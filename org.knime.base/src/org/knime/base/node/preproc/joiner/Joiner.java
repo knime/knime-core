@@ -62,7 +62,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.knime.base.data.sort.MemoryService;
 import org.knime.base.data.sort.SortedTable;
 import org.knime.base.node.preproc.joiner.Joiner2Settings.CompositionMode;
 import org.knime.base.node.preproc.joiner.Joiner2Settings.DuplicateHandling;
@@ -78,6 +77,7 @@ import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.sort.MemoryService;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;

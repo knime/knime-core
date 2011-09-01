@@ -48,11 +48,8 @@
  * History
  *   16.04.2010 (hofer): created
  */
-package org.knime.base.data.sort;
+package org.knime.core.data.sort;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -64,12 +61,12 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.knime.base.node.preproc.sorter.SorterNodeFactory;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.IntValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.def.DefaultRow;
@@ -80,7 +77,11 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.Node;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeFactory;
 
 /**
  *
@@ -109,8 +110,11 @@ public class SortedTableTest {
      */
     @Before
     public void setUp() throws Exception {
+        NodeFactory<NodeModel> dummyFactory =
+            (NodeFactory)new VirtualPortObjectInNodeFactory(new PortType[0]);
         m_exec = new ExecutionContext(
-                new DefaultNodeProgressMonitor(), new Node(new SorterNodeFactory()),
+                new DefaultNodeProgressMonitor(),
+                new Node(dummyFactory),
                     SingleNodeContainer.MemoryPolicy.CacheOnDisc,
                     new HashMap<Integer, ContainerTable>());
     }
@@ -123,82 +127,53 @@ public class SortedTableTest {
     }
 
     /**
-     * Test method for {@link org.knime.base.data.sort.SortedTable#getBufferedDataTable()}.
-     * @throws IllegalAccessException
-     * @throws IllegalArgumentException
      * @throws CanceledExecutionException
-     * @throws InvocationTargetException
      */
     @Test
-    public final void testLowMemoryRun() throws NoSuchFieldException,
-            NoSuchMethodException,
-            IllegalArgumentException, IllegalAccessException,
-            CanceledExecutionException, InvocationTargetException {
+    public final void testLowMemoryRun() throws CanceledExecutionException {
         runMemoryTest(100, Integer.MAX_VALUE, Integer.MAX_VALUE);
     }
 
     /**
-     * Test method for {@link org.knime.base.data.sort.SortedTable#getBufferedDataTable()}.
      * Test if merge of more buffers than maxOpenBuffers works.
-     * @throws IllegalAccessException
-     * @throws IllegalArgumentException
      * @throws CanceledExecutionException
-     * @throws InvocationTargetException
      */
     @Test
-    public final void testMultiStageMerge() throws NoSuchFieldException,
-            NoSuchMethodException,
-            IllegalArgumentException, IllegalAccessException,
-            CanceledExecutionException, InvocationTargetException {
+    public final void testMultiStageMerge() throws CanceledExecutionException {
         runMemoryTest(100, 5, 8);
     }
 
     private void runMemoryTest(final int numRows,
             final int maxNumRowsPerContainer,
-            final int maxOpenContainers) throws SecurityException,
-            NoSuchFieldException, CanceledExecutionException,
-            IllegalArgumentException, IllegalAccessException,
-            NoSuchMethodException, InvocationTargetException {
-        // Private fields of the SortedTable
-        Field maxRowsField = SortedTable.class.getDeclaredField("m_maxRows");
-        maxRowsField.setAccessible(true);
-        Field memServiceField =
-            SortedTable.class.getDeclaredField("m_memService");
-        memServiceField.setAccessible(true);
-        // Private method
-        Method sortOnDiskMethod =
-            SortedTable.class.getDeclaredMethod("sortOnDisk",
-                    BufferedDataTable.class, ExecutionContext.class);
-        sortOnDiskMethod.setAccessible(true);
+            final int maxOpenContainers) throws CanceledExecutionException {
         // Create data with fields that consume a lot memory
         DataTable inputTable = new TestData(numRows, 1);
 
-
         BufferedDataTable bdt =
             m_exec.createBufferedDataTable(inputTable, m_exec);
-        SortedTable sortedTable = new SortedTable(bdt, Arrays.asList("Index"),
-                new boolean[] {true}, false, maxOpenContainers, m_exec);
-        BufferedDataTable defaultResult = sortedTable.getBufferedDataTable();
+        TableSorter sorter = new TableSorter(bdt, Arrays.asList("Index"),
+                new boolean[] {true});
+        sorter.setMaxOpenContainers(maxOpenContainers);
+        BufferedDataTable defaultResult = sorter.sort(m_exec);
 
-        // set private fields
-        maxRowsField.setInt(sortedTable, maxNumRowsPerContainer);
         // 30MB min memory
         MemoryService memService = new MemoryService(0.001, 10000000, false);
-        memServiceField.set(sortedTable, memService);
+        sorter.setMaxRows(maxNumRowsPerContainer);
+        sorter.setMemService(memService);
+
         // run again with change settings
-        sortOnDiskMethod.invoke(sortedTable, bdt, m_exec);
+        BufferedDataTable result = sorter.sort(m_exec);
 
         // Check if column is sorted in ascending order
         int prevValue = Integer.MIN_VALUE;
-        BufferedDataTable result = sortedTable.getBufferedDataTable();
-        for (DataRow row : sortedTable.getBufferedDataTable()) {
-            int thisValue = ((IntCell)row.getCell(0)).getIntValue();
+        for (DataRow row : result) {
+            int thisValue = ((IntValue)row.getCell(0)).getIntValue();
             Assert.assertTrue(thisValue >= prevValue);
         }
         // Check if it has the same results as defaultResult
         Assert.assertTrue(defaultResult.getRowCount() == result.getRowCount());
         RowIterator defaultIter = defaultResult.iterator();
-        RowIterator iter = sortedTable.getBufferedDataTable().iterator();
+        RowIterator iter = result.iterator();
         while (defaultIter.hasNext()) {
             DataRow defaultRow = defaultIter.next();
             DataRow row = iter.next();
@@ -226,6 +201,7 @@ public class SortedTableTest {
         /**
          * {@inheritDoc}
          */
+        @Override
         public DataTableSpec getDataTableSpec() {
             return new DataTableSpec("TestDataSpec",
                     new String[]{"Index", "Data"},
@@ -235,6 +211,7 @@ public class SortedTableTest {
         /**
          * {@inheritDoc}
          */
+        @Override
         public RowIterator iterator() {
             return new TestDataIterator(m_size, m_randSeed);
         }

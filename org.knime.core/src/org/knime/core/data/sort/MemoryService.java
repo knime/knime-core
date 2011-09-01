@@ -48,7 +48,7 @@
  * History
  *   18.02.2010 (hofer): created
  */
-package org.knime.base.data.sort;
+package org.knime.core.data.sort;
 
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
@@ -178,7 +178,6 @@ public final class MemoryService {
                         "intensive nodes might not work correctly.");
             }
         }
-
 
         m_threshold = (long)(usedMemoryThreshold * maxMem);
 
