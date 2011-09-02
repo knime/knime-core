@@ -54,6 +54,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
@@ -81,12 +82,12 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
@@ -261,7 +262,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
 
         // for all included columns do the discretization
         int currentColumn = 0;
-        for (String includedColumnName 
+        for (String includedColumnName
                 : m_includedColumnNames.getIncludeList()) {
 
             LOGGER.debug("Process column: " + includedColumnName);
@@ -337,7 +338,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
                 subExecPerColumn.checkCanceled();
 
                 // create subExec for counting
-                ExecutionContext subExecCount = 
+                ExecutionContext subExecCount =
                     subExecBounds.createSubExecutionContext(
                             1.0D / m_classValues.length);
 
@@ -702,9 +703,8 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
         // in ascending order
         // in case the class column is not used as second sort criteria
         // the sort order of field 2 is ignored
-        boolean[] sortOrder = new boolean[2];
-        sortOrder[0] = true;
-        sortOrder[1] = true;
+        boolean[] sortOrder = new boolean[sortColumn.size()];
+        Arrays.fill(sortOrder, true);
 
         SortedTable sortedTable =
                 new SortedTable(table, sortColumn, sortOrder, m_sortInMemory
@@ -778,7 +778,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
                     // if the class value has changed since this time
                     if (!Double.isNaN(lastChangeValueWithoutNewBoundary)) {
                         // a new boundary is the midpoint
-                        double newBoundary = (lastDifferentValue 
+                        double newBoundary = (lastDifferentValue
                                 + lastChangeValueWithoutNewBoundary) / 2.0D;
 
                         // add the new midpoint boundary to the linked list
@@ -971,7 +971,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
         }
         SettingsModelFilterString tmpIncl = null;
         try {
-            tmpIncl = 
+            tmpIncl =
                 m_includedColumnNames.createCloneWithValidatedValue(settings);
         } catch (InvalidSettingsException ise) {
             // new with 2.0
