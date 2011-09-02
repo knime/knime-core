@@ -59,7 +59,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
-import org.knime.core.data.sort.TableSorter;
+import org.knime.core.data.sort.BufferedDataTableSorter;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -68,8 +68,9 @@ import org.knime.core.node.ExecutionContext;
  * A data table that sorts a given data table according to the passed sorting
  * parameters.
  *
- * <p><b>Note</b>: This class is only wrapping the class {@link TableSorter}. It
- * is recommend to use the {@link TableSorter} class directly rather than this
+ * <p><b>Note</b>: This class is only wrapping the class
+ * {@link BufferedDataTableSorter}. It is recommend to use the
+ * {@link BufferedDataTableSorter} class directly rather than this
  * class (which is kept anyway to retain backward compatibility).
  *
  * @author Christoph Sieb, University of Konstanz
@@ -113,7 +114,8 @@ public class SortedTable implements DataTable {
             final boolean sortInMemory, final int maxOpenContainer,
             final ExecutionContext exec)
     throws CanceledExecutionException {
-        TableSorter sorter = new TableSorter(dataTable, rowComparator);
+        BufferedDataTableSorter sorter =
+            new BufferedDataTableSorter(dataTable, rowComparator);
         sorter.setSortInMemory(sortInMemory);
         sorter.setMaxOpenContainers(maxOpenContainer);
         m_sortedTable = sorter.sort(exec);
@@ -197,8 +199,8 @@ public class SortedTable implements DataTable {
             final boolean sortInMemory, final int maxOpenContainer,
             final ExecutionContext exec)
     throws CanceledExecutionException {
-        TableSorter sorter =
-            new TableSorter(dataTable, inclList, sortAscending);
+        BufferedDataTableSorter sorter =
+            new BufferedDataTableSorter(dataTable, inclList, sortAscending);
         sorter.setMaxOpenContainers(maxOpenContainer);
         sorter.setSortInMemory(sortInMemory);
         m_sortedTable = sorter.sort(exec);

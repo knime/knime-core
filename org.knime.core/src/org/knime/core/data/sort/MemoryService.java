@@ -58,7 +58,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -201,13 +200,12 @@ public final class MemoryService {
 
     /**
      * This is a stateful method return true in the low memory condition. Note,
-     * that this method only returns true at most once between two garbage
+     * this method only returns true at most once between two garbage
      * collections.
      *
-     * @param exec The {@link ExecutionContext}
      * @return True if memory is low.
      */
-    public boolean isMemoryLow(final ExecutionContext exec) {
+    public boolean isMemoryLow() {
         if (m_waitForNextGC) {
             long thisCount = null != m_memPool
                 ? m_gcBean.iterator().next().getCollectionCount()

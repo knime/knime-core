@@ -633,7 +633,7 @@ public final class Joiner {
         CloseableRowIterator innerIter = innerTable.iterator();
         while (innerIter.hasNext()) {
             exec.checkCanceled();
-            if (!m_memService.isMemoryLow(exec)) {
+            if (!m_memService.isMemoryLow()) {
                 DataRow row = innerIter.next();
                 InputDataRow inputDataRow = new InputDataRow(row, counter,
                         InputDataRow.Settings.InDataPort.Left,

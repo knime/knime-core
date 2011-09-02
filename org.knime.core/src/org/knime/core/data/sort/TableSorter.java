@@ -53,7 +53,6 @@ package org.knime.core.data.sort;
 
 import java.text.NumberFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -67,32 +66,24 @@ import java.util.Set;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValueComparator;
+import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 
 /**
- * Class to sort a table. The sorting is done in a disk-based k-way merge sort
- * using a MemoryService that observes the JVM's memory consumption.
- * The implementation reads in the input table sequentially into chunks,
- * whereby the chunk size is determined at runtime based on available memory.
- * Each chunk is then sorted in memory and flushed out into a temporary
- * container. The final step is to compose the output table by merging the
- * temporary containers.
- *
- * <p>Usage: Client implementations will initialize this object with the table
- * to be sorted, set properties using the varies set-methods (defaults are
- * generally fine) and finally call the {@link #sort(ExecutionContext)} method.
+ * Class to sort a table. See <a href="package.html">package description</a>
+ * for details.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public final class TableSorter {
+abstract class TableSorter {
 
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(TableSorter.class);
@@ -111,7 +102,9 @@ public final class TableSorter {
 
     private MemoryService m_memService = new MemoryService(DEF_MEM_THRESHOLD);
 
-    private final BufferedDataTable m_inputTable;
+    private final DataTable m_inputTable;
+    private final int m_rowsInInputTable;
+
     /**
      * The maximal number of open containers. This has an effect when many
      * containers must be merged.
@@ -129,20 +122,32 @@ public final class TableSorter {
 
     /** Private constructor. Assigns input table, checks argument.
      * @param inputTable Table to sort.
+     * @param rowsCount The number of rows in the table
      * @throws NullPointerException If arg is null. */
-    private TableSorter(final BufferedDataTable inputTable) {
+    private TableSorter(final DataTable inputTable, final int rowsCount) {
         if (inputTable == null) {
             throw new NullPointerException("Argument must not be null.");
         }
+        // for BDT better use the appropriate derived class (blob handling)
+        if (getClass().equals(TableSorter.class)
+                && inputTable instanceof BufferedDataTable) {
+            LOGGER.coding("Do not use a "
+                    + TableSorter.class.getSimpleName() + " to sort"
+                    + " a " + BufferedDataTable.class.getSimpleName()
+                    + " but use a "
+                    + BufferedDataTableSorter.class.getSimpleName());
+        }
         m_inputTable = inputTable;
+        m_rowsInInputTable = rowsCount;
     }
 
     /** Inits sorter on argument table with given row comparator.
      * @param inputTable Table to sort.
+     * @param rowsCount The number of rows in the table
      * @param rowComparator Passed to {@link #setRowComparator(Comparator)}. */
-    public TableSorter(final BufferedDataTable inputTable,
+    public TableSorter(final DataTable inputTable, final int rowsCount,
             final Comparator<DataRow> rowComparator) {
-        this(inputTable);
+        this(inputTable, rowsCount);
         setRowComparator(rowComparator);
     }
 
@@ -150,6 +155,7 @@ public final class TableSorter {
      * {@link #setSortColumns(Collection, boolean[])}.
      *
      * @param inputTable The table to sort
+     * @param rowsCount The number of rows in the table
      * @param inclList Passed on to
      * {@link #setSortColumns(Collection, boolean[])}.
      * @param sortAscending Passed on to
@@ -157,9 +163,10 @@ public final class TableSorter {
      * @throws NullPointerException If any argument is null.
      * @throws IllegalArgumentException If arguments are inconsistent.
      */
-    public TableSorter(final BufferedDataTable inputTable,
-            final Collection<String> inclList, final boolean[] sortAscending) {
-        this(inputTable);
+    public TableSorter(final DataTable inputTable,
+            final int rowsCount, final Collection<String> inclList,
+            final boolean[] sortAscending) {
+        this(inputTable, rowsCount);
         setSortColumns(inclList, sortAscending);
     }
 
@@ -277,69 +284,93 @@ public final class TableSorter {
 
     /** Sorts the table passed in the constructor according to the settings
      * and returns the sorted output table.
-     * @param ctx The execution context to create temporary buffers and to
-     * report progress
+     * @param exec To report progress
      * @return The sorted output.
      * @throws CanceledExecutionException If canceled. */
-    public BufferedDataTable sort(final ExecutionContext ctx)
+    DataTable sortInternal(final ExecutionMonitor exec)
         throws CanceledExecutionException {
-        BufferedDataTable result;
-        if (m_inputTable.getRowCount() < 2) {
-            result = m_inputTable;
-        } else if (m_sortInMemory) {
-            result = sortInMemory(ctx);
+        DataTable result;
+        if (m_sortInMemory) {
+            result = sortInMemory(exec);
         } else {
-            result = sortOnDisk(ctx);
+            result = sortOnDisk(exec);
         }
-        ctx.setProgress(1.0);
+        exec.setProgress(1.0);
         return result;
     }
 
-    private BufferedDataTable sortInMemory(final ExecutionContext exec)
+    private DataTable sortInMemory(final ExecutionMonitor exec)
     throws CanceledExecutionException {
-        final BufferedDataTable dataTable = m_inputTable;
-        final DataRow[] rows = new DataRow[dataTable.getRowCount()];
+        final DataTable dataTable = m_inputTable;
+        List<DataRow> rowList = new ArrayList<DataRow>();
 
-        final double max = 2 * dataTable.getRowCount();
         int progress = 0;
+        final int rowCount = m_rowsInInputTable;
         exec.setMessage("Reading data");
-        int i = 0;
+        ExecutionMonitor readExec = exec.createSubProgress(0.5);
         for (final DataRow r : dataTable) {
-            exec.checkCanceled();
-            exec.setProgress(progress / max);
-            rows[i++] = r;
+            readExec.checkCanceled();
+            if (rowCount > 0) {
+                readExec.setProgress(progress / (double)rowCount,
+                        r.getKey().getString());
+            } else {
+                readExec.setMessage(r.getKey() + " (row " + progress + ")");
+            }
+            rowList.add(r);
             progress++;
+        }
+        // if there is 0 or 1 row only, return immediately (can't rely on
+        // "rowCount" as it might not be set)
+        if (rowList.size() <= 1) {
+            return m_inputTable;
         }
 
         exec.setMessage("Sorting");
-        Arrays.sort(rows, m_rowComparator);
+        Collections.sort(rowList, m_rowComparator);
 
         exec.setMessage("Creating sorted table");
 
-        final BufferedDataContainer dc =
-            exec.createDataContainer(dataTable.getDataTableSpec(), true);
-        for (i = 0; i < rows.length; i++) {
+        final DataContainer dc = createDataContainer(
+                dataTable.getDataTableSpec(), false);
+        ExecutionMonitor writeExec = exec.createSubProgress(0.5);
+        progress = 0;
+        for (DataRow r : rowList) {
             exec.checkCanceled();
-            exec.setProgress(progress / max);
-            dc.addRowToTable(rows[i]);
+            if (rowCount > 0) {
+                writeExec.setProgress(progress / (double)rowCount,
+                        r.getKey().getString());
+            } else {
+                writeExec.setMessage(r.getKey() + " (row " + progress + ")");
+            }
+            dc.addRowToTable(r);
             progress++;
         }
         dc.close();
         return dc.getTable();
     }
 
+    /** Creates data container, either a buffered data container or a plain
+     * one.
+     * @param spec The spec of the container/table.
+     * @param forceOnDisk false to use default, true to flush data immediately
+     * to disk. It's true when used in the
+     * #sortOnDisk(ExecutionMonitor) method and the container is only
+     * used temporarily.
+     * @return A new fresh container. */
+    abstract DataContainer createDataContainer(final DataTableSpec spec,
+            final boolean forceOnDisk);
+
     /**
      * Sorts the given data table using a disk-based k-way merge sort.
      *
-     * @param dataTable the data table that should be sorted
+     * @param dataTable the data table that sgetRowCounthould be sorted
      * @param exec an execution context for reporting progress and creating
      *            BufferedDataContainers
      * @throws CanceledExecutionException if the user has canceled execution
      */
-    private BufferedDataTable sortOnDisk(final ExecutionContext exec)
+    private DataTable sortOnDisk(final ExecutionMonitor exec)
     throws CanceledExecutionException {
-        final BufferedDataTable dataTable = m_inputTable;
-        assert dataTable.getRowCount() > 0;
+        final DataTable dataTable = m_inputTable;
 
         // cont will hold the sorted chunks
         List<Iterable<DataRow>> chunksCont =
@@ -347,8 +378,9 @@ public final class TableSorter {
 
         ArrayList<DataRow> buffer = new ArrayList<DataRow>();
 
-        double progress = 0;
-        double incProgress = 0.5 / dataTable.getRowCount();
+        double progress = 0.0;
+        double incProgress = m_rowsInInputTable <= 0
+            ? -1.0 : 1.0 / (2.0 * m_rowsInInputTable);
         int counter = 0;
         int cf = 0;
         int chunkStartRow = 0;
@@ -357,30 +389,33 @@ public final class TableSorter {
         for (Iterator<DataRow> iter = dataTable.iterator(); iter.hasNext();) {
             cf++;
             exec.checkCanceled();
-            if (!m_memService.isMemoryLow(exec)
+            if (!m_memService.isMemoryLow()
                     && (cf % m_maxRows != 0 || cf == 0)) {
                 counter++;
-                progress += incProgress;
-                if (counter % 100 == 0) {
-                    exec.checkCanceled();
-                    exec.setProgress(progress, "Reading table, " + counter
-                            + " rows read");
+                exec.checkCanceled();
+                String message = "Reading table, " + counter + " rows read";
+                if (m_rowsInInputTable > 0) {
+                    progress += incProgress;
+                    exec.setProgress(progress, message);
+                } else {
+                    exec.setMessage(message);
                 }
                 DataRow row = iter.next();
                 buffer.add(row);
             } else {
                 LOGGER.debug("Writing chunk [" + chunkStartRow + ":"
                         + counter + "] - mem usage: " + getMemUsage());
-                int estimatedIncrements = dataTable.getRowCount() - counter
-                + buffer.size();
-                incProgress = (0.5 - progress) / estimatedIncrements;
+                if (m_rowsInInputTable > 0) {
+                    int estimatedIncrements =
+                        m_rowsInInputTable - counter + buffer.size();
+                    incProgress = (0.5 - progress) / estimatedIncrements;
+                }
                 exec.setMessage("Sorting temporary buffer");
                 // sort buffer
                 Collections.sort(buffer, m_rowComparator);
                 // write buffer to disk
-                BufferedDataContainer diskCont =
-                    exec.createDataContainer(dataTable.getDataTableSpec(),
-                            true, 0);
+                DataContainer diskCont = createDataContainer(
+                        dataTable.getDataTableSpec(), true);
                 diskCont.setMaxPossibleValues(0);
                 final int totalBufferSize = buffer.size();
                 for (int i = 0; i < totalBufferSize; i++) {
@@ -390,9 +425,11 @@ public final class TableSorter {
                     // array copies
                     DataRow next = buffer.set(i, null);
                     diskCont.addRowToTable(next);
-                    progress += incProgress;
-                    exec.setProgress(progress);
                     exec.checkCanceled();
+                    if (m_rowsInInputTable > 0) {
+                        progress += incProgress;
+                        exec.setProgress(progress);
+                    }
                 }
                 buffer.clear();
                 diskCont.close();
@@ -409,6 +446,11 @@ public final class TableSorter {
                 chunkStartRow = counter + 1;
             }
         }
+        // no or one row only in input table, can exit immediately
+        // (can't rely on global rowCount - might not be set)
+        if (counter <= 1) {
+            return m_inputTable;
+        }
         // Add buffer to the chunks
         if (!buffer.isEmpty()) {
             // sort buffer
@@ -418,7 +460,7 @@ public final class TableSorter {
 
         exec.setMessage("Merging temporary tables");
         // The final output container
-        BufferedDataContainer cont = null;
+        DataContainer cont = null;
         // merge chunks until there is one left
         while (chunksCont.size() > 1 || cont == null) {
             exec.setMessage("Merging temporary tables, " + chunksCont.size()
@@ -426,16 +468,19 @@ public final class TableSorter {
             if (chunksCont.size() < m_maxOpenContainers) {
                 // The final output container, leave it to the
                 // system to do the caching (bug 1809)
-                cont = exec.createDataContainer(dataTable.getDataTableSpec(),
-                        true);
-                incProgress = (1.0 - progress) / dataTable.getRowCount();
+                cont = createDataContainer(
+                        dataTable.getDataTableSpec(), false);
+                if (m_rowsInInputTable > 0) {
+                    incProgress = (1.0 - progress) / m_rowsInInputTable;
+                }
             } else {
-                cont = exec.createDataContainer(dataTable.getDataTableSpec(),
-                        true, 0);
-                double estimatedReads =
-                    Math.ceil(chunksCont.size() / m_maxOpenContainers)
-                    * dataTable.getRowCount();
-                incProgress = (1.0 - progress) / estimatedReads;
+                cont = createDataContainer(dataTable.getDataTableSpec(), true);
+                if (m_rowsInInputTable > 0) {
+                    double estimatedReads =
+                        Math.ceil(chunksCont.size() / m_maxOpenContainers)
+                        * m_rowsInInputTable;
+                    incProgress = (1.0 - progress) / estimatedReads;
+                }
             }
             // isolate lists to merge
             List<Iterable<DataRow>> toMergeCont =
@@ -463,9 +508,12 @@ public final class TableSorter {
                 MergeEntry first = currentRows.poll();
                 DataRow least = first.poll();
                 cont.addRowToTable(least);
-                // increment progress
-                progress += incProgress;
-                exec.setProgress(progress);
+                exec.checkCanceled();
+                if (m_rowsInInputTable > 0) {
+                    // increment progress
+                    progress += incProgress;
+                    exec.setProgress(progress);
+                }
                 // read next row in first
                 if (null != first.peek()) {
                     currentRows.add(first);

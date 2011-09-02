@@ -151,8 +151,9 @@ public class TableSorterTest {
 
         BufferedDataTable bdt =
             m_exec.createBufferedDataTable(inputTable, m_exec);
-        TableSorter sorter = new TableSorter(bdt, Arrays.asList("Index"),
-                new boolean[] {true});
+        BufferedDataTableSorter sorter =
+            new BufferedDataTableSorter(bdt, Arrays.asList("Index"),
+                    new boolean[] {true});
         sorter.setMaxOpenContainers(maxOpenContainers);
         BufferedDataTable defaultResult = sorter.sort(m_exec);
 
