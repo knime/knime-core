@@ -204,13 +204,15 @@ public class RepositoryView extends ViewPart implements
             Display.getDefault().asyncExec(new Runnable() {
                 @Override
                 public void run() {
-                    MessageBox mb =
-                            new MessageBox(Display.getDefault()
-                                    .getActiveShell(), SWT.ICON_INFORMATION
-                                    | SWT.OK);
-                    mb.setText("Problem categories...");
-                    mb.setMessage(message.toString());
-                    mb.open();
+                    if (Display.getDefault().getActiveShell() != null) {
+                        MessageBox mb =
+                                new MessageBox(Display.getDefault()
+                                        .getActiveShell(), SWT.ICON_INFORMATION
+                                        | SWT.OK);
+                        mb.setText("Problem categories...");
+                        mb.setMessage(message.toString());
+                        mb.open();
+                    }
                 }
             });
         }
