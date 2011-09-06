@@ -32,7 +32,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Enumeration;
@@ -160,16 +159,16 @@ public class KNIMETestingApplication implements IApplication {
         return EXIT_OK;
     }
 
-
     private void downloadWorkflows() throws URISyntaxException, IOException,
             SecurityException, NoSuchMethodException, IllegalArgumentException,
             IllegalAccessException, InvocationTargetException {
         assert m_wfDownloadClass != null;
         File tempDir = FileUtil.createTempDir("KNIME Testflow");
         Method downloadMethod =
-                m_wfDownloadClass.getMethod("downloadWorkflow", URI.class,
+                m_wfDownloadClass.getMethod("downloadWorkflow", String.class,
                         File.class);
-        downloadMethod.invoke(null, new URI(m_serverUri), tempDir);
+        downloadMethod.invoke(
+                null, m_serverUri, tempDir);
         m_rootDir = tempDir.getCanonicalPath();
     }
 
