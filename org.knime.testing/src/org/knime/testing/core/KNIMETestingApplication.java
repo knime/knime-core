@@ -485,8 +485,12 @@ public class KNIMETestingApplication implements IApplication {
             }
 
             // "-server" specifies a workflow group on a server
-            if ((stringArgs[i] != null) && stringArgs[i].equals("-server")
-                    && (m_wfDownloadClass != null)) {
+            if ((stringArgs[i] != null) && stringArgs[i].equals("-server")) {
+                if (m_wfDownloadClass == null) {
+                    System.err.println("Workflow download from server is not "
+                            +"available");
+                    return false;
+                }
                 if (m_serverUri != null) {
                     System.err.println("You can't specify multiple -server "
                             + "options at the command line");
