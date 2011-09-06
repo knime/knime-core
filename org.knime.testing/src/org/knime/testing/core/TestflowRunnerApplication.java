@@ -87,7 +87,7 @@ public class TestflowRunnerApplication implements IApplication {
 
         try {
             m_wfDownloadClass =
-                    Class.forName("com.knime.testing.server.WorkflowDownloadApplication");
+                    Class.forName("com.knime.enterprise.client.filesystem.util.WorkflowDownloadApplication");
         } catch (ClassNotFoundException ex) {
             // no server extension available
         }
