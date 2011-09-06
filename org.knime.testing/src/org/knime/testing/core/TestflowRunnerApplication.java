@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.URI;
 import java.net.URISyntaxException;
 
 import junit.framework.Test;
@@ -380,9 +379,9 @@ public class TestflowRunnerApplication implements IApplication {
         assert m_wfDownloadClass != null;
         File tempDir = FileUtil.createTempDir("KNIME Testflow");
         Method downloadMethod =
-                m_wfDownloadClass.getMethod("downloadWorkflow", URI.class,
+                m_wfDownloadClass.getMethod("downloadWorkflows", String.class,
                         File.class);
-        downloadMethod.invoke(null, new URI(m_serverUri), tempDir);
+        downloadMethod.invoke(null, m_serverUri, tempDir);
         m_rootDir = tempDir.getCanonicalPath();
     }
 }
