@@ -318,7 +318,7 @@ public class ThreadPoolTest extends TestCase {
                     + " queued jobs");
             if (Math.random() > 0.95) {
                 root.setMaxThreads(root.getMaxThreads() + 1);
-            } else if (Math.random() > 0.98) {
+            } else if ((root.getMaxThreads() > 1) && (Math.random() > 0.98)) {
                 root.setMaxThreads(root.getMaxThreads() - 1);
             }
         }
