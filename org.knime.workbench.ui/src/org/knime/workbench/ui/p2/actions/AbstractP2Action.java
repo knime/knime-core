@@ -50,6 +50,7 @@
  */
 package org.knime.workbench.ui.p2.actions;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.jobs.JobChangeAdapter;
@@ -88,6 +89,22 @@ public abstract class AbstractP2Action extends Action {
                     + "Installing extension is not possible in this case.");
             mbox.open();
             return;
+        }
+        String installLocation = Platform.getInstallLocation().getURL().toString();
+        String configurationLocation = Platform.getConfigurationLocation().getURL().toString();
+
+        if (!configurationLocation.contains(installLocation)) {
+            MessageBox mbox =
+                    new MessageBox(ProvUI.getDefaultParentShell(),
+                            SWT.ICON_WARNING | SWT.YES  | SWT.NO);
+            mbox.setText("Permission problem");
+            mbox.setMessage("Your KNIME installation directory seems to be "
+                    + "read-only, maybe because KNIME was installed by a "
+                    + "different user. Installing extensions or updating KNIME "
+                    + "may cause problems. Do you really want to continue?");
+            if (mbox.open() == SWT.NO) {
+                return;
+            }
         }
 
         Job.getJobManager().cancel(LoadMetadataRepositoryJob.LOAD_FAMILY);
