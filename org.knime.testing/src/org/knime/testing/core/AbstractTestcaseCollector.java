@@ -52,9 +52,11 @@ package org.knime.testing.core;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -98,7 +100,26 @@ public abstract class AbstractTestcaseCollector {
         }
 
         classNames.remove(this.getClass().getName());
+        filterClasses(classNames);
         return classNames;
+    }
+
+
+    private void filterClasses(final List<String> classNames) {
+        Iterator<String> it = classNames.iterator();
+        while (it.hasNext()) {
+            String className = it.next();
+            try {
+                Class<?> c = Class.forName(className);
+                if (((c.getModifiers() & Modifier.ABSTRACT) != 0)
+                        || ((c.getModifiers() & Modifier.PUBLIC) == 0)) {
+                    it.remove();
+                }
+            } catch (ClassNotFoundException ex) {
+                // strange?!
+                it.remove();
+            }
+        }
     }
 
     /**
