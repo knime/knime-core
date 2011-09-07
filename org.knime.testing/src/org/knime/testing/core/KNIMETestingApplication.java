@@ -30,9 +30,6 @@ import java.io.FileFilter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Enumeration;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -57,12 +54,12 @@ import org.knime.core.util.KnimeEncryption;
 import org.knime.workbench.core.KNIMECorePlugin;
 import org.knime.workbench.repository.RepositoryManager;
 
+import com.knime.enterprise.client.filesystem.util.WorkflowDownloadApplication;
+
 /**
  *
  */
 public class KNIMETestingApplication implements IApplication {
-    private Class<?> m_wfDownloadClass;
-
     private boolean m_analyzeLogFile = false;
 
     private File m_analyzeOutputDir = null;
@@ -100,13 +97,6 @@ public class KNIMETestingApplication implements IApplication {
 
         // make sure the logfile doesn't get split.
         System.setProperty(KNIMEConstants.PROPERTY_MAX_LOGFILESIZE, "-1");
-
-        try {
-            m_wfDownloadClass =
-                    Class.forName("com.knime.enterprise.client.filesystem.util.WorkflowDownloadApplication");
-        } catch (ClassNotFoundException ex) {
-            // no server extension available
-        }
 
         // this is just to load the repository plug-in
         RepositoryManager.INSTANCE.toString();
@@ -159,16 +149,9 @@ public class KNIMETestingApplication implements IApplication {
         return EXIT_OK;
     }
 
-    private void downloadWorkflows() throws URISyntaxException, IOException,
-            SecurityException, NoSuchMethodException, IllegalArgumentException,
-            IllegalAccessException, InvocationTargetException {
-        assert m_wfDownloadClass != null;
+    private void downloadWorkflows() throws Exception {
         File tempDir = FileUtil.createTempDir("KNIME Testflow");
-        Method downloadMethod =
-                m_wfDownloadClass.getMethod("downloadWorkflow", String.class,
-                        File.class);
-        downloadMethod.invoke(
-                null, m_serverUri, tempDir);
+        WorkflowDownloadApplication.downloadWorkflows(m_serverUri, tempDir);
         m_rootDir = tempDir.getCanonicalPath();
     }
 
@@ -486,11 +469,6 @@ public class KNIMETestingApplication implements IApplication {
 
             // "-server" specifies a workflow group on a server
             if ((stringArgs[i] != null) && stringArgs[i].equals("-server")) {
-                if (m_wfDownloadClass == null) {
-                    System.err.println("Workflow download from server is not "
-                            +"available");
-                    return false;
-                }
                 if (m_serverUri != null) {
                     System.err.println("You can't specify multiple -server "
                             + "options at the command line");
@@ -539,12 +517,10 @@ public class KNIMETestingApplication implements IApplication {
                 + "<dir_name> is omitted the Java temp dir is used.");
         System.err.println("    -root <dir_name>: optional, specifies the"
                 + " root dir where all testcases are located in.");
-        if (m_wfDownloadClass != null) {
-            System.err.println("    -server <uri>: optional, a KNIME server "
-                    + "from which workflows should be downloaded first.");
-            System.err.println("                   Example: "
-                    + "knimefs://<user>:<password>@host[:port]/workflowGroup1");
-        }
+        System.err.println("    -server <uri>: optional, a KNIME server "
+                + "from which workflows should be downloaded first.");
+        System.err.println("                   Example: "
+                + "knimefs://<user>:<password>@host[:port]/workflowGroup1");
         System.err.println("IF -pattern OR -root IS OMITTED A DIALOG OPENS"
                 + " REQUESTING USER INPUT.");
 

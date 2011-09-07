@@ -29,9 +29,6 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.net.URISyntaxException;
 
 import junit.framework.Test;
 
@@ -45,6 +42,8 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.util.FileUtil;
 import org.knime.workbench.repository.RepositoryManager;
 
+import com.knime.enterprise.client.filesystem.util.WorkflowDownloadApplication;
+
 /**
  * This application executes the testflows and writes the results into an XML
  * file identical to the one produced by ANT's &lt;junit> task. This can then be
@@ -53,8 +52,6 @@ import org.knime.workbench.repository.RepositoryManager;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class TestflowRunnerApplication implements IApplication {
-    private Class<?> m_wfDownloadClass;
-
     private boolean m_analyzeLogFile = false;
 
     private String m_testNamePattern;
@@ -83,13 +80,6 @@ public class TestflowRunnerApplication implements IApplication {
     public Object start(final IApplicationContext context) throws Exception {
         // make sure the logfile doesn't get split.
         System.setProperty(KNIMEConstants.PROPERTY_MAX_LOGFILESIZE, "-1");
-
-        try {
-            m_wfDownloadClass =
-                    Class.forName("com.knime.enterprise.client.filesystem.util.WorkflowDownloadApplication");
-        } catch (ClassNotFoundException ex) {
-            // no server extension available
-        }
 
         // this is to load the repository plug-in
         RepositoryManager.INSTANCE.toString();
@@ -298,12 +288,6 @@ public class TestflowRunnerApplication implements IApplication {
 
             // "-server" specifies a workflow group on a server
             if ((stringArgs[i] != null) && stringArgs[i].equals("-server")) {
-                if (m_wfDownloadClass == null) {
-                    System.err.println("Workflow download from server is not "
-                            +"available");
-                    return false;
-                }
-
                 if (m_serverUri != null) {
                     System.err.println("You can't specify multiple -server "
                             + "options at the command line");
@@ -358,12 +342,10 @@ public class TestflowRunnerApplication implements IApplication {
                 + "only test matching <reg_exp> will be run.");
         System.err.println("    -root <dir_name>: optional, specifies the"
                 + " root dir where all testcases are located in.");
-        if (m_wfDownloadClass != null) {
-            System.err.println("    -server <uri>: optional, a KNIME server "
-                    + "from which workflows should be downloaded first.");
-            System.err.println("                   Example: "
-                    + "knimefs://<user>:<password>@host[:port]/workflowGroup1");
-        }
+        System.err.println("    -server <uri>: optional, a KNIME server "
+                + "from which workflows should be downloaded first.");
+        System.err.println("                   Example: "
+                + "knimefs://<user>:<password>@host[:port]/workflowGroup1");
         System.err.println("    -analyze <dir_name>: optional, "
                 + "analyzes the log file after the run.");
         System.err.println("                         The result files will "
@@ -378,15 +360,9 @@ public class TestflowRunnerApplication implements IApplication {
     public void stop() {
     }
 
-    private void downloadWorkflows() throws URISyntaxException, IOException,
-            SecurityException, NoSuchMethodException, IllegalArgumentException,
-            IllegalAccessException, InvocationTargetException {
-        assert m_wfDownloadClass != null;
+    private void downloadWorkflows() throws Exception {
         File tempDir = FileUtil.createTempDir("KNIME Testflow");
-        Method downloadMethod =
-                m_wfDownloadClass.getMethod("downloadWorkflows", String.class,
-                        File.class);
-        downloadMethod.invoke(null, m_serverUri, tempDir);
+        WorkflowDownloadApplication.downloadWorkflows(m_serverUri, tempDir);
         m_rootDir = tempDir.getCanonicalPath();
     }
 }
