@@ -51,7 +51,13 @@
       <node
             category-path="/testing"
             factory-class="org.knime.testing.node.file.DifferFileNodeFactory"
-            id="org.knime.testing.file.DifferFileNodeFactory"/>     
+            id="org.knime.testing.file.DifferFileNodeFactory"/>
+      <node
+            category-path="/testing"
+            expert-flag="false"
+            factory-class="org.knime.testing.node.config.TestConfigNodeFactory"
+            id="org.knime.testing.node.config.TestConfigNodeFactory">
+      </node>     
    </extension>
    <extension
          point="org.knime.workbench.repository.categories">
