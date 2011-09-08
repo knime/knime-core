@@ -2040,7 +2040,7 @@
 </text>
         <rect height="491.77713" id="rect1389" style="fill:none;stroke-width:0.35433072;stroke-miterlimit:4;stroke-dasharray:none" width="729.85242" x="6.4344668" y="123.96052"/>
         <text id="KNIME-Version" inkscape:label="#text2163" sodipodi:linespacing="125%" style="text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;" x="668.18286" xml:space="preserve" y="134.34628">
-<tspan id="tspan3830" style="font-family:Arial Bold;font-weight:bold;font-style:normal;font-stretch:normal;font-variant:normal;font-size:16">Version 2.4.0</tspan>
+<tspan id="tspan3830" style="font-family:Arial Bold;font-weight:bold;font-style:normal;font-stretch:normal;font-variant:normal;font-size:16">Version 2.5.0</tspan>
 </text>
         <text id="KNIME-Builddate" inkscape:label="#text2179" sodipodi:linespacing="125%" style="text-align:end;line-height:125%;writing-mode:lr-tb;text-anchor:end;fill:#000000;fill-opacity:1;stroke:none;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;" x="669.30548" xml:space="preserve" y="148.92131">
 <tspan id="tspan3832" style="font-family:Arial;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:10">(Build July 7, 2011)</tspan>

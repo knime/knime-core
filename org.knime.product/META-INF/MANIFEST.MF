@@ -2,9 +2,11 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Konstanz Information Miner
 Bundle-SymbolicName: org.knime.product;singleton:=true
-Bundle-Version: 2.4.0.qualifier
+Bundle-Version: 2.5.0.qualifier
+Bundle-ClassPath: knime-product.jar,lib/tagsoup-1.2.1.jar
 Bundle-Activator: org.knime.product.ProductPlugin
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Bundle-Localization: plugin
 Export-Package: org.knime.product,
  org.knime.product.headless,
  org.knime.product.rcp
@@ -30,6 +32,3 @@ Require-Bundle: org.eclipse.ui,
  com.knime.licenses;bundle-version="1.0.0";resolution:=optional,
  org.eclipse.ui.forms;bundle-version="3.5.2"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
-Bundle-Localization: plugin
-Bundle-ClassPath: knime-product.jar,
- lib/tagsoup-1.2.1.jar
