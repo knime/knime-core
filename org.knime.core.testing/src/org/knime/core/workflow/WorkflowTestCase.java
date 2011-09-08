@@ -54,7 +54,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
  *
  * @author wiswedel, University of Konstanz
  */
-public class WorkflowTestCase extends TestCase {
+public abstract class WorkflowTestCase extends TestCase {
 
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
