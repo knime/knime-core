@@ -10,12 +10,14 @@ Export-Package: org.knime.testing,
  org.knime.testing.data.blob,
  org.knime.testing.guiTests,
  org.knime.testing.node.blocking,
+ org.knime.testing.node.config,
  org.knime.testing.node.datagenerator,
  org.knime.testing.node.differModelContent,
  org.knime.testing.node.differNode,
  org.knime.testing.node.disturber,
  org.knime.testing.node.executioncount,
  org.knime.testing.node.failing,
+ org.knime.testing.node.file,
  org.knime.testing.node.runtime,
  org.knime.testing.stacktracedumper
 Require-Bundle: org.eclipse.core.runtime,
@@ -28,7 +30,6 @@ Require-Bundle: org.eclipse.core.runtime,
  org.apache.log4j,
  org.apache.ant;bundle-version="1.7.1",
  org.eclipse.ant.core;bundle-version="3.2.200",
- com.knime.enterprise.utility;bundle-version="2.4.0",
  com.knime.enterprise.client.filesystem;bundle-version="2.4.0"
 Eclipse-RegisterBuddy: org.knime.base
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
