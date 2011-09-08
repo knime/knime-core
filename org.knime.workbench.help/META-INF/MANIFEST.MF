@@ -2,7 +2,8 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Workbench Help
 Bundle-SymbolicName: org.knime.workbench.help;singleton:=true
-Bundle-Version: 2.4.0.qualifier
+Bundle-Version: 2.5.0.qualifier
+Bundle-Activator: org.knime.workbench.helpview.HelpviewPlugin
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: org.knime.workbench.helpview,
  org.knime.workbench.helpview.wizard
@@ -21,4 +22,3 @@ Require-Bundle: org.eclipse.core.runtime,
  javax.servlet;bundle-version="2.5.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
-Bundle-Activator: org.knime.workbench.helpview.HelpviewPlugin
