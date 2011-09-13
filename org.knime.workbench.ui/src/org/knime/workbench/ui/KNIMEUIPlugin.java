@@ -187,8 +187,10 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
         IDialogSettings ds2 = ds.getSection("AvailableIUsPage");
         if (ds2 == null) {
            ds2 = ds.addNewSection("AvailableIUsPage");
+           ds2.put("HideInstalledContent", true);
+        } else if (ds2.get("HideInstalledContent") == null) {
+            ds2.put("HideInstalledContent", true);
         }
-        ds2.put("HideInstalledContent", true);
     }
 
     /**
