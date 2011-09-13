@@ -53,6 +53,8 @@ package org.knime.workbench.ui;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
+import org.eclipse.equinox.internal.p2.ui.ProvUIActivator;
+import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.ImageRegistry;
@@ -75,6 +77,7 @@ import org.osgi.framework.BundleContext;
  *
  * @author Florian Georg, University of Konstanz
  */
+@SuppressWarnings("restriction")
 public class KNIMEUIPlugin extends AbstractUIPlugin {
     // Make sure that this *always* matches the ID in plugin.xml
 
@@ -176,6 +179,16 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
         } catch (Exception e) {
             LOGGER.error("Error during loading of node usage history: ", e);
         }
+
+        // hide already installed IU by default in install wizard
+        // its a bit dirty but there is no API to set the option
+        // the constants are taken from AvailableIUsPage
+        IDialogSettings ds = ProvUIActivator.getDefault().getDialogSettings();
+        IDialogSettings ds2 = ds.getSection("AvailableIUsPage");
+        if (ds2 == null) {
+           ds2 = ds.addNewSection("AvailableIUsPage");
+        }
+        ds2.put("HideInstalledContent", true);
     }
 
     /**
