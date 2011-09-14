@@ -50,6 +50,8 @@
  */
 package org.knime.core.node.workflow;
 
+import java.text.NumberFormat;
+
 /**
  * Contained in a {@link NodeProgressEvent} which is fired when the progress
  * information has changed, either the progress (value between 0 and 1 or
@@ -116,6 +118,14 @@ public final class NodeProgress {
      */
     public boolean hasMessage() {
         return m_message != null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return "Progress " + (m_progress == null ? "<none>"
+                : NumberFormat.getPercentInstance().format(m_progress))
+                + "; message: " + (m_message == null ? "<none>" : m_message);
     }
 
 }
