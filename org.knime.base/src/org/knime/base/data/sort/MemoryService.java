@@ -81,7 +81,7 @@ public final class MemoryService {
     	"knime.disable.minmemory_in_sorter";
 
     /** See {@link #DEF_COLLECTION_USAGE} for details. */
-    private static final boolean DISABLE_SORT_MIN_MEMORY =
+    static final boolean DISABLE_SORT_MIN_MEMORY =
     	Boolean.getBoolean(PROPERTY_DISABLE_SORT_MIN_MEMORY);
 
     /** Default collection usage. This used to be true a long time ago until

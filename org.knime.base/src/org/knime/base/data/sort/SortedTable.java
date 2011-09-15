@@ -247,7 +247,8 @@ public class SortedTable implements DataTable {
         m_rowComparator = new RowComparator();
         m_spec = dataTable.getDataTableSpec();
         m_maxRows = Integer.MAX_VALUE;
-        m_memService = new MemoryService(0.75);
+        double memThreshold = MemoryService.DISABLE_SORT_MIN_MEMORY ? 0.85 : 0.75;
+        m_memService = new MemoryService(memThreshold);
         m_maxOpenContainers = maxOpenContainer;
 
         // get the column indices of the columns that will be sorted
