@@ -18,8 +18,8 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
- * 2006-06-08 (tm): reviewed 
+ *
+ * 2006-06-08 (tm): reviewed
  */
 package org.knime.core.node.tableview;
 
@@ -44,15 +44,17 @@ import org.knime.core.data.def.DefaultTable;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.KeyEvent;
+import org.knime.core.node.tableview.TableContentModel.TableContentFilter;
+import org.knime.core.node.util.ViewUtils;
 
 /**
  * Test class for public methods in a
  * {@link org.knime.core.node.tableview.TableContentModel}.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class TableContentModelTest extends TestCase {
-    
+
     private static final Object[][] OBJECT_DATA = new Object[][]{
             {new Double(1.0), new Integer(2), "three"},
             {new Double(4.0), new Integer(5), "six"},
@@ -64,10 +66,10 @@ public class TableContentModelTest extends TestCase {
             {new Double(22.0), new Integer(23), "twentyfour"},
             {new Double(25.0), new Integer(26), "twentyseven"},
     };
-    private static final DataTable DATA = 
+    private static final DataTable DATA =
         new DefaultTable(OBJECT_DATA, null, null);
 
-    
+
     /**
      * Creates empty TableContentModel, that's it!
      */
@@ -125,7 +127,7 @@ public class TableContentModelTest extends TestCase {
     }
 
     /**
-     * Method being tested: setHiLiteHandler(HiLiteHandler) and 
+     * Method being tested: setHiLiteHandler(HiLiteHandler) and
      *                      boolean hasHiLiteHandler().
      */
     public final void testSetHiLiteHandler() {
@@ -139,10 +141,10 @@ public class TableContentModelTest extends TestCase {
         assertTrue("Has HiLiteHandler", m.hasHiLiteHandler());
         m.setDataTable(null);
         assertTrue("Has HiLiteHandler", m.hasHiLiteHandler());
-        
+
         m.setHiLiteHandler(null);
         assertFalse("Has HiLiteHandler", m.hasHiLiteHandler());
-        
+
     }
 
     /**
@@ -166,7 +168,7 @@ public class TableContentModelTest extends TestCase {
         assertEquals(m.getRowCount(), 0);
         assertTrue(m.isRowCountFinal());
         m.setDataTable(DATA);
-        
+
         // row count may not be final, check for <=
         assertTrue(m.getRowCount() <= OBJECT_DATA.length);
         m.setDataTable(null);
@@ -184,12 +186,12 @@ public class TableContentModelTest extends TestCase {
         } catch (IndexOutOfBoundsException e) {
             System.out.println(e.getMessage());
         }
-        
+
         // create big data table (so that it has to cache) and
         // try to get the wrong value at the right position (hopefully, we fail)
         final double[][] ddata = new double[20000][50];
         final long seed = System.currentTimeMillis();
-        
+
         // use random access, so the cache is updated frequently
         Random rand = new Random(seed);
         for (int row = 0; row < ddata.length; row++) {
@@ -209,7 +211,7 @@ public class TableContentModelTest extends TestCase {
             assertTrue(value instanceof DoubleValue);
             double val = ((DoubleValue)value).getDoubleValue();
             String errorMessage = "getValueAt(" + row + ", " + col
-                + ") not equal to what it was set once. Used Random seed " 
+                + ") not equal to what it was set once. Used Random seed "
                 + seed + "; You may want to use that for debugging.";
             assertEquals(errorMessage, val, ddata[row][col], 0.0);
         }
@@ -262,7 +264,7 @@ public class TableContentModelTest extends TestCase {
             String colName2 = spec.getColumnSpec(i).getName().toString();
             assertEquals(colName1, colName2);
         }
-        
+
         try {
             m.getColumnName(-1);
             fail();
@@ -275,7 +277,7 @@ public class TableContentModelTest extends TestCase {
         } catch (IndexOutOfBoundsException e) {
             System.out.println(e.getMessage());
         }
-        
+
     }
 
     /**
@@ -327,7 +329,7 @@ public class TableContentModelTest extends TestCase {
             m.setCacheSize(-1);
             fail();
         } catch (IllegalArgumentException e) {
-            System.out.println(e.getMessage()); 
+            System.out.println(e.getMessage());
         }
     }
 
@@ -361,7 +363,7 @@ public class TableContentModelTest extends TestCase {
     public final void testIsHiLit() {
         final HiLiteHandler hiliteHdl = new HiLiteHandler();
         final TableContentModel m = new TableContentModel(DATA, hiliteHdl);
-        
+
         // hilite every other in DATA and check if it is correctly reflected
         // in m
         final HashSet<RowKey> set = new HashSet<RowKey>();
@@ -374,6 +376,7 @@ public class TableContentModelTest extends TestCase {
             }
             isEvenNumber = !isEvenNumber;
         }
+        flushEDTQueue();
         for (int i = 0; i < m.getRowCount(); i++) {
             RowKey key = m.getRow(i).getKey();
             boolean isHiLit = m.isHiLit(i);
@@ -402,36 +405,37 @@ public class TableContentModelTest extends TestCase {
         final TableContentModel m = new TableContentModel(DATA, hiliter);
         final JTable table = new JTable(m);
         final ListSelectionModel listModel = table.getSelectionModel();
-        
+
         // make sure, the content model knows about ALL ROWS
         m.getRow(OBJECT_DATA.length - 1);
         assertEquals(table.getRowCount(), OBJECT_DATA.length);
-        
+
         // select every other row in the JTable and try to propagate that to
         // the hilite handler
         for (int i = 0; i < OBJECT_DATA.length; i += 2) {
             listModel.addSelectionInterval(i, i);
         }
         m.requestHiLite(listModel);
-        
+        flushEDTQueue();
+
         for (int i = 0; i < OBJECT_DATA.length; i++) {
             boolean shouldBeHiLit = (i % 2 == 0);
             boolean isHiLit = m.isHiLit(i);
             assertEquals(shouldBeHiLit, isHiLit);
         }
-        
+
         // add every third row to the selection.
         for (int i = 0; i < OBJECT_DATA.length; i += 3) {
             listModel.addSelectionInterval(i, i);
         }
         m.requestHiLite(listModel);
-        
+        flushEDTQueue();
         for (int i = 0; i < OBJECT_DATA.length; i++) {
             boolean shouldBeHiLit = (i % 2 == 0) || (i % 3 == 0);
             boolean isHiLit = m.isHiLit(i);
             assertEquals(shouldBeHiLit, isHiLit);
         }
-        
+
         // clearing the selection shouldn't have any effect
         listModel.clearSelection();
         for (int i = 0; i < OBJECT_DATA.length; i++) {
@@ -439,20 +443,21 @@ public class TableContentModelTest extends TestCase {
             boolean isHiLit = m.isHiLit(i);
             assertEquals(shouldBeHiLit, isHiLit);
         }
-        
+
         listModel.setSelectionInterval(0, OBJECT_DATA.length - 1);
         m.requestHiLite(listModel);
+        flushEDTQueue();
         for (int i = 0; i < OBJECT_DATA.length; i++) {
             assertTrue(m.isHiLit(i));
         }
-        
+
         try {
             m.requestHiLite((ListSelectionModel)null);
             fail();
         } catch (NullPointerException e) {
             System.out.println(e.getMessage());
         }
-        
+
     } // testHilite()
 
     /**
@@ -464,44 +469,47 @@ public class TableContentModelTest extends TestCase {
         final TableContentModel m = new TableContentModel(DATA, hiliter);
         final JTable table = new JTable(m);
         final ListSelectionModel listModel = table.getSelectionModel();
-        
+
         // make sure, the content model knows about ALL ROWS
         m.getRow(OBJECT_DATA.length - 1);
         assertEquals(table.getRowCount(), OBJECT_DATA.length);
-        
+
         // first: hilite all; unhilite subsequently
         listModel.setSelectionInterval(0, OBJECT_DATA.length - 1);
         m.requestHiLite(listModel);
+        flushEDTQueue();
         for (int i = 0; i < OBJECT_DATA.length; i++) {
             assertTrue(m.isHiLit(i));
         }
         listModel.clearSelection();
-        
+
         // unselect every other row in the JTable and try to propagate that to
         // the hilite handler
         for (int i = 0; i < OBJECT_DATA.length; i += 2) {
             listModel.addSelectionInterval(i, i);
         }
         m.requestUnHiLite(listModel);
-        
+        flushEDTQueue();
+
         for (int i = 0; i < OBJECT_DATA.length; i++) {
             boolean shouldBeUnHiLit = (i % 2 == 0);
             boolean isUnHiLit = !m.isHiLit(i);
             assertEquals(shouldBeUnHiLit, isUnHiLit);
         }
-        
+
         // remove every third row from the selection.
         for (int i = 0; i < OBJECT_DATA.length; i += 3) {
             listModel.addSelectionInterval(i, i);
         }
         m.requestUnHiLite(listModel);
-        
+        flushEDTQueue();
+
         for (int i = 0; i < OBJECT_DATA.length; i++) {
             boolean shouldBeUnHiLit = (i % 2 == 0) || (i % 3 == 0);
             boolean isUnHiLit = !m.isHiLit(i);
             assertEquals(shouldBeUnHiLit, isUnHiLit);
         }
-        
+
         // clearing the selection shouldn't have any effect
         listModel.clearSelection();
         for (int i = 0; i < OBJECT_DATA.length; i++) {
@@ -509,9 +517,10 @@ public class TableContentModelTest extends TestCase {
             boolean isUnHiLit = !m.isHiLit(i);
             assertEquals(shouldBeUnHiLit, isUnHiLit);
         }
-        
+
         listModel.setSelectionInterval(0, OBJECT_DATA.length - 1);
         m.requestUnHiLite(listModel);
+        flushEDTQueue();
         for (int i = 0; i < OBJECT_DATA.length; i++) {
             assertFalse(m.isHiLit(i));
         }
@@ -532,31 +541,40 @@ public class TableContentModelTest extends TestCase {
         final TableContentModel m = new TableContentModel(DATA, hiliter);
         final JTable table = new JTable(m);
         final ListSelectionModel listModel = table.getSelectionModel();
-        
+
         // make sure, the content model knows about ALL ROWS
         m.getRow(OBJECT_DATA.length - 1);
         assertEquals(table.getRowCount(), OBJECT_DATA.length);
-        
-        // first: hilite all; 
+
+        // first: hilite all;
         listModel.setSelectionInterval(0, OBJECT_DATA.length - 1);
         m.requestHiLite(listModel);
+        flushEDTQueue();
         for (int i = 0; i < OBJECT_DATA.length; i++) {
             assertTrue(m.isHiLit(i));
         }
-        
+
         // reset hilite
         m.requestResetHiLite();
+        // hilite happens in EDT thread, this is executed in main - need to wait
+        ViewUtils.invokeAndWaitInEDT(new Runnable() {
+            @Override
+            public void run() {
+                // nothing, just run
+            }
+        });
         for (int i = 0; i < OBJECT_DATA.length; i++) {
             assertFalse(m.isHiLit(i));
         }
-        
+
         int lucky = (int)(Math.random() * OBJECT_DATA.length);
         listModel.setSelectionInterval(lucky, lucky);
         m.requestHiLite(listModel);
-        m.showHiLitedOnly(true);
-        
+        flushEDTQueue();
+        m.setTableContentFilter(TableContentFilter.HiliteOnly);
+
         // 0 should be ok, it returns the lucky row
-        m.getRow(0); 
+        m.getRow(0);
         m.unHiLiteAll(new KeyEvent(this));
         assertEquals(m.getRowCount(), 0);
     }
@@ -586,12 +604,12 @@ public class TableContentModelTest extends TestCase {
         // further checking is done at testCachingStrategy() and other
         // test methods
     }
-   
-    /** 
-     * Tests ring buffer chaching strategy of the 
-     * <code>TableContentModel</code>. This method uses a modified 
+
+    /**
+     * Tests ring buffer chaching strategy of the
+     * <code>TableContentModel</code>. This method uses a modified
      * <code>Iterator</code> that throws an <code>Exception</code> when called
-     * at an inappropriate time.  
+     * at an inappropriate time.
      */
     public final void testCachingStrategy() {
         final String[] colnames = new String[]{"C1"};
@@ -600,21 +618,21 @@ public class TableContentModelTest extends TestCase {
         for (int i = 0; i < data.length; i++) {
             data[i] = new DefaultRow(new RowKey("Row_" + i), new double[]{i});
         }
-        
-        // these flags keep track when the iterator of the table may be 
-        // accessed (will be changed in this method, first flag) and when the 
+
+        // these flags keep track when the iterator of the table may be
+        // accessed (will be changed in this method, first flag) and when the
         // iterator is indeed being accessed (set in the iterator below to true,
         // reset here, second flag)
         final boolean[] flags = new boolean[] {true, false};
 
-        // override DataTable to set own iterator 
+        // override DataTable to set own iterator
         final DataTable table = new DefaultTable(data, colnames, colclasses) {
             @Override
             public RowIterator iterator() {
                 return new RestrictedAccessIterator(getRowsInList(), flags);
             }
         };
-        
+
         TableContentModel model = new TableContentModel(table);
         final int chunkSize = 25;  // change default chunk and cache size
         final int cacheSize = 2 * chunkSize;
@@ -622,32 +640,32 @@ public class TableContentModelTest extends TestCase {
         assertEquals(model.getChunkSize(), chunkSize);
         model.setCacheSize(cacheSize);
         assertEquals(model.getCacheSize(), cacheSize);
-        
+
         assertTrue(flags[1]);  // init of table uses iterator
         flags[1] = false;
         flags[0] = true;       // allow table access
-        
+
         model.getRow(0);       // get first row, iterator is used
         assertTrue(flags[1]);  // is true when iterator has indeed been used
-        
-        // simulate scrolling down - for first "chunksize" rows  
+
+        // simulate scrolling down - for first "chunksize" rows
         // iterator access
         flags[0] = false;
         flags[1] = false;
         for (int i = 0; i < chunkSize; i++) { // access rows 0 - 24
             model.getRow(i); // will throw exception when iterator is accessed
         }
-        
+
         assertFalse(flags[0]);
         assertFalse(flags[1]);
-        
-        flags[0] = true;         // row "chunksize": update cache! 
+
+        flags[0] = true;         // row "chunksize": update cache!
         model.getRow(chunkSize); // now in cache: Row_1 - Row_50 (release Row_0)
         assertTrue(flags[1]);    // iterator has been used
-        
+
         flags[0] = false;
         flags[1] = false;
-        
+
         // cache is full, containing Row_1 - Row_50
         for (int i = 1; i < cacheSize; i++) {
             // must not access Row_50 (will use iterator)
@@ -655,13 +673,13 @@ public class TableContentModelTest extends TestCase {
         }
         assertFalse(flags[0]);
         assertFalse(flags[1]);
-        
+
         // ok, let's simulate arbitrary jumping in the table and check the
         // cache, let's say 20 different positions, the rows in the cache are:
         // [row+chunksize-cachesize+1 : row+chunksize-1]
         final Random rand = new Random();
         for (int i = 0; i < 200; i++) {
-            int row = rand.nextInt(500); // draw some row to access  
+            int row = rand.nextInt(500); // draw some row to access
             flags[0] = true;
             flags[1] = false;
             model.getRow(row);
@@ -679,7 +697,7 @@ public class TableContentModelTest extends TestCase {
             assertFalse(flags[1]);
         }
     } // testCachingStrategy()
-    
+
     /**
      * Tests the correctness of the model when only hilited are shown.
      */
@@ -690,7 +708,7 @@ public class TableContentModelTest extends TestCase {
         for (int i = 0; i < data.length; i++) {
             data[i] = new DefaultRow(new RowKey("Row_" + i), new double[]{i});
         }
-        // override DataTable to set own iterator 
+        // override DataTable to set own iterator
         final DataTable table = new DefaultTable(data, colnames, colclasses);
         TableContentModel model = new TableContentModel(table);
         final int chunkSize = 25;  // change default chunk and cache size
@@ -699,7 +717,7 @@ public class TableContentModelTest extends TestCase {
         assertEquals(model.getChunkSize(), chunkSize);
         model.setCacheSize(cacheSize);
         assertEquals(model.getCacheSize(), cacheSize);
-        model.showHiLitedOnly(true);
+        model.setTableContentFilter(TableContentFilter.HiliteOnly);
         assertEquals(model.getRowCount(), 0);
         assertTrue(model.isRowCountFinal());
         final HiLiteHandler hiliter = new HiLiteHandler();
@@ -712,6 +730,7 @@ public class TableContentModelTest extends TestCase {
             if (i % 100 == 0) {
                 // clear all, also that should work
                 hiliter.fireClearHiLiteEvent();
+                flushEDTQueue();
                 nrHiLitKeys = 0;
             } else {
                 // let at most 20% change
@@ -723,13 +742,16 @@ public class TableContentModelTest extends TestCase {
                     boolean isHilit = hiliter.isHiLit(keyForIndex);
                     if (isHilit) {
                         hiliter.fireUnHiLiteEvent(keyForIndex);
+                        flushEDTQueue();
                         nrHiLitKeys--;
                     } else {
                         hiliter.fireHiLiteEvent(keyForIndex);
+                        flushEDTQueue();
                         nrHiLitKeys++;
                     }
                 }
             }
+            flushEDTQueue();
             // now the sanity checks
             for (int row = 0; row < model.getRowCount(); row++) {
                 RowKey key = model.getRow(row).getKey();
@@ -741,20 +763,31 @@ public class TableContentModelTest extends TestCase {
         }
 
     }
-    
+
+    /** Runs an empty runnable in the EDT thread to make sure there are no
+     * further hilite events queued. */
+    private void flushEDTQueue() {
+        ViewUtils.invokeAndWaitInEDT(new Runnable() {
+            @Override
+            public void run() {
+                // nothing to do, just run
+            }
+        });
+    }
+
     /**
      * Iterator that throws exception when <code>next()</code> method is called
      * at an inappropriate time.
      */
     private static class RestrictedAccessIterator extends DefaultRowIterator {
-        
+
         // flags passed in constructor
         private final boolean[] m_flags;
-        
+
         /**
          * Constructs new Iterator based on <code>table</code> and the access
          * policy encoded in <code>flags</code>.
-         * 
+         *
          * @param table to iterate over.
          * @param flags two-dimensional array, first flag is set remotely and is
          *            <code>true</code> when <code>next()</code> may be
@@ -768,12 +801,12 @@ public class TableContentModelTest extends TestCase {
             super(table);
             m_flags = flags;
         } // RestrictedAccessIterator(DefaultTable, boolean[])
-        
-        
+
+
         /**
          * Pushes iterator forward. If first flag is set to <code>true</code> or
          * throws an exception when it is set to <code>false</code>
-         * 
+         *
          * @return next row in the table
          * @see RowIterator#next()
          * @throws IllegalStateException if iterator is disabled
@@ -782,7 +815,7 @@ public class TableContentModelTest extends TestCase {
         public DataRow next() {
             if (!m_flags[0]) {
                 throw new IllegalStateException(
-                        "Iterator should not have been called at the current " 
+                        "Iterator should not have been called at the current "
                         + "state, all rows are supposedly cached");
             }
             m_flags[1] = true;
