@@ -120,7 +120,11 @@ public class DataTableSorter extends TableSorter {
     @Override
     protected DataContainer createDataContainer(final DataTableSpec spec,
             final boolean forceOnDisk) {
-        return new DataContainer(spec, true, forceOnDisk ? 0 : -1);
+        if (forceOnDisk) {
+            return new DataContainer(spec, true, 0);
+        } else {
+            return new DataContainer(spec, true);
+        }
     }
 
 }
