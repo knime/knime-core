@@ -75,6 +75,19 @@ import org.eclipse.osgi.baseadaptor.loader.ClasspathManager;
  */
 @SuppressWarnings("restriction")
 public abstract class AbstractTestcaseCollector {
+    private final List<String> m_excludedTestcases = new ArrayList<String>();
+
+    public AbstractTestcaseCollector() {
+    }
+
+
+    public AbstractTestcaseCollector(final Class... excludedTestcases) {
+        for (Class<?> c : excludedTestcases) {
+            m_excludedTestcases.add(c.getName());
+        }
+    }
+
+
     public List<String> getUnittestsClasses() throws IOException {
         BaseClassLoader cl = (BaseClassLoader)getClass().getClassLoader();
         ClasspathManager cpm = cl.getClasspathManager();
@@ -109,15 +122,19 @@ public abstract class AbstractTestcaseCollector {
         Iterator<String> it = classNames.iterator();
         while (it.hasNext()) {
             String className = it.next();
-            try {
-                Class<?> c = Class.forName(className);
-                if (((c.getModifiers() & Modifier.ABSTRACT) != 0)
-                        || ((c.getModifiers() & Modifier.PUBLIC) == 0)) {
+            if (m_excludedTestcases.contains(className)) {
+                it.remove();
+            } else {
+                try {
+                    Class<?> c = Class.forName(className);
+                    if (((c.getModifiers() & Modifier.ABSTRACT) != 0)
+                            || ((c.getModifiers() & Modifier.PUBLIC) == 0)) {
+                        it.remove();
+                    }
+                } catch (ClassNotFoundException ex) {
+                    // strange?!
                     it.remove();
                 }
-            } catch (ClassNotFoundException ex) {
-                // strange?!
-                it.remove();
             }
         }
     }
