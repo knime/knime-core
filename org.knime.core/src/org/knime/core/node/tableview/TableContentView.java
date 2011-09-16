@@ -51,6 +51,7 @@ package org.knime.core.node.tableview;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
@@ -86,6 +87,7 @@ import javax.swing.table.TableModel;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTable;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.data.renderer.DataValueRenderer;
@@ -233,16 +235,22 @@ public class TableContentView extends JTable {
                     if (!id.equals(TableContentModel.PROPERTY_DATA)) {
                         return;
                     }
-                    scrollRectToVisible(new Rectangle());
                     TableColumnModel tcM = getColumnModel();
                     if (hasData()) {
+                        DataTable data = getContentModel().getDataTable();
+                        DataTableSpec spec = data.getDataTableSpec();
                         for (int i = 0; i < tcM.getColumnCount(); i++) {
-                            DataTable data = getContentModel().getDataTable();
+                            int colInModel = convertColumnIndexToModel(i);
                             DataColumnSpec headerValue =
-                                data.getDataTableSpec().getColumnSpec(i);
+                                spec.getColumnSpec(colInModel);
                             tcM.getColumn(i).setHeaderValue(headerValue);
                         }
                     }
+                    getTableHeader().repaint(); // repaint sort icon
+                    // property data update to row header view
+                    // (only sort icon - data update done via TableModelEvent)
+                    firePropertyChange(evt.getPropertyName(),
+                            evt.getOldValue(), evt.getNewValue());
                 }
             };
         } else {
@@ -416,7 +424,7 @@ public class TableContentView extends JTable {
      * desired (for instance in the data outport view).
      * @param show Whether or not this icon should be shown.
      */
-    public void setShowIconInColumnHeader(final boolean show) {
+    public final void setShowIconInColumnHeader(final boolean show) {
         if (show != m_isShowIconInColumnHeader) {
             m_isShowIconInColumnHeader = show;
             JTableHeader header = getTableHeader();
@@ -453,7 +461,11 @@ public class TableContentView extends JTable {
             newTableHeader.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(final MouseEvent e) {
-                    onMouseClickInHeader(e);
+                    // don't handle event if table width is being adjusted
+                    if (!Cursor.getPredefinedCursor(Cursor.E_RESIZE_CURSOR).
+                            equals(newTableHeader.getCursor())) {
+                        onMouseClickInHeader(e);
+                    }
                 }
             });
         }
@@ -549,17 +561,28 @@ public class TableContentView extends JTable {
     protected void onMouseClickInHeader(final MouseEvent e) {
         JTableHeader header = getTableHeader();
         // get column in which event occurred
-        int column = header.columnAtPoint(e.getPoint());
-        Rectangle recOfColumn = header.getHeaderRect(column);
+        int columnInView = header.columnAtPoint(e.getPoint());
+        Rectangle recOfColumn = header.getHeaderRect(columnInView);
         int horizPos = e.getX() - recOfColumn.x;
         assert (horizPos >= 0);
         // right click in header.
         if (SwingUtilities.isRightMouseButton(e)) {
-            JPopupMenu popup = getPopUpMenu(column);
+            JPopupMenu popup = getPopUpMenu(columnInView);
             if (popup.getSubElements().length > 0) { // only if it has content
                 popup.show(header, e.getX(), e.getY());
             }
+        } else {
+            onSortRequest(convertColumnIndexToModel(columnInView));
         }
+    }
+
+    /** Invoked by the mouse listener on the table header to trigger table
+     * sorting on a given column. This call might be ignored if the model
+     * does not allow interactive sorting.
+     * @param columnIndex The column that was clicked.
+     * @see TableContentModel#isSortingAllowed() */
+    protected void onSortRequest(final int columnIndex) {
+        getContentModel().requestSort(columnIndex, this);
     }
 
     /**

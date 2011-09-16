@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,69 +44,44 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * 2006-06-08 (tm): reviewed
  */
 package org.knime.core.node.tableview;
 
 import java.awt.Component;
+import java.awt.Graphics;
+import java.awt.Image;
+import java.util.WeakHashMap;
 
 import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JTable;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
+import javax.swing.table.TableModel;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.node.tableview.TableSortOrder.TableSortKey;
 
 
 /**
  * Renderer to be used to display the column header of a table. It will show
  * an icon on the left and the name of the column on the right. The icon is
- * given by the type's <code>getIcon()</code> method
- * 
- * @see org.knime.core.data.DataType#getIcon() 
+ * given by the type's <code>getIcon()</code> method. If the column is sorted,
+ * the icon will be compound icon consisting of the type icon and and
+ * arrow icon indicating the sort order.
+ *
+ * @see org.knime.core.data.DataType#getIcon()
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
-    private static final long serialVersionUID = -2356486759304444805L;
-    
-    private boolean m_showIcon = true;
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Component getTableCellRendererComponent(final JTable table, 
-            final Object value, final boolean isSelected, 
-            final boolean hasFocus, final int row, final int column) {
-        // set look and feel of a header
-        if (table != null) {
-            JTableHeader header = table.getTableHeader();
-            if (header != null) {
-                setForeground(header.getForeground());
-                setBackground(header.getBackground());
-                setFont(header.getFont());
-            }
-        }
-        setBorder(UIManager.getBorder("TableHeader.cellBorder"));
-        Icon icon = null;
-        Object newValue = value;
-        if (value instanceof DataColumnSpec) {
-            DataType columnType = ((DataColumnSpec)value).getType();
-            newValue =  ((DataColumnSpec)value).getName();
-            icon = columnType.getIcon();
-        }
-        if (isShowIcon()) {
-            setIcon(icon);
-        } else {
-            setIcon(null);
-        }
-        setToolTipText(newValue != null ? newValue.toString() : null);
-        setValue(newValue);
-        return this;
-    }
+    private static final long serialVersionUID = -2356486759304444805L;
+
+    private boolean m_showIcon = true;
 
     /**
      * @return the showIcon
@@ -121,5 +96,191 @@ public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
     public void setShowIcon(final boolean showIcon) {
         m_showIcon = showIcon;
     }
-    
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Component getTableCellRendererComponent(final JTable table,
+            final Object value, final boolean isSelected,
+            final boolean hasFocus, final int row, final int column) {
+        // set look and feel of a header
+        if (table != null) {
+            JTableHeader header = table.getTableHeader();
+            if (header != null) {
+                setForeground(header.getForeground());
+                setBackground(header.getBackground());
+                setFont(header.getFont());
+            }
+        }
+        setBorder(UIManager.getBorder("TableHeader.cellBorder"));
+        Icon typeIcon = null;
+        Icon sortIcon = null;
+        Object newValue = value;
+        if (isShowIcon() && value instanceof DataColumnSpec) {
+            DataType columnType = ((DataColumnSpec)value).getType();
+            newValue =  ((DataColumnSpec)value).getName();
+            typeIcon = columnType.getIcon();
+        }
+        sortIcon = getSortIcon(table, column);
+        if (typeIcon == null && sortIcon == null) {
+            setIcon(null);
+        } else {
+            setIcon(new CompoundIcon(typeIcon, sortIcon));
+        }
+        setToolTipText(newValue != null ? newValue.toString() : null);
+        setValue(newValue);
+        return this;
+    }
+
+    /**
+     * @param table
+     * @param column
+     * @param sortIcon
+     * @return */
+    private Icon getSortIcon(final JTable table, final int column) {
+        if (table == null) {
+            return null;
+        }
+        TableModel model = table.getModel();
+        int colIndexInModel = -1;
+        TableSortOrder sortOrder = null;
+        if (model instanceof TableContentModel) {
+            TableContentModel cntModel = (TableContentModel)model;
+            sortOrder = cntModel.getTableSortOrder();
+            colIndexInModel = table.convertColumnIndexToModel(column);
+        } else if (model instanceof TableRowHeaderModel) {
+            TableRowHeaderModel rowHeaderModel = (TableRowHeaderModel)model;
+            TableContentInterface cntIface = rowHeaderModel.getTableContent();
+            if (cntIface instanceof TableContentModel) {
+                TableContentModel cntModel = (TableContentModel)cntIface;
+                sortOrder = cntModel.getTableSortOrder();
+                colIndexInModel = -1;
+            }
+        }
+        TableSortKey sortKey;
+        if (sortOrder == null) {
+            sortKey = TableSortKey.NONE;
+        } else {
+            sortKey = sortOrder.getSortKeyForColumn(colIndexInModel);
+        }
+        switch (sortKey) {
+        case PRIMARY_ASCENDING:
+            Icon sortIcon = UIManager.getIcon("Table.ascendingSortIcon");
+            return getLarge16x16SortIcon(sortIcon);
+        case SECONDARY_ASCENDING:
+            return UIManager.getIcon("Table.ascendingSortIcon");
+        case PRIMARY_DESCENDING:
+            sortIcon = UIManager.getIcon("Table.descendingSortIcon");
+            return getLarge16x16SortIcon(sortIcon);
+        case SECONDARY_DESCENDING:
+            return UIManager.getIcon("Table.descendingSortIcon");
+        default:
+            return null;
+        }
+    }
+
+    /** Maps the table ascending/descending sort icon to a slightly upscaled
+     * image (scaling is done on demand). */
+    static final WeakHashMap<ImageIcon, ImageIcon> SORT_ICON_MAP =
+        new WeakHashMap<ImageIcon, ImageIcon>();
+
+    /**
+     * Get the image underlying the icon in 16x16 format. The argument icon
+     * is the java system icon used to represent sort orderings.
+     * @param icon The icon or null.;
+     * @return The upscaled image icon (or null if that's not possible).
+     */
+    private static ImageIcon getLarge16x16SortIcon(final Icon icon) {
+        ImageIcon result = SORT_ICON_MAP.get(icon);
+        if (result != null) {
+            return result;
+        } else if (!(icon instanceof ImageIcon)) {
+            return null;
+        } else {
+            ImageIcon imageIcon = (ImageIcon)icon;
+            Image image = imageIcon.getImage();
+            Image large = image.getScaledInstance(16, -1, Image.SCALE_SMOOTH);
+            ImageIcon largeIcon = new ImageIcon(large,
+                    imageIcon.getDescription() + "-large");
+            SORT_ICON_MAP.put(imageIcon, largeIcon);
+            return largeIcon;
+        }
+    }
+
+    /** Merges two icons (type icon & sort icon). */
+    private static final class CompoundIcon implements Icon {
+
+        private final Icon m_leftIcon;
+        private final Icon m_rightIcon;
+
+        /**
+         * @param leftIcon
+         * @param rightIcon */
+        private CompoundIcon(final Icon leftIcon, final Icon rightIcon) {
+            m_leftIcon = leftIcon;
+            m_rightIcon = rightIcon;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public void paintIcon(final Component c, final Graphics g,
+                final int x, final int y) {
+            if (m_leftIcon == null && m_rightIcon == null) {
+                // nothing to paint
+            } else if (m_leftIcon == null) {
+                m_rightIcon.paintIcon(c, g, x, y);
+            } else if (m_rightIcon == null) {
+                m_leftIcon.paintIcon(c, g, x, y);
+            } else {
+                int leftHeight = m_leftIcon.getIconHeight();
+                int rightHeight = m_rightIcon.getIconHeight();
+                int maxHeight = Math.max(leftHeight, rightHeight);
+                int leftWidth = m_leftIcon.getIconWidth();
+                if (leftHeight == maxHeight) {
+                    m_leftIcon.paintIcon(c, g, x, y);
+                } else {
+                    m_leftIcon.paintIcon(c, g, x,
+                            y + (maxHeight - leftHeight) / 2);
+                }
+                if (rightHeight == maxHeight) {
+                    m_rightIcon.paintIcon(c, g, leftWidth + 1, y);
+                } else {
+                    m_rightIcon.paintIcon(c, g, leftWidth + 1,
+                            y + (maxHeight - rightHeight) / 2);
+                }
+            }
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public int getIconWidth() {
+            if (m_leftIcon == null && m_rightIcon == null) {
+                return 0;
+            } else if (m_leftIcon == null) {
+                return m_rightIcon.getIconWidth();
+            } else if (m_rightIcon == null) {
+                return m_leftIcon.getIconWidth();
+            } else {
+                return m_leftIcon.getIconWidth()
+                + m_rightIcon.getIconWidth() + 1;
+            }
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public int getIconHeight() {
+            if (m_leftIcon == null && m_rightIcon == null) {
+                return 0;
+            } else if (m_leftIcon == null) {
+                return m_rightIcon.getIconHeight();
+            } else if (m_rightIcon == null) {
+                return m_leftIcon.getIconHeight();
+            } else {
+                return Math.max(m_leftIcon.getIconHeight(),
+                        m_rightIcon.getIconHeight());
+            }
+        }
+    }
+
 }

@@ -57,7 +57,7 @@ import org.knime.core.node.NodeView;
 import org.knime.core.node.tableview.TableView;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class BufferedDataTableView extends JComponent {
@@ -66,13 +66,13 @@ public class BufferedDataTableView extends JComponent {
 
     private DataTable m_table;
 
-    /** 
+    /**
      * Updates are synchronized on this object. Declaring the methods
      * as synchronized (i.e. using "this" as mutex) does not work as swing
      * also acquires locks on this graphical object.
      */
     private final Object m_updateLock = new Object();
-    
+
     /**
      * A view showing the data stored in the specified output port.
      * @param table table to display
@@ -84,6 +84,7 @@ public class BufferedDataTableView extends JComponent {
         setBackground(NodeView.COLOR_BACKGROUND);
 
         m_dataView = new TableView();
+        m_dataView.getContentModel().setSortingAllowed(true);
         m_dataView.registerNavigationActions();
         m_dataView.getHeaderTable().setShowColorInfo(false);
         updateDataTable();
@@ -96,7 +97,7 @@ public class BufferedDataTableView extends JComponent {
             revalidate();
         }
     }
-        
+
     /**
      * {@inheritDoc}
      */
@@ -106,7 +107,7 @@ public class BufferedDataTableView extends JComponent {
             return "No Table";
         }
         StringBuilder result = new StringBuilder("");
-        String tableName = m_table.getDataTableSpec().getName(); 
+        String tableName = m_table.getDataTableSpec().getName();
         if (tableName != null) {
             result.append("Table \"" + tableName + "\"");
         } else {
@@ -132,5 +133,5 @@ public class BufferedDataTableView extends JComponent {
         m_table = null;
         m_dataView.setDataTable(null);
     }
-    
+
 }

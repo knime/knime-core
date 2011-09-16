@@ -71,7 +71,7 @@ import org.knime.core.node.tableview.TableContentModel;
  * not have any further functionality than its super class {@link NodeModel}.
  * The content itself resides in
  * {@link org.knime.core.node.tableview.TableContentModel}.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  * @see org.knime.core.node.tableview.TableContentModel
  */
@@ -92,26 +92,25 @@ public class TableNodeModel extends NodeModel
      * output port.
      */
     public TableNodeModel() {
-        super(1, 0);
-        // models have empty content
-        m_contModel = new TableContentModel();
+        this(new PortType[] {BufferedDataTable.TYPE});
     }
-    
-    /** Subclass constructor which overrides the port types. Subclasses must 
-     * also override the execute and configure methods. 
+
+    /** Subclass constructor which overrides the port types. Subclasses must
+     * also override the execute and configure methods.
      *
      * @param inPortTypes the input port types
      */
     protected TableNodeModel(final PortType[] inPortTypes) {
-    	super(inPortTypes, new PortType[]{});
-    	  // models have empty content
+        super(inPortTypes, new PortType[]{});
+        // models have empty content
         m_contModel = new TableContentModel();
+        m_contModel.setSortingAllowed(true);
     }
 
     /**
      * Get reference to the underlying content model. This model will be the
      * same for successive calls and never be <code>null</code>.
-     * 
+     *
      * @return reference to underlying content model
      */
     public TableContentModel getContentModel() {
@@ -123,12 +122,12 @@ public class TableNodeModel extends NodeModel
      * property handler, sets them in the {@link TableContentModel} and starts
      * event firing to inform listeners. Do not call this method separately, it
      * is invoked by this model's node.
-     * 
+     *
      * @param data the data table at the (single) input port, wrapped in a
      *            one-dimensional array
      * @param exec the execution monitor
      * @return an empty table
-     * 
+     *
      * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      */
     @Override
@@ -171,7 +170,7 @@ public class TableNodeModel extends NodeModel
                 (BufferedDataTable)(m_contModel.getDataTable())
         };
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -184,7 +183,7 @@ public class TableNodeModel extends NodeModel
         HiLiteHandler inProp = getInHiLiteHandler(INPORT);
         m_contModel.setHiLiteHandler(inProp);
     }
-    
+
     /**
      * {@inheritDoc}
      */

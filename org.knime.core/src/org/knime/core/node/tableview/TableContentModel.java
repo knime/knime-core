@@ -57,6 +57,7 @@ import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.swing.JComponent;
 import javax.swing.ListSelectionModel;
 import javax.swing.SwingUtilities;
 import javax.swing.table.AbstractTableModel;
@@ -69,12 +70,14 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CloseableRowIterator;
+import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteListener;
 import org.knime.core.node.property.hilite.KeyEvent;
+import org.knime.core.node.util.ViewUtils;
 
 
 /**
@@ -242,6 +245,22 @@ public class TableContentModel extends AbstractTableModel
      */
     private RowCounterThread m_rowCounterThread;
 
+    /** See {@link #setSortingAllowed(boolean)} for details. */
+    private boolean m_isSortingAllowed = false;
+
+    /** A SwingWorker that runs when the user sorts a column. This field
+     * is only written in the EDT thread, its "done" method will set a new
+     * DataTable in this model. */
+    private TableSorterWorker m_tableSorterWorker;
+
+    /** The sorting in the table, null if original (unsorted) table is shown.
+     * This field is set in the EDT, simultaneously w/ the TableSorterWorker. */
+    private TableSortOrder m_tableSortOrder;
+
+    /** The original table that was set by the user. It may not be displayed
+     * if the user chose to sort the table in the view (m_data is then the
+     * sorted table). */
+    private DataTable m_originalUnsortedTable;
 
     /**
      * Creates a new TableContentModel with empty content. Call
@@ -297,13 +316,13 @@ public class TableContentModel extends AbstractTableModel
         // EventDispatchThread (even invokeAndWait). This causes OutportView to
         // freeze while data is loading (since it is loaded in EDT)
         if (SwingUtilities.isEventDispatchThread()) {
-            setDataTableIntern(data);
+            setDataTableNew(data);
         } else {
             try {
                 SwingUtilities.invokeAndWait(new Runnable() {
                    @Override
                    public void run() {
-                       setDataTableIntern(data);
+                       setDataTableNew(data);
                    }
                 });
             } catch (InterruptedException ie) {
@@ -318,11 +337,47 @@ public class TableContentModel extends AbstractTableModel
 
     /**
      * Sets new data for this table. The argument may be <code>null</code> to
+     * indicate invalid data (nothing displayed). It will keep the argument
+     * as original unsorted table.
+     *
+     * @param data the new data being displayed or <code>null</code>
+     */
+    private void setDataTableNew(final DataTable data) {
+        if (m_tableSorterWorker != null) {
+            m_tableSorterWorker.cancel(true);
+            m_tableSorterWorker = null;
+        }
+        setDataTableIntern(data);
+        m_originalUnsortedTable = data;
+    }
+
+    /**
+     * Sets new data for this table.
+     * @param data the new data being displayed
+     * @param newOrder the new order of the sorted data (needed for the next
+     * sort and for the display in the table header)
+     */
+    void setDataTableOnSort(
+            final DataTable data, final TableSortOrder newOrder) {
+        if (!SwingUtilities.isEventDispatchThread()) {
+            throw new IllegalStateException(
+                    "Setting sorted table must be done in ED-Thread");
+        }
+        if (data == null) {
+            throw new NullPointerException("Argument must not be null.");
+        }
+        setDataTableIntern(data);
+        m_tableSortOrder = newOrder;
+    }
+
+    /**
+     * Sets new data for this table. The argument may be <code>null</code> to
      * indicate invalid data (nothing displayed).
      *
      * @param data the new data being displayed or <code>null</code>
      */
-    private synchronized void setDataTableIntern(final DataTable data) {
+    private void setDataTableIntern(final DataTable data) {
+        assert SwingUtilities.isEventDispatchThread();
         if (m_data == data) {
             return;  // do not start event storm
         }
@@ -359,10 +414,17 @@ public class TableContentModel extends AbstractTableModel
             // assume that there are rows, may change in cacheNextRow() below
             m_isMaxRowCountFinal = false;
             m_isRowCountOfInterestFinal = false;
+            final int rowCountFromTable;
             if (data instanceof BufferedDataTable) {
-                BufferedDataTable bData = (BufferedDataTable)data;
+                rowCountFromTable = ((BufferedDataTable)data).getRowCount();
+            } else if (data instanceof ContainerTable) {
+                rowCountFromTable = ((ContainerTable)data).getRowCount();
+            } else {
+                rowCountFromTable = -1; // unknown
+            }
+            if (rowCountFromTable >= 0) {
                 m_isMaxRowCountFinal = true;
-                m_maxRowCount = bData.getRowCount();
+                m_maxRowCount = rowCountFromTable;
                 if (!m_tableFilter.performsFiltering()) {
                     m_rowCountOfInterest = m_maxRowCount;
                     m_isRowCountOfInterestFinal = true;
@@ -385,6 +447,11 @@ public class TableContentModel extends AbstractTableModel
             }
         }
         m_propertySupport.firePropertyChange(PROPERTY_DATA, oldData, m_data);
+    }
+
+    /** @return the tableSortOrder */
+    public TableSortOrder getTableSortOrder() {
+        return m_tableSortOrder;
     }
 
     /**
@@ -490,6 +557,65 @@ public class TableContentModel extends AbstractTableModel
         return m_hiLiteHdl;
     }
 
+    /** Whether interactive sorting on column header click is enabled
+     * (default is false).
+     * @return this property.
+     * @see #setSortingAllowed(boolean) */
+    public boolean isSortingAllowed() {
+        return m_isSortingAllowed;
+    }
+
+    /** Enables/disables interactive sorting, which is usually invoked by
+     * clicking the column header. This property controls whether the
+     * {@link #requestSort(int, JComponent)} call is ignored or not.
+     *
+     * <p>The default is false, i.e. sorting is not allowed.
+     * @param isSortingAllowed the isSortingAllowed to set */
+    public final void setSortingAllowed(final boolean isSortingAllowed) {
+        m_isSortingAllowed = isSortingAllowed;
+    }
+
+    /** Sorts the table according the argument column. This call might be
+     * ignored if {@link #isSortingAllowed()} is false.
+     * @param column The column that was clicked. It will be sorted either
+     * ascending or descending (or unsorted) depending on the previous sorting.
+     * @param parComponent The parent component. The worker will create a modal
+     * progress dialog on this component. */
+    public final void requestSort(final int column,
+            final JComponent parComponent) {
+        if (isSortingAllowed()) {
+            // queue in EDT to line up with table changes.
+            // The sorting is done in a SwingWorker
+            ViewUtils.invokeAndWaitInEDT(new Runnable() {
+                @Override
+                public void run() {
+                    sortTableIntern(column, parComponent);
+                }
+            });
+        }
+    }
+
+    /** Implementation of {@link #requestSort(int, JComponent)} that is
+     * executed in the ED Thread. */
+    private void sortTableIntern(final int column,
+            final JComponent parComponent) {
+        assert SwingUtilities.isEventDispatchThread();
+        if (m_tableSorterWorker != null) {
+            m_tableSorterWorker.cancel(true);
+            m_tableSorterWorker = null;
+        }
+        TableSortOrder nextOrder = m_tableSortOrder == null
+        ? new TableSortOrder(column) : m_tableSortOrder.nextSortOrder(column);
+        if (nextOrder == null) {
+            setDataTableOnSort(m_originalUnsortedTable, nextOrder);
+        } else {
+            TableSorterWorker sortWorker = new TableSorterWorker(
+                    m_originalUnsortedTable, nextOrder, parComponent, this);
+            sortWorker.executeAndShowProgress();
+            m_tableSorterWorker = sortWorker;
+        }
+    }
+
     /**
      * Is there valid data to show?
      *
@@ -498,7 +624,7 @@ public class TableContentModel extends AbstractTableModel
      */
     public final boolean hasData() {
         return m_data != null;
-    } // hasData()
+    }
 
     /** Get the name of the current data table (if any) or <code>null</code>.
      * @return The table name or <code>null</code>.

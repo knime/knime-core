@@ -83,9 +83,9 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.tableview.TableContentModel;
+import org.knime.core.node.tableview.TableContentModel.TableContentFilter;
 import org.knime.core.node.tableview.TableContentView;
 import org.knime.core.node.tableview.TableView;
-import org.knime.core.node.tableview.TableContentModel.TableContentFilter;
 
 /**
  * Table view on a {@link org.knime.core.data.DataTable}. It simply uses a
@@ -93,7 +93,7 @@ import org.knime.core.node.tableview.TableContentModel.TableContentFilter;
  * been executed or is reset, the view will print "&lt;no data&gt;". The view
  * adds also a menu entry to the menu bar where the user can synchronize the
  * selection with a global hilite handler.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class TableNodeView extends NodeView {
@@ -105,7 +105,7 @@ public class TableNodeView extends NodeView {
      * Starts a new <code>TableNodeView</code> displaying "&lt;no data&gt;".
      * The content comes up when the super class {@link NodeView} calls the
      * {@link #modelChanged()} method.
-     * 
+     *
      * @param nodeModel the underlying model
      */
     public TableNodeView(final TableNodeModel nodeModel) {
@@ -115,6 +115,7 @@ public class TableNodeView extends NodeView {
         assert (cntModel != null);
         m_tableView = new TableView(cntModel);
         cntModel.addTableModelListener(new TableModelListener() {
+            @Override
             public void tableChanged(final TableModelEvent e) {
                 // fired when new rows have been seen (refer to description
                 // of caching strategy of the model)
@@ -135,7 +136,7 @@ public class TableNodeView extends NodeView {
      * (keeping the cache and so on) needs to have a {@link DataTable} to show.
      * This method returns <code>true</code> when the node was executed and
      * <code>false</code> otherwise.
-     * 
+     *
      * @return <code>true</code> if there is data to display
      */
     public boolean hasData() {
@@ -144,7 +145,7 @@ public class TableNodeView extends NodeView {
 
     /**
      * Checks is property handler is set.
-     * 
+     *
      * @return <code>true</code> if property handler set
      * @see TableContentView#hasHiLiteHandler()
      */
@@ -154,7 +155,7 @@ public class TableNodeView extends NodeView {
 
     /**
      * Sets a new handler for this view.
-     * 
+     *
      * @param hiLiteHdl the new handler to set, may be <code>null</code> to
      *            disable any brushing
      */
@@ -164,7 +165,7 @@ public class TableNodeView extends NodeView {
 
     /**
      * Shall row header encode the color information in an icon.
-     * 
+     *
      * @param isShowColor <code>true</code> for show icon (and thus the
      *            color), <code>false</code> ignore colors
      * @see org.knime.core.node.tableview.TableRowHeaderView
@@ -176,7 +177,7 @@ public class TableNodeView extends NodeView {
 
     /**
      * Is the color info shown.
-     * 
+     *
      * @return <code>true</code> Icon with the color is present
      */
     public boolean isShowColorInfo() {
@@ -185,7 +186,7 @@ public class TableNodeView extends NodeView {
 
     /**
      * Get row height from table.
-     * 
+     *
      * @return current row height
      * @see javax.swing.JTable#getRowHeight()
      */
@@ -195,7 +196,7 @@ public class TableNodeView extends NodeView {
 
     /**
      * Set a new row height in the table.
-     * 
+     *
      * @param newHeight the new height
      * @see javax.swing.JTable#setRowHeight(int)
      */
@@ -205,7 +206,7 @@ public class TableNodeView extends NodeView {
 
     /**
      * Hilites selected rows in the hilite handler.
-     * 
+     *
      * @see TableView#hiliteSelected()
      */
     public void hiliteSelected() {
@@ -214,7 +215,7 @@ public class TableNodeView extends NodeView {
 
     /**
      * Unhilites selected rows in the hilite handler.
-     * 
+     *
      * @see TableView#unHiliteSelected()
      */
     public void unHiliteSelected() {
@@ -223,7 +224,7 @@ public class TableNodeView extends NodeView {
 
     /**
      * Resets hiliting in the hilite handler.
-     * 
+     *
      * @see TableView#resetHilite()
      */
     public void resetHilite() {
@@ -260,7 +261,7 @@ public class TableNodeView extends NodeView {
 
     /**
      * Called from the super class when a property of the node has been changed.
-     * 
+     *
      * @see org.knime.core.node.NodeView#modelChanged()
      */
     @Override
@@ -281,7 +282,7 @@ public class TableNodeView extends NodeView {
 
     /**
      * Does nothing since view is in sync anyway.
-     * 
+     *
      * @see org.knime.core.node.NodeView#onOpen()
      */
     @Override
@@ -306,12 +307,14 @@ public class TableNodeView extends NodeView {
         JMenuItem item = new JMenuItem("Write CSV");
         item.addPropertyChangeListener("ancestor",
                 new PropertyChangeListener() {
+                    @Override
                     public void propertyChange(final PropertyChangeEvent evt) {
                         ((JMenuItem)evt.getSource()).setEnabled(hasData());
                     }
                 });
         final CSVFilesHistoryPanel hist = new CSVFilesHistoryPanel();
         item.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 int i = JOptionPane.showConfirmDialog(m_tableView, hist,
                         "Choose File", JOptionPane.OK_CANCEL_OPTION);
@@ -329,7 +332,7 @@ public class TableNodeView extends NodeView {
     /**
      * Called by the JMenu item "Write to CVS", it write the table as shown in
      * table view to a CSV file.
-     * 
+     *
      * @param file the file to write to
      */
     private void writeToCSV(final File file) {
@@ -348,6 +351,7 @@ public class TableNodeView extends NodeView {
         t.start();
         // A thread that waits for t to finish and then disposes the prog view
         new Thread(new Runnable() {
+            @Override
             public void run() {
                 try {
                     t.join();
@@ -372,7 +376,7 @@ public class TableNodeView extends NodeView {
 
         /**
          * Creates instance.
-         * 
+         *
          * @param file the file to write to
          * @param exec the execution monitor
          */
@@ -404,7 +408,7 @@ public class TableNodeView extends NodeView {
                     settings.setSeparatorReplacement("");
                     settings.setReplaceSeparatorInStrings(true);
                     settings.setMissValuePattern("");
-                    CSVWriter writer = new CSVWriter(new FileWriter(m_file), 
+                    CSVWriter writer = new CSVWriter(new FileWriter(m_file),
                             settings);
                     String message;
                     try {
@@ -431,7 +435,7 @@ public class TableNodeView extends NodeView {
     /**
      * Row filter that filters non-hilited rows - it's the most convenient way
      * to write only the hilited rows.
-     * 
+     *
      * @author Bernd Wiswedel, University of Konstanz
      */
     private static final class RowHiliteFilter extends RowFilter {
@@ -444,7 +448,7 @@ public class TableNodeView extends NodeView {
          * @param filter table content filter
          * @param handler the handler to get the hilite info from
          */
-        public RowHiliteFilter(final TableContentFilter filter, 
+        public RowHiliteFilter(final TableContentFilter filter,
                 final HiLiteHandler handler) {
             m_handler = handler;
             m_filter = filter;

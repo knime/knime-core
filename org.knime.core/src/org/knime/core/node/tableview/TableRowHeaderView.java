@@ -44,14 +44,16 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
- * 2006-06-08 (tm): reviewed 
+ *
+ * 2006-06-08 (tm): reviewed
  */
 package org.knime.core.node.tableview;
 
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
@@ -59,6 +61,7 @@ import javax.swing.JTable;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.event.TableModelEvent;
+import javax.swing.table.JTableHeader;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableModel;
@@ -67,27 +70,27 @@ import org.knime.core.data.property.ColorAttr;
 import org.knime.core.data.renderer.DataValueRenderer;
 
 
-/** 
+/**
  * Row Header for a table view on a {@link org.knime.core.data.DataTable}.
  * It displays a {@link org.knime.core.data.DataRow}'s key (type
- * {@link org.knime.core.data.DataCell})using the 
- * <code>toString()</code> method. Thus, this table has exactly one column. 
+ * {@link org.knime.core.data.DataCell})using the
+ * <code>toString()</code> method. Thus, this table has exactly one column.
  * The model for this kind of view is a
  * {@link org.knime.core.node.tableview.TableRowHeaderModel}.
  * <br />
  * This class is used in conjunction with a {@link TableContentView} as
  * the row header view in a scroll pane (realized by {@link TableView}).
- *  
- * @see org.knime.core.node.tableview.TableContentView 
+ *
+ * @see org.knime.core.node.tableview.TableContentView
  * @author Bernd Wiswedel, University Konstanz
  */
 public final class TableRowHeaderView extends JTable {
     private static final long serialVersionUID = 4115412802300446736L;
     private Color m_headerBackground;
-    
-    /** 
+
+    /**
      * Instantiates new view based on a <code>TableRowHeaderModel</code>.
-     * 
+     *
      * @param dm the model to be displayed
      */
     private TableRowHeaderView(final TableRowHeaderModel dm) {
@@ -95,24 +98,24 @@ public final class TableRowHeaderView extends JTable {
         getTableHeader().setReorderingAllowed(false);
         new RowHeaderHeightMouseListener(this);
     } // TableRowHeaderView
-    
+
     /**
-     * Makes sure to register a property handler and sets the correct 
+     * Makes sure to register a property handler and sets the correct
      * cell renderer.
-     * 
-     * @see javax.swing.JTable#addColumn(javax.swing.table.TableColumn)
+     * {@inheritDoc}
      */
     @Override
     public void addColumn(final TableColumn aColumn) {
         super.addColumn(aColumn);
         aColumn.addPropertyChangeListener(new PropertyChangeListener() {
+            @Override
             public void propertyChange(final PropertyChangeEvent evt) {
                 if (evt.getPropertyName().equals("width")) {
                     int newWidth = (Integer)evt.getNewValue();
-                    // bug fix #293: on execute & open view the row header 
-                    // column is collapsed to a minimum (hardcoded to 15 in 
+                    // bug fix #293: on execute & open view the row header
+                    // column is collapsed to a minimum (hardcoded to 15 in
                     // TableColumn.java). We set a slightly smaller value here
-                    // and catch requests to set it to this minimum. 
+                    // and catch requests to set it to this minimum.
                     if (newWidth == aColumn.getMinWidth()) {
                         return;
                     }
@@ -127,10 +130,10 @@ public final class TableRowHeaderView extends JTable {
         assert (getColumnCount() == 1);
     }
 
-    /** 
+    /**
      * Sets a new model for this view The argument
      * must be instance of {@link TableRowHeaderModel}.
-     * 
+     *
      * @param tableModel the new model
      * @throws NullPointerException if argument is <code>null</code>.
      * @throws ClassCastException if <code>dataModel</code> is not of type
@@ -146,16 +149,22 @@ public final class TableRowHeaderView extends JTable {
             throw new ClassCastException("Not a TableRowHeaderModel");
         }
         super.setModel(tableModel);
-    } 
-    
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public TableRowHeaderModel getModel() {
+        return (TableRowHeaderModel)super.getModel();
+    }
+
     /**
      * Resets all individual row heights as the super implementation
      * deletes the private SizeSequence field.
-     * @see JTable#tableChanged(TableModelEvent)
+     * {@inheritDoc}
      */
     @Override
     public void tableChanged(final TableModelEvent e) {
-        // for all the cases in the following if-statement the super 
+        // for all the cases in the following if-statement the super
         // implementation will delete the private field "rowModel", causing
         // the individual row heights to be forgotten
         if (e == null || e.getFirstRow() == TableModelEvent.HEADER_ROW
@@ -170,38 +179,37 @@ public final class TableRowHeaderView extends JTable {
         }
         super.tableChanged(e);
     }
-    
+
     /**
      * Delegating method to model. It sets the column header name which is,
      * by default, "Key".
-     * 
+     *
      * @param newName the new name of the column or <code>null</code> to leave
      * empty
      */
     public void setColumnName(final String newName) {
-        ((TableRowHeaderModel)getModel()).setColumnName(newName);
+        getModel().setColumnName(newName);
     }
 
     /**
      * Overridden in order to set the correct selection color (depending on
      * hilite status).
-     * 
-     * @see JTable#prepareRenderer(TableCellRenderer, int, int)
+     * {@inheritDoc}
      */
     @Override
     public Component prepareRenderer(
         final TableCellRenderer renderer, final int row, final int column) {
         if (renderer instanceof DataCellHeaderRenderer) {
             final DataCellHeaderRenderer r = (DataCellHeaderRenderer)renderer;
-            final TableRowHeaderModel model = (TableRowHeaderModel)getModel();
-            
+            final TableRowHeaderModel model = getModel();
+
             // set proper selection color
             boolean isHiLit = model.isHiLit(row);
-            Color selColor = (isHiLit 
+            Color selColor = (isHiLit
                     ? ColorAttr.SELECTED_HILITE : ColorAttr.SELECTED);
             setSelectionBackground(selColor);
             // this might be ignored anyway if the row is selected ...
-            if (isHiLit) { 
+            if (isHiLit) {
                 r.setBackground(ColorAttr.HILITE);
             } else {
                 r.setBackground(m_headerBackground);
@@ -211,21 +219,20 @@ public final class TableRowHeaderView extends JTable {
         }
         return super.prepareRenderer(renderer, row, column);
     } // prepareRenderer(TableCellRenderer, int, int)
-    
+
 
     private float[] m_tempHSBColor;
-    
+
     /**
      * Overridden to avoid event storm. The super implementation will invoke
      * a repaint if the color has changed. Since that happens frequently (and
      * also within the repaint) this causes an infinite loop.
-     * 
-     * @see javax.swing.JTable#setSelectionBackground(java.awt.Color)
+     * {@inheritDoc}
      */
     @Override
     public void setSelectionBackground(final Color back) {
         if (back == null) {
-            throw new NullPointerException("Color must not be null!");  
+            throw new NullPointerException("Color must not be null!");
         }
         Color fore;
         if (m_tempHSBColor == null) {
@@ -233,7 +240,7 @@ public final class TableRowHeaderView extends JTable {
         }
         float[] hsb = m_tempHSBColor;
         if (back != null) {
-            Color.RGBtoHSB(back.getRed(), back.getGreen(), back.getBlue(), 
+            Color.RGBtoHSB(back.getRed(), back.getGreen(), back.getBlue(),
                     hsb);
             if (hsb[2] > 0.5f) {
                 fore = Color.BLACK;
@@ -244,16 +251,42 @@ public final class TableRowHeaderView extends JTable {
         }
         super.selectionBackground = back;
     }
-    
+
+    /**
+     * Overridden so that we can attach a mouse listener to it and set
+     * the proper renderer. The mouse listener is used to display a popup menu.
+     * {@inheritDoc}
+     */
+    @Override
+    public void setTableHeader(final JTableHeader newTableHeader) {
+        if (newTableHeader != null) {
+            ColumnHeaderRenderer renderer = new ColumnHeaderRenderer();
+            renderer.setHorizontalAlignment(ColumnHeaderRenderer.CENTER);
+            newTableHeader.setDefaultRenderer(renderer);
+            renderer.setShowIcon(false);
+            newTableHeader.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseClicked(final MouseEvent e) {
+                    onMouseClickInHeader();
+                }
+
+            });
+        }
+        super.setTableHeader(newTableHeader);
+    }
+
+    private void onMouseClickInHeader() {
+        getModel().requestSort(this.getRootPane());
+    }
     /**
      * Shall row header encode the color information in an icon?
-     * 
+     *
      * @param isShowColor <code>true</code> for show icon (and thus the color),
      *        <code>false</code> ignore colors
      */
     public void setShowColorInfo(final boolean isShowColor) {
         boolean oldValue = isShowColorInfo();
-        TableCellRenderer renderer = 
+        TableCellRenderer renderer =
             getColumnModel().getColumn(0).getCellRenderer();
         if (renderer instanceof DataCellHeaderRenderer) {
             ((DataCellHeaderRenderer)renderer).showIcon(isShowColor);
@@ -266,12 +299,12 @@ public final class TableRowHeaderView extends JTable {
 
     /**
      * Is the color info shown?
-     * 
+     *
      * @return <code>true</code> if icon with the color is present,
      *      <code>false</code> otherwise
      */
     public boolean isShowColorInfo() {
-        TableCellRenderer renderer = 
+        TableCellRenderer renderer =
             getColumnModel().getColumn(0).getCellRenderer();
         if (renderer instanceof DataCellHeaderRenderer) {
             return ((DataCellHeaderRenderer)renderer).isShowIcon();
@@ -282,24 +315,24 @@ public final class TableRowHeaderView extends JTable {
     /**
      * Overridden in order to fire an event that an individual row has
      * changed.
-     * 
-     * @see javax.swing.JTable#setRowHeight(int, int)
+     *
+     * {@inheritDoc}
      */
     @Override
     public void setRowHeight(final int row, final int myRowHeight) {
         super.setRowHeight(row, myRowHeight);
         firePropertyChange("individualrowheight", -1, row);
     }
-    
+
     /**
      * Overridden in order to fire an event. The super class will also fire
-     * a property change event with property name "rowHeight". This event, 
-     * however, is not propagated when the row height doesn't change. The 
+     * a property change event with property name "rowHeight". This event,
+     * however, is not propagated when the row height doesn't change. The
      * super class will therefore not handle the case where there is at least
      * one individual row height and the majority row height (as set by
      * setRowHeight) stays the same. It will swallow the event.
-     *  
-     * @see javax.swing.JTable#setRowHeight(int)
+     *
+     * {@inheritDoc}
      */
     @Override
     public void setRowHeight(final int myRowHeight) {
@@ -307,8 +340,8 @@ public final class TableRowHeaderView extends JTable {
         // values must differ
         firePropertyChange("allrowheight", -1, myRowHeight);
     }
-    
-    /** 
+
+    /**
      * Changes look and feel here (by calling {@link JTable#updateUI()})
      * and also in the renderer.
      * {@inheritDoc}
@@ -319,30 +352,30 @@ public final class TableRowHeaderView extends JTable {
         m_headerBackground = UIManager.getColor("TableHeader.background");
         setBackground(m_headerBackground);
         Border b = UIManager.getBorder("TableHeader.border");
-        TableCellRenderer renderer = 
+        TableCellRenderer renderer =
             getColumnModel().getColumn(0).getCellRenderer();
         if (renderer instanceof DataCellHeaderRenderer) {
             ((DataCellHeaderRenderer)renderer).setBorder(b);
         }
     } // updateUI()
-    
+
     /**
      * Set a new renderer for our column.
-     * 
+     *
      * @param renderer the new renderer
      */
     public void setRenderer(final DataValueRenderer renderer) {
         getColumnModel().getColumn(0).setCellRenderer(renderer);
     }
-    
+
     /**
      * Factory method that creates a row header view for a given table.
-     * The argument's model must be an instance of 
+     * The argument's model must be an instance of
      * {@link TableContentInterface} in order to connect the returned
      * view to argument view. This method will also bind both selection
-     * models together (in particular, the returned view will use the 
-     * argument's view) and also both tables row height. 
-     * 
+     * models together (in particular, the returned view will use the
+     * argument's view) and also both tables row height.
+     *
      * @param table the table to which to connect to
      * @return a new header view connected to <code>table</code>
      * @throws NullPointerException if the argument is <code>null</code>.
@@ -357,26 +390,31 @@ public final class TableRowHeaderView extends JTable {
         headerView.setSelectionModel(table.getSelectionModel());
         // make sure row heights are equal
         headerView.setRowHeight(table.getRowHeight());
-        
+
         // add listener to the content view (the argument) which is informed
         // when the views model changes
         PropertyChangeListener propListener = new PropertyChangeListener() {
+            @Override
             public void propertyChange(final PropertyChangeEvent evt) {
-                if (evt.getPropertyName().equals("model")) {
+                String propName = evt.getPropertyName();
+                if (propName.equals("model")) {
                     TableModel m = table.getModel();
                     myModel.setTableContent(m);
-                } else if (evt.getPropertyName().equals("requestRowHeight")) {
-                    // this event comes in when the table is 
+                } else if (propName.equals("requestRowHeight")) {
+                    // this event comes in when the table is
                     // build up from scratch
                     headerView.setRowHeight((Integer)evt.getNewValue());
+                } else if (propName.equals(TableContentModel.PROPERTY_DATA)) {
+                    headerView.getTableHeader().repaint(); // sort icon
                 }
             }
         };
         table.addPropertyChangeListener(propListener);
-        
+
         // add a listener to the row header view, which makes sure that
         // any row height change is propagated to the content view
         PropertyChangeListener prop2Listener = new PropertyChangeListener() {
+            @Override
             public void propertyChange(final PropertyChangeEvent e) {
                 if (e.getPropertyName().equals("allrowheight")) {
                     table.setRowHeight((Integer)e.getNewValue());
@@ -392,7 +430,7 @@ public final class TableRowHeaderView extends JTable {
         };
         headerView.addPropertyChangeListener(prop2Listener);
         if (table instanceof TableContentView) {
-            int bestRowHeight = 
+            int bestRowHeight =
                 ((TableContentView)table).fitCellSizeToRenderer();
             headerView.setRowHeight(bestRowHeight);
         }
