@@ -82,6 +82,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.StringFormat;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeProgress;
 import org.knime.core.node.workflow.NodeProgressEvent;
@@ -171,6 +172,9 @@ final class TableSorterWorker extends SwingWorker<DataTable, NodeProgress> {
             }
             sortColNames.add(name);
         }
+        long start = System.currentTimeMillis();
+        LOGGER.debug("Starting interactive table sorting on column(s) "
+                + sortColNames);
         boolean[] sortOrders = m_sortOrder.getSortColumnOrder();
         // it DOES NOT respect blobs -- they will be copied (expensive)
         DataTableSorter sorter =
@@ -184,10 +188,13 @@ final class TableSorterWorker extends SwingWorker<DataTable, NodeProgress> {
         };
         m_nodeProgressMonitor = new DefaultNodeProgressMonitor();
         ExecutionMonitor exec = new ExecutionMonitor(m_nodeProgressMonitor);
-        publish(new NodeProgress(1.0, "Table sorting ended..."));
         m_nodeProgressMonitor.addProgressListener(progLis);
         try {
-            return sorter.sort(exec);
+            DataTable result = sorter.sort(exec);
+            long elapsedMS = System.currentTimeMillis() - start;
+            String time = StringFormat.formatElapsedTime(elapsedMS);
+            LOGGER.debug("Interactive table sorting finished (" + time + ")");
+            return result;
         } finally {
             m_nodeProgressMonitor.removeProgressListener(progLis);
         }
@@ -205,9 +212,6 @@ final class TableSorterWorker extends SwingWorker<DataTable, NodeProgress> {
             if (nodeProgress.hasMessage()) {
                 m_progBar.setMessage(nodeProgress.getMessage());
             }
-        }
-        if (!m_progBar.isVisible()) {
-            m_progBar.setVisible(true);
         }
     }
 
