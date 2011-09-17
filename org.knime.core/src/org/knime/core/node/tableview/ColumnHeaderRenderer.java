@@ -51,7 +51,12 @@ package org.knime.core.node.tableview;
 
 import java.awt.Component;
 import java.awt.Graphics;
+import java.awt.GraphicsConfiguration;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.Image;
+import java.awt.Transparency;
+import java.awt.image.BufferedImage;
 import java.util.WeakHashMap;
 
 import javax.swing.Icon;
@@ -182,8 +187,8 @@ public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
 
     /** Maps the table ascending/descending sort icon to a slightly upscaled
      * image (scaling is done on demand). */
-    static final WeakHashMap<ImageIcon, ImageIcon> SORT_ICON_MAP =
-        new WeakHashMap<ImageIcon, ImageIcon>();
+    static final WeakHashMap<Icon, ImageIcon> SORT_ICON_MAP =
+        new WeakHashMap<Icon, ImageIcon>();
 
     /**
      * Get the image underlying the icon in 16x16 format. The argument icon
@@ -191,20 +196,36 @@ public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
      * @param icon The icon or null.;
      * @return The upscaled image icon (or null if that's not possible).
      */
-    private static ImageIcon getLarge16x16SortIcon(final Icon icon) {
+    private ImageIcon getLarge16x16SortIcon(final Icon icon) {
         ImageIcon result = SORT_ICON_MAP.get(icon);
         if (result != null) {
             return result;
-        } else if (!(icon instanceof ImageIcon)) {
-            return null;
         } else {
-            ImageIcon imageIcon = (ImageIcon)icon;
-            Image image = imageIcon.getImage();
+            Image image = getImageFromIcon(icon);
             Image large = image.getScaledInstance(16, -1, Image.SCALE_SMOOTH);
-            ImageIcon largeIcon = new ImageIcon(large,
-                    imageIcon.getDescription() + "-large");
-            SORT_ICON_MAP.put(imageIcon, largeIcon);
+            ImageIcon largeIcon = new ImageIcon(large, "scaled_image");
+            SORT_ICON_MAP.put(icon, largeIcon);
             return largeIcon;
+        }
+    }
+    
+    private Image getImageFromIcon(final Icon icon) {
+        if (icon instanceof ImageIcon) {
+            ImageIcon imageIcon = (ImageIcon)icon;
+            return imageIcon.getImage();
+        } else {
+            BufferedImage bimage = new BufferedImage(icon.getIconWidth(), 
+                    icon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
+            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            GraphicsDevice gs = ge.getDefaultScreenDevice();
+            GraphicsConfiguration gc = gs.getDefaultConfiguration();
+
+            // Create an image that supports arbitrary levels of transparency
+            bimage = gc.createCompatibleImage(icon.getIconWidth(), 
+                    icon.getIconHeight(), Transparency.TRANSLUCENT);
+            icon.paintIcon(this, bimage.createGraphics(), 0, 0);
+            bimage.flush();
+            return bimage;
         }
     }
 
