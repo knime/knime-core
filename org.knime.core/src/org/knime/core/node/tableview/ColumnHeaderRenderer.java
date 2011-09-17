@@ -174,54 +174,99 @@ public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
             Icon sortIcon = UIManager.getIcon("Table.ascendingSortIcon");
             return getLarge16x16SortIcon(sortIcon);
         case SECONDARY_ASCENDING:
-            return UIManager.getIcon("Table.ascendingSortIcon");
+            sortIcon = UIManager.getIcon("Table.ascendingSortIcon");
+            return getSmall11x11SortIcon(sortIcon);
         case PRIMARY_DESCENDING:
             sortIcon = UIManager.getIcon("Table.descendingSortIcon");
             return getLarge16x16SortIcon(sortIcon);
         case SECONDARY_DESCENDING:
-            return UIManager.getIcon("Table.descendingSortIcon");
+            sortIcon = UIManager.getIcon("Table.descendingSortIcon");
+            return getSmall11x11SortIcon(sortIcon);
         default:
             return null;
         }
     }
 
-    /** Maps the table ascending/descending sort icon to a slightly upscaled
-     * image (scaling is done on demand). */
-    static final WeakHashMap<Icon, ImageIcon> SORT_ICON_MAP =
-        new WeakHashMap<Icon, ImageIcon>();
+    /** Maps the systems table ascending/descending sort icon to a
+     * slightly upscaled image. The values in this map are used to indicate
+     * the primary sort column. */
+    static final WeakHashMap<Icon, Icon> SORT_ICON_LARGE =
+        new WeakHashMap<Icon, Icon>();
+
+    /** Maps the systems table ascending/descending sort icon to a
+     * slightly downscaled image. The values in this map are used to indicate
+     * the secondary sort column. */
+    static final WeakHashMap<Icon, Icon> SORT_ICON_SMALL =
+        new WeakHashMap<Icon, Icon>();
 
     /**
-     * Get the image underlying the icon in 16x16 format. The argument icon
-     * is the java system icon used to represent sort orderings.
-     * @param icon The icon or null.;
+     * Get the icon used to represent the primary sort key. The argument icon
+     * is the system sort icon, the returned value is a slightly
+     * scaled version of that icon (scaled to make it look different from
+     * the secondary sort key).
+     * @param icon The system icon
      * @return The upscaled image icon (or null if that's not possible).
      */
-    private ImageIcon getLarge16x16SortIcon(final Icon icon) {
-        ImageIcon result = SORT_ICON_MAP.get(icon);
-        if (result != null) {
+    private Icon getLarge16x16SortIcon(final Icon icon) {
+        Icon result = SORT_ICON_LARGE.get(icon);
+        if (icon == null) {
+            return null;
+        } else if (result != null) {
             return result;
         } else {
-            Image image = getImageFromIcon(icon);
-            Image large = image.getScaledInstance(16, -1, Image.SCALE_SMOOTH);
-            ImageIcon largeIcon = new ImageIcon(large, "scaled_image");
-            SORT_ICON_MAP.put(icon, largeIcon);
+            Icon largeIcon = icon;
+            if (icon.getIconWidth() < 16) { // hopefully always true
+                Image image = getImageFromIcon(icon);
+                Image largeImage = scale(image, 16);
+                largeIcon = new ImageIcon(largeImage, "scaled_image_16");
+            }
+            SORT_ICON_LARGE.put(icon, largeIcon);
             return largeIcon;
         }
     }
-    
+
+    /**
+     * Get the icon used to represent the secondary sort key. Analogous to
+     * {@link #getLarge16x16SortIcon(Icon)}.
+     * @param icon The system icon
+     * @return The downscaled image icon.
+     */
+    private Icon getSmall11x11SortIcon(final Icon icon) {
+        Icon result = SORT_ICON_SMALL.get(icon);
+        if (icon == null) {
+            return null;
+        } else if (result != null) {
+            return result;
+        } else {
+            Icon smallIcon = icon;
+            if (icon.getIconWidth() > 11) { // hopefully always true
+                Image image = getImageFromIcon(icon);
+                Image smallImage = scale(image, 11);
+                smallIcon = new ImageIcon(smallImage, "scaled_image_11");
+            }
+            SORT_ICON_SMALL.put(icon, smallIcon);
+            return smallIcon;
+        }
+    }
+
+    private Image scale(final Image image, final int newWidth) {
+        return image.getScaledInstance(newWidth, -1, Image.SCALE_SMOOTH);
+    }
+
     private Image getImageFromIcon(final Icon icon) {
         if (icon instanceof ImageIcon) {
             ImageIcon imageIcon = (ImageIcon)icon;
             return imageIcon.getImage();
         } else {
-            BufferedImage bimage = new BufferedImage(icon.getIconWidth(), 
+            BufferedImage bimage = new BufferedImage(icon.getIconWidth(),
                     icon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
-            GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+            GraphicsEnvironment ge =
+                GraphicsEnvironment.getLocalGraphicsEnvironment();
             GraphicsDevice gs = ge.getDefaultScreenDevice();
             GraphicsConfiguration gc = gs.getDefaultConfiguration();
 
             // Create an image that supports arbitrary levels of transparency
-            bimage = gc.createCompatibleImage(icon.getIconWidth(), 
+            bimage = gc.createCompatibleImage(icon.getIconWidth(),
                     icon.getIconHeight(), Transparency.TRANSLUCENT);
             icon.paintIcon(this, bimage.createGraphics(), 0, 0);
             bimage.flush();
