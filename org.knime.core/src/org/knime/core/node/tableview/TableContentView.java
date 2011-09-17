@@ -562,6 +562,9 @@ public class TableContentView extends JTable {
         JTableHeader header = getTableHeader();
         // get column in which event occurred
         int columnInView = header.columnAtPoint(e.getPoint());
+        if (columnInView < 0) { // ouside columns
+            return;
+        }
         Rectangle recOfColumn = header.getHeaderRect(columnInView);
         int horizPos = e.getX() - recOfColumn.x;
         assert (horizPos >= 0);
