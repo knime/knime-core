@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Jun 20, 2006 (wiswedel): created
  */
@@ -70,22 +70,22 @@ import org.knime.core.data.DataTableSpec;
  * implementations that perform column based operations on columns of the input
  * table, such as a column filter node (that simply hides some columns from the
  * input table) or a node that appends/replaces certain columns.
- * 
+ *
  * <p>
  * The following example demonstrates the usage of a
  * <code>ColumnRearranger</code> to append a column to a given table, which
  * contains the sum of the first two columns of the input table (given that
  * these columns are numeric). The node model implementation would contain code
  * as follows.
- * 
+ *
  * <pre>
- * public BufferedDataTable[] execute(BufferedDataTable[] in, 
+ * public BufferedDataTable[] execute(BufferedDataTable[] in,
  *     ExecutionContext exec) throws Exception {
  *     ColumnRearranger c = createColumnRearranger(in[0].getDataTableSpec());
  *     BufferedDataTable out = exec.createColumnRearrangeTable(in[0], c, exec);
  *     return new BufferedDataTable[]{out};
  * }
- * 
+ *
  * public DataTableSpec[] configure(DataTableSpec[] in)
  *         throws InvalidSettingsException {
  *     DataColumnSpec c0 = in[0].getColumnSpec(0);
@@ -103,10 +103,10 @@ import org.knime.core.data.DataTableSpec;
  *     return new DataTableSpec[]{result};
  * }
  * </pre>
- * 
+ *
  * The createColumnRearranger method is a local helper method, which is called
  * from both the <code>execute</code> and the <code>configure</code> method:
- * 
+ *
  * <pre>
  * private ColumnRearranger createColumnRearranger(DataTableSpec in) {
  *     ColumnRearranger c = new ColumnRearranger(in);
@@ -133,7 +133,7 @@ import org.knime.core.data.DataTableSpec;
  *     return c;
  * }
  * </pre>
- * 
+ *
  * @see org.knime.core.data.container.CellFactory
  * @see org.knime.core.node.ExecutionContext#createColumnRearrangeTable(
  *      org.knime.core.node.BufferedDataTable, ColumnRearranger,
@@ -141,10 +141,10 @@ import org.knime.core.data.DataTableSpec;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class ColumnRearranger {
-    
+
     private final Vector<SpecAndFactoryObject> m_includes;
     private final DataTableSpec m_originalSpec;
-    
+
     /** Creates new object based on the spec of the table underlying the
      * newly created table.
      * @param original The table which serves as reference.
@@ -159,12 +159,12 @@ public final class ColumnRearranger {
         }
         m_originalSpec = original;
     }
-    
-    /** Removes all columns from the current settings, whose index is not 
+
+    /** Removes all columns from the current settings, whose index is not
      * contained in the argument <code>colIndices</code>. In other words,
      * the number of columns in the spec that would be created after this method
      * has been called, is <code>colIndices.length</code>.
-     * 
+     *
      * <p>
      * Note: Any subsequent invocation of this method or any other method that
      * refers to column indices is based on the reduced set of columns.
@@ -172,7 +172,7 @@ public final class ColumnRearranger {
      * @throws IndexOutOfBoundsException If any value in the argument array
      * is out of bounds (smaller 0 or greater/equal to the current number of
      * columns) or the array contains duplicates.
-     * @throws NullPointerException If the argument is <code>null</code> 
+     * @throws NullPointerException If the argument is <code>null</code>
      */
     public void keepOnly(final int... colIndices) {
         HashSet<Integer> hash = new HashSet<Integer>();
@@ -196,17 +196,17 @@ public final class ColumnRearranger {
         assert m_includes.size() == colIndices.length;
         assert hash.isEmpty();
     }
-    
-    /** Removes all columns from the current settings, whose column name is not 
+
+    /** Removes all columns from the current settings, whose column name is not
      * contained in the argument <code>colNames</code>. In other words,
      * the number of columns in the spec that would be created after this method
      * has been called, is <code>colNames.length</code>.
-     * 
+     *
      * @param colNames The names of the columns to keep.
      * @throws IllegalArgumentException If any value in the argument array
      * is invalid, i.e. null or not contained in the current set of columns or
      * if the array contains duplicates.
-     * @throws NullPointerException If the argument is <code>null</code> 
+     * @throws NullPointerException If the argument is <code>null</code>
      */
     public void keepOnly(final String... colNames) {
         HashSet<String> found = new HashSet<String>(Arrays.asList(colNames));
@@ -220,7 +220,7 @@ public final class ColumnRearranger {
             throw new IllegalArgumentException("Argument contains duplicates: "
                     + Arrays.toString(colNames));
         }
-        for (Iterator<SpecAndFactoryObject> it = m_includes.iterator(); 
+        for (Iterator<SpecAndFactoryObject> it = m_includes.iterator();
             it.hasNext();) {
             SpecAndFactoryObject cur = it.next();
             if (!found.remove(cur.getColSpec().getName())) {
@@ -234,7 +234,7 @@ public final class ColumnRearranger {
         }
         assert m_includes.size() == colNames.length;
     }
-    
+
     /** Removes all columns whose index is contained in the argument array.
      *
      * <p>
@@ -242,7 +242,7 @@ public final class ColumnRearranger {
      * refers to column indices is based on the reduced set of columns.
      * @param colIndices The indices of the columns to remove.
      * @throws IndexOutOfBoundsException If any element in the array is out of
-     * bounds (i.e. smaller than 0 or greater/equal the current number of 
+     * bounds (i.e. smaller than 0 or greater/equal the current number of
      * columns) or the argument contains duplicates.
      * @throws NullPointerException If the argument is <code>null</code>.
      */
@@ -261,8 +261,8 @@ public final class ColumnRearranger {
             m_includes.remove(copy[i]);
         }
     }
-    
-    /** Removes all columns from the current set of columns whose name is 
+
+    /** Removes all columns from the current set of columns whose name is
      * contained in the argument array.
      * @param colNames The names of the columns to remove.
      * @throws NullPointerException If any element is null
@@ -279,7 +279,7 @@ public final class ColumnRearranger {
             throw new IllegalArgumentException("Argument contains duplicates: "
                     + Arrays.toString(colNames));
         }
-        for (Iterator<SpecAndFactoryObject> it = m_includes.iterator(); 
+        for (Iterator<SpecAndFactoryObject> it = m_includes.iterator();
             it.hasNext();) {
                 SpecAndFactoryObject cur = it.next();
                 if (found.remove(cur.getColSpec().getName())) {
@@ -292,8 +292,8 @@ public final class ColumnRearranger {
                     + ": " + Arrays.toString(found.toArray()));
         }
     }
-    
-    /** Get the current index of the column with name <code>colName</code>. 
+
+    /** Get the current index of the column with name <code>colName</code>.
      * Note, the index may change if any of the modifier methods is called.
      * @param colName The name of the column to find.
      * @return The index of the column whose name equals <code>colName</code>
@@ -307,17 +307,17 @@ public final class ColumnRearranger {
         for (int i = 0; i < m_includes.size(); i++) {
             SpecAndFactoryObject cur = m_includes.get(i);
             if (cur.getColSpec().getName().equals(colName)) {
-                return i; 
+                return i;
             }
         }
         return -1;
     }
-    
+
     /**
      * Moves the column at index <code>from</code> to the index <code>to</code>.
      * This method can be used to re-sort the set of columns.
-     * 
-     * If <code>from</code> is greater than <code>to</code>, then the column 
+     *
+     * If <code>from</code> is greater than <code>to</code>, then the column
      * indices will be affected as follows:
      * <ul>
      * <li>Any column before <code>to</code> (excl) and after <code>from</code>
@@ -333,15 +333,15 @@ public final class ColumnRearranger {
      * <li>The columns between <code>from</code> and <code>to</code> (excl)
      * will have an index one less than they had before.</li>
      * </ul>
-     * 
-     * <p> This method is inherently expensive as it shifts elements 
-     * back and forth. If you change the order of all columns (and hence would 
-     * need to call this method often), use the permute method instead. 
      *
-     * @param from The from index. 
+     * <p> This method is inherently expensive as it shifts elements
+     * back and forth. If you change the order of all columns (and hence would
+     * need to call this method often), use the permute method instead.
+     *
+     * @param from The from index.
      * @param to The destination index.
      * @throws IndexOutOfBoundsException If any of the values is out of range,
-     * i.e. less than 0 or greater or equal to the current set of columns. 
+     * i.e. less than 0 or greater or equal to the current set of columns.
      * @see #move(String, int)
      * @see #permute(String[])
      */
@@ -355,14 +355,14 @@ public final class ColumnRearranger {
             m_includes.insertElementAt(val, to);
         }
     }
-    
+
     /**
      * Moves the column named <code>colName</code> to the index
      * <code>to</code>. This method can be used to re-sort the set of
      * columns. The implementation first determines the index of the
      * argument column and then calls {@link #move(int, int)} with the correct
      * arguments.
-     * 
+     *
      * <p>This method is expensive if called multiple times (for instance when
      * re-sorting the entire table). See the {@link #move(int, int)} method for
      * details.
@@ -372,7 +372,7 @@ public final class ColumnRearranger {
      *             i.e. less than 0 or greater or equal to the current set of
      *             columns.
      * @throws NullPointerException If <code>colName</code> is null.
-     * @throws IllegalArgumentException 
+     * @throws IllegalArgumentException
      *             If there is no column <code>colName</code>.
      * @see #move(int, int)
      * @see #permute(String[])
@@ -387,13 +387,13 @@ public final class ColumnRearranger {
         throw new IllegalArgumentException(
                 "No such column \"" + colName + "\"");
     }
-    
-    /** Changes the order of the columns according to the argument array. 
+
+    /** Changes the order of the columns according to the argument array.
      * The array must contain the column indices in the desired order.
-     * This method is the counterpart to the {@link #permute(String[])} method. 
-     * 
-     * @param colIndicesInOrder The new column ordering. It may contain fewer 
-     * names than actually present in this re-arrange object. However, it must 
+     * This method is the counterpart to the {@link #permute(String[])} method.
+     *
+     * @param colIndicesInOrder The new column ordering. It may contain fewer
+     * names than actually present in this re-arrange object. However, it must
      * not contain unknown columns, nor should it contain duplicates or null
      * elements.
      * @throws NullPointerException If the argument is <code>null</code>
@@ -408,23 +408,23 @@ public final class ColumnRearranger {
         }
         permute(orderedNames);
     }
-    
-    /** Changes the order of the columns according to the argument array. 
-     * The array must contain the column names in the desired order. 
+
+    /** Changes the order of the columns according to the argument array.
+     * The array must contain the column names in the desired order.
      * If this rearrange object contains names that are not contained in the
-     * argument array, those columns are moved to the end of the new ordering. 
-     * 
-     * <p>This method is efficient compared to the implementation of the 
-     * {@link #move(int, int)} method and should be used if the entire table 
-     * is to be re-sorted. 
-     * 
-     * @param colNamesInOrder The new column ordering. It may contain fewer 
-     * names than actually present in this re-arrange object. However, it must 
+     * argument array, those columns are moved to the end of the new ordering.
+     *
+     * <p>This method is efficient compared to the implementation of the
+     * {@link #move(int, int)} method and should be used if the entire table
+     * is to be re-sorted.
+     *
+     * @param colNamesInOrder The new column ordering. It may contain fewer
+     * names than actually present in this re-arrange object. However, it must
      * not contain unknown columns, nor should it contain duplicates or null
      * elements.
-     * @throws NullPointerException If the argument is <code>null</code> or 
+     * @throws NullPointerException If the argument is <code>null</code> or
      *          contains <code>null</code> elements.
-     * @throws IllegalArgumentException If the array contains duplicates or 
+     * @throws IllegalArgumentException If the array contains duplicates or
      *          unknown columns.
      */
     public void permute(final String[] colNamesInOrder) {
@@ -457,16 +457,16 @@ public final class ColumnRearranger {
                     + Arrays.toString(order.keySet().toArray()));
         }
         Collections.sort(m_includes, new Comparator<SpecAndFactoryObject>() {
-           /** {@inheritDoc} */
-            public int compare(final SpecAndFactoryObject o1, 
+            @Override
+            public int compare(final SpecAndFactoryObject o1,
                     final SpecAndFactoryObject o2) {
                 String s1 = o1.getColSpec().getName();
                 String s2 = o2.getColSpec().getName();
-                return order.get(s1).compareTo(order.get(s2)); 
-            } 
+                return order.get(s1).compareTo(order.get(s2));
+            }
         });
     }
-    
+
     /** Inserts the columns provided by <code>fac</code> at a given position.
      * Any columns before that position stay where they are, the column at
      * the position and any thereafter are shifted to the right by the number
@@ -496,21 +496,21 @@ public final class ColumnRearranger {
     public void append(final CellFactory fac) {
         insertAt(m_includes.size(), fac);
     }
-    
-    /** Replaces a single column. The target column is specified by the 
+
+    /** Replaces a single column. The target column is specified by the
      * <code>colName</code> argument and the new column is given through the
      * <code>newCol</code> cell factory.
-     * <p><strong>Note:</strong>The newCol argument must only specify one 
+     * <p><strong>Note:</strong>The newCol argument must only specify one
      * single column. If you need to replace one column by many others, use
-     * the <code>remove(colName)</code> in conjunction with the 
-     * <code>insertAt(position, newCol)</code> method. 
-     * @param newCol The column factory for the <strong>single</strong> new 
+     * the <code>remove(colName)</code> in conjunction with the
+     * <code>insertAt(position, newCol)</code> method.
+     * @param newCol The column factory for the <strong>single</strong> new
      *         column.
      * @param colName The name of the column to replace.
      * @throws NullPointerException If any argument is null.
      * @throws IndexOutOfBoundsException If newCol provides not exactly one new
      *          column
-     * @throws IllegalArgumentException If <code>colName</code> is not 
+     * @throws IllegalArgumentException If <code>colName</code> is not
      *          contained in the current set of columns.
      */
     public void replace(final CellFactory newCol, final String colName) {
@@ -520,18 +520,18 @@ public final class ColumnRearranger {
         }
         replace(newCol, index);
     }
-    
+
     /** Replaces a set of columns. The columns to be replaced are specified by
      * the <code>colIndex</code> argument and the new columns is given through
      * the <code>newCol</code> cell factory.
-     * <p><strong>Note:</strong>The newCol argument must specify exactly as 
-     * many columns as there are in <code>colIndex</code>. If you want to 
+     * <p><strong>Note:</strong>The newCol argument must specify exactly as
+     * many columns as there are in <code>colIndex</code>. If you want to
      * remove more (or fewer) columns as given by <code>fac</code>, you can
      * always accomplish this using the remove, indexOf, and/or inserAt methods.
      * @param fac The column factory for the new columns.
      * @param colIndex The indices of the columns to be replaced.
      * @throws NullPointerException If any argument is null.
-     * @throws IndexOutOfBoundsException If <code>fac</code> provides not 
+     * @throws IndexOutOfBoundsException If <code>fac</code> provides not
      *          exactly as many columns as colIndex.length or the colIndex
      *          argument contains invalid entries.
      */
@@ -544,26 +544,26 @@ public final class ColumnRearranger {
         }
         for (int i = 0; i < colSpecs.length; i++) {
             remove(colIndex[i]);
-            SpecAndFactoryObject s = 
+            SpecAndFactoryObject s =
                 new SpecAndFactoryObject(fac, i, colSpecs[i]);
             m_includes.insertElementAt(s, colIndex[i]);
         }
     }
-    
+
     /** Access method for the internal data structure.
      * @return The current set of columns.
      */
     Vector<SpecAndFactoryObject> getIncludes() {
         return m_includes;
     }
-    
+
     /** Access method for the internal data structure.
      * @return The original spec as passed in the constructor.
      */
     DataTableSpec getOriginalSpec() {
         return m_originalSpec;
     }
-    
+
     /** Creates the data table spec on the current set of columns. Subsequent
      * changes to this object will also change the return value of this method.
      * You may want to call this method during configure in order to create the
@@ -578,14 +578,14 @@ public final class ColumnRearranger {
         }
         return new DataTableSpec(colSpecs);
     }
-    
+
     /** Utility class that helps us with internal data structures. */
     static final class SpecAndFactoryObject {
         private final CellFactory m_factory;
         private final DataColumnSpec m_colSpec;
         private final int m_columnInFactory;
         private final int m_originalIndex;
-        
+
         private SpecAndFactoryObject(
                 final DataColumnSpec colSpec, final int originalIndex) {
             m_colSpec = colSpec;
@@ -593,8 +593,8 @@ public final class ColumnRearranger {
             m_factory = null;
             m_originalIndex = originalIndex;
         }
-        
-        private SpecAndFactoryObject(final CellFactory cellFactory, 
+
+        private SpecAndFactoryObject(final CellFactory cellFactory,
                 final int index, final DataColumnSpec colSpec) {
             m_colSpec = colSpec;
             m_factory = cellFactory;
@@ -622,7 +622,7 @@ public final class ColumnRearranger {
         final CellFactory getFactory() {
             return m_factory;
         }
-        
+
         /**
          * @return If the column is created through a cell factory.
          */
@@ -637,5 +637,5 @@ public final class ColumnRearranger {
             return m_originalIndex;
         }
     }
-    
+
 }
