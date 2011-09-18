@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 6, 2009 (wiswedel): created
  */
@@ -54,14 +54,15 @@ package org.knime.core.data.container;
  * Exception that may be thrown by a {@link DataContainer} if the data is
  * invalid. This can be, e.g. null values, incompatible types, duplicate keys,
  * ill-sized rows.
- * 
+ *
  * <p>This exception has typically a cause being set, which indicates the true
- * origin of the problem. This class wraps these errors because the data is 
+ * origin of the problem. This class wraps these errors because the data is
  * possibly written asynchronously, i.e. the error may occur later than it is
  * actually caused.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
+@SuppressWarnings("serial")
 public class DataContainerException extends RuntimeException {
 
     /** Creates new exception without specific cause.

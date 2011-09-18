@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Nov 28, 2006 (wiswedel): created
  */
@@ -76,20 +76,20 @@ import org.knime.core.util.FileUtil;
 import org.knime.core.util.KNIMETimer;
 
 /**
- * Opens (on demand) a zip file from the workspace location and copies the 
- * binary data content to temp for further reading. This class creates 
+ * Opens (on demand) a zip file from the workspace location and copies the
+ * binary data content to temp for further reading. This class creates
  * a {@link Buffer} which reads from the temp file.
- * 
+ *
  * <p>Think of this class as an runnable that is executed once on demand. It
  * helps to delay the copy process of the data to speed up the loading of
  * saved workflows.
  * @author Bernd Wiswedel, University of Konstanz
  */
 final class CopyOnAccessTask {
-    
-    private static final NodeLogger LOGGER = 
+
+    private static final NodeLogger LOGGER =
         NodeLogger.getLogger(CopyOnAccessTask.class);
-    
+
     /** Delay im ms until copying process is reported to LOGGER, small
      * files won't report their copying (if faster than this threshold). */
     private static final long NOTIFICATION_DELAY = 3000;
@@ -107,7 +107,7 @@ final class CopyOnAccessTask {
     /** Flag to indicate that the buffer needs to restore its content
      * into memory once it is created. */
     private boolean m_needsRestoreIntoMemory;
-    
+
     /**
      * Keeps reference, nothing else.
      * @param fileRef To read from.
@@ -116,7 +116,7 @@ final class CopyOnAccessTask {
      * @param tblRep Repository of tables for blob (de)serialization.
      * @param creator To instantiate the buffer object.
      */
-    CopyOnAccessTask(final ReferencedFile fileRef, final DataTableSpec spec, 
+    CopyOnAccessTask(final ReferencedFile fileRef, final DataTableSpec spec,
             final int bufferID, final Map<Integer, ContainerTable> tblRep,
             final BufferCreator creator) {
         m_fileRef = fileRef;
@@ -125,14 +125,14 @@ final class CopyOnAccessTask {
         m_tableRep = tblRep;
         m_bufferCreator = creator;
     }
-    
+
     /**
      * Called to start the copy process. Is only called once.
      * @return The buffer instance reading from the temp file.
-     * @throws IOException If the file can't be accessed. 
+     * @throws IOException If the file can't be accessed.
      */
     Buffer createBuffer() throws IOException {
-        // timer task which prints a INFO message that the copying 
+        // timer task which prints a INFO message that the copying
         // is in progress.
         TimerTask timerTask = null;
         m_fileRef.lock();
@@ -159,20 +159,20 @@ final class CopyOnAccessTask {
             m_fileRef.unlock();
         }
     }
-    
+
     /**
      * Called to start the copy process. Is only called once.
      * @param in To read from, will instantiate a zip input stream on top of
      * it, which will call close() eventually
      * @return The buffer instance reading from the temp file.
-     * @throws IOException If the file can't be accessed. 
+     * @throws IOException If the file can't be accessed.
      */
     Buffer createBuffer(final InputStream in) throws IOException {
         ZipInputStream inStream = new ZipInputStream(in);
         ZipEntry entry;
         File binFile = DataContainer.createTempFile();
         File blobDir = null;
-        // we only need to read from this file while being in 
+        // we only need to read from this file while being in
         // this method; temp file is deleted later on.
         File metaTempFile = File.createTempFile("meta", ".xml");
         metaTempFile.deleteOnExit();
@@ -181,7 +181,7 @@ final class CopyOnAccessTask {
         boolean isDataFound = false;
         boolean isMetaFound = false;
         while ((entry = inStream.getNextEntry()) != null) {
-            String name = entry.getName(); 
+            String name = entry.getName();
             if (name.equals(Buffer.ZIP_ENTRY_DATA)) {
                 OutputStream output = new BufferedOutputStream(
                         new FileOutputStream(binFile));
@@ -201,12 +201,11 @@ final class CopyOnAccessTask {
                     blobDir = Buffer.createBlobDirNameForTemp(binFile);
                 }
                 copyEntryToDir(entry, inStream, blobDir);
-            } else if (name.equals(DataContainer.ZIP_ENTRY_SPEC) 
+            } else if (name.equals(DataContainer.ZIP_ENTRY_SPEC)
                     && !isSpecFound) {
-                InputStream nonClosableStream = 
+                InputStream nonClosableStream =
                     new NonClosableInputStream.Zip(inStream);
-                @SuppressWarnings("unchecked") // cast with generics
-                NodeSettingsRO settings = 
+                NodeSettingsRO settings =
                     NodeSettings.loadFromXML(nonClosableStream);
                 try {
                     NodeSettingsRO specSettings = settings.getNodeSettings(
@@ -223,17 +222,17 @@ final class CopyOnAccessTask {
         }
         inStream.close();
         if (!isDataFound) {
-            throw new IOException("No entry " + Buffer.ZIP_ENTRY_DATA 
+            throw new IOException("No entry " + Buffer.ZIP_ENTRY_DATA
                     + " in file");
-        } 
+        }
         if (!isMetaFound) {
             throw new IOException("No entry " + Buffer.ZIP_ENTRY_META
                     + " in file");
-        } 
+        }
         if (!isSpecFound) {
             throw new IOException("No entry " + DataContainer.ZIP_ENTRY_SPEC
                     + " in file");
-        } 
+        }
         InputStream metaIn = new BufferedInputStream(
                 new FileInputStream(metaTempFile));
         Buffer buffer = m_bufferCreator.createBuffer(
@@ -245,39 +244,39 @@ final class CopyOnAccessTask {
         metaTempFile.delete();
         return buffer;
     }
-    
+
     /** Get name of file to copy from. Used for better error messages.
      * @return source file
      */
     String getFileName() {
         return m_fileRef.toString();
     }
-    
-    /** Get this buffer's ID. 
+
+    /** Get this buffer's ID.
      * @return the buffer ID or -1
      */
     int getBufferID() {
         return m_bufferID;
     }
-    
+
     /** Requests the buffer to read its content into memory once it has
      * been created. */
     void setRestoreIntoMemory() {
         m_needsRestoreIntoMemory = true;
     }
-    
+
     /** Get table repository in workflow for blob (de)serialization.
      * @return table repository reference
      */
     Map<Integer, ContainerTable> getTableRepository() {
         return m_tableRep;
     }
-    
+
     /**
      * Adds the current entry of the zip input stream to the destination
      * directory. Used to copy the blobs from the zip file to /temp/.
      */
-    private static void copyEntryToDir(final ZipEntry entry, 
+    private static void copyEntryToDir(final ZipEntry entry,
             final ZipInputStream in, final File blobDir) throws IOException {
         String path = entry.getName();
         if (path.startsWith(Buffer.ZIP_ENTRY_BLOBS + "/")) {
@@ -286,7 +285,7 @@ final class CopyOnAccessTask {
         File f = new File(blobDir, path);
         if (entry.isDirectory()) {
             if (!f.mkdirs()) {
-                throw new IOException("Unable to create temporary directory " 
+                throw new IOException("Unable to create temporary directory "
                         + f.getName());
             }
         } else {

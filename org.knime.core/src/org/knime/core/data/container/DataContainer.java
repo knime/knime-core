@@ -127,26 +127,26 @@ import org.knime.core.util.DuplicateKeyException;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class DataContainer implements RowAppender {
-    
-    private static final NodeLogger LOGGER = 
+
+    private static final NodeLogger LOGGER =
         NodeLogger.getLogger(DataContainer.class);
-    
+
     /** Whether compression is enabled by default.
      * @see KNIMEConstants#PROPERTY_TABLE_GZIP_COMPRESSION */
     public static final boolean DEF_GZIP_COMPRESSION = true;
 
     /** Java property name to set a different threshold for the number of
      * cells to be held in main memory. This property is set at startup, usually
-     * by adding a line such as 
+     * by adding a line such as
      * <code>-Dorg.knime.container.cellsinmemory=1000</code> to the knime.ini
      * file in the installation directory.
      */
     public static final String PROPERTY_CELLS_IN_MEMORY =
         "org.knime.container.cellsinmemory";
-    
+
     /** The default number of cells to be held in memory. */
     public static final int DEF_MAX_CELLS_IN_MEMORY = 100000;
-    
+
     static {
         int size = DEF_MAX_CELLS_IN_MEMORY;
         String envVar = PROPERTY_CELLS_IN_MEMORY;
@@ -163,18 +163,18 @@ public class DataContainer implements RowAppender {
                 LOGGER.debug("Max cell count to be held in memory to " + size);
             } catch (NumberFormatException e) {
                 LOGGER.warn("Unable to parse property " + envVar
-                        + ", using default (" + DEF_MAX_CELLS_IN_MEMORY 
+                        + ", using default (" + DEF_MAX_CELLS_IN_MEMORY
                         + ")", e);
             }
         }
         MAX_CELLS_IN_MEMORY = size;
     }
-    
-    
+
+
     /**
      * Number of cells that are cached without being written to the
-     * temp file (see Buffer implementation); It defaults to the 
-     * value defined by {@link #DEF_MAX_CELLS_IN_MEMORY} but can be changed 
+     * temp file (see Buffer implementation); It defaults to the
+     * value defined by {@link #DEF_MAX_CELLS_IN_MEMORY} but can be changed
      * using the java property {@link #PROPERTY_CELLS_IN_MEMORY}.
      */
     public static final int MAX_CELLS_IN_MEMORY;
@@ -209,8 +209,8 @@ public class DataContainer implements RowAppender {
      * enabled by setting the appropriate java property at startup.  */
     static final boolean SYNCHRONOUS_IO =
         Boolean.getBoolean(KNIMEConstants.PROPERTY_SYNCHRONOUS_IO);
-    
-    /** the maximum number of asynchronous write threads, each additional 
+
+    /** the maximum number of asynchronous write threads, each additional
      * container will switch to synchronous mode. */
     private static final int MAX_ASYNC_WRITE_THREADS = 50;
 
@@ -223,8 +223,8 @@ public class DataContainer implements RowAppender {
 
     /** The object that saves the rows. */
     private Buffer m_buffer;
-    
-    /** The current number of objects added to this container. In a synchronous 
+
+    /** The current number of objects added to this container. In a synchronous
      * case this number is equal to m_buffer.size() but it may be larger if the
      * data is written asynchronously. */
     private int m_size;
@@ -234,12 +234,12 @@ public class DataContainer implements RowAppender {
     private Future<Void> m_asyncAddFuture;
 
     private AtomicReference<Throwable> m_writeThrowable;
-    
+
     /** Whether this container writes synchronously, i.e. when rows come in
-     * they get written immediately. If true the fields 
+     * they get written immediately. If true the fields
      * {@link #m_asyncAddFuture} and {@link #m_writeThrowable} are null.
-     * This field coincides most of times with the {@link #SYNCHRONOUS_IO}, 
-     * but may be true if there are too many concurrent write threads (more 
+     * This field coincides most of times with the {@link #SYNCHRONOUS_IO},
+     * but may be true if there are too many concurrent write threads (more
      * than {@value #MAX_ASYNC_WRITE_THREADS}).
      */
     private final boolean m_isSynchronousWrite;
@@ -353,10 +353,10 @@ public class DataContainer implements RowAppender {
         m_spec = spec;
         m_duplicateChecker = new DuplicateChecker();
         boolean isSynchronousWrite = SYNCHRONOUS_IO;
-        if (!isSynchronousWrite 
+        if (!isSynchronousWrite
                 && ASYNC_EXECUTORS.getActiveCount() > MAX_ASYNC_WRITE_THREADS) {
-            LOGGER.debug("Number of Table IO write threads exceeds " 
-                    + MAX_ASYNC_WRITE_THREADS 
+            LOGGER.debug("Number of Table IO write threads exceeds "
+                    + MAX_ASYNC_WRITE_THREADS
                     + " -- switching to synchronous write mode");
             isSynchronousWrite = true;
         }
@@ -613,7 +613,7 @@ public class DataContainer implements RowAppender {
      * @throws IllegalStateException If container is not open.
      * @throws DuplicateKeyException If the final check for duplicate row
      * keys fails.
-     * @throws DataContainerException If the duplicate check fails for an 
+     * @throws DataContainerException If the duplicate check fails for an
      *         unknown IO problem
      */
     public void close() {
@@ -666,9 +666,9 @@ public class DataContainer implements RowAppender {
     }
 
     /** Adds the argument object (which will be a DataRow unless when called
-     * from close()) to the filling data row queue. It will exchange the 
+     * from close()) to the filling data row queue. It will exchange the
      * filling queue with the emptying queue from the write thread in case the
-     * queue is full. 
+     * queue is full.
      * @param object the object to add.
      */
     private void offerToAsynchronousQueue(final Object object) {
@@ -685,7 +685,7 @@ public class DataContainer implements RowAppender {
                     if (m_asyncAddFuture.isDone()) {
                         checkAsyncWriteThrowable();
                         // if we reach this code, the write process has not
-                        // thrown an exception (the above line will likely 
+                        // thrown an exception (the above line will likely
                         // throw an exc.)
                         throw new DataContainerException(
                                 "Writing to table has unexpectedly stopped");
@@ -752,6 +752,7 @@ public class DataContainer implements RowAppender {
     }
 
     /** {@inheritDoc} */
+    @Override
     public void addRowToTable(final DataRow row) {
         if (!isOpen()) {
             throw new IllegalStateException("Cannot add row: container has"
@@ -813,7 +814,7 @@ public class DataContainer implements RowAppender {
      * @param key Key being added. This implementation extracts the string
      * representation from it and adds it to an internal
      * {@link DuplicateChecker} instance.
-     * @throws DataContainerException This implementation may throw a 
+     * @throws DataContainerException This implementation may throw a
      * <code>DataContainerException</code> when
      * {@link DuplicateChecker#addKey(String)} throws an {@link IOException}.
      * @throws DuplicateKeyException If a duplicate is encountered.
@@ -1176,7 +1177,7 @@ public class DataContainer implements RowAppender {
         String date = DATE_FORMAT.format(new Date());
         String fileName = "knime_container_" + date + "_";
         String suffix = ".bin.gz";
-        File f = File.createTempFile(fileName, suffix, 
+        File f = File.createTempFile(fileName, suffix,
                 new File(KNIMEConstants.getKNIMETempDir()));
         f.deleteOnExit();
         return f;
@@ -1240,8 +1241,8 @@ public class DataContainer implements RowAppender {
                     }
                     d = m_containerRef.get();
                 } while (d != null);
-                // m_containerRef.get() returned null -> close() was never 
-                // called on the container (which was garbage collected 
+                // m_containerRef.get() returned null -> close() was never
+                // called on the container (which was garbage collected
                 // already); we can end this thread
                 LOGGER.debug("Ending DataContainer write thread since "
                         + "container was garbage collected");
