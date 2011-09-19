@@ -347,8 +347,8 @@ public class TableContentModel extends AbstractTableModel
             m_tableSorterWorker.cancel(true);
             m_tableSorterWorker = null;
         }
-        setDataTableIntern(data);
         m_originalUnsortedTable = data;
+        setDataTableIntern(data);
     }
 
     /**
