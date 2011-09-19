@@ -51,9 +51,7 @@
 package org.knime.product.rcp;
 
 import org.eclipse.jface.action.Action;
-import org.eclipse.ui.IWorkbenchPage;
-import org.eclipse.ui.IWorkbenchWindow;
-import org.eclipse.ui.PartInitException;
+import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
 
@@ -90,14 +88,18 @@ class TipsAndTricksAction extends Action {
      * Opens the tips and tricks window in an editor.
      */
     static void openTipsAndTricks() {
-        try {
-            IWorkbenchWindow w =
-                    PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-            IWorkbenchPage page = w.getActivePage();
-            page.showView("org.eclipse.ui.internal.introview");
-            page.toggleZoom(page.getActivePartReference());
-        } catch (PartInitException ex) {
-            LOGGER.error("Cannot open Tips&Tricks view", ex);
-        }
+        Dialog d =
+            new TipsAndTricksDialog(PlatformUI.getWorkbench().getDisplay()
+                    .getActiveShell());
+        d.open();
+//        try {
+//            IWorkbenchWindow w =
+//                    PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+//            IWorkbenchPage page = w.getActivePage();
+//            page.showView("org.eclipse.ui.internal.introview");
+//            page.toggleZoom(page.getActivePartReference());
+//        } catch (PartInitException ex) {
+//            LOGGER.error("Cannot open Tips&Tricks view", ex);
+//        }
     }
 }
