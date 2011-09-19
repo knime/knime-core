@@ -800,7 +800,7 @@ public class TableContentModel extends AbstractTableModel
      * @see #TableContentModel(DataTable)
      */
     public final DataTable getDataTable() {
-        return m_data;
+        return m_originalUnsortedTable;
     } // getDataTable()
 
     /**
