@@ -52,10 +52,17 @@ package org.knime.core.node.util;
 
 import java.awt.FlowLayout;
 import java.lang.reflect.InvocationTargetException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import javax.swing.Icon;
+import javax.swing.ImageIcon;
 import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
+
+import org.knime.core.data.DataValue;
+import org.knime.core.node.NodeLogger;
 
 /**
  * Provides helper methods mostly useful when implementing NodeViews.
@@ -183,5 +190,51 @@ public final class ViewUtils {
         }
         return panel;
     }
+
+    /** Convenience method to load an icon from package relative path. The icon
+     * is supposed to be located relative to the package associated with the
+     * argument class under the path <code>path</code>. This method will
+     * not throw an exception when the loading fails but instead return a
+     * <code>null</code> icon.
+     * @param className The class object, from which to retrieve the
+     * {@link Class#getPackage() package}, e.g. <code>FooValue.class</code>.
+     * @param path The icon path relative to package associated with the
+     * class argument.
+     * @return the icon loaded from that path or null if it loading fails
+     */
+    public static Icon loadIcon(
+            final Class<?> className, final String path) {
+        ImageIcon icon;
+        try {
+            ClassLoader loader = className.getClassLoader();
+            String packagePath =
+                className.getPackage().getName().replace('.', '/');
+            String correctedPath = path;
+            if (!path.startsWith("/")) {
+                correctedPath = "/" + path;
+            }
+
+            correctedPath = packagePath + correctedPath;
+            if (correctedPath.contains("..")) {
+                // replace relative paths such as "/abc/../bla.png"
+                // with "/bla.png" because otherwise resources in Jar-files
+                // won't be found
+                Pattern p = Pattern.compile("/[^/\\.]+/\\.\\./");
+                Matcher m = p.matcher(correctedPath);
+                while (m.find()) {
+                    correctedPath = m.replaceFirst("/");
+                    m = p.matcher(correctedPath);
+                }
+            }
+
+            icon = new ImageIcon(loader.getResource(correctedPath));
+        } catch (Exception e) {
+            NodeLogger.getLogger(DataValue.class).debug(
+                    "Unable to load icon at path " + path, e);
+            icon = null;
+        }
+        return icon;
+    }
+
 
 }

@@ -48,14 +48,10 @@
  */
 package org.knime.core.data;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 
 import org.knime.core.data.renderer.DataValueRendererFamily;
-import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.ViewUtils;
 
 /**
  * The interface all value interfaces of {@link org.knime.core.data.DataCell}s
@@ -168,11 +164,8 @@ public interface DataValue {
             return null;
         }
 
-        /** Convenience method to allow subclasses to load their icon. The icon
-         * is supposed to be located relative to the package associated with the
-         * argument class under the path <code>path</code>. This method will
-         * not throw an exception when the loading fails but instead return a
-         * <code>null</code> icon.
+        /** Convenience method to allow subclasses to load their icon. See
+         * {@link ViewUtils#loadIcon(Class, String)} for details.
          * @param className The class object, from which to retrieve the
          * {@link Class#getPackage() package}, e.g. <code>FooValue.class</code>.
          * @param path The icon path relative to package associated with the
@@ -181,36 +174,7 @@ public interface DataValue {
          */
         protected static Icon loadIcon(
                 final Class<?> className, final String path) {
-            ImageIcon icon;
-            try {
-                ClassLoader loader = className.getClassLoader();
-                String packagePath =
-                    className.getPackage().getName().replace('.', '/');
-                String correctedPath = path;
-                if (!path.startsWith("/")) {
-                    correctedPath = "/" + path;
-                }
-
-                correctedPath = packagePath + correctedPath;
-                if (correctedPath.contains("..")) {
-                    // replace relative paths such as "/abc/../bla.png"
-                    // with "/bla.png" because otherwise resources in Jar-files
-                    // won't be found
-                    Pattern p = Pattern.compile("/[^/\\.]+/\\.\\./");
-                    Matcher m = p.matcher(correctedPath);
-                    while (m.find()) {
-                        correctedPath = m.replaceFirst("/");
-                        m = p.matcher(correctedPath);
-                    }
-                }
-
-                icon = new ImageIcon(loader.getResource(correctedPath));
-            } catch (Exception e) {
-                NodeLogger.getLogger(DataValue.class).debug(
-                        "Unable to load icon at path " + path, e);
-                icon = null;
-            }
-            return icon;
+            return ViewUtils.loadIcon(className, path);
         }
     }
 }
