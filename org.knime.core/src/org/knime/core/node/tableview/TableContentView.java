@@ -622,7 +622,7 @@ public class TableContentView extends JTable {
                 @Override
                 public void actionPerformed(final ActionEvent action) {
                     JOptionPane.showMessageDialog(
-                            TableContentView.this, columnValues,
+                            TableContentView.this.getRootPane(), columnValues,
                             "Possible Values",
                             JOptionPane.INFORMATION_MESSAGE);
                 }
