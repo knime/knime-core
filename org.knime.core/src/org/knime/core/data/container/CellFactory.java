@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.core.data.container;
 
@@ -55,8 +55,14 @@ import org.knime.core.data.RowKey;
 import org.knime.core.node.ExecutionMonitor;
 
 /**
- * Factory for a ColumnRearranger to provide new columns which are, e.g. 
+ * Factory for a ColumnRearranger to provide new columns which are, e.g.
  * appended to a given table.
+ *
+ * <p>Note, it's strongly recommend to extend the abstract classes
+ * {@link AbstractCellFactory} and {@link SingleCellFactory} instead of
+ * implementing this interface. These classes also enable the parallel
+ * processing of the input table.
+ *
  * @see org.knime.core.data.container.ColumnRearranger
  * @see org.knime.core.data.container.ColumnRearranger#append(CellFactory)
  * @author Bernd Wiswedel, University of Konstanz
@@ -64,7 +70,7 @@ import org.knime.core.node.ExecutionMonitor;
 public interface CellFactory {
 
     /**
-     * Get the new cells for a given row. These cells are incorporated into the 
+     * Get the new cells for a given row. These cells are incorporated into the
      * existing row. The way it is done is defined through the ColumnRearranger
      * using this object.
      * @param row The row of interest.
@@ -72,11 +78,11 @@ public interface CellFactory {
      * @throws IllegalArgumentException  If there is no mapping available.
      */
     DataCell[] getCells(final DataRow row);
-    
+
     /**
      * The column specs for the cells that are generated in the getCells()
      * method. This method is only called once, there is no need to cache
-     * the return value. The length of the returned array must match the 
+     * the return value. The length of the returned array must match the
      * length of the array returned by the getCells(DataRow) method and also
      * the types must match, i.e. the type of the respective DataColumnSpec
      * must be of the same type or a super type of the cell as returned
@@ -84,8 +90,8 @@ public interface CellFactory {
      * @return The specs to the newly created cells.
      */
     DataColumnSpec[] getColumnSpecs();
-    
-    /** This method is called when a row has been processed. It allows the 
+
+    /** This method is called when a row has been processed. It allows the
      * implementor to set progress in the execution monitor and also some
      * meaningful progress message.
      * <p>Note, you don't need to check <code>exec.checkCanceled()</code> in
@@ -94,8 +100,8 @@ public interface CellFactory {
      * @param rowCount The total number of rows.
      * @param lastKey The row's key.
      * @param exec The execution monitor to report progress to.
-     */ 
-    void setProgress(final int curRowNr, final int rowCount, 
+     */
+    void setProgress(final int curRowNr, final int rowCount,
             final RowKey lastKey, final ExecutionMonitor exec);
-        
+
 }

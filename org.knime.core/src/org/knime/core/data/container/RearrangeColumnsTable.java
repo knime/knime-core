@@ -54,10 +54,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Vector;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.ExecutionException;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -78,6 +81,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.util.MultiThreadWorker;
 
 
 /**
@@ -299,24 +303,31 @@ public final class RearrangeColumnsTable
             new ArrayList<DataColumnSpec>();
         // the reduced set of SpecAndFactoryObject that models newly
         // appended/inserted columns; this vector is in most cases
-        // considerably smaller than m_includes
-        Vector<SpecAndFactoryObject> reducedList =
+        // considerably smaller than the vector includes
+        Vector<SpecAndFactoryObject> newColumnFactoryList =
             new Vector<SpecAndFactoryObject>();
         int newColCount = 0;
-        IdentityHashMap<CellFactory, Object> counter =
-            new IdentityHashMap<CellFactory, Object>();
+        // with v2.5 we added the ability to process the input concurrently
+        // this field has the minimum worker count for all used factories
+        // (or negative for sequential processing)
+        int workerCount = Integer.MAX_VALUE;
         for (int i = 0; i < size; i++) {
             SpecAndFactoryObject s = includes.get(i);
             if (s.isNewColumn()) {
-                counter.put(s.getFactory(), null);
-                reducedList.add(s);
+                CellFactory factory = s.getFactory();
+                if (factory instanceof AbstractCellFactory) {
+                    AbstractCellFactory acf = (AbstractCellFactory)factory;
+                    workerCount =
+                        Math.min(workerCount, acf.getMaxParallelWorkers());
+                } else {
+                    // unknown factory - process sequentially
+                    workerCount = -1;
+                }
+                newColumnFactoryList.add(s);
                 newColSpecsList.add(s.getColSpec());
                 newColCount++;
             }
         }
-        // number of different factories used, in 99% of all cases
-        // this is either 0 or 1
-        final int factoryCount = counter.size();
         DataColumnSpec[] newColSpecs =
             newColSpecsList.toArray(new DataColumnSpec[newColSpecsList.size()]);
         ContainerTable appendTable;
@@ -328,46 +339,14 @@ public final class RearrangeColumnsTable
             DataContainer container =
                 context.createDataContainer(new DataTableSpec(newColSpecs));
             container.setBufferCreator(new NoKeyBufferCreator());
-            assert reducedList.size() == newColCount;
-            int finalRowCount = table.getRowCount();
-            int r = 0;
+            assert newColumnFactoryList.size() == newColCount;
             try {
-                for (RowIterator it = table.iterator(); it.hasNext(); r++) {
-                    DataRow row = it.next();
-                    DataCell[] newCells = new DataCell[newColCount];
-                    int factoryCountRow = 0;
-                    CellFactory facForProgress = null;
-                    for (int i = 0; i < newColCount; i++) {
-                        // early stopping, if we have just one factory but
-                        // many many columns, this if statement will save a lot
-                        if (factoryCount == factoryCountRow) {
-                            break;
-                        }
-                        if (newCells[i] != null) {
-                            continue;
-                        }
-                        SpecAndFactoryObject cur = reducedList.get(i);
-                        CellFactory fac = cur.getFactory();
-                        if (facForProgress == null) {
-                            facForProgress = fac;
-                        }
-                        factoryCountRow++;
-                        DataCell[] fromFac = fac.getCells(row);
-                        for (int j = 0; j < newColCount; j++) {
-                            SpecAndFactoryObject checkMe = reducedList.get(j);
-                            if (checkMe.getFactory() == fac) {
-                                assert newCells[j] == null;
-                                newCells[j] =
-                                    fromFac[checkMe.getColumnInFactory()];
-                            }
-                        }
-                    }
-                    assert facForProgress != null;
-                    facForProgress.setProgress(r + 1, finalRowCount,
-                            row.getKey(), subProgress);
-                    DataRow appendix = new DefaultRow(row.getKey(), newCells);
-                    container.addRowToTable(appendix);
-                    subProgress.checkCanceled();
+                if (workerCount <= 0) {
+                    calcNewColsSynchronously(table, subProgress,
+                            newColumnFactoryList, container);
+                } else {
+                    calcNewColsASynchronously(table, subProgress,
+                            newColumnFactoryList, container);
                 }
             } finally {
                 container.close();
@@ -401,6 +380,142 @@ public final class RearrangeColumnsTable
         DataTableSpec spec = new DataTableSpec(colSpecs);
         return new RearrangeColumnsTable(
                 table, includesIndex, isFromRefTable, spec, appendTable);
+    }
+
+    /** Processes input sequentially in the caller thread. */
+    private static void calcNewColsSynchronously(final BufferedDataTable table,
+            final ExecutionMonitor subProgress,
+            final Vector<SpecAndFactoryObject> reducedList,
+            final DataContainer container)
+    throws CanceledExecutionException {
+        int finalRowCount = table.getRowCount();
+        final int factoryCount = countUniqueProducerFactories(reducedList);
+        int r = 0;
+        CellFactory facForProgress = null;
+        final int newColCount = reducedList.size();
+        for (int i = 0; i < newColCount; i++) {
+            SpecAndFactoryObject cur = reducedList.get(i);
+            CellFactory fac = cur.getFactory();
+            if (facForProgress == null) {
+                facForProgress = fac;
+            }
+        }
+        assert facForProgress != null;
+        for (RowIterator it = table.iterator(); it.hasNext(); r++) {
+            DataRow row = it.next();
+            DataRow append = calcNewCellsForRow(row, reducedList, factoryCount);
+            container.addRowToTable(append);
+            facForProgress.setProgress(r + 1, finalRowCount,
+                    row.getKey(), subProgress);
+            subProgress.checkCanceled();
+        }
+    }
+
+    /** Processes input concurrently using a
+     * {@link ConcurrentNewColCalculator}. */
+    private static void calcNewColsASynchronously(final BufferedDataTable table,
+            final ExecutionMonitor subProgress,
+            final Vector<SpecAndFactoryObject> reducedList,
+            final DataContainer container)
+            throws CanceledExecutionException {
+        int finalRowCount = table.getRowCount();
+        CellFactory facForProgress = null;
+        final int factoryCount = countUniqueProducerFactories(reducedList);
+        final int newColCount = reducedList.size();
+        int workers = Integer.MAX_VALUE;
+        int queueSize = Integer.MAX_VALUE;
+        for (int i = 0; i < newColCount; i++) {
+            SpecAndFactoryObject cur = reducedList.get(i);
+            CellFactory fac = cur.getFactory();
+            if (fac instanceof AbstractCellFactory) {
+                AbstractCellFactory acf = (AbstractCellFactory)fac;
+                workers = Math.min(workers, acf.getMaxParallelWorkers());
+                queueSize = Math.min(queueSize, acf.getMaxQueueSize());
+            } else {
+                throw new IllegalStateException("Coding problem: This method"
+                        + " should not have been called as the cell factories"
+                        + " do not allow parallel processing");
+            }
+            if (facForProgress == null) {
+                facForProgress = fac;
+            }
+        }
+        assert facForProgress != null;
+        assert workers > 0 : "Nr workers <= 0: " + workers;
+        assert queueSize > 0 : "queue size <= 0: " + queueSize;
+        ConcurrentNewColCalculator calculator = new ConcurrentNewColCalculator(
+                queueSize, workers, container, subProgress, finalRowCount,
+                reducedList, factoryCount, facForProgress);
+        try {
+            calculator.run(table);
+        } catch (InterruptedException e) {
+            CanceledExecutionException cee =
+                new CanceledExecutionException(e.getMessage());
+            cee.initCause(e);
+            throw cee;
+        } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause == null) {
+                cause = e;
+            }
+            if (cause instanceof RuntimeException) {
+                throw (RuntimeException)cause;
+            }
+            throw new RuntimeException(cause);
+        }
+    }
+
+    /** Calls for an input row the list of cell factories to produce the
+     * output row (contains only the new cells, merged later).
+     * @param row The input row to be processed
+     * @param reducedList For each new (or replaced) column the factory.
+     * @param factoryCount The number of different factories (early termination)
+     * @return The output row.
+     */
+    private static DataRow calcNewCellsForRow(final DataRow row,
+            final Vector<SpecAndFactoryObject> reducedList,
+            final int factoryCount) {
+        final int newColCount = reducedList.size();
+        DataCell[] newCells = new DataCell[newColCount];
+        int factoryCountRow = 0;
+        for (int i = 0; i < newColCount; i++) {
+            // early stopping, if we have just one factory but
+            // many many columns, this if statement will save a lot
+            if (factoryCount == factoryCountRow) {
+                break;
+            }
+            if (newCells[i] != null) {
+                continue;
+            }
+            CellFactory fac = reducedList.get(i).getFactory();
+            factoryCountRow++;
+            DataCell[] fromFac = fac.getCells(row);
+            for (int j = 0; j < newColCount; j++) {
+                SpecAndFactoryObject checkMe = reducedList.get(j);
+                if (checkMe.getFactory() == fac) {
+                    assert newCells[j] == null;
+                    newCells[j] =
+                        fromFac[checkMe.getColumnInFactory()];
+                }
+            }
+        }
+        DataRow appendix = new DefaultRow(row.getKey(), newCells);
+        return appendix;
+    }
+
+    /** Counts for the argument collection the number of unique cell factories.
+     * @param facs To count in (length = number of newly created columns)
+     * @return The number of unique factories (in most cases just 1)
+     */
+    private static int countUniqueProducerFactories(
+            final Collection<SpecAndFactoryObject> facs) {
+        IdentityHashMap<CellFactory, Object> counter =
+            new IdentityHashMap<CellFactory, Object>();
+        for (SpecAndFactoryObject s : facs) {
+            CellFactory factory = s.getFactory();
+            counter.put(factory, null);
+        }
+        return counter.size();
     }
 
     /**
@@ -499,5 +614,73 @@ public final class RearrangeColumnsTable
             return new NoKeyBuffer(
                     binFile, blobDir, spec, metaIn, bufID, tblRep);
         }
+    }
+
+    /** The MultiThreadWorker that processes the input rows concurrently. Only
+     * used if the cell factory is an {@link AbstractCellFactory} with
+     * parallel processing (
+     * {@link AbstractCellFactory#setParallelProcessing(boolean)})
+     */
+    private static final class ConcurrentNewColCalculator
+        extends MultiThreadWorker<DataRow, DataRow> {
+
+        private final ExecutionMonitor m_subProgress;
+        private Vector<SpecAndFactoryObject> m_reducedList;
+        private final int m_factoryCount;
+        private DataContainer m_container;
+        private final int m_totalRowCount;
+        private final CellFactory m_facForProgress;
+
+        /**
+         * @param maxQueueSize
+         * @param maxActiveInstanceSize
+         * @param table
+         * @param subProgress
+         * @param reducedList
+         * @param newColCount
+         * @param factoryCount
+         * @param container */
+        private ConcurrentNewColCalculator(final int maxQueueSize,
+                final int maxActiveInstanceSize,
+                final DataContainer container,
+                final ExecutionMonitor subProgress,
+                final int totalRowCount,
+                final Vector<SpecAndFactoryObject> reducedList,
+                final int factoryCount,
+                final CellFactory facForProgress) {
+            super(maxQueueSize, maxActiveInstanceSize);
+            m_container = container;
+            m_subProgress = subProgress;
+            m_totalRowCount = totalRowCount;
+            m_reducedList = reducedList;
+            m_factoryCount = factoryCount;
+            m_facForProgress = facForProgress;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        protected DataRow compute(final DataRow in,
+                final long index) throws Exception {
+            return calcNewCellsForRow(in, m_reducedList, m_factoryCount);
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        protected void processFinished(final ComputationTask task)
+            throws ExecutionException, CancellationException,
+            InterruptedException {
+            int r = (int)task.getIndex(); // row count in table is integer
+            RowKey key = task.getInput().getKey();
+            DataRow append = task.get();  // exception falls through
+            m_container.addRowToTable(append);
+            m_facForProgress.setProgress(r + 1, m_totalRowCount,
+                    key, m_subProgress);
+            try {
+                m_subProgress.checkCanceled();
+            } catch (CanceledExecutionException cee) {
+                throw new CancellationException();
+            }
+        }
+
     }
 }

@@ -1,5 +1,5 @@
-/* 
- * 
+/*
+ *
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -45,7 +45,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Jun 20, 2006 (wiswedel): created
  */
@@ -57,17 +57,49 @@ import org.knime.core.data.DataRow;
 
 /**
  * Convenience implementation of a cell factory with one new column.
+ *
+ * <p>As of v2.5 the input table can be processed concurrently. This property
+ * should only be set if (i) the processing of an individual row is expensive,
+ * i.e. takes significantly longer than pure I/O and (ii) there are no
+ * interdependency between the row calculations.
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public abstract class SingleCellFactory extends AbstractCellFactory {
-    
-    /** Create new cell factory that provides one column given by newColSpec. 
+
+    /** Create new cell factory that provides one column given by newColSpec.
+     * The calculation is done sequentially (no parallel processing of input).
      * @param newColSpec The spec of the new column.
      */
     public SingleCellFactory(final DataColumnSpec newColSpec) {
         super(newColSpec);
     }
-    
+
+    /** Create new cell factory that provides one column given by newColSpec.
+     * @param processConcurrently If to process the rows concurrently (must
+     * only be true if there are no interdependency between the rows).
+     * @param newColSpec The spec of the new column.
+     * @see #setParallelProcessing(boolean)
+     */
+    public SingleCellFactory(final boolean processConcurrently,
+            final DataColumnSpec newColSpec) {
+        super(processConcurrently, newColSpec);
+    }
+
+    /** Create new cell factory that provides one column given by newColSpec.
+     * @param processConcurrently If to process the rows concurrently (must
+     * only be true if there are no interdependency between the rows).
+     * @param workerCount see {@link #setParallelProcessing(boolean, int, int)}
+     * @param maxQueueSize see {@link #setParallelProcessing(boolean, int, int)}
+     * @param newColSpec The spec of the new column.
+     * @see #setParallelProcessing(boolean, int, int)
+     */
+    public SingleCellFactory(final boolean processConcurrently,
+            final int workerCount, final int maxQueueSize,
+            final DataColumnSpec newColSpec) {
+        super(processConcurrently, newColSpec);
+    }
+
     /** {@inheritDoc} */
     @Override
     public DataCell[] getCells(final DataRow row) {
@@ -80,5 +112,5 @@ public abstract class SingleCellFactory extends AbstractCellFactory {
      * @return The new cell.
      */
     public abstract DataCell getCell(final DataRow row);
-    
+
 }

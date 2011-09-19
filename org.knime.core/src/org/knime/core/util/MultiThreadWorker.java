@@ -307,6 +307,10 @@ public abstract class MultiThreadWorker<In, Out> {
             // Attempt to flush output hash. The output is processed
             // sequentially according to the input ordering.
             synchronized (m_finishedTasks) {
+                if (m_isCanceled) {
+                    // don't processFinished if canceled
+                    return;
+                }
                 // is task next-to-be-processed
                 if (index == m_nextFinishedIndex) {
                     ComputationTask first = task;
@@ -314,10 +318,20 @@ public abstract class MultiThreadWorker<In, Out> {
                         try {
                             processFinished(first);
                         } catch (Exception e) {
-                            m_exception = e;
-                            m_mainThread.interrupt();
-                            m_logger.warn("Unhandled exception in "
-                                    + "processFinished", e);
+                            cancel(true);
+                            if (e instanceof CancellationException
+                                    || e instanceof InterruptedException) {
+                                // ordinary cancel
+                                m_logger.debug("Cancelling \""
+                                        + getClass().getSimpleName()
+                                        + "\" due to "
+                                        + e.getClass().getSimpleName());
+                            } else {
+                                // abnormal termination
+                                m_exception = e;
+                                m_logger.warn("Unhandled exception in "
+                                        + "processFinished", e);
+                            }
                         } finally {
                             m_maxQueueSemaphore.release();
                         }
@@ -384,17 +398,26 @@ public abstract class MultiThreadWorker<In, Out> {
 
     /** Post-process a finished computation, for instance write a computed
      * result into a file or add a computed row to a data container. This method
-     * is <b>not called concurrently</b> and the passed arguments come in in the
-     * order represented by the iterator of the {@link #run(Iterable)} method.
+     * is <b>not called concurrently</b> and the passed {@link ComputationTask}
+     * objects come in the order represented by the iterator of the
+     * {@link #run(Iterable)} method.
      *
      * <p>The result of a computation is to be retrieved using the task's
-     * {@linkplain ComputationTask#get() get} method, whereby the implementor
-     * also needs to handle exceptions that may have been thrown in the
-     * {@link #compute(Object, long) computation} of the result.
+     * {@linkplain ComputationTask#get() get} method. The implementation may
+     * want to handle any exception that is possibly thrown by the
+     * {@link #compute(Object, long) computation} (for instance
+     * by logging an error and replacing the result with an appropriate missing
+     * value) -- if it's not handled the entire execution will abort with an
+     * error being logged.
      *
      * @param task The next task to be finally processed.
+     * @throws ExecutionException If the exception of the Computation is no
+     * further handled -- and causes the entire calculation to stop.
+     * @throws CancellationException If canceled (abort)
+     * @throws InterruptedException If canceled (abort)
      */
-    protected abstract void processFinished(ComputationTask task);
+    protected abstract void processFinished(ComputationTask task)
+    throws ExecutionException, CancellationException, InterruptedException;
 
 
     /** Represents a single computation, consists of corresponding input record,
