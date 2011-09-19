@@ -51,16 +51,8 @@ package org.knime.core.node.tableview;
 
 import java.awt.Component;
 import java.awt.Graphics;
-import java.awt.GraphicsConfiguration;
-import java.awt.GraphicsDevice;
-import java.awt.GraphicsEnvironment;
-import java.awt.Image;
-import java.awt.Transparency;
-import java.awt.image.BufferedImage;
-import java.util.WeakHashMap;
 
 import javax.swing.Icon;
-import javax.swing.ImageIcon;
 import javax.swing.JTable;
 import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -70,6 +62,7 @@ import javax.swing.table.TableModel;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.node.tableview.TableSortOrder.TableSortKey;
+import org.knime.core.node.util.ViewUtils;
 
 
 /**
@@ -87,6 +80,22 @@ public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
     private static final long serialVersionUID = -2356486759304444805L;
 
     private boolean m_showIcon = true;
+
+    private static final Icon ICON_PRIM_DES = ViewUtils.loadIcon(
+            ColumnHeaderRenderer.class,
+            "icon/table_sort_descending_primary.png");
+
+    private static final Icon ICON_PRIM_ASC = ViewUtils.loadIcon(
+            ColumnHeaderRenderer.class,
+            "icon/table_sort_ascending_primary.png");
+
+    private static final Icon ICON_SEC_DES = ViewUtils.loadIcon(
+            ColumnHeaderRenderer.class,
+            "icon/table_sort_descending_secondary.png");
+
+    private static final Icon ICON_SEC_ASC = ViewUtils.loadIcon(
+            ColumnHeaderRenderer.class,
+            "icon/table_sort_ascending_secondary.png");
 
     /**
      * @return the showIcon
@@ -171,106 +180,15 @@ public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
         }
         switch (sortKey) {
         case PRIMARY_ASCENDING:
-            Icon sortIcon = UIManager.getIcon("Table.ascendingSortIcon");
-            return getLarge16x16SortIcon(sortIcon);
+            return ICON_PRIM_ASC;
         case SECONDARY_ASCENDING:
-            sortIcon = UIManager.getIcon("Table.ascendingSortIcon");
-            return getSmall11x11SortIcon(sortIcon);
+            return ICON_SEC_ASC;
         case PRIMARY_DESCENDING:
-            sortIcon = UIManager.getIcon("Table.descendingSortIcon");
-            return getLarge16x16SortIcon(sortIcon);
+            return ICON_PRIM_DES;
         case SECONDARY_DESCENDING:
-            sortIcon = UIManager.getIcon("Table.descendingSortIcon");
-            return getSmall11x11SortIcon(sortIcon);
+            return ICON_SEC_DES;
         default:
             return null;
-        }
-    }
-
-    /** Maps the systems table ascending/descending sort icon to a
-     * slightly upscaled image. The values in this map are used to indicate
-     * the primary sort column. */
-    static final WeakHashMap<Icon, Icon> SORT_ICON_LARGE =
-        new WeakHashMap<Icon, Icon>();
-
-    /** Maps the systems table ascending/descending sort icon to a
-     * slightly downscaled image. The values in this map are used to indicate
-     * the secondary sort column. */
-    static final WeakHashMap<Icon, Icon> SORT_ICON_SMALL =
-        new WeakHashMap<Icon, Icon>();
-
-    /**
-     * Get the icon used to represent the primary sort key. The argument icon
-     * is the system sort icon, the returned value is a slightly
-     * scaled version of that icon (scaled to make it look different from
-     * the secondary sort key).
-     * @param icon The system icon
-     * @return The upscaled image icon (or null if that's not possible).
-     */
-    private Icon getLarge16x16SortIcon(final Icon icon) {
-        Icon result = SORT_ICON_LARGE.get(icon);
-        if (icon == null) {
-            return null;
-        } else if (result != null) {
-            return result;
-        } else {
-            Icon largeIcon = icon;
-            if (icon.getIconWidth() < 16) { // hopefully always true
-                Image image = getImageFromIcon(icon);
-                Image largeImage = scale(image, 16);
-                largeIcon = new ImageIcon(largeImage, "scaled_image_16");
-            }
-            SORT_ICON_LARGE.put(icon, largeIcon);
-            return largeIcon;
-        }
-    }
-
-    /**
-     * Get the icon used to represent the secondary sort key. Analogous to
-     * {@link #getLarge16x16SortIcon(Icon)}.
-     * @param icon The system icon
-     * @return The downscaled image icon.
-     */
-    private Icon getSmall11x11SortIcon(final Icon icon) {
-        Icon result = SORT_ICON_SMALL.get(icon);
-        if (icon == null) {
-            return null;
-        } else if (result != null) {
-            return result;
-        } else {
-            Icon smallIcon = icon;
-            if (icon.getIconWidth() > 11) { // hopefully always true
-                Image image = getImageFromIcon(icon);
-                Image smallImage = scale(image, 11);
-                smallIcon = new ImageIcon(smallImage, "scaled_image_11");
-            }
-            SORT_ICON_SMALL.put(icon, smallIcon);
-            return smallIcon;
-        }
-    }
-
-    private Image scale(final Image image, final int newWidth) {
-        return image.getScaledInstance(newWidth, -1, Image.SCALE_SMOOTH);
-    }
-
-    private Image getImageFromIcon(final Icon icon) {
-        if (icon instanceof ImageIcon) {
-            ImageIcon imageIcon = (ImageIcon)icon;
-            return imageIcon.getImage();
-        } else {
-            BufferedImage bimage = new BufferedImage(icon.getIconWidth(),
-                    icon.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
-            GraphicsEnvironment ge =
-                GraphicsEnvironment.getLocalGraphicsEnvironment();
-            GraphicsDevice gs = ge.getDefaultScreenDevice();
-            GraphicsConfiguration gc = gs.getDefaultConfiguration();
-
-            // Create an image that supports arbitrary levels of transparency
-            bimage = gc.createCompatibleImage(icon.getIconWidth(),
-                    icon.getIconHeight(), Transparency.TRANSLUCENT);
-            icon.paintIcon(this, bimage.createGraphics(), 0, 0);
-            bimage.flush();
-            return bimage;
         }
     }
 
