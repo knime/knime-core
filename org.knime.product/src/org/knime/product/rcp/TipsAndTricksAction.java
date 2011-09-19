@@ -53,7 +53,6 @@ package org.knime.product.rcp;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.ui.PlatformUI;
-import org.knime.core.node.NodeLogger;
 
 /**
  * Simple action that opens a browser window with the tips and tricks page.
@@ -61,9 +60,9 @@ import org.knime.core.node.NodeLogger;
  * @author Thorsten Meinl, University of Konstanz
  */
 class TipsAndTricksAction extends Action {
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(KNIMEApplicationWorkbenchAdvisor.class.getPackage()
-                    .toString() + ".TipsAndTricks");
+//    private static final NodeLogger LOGGER = NodeLogger
+//            .getLogger(KNIMEApplicationWorkbenchAdvisor.class.getPackage()
+//                    .toString() + ".TipsAndTricks");
 
     private static final String ID = "KNIMETipsAndTricks";
 
