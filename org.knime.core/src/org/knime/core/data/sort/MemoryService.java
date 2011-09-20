@@ -68,8 +68,31 @@ import org.knime.core.node.NodeLogger;
  * @author Heiko Hofer
  */
 public final class MemoryService {
+
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(MemoryService.class);
+
+    /** System property to disable test code -- this field will be removed
+     * in future versions, it's here to allow the user to workaround a potential
+     * problem with test code in this class.
+     */
+    public static final String PROPERTY_DISABLE_SORT_MIN_MEMORY =
+    	"knime.disable.minmemory_in_sorter";
+
+    /** See {@link #DEF_COLLECTION_USAGE} for details. */
+    static final boolean DISABLE_SORT_MIN_MEMORY =
+    	Boolean.getBoolean(PROPERTY_DISABLE_SORT_MIN_MEMORY);
+
+    /** Default collection usage. This used to be true a long time ago until
+     * we found memory problems and thought it might be related to this true
+     * default value. Then we changed it to false but that might be a hoax
+     * because the problem that we saw at that time could be related to the
+     * buggy test code (then introduced
+     * {@link #PROPERTY_DISABLE_SORT_MIN_MEMORY})
+     * If the java property is now true, we use collection usage.
+     */
+    private static final boolean DEF_COLLECTION_USAGE =
+    	DISABLE_SORT_MIN_MEMORY ? true : false;
 
     /** The threshold for the low memory condition. */
     private long m_threshold;
@@ -96,7 +119,7 @@ public final class MemoryService {
      * @param usedMemoryThreshold A number between 0 and 1.
      */
     public MemoryService(final double usedMemoryThreshold) {
-        this(usedMemoryThreshold, 0, false);
+        this(usedMemoryThreshold, 0, DEF_COLLECTION_USAGE);
 
     }
 
@@ -181,7 +204,7 @@ public final class MemoryService {
         m_threshold = (long)(usedMemoryThreshold * maxMem);
 
         // if currently available memory is lower than the minimum
-        if (m_threshold - usedMem < minAvailableMemory) {
+        if (!DISABLE_SORT_MIN_MEMORY && m_threshold - usedMem < minAvailableMemory) {
             // try to free memory
             Runtime.getRuntime().gc();
             Runtime.getRuntime().gc();

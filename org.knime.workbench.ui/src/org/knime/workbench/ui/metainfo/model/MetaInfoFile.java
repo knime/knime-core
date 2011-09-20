@@ -22,7 +22,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Calendar;
 
 import javax.xml.transform.OutputKeys;
@@ -36,11 +35,6 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.operation.IRunnableWithProgress;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.progress.IProgressService;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.util.FileUtil;
@@ -204,61 +198,18 @@ public final class MetaInfoFile {
                     + "Only KnimeProjectNature and "
                     + "KnimeWorkflowSetProjectNature are supported!");
         }
-        final IProgressService ps = PlatformUI.getWorkbench()
-            .getProgressService();
-        final ProjectCreationRunnable runnable = new ProjectCreationRunnable(
-                name, natureId);
-        // we have to run the runnable with progress in the UI thread
-        Display.getDefault().syncExec(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    ps.busyCursorWhile(runnable);
-                } catch (Exception e) {
-                    LOGGER.error("Error while creating project "  + name, e);
-                }
-            }
-        });
-        return runnable.getNewProject();
+        IProject newProject = null;
+        try {
+            IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
+            newProject = root.getProject(name);
+            newProject.create(null);
+            newProject.open(null);
+            IProjectDescription desc = newProject.getDescription();
+            desc.setNatureIds(new String[] {natureId});
+            newProject.setDescription(desc, null);
+        } catch (Exception e) {
+            LOGGER.error("Error while creating project "  + name, e);
+        }
+        return newProject;
     }
-
-    private static class ProjectCreationRunnable
-        implements IRunnableWithProgress {
-
-        private IProject m_newProject;
-        private final String m_newProjectName;
-        private final String m_natureID;
-
-        public ProjectCreationRunnable(final String newProjectName,
-                final String natureID) {
-            m_newProjectName = newProjectName;
-            m_natureID = natureID;
-        }
-
-        public IProject getNewProject() {
-            return m_newProject;
-        }
-
-        @Override
-        public void run(final IProgressMonitor monitor)
-                throws InvocationTargetException, InterruptedException {
-            try {
-                IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
-                m_newProject = root.getProject(m_newProjectName);
-                m_newProject.create(monitor);
-                m_newProject.open(monitor);
-                IProjectDescription desc = m_newProject
-                    .getDescription();
-                desc.setNatureIds(
-                        new String[] {
-                        m_natureID});
-                m_newProject.setDescription(desc, null);
-            } catch (Throwable e) {
-                e.printStackTrace();
-                throw new InvocationTargetException(e);
-            }
-        }
-    }
-
-
 }

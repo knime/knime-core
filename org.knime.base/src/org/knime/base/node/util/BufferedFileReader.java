@@ -57,6 +57,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
@@ -580,9 +581,17 @@ public final class BufferedFileReader extends BufferedReader {
             // it
             long fileSize = 0;
             try {
-                File dataFile = new File(dataLocation.toURI());
-                if (dataFile.exists()) {
-                    fileSize = dataFile.length();
+                if (dataLocation.getProtocol().equalsIgnoreCase("file")) {
+                    File dataFile = new File(dataLocation.getPath());
+                    if (dataFile.exists()) {
+                        fileSize = dataFile.length();
+                    } else {
+                        dataFile = new File(URLDecoder.decode(
+                                dataLocation.getPath(), "UTF-8"));
+                        if (dataFile.exists()) {
+                            fileSize = dataFile.length();
+                        }
+                    }
                 }
             } catch (Exception e) {
                 // then don't give them a filesize.

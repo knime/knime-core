@@ -72,7 +72,6 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.StringCell;
@@ -97,6 +96,7 @@ import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.pmml.PMMLModelType;
 import org.knime.core.util.Pair;
+import org.knime.core.util.UniqueNameGenerator;
 import org.w3c.dom.Node;
 
 /**
@@ -275,11 +275,12 @@ public class DecTreePredictorNodeModel extends NodeModel {
             if (m_showDistribution.getBooleanValue()) {
                 for (int i = numInCells; i < newCells.length - 1; i++) {
                     String predClass = outSpec.getColumnSpec(i).getName();
-                    if (classDistrib != null) {
+                    if (classDistrib != null
+                            && classDistrib.get(predClass) != null) {
                         newCells[i] = new DoubleCell(
                                 classDistrib.get(predClass));
                     } else {
-                        newCells[i] = DataType.getMissingCell();
+                        newCells[i] = new DoubleCell(0.0);
                     }
                 }
             }
@@ -384,6 +385,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
         int numCols = (predValues == null ? 0 : predValues.size()) + 1;
 
         DataTableSpec inSpec = (DataTableSpec)inSpecs[INDATAPORT];
+        UniqueNameGenerator nameGenerator = new UniqueNameGenerator(inSpec);
         DataColumnSpec[] newCols = new DataColumnSpec[numCols];
 
         /* Set bar renderer and domain [0,1] as default for the double cells
@@ -398,15 +400,15 @@ public class DecTreePredictorNodeModel extends NodeModel {
 
         // add all distribution columns
         for (int i = 0; i < numCols - 1; i++) {
-            DataColumnSpecCreator colSpecCreator = new DataColumnSpecCreator(
+            DataColumnSpecCreator colSpecCreator = nameGenerator.newCreator(
                     predValues.get(i).toString(), DoubleCell.TYPE);
 //            colSpecCreator.setProperties(propsRendering);
             colSpecCreator.setDomain(domain);
             newCols[i] = colSpecCreator.createSpec();
         }
         //add the prediction column
-        newCols[numCols - 1] = new DataColumnSpecCreator("Prediction (DecTree)",
-                        StringCell.TYPE).createSpec();
+        newCols[numCols - 1] = nameGenerator.newColumn(
+                "Prediction (DecTree)", StringCell.TYPE);
         DataTableSpec newColSpec =
                 new DataTableSpec(newCols);
         return new DataTableSpec(inSpec, newColSpec);

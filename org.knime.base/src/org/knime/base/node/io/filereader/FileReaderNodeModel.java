@@ -437,7 +437,7 @@ public class FileReaderNodeModel extends NodeModel {
                     // non-file URL we just take over
                     validLoc.add(loc);
                 }
-            } catch (MalformedURLException mue) {
+            } catch (Throwable mue) {
                 // ignore this (invalid) entry in the history
             }
         }

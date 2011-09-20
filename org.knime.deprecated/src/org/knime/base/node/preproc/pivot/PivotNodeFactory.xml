@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd" >
 <knimeNode icon="pivot.png" type="Manipulator" deprecated="true">
-    <name>Pivoting</name>
+    <name>Pivoting (deprecated)</name>
     <shortDescription>Node computes an aggregation value between all 
         co-occurrences of two column, pivot and group column. The aggregation 
         can be based on a third numeric column, or just the number of 

@@ -352,6 +352,19 @@ public final class DialogComponentStringSelection extends DialogComponent {
         }
         // also update the enable status
         setEnabledComponents(getModel().isEnabled());
+
+        // make sure the model is in sync (in case model value isn't selected)
+        StringIconOption selItem =
+            (StringIconOption)m_combobox.getSelectedItem();
+        try {
+            if ((selItem == null && strVal != null)
+                    || (selItem != null && !selItem.getText().equals(strVal))) {
+                // if the (initial) value in the model is not in the list
+                updateModel();
+            }
+        } catch (InvalidSettingsException e) {
+            // ignore invalid values here
+        }
     }
 
     /**
@@ -360,6 +373,7 @@ public final class DialogComponentStringSelection extends DialogComponent {
     private void updateModel() throws InvalidSettingsException {
 
         if (m_combobox.getSelectedItem() == null) {
+            ((SettingsModelString)getModel()).setStringValue(null);
             m_combobox.setBackground(Color.RED);
             // put the color back to normal with the next selection.
             m_combobox.addActionListener(new ActionListener() {

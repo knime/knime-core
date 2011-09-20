@@ -461,11 +461,20 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
                     ((DefaultListModel)m_includedColumns.getModel()).clear();
                 }
                 for (int i = 0; i < m_tableModel.getRowCount(); i++) {
-                    if (m_tableModel.getNrOfFeatures(i) == m_settings
-                            .nrOfFeatures()) {
-                        m_featureLevels.getSelectionModel()
-                                .setSelectionInterval(i, i);
-                        break;
+                    if (m_settings.thresholdMode()) {
+                        if (m_tableModel.getNrOfFeatures(i) == m_settings
+                                .includedColumns(m_bwElimModel).size()) {
+                            m_featureLevels.getSelectionModel()
+                                    .setSelectionInterval(i, i);
+                            break;
+                        }
+                    } else {
+                        if (m_tableModel.getNrOfFeatures(i) == m_settings
+                                .nrOfFeatures()) {
+                            m_featureLevels.getSelectionModel()
+                                    .setSelectionInterval(i, i);
+                            break;
+                        }
                     }
                 }
                 m_includeTargetColumn.setSelected(m_settings

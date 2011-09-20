@@ -33,7 +33,13 @@ import org.knime.workbench.core.WorkflowManagerTransfer;
 import org.knime.workbench.editor2.editparts.SubworkflowEditPart;
 
 /**
+ * Drag listener that defines meta node templates.
  *
+ * <p> This listener is not registered during viewer initialization but only
+ * if the shift key is down. This could also be handled in the
+ * {@link #dragStart(DragSourceEvent)} listener method but has strange side
+ * effects (bug 2844: Node Drags/Resizing sometimes does not work
+ * (Linux only, delay problem))
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  *
  */
@@ -79,12 +85,6 @@ public class WorkflowEditorTemplateDragSourceListener extends
     @Override
     public void dragStart(final DragSourceEvent event) {
         LOGGER.debug("dragStart with event: " + event);
-        /* Cancel the drag and move the node using the tracker if SHIFT key is
-         * not pressed. */
-        if (!getViewer().isShiftPressed()) {
-            event.doit = false;
-            return;
-        }
         @SuppressWarnings("rawtypes")
         List selectedEditParts = getViewer().getSelectedEditParts();
         StringBuffer sb = new StringBuffer("Dragging meta nodes: ");
@@ -114,7 +114,7 @@ public class WorkflowEditorTemplateDragSourceListener extends
         LOGGER.debug("dragFinished with event: " + event);
         /* This should already be the case but does not hurt either.
          * Nothing else to do here as the data is always "copied".*/
-        getViewer().setShiftPressed(false);
+        getViewer().unregisterTemplateDragSourceListener();
     }
 
     /**

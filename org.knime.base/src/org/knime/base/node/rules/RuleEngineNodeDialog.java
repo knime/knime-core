@@ -110,7 +110,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
     /** Default name for the newly appended column. */
     static final String NEW_COL_NAME = "prediction";
 
-    private static final String RULE_LABEL = "Enter rule...";
+    private static final String RULE_LABEL = "Enter condition...";
 
     private static final String OUTCOME_LABEL = "Outcome...";
 
@@ -172,7 +172,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
         m_variableList.addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(final ListSelectionEvent arg0) {
-                if (!arg0.getValueIsAdjusting()) {
+                if (!arg0.getValueIsAdjusting() && (m_lastUsedTextfield != null)) {
                     String existingText = m_lastUsedTextfield.getText();
                     if (existingText.equals(RULE_LABEL)) {
                         existingText = "";
@@ -181,8 +181,8 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
                         String newText =
                                 ((DataColumnSpec)m_variableList
                                         .getSelectedValue()).getName();
-                        m_lastUsedTextfield.setText(existingText + " $"
-                                + newText + "$");
+                        m_lastUsedTextfield.setText((existingText + " $"
+                                + newText + "$").trim());
                         m_lastUsedTextfield.requestFocusInWindow();
                         if (m_lastUsedTextfield == m_ruleLabelEditor) {
                             m_outcomeIsColumn.setSelected(true);
@@ -219,7 +219,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
         Box listBox = Box.createHorizontalBox();
         JScrollPane variableScroller = new JScrollPane(m_variableList);
         variableScroller.setBorder(BorderFactory
-                .createTitledBorder("Variables"));
+                .createTitledBorder("Columns"));
         JScrollPane operatorScroller = new JScrollPane(m_operatorList);
         operatorScroller.setBorder(BorderFactory
                 .createTitledBorder("Operators"));
@@ -381,6 +381,17 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
         c.insets = new Insets(0, 20, 0, 0);
         c.weightx = 0.8;
         c.fill = GridBagConstraints.HORIZONTAL;
+
+        ruleBox.add(new JLabel("Condition"), c);
+        c.gridx++;
+        c.weightx = 0.1;
+        c.insets = new Insets(0, 5, 0, 0);
+        ruleBox.add(new JLabel("Outcome"), c);
+
+
+        c.gridx = 0;
+        c.gridy++;
+        c.insets = new Insets(0, 20, 0, 0);
         ruleBox.add(m_ruleEditor, c);
         c.insets = new Insets(0, 5, 0, 0);
         c.gridx++;
@@ -402,13 +413,13 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
          * Putting it all together
          */
         Box editorBox = Box.createVerticalBox();
-        editorBox.add(defaultLabelBox);
-        editorBox.add(Box.createVerticalStrut(20));
         editorBox.add(newColNameBox);
+        editorBox.add(Box.createVerticalStrut(20));
+        editorBox.add(defaultLabelBox);
         editorBox.add(Box.createVerticalStrut(20));
         editorBox.add(ruleBox);
         editorBox.add(Box.createVerticalStrut(20));
-        m_error = new JLabel();
+        m_error = new JLabel(" ");
         m_error.setForeground(Color.RED);
         editorBox.add(m_error);
         editorBox.setBorder(BorderFactory.createEtchedBorder());
@@ -569,7 +580,9 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
             String consequent = m_ruleLabelEditor.getText();
 
             if (!m_outcomeIsColumn.isSelected()) {
-                consequent = "\"" + consequent + "\"";
+                if (!consequent.startsWith("\"") && ! consequent.endsWith("\"")) {
+                    consequent = "\"" + consequent + "\"";
+                }
             } else if (!consequent.startsWith("$") || !consequent.endsWith("$")) {
                 m_error.setText("Column references must be enclosed in $");
                 m_ruleLabelEditor.requestFocusInWindow();
@@ -596,7 +609,8 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
             if (offset <= m_ruleEditor.getText().length()) {
                 m_ruleEditor.requestFocusInWindow();
                 m_ruleEditor.setCaretPosition(offset);
-            } else {
+            } else if ((offset - m_ruleEditor.getText().length())
+                    <= m_ruleLabelEditor.getText().length()) {
                 m_ruleLabelEditor.requestFocusInWindow();
                 m_ruleLabelEditor.setCaretPosition(offset
                         - m_ruleEditor.getText().length() - 2);

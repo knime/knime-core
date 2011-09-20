@@ -335,7 +335,7 @@ public class AppendedRowsTable implements DataTable {
         if (d1Max == null || d2Max == null) {
             newMax = null;
         } else {
-            newMax = comp.compare(d1Max, d2Max) < 0 ? d1Max : d2Max;
+            newMax = comp.compare(d1Max, d2Max) > 0 ? d1Max : d2Max;
         }
         final Set<DataCell> newPoss;
         if (d1Poss == null || d2Poss == null) {

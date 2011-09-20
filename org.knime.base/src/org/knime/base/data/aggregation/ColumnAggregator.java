@@ -174,6 +174,8 @@ public class ColumnAggregator {
     /**
      * Creates only ones an {@link AggregationOperator} that is always
      * returned by this method.
+     * In order to remove the created {@link AggregationOperator} call the
+     * {@link #reset()} method.
      *
      * @param globalSettings the maximum number of unique values
      * @return the operator for this column
@@ -187,6 +189,13 @@ public class ColumnAggregator {
                     globalSettings, opColSettings);
         }
         return m_operator;
+    }
+
+    /**
+     * Removes any cached operators.
+     */
+    public void reset() {
+        m_operator = null;
     }
 
     /**
@@ -285,4 +294,5 @@ public class ColumnAggregator {
         cnfg.addStringArray(CNFG_AGGR_METHODS, aggrMethods);
         cnfg.addBooleanArray(CNFG_INCL_MISSING_VALS, inclMissingVals);
     }
+
 }

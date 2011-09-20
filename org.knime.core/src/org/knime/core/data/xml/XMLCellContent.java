@@ -189,7 +189,7 @@ public class XMLCellContent implements XMLValue {
             }
         });
         writer.close();
-        return os.toString();
+        return os.toString("UTF-8");
     }
 
     private static Document parse(final String xmlString) throws IOException,

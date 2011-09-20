@@ -493,6 +493,10 @@
             factory-class="org.knime.base.node.preproc.pmml.binner.BinnerNodeFactory"
             id="org.knime.base.node.preproc.pmml.binner.BinnerNodeFactory"/>
       <node
+            category-path="/manipulation/pmml"
+            factory-class="org.knime.base.node.preproc.pmml.columnTrans.One2ManyColPMMLNodeFactory"
+            id="org.knime.base.node.preproc.columnTrans.One2ManyColPMMLNodeFactory" />
+      <node
             category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.domain.DomainNodeFactory"
             id="org.knime.base.node.preproc.domain.DomainNodeFactory"/>

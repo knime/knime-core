@@ -23,31 +23,59 @@
 package org.knime.workbench.editor2;
 
 import org.eclipse.gef.ui.parts.ScrollingGraphicalViewer;
+import org.eclipse.swt.widgets.Display;
+import org.knime.core.node.NodeLogger;
 
 /**
- * Extension of {@link ScrollingGraphicalViewer} that can store the state
- * of the SHIFT modifier key. This is necessary to allow dragging meta nodes
- * out of the editor.
+ * Extension of {@link ScrollingGraphicalViewer} that will (un)register a
+ * {@link WorkflowEditorTemplateDragSourceListener} upon request (shift key
+ * down).
+ *
  *
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  *
  */
 public class WorkflowEditorViewer extends ScrollingGraphicalViewer {
-    private boolean m_shiftPressed = false;
 
-    /**
-     * @return true if the shift key is pressed, false otherwise
-     */
-    public boolean isShiftPressed() {
-        return m_shiftPressed;
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(WorkflowEditorViewer.class);
+
+    /** The listener, registered on demand. See Bug 2844 for details and
+     * also WorkflowGraphicalViewer#createViewer. */
+    private WorkflowEditorTemplateDragSourceListener
+        m_templateDragSourceListener;
+
+    private boolean m_isRegistered;
+
+    /** Activate listener (register it). */
+    public synchronized void registerTemplateDragSourceListener() {
+        if (!m_isRegistered) {
+            if (m_templateDragSourceListener == null) {
+                m_templateDragSourceListener =
+                    new WorkflowEditorTemplateDragSourceListener(this);
+            }
+            LOGGER.debug("Registering workflow template listener");
+            addDragSourceListener(m_templateDragSourceListener);
+            m_isRegistered = true;
+        }
     }
 
-    /**
-     * @param shiftPressed true if the shift key is pressed, false otherwise
-     */
-    public void setShiftPressed(final boolean shiftPressed) {
-        m_shiftPressed = shiftPressed;
+    /** Inactivate listener (unregister it). */
+    public void unregisterTemplateDragSourceListener() {
+        // delay removal as a drag operation may be in progress
+        Display.getDefault().asyncExec(new Runnable() {
+            /** {@inheritDoc} */
+            @Override
+            public void run() {
+                if (m_isRegistered) {
+                    m_isRegistered = false;
+                    LOGGER.debug("Unregistering workflow template listener");
+                    removeDragSourceListener(
+                            (org.eclipse.jface.util.TransferDragSourceListener)
+                            m_templateDragSourceListener);
+                }
+            }
+        });
     }
-
 
 }

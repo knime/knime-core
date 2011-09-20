@@ -113,6 +113,7 @@ public final class NodeSettings extends Config
      *
      * @param dest the destination this Config object is copied to.
      */
+    @Override
     public void copyTo(final ConfigWO dest) {
         super.copyTo(dest);
     }

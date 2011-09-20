@@ -137,6 +137,13 @@ public class AggregationColumnPanel extends MouseAdapter {
      */
     private class AggregationColumnTableListener extends MouseAdapter {
 
+        /**Constructor for class AggregationColumnTableListener.
+         *
+         */
+        AggregationColumnTableListener() {
+            // nothing to do
+        }
+
         /**
          * {@inheritDoc}
          */

@@ -18,9 +18,7 @@
  */
 package org.knime.workbench.editor2;
 
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.io.File;
 import java.net.URL;
 
 import org.eclipse.gef.EditPartViewer;
@@ -57,12 +55,8 @@ public class WorkflowEditorFileDropTargetListener
         // Set the factory on the current request
         URL url;
         try {
-            url = new URI("file", file, null).toURL();
-        } catch (MalformedURLException e1) {
-            LOGGER.error("Unable to create URI from file location (" + file
-                    + ")");
-            return;
-        } catch (URISyntaxException e) {
+            url = new File(file).toURI().toURL();
+        } catch (Throwable e1) {
             LOGGER.error("Unable to create URI from file location (" + file
                     + ")");
             return;

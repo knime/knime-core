@@ -51,7 +51,6 @@ package org.knime.workbench.editor2;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.EventObject;
 import java.util.Iterator;
@@ -747,19 +746,8 @@ public class WorkflowEditor extends GraphicalEditor implements
 
             // input is the (full, absolute) path to the workflow.knime file
             File wfFile = new File(((IURIEditorInput)input).getURI());
-            try {
-                // store the workflow directory
-                m_fileResource = wfFile.getParentFile().toURI();
-                String path = m_fileResource.getPath();
-                if (path.endsWith("/")) {
-                    // remove trailing slashes                }
-                    path = path.substring(0, path.length() - 1);
-                    m_fileResource =
-                        new URI(m_fileResource.getScheme(), null, path, null);
-                }
-            } catch (URISyntaxException e1) {
-                // then leave the slash...
-            }
+            // store the workflow directory
+            m_fileResource = wfFile.getParentFile().toURI();
 
             LOGGER.debug("Resource File's project: " + m_fileResource);
 

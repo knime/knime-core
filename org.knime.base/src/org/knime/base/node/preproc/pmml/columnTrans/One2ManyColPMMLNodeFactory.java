@@ -43,37 +43,69 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
- * History
- *   12.07.2006 (gabriel): created
  */
-package org.knime.core.node;
+package org.knime.base.node.preproc.pmml.columnTrans;
 
-import org.knime.core.node.config.ConfigRO;
-import org.knime.core.node.config.ConfigWO;
+import org.knime.base.node.preproc.columnTrans.One2ManyColNodeDialog;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeView;
 
 /**
- * Read-only interface for <code>NodeSettingsRO</code> objects.
  *
- * @author Thomas Gabriel, University of Konstanz
+ * @author Dominik Morent, University of Konstanz
  */
-public interface NodeSettingsRO extends ConfigRO {
+public class One2ManyColPMMLNodeFactory extends NodeFactory {
 
     /**
-     * Returns a read-only <code>NodeSettingsRO</code> object from this config.
-     * @param key The identifier.
-     * @return A new <code>NodeSettingsRO</code> object.
-     * @throws InvalidSettingsException If the object can't be accessed.
+     *
      */
-    NodeSettingsRO getNodeSettings(String key)
-        throws InvalidSettingsException;
+    public One2ManyColPMMLNodeFactory() {
+        super();
+    }
 
     /**
-     * Copies this <code>NodeSettings</code> instance into a write-only
-     * <code>ConfigWO</code>.
-     * @param dest the <code>ConfigWO</code> to write this instance to.
+     * {@inheritDoc}
      */
-    public void copyTo(final ConfigWO dest);
+    @Override
+    public NodeModel createNodeModel() {
+        return new One2ManyColPMMLNodeModel();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView createNodeView(final int viewIndex,
+            final NodeModel nodeModel) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new One2ManyColNodeDialog();
+    }
 
 }

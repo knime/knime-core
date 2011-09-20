@@ -60,10 +60,11 @@ import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -500,29 +501,42 @@ public final class FilesHistoryPanel extends JPanel {
             new ChangeListener() {
                 @Override
                 public void stateChanged(final ChangeEvent e) {
-                    String fileS = getSelectedFile();
                     // we can only check local files, ignore everything else
                     Component editorComponent =
                         m_textBox.getEditor().getEditorComponent();
+                    if (new File(getSelectedFile()).exists()) {
+                        editorComponent.setBackground(Color.WHITE);
+                        return;
+                    }
+
                     try {
-                        URL u = new URL(fileS);
-                        if ("file".equals(u.getProtocol())) {
-                            fileS = new File(u.toURI()).getAbsolutePath();
+                        URL url = new URL(getSelectedFile());
+                        if ("file".equalsIgnoreCase(url.getProtocol())) {
+                            File file = new File(url.getPath());
+                            if (file.exists()) {
+                                editorComponent.setBackground(Color.WHITE);
+                                return;
+                            } else {
+                                // maybe the URL is encoded (e.g. %20 for spaces)
+                                // so try to decode it
+                                file = new File(URLDecoder.decode(
+                                        url.getPath(), "UTF-8"));
+                                if (file.exists()) {
+                                    editorComponent.setBackground(Color.WHITE);
+                                    return;
+                                }
+                            }
                         } else {
                             editorComponent.setBackground(Color.WHITE);
                             return;
                         }
                     } catch (MalformedURLException ex) {
                         // ignore
-                    } catch (URISyntaxException uri) {
+                    } catch (UnsupportedEncodingException ex) {
                         // ignore
                     }
 
-                    if (new File(fileS).exists()) {
-                        editorComponent.setBackground(Color.WHITE);
-                    } else {
-                        editorComponent.setBackground(Color.ORANGE);
-                    }
+                    editorComponent.setBackground(Color.ORANGE);
                 }
             };
 

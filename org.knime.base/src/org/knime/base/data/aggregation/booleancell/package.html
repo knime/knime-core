@@ -1,5 +1,5 @@
-/*
- * ------------------------------------------------------------------------
+<!--
+========================================================================
  *
  *  Copyright (C) 2003 - 2011
  *  University of Konstanz, Germany and
@@ -43,37 +43,10 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
- *
- * History
- *   12.07.2006 (gabriel): created
- */
-package org.knime.core.node;
-
-import org.knime.core.node.config.ConfigRO;
-import org.knime.core.node.config.ConfigWO;
-
-/**
- * Read-only interface for <code>NodeSettingsRO</code> objects.
- *
- * @author Thomas Gabriel, University of Konstanz
- */
-public interface NodeSettingsRO extends ConfigRO {
-
-    /**
-     * Returns a read-only <code>NodeSettingsRO</code> object from this config.
-     * @param key The identifier.
-     * @return A new <code>NodeSettingsRO</code> object.
-     * @throws InvalidSettingsException If the object can't be accessed.
-     */
-    NodeSettingsRO getNodeSettings(String key)
-        throws InvalidSettingsException;
-
-    /**
-     * Copies this <code>NodeSettings</code> instance into a write-only
-     * <code>ConfigWO</code>.
-     * @param dest the <code>ConfigWO</code> to write this instance to.
-     */
-    public void copyTo(final ConfigWO dest);
-
-}
+====================================================================
+-->
+<body>
+Contains implementations of the  
+{@link org.knime.base.data.aggregation.AggregationOperator}
+that are compatible to {@link org.knime.core.data.collection.BooleanValue}.
+</body>

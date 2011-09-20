@@ -79,7 +79,7 @@ public final class KNIMEConstants {
     public static final String VERSION;
 
     /** The build date, is set automatically by the build scripts. */
-    public static final String BUILD_DATE = "July 7, 2011";
+    public static final String BUILD_DATE = "August 29, 2011";
 
     /** Java property name that is used to identify whether KNIME is started
      * in expert mode or not. Note, with KNIME v2.4 this field became obsolete
@@ -183,6 +183,14 @@ public final class KNIMEConstants {
     public static final String PROPERTY_MAX_LOGFILESIZE =
         "knime.logfile.maxsize";
 
+    /** Java property that allows to disable the live update in the node
+         repository search. */
+   public static final String PROPERTY_REPOSITORY_NON_INSTANT_SEARCH =
+       "knime.repository.non-instant-search";
+
+   /** Java property for the location of the license directory. */
+   public static final String PROPERTY_LICENSE_DIRECTORY =
+       "com.knime.licensedir";
 
 
     /** KNIME home directory. */
@@ -254,14 +262,18 @@ public final class KNIMEConstants {
     static {
         File knimeHome = KNIMEPath.getKNIMEHomeDirPath();
         knimeHomeDir = knimeHome;
-        ImageIcon icon;
-        try {
-            ClassLoader loader = KNIMEConstants.class.getClassLoader();
-            icon = new ImageIcon(loader.getResource(KNIME_ICON_PATH));
-        } catch (Exception e) {
-            icon = null;
+        if (!Boolean.getBoolean("java.awt.headless")) {
+            ImageIcon icon;
+            try {
+                ClassLoader loader = KNIMEConstants.class.getClassLoader();
+                icon = new ImageIcon(loader.getResource(KNIME_ICON_PATH));
+            } catch (Exception e) {
+                icon = null;
+            }
+            KNIME16X16 = icon;
+        } else {
+            KNIME16X16 = null;
         }
-        KNIME16X16 = icon;
         // we prefer to have all gui-related locals being set to us-standard
         try {
             Locale.setDefault(Locale.US);

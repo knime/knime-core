@@ -65,17 +65,15 @@ import org.knime.core.data.def.DoubleCell;
  */
 public class ExponentialMA extends MovingAverage {
 
-    private double m_alpha;
+    private final double m_alpha;
     private double m_avg = 0;
-    private int m_nrofValues = 0;
-    private int m_winLength;
+    private boolean m_isInit;
 
     /**
      * @param winLength the length of the window.
      */
     public ExponentialMA(final int winLength) {
-        m_winLength = 1;
-        m_nrofValues = 0;
+        m_isInit = false;
         m_alpha = 2.0 / (winLength + 1);
 
         m_avg = 0;
@@ -87,10 +85,10 @@ public class ExponentialMA extends MovingAverage {
     @Override
     public DataCell getMeanandUpdate(final double newValue) {
 
-        // till the predefined window size is reached, we calculate the mean
-        if (m_nrofValues < m_winLength) {
-            m_avg = m_avg + ((newValue - m_avg) / (m_winLength + 1));
-            m_nrofValues++;
+        // in the first step, the average is set to the value
+        if (!m_isInit) {
+            m_avg = newValue;
+            m_isInit = true;
         } else {
             m_avg = m_alpha * newValue + m_avg * (1 - m_alpha);
         }

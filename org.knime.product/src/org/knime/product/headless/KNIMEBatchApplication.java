@@ -47,6 +47,7 @@
  */
 package org.knime.product.headless;
 
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.knime.core.node.workflow.BatchExecutor;
@@ -72,6 +73,8 @@ public class KNIMEBatchApplication implements IApplication {
         }
         // load the ui plugin to read the preferences
         // KNIMEUIPlugin.getDefault();
+        Platform.getBundle("org.knime.workbench.core").start();
+
         Object args =
                 context.getArguments()
                         .get(IApplicationContext.APPLICATION_ARGS);

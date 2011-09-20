@@ -148,7 +148,7 @@ public final class CredentialsStore implements Observer {
      * Update the {@link Credentials} with the names from the given
      * crendentials list. Only the login and password are updated.
      * @param credentialsList the list of credentials to change
-     * return if there were changes in any of the fields
+     * @return true, if there were changes in any of the fields
      * @throws IllegalArgumentException If the identifier is unknown
      */
     synchronized boolean update(final Credentials... credentialsList) {

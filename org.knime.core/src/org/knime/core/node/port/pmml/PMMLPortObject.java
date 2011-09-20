@@ -50,10 +50,12 @@ package org.knime.core.node.port.pmml;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -75,6 +77,7 @@ import org.dmg.pmml40.DataFieldDocument.DataField;
 import org.dmg.pmml40.DerivedFieldDocument.DerivedField;
 import org.dmg.pmml40.ExtensionDocument;
 import org.dmg.pmml40.GeneralRegressionModelDocument.GeneralRegressionModel;
+import org.dmg.pmml40.INVALIDVALUETREATMENTMETHOD;
 import org.dmg.pmml40.LocalTransformationsDocument.LocalTransformations;
 import org.dmg.pmml40.MiningFieldDocument.MiningField;
 import org.dmg.pmml40.MiningModelDocument.MiningModel;
@@ -390,7 +393,7 @@ public final class PMMLPortObject implements PortObject {
      */
     public void addModelTranslater(final PMMLTranslator modelTranslator) {
         SchemaType type = modelTranslator.exportTo(m_pmmlDoc, m_spec);
-        moveDerivedFields(type);
+        LocalTransformations localTransformations = moveDerivedFields(type);
 
         /* Remove mining fields from mining schema that where created as a
          * derived field. In KNIME the origin of columns is not distinguished
@@ -411,9 +414,45 @@ public final class PMMLPortObject implements PortObject {
         MiningField[] miningFieldArray = miningSchema.getMiningFieldArray();
         List<MiningField> miningFields = new ArrayList<MiningField>(
                 Arrays.asList(miningFieldArray));
+        Set<String> miningFieldNames = new HashSet<String>();
         for (MiningField miningField : miningFieldArray) {
-            if (derivedFields.contains(miningField.getName())) {
+            String miningFieldName = miningField.getName();
+            if (derivedFields.contains(miningFieldName)) {
+                LOGGER.debug("Removing field \"" + miningFieldName
+                        + "\" from MiningFields as it is a DerivedField.");
                 miningFields.remove(miningField);
+            } else {
+                miningFieldNames.add(miningFieldName);
+            }
+        }
+
+        /* According to the PMML Spec DerivedFields must ultimately refer back
+         * to active MiningFields of the model's MiningSchema. Therefore we
+         * have to add all referred DataFields to the MiningSchema. */
+        String fullPath = NAMESPACE_DECLARATION
+                + "$this/pmml:DerivedField/*/@field";
+        XmlObject[] xmlDescendants = localTransformations.selectPath(fullPath);
+        Set<String> referencedFields = new LinkedHashSet<String>();
+        // collect all referred field names
+        for (XmlObject xo : xmlDescendants) {
+            XmlCursor xmlCursor = xo.newCursor();
+            referencedFields.add(xmlCursor.getTextValue());
+            xmlCursor.dispose();
+        }
+
+        for (String referencedField : referencedFields) {
+            if (!derivedFields.contains(referencedField)
+                    && !miningFieldNames.contains(referencedField)) {
+                /* Add them to the mining schema if they are not already
+                 * contained there and if they don't refer to derived fields. */
+                MiningField miningField = MiningField.Factory.newInstance();
+                miningField.setName(referencedField);
+                miningField.setInvalidValueTreatment(
+                        INVALIDVALUETREATMENTMETHOD.AS_IS);
+                LOGGER.debug("Adding field \"" + referencedField
+                        + "\" to MiningSchema because it is referenced in "
+                        + "LocalTransformations.");
+                miningFields.add(miningField);
             }
         }
         miningSchema.setMiningFieldArray(miningFields.toArray(
@@ -482,18 +521,24 @@ public final class PMMLPortObject implements PortObject {
         } // else do nothing as no model exists yet
     }
 
-    /* Moves the content of the transformation dictionary to local
-     * transformations. */
-    private void moveDerivedFields(final SchemaType type) {
+    /**
+     * Moves the content of the transformation dictionary to local
+     * transformations.
+     * @param type the type of model to move the derived fields to
+     * @return the {@link LocalTransformations} element containing the moved
+     *      derived fields or an empty local transformation object if nothing
+     *      has to be moved
+     */
+    private LocalTransformations moveDerivedFields(final SchemaType type) {
         PMML pmml = m_pmmlDoc.getPMML();
 
         TransformationDictionary transDict
                 = pmml.getTransformationDictionary();
-        if (transDict == null) { // nothing to be moved
-            return;
-        }
         LocalTransformations localTrans
                 = LocalTransformations.Factory.newInstance();
+        if (transDict == null) { // nothing to be moved
+            return localTrans;
+        }
         localTrans.setDerivedFieldArray(transDict.getDerivedFieldArray());
         localTrans.setExtensionArray(transDict.getExtensionArray());
 
@@ -554,6 +599,7 @@ public final class PMMLPortObject implements PortObject {
             transDict.setDerivedFieldArray(new DerivedField[0]);
             transDict.setExtensionArray(new ExtensionDocument.Extension[0]);
         }
+        return localTrans;
     }
 
     /** {@inheritDoc} */
@@ -721,6 +767,8 @@ public final class PMMLPortObject implements PortObject {
             }
         }
         dataDict.setDataFieldArray(dataFields.toArray(new DataField[0]));
+        // update the number of fields
+        dataDict.setNumberOfFields(BigInteger.valueOf(dataFields.size()));
 
         // -------------------------------------------------
         // update field names in the model if applicable
@@ -812,8 +860,9 @@ public final class PMMLPortObject implements PortObject {
     }
 
     /**
-     * @return the derived fields defined in the transformation dictionary or
-     *      an empty array if no derived fields are defined.
+     * @return the derived fields defined in the transformation dictionary and
+     *          local transformations or an empty array if no derived fields
+     *          are defined.
      */
     public DerivedField[] getDerivedFields() {
         return DerivedFieldMapper.getDerivedFields(m_pmmlDoc.getPMML());

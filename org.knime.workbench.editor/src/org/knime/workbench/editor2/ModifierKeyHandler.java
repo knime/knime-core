@@ -26,7 +26,6 @@ import org.eclipse.gef.GraphicalViewer;
 import org.eclipse.gef.ui.parts.GraphicalViewerKeyHandler;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.KeyEvent;
-import org.knime.core.node.NodeLogger;
 
 /**
  * Notifies the {@link WorkflowEditorViewer} if the shift key has been pressed.
@@ -35,8 +34,7 @@ import org.knime.core.node.NodeLogger;
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  */
 public class ModifierKeyHandler extends GraphicalViewerKeyHandler {
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            ModifierKeyHandler.class);
+
     /**
      * Constructs a key handler for the given viewer.
      * @param viewer the viewer
@@ -51,8 +49,8 @@ public class ModifierKeyHandler extends GraphicalViewerKeyHandler {
     @Override
     public boolean keyPressed(final KeyEvent event) {
         if (event.keyCode == SWT.SHIFT) {
-            LOGGER.debug("Shift key pressed");
-            ((WorkflowEditorViewer)getViewer()).setShiftPressed(true);
+            ((WorkflowEditorViewer)getViewer())
+                .registerTemplateDragSourceListener();
         }
         return super.keyPressed(event);
     }
@@ -63,8 +61,8 @@ public class ModifierKeyHandler extends GraphicalViewerKeyHandler {
     @Override
     public boolean keyReleased(final KeyEvent event) {
         if (event.keyCode == SWT.SHIFT) {
-            LOGGER.debug("Shift key released");
-            ((WorkflowEditorViewer)getViewer()).setShiftPressed(false);
+            ((WorkflowEditorViewer)getViewer())
+                .unregisterTemplateDragSourceListener();
         }
         return super.keyReleased(event);
     }

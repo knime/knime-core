@@ -105,7 +105,7 @@ public class ColumnListLoopStartNodeModel extends NodeModel implements
             for (String col : m_settings.iterateOverColumns()) {
                 if (!inSpecs[0].containsName(col)) {
                     throw new IllegalArgumentException("Column '" + col
-                            + "' does " + "not exist in input table");
+                            + "' does not exist in input table");
                 }
             }
         }
@@ -124,12 +124,19 @@ public class ColumnListLoopStartNodeModel extends NodeModel implements
             pushFlowVariableString("currentColumnName",
                     inSpec.getColumnSpec(m_currentColIndex).getName());
         } else {
-            includedCols =
-                    new String[m_settings.alwaysIncludeColumns().size() + 1];
-            int i = 0;
+            List<String> temp = new ArrayList<String>();
             for (String s : m_settings.alwaysIncludeColumns()) {
+                if (inSpec.containsName(s)) {
+                    temp.add(s);
+                }
+            }
+
+            includedCols = new String[temp.size() + 1];
+            int i = 0;
+            for (String s : temp) {
                 includedCols[i++] = s;
             }
+
             includedCols[i] =
                     m_settings.iterateOverColumns().get(m_currentColIndex);
             pushFlowVariableString("currentColumnName", m_settings
@@ -137,6 +144,9 @@ public class ColumnListLoopStartNodeModel extends NodeModel implements
         }
 
         ColumnRearranger crea = new ColumnRearranger(inSpec);
+
+
+
         crea.keepOnly(includedCols);
         return crea;
     }
