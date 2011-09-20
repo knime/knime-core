@@ -90,7 +90,7 @@ public class AnalyzeLogFile {
      * @throws FileNotFoundException if it couldn't find the log file.
      * @throws IOException if something went wrong writing the files.
      */
-    AnalyzeLogFile(final File logFile, final File outputDir)
+    public AnalyzeLogFile(final File logFile, final File outputDir)
             throws FileNotFoundException, IOException {
         if ((logFile == null) || (!logFile.exists())) {
             throw new IllegalArgumentException("You must specify an existing"

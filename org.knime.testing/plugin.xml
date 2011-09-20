@@ -83,30 +83,4 @@
          </run>
       </application>
    </extension>
-   <extension
-         id="TestflowRunner"
-         point="org.eclipse.core.runtime.applications">
-      <application
-            cardinality="singleton-global"
-            thread="main"
-            visible="true">
-         <run
-               class="org.knime.testing.core.TestflowRunnerApplication">
-         </run>
-      </application>
-   </extension>
-   <extension
-         id="UnittestRunner"
-         point="org.eclipse.core.runtime.applications">
-      <application
-            cardinality="singleton-global"
-            thread="main"
-            visible="true">
-         <run
-               class="org.knime.testing.core.UnittestRunnerApplication">
-         </run>
-      </application>
-   </extension>
-   
-
 </plugin>

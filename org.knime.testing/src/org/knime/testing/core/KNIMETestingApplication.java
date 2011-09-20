@@ -49,12 +49,9 @@ import org.eclipse.equinox.app.IApplicationContext;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.EncryptionKeySupplier;
-import org.knime.core.util.FileUtil;
 import org.knime.core.util.KnimeEncryption;
 import org.knime.workbench.core.KNIMECorePlugin;
 import org.knime.workbench.repository.RepositoryManager;
-
-import com.knime.enterprise.client.filesystem.util.WorkflowDownloadApplication;
 
 /**
  *
@@ -67,8 +64,6 @@ public class KNIMETestingApplication implements IApplication {
     private String m_testNamePattern = null;
 
     private String m_rootDir = null;
-
-    private String m_serverUri = null;
 
     // if this is not null, tests are running - and can be stopped in here.
     private TestResult m_results = null;
@@ -114,8 +109,7 @@ public class KNIMETestingApplication implements IApplication {
             return EXIT_OK;
         }
 
-        if ((m_testNamePattern == null)
-                || ((m_rootDir == null) && (m_serverUri == null))) {
+        if ((m_testNamePattern == null) || (m_rootDir == null)) {
             // if no (or not enough) command line arguments were specified:
             final AtomicBoolean okayBoolean = new AtomicBoolean(false);
             SwingUtilities.invokeAndWait(new Runnable() {
@@ -135,9 +129,6 @@ public class KNIMETestingApplication implements IApplication {
             m_saveLocation = getRuntimeWorkspace();
         }
 
-        if (m_serverUri != null) {
-            downloadWorkflows();
-        }
 
         // Go!
         runRegressionTests(m_testNamePattern);
@@ -147,12 +138,6 @@ public class KNIMETestingApplication implements IApplication {
         }
 
         return EXIT_OK;
-    }
-
-    private void downloadWorkflows() throws Exception {
-        File tempDir = FileUtil.createTempDir("KNIME Testflow");
-        WorkflowDownloadApplication.downloadWorkflows(m_serverUri, tempDir);
-        m_rootDir = tempDir.getCanonicalPath();
     }
 
     private boolean getParametersFromUser() {
@@ -467,26 +452,6 @@ public class KNIMETestingApplication implements IApplication {
                 continue;
             }
 
-            // "-server" specifies a workflow group on a server
-            if ((stringArgs[i] != null) && stringArgs[i].equals("-server")) {
-                if (m_serverUri != null) {
-                    System.err.println("You can't specify multiple -server "
-                            + "options at the command line");
-                    return false;
-                }
-
-                i++;
-                // requires another argument
-                if ((i >= stringArgs.length) || (stringArgs[i] == null)
-                        || (stringArgs[i].length() == 0)) {
-                    System.err.println("Missing <url> for option -server.");
-                    printUsage();
-                    return false;
-                }
-                m_serverUri = stringArgs[i++];
-                continue;
-            }
-
             System.err.println("Invalid option: '" + stringArgs[i] + "'\n");
             printUsage();
             return false;
@@ -517,10 +482,6 @@ public class KNIMETestingApplication implements IApplication {
                 + "<dir_name> is omitted the Java temp dir is used.");
         System.err.println("    -root <dir_name>: optional, specifies the"
                 + " root dir where all testcases are located in.");
-        System.err.println("    -server <uri>: optional, a KNIME server "
-                + "from which workflows should be downloaded first.");
-        System.err.println("                   Example: "
-                + "knimefs://<user>:<password>@host[:port]/workflowGroup1");
         System.err.println("IF -pattern OR -root IS OMITTED A DIALOG OPENS"
                 + " REQUESTING USER INPUT.");
 
