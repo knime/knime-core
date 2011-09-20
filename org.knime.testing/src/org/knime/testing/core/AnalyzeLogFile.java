@@ -187,7 +187,7 @@ public class AnalyzeLogFile {
                         + ".txt"));
 
         int posTests = m_numOfTestsRun - m_numOfFailingTests;
-        int posRate = (int)Math.round((posTests * 100.0) / m_numOfTestsRun);
+        int posRate = (int)Math.floor((posTests * 100.0) / m_numOfTestsRun);
 
         summary.write("Regression run on " + m_startTime + CRLF);
         summary.write("Tests run: " + m_numOfTestsRun + ", failing: "
