@@ -228,9 +228,9 @@ public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
                             y + (maxHeight - leftHeight) / 2);
                 }
                 if (rightHeight == maxHeight) {
-                    m_rightIcon.paintIcon(c, g, leftWidth + 1, y);
+                    m_rightIcon.paintIcon(c, g, x + leftWidth + 2, y);
                 } else {
-                    m_rightIcon.paintIcon(c, g, leftWidth + 1,
+                    m_rightIcon.paintIcon(c, g, x + leftWidth + 2,
                             y + (maxHeight - rightHeight) / 2);
                 }
             }
@@ -247,7 +247,7 @@ public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
                 return m_leftIcon.getIconWidth();
             } else {
                 return m_leftIcon.getIconWidth()
-                + m_rightIcon.getIconWidth() + 1;
+                + m_rightIcon.getIconWidth() + 2;
             }
         }
 
