@@ -79,6 +79,7 @@ import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.sort.MemoryService;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
@@ -92,12 +93,12 @@ import org.knime.core.node.NodeSettingsRO;
 public final class Joiner {
     /** Logger to print debug info to. */
     private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(Joiner.class);
+    .getLogger(Joiner.class);
 
-    private DataTableSpec m_leftDataTableSpec;
-    private DataTableSpec m_rightDataTableSpec;
+    private final DataTableSpec m_leftDataTableSpec;
+    private final DataTableSpec m_rightDataTableSpec;
 
-    private Joiner2Settings m_settings;
+    private final Joiner2Settings m_settings;
 
     private boolean m_multipleMatchCanOccur;
     private Set<Integer> m_multiLeftRetainAll;
@@ -114,13 +115,18 @@ public final class Joiner {
     private List<String> m_leftSurvivors;
     private List<String> m_rightSurvivors;
 
-    private List<String> m_configWarnings;
-    private List<String> m_runtimeWarnings;
+    private final List<String> m_configWarnings;
+    private final List<String> m_runtimeWarnings;
 
     private int m_numBits;
     private int m_bitMask;
 
+    /** added for testing purpose. */
     private MemoryService m_memService;
+    /** added for testing purpose. */
+    private int m_numBitsInitial;
+    /** added for testing purpose. */
+    private int m_numBitsMaximal;
 
 
 
@@ -170,7 +176,7 @@ public final class Joiner {
      * @throws InvalidSettingsException when settings are not supported
      */
     private DataTableSpec createSpec(final DataTableSpec[] specs)
-            throws InvalidSettingsException {
+    throws InvalidSettingsException {
         m_configWarnings.clear();
         List<String> leftCols = getLeftIncluded(specs[0]);
         List<String> rightCols = getRightIncluded(specs[1]);
@@ -222,14 +228,14 @@ public final class Joiner {
             boolean leftJoinAttrIsRowKey =
                 Joiner2Settings.ROW_KEY_IDENTIFIER.equals(leftJoinAttr);
             DataType leftType = leftJoinAttrIsRowKey
-                ? StringCell.TYPE
-                            : specs[0].getColumnSpec(leftJoinAttr).getType();
+            ? StringCell.TYPE
+                    : specs[0].getColumnSpec(leftJoinAttr).getType();
             String rightJoinAttr = m_settings.getRightJoinColumns()[i];
             boolean rightJoinAttrIsRowKey =
                 Joiner2Settings.ROW_KEY_IDENTIFIER.equals(rightJoinAttr);
             DataType rightType = rightJoinAttrIsRowKey
-                ? StringCell.TYPE
-                            : specs[1].getColumnSpec(rightJoinAttr).getType();
+            ? StringCell.TYPE
+                    : specs[1].getColumnSpec(rightJoinAttr).getType();
             if (!leftType.equals(rightType)) {
                 String left = leftJoinAttrIsRowKey ? "Row ID" : leftJoinAttr;
                 String right = rightJoinAttrIsRowKey ? "Row ID" : rightJoinAttr;
@@ -268,9 +274,9 @@ public final class Joiner {
                             + right + "\" to string.");
                 } else {
                     throw new InvalidSettingsException("Type mismatch found of "
-                        + "Joining Column Pair \""
-                        + left + "\" and \"" + right + "\"."
-                        + "This causes an empty output table.");
+                            + "Joining Column Pair \""
+                            + left + "\" and \"" + right + "\"."
+                            + "This causes an empty output table.");
                 }
             }
         }
@@ -296,7 +302,7 @@ public final class Joiner {
                     } while (rightCols.contains(newName));
 
                     DataColumnSpecCreator dcsc =
-                            new DataColumnSpecCreator(columnSpec);
+                        new DataColumnSpecCreator(columnSpec);
                     dcsc.removeAllHandlers();
                     dcsc.setName(newName);
                     takeSpecs.add(dcsc.createSpec());
@@ -309,7 +315,7 @@ public final class Joiner {
         }
 
         return new DataTableSpec(takeSpecs.toArray(new DataColumnSpec[takeSpecs
-                .size()]));
+                                                                      .size()]));
     }
 
     /**
@@ -317,7 +323,7 @@ public final class Joiner {
      * @return
      */
     private List<String> getLeftIncluded(final DataTableSpec dataTableSpec)
-        throws InvalidSettingsException {
+    throws InvalidSettingsException {
         List<String> leftCols = new ArrayList<String>();
         for (DataColumnSpec column : dataTableSpec) {
             leftCols.add(column.getName());
@@ -353,7 +359,7 @@ public final class Joiner {
      * @return
      */
     private List<String> getRightIncluded(final DataTableSpec dataTableSpec)
-        throws InvalidSettingsException {
+    throws InvalidSettingsException {
         List<String> rightCols = new ArrayList<String>();
         for (DataColumnSpec column : dataTableSpec) {
             rightCols.add(column.getName());
@@ -380,7 +386,7 @@ public final class Joiner {
         }
         if (m_settings.getRemoveRightJoinCols()) {
             rightCols
-                    .removeAll(Arrays.asList(m_settings.getRightJoinColumns()));
+            .removeAll(Arrays.asList(m_settings.getRightJoinColumns()));
         }
         return rightCols;
     }
@@ -422,12 +428,13 @@ public final class Joiner {
      * @param rightTable The right input table.
      * @param exec The Execution monitor for this execution.
      * @return The joined table.
-     * @throws Exception When execution fails.
+     * @throws CanceledExecutionException when execution is canceled
+     * @throws InvalidSettingsException when inconsistent settings are provided
      */
     public BufferedDataTable computeJoinTable(
             final BufferedDataTable leftTable,
             final BufferedDataTable rightTable, final ExecutionContext exec)
-            throws Exception {
+    throws CanceledExecutionException, InvalidSettingsException {
         m_runtimeWarnings.clear();
         m_leftRowKeyMap.clear();
         m_rightRowKeyMap.clear();
@@ -455,7 +462,7 @@ public final class Joiner {
 
 
         m_retainRight = JoinMode.RightOuterJoin.equals(m_settings.getJoinMode())
-          || JoinMode.FullOuterJoin.equals(m_settings.getJoinMode());
+        || JoinMode.FullOuterJoin.equals(m_settings.getJoinMode());
         m_retainLeft = JoinMode.LeftOuterJoin.equals(m_settings.getJoinMode())
         || JoinMode.FullOuterJoin.equals(m_settings.getJoinMode());
 
@@ -463,8 +470,8 @@ public final class Joiner {
         // once. This is in general met with the MatchAny Option but only if
         // there are more than one join column.
         m_multipleMatchCanOccur = m_settings.getCompositionMode()
-                        .equals(CompositionMode.MatchAny)
-                        && m_settings.getLeftJoinColumns().length > 1;
+        .equals(CompositionMode.MatchAny)
+        && m_settings.getLeftJoinColumns().length > 1;
 
         if (m_multipleMatchCanOccur) {
             m_multiLeftRetainAll =
@@ -482,9 +489,9 @@ public final class Joiner {
                 rightTable.getDataTableSpec(),
                 rightSurvivors);
 
-        m_memService = new MemoryService(m_settings.getUsedMemoryThreshold(),
-                m_settings.getMinAvailableMemory(),
-                m_settings.getUseCollectionUsage());
+        if (null == m_memService) {
+            m_memService = new MemoryService();
+        }
 
         /* numBits -> numPartitions
          * 0 -> 1
@@ -496,7 +503,7 @@ public final class Joiner {
          * 6 -> 64
          * 7 -> 128
          */
-        m_numBits = m_settings.getNumBitsInitial();
+        m_numBits = m_numBitsInitial;
         int numPartitions = 0x0001 << m_numBits;
         m_bitMask = 0;
         for (int i = 0; i < m_numBits; i++) {
@@ -516,8 +523,8 @@ public final class Joiner {
         exec.setProgress(0.0);
         while (pendingParts.size() > 0) {
             Collection<Integer> processedParts = performJoin(
-                innerTable, outerTable,
-                joinCont, pendingParts, exec, progressIntervals[0]);
+                    innerTable, outerTable,
+                    joinCont, pendingParts, exec, progressIntervals[0]);
             pendingParts.removeAll(processedParts);
         }
 
@@ -537,29 +544,29 @@ public final class Joiner {
         // numbers are needed to report progress more precisely
         int totalNumJoins = joinCont.getRowCount();
         int numMatches = null != joinCont.getMatches()
-            ? joinCont.getMatches().getRowCount() : 0;
+        ? joinCont.getMatches().getRowCount() : 0;
         int numLeftOuter = null != joinCont.getLeftOuter()
-            ? joinCont.getLeftOuter().getRowCount() : 0;
+        ? joinCont.getLeftOuter().getRowCount() : 0;
         int numRightOuter = null != joinCont.getRightOuter()
-            ? joinCont.getRightOuter().getRowCount() : 0;
+        ? joinCont.getRightOuter().getRowCount() : 0;
 
         exec.setMessage("Sort Joined Partitions");
         Comparator<DataRow> joinComp = OutputDataRow.createRowComparator();
         SortedTable matches = null != joinCont.getMatches()
-                ? new SortedTable(joinCont.getMatches(), joinComp, false,
+        ? new SortedTable(joinCont.getMatches(), joinComp, false,
                 exec.createSubExecutionContext(
                         progressIntervals[1] * numMatches / totalNumJoins))
-                : null;
+        : null;
         SortedTable leftOuter = null != joinCont.getLeftOuter()
-                ? new SortedTable(joinCont.getLeftOuter(), joinComp, false,
+        ? new SortedTable(joinCont.getLeftOuter(), joinComp, false,
                 exec.createSubExecutionContext(
                         progressIntervals[1] * numLeftOuter / totalNumJoins))
-                : null;
+        : null;
         SortedTable rightOuter = null != joinCont.getRightOuter()
-                ? new SortedTable(joinCont.getRightOuter(), joinComp, false,
+        ? new SortedTable(joinCont.getRightOuter(), joinComp, false,
                 exec.createSubExecutionContext(
                         progressIntervals[1] * numRightOuter / totalNumJoins))
-                : null;
+        : null;
 
         exec.setMessage("Merge Joined Partitions");
         // Build sorted table
@@ -603,7 +610,7 @@ public final class Joiner {
      * @param exec The execution context.
      * @param progressDiff The difference in the progress monitor.
      * @return The partitions that were successfully processed (read + joined).
-     * @throws Exception Needed by exec.checkCanceled().
+     * @throws CanceledExecutionException when execution is canceled
      */
     private Collection<Integer> performJoin(
             final BufferedDataTable innerTable,
@@ -611,11 +618,11 @@ public final class Joiner {
             final JoinContainer outputContainer,
             final Collection<Integer> pendingParts,
             final ExecutionContext exec,
-            final double progressDiff)  throws Exception {
+            final double progressDiff) throws CanceledExecutionException  {
         // Update increment for reporting progress
         double progress = exec.getProgressMonitor().getProgress();
         double numRows = innerTable.getRowCount()
-                + outerTable.getRowCount();
+        + outerTable.getRowCount();
         double inc = (progressDiff - progress) / numRows;
 
         Collection<Integer> currParts = new ArrayList<Integer>();
@@ -688,15 +695,15 @@ public final class Joiner {
                                 + currParts + ". Skip: " + removeParts);
                         // update increment for reporting progress
                         numRows += innerTable.getRowCount()
-                                    + outerTable.getRowCount();
+                        + outerTable.getRowCount();
                         inc = (progressDiff - progress) / numRows;
 
                         setMessage("Read", exec, pendingParts, currParts);
                     } else if (nonEmptyPartitions.size() == 1) {
-                        if (m_numBits < m_settings.getNumBitsMaximal()) {
+                        if (m_numBits < m_numBitsMaximal) {
                             LOGGER.debug("Increase number of partitions while "
-                                 + "reading inner table. Currently Processed: "
-                                 + nonEmptyPartitions);
+                                    + "reading inner table. Currently "
+                                    + "Processed: " + nonEmptyPartitions);
 
                             // increase number of partitions
                             m_numBits = m_numBits + 1;
@@ -718,7 +725,7 @@ public final class Joiner {
                                     currPart);
                             // update increment for reporting progress
                             numRows += innerTable.getRowCount()
-                                        + outerTable.getRowCount();
+                            + outerTable.getRowCount();
                             inc = (progressDiff - progress) / numRows;
 
                             setMessage("Read", exec, pendingParts, currParts);
@@ -727,9 +734,9 @@ public final class Joiner {
                             // We can only keep going and hope that other nodes
                             // may free some memory.
                             LOGGER.warn("Memory is low. "
-                            + "I have no chance to free memory. This may "
+                                + "I have no chance to free memory. This may "
                                 + "cause an endless loop.");
-                         }
+                        }
                     } else if (nonEmptyPartitions.size() < 1) {
                         // We have only empty partitions.
                         // Other node consume to much memory,
@@ -754,7 +761,7 @@ public final class Joiner {
         // Log which parts were successfully joined
         for (int part : currParts) {
             int numTuples = innerHash.get(part) != null
-                ? innerHash.get(part).values().size() : 0;
+            ? innerHash.get(part).values().size() : 0;
             LOGGER.debug("Joined " + part + " with "
                     + numTuples + " tuples.");
         }
@@ -868,7 +875,7 @@ public final class Joiner {
      * @param outputCont The joined rows will be added to this container.
      * @param exec The {@link ExecutionContext}
      * @param incProgress The progress increment.
-     * @throws Exception Needed by exec.checkCanceled().
+     * @throws CanceledExecutionException When execution is cancelled
      */
     private void joinInMemory(
             final Map <Integer, Map<JoinTuple, Set<Integer>>> innerHash,
@@ -877,7 +884,7 @@ public final class Joiner {
             final BufferedDataTable outerTable,
             final JoinContainer outputCont,
             final ExecutionContext exec,
-            final double incProgress) throws Exception {
+            final double incProgress) throws CanceledExecutionException {
         double progress = exec.getProgressMonitor().getProgress();
         int counter = 0;
         for (DataRow row : outerTable) {
@@ -1041,12 +1048,12 @@ public final class Joiner {
      *             failed.
      */
     public static  void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    throws InvalidSettingsException {
         Joiner2Settings s = new Joiner2Settings();
         s.loadSettings(settings);
         if (s.getDuplicateHandling() == null) {
             throw new InvalidSettingsException(
-                    "No duplicate handling method selected");
+            "No duplicate handling method selected");
         }
         if (s.getJoinMode() == null) {
             throw new InvalidSettingsException("No join mode selected");
@@ -1054,12 +1061,12 @@ public final class Joiner {
         if ((s.getLeftJoinColumns() == null)
                 || (s.getLeftJoinColumns().length < 1)) {
             throw new InvalidSettingsException(
-                    "No column from the left table selected");
+            "No column from the left table selected");
         }
         if ((s.getRightJoinColumns() == null)
                 || (s.getRightJoinColumns().length < 1)) {
             throw new InvalidSettingsException(
-                    "No column from the right table selected");
+            "No column from the right table selected");
         }
         if (s.getLeftJoinColumns() != null
                 && s.getRightJoinColumns() != null
@@ -1067,13 +1074,13 @@ public final class Joiner {
                 != s.getRightJoinColumns().length) {
             throw new InvalidSettingsException(
                     "Number of columns selected from the left table and from "
-                            + "the right table do not match");
+                    + "the right table do not match");
         }
         if (DuplicateHandling.AppendSuffix.equals(s.getDuplicateHandling())
                 && ((s.getDuplicateColumnSuffix() == null) || (s
                         .getDuplicateColumnSuffix().length() < 1))) {
             throw new InvalidSettingsException(
-                    "No suffix for duplicate columns provided");
+            "No suffix for duplicate columns provided");
         }
         if (s.getMaxOpenFiles() < 3) {
             throw new InvalidSettingsException(
@@ -1112,17 +1119,17 @@ public final class Joiner {
             DataRow right = rightIter.next();
             for (int i = 0; i < duplicates.size(); i++) {
                 if (null == messages[i]
-                       && !left.getCell(leftIndex[i]).equals(
-                        right.getCell(rightIndex[i]))) {
+                                     && !left.getCell(leftIndex[i]).equals(
+                                             right.getCell(rightIndex[i]))) {
                     // Two cells do not match
                     messages[i] = "The column \"" + duplicates.get(i)
-                            + "\" can be found in "
-                            + "both input tables but the content is not "
-                            + "equal. "
-                            + "Only the one in the left input table will show "
-                            + "up in the output table. Please change the "
-                            + "Duplicate Column Handling if both columns "
-                            + "should show up in the ouput table.";
+                    + "\" can be found in "
+                    + "both input tables but the content is not "
+                    + "equal. "
+                    + "Only the one in the left input table will show "
+                    + "up in the output table. Please change the "
+                    + "Duplicate Column Handling if both columns "
+                    + "should show up in the ouput table.";
                 }
             }
 
@@ -1162,6 +1169,30 @@ public final class Joiner {
             c++;
         }
         return indices;
+    }
+
+    /**
+     * Used for testing, only.
+     * @param memoryService set memory service
+     */
+    void setMemoryService(final MemoryService memoryService) {
+        m_memService = memoryService;
+    }
+
+    /**
+     * Used for testing, only.
+     * @param bits number of initial partitions will be 2^bits
+     */
+    void setNumBitsInitial(final int bits) {
+        m_numBitsInitial = bits;
+    }
+
+    /**
+     * Used for testing, only.
+     * @param bits number of maximal partitions will be 2^numBits
+     */
+    void setNumBitsMaximal(final int bits) {
+        m_numBitsMaximal = bits;
     }
 
 }

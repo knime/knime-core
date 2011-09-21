@@ -72,28 +72,6 @@ public final class MemoryService {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(MemoryService.class);
 
-    /** System property to disable test code -- this field will be removed
-     * in future versions, it's here to allow the user to workaround a potential
-     * problem with test code in this class.
-     */
-    public static final String PROPERTY_DISABLE_SORT_MIN_MEMORY =
-    	"knime.disable.minmemory_in_sorter";
-
-    /** See {@link #DEF_COLLECTION_USAGE} for details. */
-    static final boolean DISABLE_SORT_MIN_MEMORY =
-    	Boolean.getBoolean(PROPERTY_DISABLE_SORT_MIN_MEMORY);
-
-    /** Default collection usage. This used to be true a long time ago until
-     * we found memory problems and thought it might be related to this true
-     * default value. Then we changed it to false but that might be a hoax
-     * because the problem that we saw at that time could be related to the
-     * buggy test code (then introduced
-     * {@link #PROPERTY_DISABLE_SORT_MIN_MEMORY})
-     * If the java property is now true, we use collection usage.
-     */
-    private static final boolean DEF_COLLECTION_USAGE =
-    	DISABLE_SORT_MIN_MEMORY ? true : false;
-
     /** The threshold for the low memory condition. */
     private long m_threshold;
 
@@ -102,14 +80,23 @@ public final class MemoryService {
 
     /** {@link GarbageCollectorMXBean}s associated with the observed
      * {@link MemoryPoolMXBean}. */
-    private ArrayList<GarbageCollectorMXBean> m_gcBean;
+    private final ArrayList<GarbageCollectorMXBean> m_gcBean;
 
     // Flag controlling the output of isMemoryLow
     private boolean m_waitForNextGC;
     // Flag controlling the output of isMemoryLow
     private long m_lastCount;
 
-    private boolean m_useCollectionUsage;
+    private final boolean m_useCollectionUsage;
+
+
+    /**
+     * Use MemoryService to test for low memory condition in computation
+     * which are memory intensive.
+     */
+    public MemoryService() {
+        this(0.85);
+    }
 
     /**
      * Creates a new instance. This instance will report a low memory condition
@@ -119,15 +106,19 @@ public final class MemoryService {
      * @param usedMemoryThreshold A number between 0 and 1.
      */
     public MemoryService(final double usedMemoryThreshold) {
-        this(usedMemoryThreshold, 0, DEF_COLLECTION_USAGE);
-
+        this(usedMemoryThreshold, -1, true);
     }
 
     /**
-     * @param usedMemoryThreshold
-     * @param minAvailableMemory
+     * Added for testing purpose. It is most likely that you do not have to
+     * use this constructor.
+     *
+     * @param usedMemoryThreshold the memory threshold
+     * @param minAvailableMemory minimum amount of available memory
+     * @param useCollectionUsage if collection usage should be used to
+     * determine the available memory
      */
-    public MemoryService(final double usedMemoryThreshold,
+    private MemoryService(final double usedMemoryThreshold,
             final long minAvailableMemory,
             final boolean useCollectionUsage) {
         // Determine the memory pool to be observed
@@ -187,7 +178,7 @@ public final class MemoryService {
                     }
                     if (factorPresent) {
                         maxMem = Integer.parseInt(
-                              arg.substring(4, arg.length() - 1)) * factor;
+                                arg.substring(4, arg.length() - 1)) * factor;
                     } else {
                         maxMem = Integer.parseInt(arg.substring(4));
                     }
@@ -195,30 +186,43 @@ public final class MemoryService {
                 }
             }
             if (!xmxArgSet) {
-                LOGGER.error("Please, set -Xmx jvm argument " +
-                        "due to a bug in G1GC. Otherwise, memory " +
-                        "intensive nodes might not work correctly.");
+                LOGGER.error("Please, set -Xmx jvm argument "
+                        + "due to a bug in G1GC. Otherwise, memory "
+                        + "intensive nodes might not work correctly.");
             }
         }
 
         m_threshold = (long)(usedMemoryThreshold * maxMem);
 
-        // if currently available memory is lower than the minimum
-        if (!DISABLE_SORT_MIN_MEMORY && m_threshold - usedMem < minAvailableMemory) {
+        if (minAvailableMemory > 0) { // only true if called from test case
             // try to free memory
             Runtime.getRuntime().gc();
             Runtime.getRuntime().gc();
             usedMem = null != m_memPool ? m_memPool.getUsage().getUsed()
                     : Runtime.getRuntime().totalMemory()
                     - Runtime.getRuntime().freeMemory();
-            m_threshold = Math.min(usedMem + minAvailableMemory, maxMem);
+            m_threshold = minAvailableMemory + usedMem;
+            if (m_threshold >= maxMem) {
+                throw new IllegalStateException("Can't initialize memory "
+                        + "service. Min available memory not available.");
+            }
         }
 
         m_waitForNextGC = false;
         m_lastCount = -1;
         m_useCollectionUsage = null != m_memPool
-            && null != m_memPool.getCollectionUsage() ? useCollectionUsage
-                    : false;
+        && null != m_memPool.getCollectionUsage() ? useCollectionUsage
+                : false;
+    }
+
+    /**
+     * Factory to create an instance of MemoryService for use in test cases.
+     * @param freeMemory amount of free memory
+     * @return a new instance of MemoryService
+     */
+    public static MemoryService createTestCaseMemoryService(
+            final long freeMemory) {
+        return new MemoryService(0.0, freeMemory, false);
     }
 
     /**
@@ -231,9 +235,9 @@ public final class MemoryService {
     public boolean isMemoryLow() {
         if (m_waitForNextGC) {
             long thisCount = null != m_memPool
-                ? m_gcBean.iterator().next().getCollectionCount()
-                : Runtime.getRuntime().totalMemory()
-                            - Runtime.getRuntime().freeMemory();
+            ? m_gcBean.iterator().next().getCollectionCount()
+                    : Runtime.getRuntime().totalMemory()
+                    - Runtime.getRuntime().freeMemory();
 
             if (thisCount == m_lastCount) {
                 return false;
@@ -260,7 +264,7 @@ public final class MemoryService {
             }
         } else {
             long used = Runtime.getRuntime().totalMemory()
-                            - Runtime.getRuntime().freeMemory();
+            - Runtime.getRuntime().freeMemory();
             boolean memoryIsLow = used > m_threshold;
             if (memoryIsLow) {
                 m_waitForNextGC = true;

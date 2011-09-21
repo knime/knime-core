@@ -48,9 +48,8 @@
  * History
  *   16.04.2010 (hofer): created
  */
-package org.knime.core.data.sort;
+package org.knime.base.node.preproc.joiner;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Random;
@@ -66,16 +65,17 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.data.IntValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.sort.MemoryService;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
@@ -87,7 +87,7 @@ import org.knime.core.node.workflow.virtual.VirtualPortObjectInNodeFactory;
  *
  * @author Heiko Hofer
  */
-public class TableSorterTest {
+public class JoinerTest {
     private ExecutionContext m_exec;
 
     /**
@@ -128,56 +128,125 @@ public class TableSorterTest {
 
     /**
      * @throws CanceledExecutionException
+     * @throws InvalidSettingsException
      */
     @Test
-    public final void testLowMemoryRun() throws CanceledExecutionException {
-        runMemoryTest(100, Integer.MAX_VALUE, Integer.MAX_VALUE);
-    }
+    public final void testIncreaseNumPartitionsRun()
+    	throws CanceledExecutionException, InvalidSettingsException {
 
-    /**
-     * Test if merge of more buffers than maxOpenBuffers works.
-     * @throws CanceledExecutionException
-     */
-    @Test
-    public final void testMultiStageMerge() throws CanceledExecutionException {
-        runMemoryTest(100, 5, 8);
-    }
+    	Joiner2Settings settingsRef = createReferenceSettings("Data");
+    	Joiner2Settings settingsTest = createReferenceSettings("Data");
 
-    private void runMemoryTest(final int numRows,
-            final int maxNumRowsPerContainer,
-            final int maxOpenContainers) throws CanceledExecutionException {
         // Create data with fields that consume a lot memory
-        DataTable inputTable = new TestData(numRows, 1);
+        DataTable inputTable = new TestData(100, 1);
 
         BufferedDataTable bdt =
             m_exec.createBufferedDataTable(inputTable, m_exec);
-        BufferedDataTableSorter sorter =
-            new BufferedDataTableSorter(bdt, Arrays.asList("Index"),
-                    new boolean[] {true});
-        sorter.setMaxOpenContainers(maxOpenContainers);
-        BufferedDataTable defaultResult = sorter.sort(m_exec);
+        // run joiner with reference settings
+        Joiner joinerRef = new Joiner(inputTable.getDataTableSpec(),
+        		inputTable.getDataTableSpec(), settingsRef);
+        BufferedDataTable reference = joinerRef.computeJoinTable(bdt, bdt,
+        		m_exec);
+
+        // run joiner with test settings
+        Joiner joinerTest = new Joiner(inputTable.getDataTableSpec(),
+        		bdt.getDataTableSpec(), settingsTest);
+        joinerTest.setMemoryService(
+        		MemoryService.createTestCaseMemoryService(30000000L));
+        joinerTest.setNumBitsInitial(0);
+        joinerTest.setNumBitsMaximal(6);
+        BufferedDataTable test = joinerTest.computeJoinTable(bdt,
+        		bdt, m_exec);
+        performTest(reference, test);
+    }
+
+    /**
+     * @throws CanceledExecutionException
+     * @throws InvalidSettingsException
+     */
+    @Test
+    public final void testSkipPartitionsRun()
+    	throws CanceledExecutionException, InvalidSettingsException {
+
+    	Joiner2Settings settingsRef = createReferenceSettings("Data");
+    	Joiner2Settings settingsTest = createReferenceSettings("Data");
+
+        // Create data with fields that consume a lot memory
+        DataTable inputTable = new TestData(100, 1);
+
+        BufferedDataTable bdt =
+            m_exec.createBufferedDataTable(inputTable, m_exec);
+        // run joiner with reference settings
+        Joiner joinerRef = new Joiner(inputTable.getDataTableSpec(),
+        		inputTable.getDataTableSpec(), settingsRef);
+        BufferedDataTable reference = joinerRef.computeJoinTable(bdt, bdt,
+        		m_exec);
+
+        // run joiner with test settings
+        Joiner joinerTest = new Joiner(inputTable.getDataTableSpec(),
+        		bdt.getDataTableSpec(), settingsTest);
+        joinerTest.setMemoryService(
+        		MemoryService.createTestCaseMemoryService(30000000L));
+        joinerTest.setNumBitsInitial(8);
+        BufferedDataTable test = joinerTest.computeJoinTable(bdt,
+        		bdt, m_exec);
+        performTest(reference, test);
+    }
+
+    /**
+     * @throws CanceledExecutionException
+     * @throws InvalidSettingsException
+     */
+    @Test
+    public final void testSortPartitionsRun()
+    	throws CanceledExecutionException, InvalidSettingsException {
+
+    	Joiner2Settings settingsRef = createReferenceSettings(
+    			Joiner2Settings.ROW_KEY_IDENTIFIER);
+    	Joiner2Settings settingsTest = createReferenceSettings(
+    			Joiner2Settings.ROW_KEY_IDENTIFIER);
+    	settingsTest.setMaxOpenFiles(3);
+
+        // Create data with fields that consume a lot memory
+        DataTable inputTable = new TestData(100, 1);
+
+        BufferedDataTable bdt =
+            m_exec.createBufferedDataTable(inputTable, m_exec);
+        // run joiner with reference settings
+        Joiner joinerRef = new Joiner(inputTable.getDataTableSpec(),
+        		inputTable.getDataTableSpec(), settingsRef);
+        BufferedDataTable reference = joinerRef.computeJoinTable(bdt, bdt,
+        		m_exec);
+
+        // run joiner with test settings
+        Joiner joinerTest = new Joiner(inputTable.getDataTableSpec(),
+        		bdt.getDataTableSpec(), settingsTest);
+        joinerTest.setMemoryService(
+        		MemoryService.createTestCaseMemoryService(30000000L));
+        joinerTest.setNumBitsInitial(0);
+        joinerTest.setNumBitsMaximal(6);
+        BufferedDataTable test = joinerTest.computeJoinTable(bdt,
+        		bdt, m_exec);
+        performTest(reference, test);
+    }
+
+    private Joiner2Settings createReferenceSettings(final String col) {
+    	Joiner2Settings settingsRef = new Joiner2Settings();
+    	String[] joinColumns = new String[]{col};
+    	settingsRef.setLeftJoinColumns(joinColumns);
+    	settingsRef.setRightJoinColumns(joinColumns);
+    	return settingsRef;
+    }
 
 
-        sorter.setMaxRows(maxNumRowsPerContainer);
-        // 10MB free memory
-        sorter.setMemService(
-        		MemoryService.createTestCaseMemoryService(10000000L));
-
-        // run again with change settings
-        BufferedDataTable result = sorter.sort(m_exec);
-
-        // Check if column is sorted in ascending order
-        int prevValue = Integer.MIN_VALUE;
-        for (DataRow row : result) {
-            int thisValue = ((IntValue)row.getCell(0)).getIntValue();
-            Assert.assertTrue(thisValue >= prevValue);
-        }
+    private void performTest(final BufferedDataTable reference,
+    		final BufferedDataTable test) {
         // Check if it has the same results as defaultResult
-        Assert.assertTrue(defaultResult.getRowCount() == result.getRowCount());
-        RowIterator defaultIter = defaultResult.iterator();
-        RowIterator iter = result.iterator();
-        while (defaultIter.hasNext()) {
-            DataRow defaultRow = defaultIter.next();
+        Assert.assertTrue(reference.getRowCount() == test.getRowCount());
+        RowIterator referenceIter = reference.iterator();
+        RowIterator iter = test.iterator();
+        while (referenceIter.hasNext()) {
+            DataRow defaultRow = referenceIter.next();
             DataRow row = iter.next();
             Assert.assertTrue(defaultRow.getKey().getString().equals(
                     row.getKey().getString()));
@@ -187,7 +256,6 @@ public class TableSorterTest {
                 Assert.assertTrue(
                         defaultCellIter.next().equals(cellIter.next()));
             }
-
         }
     }
 

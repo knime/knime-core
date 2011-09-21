@@ -50,7 +50,6 @@
  */
 package org.knime.base.node.preproc.joiner;
 
-import org.knime.core.data.sort.MemoryService;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -78,12 +77,7 @@ public class Joiner2Settings {
     private static final String MAX_OPEN_FILES = "maxOpenFiles";
     private static final String ROW_KEY_SEPARATOR = "rowKeySeparator";
     private static final String ENABLE_HILITE = "enableHiLite";
-    private static final String NUM_BITS_INITIAL = "numBitsInitial";
-    private static final String NUM_BITS_MAX = "numBitsMaximal";
-    private static final String USED_MEMORY_THRESHOLD = "usedMemoryThreshold";
-    private static final String MIN_AVAILABLE_MEMORY = "minAvailableMemory";
-    private static final String MEM_USE_COLLECTION_USAGE =
-        "memUseCollectionUsage";
+
     /**
      * This enum holds all ways of handling duplicate column names in the two
      * input tables.
@@ -173,11 +167,6 @@ public class Joiner2Settings {
     private int m_maxOpenFiles = 200;
     private String m_rowKeySeparator = "_";
     private boolean m_enableHiLite = false;
-    private int m_numBitsInitial = 6;
-    private int m_numBitsMaximal = Integer.SIZE;
-    private long m_minAvailableMemory = 10000000L;
-    private double m_usedMemoryThreshold = 0.85;
-    private boolean m_useCollectionUsage = true;
 
     /**
      * Returns the columns of the left table used in the join predicate.
@@ -466,104 +455,6 @@ public class Joiner2Settings {
     }
 
     /**
-     * Returns the initial number of bits which defines the initial number
-     * of partitions (#partitions = 2^initialNumBits).
-     *
-     * @return the initialNumBits
-     */
-    public int getNumBitsInitial() {
-        return m_numBitsInitial;
-    }
-
-    /**
-     * Sets the initial number of bits which defines the initial number
-     * of partitions (#partitions = 2^initialNumBits).
-     *
-     * @param numBitsInitial the initialNumBits to set
-     */
-    public void setNumBitsInitial(final int numBitsInitial) {
-        m_numBitsInitial = numBitsInitial;
-    }
-
-    /**
-     * Returns the maximal number of bits which specifies the maximal number
-     * of partitions (max(#partitions) = 2^numBitsInitial).
-     *
-     * @return the numBitsMaximal
-     */
-    public int getNumBitsMaximal() {
-        return m_numBitsMaximal;
-    }
-
-    /**
-     * Sets the maximal number of bits which specifies the maximal number
-     * of partitions (max(#partitions) = 2^numBitsInitial).
-     *
-     * @param numBitsMaximal the numBitsMaximal to set
-     */
-    public void setNumBitsMaximal(final int numBitsMaximal) {
-        m_numBitsMaximal = numBitsMaximal;
-    }
-
-    /**
-     * The minimal amount of heap space in bytes that the joiner node is
-     * allowed to occupy.
-     *
-     * @return the minAvailableMemory
-     */
-    public long getMinAvailableMemory() {
-        return m_minAvailableMemory;
-    }
-
-    /**
-     * The minimal amount of heap space in bytes that the joiner node is
-     * allowed to occupy.
-     *
-     * @param minAvailableMemory the minAvailableMemory to set
-     */
-    public void setMinAvailableMemory(final long minAvailableMemory) {
-        m_minAvailableMemory = minAvailableMemory;
-    }
-
-    /**
-     * The joiner tries to keep to used heap space below the return value
-     * multiplied by the available heap space.
-     *
-     * @return the usedMemoryThreshold
-     */
-    public double getUsedMemoryThreshold() {
-        return m_usedMemoryThreshold;
-    }
-
-    /**
-     * The joiner tries to keep to used heap space below this threshold
-     * multiplied by the available heap space.
-     *
-     * @param usedMemoryThreshold the usedMemoryThreshold to set
-     */
-    public void setUsedMemoryThreshold(final double usedMemoryThreshold) {
-        m_usedMemoryThreshold = usedMemoryThreshold;
-    }
-
-    /**
-     * Option to initialize the {@link MemoryService} used by the joiner.
-     *
-     * @return the useCollectionUsage
-     */
-    public boolean getUseCollectionUsage() {
-        return m_useCollectionUsage;
-    }
-
-    /**
-     * Option to initialize the {@link MemoryService} used by the joiner.
-     *
-     * @param useCollectionUsage the useCollectionUsage to set
-     */
-    public void setUseCollectionUsage(final boolean useCollectionUsage) {
-        m_useCollectionUsage = useCollectionUsage;
-    }
-
-    /**
      * Loads the settings from the node settings object.
      *
      * @param settings a node settings object
@@ -591,12 +482,7 @@ public class Joiner2Settings {
         m_maxOpenFiles = settings.getInt(MAX_OPEN_FILES);
         m_rowKeySeparator = settings.getString(ROW_KEY_SEPARATOR);
         m_enableHiLite = settings.getBoolean(ENABLE_HILITE);
-        m_numBitsInitial = settings.getInt(NUM_BITS_INITIAL);
-        m_numBitsMaximal = settings.getInt(NUM_BITS_MAX);
-        m_usedMemoryThreshold = settings.getDouble(USED_MEMORY_THRESHOLD);
-        m_minAvailableMemory = settings.getLong(MIN_AVAILABLE_MEMORY);
-        m_useCollectionUsage =
-            settings.getBoolean(MEM_USE_COLLECTION_USAGE);
+
     }
 
     /**
@@ -639,13 +525,6 @@ public class Joiner2Settings {
         m_maxOpenFiles = settings.getInt(MAX_OPEN_FILES, 200);
         m_rowKeySeparator = settings.getString(ROW_KEY_SEPARATOR, "_");
         m_enableHiLite = settings.getBoolean(ENABLE_HILITE, false);
-        m_numBitsInitial = settings.getInt(NUM_BITS_INITIAL, 6);
-        m_numBitsMaximal = settings.getInt(NUM_BITS_MAX, Integer.SIZE);
-        m_usedMemoryThreshold = settings.getDouble(USED_MEMORY_THRESHOLD, 0.85);
-        m_minAvailableMemory =
-            settings.getLong(MIN_AVAILABLE_MEMORY, 10000000L);
-        m_useCollectionUsage =
-            settings.getBoolean(MEM_USE_COLLECTION_USAGE, true);
     }
 
     /**
@@ -672,11 +551,5 @@ public class Joiner2Settings {
         settings.addInt(MAX_OPEN_FILES, m_maxOpenFiles);
         settings.addString(ROW_KEY_SEPARATOR, m_rowKeySeparator);
         settings.addBoolean(ENABLE_HILITE, m_enableHiLite);
-        settings.addInt(NUM_BITS_INITIAL, m_numBitsInitial);
-        settings.addInt(NUM_BITS_MAX, m_numBitsMaximal);
-        settings.addDouble(USED_MEMORY_THRESHOLD, m_usedMemoryThreshold);
-        settings.addLong(MIN_AVAILABLE_MEMORY, m_minAvailableMemory);
-        settings.addBoolean(MEM_USE_COLLECTION_USAGE,
-                m_useCollectionUsage);
     }
 }
