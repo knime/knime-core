@@ -229,6 +229,9 @@ public final class ContainerTable implements DataTable, KnowsRowCountTable {
             // it may not even be in there
             m_buffer.getGlobalRepository().remove(m_buffer.getBufferID());
         }
+        if (m_readTask != null) {
+            m_readTask.getTableRepository().remove(m_readTask.getBufferID());
+        }
     }
 
     /** Do not use this method (only invoked by the framework).
