@@ -316,13 +316,13 @@ public class TableContentModel extends AbstractTableModel
         // EventDispatchThread (even invokeAndWait). This causes OutportView to
         // freeze while data is loading (since it is loaded in EDT)
         if (SwingUtilities.isEventDispatchThread()) {
-            setDataTableNew(data);
+            setDataTableIntern(data, data, null);
         } else {
             try {
                 SwingUtilities.invokeAndWait(new Runnable() {
                    @Override
                    public void run() {
-                       setDataTableNew(data);
+                       setDataTableIntern(data, data, null);
                    }
                 });
             } catch (InterruptedException ie) {
@@ -333,22 +333,6 @@ public class TableContentModel extends AbstractTableModel
                         "Exception while setting new table.", ite);
             }
         }
-    }
-
-    /**
-     * Sets new data for this table. The argument may be <code>null</code> to
-     * indicate invalid data (nothing displayed). It will keep the argument
-     * as original unsorted table.
-     *
-     * @param data the new data being displayed or <code>null</code>
-     */
-    private void setDataTableNew(final DataTable data) {
-        if (m_tableSorterWorker != null) {
-            m_tableSorterWorker.cancel(true);
-            m_tableSorterWorker = null;
-        }
-        m_originalUnsortedTable = data;
-        setDataTableIntern(data);
     }
 
     /**
@@ -366,27 +350,32 @@ public class TableContentModel extends AbstractTableModel
         if (data == null) {
             throw new NullPointerException("Argument must not be null.");
         }
-        setDataTableIntern(data);
-        m_tableSortOrder = newOrder;
+        setDataTableIntern(m_originalUnsortedTable, data, newOrder);
     }
 
     /**
-     * Sets new data for this table. The argument may be <code>null</code> to
-     * indicate invalid data (nothing displayed).
-     *
-     * @param data the new data being displayed or <code>null</code>
+     * Sets new data for this table. The table argument may be
+     * <code>null</code> to indicate invalid data (nothing displayed).
      */
-    private void setDataTableIntern(final DataTable data) {
+    private void setDataTableIntern(final DataTable originalData,
+            final DataTable data, final TableSortOrder sortOrder) {
         assert SwingUtilities.isEventDispatchThread();
         if (m_data == data) {
             return;  // do not start event storm
         }
+        boolean clearOldTable = m_tableSortOrder != null;
+        if (m_tableSorterWorker != null) {
+            m_tableSorterWorker.cancel(true);
+            m_tableSorterWorker = null;
+        }
+        m_tableSortOrder = sortOrder;
         cancelRowCountingInBackground();
         int oldColCount = getColumnCount();
         int newColCount =
             data != null ? data.getDataTableSpec().getNumColumns() : 0;
         int oldRowCount = getRowCount();
         DataTable oldData = m_data;
+        m_originalUnsortedTable = originalData;
         m_data = data;
         m_cachedRows = null;
         m_hilitSet = null;
@@ -447,6 +436,9 @@ public class TableContentModel extends AbstractTableModel
             }
         }
         m_propertySupport.firePropertyChange(PROPERTY_DATA, oldData, m_data);
+        if (clearOldTable && oldData instanceof ContainerTable) {
+            ((ContainerTable)oldData).clear();
+        }
     }
 
     /** @return the tableSortOrder */
