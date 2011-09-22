@@ -146,9 +146,10 @@ public final class ConcatenateTable implements KnowsRowCountTable {
 
     /** {@inheritDoc} */
     @Override
-    public void removeFromTableRepository(
+    public boolean removeFromTableRepository(
             final HashMap<Integer, ContainerTable> rep) {
         // no new tables, ignore
+        return false;
     }
 
     /** {@inheritDoc} */

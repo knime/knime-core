@@ -579,15 +579,18 @@ public final class RearrangeColumnsTable
      * {@inheritDoc}
      */
     @Override
-    public void removeFromTableRepository(
+    public boolean removeFromTableRepository(
             final HashMap<Integer, ContainerTable> rep) {
         if (m_appendTable != null) {
             int id = m_appendTable.getBufferID();
             if (rep.remove(id) == null) {
                 LOGGER.debug("Failed to remove appended table with id "
                         + id + " from global table repository.");
+                return false;
             }
+            return true;
         }
+        return false;
     }
 
     /** Creates NoKeyBuffer objects rather then Buffer objects. */

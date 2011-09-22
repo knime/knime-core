@@ -239,7 +239,6 @@ public class ExecutionContext extends ExecutionMonitor {
 
     }
 
-
     /**
      * Creates a container to which rows can be added. Use this method if
      * you sequentially generate new rows. Add those by using the
@@ -453,6 +452,54 @@ public class ExecutionContext extends ExecutionMonitor {
         BufferedDataTable out = new BufferedDataTable(jt);
         out.setOwnerRecursively(m_node);
         return out;
+    }
+
+    /** Allows node implementations to clear temporary tables. This is useful
+     * for nodes that need to create temp tables during their execution, e.g.
+     * a sorter implementation swaps out temporary data to disk for later
+     * merging. Most node implementations will not use this method as they
+     * create the final output tables directly.
+     *
+     * There a couple of side-constraints:
+     * <ul>
+     * <li>This method is only to be called during a node's execution.
+     * <li>The argument table needs to be created using the current node's
+     * execution context (either this object or a derived/parent execution
+     * context).
+     * <li>Only the argument table will be cleared, any referenced table (also
+     * created by the same node) will not be cleared.
+     * <li>The table argument must not be returned by the execute method.
+     * <li>As this table is supposed to be temporary storage the table should
+     * not contain any individually defined {@link
+     * org.knime.core.data.container.BlobDataCell} as these might be referenced
+     * by other tables created during execution.
+     * </ul>
+     *
+     * @param table The table to be cleared.
+     * @throws NullPointerException If the argument is null.
+     * @throws IllegalStateException If the table is not created by this node
+     *         or this method is not called during execution.
+     * @since v2.5
+     */
+    public void clearTable(final BufferedDataTable table) {
+        if (table.getOwner() != m_node) {
+            String oOwner = table.getOwner().getName();
+            throw new IllegalStateException("Can't clear table that was "
+                    + "created by another node (\"" + oOwner + "\")");
+        }
+        int id = table.getBufferedTableId();
+        if (m_globalTableRepository.containsKey(id)) {
+            throw new IllegalStateException("Clearing table not allowed - can "
+                    + "only clear a table during execution");
+        }
+        table.clearSingle(m_node);
+        // this is a bit dirty: the local table repository enables us to
+        // reference blob cells that are created in a different table but
+        // on the same node (other table not yet in global repository - and
+        // maybe never will). The arg table is added to the local rep during
+        // DataContainer#close but it can remove itself during clear()...
+        // that's why we do it here.
+        m_localTableRepository.remove(id);
     }
 
     /**

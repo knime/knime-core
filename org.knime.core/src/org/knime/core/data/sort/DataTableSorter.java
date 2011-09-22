@@ -56,9 +56,11 @@ import java.util.Comparator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.NodeLogger;
 
 /**
  * Table sorter for sorting plain {@link DataTable} objects (use the class
@@ -124,6 +126,21 @@ public class DataTableSorter extends TableSorter {
             return new DataContainer(spec, true, 0);
         } else {
             return new DataContainer(spec, true);
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    void clearTable(final DataTable table) {
+        // the DataContainer returns ContainerTable
+        if (!(table instanceof ContainerTable)) {
+            NodeLogger.getLogger(getClass()).warn("Can't clear table instance "
+                    + "of \"" + table.getClass().getSimpleName()
+                    + "\" - expected \"" + ContainerTable.class.getSimpleName()
+                    + "\"");
+        } else {
+            ContainerTable t = (ContainerTable)table;
+            t.clear();
         }
     }
 

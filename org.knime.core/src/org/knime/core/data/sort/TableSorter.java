@@ -360,6 +360,11 @@ abstract class TableSorter {
     abstract DataContainer createDataContainer(final DataTableSpec spec,
             final boolean forceOnDisk);
 
+    /** Clears the temporary table that was used during the execution but is
+     * no longer needed.
+     * @param table The table to be cleared. */
+    abstract void clearTable(final DataTable table);
+
     /**
      * Sorts the given data table using a disk-based k-way merge sort.
      *

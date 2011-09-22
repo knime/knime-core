@@ -261,17 +261,22 @@ public final class BufferedDataTable implements DataTable, PortObject {
      * if and only if its owner is the argument node.
      * @param rep The repository to be removed from.
      * @param owner The dedicated owner.
+     * @return The number of tables effectively removed, used for assertions.
      */
-    void removeFromTableRepository(final HashMap<Integer, ContainerTable> rep,
+    int removeFromTableRepository(final HashMap<Integer, ContainerTable> rep,
             final Node owner) {
         if (getOwner() != owner) { // can safely test for hard references here
-            return;
+            return 0;
         }
+        int result = 0;
         BufferedDataTable[] references = m_delegate.getReferenceTables();
         for (BufferedDataTable reference : references) {
-            reference.removeFromTableRepository(rep, owner);
+            result += reference.removeFromTableRepository(rep, owner);
         }
-        m_delegate.removeFromTableRepository(rep);
+        if (m_delegate.removeFromTableRepository(rep)) {
+            result += 1;
+        }
+        return result;
     }
 
     /**
@@ -673,7 +678,8 @@ public final class BufferedDataTable implements DataTable, PortObject {
         }
     }
 
-    /** Clears any associated storage, for instance temp files.
+    /** Clears any associated storage, for instance temp files. This call also
+     * clears all referenced tables (if they are owned by the same node).
      * @param dataOwner The owner of the tables. If
      * getOwner() != dataOwner, we return immediately.
      */
@@ -689,6 +695,28 @@ public final class BufferedDataTable implements DataTable, PortObject {
             BufferedDataTable[] references = m_delegate.getReferenceTables();
             for (BufferedDataTable reference : references) {
                 reference.clear(dataOwner);
+            }
+            m_isCleared.setValue(true);
+            m_delegate.clear();
+        }
+    }
+
+    /** Clears any associated storage, for instance temp files. This call does
+     * not clear referenced tables owned by the same node. Only used if client
+     * code programmatically clears a temporary table created during the
+     * execution.
+     * @param dataOwner The owner of the tables. If
+     * getOwner() != dataOwner, we return immediately.
+     */
+    synchronized void clearSingle(final Node dataOwner) {
+        // only take responsibility for our data tables
+        if (dataOwner != getOwner()) {
+            // this really is an assertion
+            throw new IllegalStateException("Table not created by owner node");
+        }
+        synchronized (m_isCleared) {
+            if (m_isCleared.booleanValue()) {
+                return;
             }
             m_isCleared.setValue(true);
             m_delegate.clear();
@@ -756,8 +784,11 @@ public final class BufferedDataTable implements DataTable, PortObject {
         /** Remove this table from global table repository. Called when
          * node is reset.
          * @param rep The workflow table repository.
+         * @return If this table was indeed removed from the table repository
+         *         (true for ordinary container tables but false for wrappers
+         *         such as concatenate or spec replacer)
          */
-        void removeFromTableRepository(
+        boolean removeFromTableRepository(
                 final HashMap<Integer, ContainerTable> rep);
 
     }

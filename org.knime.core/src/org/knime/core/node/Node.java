@@ -1257,16 +1257,19 @@ public final class Node implements NodeModelWarningListener {
      * {@link #putOutputTablesIntoGlobalRepository(HashMap)}. It will remove
      * all output tables and its delegates from the global table repository.
      * @param rep The global table rep.
+     * @return The number of tables effectively removed, used for assertions.
      */
-    public void removeOutputTablesFromGlobalRepository(
+    public int removeOutputTablesFromGlobalRepository(
             final HashMap<Integer, ContainerTable> rep) {
+        int result = 0;
         for (int i = 0; i < m_outputs.length; i++) {
             PortObject portObject = m_outputs[i].object;
             if (portObject instanceof BufferedDataTable) {
                 BufferedDataTable t = (BufferedDataTable)portObject;
-                t.removeFromTableRepository(rep, this);
+                result += t.removeFromTableRepository(rep, this);
             }
         }
+        return result;
     }
 
     /**

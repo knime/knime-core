@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Aug 12, 2008 (wiswedel): created
  */
@@ -57,23 +57,23 @@ import java.util.Map;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 
 /**
- * Special table implementation that simply wraps a given 
+ * Special table implementation that simply wraps a given
  * {@link BufferedDataTable}. This class is used by the framework and should not
  * be of public interest.
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class WrappedTable implements KnowsRowCountTable {
-    
+
     private final BufferedDataTable m_table;
-    
+
     /** Creates new table wrapping the argument.
      * @param table Table to wrap
      * @throws NullPointerException If argument is null.
@@ -93,7 +93,7 @@ public final class WrappedTable implements KnowsRowCountTable {
     /** {@inheritDoc} */
     @Override
     public void ensureOpen() {
-        
+
     }
 
     /** {@inheritDoc} */
@@ -119,7 +119,7 @@ public final class WrappedTable implements KnowsRowCountTable {
     public DataTableSpec getDataTableSpec() {
         return m_table.getDataTableSpec();
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void putIntoTableRepository(
@@ -128,35 +128,36 @@ public final class WrappedTable implements KnowsRowCountTable {
 
     /** {@inheritDoc} */
     @Override
-    public void removeFromTableRepository(
+    public boolean removeFromTableRepository(
             final HashMap<Integer, ContainerTable> rep) {
+        return false;
     }
-    
+
     private static final String CFG_INTERNAL_META = "meta_internal";
     private static final String CFG_REFERENCE_ID = "table_reference_ID";
 
     /** {@inheritDoc} */
     @Override
     public void saveToFile(final File f, final NodeSettingsWO s,
-            final ExecutionMonitor exec) 
+            final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
         NodeSettingsWO subSettings = s.addNodeSettings(CFG_INTERNAL_META);
         subSettings.addInt(CFG_REFERENCE_ID, m_table.getBufferedTableId());
     }
-    
-    /** Restore table, reverse operation to 
+
+    /** Restore table, reverse operation to
      * {@link #saveToFile(File, NodeSettingsWO, ExecutionMonitor) save}.
      * @param s To load from
      * @param tblRep Global table loader map.
      * @return A freshly created wrapped table.
      * @throws InvalidSettingsException If settings are invalid.
      */
-    public static WrappedTable load(final NodeSettingsRO s, 
-            final Map<Integer, BufferedDataTable> tblRep) 
+    public static WrappedTable load(final NodeSettingsRO s,
+            final Map<Integer, BufferedDataTable> tblRep)
         throws InvalidSettingsException {
         NodeSettingsRO subSettings = s.getNodeSettings(CFG_INTERNAL_META);
         int refID = subSettings.getInt(CFG_REFERENCE_ID);
-        BufferedDataTable reference = 
+        BufferedDataTable reference =
             BufferedDataTable.getDataTable(tblRep, refID);
         return new WrappedTable(reference);
     }

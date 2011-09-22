@@ -510,7 +510,11 @@ public final class SingleNodeContainer extends NodeContainer {
      * their body not reset between iterations. */
     void cleanOutPorts() {
         m_node.cleanOutPorts();
-        removeOutputTablesFromGlobalRepository();
+        // this should have no affect as m_node.cleanOutPorts() will remove
+        // all tables already
+        int nrRemovedTables = removeOutputTablesFromGlobalRepository();
+        assert nrRemovedTables == 0 : nrRemovedTables + " tables in global "
+            + "repository after node cleared outports (expected 0)";
     }
 
     /** Enable (or disable) queuing of underlying node for execution. This
@@ -879,10 +883,10 @@ public final class SingleNodeContainer extends NodeContainer {
 
     /** Removes all tables that were created by this node from the global
      * table repository. */
-    private void removeOutputTablesFromGlobalRepository() {
+    private int removeOutputTablesFromGlobalRepository() {
         HashMap<Integer, ContainerTable> globalRep =
             getParent().getGlobalTableRepository();
-        m_node.removeOutputTablesFromGlobalRepository(globalRep);
+        return m_node.removeOutputTablesFromGlobalRepository(globalRep);
     }
 
     // //////////////////////////////////////

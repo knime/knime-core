@@ -175,8 +175,9 @@ public final class JoinedTable implements KnowsRowCountTable {
      * {@inheritDoc}
      */
     @Override
-    public void removeFromTableRepository(
+    public boolean removeFromTableRepository(
             final HashMap<Integer, ContainerTable> rep) {
+        return false;
     }
 
     private static final String CFG_INTERNAL_META = "meta_internal";

@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Jul 14, 2006 (wiswedel): created
  */
@@ -61,18 +61,18 @@ import java.util.zip.ZipFile;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 
 
 /**
  * Table that only replaces the data table spec of an underlying table. This
- * class is not intended for subclassing or to be used in a node model 
+ * class is not intended for subclassing or to be used in a node model
  * implementation. Instead, use the methods provided through the execution
  * context.
  * @see org.knime.core.node.ExecutionContext#createSpecReplacerTable(
@@ -80,11 +80,11 @@ import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class TableSpecReplacerTable implements KnowsRowCountTable {
-    
+
     private final BufferedDataTable m_reference;
     private final DataTableSpec m_newSpec;
-    
-    /** Creates new table. Not intended to be used directly for node 
+
+    /** Creates new table. Not intended to be used directly for node
      * implementations.
      * @param table The reference table.
      * @param newSpec Its new spec.
@@ -95,8 +95,8 @@ public final class TableSpecReplacerTable implements KnowsRowCountTable {
             final BufferedDataTable table, final DataTableSpec newSpec) {
         DataTableSpec oldSpec = table.getDataTableSpec();
         if (oldSpec.getNumColumns() != newSpec.getNumColumns()) {
-            throw new IllegalArgumentException("Table specs have different " 
-                    + "lengths: " + oldSpec.getNumColumns() + " vs. " 
+            throw new IllegalArgumentException("Table specs have different "
+                    + "lengths: " + oldSpec.getNumColumns() + " vs. "
                     + newSpec.getNumColumns());
             // I don't think we can make more assertions here.
         }
@@ -107,35 +107,39 @@ public final class TableSpecReplacerTable implements KnowsRowCountTable {
     private static final String CFG_INTERNAL_META = "meta_internal";
     private static final String CFG_REFERENCE_ID = "table_reference_ID";
     private static final String ZIP_ENTRY_SPEC = "newspec.xml";
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public void saveToFile(final File f, final NodeSettingsWO s,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         NodeSettingsWO subSettings = s.addNodeSettings(CFG_INTERNAL_META);
         subSettings.addInt(CFG_REFERENCE_ID, m_reference.getBufferedTableId());
     }
-    
+
     /**
      * Does nothing.
      * {@inheritDoc}
      */
+    @Override
     public void putIntoTableRepository(
             final HashMap<Integer, ContainerTable> rep) {
     }
-    
+
     /**
      * Does nothing.
      * {@inheritDoc}
      */
-    public void removeFromTableRepository(
+    @Override
+    public boolean removeFromTableRepository(
             final HashMap<Integer, ContainerTable> rep) {
+        return false;
     }
-    
+
     /**
-     * Restores table from a file that has been written using KNIME 1.1.x 
+     * Restores table from a file that has been written using KNIME 1.1.x
      * or before. Not intended to be used by node implementations.
      * @param f The file to read from.
      * @param s The settings to get meta information from.
@@ -145,8 +149,8 @@ public final class TableSpecReplacerTable implements KnowsRowCountTable {
      * @throws InvalidSettingsException If reading the settings fails.
      */
     public static TableSpecReplacerTable load11x(
-            final File f, final NodeSettingsRO s, 
-            final Map<Integer, BufferedDataTable> tblRep) 
+            final File f, final NodeSettingsRO s,
+            final Map<Integer, BufferedDataTable> tblRep)
         throws IOException, InvalidSettingsException {
         ZipFile zipFile = new ZipFile(f);
         InputStream in = new BufferedInputStream(
@@ -157,7 +161,7 @@ public final class TableSpecReplacerTable implements KnowsRowCountTable {
     }
 
     /**
-     * Restores table from a file that has been written using KNIME 1.2.0 
+     * Restores table from a file that has been written using KNIME 1.2.0
      * or later. Not intended to be used by node implementations.
      * @param s The settings to get meta information from.
      * @param newSpec The new table spec.
@@ -165,31 +169,34 @@ public final class TableSpecReplacerTable implements KnowsRowCountTable {
      * @return The resulting table.
      * @throws InvalidSettingsException If reading the settings fails.
      */
-    public static TableSpecReplacerTable load(final NodeSettingsRO s, 
-            final DataTableSpec newSpec, 
-            final Map<Integer, BufferedDataTable> tblRep) 
+    public static TableSpecReplacerTable load(final NodeSettingsRO s,
+            final DataTableSpec newSpec,
+            final Map<Integer, BufferedDataTable> tblRep)
         throws InvalidSettingsException {
         NodeSettingsRO subSettings = s.getNodeSettings(CFG_INTERNAL_META);
         int refID = subSettings.getInt(CFG_REFERENCE_ID);
-        BufferedDataTable reference = 
+        BufferedDataTable reference =
             BufferedDataTable.getDataTable(tblRep, refID);
         return new TableSpecReplacerTable(reference, newSpec);
     }
-    
+
     /**
-     * Do not call this method! It's used internally. 
+     * Do not call this method! It's used internally.
      * {@inheritDoc}
      */
+    @Override
     public void clear() {
     }
-    
+
     /** {@inheritDoc} */
+    @Override
     public void ensureOpen() {
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataTableSpec getDataTableSpec() {
         return m_newSpec;
     }
@@ -197,6 +204,7 @@ public final class TableSpecReplacerTable implements KnowsRowCountTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public CloseableRowIterator iterator() {
         return m_reference.iterator();
     }
@@ -204,14 +212,16 @@ public final class TableSpecReplacerTable implements KnowsRowCountTable {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getRowCount() {
         return m_reference.getRowCount();
     }
-    
+
     /**
      * Get handle to reference table in an array of length 1.
      * @return Reference to that table.
      */
+    @Override
     public BufferedDataTable[] getReferenceTables() {
         return new BufferedDataTable[]{m_reference};
     }

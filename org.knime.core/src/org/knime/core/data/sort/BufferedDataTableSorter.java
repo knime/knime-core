@@ -54,11 +54,13 @@ import java.util.Collection;
 import java.util.Comparator;
 
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.NodeLogger;
 
 /**
  * Table sorter for sorting {@link BufferedDataTable} objects. The returned
@@ -131,6 +133,20 @@ public class BufferedDataTableSorter extends TableSorter {
             final boolean forceOnDisk) {
         return m_execContext.createDataContainer(
                 spec, true, forceOnDisk ? 0 : -1);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    void clearTable(final DataTable table) {
+        // the DataContainer returns ContainerTable
+        if (!(table instanceof BufferedDataTable)) {
+            NodeLogger.getLogger(getClass()).warn("Can't clear table instance "
+                    + "of \"" + table.getClass().getSimpleName()
+                    + "\" - expected \""
+                    + BufferedDataTable.class.getSimpleName() + "\"");
+        } else {
+            m_execContext.clearTable((BufferedDataTable)table);
+        }
     }
 
 }

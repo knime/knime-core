@@ -209,12 +209,14 @@ public final class ContainerTable implements DataTable, KnowsRowCountTable {
      * {@inheritDoc}
      */
     @Override
-    public void removeFromTableRepository(
+    public boolean removeFromTableRepository(
             final HashMap<Integer, ContainerTable> rep) {
         if (rep.remove(getBufferID()) == null) {
             LOGGER.debug("Failed to remove container table with id "
                     + getBufferID() + " from global table repository.");
+            return false;
         }
+        return true;
     }
 
     /**
