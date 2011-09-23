@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Nov 27, 2008 (wiswedel): created
  */
@@ -32,9 +32,9 @@ import org.knime.base.node.util.cache.CacheNodeFactory;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.util.FileUtil;
 import org.knime.testing.node.differNode.DataTableDiffer;
 import org.knime.testing.node.differNode.TestEvaluationException;
@@ -42,10 +42,10 @@ import org.knime.testing.node.runtime.RuntimeNodeFactory;
 import org.knime.testing.node.runtime.RuntimeNodeModel;
 
 /**
- * Creates a workflow of a node that creates a BDT with large blob cells 
+ * Creates a workflow of a node that creates a BDT with large blob cells
  * (each about 1MB) and then adds a sequence of Cache nodes. The chain is
  * ended by a tester node that compares the tables. The test case checks
- * whether the saved workflow is of the approximated size. 
+ * whether the saved workflow is of the approximated size.
  * @author Bernd Wiswedel, University of Konstanz
  */
 public abstract class AbstractBlobsInWorkflowTest extends TestCase {
@@ -54,9 +54,9 @@ public abstract class AbstractBlobsInWorkflowTest extends TestCase {
     private WorkflowManager m_flow;
 
     protected abstract BufferedDataTable createBDT(final ExecutionContext exec);
-    
+
     protected abstract long getApproximateSize();
-    
+
     private static final long calculateSize(final File dir) {
         long size = 0;
         if (dir.isDirectory()) {
@@ -68,18 +68,18 @@ public abstract class AbstractBlobsInWorkflowTest extends TestCase {
         }
         return size;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected void setUp() throws Exception {
         m_wfmDir = FileUtil.createTempDir(getClass().getSimpleName());
-        WorkflowManager m = 
+        WorkflowManager m =
             WorkflowManager.ROOT.createAndAddProject("Blob test");
         RuntimeNodeModel createModel = new RuntimeNodeModel(0, 1) {
             /** {@inheritDoc} */
             @Override
-            protected BufferedDataTable[] execute(BufferedDataTable[] inData,
-                    ExecutionContext exec) throws Exception {
+            protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+                    final ExecutionContext exec) throws Exception {
                 return new BufferedDataTable[]{createBDT(exec)};
             }
         };
@@ -90,18 +90,18 @@ public abstract class AbstractBlobsInWorkflowTest extends TestCase {
         for (int i = 0; i < cacheIDs.length; i++) {
             cacheIDs[i] = m.createAndAddNode(cacheNodeFactory);
             if (i == 0) {
-                m.addConnection(createID, 0, cacheIDs[i], 0);
+                m.addConnection(createID, 1, cacheIDs[i], 1);
             } else {
-                m.addConnection(cacheIDs[i - 1], 0, cacheIDs[i], 0);
+                m.addConnection(cacheIDs[i - 1], 1, cacheIDs[i], 1);
             }
         }
-        final AtomicReference<Throwable> failure = 
-            new AtomicReference<Throwable>(); 
+        final AtomicReference<Throwable> failure =
+            new AtomicReference<Throwable>();
         RuntimeNodeModel checkModel = new RuntimeNodeModel(1, 0) {
             /** {@inheritDoc} */
             @Override
-            protected BufferedDataTable[] execute(BufferedDataTable[] inData,
-                    ExecutionContext exec) throws Exception {
+            protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+                    final ExecutionContext exec) throws Exception {
                 try {
                     new DataTableDiffer().compare(inData[0], createBDT(exec));
                 } catch (TestEvaluationException tee) {
@@ -112,13 +112,13 @@ public abstract class AbstractBlobsInWorkflowTest extends TestCase {
             }
         };
         NodeID checkID = m.createAndAddNode(new RuntimeNodeFactory(checkModel));
-        m.addConnection(cacheIDs[cacheIDs.length - 1], 0, checkID, 0);
+        m.addConnection(cacheIDs[cacheIDs.length - 1], 1, checkID, 1);
         m_flow = m;
         m.executeAllAndWaitUntilDone();
         assertNull(failure.get());
         assertTrue(m.getState().equals(State.EXECUTED));
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected void tearDown() throws Exception {
@@ -129,14 +129,14 @@ public abstract class AbstractBlobsInWorkflowTest extends TestCase {
             WorkflowManager.ROOT.removeProject(m_flow.getID());
         }
     }
-    
+
     public void testSize() throws Exception {
         m_flow.save(m_wfmDir, new ExecutionMonitor(), true);
         long size = calculateSize(m_wfmDir);
         double sizeInMB = size / 1024 / 1024.0;
         long roughlyExpectedSize = getApproximateSize();
         double roughlyExpectedSizeInMB = roughlyExpectedSize / 1024 / 1024.0;
-        String error = "Size of workflow out of range, expected ~" 
+        String error = "Size of workflow out of range, expected ~"
             + roughlyExpectedSizeInMB + "MB, actual " + sizeInMB + "MB";
         assertTrue(error, size > 0.8 * roughlyExpectedSize);
         assertTrue(error, size < 1.2 * roughlyExpectedSize);
