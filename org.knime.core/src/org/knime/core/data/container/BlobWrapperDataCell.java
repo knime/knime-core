@@ -168,6 +168,18 @@ public final class BlobWrapperDataCell extends DataCell {
 
     /** @return The blob address. */
     BlobAddress getAddress() {
+        // the blob address of the contained cell might already be assigned
+        // but this blob address not:
+        // the BlobDataCell is contained in another wrapper (added twice to
+        // the table but blob address not set as the table is written
+        // asynchronously) - so the first wrapper gets the address set (and so
+        // does the BlobDataCell) but the second wrapper (i.e. this one) doesn't
+        //
+        // this was added as part of fixing the
+        // BlobsInSetCellPartiallySingletonsWorkflowTestunit test
+        if (m_blobAddress == null && m_hardCellRef != null) {
+            m_blobAddress = m_hardCellRef.getBlobAddress();
+        }
         return m_blobAddress;
     }
 
