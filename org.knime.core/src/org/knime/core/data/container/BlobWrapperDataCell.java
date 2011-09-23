@@ -89,14 +89,30 @@ public final class BlobWrapperDataCell extends DataCell {
      * Keeps references.
      * @param b The buffer that owns the cell.
      * @param ba Its address.
-     * @param cl The class information of the blob.
+     * @param cl The class information of the blob.]
+     * @param cell The cell, to be put into soft reference.
      */
     BlobWrapperDataCell(final Buffer b, final BlobAddress ba,
-            final CellClassInfo cl) {
+            final CellClassInfo cl, final BlobDataCell cell) {
         assert b.getBufferID() == ba.getBufferID();
         m_buffer = b;
         m_blobAddress = ba;
         m_blobClass = cl;
+        if (cell != null) {
+            assert cell.getBlobAddress().getBufferID() == ba.getBufferID();
+            m_cellRef = new SoftReference<BlobDataCell>(cell);
+        }
+    }
+
+    /**
+     * Keeps references.
+     * @param b The buffer that owns the cell.
+     * @param ba Its address.
+     * @param cl The class information of the blob.
+     */
+    BlobWrapperDataCell(final Buffer b, final BlobAddress ba,
+            final CellClassInfo cl) {
+        this(b, ba, cl, null);
     }
 
     /**

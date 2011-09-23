@@ -69,10 +69,10 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.WeakHashMap;
-import java.util.Map.Entry;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.Deflater;
@@ -113,7 +113,7 @@ import org.knime.core.util.FileUtil;
  * @author Bernd Wiswedel, University of Konstanz
  */
 class Buffer implements KNIMEStreamConstants {
-    
+
     /** Static field to enable/disable the usage of a GZipInput/OutpuStream
      * when writing the binary data. This option defaults to
      * {@value DataContainer#DEF_GZIP_COMPRESSION}.
@@ -148,7 +148,7 @@ class Buffer implements KNIMEStreamConstants {
      * this is a subconfig in meta.xml.
      */
     private static final String CFG_INTERNAL_META = "table.meta.internal";
-    
+
     /** Config entries when writing the meta info to the file (uses NodeSettings
      * object, which uses key-value pairs. Here: the version of the writing
      * method.
@@ -175,11 +175,11 @@ class Buffer implements KNIMEStreamConstants {
 
     /** Config entry: Class name of data cell. */
     private static final String CFG_CELL_SINGLE_CLASS = "class";
-    
+
     /** Config entry: element type if a cell represents a collection. */
-    private static final String CFG_CELL_SINGLE_ELEMENT_TYPE = 
+    private static final String CFG_CELL_SINGLE_ELEMENT_TYPE =
         "collection.element.type";
-    
+
     /** Current version string. */
     private static final String VERSION = "container_8";
 
@@ -246,7 +246,7 @@ class Buffer implements KNIMEStreamConstants {
         } catch (Exception e) {
             LOGGER.warn("Unable to add shutdown hook to delete temp files", e);
         }
-        // prefer this block over Boolean.getBoolean(...) to cover typos 
+        // prefer this block over Boolean.getBoolean(...) to cover typos
         // on command line (warn on console)
         String isUseGzipString = System.getProperty(
                 KNIMEConstants.PROPERTY_TABLE_GZIP_COMPRESSION);
@@ -262,9 +262,9 @@ class Buffer implements KNIMEStreamConstants {
             IS_USE_GZIP = false;
         } else {
             debugLog = false;
-            LOGGER.warn("Unable to read property " 
+            LOGGER.warn("Unable to read property "
                     + KNIMEConstants.PROPERTY_TABLE_GZIP_COMPRESSION + " (\""
-                    + isUseGzipString + "\"); defaulting to " 
+                    + isUseGzipString + "\"); defaulting to "
                     + DataContainer.DEF_GZIP_COMPRESSION);
             IS_USE_GZIP = DataContainer.DEF_GZIP_COMPRESSION;
         }
@@ -284,7 +284,7 @@ class Buffer implements KNIMEStreamConstants {
     private static boolean isUseCompressionForBlobs(
             final CellClassInfo cellClassInfo) {
         @SuppressWarnings("unchecked")
-        Class<? extends BlobDataCell> cl = 
+        Class<? extends BlobDataCell> cl =
             (Class<? extends BlobDataCell>)cellClassInfo.getCellClass();
         Boolean result = BLOB_COMPRESS_MAP.get(cl);
         if (result != null) {
@@ -393,8 +393,8 @@ class Buffer implements KNIMEStreamConstants {
     /** The iterator that is used to read the content back into memory.
      * This instance is used after the workflow is restored from disk. */
     private CloseableRowIterator m_backIntoMemoryIterator;
-    
-    /** A flag indicating whether the next call to iterator() hast to 
+
+    /** A flag indicating whether the next call to iterator() hast to
      * initialize m_backIntoMemoryIterator. This flag is mostly false but may
      * be true right after object initialization when the settings contain
      * the "was-previously-in-memory" flag. */
@@ -407,12 +407,12 @@ class Buffer implements KNIMEStreamConstants {
      * provide backward compatibility.
      */
     private int m_version = IVERSION;
-    
-    /** Map of blob addresses that were copied into this buffer. It maps the 
-     * original id to the new id (having m_bufferID as owner). 
-     * Copying is necessary if 
+
+    /** Map of blob addresses that were copied into this buffer. It maps the
+     * original id to the new id (having m_bufferID as owner).
+     * Copying is necessary if
      * - we copy from or to a buffer with id "-1" or
-     * - this buffer is instructed to copy all blobs 
+     * - this buffer is instructed to copy all blobs
      *   (important for loop end nodes).
      * If we didn't use such a map, we wouldn't notice if any one blob gets
      * copied into this buffer multiple times ... we would copy each time it is
@@ -421,7 +421,7 @@ class Buffer implements KNIMEStreamConstants {
      * need to copy blobs.
      */
     private HashMap<BlobAddress, BlobAddress> m_copiedBlobsMap;
-    
+
     /**
      * Creates new buffer for <strong>writing</strong>. It has assigned a
      * given spec, and a max row count that may resize in memory.
@@ -495,24 +495,24 @@ class Buffer implements KNIMEStreamConstants {
     public String getVersion() {
         return VERSION;
     }
-    
+
     /** Get underlying stream version. Important for file iterators.
      * @return Underlying stream version.
      */
     final int getReadVersion() {
         return m_version;
     }
-    
+
     /** @return Underlying binary file. */
     final File getBinFile() {
         return m_binFile;
     }
-    
+
     /** @return Whether stream is zipped. */
     final boolean isBinFileGZipped() {
         return IS_USE_GZIP;
     }
-    
+
     /**
      * Validate the version as read from the file if it can be parsed by
      * this implementation.
@@ -539,15 +539,15 @@ class Buffer implements KNIMEStreamConstants {
      * @param r The row to be added.
      * @param isCopyOfExisting Whether to copy blobs (this is only true when
      *        and existing buffer gets copied (version hop))
-     * @param forceCopyOfBlobs If true any blob that is not owned by this 
+     * @param forceCopyOfBlobs If true any blob that is not owned by this
      * buffer, will be copied and this buffer will take ownership. This option
      * is true for loop end nodes, which need to aggregate the data generated
-     * in the loop body 
+     * in the loop body
      */
-    void addRow(final DataRow r, final boolean isCopyOfExisting, 
+    void addRow(final DataRow r, final boolean isCopyOfExisting,
             final boolean forceCopyOfBlobs) {
         try {
-            BlobSupportDataRow row = 
+            BlobSupportDataRow row =
                 saveBlobs(r, isCopyOfExisting, forceCopyOfBlobs);
             m_list.add(row);
             incrementSize();
@@ -605,7 +605,7 @@ class Buffer implements KNIMEStreamConstants {
                 ? ((BlobSupportDataRow)row).getRawCell(col)
                     : cellCopies[col];
             DataCell processedCell = handleIncomingBlob(
-                    cell, col, row.getNumCells(), 
+                    cell, col, row.getNumCells(),
                     isCopyOfExisting, forceCopyOfBlobs);
             if (processedCell != cell) {
                 if (cellCopies == null) {
@@ -620,12 +620,12 @@ class Buffer implements KNIMEStreamConstants {
         return cellCopies == null ? (BlobSupportDataRow)row
                 : new BlobSupportDataRow(row.getKey(), cellCopies);
     }
-    
-    private DataCell handleIncomingBlob(final DataCell cell,  final int col, 
-            final int totalColCount, final boolean copyForVersionHop, 
+
+    private DataCell handleIncomingBlob(final DataCell cell,  final int col,
+            final int totalColCount, final boolean copyForVersionHop,
             final boolean forceCopyOfBlobsArg) throws IOException {
         // whether the content of the argument row needs to be copied
-        // into a new BlobSupportDataRow (will do that when either this 
+        // into a new BlobSupportDataRow (will do that when either this
         // flag is true or cellCopies != null)
         boolean isWrapperCell = cell instanceof BlobWrapperDataCell;
         BlobAddress ad;
@@ -643,20 +643,20 @@ class Buffer implements KNIMEStreamConstants {
             if (cdv.containsBlobWrapperCells()) {
                 Iterator<DataCell> it = cdv.iterator();
                 if (!(it instanceof BlobSupportDataCellIterator)) {
-                    LOGGER.coding("(Collection) DataCell of class \"" 
-                            + cell.getClass().getSimpleName() 
+                    LOGGER.coding("(Collection) DataCell of class \""
+                            + cell.getClass().getSimpleName()
                             + "\" contains Blobs, but does not "
-                            + "return an iterator supporting those " 
+                            + "return an iterator supporting those "
                             + "(expected " + BlobSupportDataCellIterator
-                            .class.getName() + ", got " 
+                            .class.getName() + ", got "
                             + it.getClass().getName() + ")");
                 }
                 while (it.hasNext()) {
-                    DataCell n = it instanceof BlobSupportDataCellIterator 
+                    DataCell n = it instanceof BlobSupportDataCellIterator
                             ? ((BlobSupportDataCellIterator)
                                     it).nextWithBlobSupport() : it.next();
                     // we disregard the return value here
-                    handleIncomingBlob(n, col, totalColCount, 
+                    handleIncomingBlob(n, col, totalColCount,
                             copyForVersionHop, forceCopyOfBlobsArg);
                 }
             }
@@ -678,9 +678,9 @@ class Buffer implements KNIMEStreamConstants {
                 ContainerTable t = m_globalRepository.get(ad.getBufferID());
                 ownerBuffer = t != null ? t.getBuffer() : null;
             }
-            /* this can only be true if the argument row contains wrapper 
-             * cells for blobs that do not have a buffer set; that is, 
-             * someone took a BlobDataCell from a predecessor node 
+            /* this can only be true if the argument row contains wrapper
+             * cells for blobs that do not have a buffer set; that is,
+             * someone took a BlobDataCell from a predecessor node
              * (ad != null) and put it manually into a new wrapper cell
              * (wc != null) - by doing that you loose the buffer info
              * (wc.getBuffer == null) */
@@ -690,27 +690,27 @@ class Buffer implements KNIMEStreamConstants {
         } else {
             ownerBuffer = null;
         }
-        // if we have to make a clone of the blob cell (true if 
+        // if we have to make a clone of the blob cell (true if
         // isCopyOfExisting is true and the blob address corresponds to the next
         // assignable m_indicesOfBlobInColumns[col])
         boolean isToCloneForVersionHop = false;
         if (copyForVersionHop) {
-            isToCloneForVersionHop = ad != null 
+            isToCloneForVersionHop = ad != null
             && ad.getBufferID() == getBufferID();
-            // this if statement handles cases where a blob is added to the 
+            // this if statement handles cases where a blob is added to the
             // buffer multiple times -- don't copy the duplicates
             if (isToCloneForVersionHop && m_indicesOfBlobInColumns == null) {
                 // first to assign
                 isToCloneForVersionHop = ad.getIndexOfBlobInColumn() == 0;
-                assert isToCloneForVersionHop 
+                assert isToCloneForVersionHop
                     : "Clone of buffer does not return blobs in order";
-            } else if (isToCloneForVersionHop 
+            } else if (isToCloneForVersionHop
                     && m_indicesOfBlobInColumns != null) {
-                isToCloneForVersionHop = ad.getIndexOfBlobInColumn() 
+                isToCloneForVersionHop = ad.getIndexOfBlobInColumn()
                         == m_indicesOfBlobInColumns[col];
             }
         }
-        
+
         // if we have to clone the blob because the forceCopyOfBlobs flag is
         // on (e.g. because the owning node is a loop end node)
         boolean isToCloneDueToForceCopyOfBlobs = false;
@@ -733,10 +733,10 @@ class Buffer implements KNIMEStreamConstants {
                 }
             }
         }
-        
+
         // if either not previously assigned (ownerBuffer == null) or
         // we have to make a clone
-        if (ownerBuffer == null || isToCloneForVersionHop 
+        if (ownerBuffer == null || isToCloneForVersionHop
                 || isToCloneDueToForceCopyOfBlobs) {
             // need to set ownership if this blob was not assigned yet
             // or has been assigned to an unlinked (i.e. local) buffer
@@ -770,9 +770,10 @@ class Buffer implements KNIMEStreamConstants {
                 rewrite.setIndexOfBlobInColumn(indexBlobInCol);
                 File source = b.getBlobFile(ad.getIndexOfBlobInColumn(),
                         ad.getColumn(), false, ad.isUseCompression());
-                File dest = getBlobFile(indexBlobInCol, col, true, 
+                File dest = getBlobFile(indexBlobInCol, col, true,
                         ad.isUseCompression());
                 FileUtil.copy(source, dest);
+                wc = new BlobWrapperDataCell(this, rewrite, cl);
             } else {
                 BlobDataCell bc;
                 if (isWrapperCell) {
@@ -782,16 +783,18 @@ class Buffer implements KNIMEStreamConstants {
                     bc = (BlobDataCell)cell;
                 }
                 // the null case can only happen if there were problems reading
-                // the persisted blob (caught exception and returned missing 
-                // cell) - reading the blob that is "not saved" here will 
+                // the persisted blob (caught exception and returned missing
+                // cell) - reading the blob that is "not saved" here will
                 // also cause trouble ("no such file"), which is ok as we need
                 // to take an error along
                 if (bc != null) {
                     writeBlobDataCell(
                             bc, rewrite, getSerializerForDataCell(cl));
+                    wc = new BlobWrapperDataCell(this, rewrite, cl, bc);
+                } else {
+                    wc = new BlobWrapperDataCell(this, rewrite, cl);
                 }
             }
-            wc = new BlobWrapperDataCell(this, rewrite, cl);
             m_containsBlobs = true;
         } else {
             // blob has been saved in one of the predecessor nodes
@@ -884,17 +887,17 @@ class Buffer implements KNIMEStreamConstants {
         subSettings.addBoolean(CFG_CONTAINS_BLOBS, m_containsBlobs);
         subSettings.addBoolean(CFG_IS_IN_MEMORY, !usesOutFile());
         subSettings.addInt(CFG_BUFFER_ID, m_bufferID);
-        NodeSettingsWO typeSubSettings = 
+        NodeSettingsWO typeSubSettings =
             subSettings.addNodeSettings(CFG_CELL_CLASSES);
         for (int i = 0; i < shortCutsLookup.length; i++) {
             CellClassInfo info = shortCutsLookup[i];
-            NodeSettingsWO single = 
+            NodeSettingsWO single =
                 typeSubSettings.addNodeSettings("element_" + i);
-            single.addString(CFG_CELL_SINGLE_CLASS, 
+            single.addString(CFG_CELL_SINGLE_CLASS,
                     info.getCellClass().getName());
             DataType elementType = info.getCollectionElementType();
             if (elementType != null) {
-                NodeSettingsWO subTypeConfig = 
+                NodeSettingsWO subTypeConfig =
                     single.addNodeSettings(CFG_CELL_SINGLE_ELEMENT_TYPE);
                 elementType.save(subTypeConfig);
             }
@@ -947,7 +950,7 @@ class Buffer implements KNIMEStreamConstants {
                 }
             }
             if (m_version <= 6) {
-                m_shortCutsLookup = 
+                m_shortCutsLookup =
                     readCellClassInfoArrayFromMetaVersion1x(subSettings);
             } else {
                 m_shortCutsLookup =
@@ -957,7 +960,7 @@ class Buffer implements KNIMEStreamConstants {
             inStream.close();
         }
     }
-    
+
     @SuppressWarnings("unchecked")
     private static CellClassInfo[] readCellClassInfoArrayFromMetaVersion1x(
             final NodeSettingsRO settings) throws InvalidSettingsException {
@@ -968,7 +971,7 @@ class Buffer implements KNIMEStreamConstants {
             try {
                 cl = GlobalClassCreator.createClass(cellClasses[i]);
             } catch (ClassNotFoundException e) {
-                throw new InvalidSettingsException("Can't load data cell " 
+                throw new InvalidSettingsException("Can't load data cell "
                         + "class \"" + cellClasses[i] + "\"", e);
             }
             if (!DataCell.class.isAssignableFrom(cl)) {
@@ -986,23 +989,23 @@ class Buffer implements KNIMEStreamConstants {
         }
         return shortCutsLookup;
     }
-    
+
     @SuppressWarnings("unchecked")
     private static CellClassInfo[] readCellClassInfoArrayFromMetaVersion2(
             final NodeSettingsRO settings) throws InvalidSettingsException {
-        NodeSettingsRO typeSubSettings = 
+        NodeSettingsRO typeSubSettings =
             settings.getNodeSettings(CFG_CELL_CLASSES);
         Set<String> keys = typeSubSettings.keySet();
         CellClassInfo[] shortCutsLookup = new CellClassInfo[keys.size()];
         int i = 0;
         for (String s : keys) {
             NodeSettingsRO single = typeSubSettings.getNodeSettings(s);
-            String className = single.getString(CFG_CELL_SINGLE_CLASS); 
+            String className = single.getString(CFG_CELL_SINGLE_CLASS);
             Class<?> cl;
             try {
                 cl = GlobalClassCreator.createClass(className);
             } catch (ClassNotFoundException e) {
-                throw new InvalidSettingsException("Can't load data cell " 
+                throw new InvalidSettingsException("Can't load data cell "
                         + "class \"" + className + "\"", e);
             }
             if (!DataCell.class.isAssignableFrom(cl)) {
@@ -1011,7 +1014,7 @@ class Buffer implements KNIMEStreamConstants {
             }
             DataType elementType = null;
             if (single.containsKey(CFG_CELL_SINGLE_ELEMENT_TYPE)) {
-                NodeSettingsRO subTypeConfig = 
+                NodeSettingsRO subTypeConfig =
                     single.getNodeSettings(CFG_CELL_SINGLE_ELEMENT_TYPE);
                 elementType = DataType.load(subTypeConfig);
             }
@@ -1064,7 +1067,7 @@ class Buffer implements KNIMEStreamConstants {
     public int size() {
         return m_size;
     }
-    
+
     /** Get whether the buffer wants to persist row keys. Here hard-coded
      * to <code>true</code> but overwritten in {@link NoKeyBuffer}.
      * @return whether row keys needs to be written/read.
@@ -1171,7 +1174,7 @@ class Buffer implements KNIMEStreamConstants {
      * or <code>null</code> if it needs to be java-serialized.
      * @param cellClass The cell's class to write out.
      * @return The serializer to use or <code>null</code>.
-     * @throws IOException If there are too many different cell 
+     * @throws IOException If there are too many different cell
      * implementations (currently 253 are theoretically supported)
      */
     private DataCellSerializer<DataCell> getSerializerForDataCell(
@@ -1208,7 +1211,7 @@ class Buffer implements KNIMEStreamConstants {
         int column = a.getColumn();
         int indexInColumn = m_indicesOfBlobInColumns[column]++;
         a.setIndexOfBlobInColumn(indexInColumn);
-        boolean isToCompress = 
+        boolean isToCompress =
             isUseCompressionForBlobs(CellClassInfo.get(cell));
         File outFile = getBlobFile(indexInColumn, column, true, isToCompress);
         BlobAddress originalBA = cell.getBlobAddress();
@@ -1239,11 +1242,11 @@ class Buffer implements KNIMEStreamConstants {
             new BufferedOutputStream(new FileOutputStream(outFile));
         if (isToCompress) {
             out = new GZIPOutputStream(out);
-            // buffering the gzip stream brings another performance boost 
+            // buffering the gzip stream brings another performance boost
             // (in one case from 5mins down to 2 mins)
             out = new BufferedOutputStream(out);
         }
-        DCObjectOutputVersion2 outStream = 
+        DCObjectOutputVersion2 outStream =
             new DCObjectOutputVersion2(out, this);
         try {
             if (ser != null) { // DataCell is datacell-serializable
@@ -1292,7 +1295,7 @@ class Buffer implements KNIMEStreamConstants {
                 blobAddress, new SoftReference<BlobDataCell>(result));
         return result;
     }
-    
+
     /** Perform lookup for the DataCell class info given the argument byte.
      * @param identifier The byte as read from the stream.
      * @return the associated cell class info
@@ -1317,7 +1320,7 @@ class Buffer implements KNIMEStreamConstants {
             // buffering the input stream is important as the blockable
             // stream, which will be put on top of it, reads bytes individually
             // (had a table, on which a single read-scan took ~6min without
-            // and ~30s with buffering) 
+            // and ~30s with buffering)
             wrap = new BufferedOutputStream(wrap);
         } else {
             wrap = outStream;
@@ -1475,15 +1478,15 @@ class Buffer implements KNIMEStreamConstants {
     boolean containsBlobCells() {
         return m_containsBlobs;
     }
-    
+
     /** Creates a clone of this buffer for writing the content to a stream
-     * that is of the current version. 
+     * that is of the current version.
      * @return A new buffer with the same ID, which is only used locally to
      * update the stream.
      */
     @SuppressWarnings("unchecked")
     Buffer createLocalCloneForWriting() {
-        return new Buffer(0, getBufferID(), 
+        return new Buffer(0, getBufferID(),
                 getGlobalRepository(), Collections.EMPTY_MAP);
     }
 
@@ -1512,7 +1515,7 @@ class Buffer implements KNIMEStreamConstants {
         CellClassInfo[] shortCutsLookup;
         if (!usesOutFile() || m_version < IVERSION) {
             // need to use new buffer since we otherwise write properties
-            // of this buffer, which prevents it from further reading (version 
+            // of this buffer, which prevents it from further reading (version
             // conflict) - see bug #1364
             Buffer copy = createLocalCloneForWriting();
             copy.m_outStream  = copy.initOutFile(
@@ -1535,7 +1538,7 @@ class Buffer implements KNIMEStreamConstants {
                 copy.m_list = null;
             }
             File blobDir = m_blobDir;
-            // use the copy's blob dir if we have a version hop 
+            // use the copy's blob dir if we have a version hop
             // (otherwise its blob dir will be empty
             if (m_version < IVERSION) {
                 blobDir = copy.m_blobDir;
@@ -1601,7 +1604,7 @@ class Buffer implements KNIMEStreamConstants {
     int getBufferID() {
         return m_bufferID;
     }
-    
+
     /** Clear the argument iterator (free the allocated resources.
      * @param it The iterator
      * @param removeFromHash Whether to remove from global hash.
@@ -1682,49 +1685,49 @@ class Buffer implements KNIMEStreamConstants {
     }
 
     /** Last recently used cache for blobs. */
-    private static final class BlobLRUCache 
+    private static final class BlobLRUCache
         extends LinkedHashMap<BlobAddress, SoftReference<BlobDataCell>> {
-        
-        
+
+
         /** Default constructor, instructs for access order. */
         BlobLRUCache() {
             super(16, 0.75f, true); // args copied from HashMap implementation
         }
-        
+
         /** {@inheritDoc} */
         @Override
         protected synchronized boolean removeEldestEntry(
                 final Entry<BlobAddress, SoftReference<BlobDataCell>> eldest) {
             return size() >= 100;
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public synchronized SoftReference<BlobDataCell> get(final Object key) {
             return super.get(key);
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public synchronized SoftReference<BlobDataCell> put(
-                final BlobAddress key, 
+                final BlobAddress key,
                 final SoftReference<BlobDataCell> value) {
             return super.put(key, value);
         }
-        
+
     }
-    
+
     /** Super class of all file iterators. */
-    abstract static class FromFileIterator extends CloseableRowIterator 
+    abstract static class FromFileIterator extends CloseableRowIterator
     implements KNIMEStreamConstants {
-        
+
         /** Called when the stream closing should take place.
-         * @return Whether the stream close was actually performed (that is 
+         * @return Whether the stream close was actually performed (that is
          * false when already closed.)
          * @throws IOException If closing fails.
          */
         abstract boolean performClose() throws IOException;
-        
+
         /** {@inheritDoc} */
         @Override
         public abstract BlobSupportDataRow next();
@@ -1760,27 +1763,27 @@ class Buffer implements KNIMEStreamConstants {
             }
             // assignment avoids race condition in following statements
             // (parallel thread may set m_backIntoMemoryIterator to null)
-            CloseableRowIterator backIntoMemoryIterator = 
+            CloseableRowIterator backIntoMemoryIterator =
                 m_backIntoMemoryIterator;
-            
-            Object semaphore = backIntoMemoryIterator != null 
+
+            Object semaphore = backIntoMemoryIterator != null
             	? backIntoMemoryIterator : FromListIterator.this;
             synchronized (semaphore) {
-            	// need to synchronize access to the list as the list is 
+            	// need to synchronize access to the list as the list is
             	// potentially modified by the backIntoMemoryIterator
             	if (m_nextIndex < m_list.size()) {
             		return m_list.get(m_nextIndex++);
             	}
             	if (backIntoMemoryIterator == null) {
             		throw new InternalError("DataRow list contains fewer "
-            				+ " elements than buffer (" + m_list.size() 
+            				+ " elements than buffer (" + m_list.size()
             				+ " vs. " + size() + ")");
             	}
                 // intermediate change possible (by other iterator)
                 if (m_nextIndex < m_list.size()) {
                     return m_list.get(m_nextIndex++);
                 }
-                BlobSupportDataRow next = 
+                BlobSupportDataRow next =
                     (BlobSupportDataRow)m_backIntoMemoryIterator.next();
                 if (next == null) {
                     throw new InternalError(
@@ -1795,7 +1798,7 @@ class Buffer implements KNIMEStreamConstants {
                 return next;
             }
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public void close() {
