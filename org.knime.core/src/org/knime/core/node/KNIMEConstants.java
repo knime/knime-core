@@ -56,6 +56,7 @@ import java.util.Locale;
 
 import javax.swing.ImageIcon;
 
+import org.knime.core.data.container.DataContainer;
 import org.knime.core.internal.CorePlugin;
 import org.knime.core.internal.KNIMEPath;
 import org.knime.core.util.ThreadPool;
@@ -103,6 +104,20 @@ public final class KNIMEConstants {
      * to true will instruct KNIME to always write synchronously, which in some
      * cases may be slower. (Asynchronous I/O became default with v2.1.) */
     public static final String PROPERTY_SYNCHRONOUS_IO = "knime.synchronous.io";
+
+    /** Java property to customize the write cache for asynchronous
+     * table writing. It specifies the size of a temporary buffer for data rows
+     * that is used during table creating. Once this buffer is full (or there
+     * are no more rows to write), this buffer is handed over to the writing
+     * routines to write the data output stream. The larger the buffer, the
+     * smaller the synchronization overhead but the larger the memory
+     * requirements.
+     * <p>
+     * The default value is {@value DataContainer#DEF_ASYNC_CACHE_SIZE}. This
+     * property has no effect if tables are written synchronously
+     * (see {@link #PROPERTY_SYNCHRONOUS_IO}). */
+    public static final String PROPERTY_ASYNC_WRITE_CACHE_SIZE =
+        "knime.async.io.cachesize";
 
     /** Java property to enable/disable table stream compression. Compression
      * results in smaller temp-file sizes but also (sometimes significant)

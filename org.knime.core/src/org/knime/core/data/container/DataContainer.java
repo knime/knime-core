@@ -147,12 +147,18 @@ public class DataContainer implements RowAppender {
     /** The default number of cells to be held in memory. */
     public static final int DEF_MAX_CELLS_IN_MEMORY = 100000;
 
+    /** For asynchronous table writing (default) the cache size. It's the number
+     * of rows that are kept in memory until handed off to the write routines.
+     * @see KNIMEConstants#PROPERTY_ASYNC_WRITE_CACHE_SIZE
+     */
+    public static final int DEF_ASYNC_CACHE_SIZE = 10;
+
     static {
         int size = DEF_MAX_CELLS_IN_MEMORY;
-        String envVar = PROPERTY_CELLS_IN_MEMORY;
-        String property = System.getProperty(envVar);
-        if (property != null) {
-            String s = property.trim();
+        String envCellsInMem = PROPERTY_CELLS_IN_MEMORY;
+        String valCellsInMem = System.getProperty(envCellsInMem);
+        if (valCellsInMem != null) {
+            String s = valCellsInMem.trim();
             try {
                 int newSize = Integer.parseInt(s);
                 if (newSize < 0) {
@@ -160,14 +166,43 @@ public class DataContainer implements RowAppender {
                             "max cell count in memory < 0" + newSize);
                 }
                 size = newSize;
-                LOGGER.debug("Max cell count to be held in memory to " + size);
+                LOGGER.debug("Setting max cell count to be held in memory to "
+                        + size);
             } catch (NumberFormatException e) {
-                LOGGER.warn("Unable to parse property " + envVar
+                LOGGER.warn("Unable to parse property " + envCellsInMem
                         + ", using default (" + DEF_MAX_CELLS_IN_MEMORY
                         + ")", e);
             }
         }
         MAX_CELLS_IN_MEMORY = size;
+
+        int asyncCacheSize = DEF_ASYNC_CACHE_SIZE;
+        String envAsyncCache = KNIMEConstants.PROPERTY_ASYNC_WRITE_CACHE_SIZE;
+        String valAsyncCache = System.getProperty(envAsyncCache);
+        if (valAsyncCache != null) {
+            String s = valAsyncCache.trim();
+            try {
+                int newSize = Integer.parseInt(s);
+                if (newSize < 0) {
+                    throw new NumberFormatException(
+                            "async write cache < 0" + newSize);
+                }
+                asyncCacheSize = newSize;
+                LOGGER.debug("Setting asynchronous write cache to "
+                        + asyncCacheSize + " row(s)");
+            } catch (NumberFormatException e) {
+                LOGGER.warn("Unable to parse property " + envAsyncCache
+                        + ", using default (" + DEF_ASYNC_CACHE_SIZE + ")", e);
+            }
+        }
+        ASYNC_CACHE_SIZE = asyncCacheSize;
+        if (Boolean.getBoolean(KNIMEConstants.PROPERTY_SYNCHRONOUS_IO)) {
+            LOGGER.debug("Using synchronous IO; "
+                    + KNIMEConstants.PROPERTY_SYNCHRONOUS_IO + " is set");
+            SYNCHRONOUS_IO = true;
+        } else {
+            SYNCHRONOUS_IO = false;
+        }
     }
 
 
@@ -187,7 +222,7 @@ public class DataContainer implements RowAppender {
     private static final int MAX_POSSIBLE_VALUES = 60;
 
     /** Size of buffers. */
-    static final int ASYNC_CACHE_SIZE = 10;
+    static final int ASYNC_CACHE_SIZE;
 
     /** The executor, which runs the IO tasks. This includes adding rows to
      * the Buffer and reading from a file iterator. */
@@ -207,8 +242,7 @@ public class DataContainer implements RowAppender {
     /** Whether to use synchronous IO while adding rows to a buffer or reading
      * from an file iterator. This is by default <code>false</code> but can be
      * enabled by setting the appropriate java property at startup.  */
-    static final boolean SYNCHRONOUS_IO =
-        Boolean.getBoolean(KNIMEConstants.PROPERTY_SYNCHRONOUS_IO);
+    static final boolean SYNCHRONOUS_IO;
 
     /** the maximum number of asynchronous write threads, each additional
      * container will switch to synchronous mode. */
