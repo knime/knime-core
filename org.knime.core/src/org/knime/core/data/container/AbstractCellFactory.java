@@ -122,6 +122,7 @@ public abstract class AbstractCellFactory implements CellFactory {
      * size are determined automatically based on the number of available cores.
      * @param value If to enable parallel processing (assumes independency
      * of individual row calculations).
+     * @since 2.5
      */
     public final void setParallelProcessing(final boolean value) {
         int maxParallelWorkers = (int)Math.ceil(1.5
@@ -133,7 +134,7 @@ public abstract class AbstractCellFactory implements CellFactory {
     /** Enables or disables parallel processing of the rows. The two relevant
      * parameters for the number of parallel workers and maximum work queue
      * need to be specified.
-     * @param value If to enable parallel processing (assumes independency
+     * @param value If to enable parallel processing (assumes independence
      * of individual row calculation).
      * @param maxParallelWorkers The number of parallel execution threads to
      * process the rows. This value may be overruled by the global thread pool
@@ -144,7 +145,8 @@ public abstract class AbstractCellFactory implements CellFactory {
      * certain row computation takes long the framework needs to temporarily
      * cache the results of the following rows - the cache size is determined
      * by this parameter. If this cache is full, no further row computations
-     * are queued until the long-running taks finishes.)
+     * are queued until the long-running task finishes.)
+     * @since 2.5
      */
     public final void setParallelProcessing(final boolean value,
             final int maxParallelWorkers, final int maxQueueSize) {

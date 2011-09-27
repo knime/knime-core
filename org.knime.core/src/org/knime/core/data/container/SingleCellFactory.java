@@ -80,6 +80,7 @@ public abstract class SingleCellFactory extends AbstractCellFactory {
      * only be true if there are no interdependency between the rows).
      * @param newColSpec The spec of the new column.
      * @see #setParallelProcessing(boolean)
+     * @since 2.5
      */
     public SingleCellFactory(final boolean processConcurrently,
             final DataColumnSpec newColSpec) {
@@ -93,6 +94,7 @@ public abstract class SingleCellFactory extends AbstractCellFactory {
      * @param maxQueueSize see {@link #setParallelProcessing(boolean, int, int)}
      * @param newColSpec The spec of the new column.
      * @see #setParallelProcessing(boolean, int, int)
+     * @since 2.5
      */
     public SingleCellFactory(final boolean processConcurrently,
             final int workerCount, final int maxQueueSize,
