@@ -138,7 +138,6 @@ public class BufferedDataTableSorter extends TableSorter {
     /** {@inheritDoc} */
     @Override
     void clearTable(final DataTable table) {
-        // the DataContainer returns ContainerTable
         if (!(table instanceof BufferedDataTable)) {
             NodeLogger.getLogger(getClass()).warn("Can't clear table instance "
                     + "of \"" + table.getClass().getSimpleName()

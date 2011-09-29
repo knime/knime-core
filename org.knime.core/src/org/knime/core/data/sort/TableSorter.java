@@ -498,6 +498,7 @@ abstract class TableSorter {
                     break;
                 }
                 toMergeCont.add(iter.next());
+                // remove container from chunksCont
                 iter.remove();
             }
             // merge container in toMergeCont into cont
@@ -527,6 +528,13 @@ abstract class TableSorter {
             cont.close();
             // Add cont to the pending containers
             chunksCont.add(0, cont.getTable());
+            // toMergeCont may contain DataTable. These DatatTables can be
+            // cleared now.
+            for (Iterable<DataRow> merged : toMergeCont) {
+                if (merged instanceof DataTable) {
+                    clearTable((DataTable)merged);
+                }
+            }
         }
         return cont.getTable();
     }
