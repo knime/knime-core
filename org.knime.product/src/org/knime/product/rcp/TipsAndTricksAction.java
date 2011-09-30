@@ -52,6 +52,9 @@ package org.knime.product.rcp;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.dialogs.Dialog;
+import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 
 /**
@@ -60,9 +63,9 @@ import org.eclipse.ui.PlatformUI;
  * @author Thorsten Meinl, University of Konstanz
  */
 class TipsAndTricksAction extends Action {
-//    private static final NodeLogger LOGGER = NodeLogger
-//            .getLogger(KNIMEApplicationWorkbenchAdvisor.class.getPackage()
-//                    .toString() + ".TipsAndTricks");
+    // private static final NodeLogger LOGGER = NodeLogger
+    // .getLogger(KNIMEApplicationWorkbenchAdvisor.class.getPackage()
+    // .toString() + ".TipsAndTricks");
 
     private static final String ID = "KNIMETipsAndTricks";
 
@@ -71,7 +74,7 @@ class TipsAndTricksAction extends Action {
      */
     public TipsAndTricksAction() {
         super("&Tips and Tricks");
-        setToolTipText("Opens the Tips&Tricks window");
+        setToolTipText("Opens the Tips&Tricks dialog");
         setId(ID);
     }
 
@@ -87,18 +90,16 @@ class TipsAndTricksAction extends Action {
      * Opens the tips and tricks window in an editor.
      */
     static void openTipsAndTricks() {
-        Dialog d =
-            new TipsAndTricksDialog(PlatformUI.getWorkbench().getDisplay()
-                    .getActiveShell());
+        Shell parentShell =
+                PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+        Dialog d = new TipsAndTricksDialog(parentShell);
+        d.create();
+        Rectangle shellBounds = parentShell.getBounds();
+        Point dialogSize = d.getShell().getSize();
+
+        d.getShell().setLocation(
+                shellBounds.x + (shellBounds.width - dialogSize.x) / 2,
+                shellBounds.y + (shellBounds.height - dialogSize.y) / 2);
         d.open();
-//        try {
-//            IWorkbenchWindow w =
-//                    PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-//            IWorkbenchPage page = w.getActivePage();
-//            page.showView("org.eclipse.ui.internal.introview");
-//            page.toggleZoom(page.getActivePartReference());
-//        } catch (PartInitException ex) {
-//            LOGGER.error("Cannot open Tips&Tricks view", ex);
-//        }
     }
 }

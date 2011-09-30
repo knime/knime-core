@@ -174,11 +174,11 @@ public class TipsAndTricksDialog extends Dialog {
         try {
             browser.setText(getHtml());
         } catch (TransformerFactoryConfigurationError ex) {
-            ex.printStackTrace();
+            LOGGER.error(ex.getMessage(), ex);
         } catch (IOException ex) {
-            ex.printStackTrace();
+            LOGGER.error(ex.getMessage(), ex);
         } catch (TransformerException ex) {
-            ex.printStackTrace();
+            LOGGER.error(ex.getMessage(), ex);
         }
         return composite;
     }
@@ -196,7 +196,6 @@ public class TipsAndTricksDialog extends Dialog {
      */
     @Override
     protected void createButtonsForButtonBar(final Composite parent) {
-        // create OK and Cancel buttons by default
         createButton(parent, IDialogConstants.OK_ID, IDialogConstants.OK_LABEL,
                 true);
     }

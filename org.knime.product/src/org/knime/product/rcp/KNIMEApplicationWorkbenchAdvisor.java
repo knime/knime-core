@@ -59,6 +59,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.IWorkbenchConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchAdvisor;
@@ -123,16 +124,20 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
         // if the Update Site is password protected
         IProxyService.class.getName();
 
-        // try to open T&T in a separate thread because if DNS resolution
-        // does not work properly this blocks KNIME startup
-        Thread t = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                tryOpenTipsAndTricks();
-            }
-        });
-        t.setDaemon(true);
-        t.start();
+
+        // show a tips&tricks dialog only if the intro page is not shown
+        if (PlatformUI.getWorkbench().getIntroManager().getIntro() == null) {
+            // try to open T&T in a separate thread because if DNS resolution
+            // does not work properly this blocks KNIME startup
+            Thread t = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    tryOpenTipsAndTricks();
+                }
+            });
+            t.setDaemon(true);
+            t.start();
+        }
     }
 
     private void tryOpenTipsAndTricks() {
@@ -163,7 +168,7 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
         }
 
         if (showTipsAndTricks) {
-            Display.getDefault().syncExec(new Runnable() {
+            Display.getDefault().asyncExec(new Runnable() {
                 @Override
                 public void run() {
                     TipsAndTricksAction.openTipsAndTricks();
