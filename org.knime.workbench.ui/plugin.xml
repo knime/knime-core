@@ -82,6 +82,17 @@
                relative="org.knime.workbench.repository.view.RepositoryView"
                visible="true">
          </view>
+         <view
+               closeable="true"
+               id="org.knime.workbench.explorer.view"
+               minimized="false"
+               moveable="true"
+               ratio="0.3"
+               relationship="stack"
+               relative="org.knime.workbench.ui.navigator.KnimeResourceNavigator"
+               standalone="false"
+               visible="true">
+         </view>         
       </perspectiveExtension>
       <perspectiveExtension
             targetID="org.knime.workbench.ui.ModellerPerspective">
