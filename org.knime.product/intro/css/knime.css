@@ -14,20 +14,13 @@ h2 {
 
 /* Styles for the links section */
 
-#links {
-    margin-left: auto;
-    margin-right: auto;
-    max-width: 900px;
-}
-
-#links a {
+.links a {
 	color: #666;
 	display: block;
 	text-decoration: none;
-	width: 45%;
 	padding: 5px;
+	margin-bottom: 40px;
 }
-
 
 a .link-label {
 	   padding-left: 75px;
@@ -40,12 +33,7 @@ a .text {
 	display: block;
 	}
 	
-#links {
-	margin-bottom: 50px;
-}	
-
 #install {
-	margin-left: 50%;
 	background: url(img/install.png) no-repeat 5px center;
     height: 64px;    
 	}
@@ -55,7 +43,6 @@ a .text {
     }
 
 #launch {
-	float: left;
 	background: url(img/launch.png) no-repeat 5px center;
     height: 64px;
 	}
@@ -64,8 +51,11 @@ a .text {
     height: 64px;
     }
 
-/* Styles for the tips-and-tricks section */
 
+
+
+
+/* Styles for the tips-and-tricks section */
 p {
     margin: 0 0 1em;
     line-height: 1.3em;
