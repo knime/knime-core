@@ -132,7 +132,8 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
             Thread t = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    tryOpenTipsAndTricks();
+                    // FIXME: enable again if web page is ready
+                    // tryOpenTipsAndTricks();
                 }
             });
             t.setDaemon(true);
