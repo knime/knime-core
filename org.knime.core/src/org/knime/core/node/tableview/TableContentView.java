@@ -141,6 +141,7 @@ public class TableContentView extends JTable {
      */
     public TableContentView(final TableContentModel model) {
         super(model);
+        setCellSelectionEnabled(true);
         // just initializing the member is not sufficient as the
         // <init> of super initialized the header as well.
         setShowIconInColumnHeader(true);
@@ -497,6 +498,8 @@ public class TableContentView extends JTable {
         } else {
             fore = Color.WHITE;
         }
+        // changed in v2.5 (before v2.5 the background was white)
+        super.selectionBackground = back;
         super.selectionForeground = fore;
     }
 
