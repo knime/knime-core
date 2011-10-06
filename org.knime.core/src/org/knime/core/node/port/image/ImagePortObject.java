@@ -101,9 +101,13 @@ public class ImagePortObject extends AbstractPortObject {
      *
      * @param content The image content.
      * @param spec The spec.
+     * @throws NullPointerException If either argument is null.
      */
     public ImagePortObject(final ImageContent content,
             final ImagePortObjectSpec spec) {
+        if (spec == null || content == null) {
+            throw new NullPointerException("Argument must not be null.");
+        }
         m_content = content;
         m_spec = spec;
     }
