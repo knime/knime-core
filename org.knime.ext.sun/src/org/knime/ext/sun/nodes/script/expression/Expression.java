@@ -55,8 +55,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -117,9 +115,9 @@ public final class Expression {
     private static final AtomicInteger COUNTER = new AtomicInteger();
 
     /** These imports are put in the import section of the source file. */
-    private static final Collection<String> IMPORTS = Arrays
-            .asList(new String[]{"java.text.*", "java.util.*", "java.io.*",
-                    "java.net.*", "java.util.regex.*"});
+    private static final String[] DEFAULT_IMPORTS =
+        new String[]{"java.text.*", "java.util.*", "java.io.*",
+                     "java.net.*", "java.util.regex.*"};
 
     /** Contains the class files of {@link #REQUIRED_COMPILATION_UNITS}. */
     private static File tempClassPath;
@@ -160,6 +158,15 @@ public final class Expression {
         m_abstractExpression = createClass(body, settings);
     }
 
+
+    /**
+     * Get collection of default imports.
+     * @return the list of default imports.
+     */
+    public static String[] getDefaultImports() {
+        return DEFAULT_IMPORTS;
+    }
+
     /* Called from the constructor. */
     @SuppressWarnings("unchecked")
     private Class<? extends AbstractSnippetExpression> createClass(
@@ -171,14 +178,17 @@ public final class Expression {
         String header = settings.getHeader();
         String source;
         String name = "Expression" + COUNTER.getAndIncrement();
+        String[] imports = null != settings.getImports()
+                ? settings.getImports()
+                : getDefaultImports();
         // Generate the well known source of the Expression
         switch (version) {
         case VERSION_1X:
-            source = generateSourceVersion1(name, body, rType);
+            source = generateSourceVersion1(name, body, rType, imports);
             break;
         case VERSION_2X:
             source = generateSourceVersion2(
-                    name, body, header, rType, isArrayReturn);
+                    name, body, header, rType, imports, isArrayReturn);
             break;
         default:
             throw new CompilationFailedException(
@@ -216,6 +226,7 @@ public final class Expression {
         }
     }
 
+
     /**
      * Generates a new instance of the compiled class.
      *
@@ -244,13 +255,14 @@ public final class Expression {
      * Creates the source for given expression classname, body & properties.
      */
     private String generateSourceVersion1(final String name,
-            final String body, final Class<?> rType) {
+            final String body, final Class<?> rType,
+            final String[] imports) {
         String copy = body;
         StringBuilder buffer = new StringBuilder(4096);
 
         /* Generate header */
         // Here comes the class
-        for (String imp : IMPORTS) {
+        for (String imp : imports) {
             buffer.append("import ");
             buffer.append(imp);
             buffer.append(";");
@@ -317,12 +329,12 @@ public final class Expression {
      */
     private String generateSourceVersion2(final String name, final String body,
             final String header, final Class<?> rType,
-            final boolean isArrayReturn) {
+            final String[] imports, final boolean isArrayReturn) {
         StringBuilder buffer = new StringBuilder(4096);
 
         /* Generate header */
         // Here comes the class
-        for (String imp : IMPORTS) {
+        for (String imp : imports) {
             buffer.append("import ");
             buffer.append(imp);
             buffer.append(";");

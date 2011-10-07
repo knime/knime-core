@@ -103,6 +103,9 @@ public final class JavaScriptingSettings {
     private static final String CFG_INSERT_MISSING_AS_NULL =
         "insert_missing_as_null";
 
+    /** NodeSettings key for imports used by the snippet. */
+    private static final String CFG_IMPORTS = "imports";
+
     private String m_expression;
     private String m_header; // added in 2.1
     private Class<?> m_returnType;
@@ -127,6 +130,9 @@ public final class JavaScriptingSettings {
 
     private final JavaScriptingCustomizer m_customizer;
 
+    /** Imports used by the snippet. */
+    private String[] m_imports;
+
 
     /** New settings for given customizer. */
     public JavaScriptingSettings(final JavaScriptingCustomizer customizer) {
@@ -149,6 +155,7 @@ public final class JavaScriptingSettings {
         settings.addBoolean(CFG_IS_ARRAY_RETURN, m_isArrayReturn);
         settings.addStringArray(CFG_JAR_FILES, m_jarFiles);
         settings.addInt(CFG_EXPRESSION_VERSION, m_expressionVersion);
+        settings.addStringArray(CFG_IMPORTS, m_imports);
 
     }
 
@@ -177,6 +184,8 @@ public final class JavaScriptingSettings {
         m_jarFiles = settings.getStringArray(CFG_JAR_FILES, (String[])null);
         m_expressionVersion = settings.getInt(
                 CFG_EXPRESSION_VERSION, Expression.VERSION_1X);
+        // added in v2.5
+        m_imports = settings.getStringArray(CFG_IMPORTS, (String[])null);
     }
 
     /** Loads parameters in Dialog.
@@ -204,6 +213,8 @@ public final class JavaScriptingSettings {
         m_jarFiles = settings.getStringArray(CFG_JAR_FILES, (String[])null);
         m_isArrayReturn = settings.getBoolean(CFG_IS_ARRAY_RETURN, false);
         m_expressionVersion = settings.getInt(CFG_EXPRESSION_VERSION, 1);
+        // added in v2.5
+        m_imports = settings.getStringArray(CFG_IMPORTS, (String[])null);
     }
 
     /**
@@ -352,6 +363,22 @@ public final class JavaScriptingSettings {
         return resultFiles;
     }
 
+    /**
+     * Get list of imports or null if defaults should be kept.
+     * @return list of imports
+     */
+    public String[] getImports() {
+        return m_imports;
+    }
+
+    /**
+     * Set list of imports or null if default imports should be used.
+     * @param imports the list of imports
+     */
+    public void setImports(final String[] imports) {
+        m_imports = imports;
+    }
+
     /** Convert jar file location to File. Also accepts file in URL format
      * (e.g. local drop files as URL).
      * @param location The location string.
@@ -467,6 +494,8 @@ public final class JavaScriptingSettings {
                     + returnType);
         }
     }
+
+
 
 
 }
