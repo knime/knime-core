@@ -372,7 +372,7 @@ public final class AggregationMethods {
                 } catch (final Throwable t) {
                     LOGGER.error("Problems during initialization of "
                             + "aggregation operator (with id '" + operator
-                            + "'.)");
+                            + "'.)", t);
                     if (decl != null) {
                         LOGGER.error("Extension " + decl + " ignored.", t);
                     }
@@ -380,7 +380,7 @@ public final class AggregationMethods {
             }
         } catch (final Exception e) {
             LOGGER.error("Exception while registering "
-                    + "aggregation operator extensions");
+                    + "aggregation operator extensions", e);
         }
     }
 
