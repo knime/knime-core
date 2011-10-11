@@ -411,6 +411,16 @@ public class PMMLDecisionTreeTranslator implements PMMLTranslator {
         }
         TreeModel treeModel = models[0];
 
+        m_tree = parseDecTreeFromModel(treeModel);
+    }
+    
+    /**
+     * Builds a decision tree object out of the TreeModel.
+     * @param treeModel treeModel parsed from the PMML.
+     * 
+     * @return DecisionTreeModel for further processing.
+     */
+    public DecisionTree parseDecTreeFromModel(final TreeModel treeModel) {
         // --------------------------------------------
         // check the mining function, only classification is allowed
         if (MININGFUNCTION.CLASSIFICATION != treeModel.getFunctionName()) {
@@ -445,8 +455,7 @@ public class PMMLDecisionTreeTranslator implements PMMLTranslator {
 
         // -------------------------------------------------
         // initialize a KNIME decision tree
-        m_tree =
-            new DecisionTree(knimeRoot, predictedField,
+        return new DecisionTree(knimeRoot, predictedField,
                     MV_STRATEGY_TO_KNIME_MAP.get(treeModel
                             .getMissingValueStrategy()), ntcStrategy);
     }
@@ -503,7 +512,8 @@ public class PMMLDecisionTreeTranslator implements PMMLTranslator {
                         new DecisionTreeNodeSplitPMML(id,
                                 getMajorityClass(pmmlNode),
                                 getClassCount(pmmlNode),
-                                getChildrenSplitAttribute(pmmlNode), pmmlPredicates,
+                                getChildrenSplitAttribute(pmmlNode), 
+                                pmmlPredicates,
                                 children, knimeDefaultChildIndex);
             } else {
                 knimeNode =
