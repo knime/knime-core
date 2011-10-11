@@ -55,6 +55,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
+import org.knime.core.data.StringValue;
 import org.knime.core.node.InvalidSettingsException;
 
 /**
@@ -305,8 +306,8 @@ public class PMMLPortObjectSpecCreator {
             }
             if (!isValidColumnSpec(columnSpec)) {
                 throw new IllegalArgumentException(
-                        "Only double and nominal value compatible columns "
-                                + "are yet supported for PMML models!");
+                        "Only double, nominal and string value compatible "
+                        + "columns are yet supported for PMML models!");
             }
         }
     }
@@ -315,15 +316,16 @@ public class PMMLPortObjectSpecCreator {
         for (DataColumnSpec colSpec : colSpecs) {
             if (!isValidColumnSpec(colSpec)) {
                 throw new IllegalArgumentException(
-                        "Only double and nominal value compatible columns "
-                                + "are yet supported for PMML models!");
+                        "Only double, nominal and string value compatible "
+                        + "columns are yet supported for PMML models!");
             }
         }
     }
 
     private static boolean isValidColumnSpec(final DataColumnSpec columnSpec) {
         return columnSpec.getType().isCompatible(DoubleValue.class)
-                || columnSpec.getType().isCompatible(NominalValue.class);
+                || columnSpec.getType().isCompatible(NominalValue.class)
+                || columnSpec.getType().isCompatible(StringValue.class);
     }
 
 }
