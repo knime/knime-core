@@ -54,6 +54,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.Font;
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
 import java.io.IOException;
@@ -66,8 +67,10 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFormattedTextField;
@@ -79,7 +82,9 @@ import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JSpinner.DefaultEditor;
 import javax.swing.JTabbedPane;
+import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.border.BevelBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicComboPopup;
@@ -121,8 +126,9 @@ import org.knime.core.util.MutableInteger;
  * @see org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane
  */
 public abstract class NodeDialogPane {
-	private static final NodeLogger LOGGER = NodeLogger.getLogger(
-			NodeDialogPane.class);
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(
+            NodeDialogPane.class);
 
     // This listener needs to be static and not an anonymous inner class
     // because it stays registered in some static Swing classes. Thus a long
@@ -130,12 +136,12 @@ public abstract class NodeDialogPane {
     // collected even if all workflows are closed.
     private static final HierarchyListener HIERARCHY_LISTENER =
         new HierarchyListener() {
-            /** {@inheritDoc} */
-            @Override
-            public void hierarchyChanged(final HierarchyEvent e) {
-                noLightWeight(e.getComponent());
-            }
-        };
+        /** {@inheritDoc} */
+        @Override
+        public void hierarchyChanged(final HierarchyEvent e) {
+            noLightWeight(e.getComponent());
+        }
+    };
 
     /** Logger "personalized" for this dialog instance. */
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
@@ -147,6 +153,10 @@ public abstract class NodeDialogPane {
      * by the derived class via <code>#addTab(String,Component)</code>.
      */
     private final JTabbedPane m_pane;
+
+    /** Status bar below the config tabs indicating that some settings are
+     * overwritten using flow variables. */
+    private final JLabel m_statusBarLabel;
 
     /**
      * Keeps all components which are added to the tabbed pane above by its
@@ -180,10 +190,6 @@ public abstract class NodeDialogPane {
     /** The tab containing the flow variables. */
     private final FlowVariablesTab m_flowVariableTab;
 
-    /** The variables tab settings as loaded from the model. We'll use them as
-     * soon as the tab gets activated to update the tree. */
-    private NodeSettings m_flowVariablesSettings;
-
     /** The flow object stack, it's also used when the variables tab get's
      * activated. */
     private FlowObjectStack m_flowObjectStack;
@@ -211,10 +217,29 @@ public abstract class NodeDialogPane {
         m_panel = new JPanel();
         // init the panel with layout
         m_panel.setLayout(new BorderLayout());
+        // status bar label - mostly hidden unless flow var tab is in use
+        m_statusBarLabel = new JLabel(
+                "", NodeView.WARNING_ICON, SwingConstants.LEFT);
+        Font font = m_statusBarLabel.getFont().deriveFont(Font.BOLD);
+        m_statusBarLabel.setFont(font);
+        m_statusBarLabel.setBorder(
+                BorderFactory.createBevelBorder(BevelBorder.RAISED));
+        m_statusBarLabel.setBackground(Color.WHITE);
+        m_statusBarLabel.setOpaque(true);
+        m_statusBarLabel.setVisible(false);
+        m_panel.add(m_statusBarLabel, BorderLayout.SOUTH);
+
         // init map for tabs
         m_tabs = new LinkedHashMap<String, Component>();
         // init tabbed pane and at it to the underlying panel
         m_pane = new JTabbedPane();
+        m_pane.addChangeListener(new ChangeListener() {
+            /** {@inheritDoc} */
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                updateFlowVariablesOverwriteWarning();
+            }
+        });
         m_panel.add(m_pane, BorderLayout.CENTER);
         m_flowVariablesModelList =
             new CopyOnWriteArrayList<FlowVariableModel>();
@@ -316,8 +341,9 @@ public abstract class NodeDialogPane {
             final PortObjectSpec[] specs, final FlowObjectStack foStack,
             final CredentialsProvider credentialsProvider,
             final boolean isWriteProtected)
-        throws NotConfigurableException {
+    throws NotConfigurableException {
         NodeSettings modelSettings = null;
+        NodeSettings flowVariablesSettings = null;
         m_flowObjectStack = foStack;
         m_credentialsProvider = credentialsProvider;
         m_specs = specs;
@@ -325,7 +351,7 @@ public abstract class NodeDialogPane {
         try {
             SettingsLoaderAndWriter l = SettingsLoaderAndWriter.load(settings);
             modelSettings = l.getModelSettings();
-            m_flowVariablesSettings = l.getVariablesSettings();
+            flowVariablesSettings = l.getVariablesSettings();
         } catch (InvalidSettingsException e) {
             // silently ignored here, variables get assigned default values
             // if they are null
@@ -342,14 +368,8 @@ public abstract class NodeDialogPane {
         }
         // add the flow variables tab
         addFlowVariablesTab();
-        m_flowVariableTab.setModified(false);
         m_flowVariablesModelChanged = false;
-        if (m_pane.getSelectedComponent() == m_flowVariableTab
-                || !m_flowVariablesModelList.isEmpty()) {
-            // this will also update the settings in all elements in
-            // m_flowVariablesModelList
-            initFlowVariablesTab(modelSettings, m_flowVariablesSettings);
-        }
+        initFlowVariablesTab(modelSettings, flowVariablesSettings);
 
         // output memory policy and job manager (stored in NodeContainer)
         if (m_memPolicyTab != null || m_jobMgrTab != null) {
@@ -377,6 +397,7 @@ public abstract class NodeDialogPane {
                 m_jobMgrTab.loadSettings(ncSettings, specs);
             }
         }
+        updateFlowVariablesOverwriteWarning();
     }
 
     /**
@@ -387,7 +408,7 @@ public abstract class NodeDialogPane {
      * @throws InvalidSettingsException If any of the writing fails.
      */
     void internalSaveSettingsTo(final NodeSettingsWO settings)
-        throws InvalidSettingsException {
+    throws InvalidSettingsException {
         SettingsLoaderAndWriter l = new SettingsLoaderAndWriter();
         NodeSettings model = new NodeSettings("field_ignored");
         try {
@@ -399,15 +420,10 @@ public abstract class NodeDialogPane {
                     + "while saving dialog settings", e);
             throw new InvalidSettingsException(e);
         }
-        NodeSettings variables;
         if (m_flowVariablesModelChanged) {
             updateFlowVariablesTab();
         }
-        if (m_flowVariableTab.isModified()) {
-            variables = m_flowVariableTab.getVariableSettings();
-        } else {
-            variables = m_flowVariablesSettings;
-        }
+        NodeSettings variables = m_flowVariableTab.getVariableSettings();
         l.setModelSettings(model);
         l.setVariablesSettings(variables);
         l.save(settings);
@@ -488,7 +504,7 @@ public abstract class NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
         throw new NotConfigurableException(
-            "NodeDialogPane.loadSettingsFrom() implementation missing!");
+        "NodeDialogPane.loadSettingsFrom() implementation missing!");
     }
 
     /**
@@ -532,7 +548,7 @@ public abstract class NodeDialogPane {
      * @see NodeModel#loadSettingsFrom(NodeSettingsRO)
      */
     protected abstract void saveSettingsTo(final NodeSettingsWO settings)
-            throws InvalidSettingsException;
+    throws InvalidSettingsException;
 
     /** Commit spinners and save settings. It will first call the
      * commitJSpinners method (which traverses all components and commits
@@ -554,17 +570,17 @@ public abstract class NodeDialogPane {
          * looses focus and that its values are stored (Bug 1949). Otherwise
          * the last changed values might get lost if a user simply clicks on
          * the ok or apply button without changing the focus first. */
-        JTabbedPane pane = (JTabbedPane) getPanel().getComponent(0);
-        int index = pane.getTabCount() -1;
-		if (index > 0) {
-	        if (TAB_NAME_VARIABLES.equals(pane.getTitleAt(index))) {
-	        	LOGGER.coding("Configuration dialog tab order has"
-	        			+ " changed. The assumption that the flow variables tab"
-	        			+ " is not the last tab was violated.");
-	        }
-	        int prevIndex = pane.getSelectedIndex();
-	        pane.setSelectedIndex(index);
-	        pane.setSelectedIndex(prevIndex);
+        JTabbedPane pane = m_pane;
+        int index = pane.getTabCount() - 1;
+        if (index > 0) {
+            if (TAB_NAME_VARIABLES.equals(pane.getTitleAt(index))) {
+                LOGGER.coding("Configuration dialog tab order has"
+                        + " changed. The assumption that the flow variables tab"
+                        + " is not the last tab was violated.");
+            }
+            int prevIndex = pane.getSelectedIndex();
+            pane.setSelectedIndex(index);
+            pane.setSelectedIndex(prevIndex);
         }
 
         internalSaveSettingsTo(settings);
@@ -582,7 +598,7 @@ public abstract class NodeDialogPane {
      * @see #loadSettingsFrom(InputStream)
      */
     public final void saveSettingsTo(final OutputStream out)
-        throws InvalidSettingsException, IOException {
+    throws InvalidSettingsException, IOException {
         NodeSettings settings = new NodeSettings("dialog");
         finishEditingAndSaveSettingsTo(settings);
         settings.saveToXML(out);
@@ -599,7 +615,7 @@ public abstract class NodeDialogPane {
      * @see #saveSettingsTo(OutputStream)
      */
     public final void loadSettingsFrom(final InputStream in)
-        throws NotConfigurableException, IOException {
+    throws NotConfigurableException, IOException {
         NodeSettingsRO settings = NodeSettings.loadFromXML(in);
         internalLoadSettingsFrom(settings, m_specs, m_flowObjectStack,
                 m_credentialsProvider, m_isWriteProtected);
@@ -642,7 +658,6 @@ public abstract class NodeDialogPane {
 
     /** Add the flow variables tab. Override to disable this tab. */
     protected void addFlowVariablesTab() {
-        // add flow variables tab if not yet done
         if (getTab(TAB_NAME_VARIABLES) == null) {
             addTab(TAB_NAME_VARIABLES, m_flowVariableTab);
             m_pane.addChangeListener(new ChangeListener() {
@@ -800,11 +815,11 @@ public abstract class NodeDialogPane {
         }
         if (!m_tabs.containsKey(oldName)) {
             throw new IllegalArgumentException(
-                    "Tab with specified name doesn't exist.");
+            "Tab with specified name doesn't exist.");
         }
         if (m_tabs.containsKey(newName)) {
             throw new IllegalArgumentException(
-                    "Another tab with the specified new name already exists");
+            "Another tab with the specified new name already exists");
         }
 
         Component tabComp = getTab(oldName);
@@ -917,7 +932,7 @@ public abstract class NodeDialogPane {
                     m_tabs.remove(pane);
                     throw new IllegalArgumentException(
                             "Tab with the specified title '" + tabTitle
-                                    + "' doesn't exist.");
+                            + "' doesn't exist.");
                 }
 
                 m_pane.setEnabledAt(tabIdx, enabled);
@@ -1067,6 +1082,7 @@ public abstract class NodeDialogPane {
             @Override
             public void stateChanged(final ChangeEvent e) {
                 m_flowVariablesModelChanged = true;
+                updateFlowVariablesOverwriteWarning();
             }
         });
         return wvm;
@@ -1093,12 +1109,11 @@ public abstract class NodeDialogPane {
     private void initFlowVariablesTab(final NodeSettingsRO nodeSettings,
             final NodeSettingsRO variableSettings) {
         m_flowVariableTab.setErrorLabel("");
-        m_flowVariableTab.setModified(true);
         m_flowVariableTab.setVariableSettings(nodeSettings, variableSettings,
                 m_flowObjectStack, Collections.EMPTY_SET);
         for (FlowVariableModel m : m_flowVariablesModelList) {
             ConfigEditTreeNode configNode = m_flowVariableTab
-                .findTreeNodeForChild(m.getKeys());
+            .findTreeNodeForChild(m.getKeys());
             if (configNode != null) {
                 m.setInputVariableName(configNode.getUseVariableName());
                 m.setOutputVariableName(configNode.getExposeVariableName());
@@ -1117,9 +1132,7 @@ public abstract class NodeDialogPane {
         commitComponentsRecursively(getPanel());
         try {
             saveSettingsTo(settings);
-            variableSettings = m_flowVariableTab.isModified()
-                ? m_flowVariableTab.getVariableSettings()
-                : m_flowVariablesSettings;
+            variableSettings = m_flowVariableTab.getVariableSettings();
         } catch (Throwable e) {
             if (!(e instanceof InvalidSettingsException)) {
                 m_logger.error("Saving intermediate settings failed with "
@@ -1130,20 +1143,71 @@ public abstract class NodeDialogPane {
             m_flowVariableTab.setErrorLabel(error);
             return;
         }
-        m_flowVariableTab.setModified(true);
         m_flowVariableTab.setVariableSettings(settings, variableSettings,
                 m_flowObjectStack, m_flowVariablesModelList);
+    }
+
+    /** Updates the warning message below the panel to inform the user
+     * whether any parameter is overwritten using flow variables. */
+    private void updateFlowVariablesOverwriteWarning() {
+        Component activeTab = m_pane.getSelectedComponent();
+        Set<String> overwrittenParams =
+            m_flowVariableTab.getVariableControlledParameters();
+        if (m_flowVariablesModelChanged) {
+            for (FlowVariableModel f : m_flowVariablesModelList) {
+                String[] keyPath = f.getKeys();
+                String key = keyPath[keyPath.length - 1];
+                if (f.getInputVariableName() == null) {
+                    overwrittenParams.remove(key);
+                } else {
+                    overwrittenParams.add(key);
+                }
+            }
+        }
+        if (activeTab != m_flowVariableTab && !overwrittenParams.isEmpty()) {
+            String msg = buildVariableOverwriteWarning(overwrittenParams);
+            m_statusBarLabel.setVisible(true);
+            m_statusBarLabel.setText(msg);
+            m_statusBarLabel.setToolTipText(msg);
+        } else {
+            m_statusBarLabel.setVisible(false);
+        }
+    }
+
+    private static String buildVariableOverwriteWarning(
+            final Collection<String> params) {
+        StringBuilder b = new StringBuilder();
+        if (params.size() == 1) {
+            String key = params.iterator().next();
+            b.append("The \"").append(key);
+            b.append("\" parameter is controlled by a variable.");
+        } else {
+            int size = params.size();
+            int i = 0;
+            for (String s : params) {
+                b.append("\"").append(s).append("\"");
+                if (i == size - 2) {
+                    b.append(" and ");
+                } else if (i == size - 1) {
+                    // last key, nothing to separate
+                } else {
+                    b.append(", ");
+                }
+                i++;
+            }
+            b.append(" are controlled by variables.");
+        }
+        return b.toString();
     }
 
     /** The tab currently called "Flow Variables". It allows the user to mask
      * certain settings of the dialog (for instance to use variables instead
      * of hard-coded values.) */
     private class FlowVariablesTab extends JPanel
-        implements ConfigEditTreeEventListener {
+    implements ConfigEditTreeEventListener {
 
         private final ConfigEditJTree m_tree;
         private final JLabel m_errorLabel;
-        private boolean m_isModified;
 
         /** Creates new tab. */
         public FlowVariablesTab() {
@@ -1196,7 +1260,7 @@ public abstract class NodeDialogPane {
                     model = ConfigEditTreeModel.create(nodeSetsCopy);
                 } else {
                     model = ConfigEditTreeModel.create(
-                        nodeSetsCopy, (Config)varSettings);
+                            nodeSetsCopy, (Config)varSettings);
                 }
             } catch (InvalidSettingsException e) {
                 JOptionPane.showMessageDialog(this, "Errors reading variable "
@@ -1247,19 +1311,11 @@ public abstract class NodeDialogPane {
             return null;
         }
 
-        /** @param isModified the isModified property.
-         * @see #isModified() */
-        public void setModified(final boolean isModified) {
-            m_isModified = isModified;
-        }
-
-        /** If true, the tab was at least once loaded after a load settings.
-         * It helps us to distinguish whether we need to read the original node
-         * settings mask or the mask from this tab.
-         * @return the above described property.
+        /** @return list of params that are controlled by a variable (then
+         * shown in status bar).
          */
-        public boolean isModified() {
-            return m_isModified;
+        Set<String> getVariableControlledParameters() {
+            return m_tree.getModel().getVariableControlledParameters();
         }
 
         /** {@inheritDoc} */

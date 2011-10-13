@@ -54,8 +54,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -176,6 +178,16 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
      * branch of the tree. */
     public boolean hasConfiguration() {
         return getRoot().hasConfiguration();
+    }
+
+    /** @return name of user parameters that are overwritten by a variable
+     * (= combo boxes that have a variable selected). This is then
+     * indicated in the status bar of the node dialog.
+     */
+    public Set<String> getVariableControlledParameters() {
+        Set<String> result = new LinkedHashSet<String>();
+        getRoot().addVariableControlledParameters(result);
+        return result;
     }
 
     /** Write the mask to a config object (for storage in node settings object).
@@ -379,7 +391,7 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
         public boolean hasConfiguration() {
             if (getUserObject().isLeaf()) {
                 return getUseVariableName() != null
-                    || getExposeVariableName() != null;
+                || getExposeVariableName() != null;
             }
             for (Enumeration<?> e = children(); e.hasMoreElements();) {
                 ConfigEditTreeNode c = (ConfigEditTreeNode)e.nextElement();
@@ -388,6 +400,22 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
                 }
             }
             return false;
+        }
+
+        /** Implementation of
+         * {@link ConfigEditTreeModel#getVariableControlledParameters()}.
+         * @param toAdd List to add to. */
+        public void addVariableControlledParameters(final Set<String> toAdd) {
+            if (getUserObject().isLeaf()) {
+                if (getUseVariableName() != null) {
+                    toAdd.add(getUserObject().getKey());
+                }
+            } else {
+                for (Enumeration<?> e = children(); e.hasMoreElements();) {
+                    ConfigEditTreeNode c = (ConfigEditTreeNode)e.nextElement();
+                    c.addVariableControlledParameters(toAdd);
+                }
+            }
         }
 
         /** Implements the functionality described in the
@@ -758,6 +786,11 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
         /** @return true if this represents a leaf (not a config object) */
         boolean isLeaf() {
             return !(m_configEntry instanceof Config);
+        }
+
+        /** @return the key of this config entry. */
+        String getKey() {
+            return m_configEntry.getKey();
         }
 
         /** {@inheritDoc} */

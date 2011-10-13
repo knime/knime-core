@@ -278,6 +278,7 @@ public class ConfigEditTreeNodePanel extends JPanel {
         if (!ConvenienceMethods.areEqual(oldToolTip, newToolTip)) {
             setToolTipText(newToolTip);
         }
+        commit();
     }
 
     /** Write the currently edited values to the underlying model. */
