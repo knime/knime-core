@@ -173,13 +173,8 @@ public class SotaNodeModel extends NodeModel {
         
         int numberCells = 0;
         int fuzzyCells = 0;
-        int intCells = 0;
         for (int i = 0; i < inDataSpec.getNumColumns(); i++) {
             DataType type = inDataSpec.getColumnSpec(i).getType();
-
-            if (SotaUtil.isIntType(type)) {
-                intCells++;
-            }
             if (SotaUtil.isNumberType(type)) {
                 numberCells++;
             } else if (SotaUtil.isFuzzyIntervalType(type)) {

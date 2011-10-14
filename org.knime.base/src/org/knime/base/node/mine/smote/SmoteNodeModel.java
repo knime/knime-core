@@ -209,7 +209,6 @@ public class SmoteNodeModel extends NodeModel {
                 int count = smoter.getCount(it.next());
                 nrRowsToAdd += (int)(count * m_rate);
             }
-            int currentRow = 0;
             for (Iterator<DataCell> it = smoter.getClassValues(); 
                 it.hasNext();) {
                 DataCell cur = it.next();
@@ -219,7 +218,6 @@ public class SmoteNodeModel extends NodeModel {
                 ExecutionMonitor subExec = exec.createSubProgress(newCount
                         / (double)nrRowsToAdd);
                 smoter.smote(cur, newCount, m_kNN, subExec);
-                currentRow += newCount;
             }
         } else if (m_method.equals(METHOD_MAJORITY)) {
             DataCell majority = smoter.getMajorityClass();

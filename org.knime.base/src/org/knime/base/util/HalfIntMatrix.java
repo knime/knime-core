@@ -287,9 +287,7 @@ public final class HalfIntMatrix {
         int maxDigits = 0;
         for (int i = 0; i < m_matrix.length; i++) {
             int m = m_matrix[i];
-            int k = 0;
             while (m > 0) {
-                k++;
                 m /= 10;
             }
             maxDigits = m > maxDigits ? m : maxDigits;

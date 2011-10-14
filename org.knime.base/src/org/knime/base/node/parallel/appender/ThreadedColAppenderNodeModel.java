@@ -113,14 +113,13 @@ public abstract class ThreadedColAppenderNodeModel extends NodeModel {
                     (int)Math.ceil(max / (4.0 * m_workers.getMaxThreads()));
             final RowIterator it = m_data[0].iterator();
             BufferedDataContainer container = null;
-            int count = 0, chunks = 0;
+            int count = 0;
             while (chunkSize > 0) {
                 m_exec.checkCanceled();
 
                 if ((count++ % chunkSize == 0) || !it.hasNext()) {
                     if (container != null) {
                         container.close();
-                        chunks++;
                         m_futures.add(m_workers.submit(createCallable(
                                 container.getTable(), chunkSize, max)));
                     }

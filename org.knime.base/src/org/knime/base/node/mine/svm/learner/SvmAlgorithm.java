@@ -537,12 +537,11 @@ public class SvmAlgorithm {
                 m_i4.add(i);
             }
         }
-
 //        double maximalViolation = kktGlobalViolation();
-        int steps = 0;
+//        int steps = 0;
 
         while (numChanged > 0 || examineAll) {
-            steps++;
+//            steps++;
 //            double currentViolation = kktGlobalViolation();
 //            if (currentViolation > maximalViolation) {
 //                maximalViolation = currentViolation;

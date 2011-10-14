@@ -238,7 +238,6 @@ public final class DecTreeNodeWidget
         c.gridwidth = 1;
         DataCell majorityClass = getUserObject().getMajorityClass();
         List<Double> classFreqList = new ArrayList<Double>();
-        int i = 0;
         for (DataCell cell : classCounts.keySet()) {
             JLabel classLabel = new JLabel(cell.toString());
             c.gridy++;
@@ -260,7 +259,6 @@ public final class DecTreeNodeWidget
                 p.add(comp, c);
                 c.gridwidth = 1;
             }
-            i++;
         }
         c.gridy++;
         c.gridx = 0;

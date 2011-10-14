@@ -106,14 +106,10 @@ public class DiscretizationScheme {
             throws InvalidSettingsException {
 
         m_intervals = new Vector<Interval>();
-        int i = 0;
         Enumeration<TreeNode> schemeConfigEnum = content.children();
         while (schemeConfigEnum.hasMoreElements()) {
-
             Config schemeConfig = (Config)schemeConfigEnum.nextElement();
             m_intervals.add(new Interval(schemeConfig));
-
-            i++;
         }
     }
 

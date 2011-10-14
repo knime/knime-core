@@ -362,7 +362,6 @@ public class LinePlotter extends ScatterPlotter {
 
             // first store them in a list to avoid keep tracking of indices
             List<DotInfo> dotList = new ArrayList<DotInfo>();
-            int colNr = 0;
             for (String col : m_columnNames) {
                 int colIdx = array.getDataTableSpec().findColumnIndex(col);
                 Color c = m_colorMapping.get(col);
@@ -431,7 +430,6 @@ public class LinePlotter extends ScatterPlotter {
                     missingValues.clear();
                 }
                 p1 = new Point(-1, -1);
-                colNr++;
             }
             DotInfo[] dots = new DotInfo[dotList.size()];
             dotList.toArray(dots);

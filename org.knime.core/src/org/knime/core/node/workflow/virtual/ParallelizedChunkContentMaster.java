@@ -218,20 +218,7 @@ implements NodeStateChangeListener {
      * {@inheritDoc}
      */
     @Override
-    public void stateChanged(NodeStateEvent state) {
-        // check if there is any executing chunk left (don't count
-        // failures...)
-        int nrExecutingChunks = 0;
-        int nrFailedChunks = 0;
-        for (ParallelizedChunkContent pbc : m_chunks) {
-            if (!pbc.isExecuted()) {
-                if (pbc.executionInProgress()) {
-                    nrExecutingChunks++;
-                } else {
-                    nrFailedChunks++;
-                }
-            }
-        }
+    public void stateChanged(final NodeStateEvent state) {
         // notify end node about new status
         m_endNode.updateStatus();
     }

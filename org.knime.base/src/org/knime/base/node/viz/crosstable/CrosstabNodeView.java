@@ -262,7 +262,6 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
             // create new
             GridBagConstraints c = createGridBagConstraints();
             c.insets = new Insets(3, 3, 3, 3);
-            int i = 0;
             for (String prop : m_crosstab.getProperties()) {
                 JCheckBox checkBox = new JCheckBox(prop);
                 checkBox.setBackground(Color.white);
@@ -274,7 +273,6 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
                         updateCrosstabulation();
                     }
                 });
-                i++;
                 m_propBoxes.add(checkBox);
                 m_propsPanel.add(checkBox, c);
                 c.gridy++;

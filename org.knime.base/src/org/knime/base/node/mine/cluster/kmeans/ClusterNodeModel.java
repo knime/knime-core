@@ -428,7 +428,6 @@ public class ClusterNodeModel extends NodeModel {
             // assume that we are done (i.e. clusters have stopped changing)
             finished = true;
             RowIterator rowIt = inData.iterator(); // first training example
-            int nrOverallPatterns = 0;
             while (rowIt.hasNext()) {
                 DataRow currentRow = rowIt.next();
                 int winner = findClosestPrototypeFor(currentRow);
@@ -458,7 +457,6 @@ public class ClusterNodeModel extends NodeModel {
                     throw new IllegalStateException("No winner found: "
                             + winner);
                 }
-                nrOverallPatterns++;
             }
             // update cluster centers
             for (int c = 0; c < m_nrOfClusters.getIntValue(); c++) {
@@ -728,21 +726,6 @@ public class ClusterNodeModel extends NodeModel {
                 m_nrIgnoredColumns++;
             }
         }
-    }
-
-    private static List<DataColumnSpec> getColumnSpecsFor(
-    		final List<String> colNames,
-            final DataTableSpec tableSpec) {
-        List<DataColumnSpec> colSpecs = new LinkedList<DataColumnSpec>();
-        for (String colName : colNames) {
-            DataColumnSpec colSpec = tableSpec.getColumnSpec(colName);
-            if (colName == null) {
-                throw new IllegalArgumentException(
-                        "Column " + colName + " not found in data table spec!");
-            }
-            colSpecs.add(colSpec);
-        }
-        return colSpecs;
     }
 
     private PMMLPortObjectSpec createPMMLSpec(final PMMLPortObjectSpec pmmlSpec,

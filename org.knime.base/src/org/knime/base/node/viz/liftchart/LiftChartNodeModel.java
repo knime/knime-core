@@ -271,8 +271,6 @@ public class LiftChartNodeModel extends NodeModel implements DataProvider {
 
         long cumulativeCounter = 0;
 
-        double lifts = 0;
-
         responseCont.addRowToTable(new DefaultRow(new RowKey("0"), 0.0, 0.0));
 
         for (int i = 0; i < counter.length; i++) {
@@ -293,8 +291,6 @@ public class LiftChartNodeModel extends NodeModel implements DataProvider {
             // (double)cumulativeCounter / (partWidthAbsolute * (i + 1));
                     (double)cumulativeCounter / number;
             cumulativeLift /= avgResponse;
-
-            lifts += lift;
 
             // cumulativeLift = lifts / (i+1);
 

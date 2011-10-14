@@ -424,17 +424,11 @@ public class RPropNodeModel extends NodeModel {
         // Convert inputs to double arrays. Values from the class column are
         // encoded as bitvectors.
         int classColNr = posSpec.findColumnIndex(m_classcol.getStringValue());
-        int nrposRows = 0;
-        RowIterator rowIt = ((BufferedDataTable)inData[INDATA]).iterator();
-        while (rowIt.hasNext()) {
-            rowIt.next();
-            nrposRows++;
-        }
         Vector<Double[]> samples = new Vector<Double[]>();
         Vector<Double[]> outputs = new Vector<Double[]>();
         Double[] sample = new Double[nrInputs];
         Double[] output = new Double[nrOutputs];
-        rowIt = ((BufferedDataTable)inData[INDATA]).iterator();
+        final RowIterator rowIt = ((BufferedDataTable)inData[INDATA]).iterator();
         int rowcounter = 0;
         while (rowIt.hasNext()) {
             boolean add = true;

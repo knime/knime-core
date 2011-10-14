@@ -308,16 +308,13 @@ public class AggregateOutputNodeModel extends NodeModel implements LoopEndNode {
                                     / rowCount), new IntCell(rowCount));
             m_foldStatistics.add(stats);
         } else {
-            int correct = 0;
             int incorrect = 0;
             int r = 0;
             for (DataRow row : in) {
                 RowKey key = row.getKey();
                 DataCell target = row.getCell(targetColIndex);
                 DataCell predict = row.getCell(predictColIndex);
-                if (target.equals(predict)) {
-                    correct++;
-                } else {
+                if (!target.equals(predict)) {
                     incorrect++;
                 }
                 r++;

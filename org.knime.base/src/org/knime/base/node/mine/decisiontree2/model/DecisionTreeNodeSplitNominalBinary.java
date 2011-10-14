@@ -101,12 +101,9 @@ public class DecisionTreeNodeSplitNominalBinary extends
     }
 
     private static ArrayList<Integer> toArrayList(final int[] intList) {
-
         ArrayList<Integer> result = new ArrayList<Integer>();
-        int counter = 0;
         for (int integer : intList) {
             result.add(integer);
-            counter++;
         }
         return result;
     }

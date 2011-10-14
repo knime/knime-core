@@ -219,19 +219,10 @@ public class MDSProjectionNodeModel extends NodeModel {
         /// Check fixed data
         //
         
-        int fixedNumberCells = 0;
         List<String> fixedColumns = new ArrayList<String>();
         for (int i = 0; i < inSpecs[FIXED_DATA_INDEX].getNumColumns(); i++) {
             fixedColumns.add(
                     inSpecs[FIXED_DATA_INDEX].getColumnSpec(i).getName());
-            if (m_includeList.contains(
-                    inSpecs[FIXED_DATA_INDEX].getColumnSpec(i).getName())) {
-                DataType type = inSpecs[FIXED_DATA_INDEX]
-                                        .getColumnSpec(i).getType();
-                if (SotaUtil.isNumberType(type)) {
-                    fixedNumberCells++;
-                }
-            }
         }
         
         if (numberCells <= 0) {
