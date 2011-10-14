@@ -46,20 +46,22 @@
  * -------------------------------------------------------------------
  *
  */
-package org.knime.base.node.io.database;
+package org.knime.core.node.port.database;
 
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
+import java.util.logging.Logger;
 
 /**
- * Wraps a Driver object.
- *
+ * Wraps an <code>java.sql.Driver</code> object.
+ * 
  * @author Thomas Gabriel, University of Konstanz
  */
-final class WrappedDriver implements Driver {
+public final class DatabaseWrappedDriver implements Driver {
     private final Driver m_d;
 
     /**
@@ -67,7 +69,7 @@ final class WrappedDriver implements Driver {
      *
      * @param d For this <code>Driver</code>.
      */
-    WrappedDriver(final Driver d) {
+    DatabaseWrappedDriver(final Driver d) {
         m_d = d;
     }
 
@@ -135,5 +137,13 @@ final class WrappedDriver implements Driver {
     @Override
     public int hashCode() {
         return m_d.hashCode();
+    }
+    
+    /**
+     * Added with Java 1.7, needs to be flagged with @Override.
+     * @since KNIME v2.5
+     */
+    public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+        return m_d.getParentLogger();
     }
 }

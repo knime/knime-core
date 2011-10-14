@@ -53,16 +53,12 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverManager;
-import java.sql.DriverPropertyInfo;
-import java.sql.SQLException;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
@@ -130,8 +126,8 @@ public final class DatabaseDriverLoader {
     private static final ClassLoader CLASS_LOADER = ClassLoader
             .getSystemClassLoader();
 
-    private static final Map<String, WrappedDriver> DRIVER_MAP
-        = new HashMap<String, WrappedDriver>();
+    private static final Map<String, DatabaseWrappedDriver> DRIVER_MAP
+        = new HashMap<String, DatabaseWrappedDriver>();
 
     /**
      * Register Java's jdbc-odbc bridge.
@@ -139,8 +135,8 @@ public final class DatabaseDriverLoader {
     static {
         try {
             Class<?> driverClass = Class.forName(JDBC_ODBC_DRIVER);
-            WrappedDriver d = new WrappedDriver((Driver)driverClass
-                    .newInstance());
+            DatabaseWrappedDriver d = new DatabaseWrappedDriver(
+                    (Driver)driverClass.newInstance());
             // DriverManager.registerDriver(d);
             DRIVER_MAP.put(d.toString(), d);
         } catch (Throwable t) {
@@ -235,7 +231,7 @@ public final class DatabaseDriverLoader {
                    try {
                     Class<?> c = loadClass(cl, name);
                     if (Driver.class.isAssignableFrom(c)) {
-                        WrappedDriver d = new WrappedDriver(
+                        DatabaseWrappedDriver d = new DatabaseWrappedDriver(
                                 (Driver)c.newInstance());
                         String driverName = d.toString();
                         DRIVER_MAP.put(driverName, d);
@@ -261,16 +257,17 @@ public final class DatabaseDriverLoader {
      * @param driverName The driver name.
      * @return The <code>WrappedDriver</code> for the given driver name.
      */
-    private static WrappedDriver getWrappedDriver(final String driverName)
-            throws Exception {
-        WrappedDriver wdriver = DRIVER_MAP.get(driverName);
+    private static DatabaseWrappedDriver getWrappedDriver(
+            final String driverName) throws Exception {
+        DatabaseWrappedDriver wdriver = DRIVER_MAP.get(driverName);
         if (wdriver != null) {
             return wdriver;
         }
         // otherwise try to load new driver from registered classes
         Class<?> c = Class.forName(driverName, true,
                 ClassLoader.getSystemClassLoader());
-        WrappedDriver d = new WrappedDriver((Driver) c.newInstance());
+        DatabaseWrappedDriver d = new DatabaseWrappedDriver(
+                (Driver) c.newInstance());
         DRIVER_MAP.put(driverName, d);
         return d;
     }
@@ -307,90 +304,6 @@ public final class DatabaseDriverLoader {
     public static File getDriverFileForDriverClass(
             final String driverClass) {
         return DRIVERFILE_TO_DRIVERCLASS.get(driverClass);
-    }
-
-    /**
-     * Wraps a Driver object.
-     *
-     * @author Thomas Gabriel, University of Konstanz
-     */
-    private static final class WrappedDriver implements Driver {
-        private final Driver m_d;
-
-        /**
-         * Create wrapper.
-         *
-         * @param d For this <code>Driver</code>.
-         */
-        WrappedDriver(final Driver d) {
-            m_d = d;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Connection connect(final String url, final Properties info)
-                throws SQLException {
-            return m_d.connect(url, info);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public boolean acceptsURL(final String url) throws SQLException {
-            return m_d.acceptsURL(url);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public DriverPropertyInfo[] getPropertyInfo(final String url,
-                final Properties info) throws SQLException {
-            return m_d.getPropertyInfo(url, info);
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public int getMajorVersion() {
-            return m_d.getMajorVersion();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public int getMinorVersion() {
-            return m_d.getMinorVersion();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public boolean jdbcCompliant() {
-            return m_d.jdbcCompliant();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public String toString() {
-            return m_d.getClass().getName();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public int hashCode() {
-            return m_d.hashCode();
-        }
     }
 
 }
