@@ -313,15 +313,10 @@ public final class RepositoryFactory {
         }
         // split the path
         String[] segments = path.split("/");
-        // path so far
-        String pathSoFar = "";
         // start at root
         IContainerObject container = root;
 
         for (int i = 0; i < segments.length; i++) {
-
-            pathSoFar += "/" + segments[i];
-
             IRepositoryObject obj = container.getChildByID(segments[i], false);
             if (obj == null) {
                 throw new IllegalArgumentException("The segment '"
