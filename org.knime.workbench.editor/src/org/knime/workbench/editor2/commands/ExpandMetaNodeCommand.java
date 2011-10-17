@@ -144,6 +144,7 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
         }
         hostWFM.paste(m_undoCopyPersistor);
         m_pastedNodes = null;
+        m_pastedAnnotations = null;
         m_undoCopyPersistor = null;
     }
 
