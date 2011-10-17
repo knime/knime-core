@@ -52,9 +52,7 @@ import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
-import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
-import java.util.logging.Logger;
 
 /**
  * Wraps an <code>java.sql.Driver</code> object.
@@ -137,13 +135,5 @@ public final class DatabaseWrappedDriver implements Driver {
     @Override
     public int hashCode() {
         return m_d.hashCode();
-    }
-    
-    /**
-     * Added with Java 1.7, needs to be flagged with @Override.
-     * @since KNIME v2.5
-     */
-    public Logger getParentLogger() throws SQLFeatureNotSupportedException {
-        return m_d.getParentLogger();
     }
 }
