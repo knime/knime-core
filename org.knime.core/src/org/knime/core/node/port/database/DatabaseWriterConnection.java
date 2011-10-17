@@ -96,7 +96,7 @@ public final class DatabaseWriterConnection {
      * @return error string or null, if non
      * @throws Exception if connection could not be established
      */
-    public final static String writeData(
+    public static final String writeData(
             final DatabaseConnectionSettings dbConn,
             final String table, final BufferedDataTable data,
             final boolean appendData, final ExecutionMonitor exec,
@@ -319,19 +319,19 @@ public final class DatabaseWriterConnection {
                                     (DateAndTimeValue) cell;
                                 if (!dateCell.hasTime()
                                         && !dateCell.hasMillis()) {
-                            		java.sql.Date date = new java.sql.Date(
-                            				dateCell.getUTCTimeInMillis());
-                            		stmt.setDate(dbIdx, date);
-                            	} else if (!dateCell.hasDate()) {
-                            		java.sql.Time time = new java.sql.Time(
-                            				dateCell.getUTCTimeInMillis());
-                            		stmt.setTime(dbIdx, time);
-                            	} else {
-                            		java.sql.Timestamp timestamp =
-                            		    new java.sql.Timestamp(
-                            		            dateCell.getUTCTimeInMillis());
-                            		stmt.setTimestamp(dbIdx, timestamp);
-                            	}
+                                    java.sql.Date date = new java.sql.Date(
+                                            dateCell.getUTCTimeInMillis());
+                                    stmt.setDate(dbIdx, date);
+                                } else if (!dateCell.hasDate()) {
+                                    java.sql.Time time = new java.sql.Time(
+                                            dateCell.getUTCTimeInMillis());
+                                    stmt.setTime(dbIdx, time);
+                                } else {
+                                    java.sql.Timestamp timestamp =
+                                        new java.sql.Timestamp(
+                                                dateCell.getUTCTimeInMillis());
+                                    stmt.setTimestamp(dbIdx, timestamp);
+                                }
                             }
                         } else {
                             if (cell.isMissing()) {
