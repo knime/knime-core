@@ -54,6 +54,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
@@ -66,18 +67,22 @@ public class CollapseMetaNodeCommand extends AbstractKNIMECommand {
             CollapseMetaNodeCommand.class);
 
     private NodeID[] m_nodes;
+    private WorkflowAnnotation[] m_annos;
     private NodeID m_wrapper;
     private String m_name;
 
     /**
      * @param wfm the workflow manager holding the new metanode
      * @param nodes the ids of the nodes to collapse
+     * @param annos the workflow annotations to collapse
      * @param name of new metanode
      */
     public CollapseMetaNodeCommand(final WorkflowManager wfm,
-            final NodeID[] nodes, final String name) {
+            final NodeID[] nodes, final WorkflowAnnotation[] annos,
+            final String name) {
         super(wfm);
         m_nodes = nodes;
+        m_annos = annos;
         m_name = name;
         m_wrapper = null;
     }
@@ -98,7 +103,8 @@ public class CollapseMetaNodeCommand extends AbstractKNIMECommand {
     public void execute() {
         try {
             m_wrapper = 
-                getHostWFM().collapseNodesIntoMetaNode(m_nodes, m_name).getID();
+                getHostWFM().collapseIntoMetaNode(m_nodes, m_annos,
+                        m_name).getID();
         } catch (Exception e) {
             String error = "Collapsing Metanode failed: " + e.getMessage();
             LOGGER.error(error, e);

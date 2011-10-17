@@ -2586,10 +2586,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** Expand the selected metanode into a set of nodes in
      * this WFM and remove the old metanode.
      *
-     * @param orgID the id of the metanode to be expanded
+     * @param wfmID the id of the metanode to be expanded
+     * @return copied content containing nodes and annotations
      * @throws IllegalArgumentException if expand can not be done
      */
-    public NodeID[] expandMetaNode(final NodeID wfmID)
+    public WorkflowCopyContent expandMetaNode(final NodeID wfmID)
     throws IllegalArgumentException {
         synchronized (m_workflowMutex) {
             // check again, to be sure...
@@ -2607,15 +2608,28 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 orgIDs[i] = nc.getID();
                 i++;
             }
+            // retrieve all workflow annotations
+            Collection<WorkflowAnnotation> annos = subWFM.getWorkflowAnnotations();
+            WorkflowAnnotation[] orgAnnos = new WorkflowAnnotation[annos.size()];
+            i = 0;
+            for (WorkflowAnnotation anno : annos) {
+                orgAnnos[i] = anno;
+                i++;
+            }
             // copy the nodes from the sub workflow manager:
             WorkflowCopyContent orgContent = new WorkflowCopyContent();
             orgContent.setNodeIDs(orgIDs);
+            orgContent.setAnnotation(orgAnnos);
             WorkflowCopyContent newContent
                     = this.copyFromAndPasteHere(subWFM, orgContent);
             NodeID[] newIDs = newContent.getNodeIDs();
+            WorkflowAnnotation[] newAnnos = newContent.getAnnotations();
+            // create map and set of quick lookup/search
             Map<NodeID, NodeID> oldIDsHash = new HashMap<NodeID, NodeID>();
+            HashSet<NodeID> newIDsHashSet = new HashSet<NodeID>();
             for (i = 0; i < orgIDs.length; i++) {
                 oldIDsHash.put(orgIDs[i], newIDs[i]);
+                newIDsHashSet.add(newIDs[i]);
             }
             // connect connections TO the sub workflow:
             for (ConnectionContainer cc :
@@ -2697,11 +2711,27 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         nc.setUIInformation(newUii);
                     }
                 }
+                for (WorkflowAnnotation anno : newAnnos) {
+                    anno.shiftPosition(xShift, yShift);
+                }
+                // move bendpoints of connections between moved nodes
+                for (ConnectionContainer cc : this.getConnectionContainers()) {
+                    if (       (newIDsHashSet.contains(cc.getSource()))
+                            && (newIDsHashSet.contains(cc.getDest())) ) {
+                        ConnectionUIInformation cuii = cc.getUIInfo();
+                        if (cuii != null) {
+                            ConnectionUIInformation newUI =
+                                cuii.createNewWithOffsetPosition(
+                                        new int[] {xShift, yShift});
+                            cc.setUIInfo(newUI);
+                        }
+                    }
+                    
+                }
             }
             // and finally remove old sub workflow
             this.removeNode(wfmID);
-            Collection<NodeID> values = oldIDsHash.values();
-            return values.toArray(new NodeID[values.size()]);
+            return newContent;
         }
     }
 
@@ -2771,15 +2801,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /** Collapse selected set of nodes into a metanode. Make sure connections
-     * from and two nodes not contained in this set are passed through
+     * from and to nodes not contained in this set are passed through
      * appropriate ports of the new metanode.
      *
      * @param orgIDs the ids of the nodes to be moved to the new metanode.
+     * @param orgAnnos the workflow annotations to be moved
      * @param name of the new metanode
      * @return newly create metanode
      * @throws IllegalArgumentException if collapse can not be done
      */
-    public WorkflowManager collapseNodesIntoMetaNode(final NodeID[] orgIDs,
+    public WorkflowManager collapseIntoMetaNode(final NodeID[] orgIDs,
+            final WorkflowAnnotation[] orgAnnos,
             final String name)
     throws IllegalArgumentException {
         synchronized (m_workflowMutex) {
@@ -2881,6 +2913,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // copy the nodes into the newly create WFM:
             WorkflowCopyContent orgContent = new WorkflowCopyContent();
             orgContent.setNodeIDs(orgIDs);
+            orgContent.setAnnotation(orgAnnos);
             WorkflowCopyContent newContent
                     = newWFM.copyFromAndPasteHere(this, orgContent);
             NodeID[] newIDs = newContent.getNodeIDs();
@@ -2895,6 +2928,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             int xmin = Integer.MAX_VALUE;
             int ymin = Integer.MAX_VALUE;
             if (newIDs.length >= 1) {
+                // calculate shift
                 for (int i = 0; i < newIDs.length; i++) {
                     NodeContainer nc = newWFM.getNodeContainer(newIDs[i]);
                     UIInformation uii = nc.getUIInformation();
@@ -2908,6 +2942,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
                 int xshift = 150 - Math.max(xmin, 70);
                 int yshift = 120 - Math.max(ymin, 20);
+                // move new nodes
                 for (int i = 0; i < newIDs.length; i++) {
                     NodeContainer nc = newWFM.getNodeContainer(newIDs[i]);
                     UIInformation uii = nc.getUIInformation();
@@ -2916,6 +2951,23 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             ((NodeUIInformation)uii).createNewWithOffsetPosition(
                                    new int[]{xshift, yshift});
                         nc.setUIInformation(newUii);
+                    }
+                }
+                // move new annotations
+                for (WorkflowAnnotation anno : newWFM.m_annotations) {
+                    anno.shiftPosition(xshift, yshift);
+                }
+                // move bendpoints of all internal connections
+                for (ConnectionContainer cc : newWFM.getConnectionContainers()) {
+                    if (       (!cc.getSource().equals(newWFM.getID()))
+                            && (!cc.getDest().equals(newWFM.getID())) ) {
+                        ConnectionUIInformation uii = cc.getUIInfo();
+                        if (uii != null) {
+                            ConnectionUIInformation newUI =
+                                uii.createNewWithOffsetPosition(
+                                        new int[] {xshift, yshift});
+                            cc.setUIInfo(newUI);
+                        }
                     }
                 }
             }
@@ -2956,9 +3008,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     }
                 }
             }
-            // and finally: delete the original nodes.
+            // and finally: delete the original nodes and annotations.
             for (NodeID id : orgIDs) {
                 this.removeNode(id);
+            }
+            for (WorkflowAnnotation anno : orgAnnos) {
+                this.removeAnnotation(anno);
             }
             return newWFM;
         }

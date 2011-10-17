@@ -48,6 +48,8 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import java.util.Vector;
+
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -56,10 +58,12 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.CollapseMetaNodeCommand;
+import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
@@ -132,21 +136,57 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
     }
 
     /**
-     * collapse nodes into metanode.
+     * collapse nodes and annotations into metanode.
      *
      * {@inheritDoc}
      */
     @Override
-    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
+    public void runInSWT() {
+        NodeContainerEditPart[] nodeParts
+                            = getSelectedParts(NodeContainerEditPart.class);
+        AnnotationEditPart[] annoParts
+                            = getSelectedParts(AnnotationEditPart.class);
+
         LOGGER.debug("Creating 'Collapse MetaNode' job for "
                 + nodeParts.length + " node(s)...");
+
         WorkflowManager manager = getManager();
-        NodeID[] ids = new NodeID[nodeParts.length];
+        NodeID[] nodeIds = new NodeID[nodeParts.length];
         for (int i = 0; i < nodeParts.length; i++) {
-            ids[i] = nodeParts[i].getNodeContainer().getID();
+            nodeIds[i] = nodeParts[i].getNodeContainer().getID();
+        }
+        WorkflowAnnotation[] annos = new WorkflowAnnotation[annoParts.length];
+        for (int i = 0; i < annoParts.length; i++) {
+            annos[i] = annoParts[i].getModel();
         }
         try {
-            String res = manager.canCollapseNodesIntoMetaNode(ids);
+            // before testing anything, let's see if we should reset
+            // the selected nodes:
+            Vector<NodeID> resetableIDs = new Vector<NodeID>(); 
+            for (NodeID id : nodeIds) {
+                if (manager.canResetNode(id)) {
+                    resetableIDs.add(id);
+                }
+            }
+            if (resetableIDs.size() > 0) {
+                // found some: ask if we can reset, otherwise bail
+                MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(),
+                        SWT.OK | SWT.CANCEL);
+                mb.setMessage("Executed Nodes will be reset - are you sure?");
+                mb.setText("Reset Executed Nodes");
+                int dialogreturn = mb.open();
+                if (dialogreturn == SWT.CANCEL) {
+                    return;
+                }
+                // do quick&dirty reset: just reset them in random order
+                // and skip the ones that were already reset in passing.
+                for (NodeID id : resetableIDs) {
+                    if (manager.canResetNode(id)) {
+                        manager.resetAndConfigureNode(id);
+                    }
+                }
+            }
+            String res = manager.canCollapseNodesIntoMetaNode(nodeIds);
             if (res != null) {
                 throw new IllegalArgumentException(res);
             }
@@ -162,7 +202,7 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
                 name = idia.getValue();
                 // create a command and push on stack to enable UNDO
                 CollapseMetaNodeCommand cmnc =
-                    new CollapseMetaNodeCommand(manager, ids, name);
+                    new CollapseMetaNodeCommand(manager, nodeIds, annos, name);
                 getCommandStack().execute(cmnc);
             }
         } catch (IllegalArgumentException e) {
@@ -180,4 +220,12 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
             // ignore
         }
     }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
+        throw new IllegalStateException(
+                "Not to be called as runInSWT is overwritten.");
+    }
+
 }

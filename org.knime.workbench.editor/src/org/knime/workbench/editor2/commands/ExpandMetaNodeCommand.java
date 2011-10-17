@@ -54,6 +54,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
@@ -69,6 +70,7 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
 
     private final NodeID m_id;
     private NodeID[] m_pastedNodes;
+    private WorkflowAnnotation[] m_pastedAnnotations;
     private WorkflowPersistor m_undoCopyPersistor;
 
     /**
@@ -100,7 +102,9 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
             cnt.setNodeIDs(m_id);
             cnt.setIncludeInOutConnections(true);
             m_undoCopyPersistor = hostWFM.copy(true, cnt);
-            m_pastedNodes = hostWFM.expandMetaNode(m_id);
+            WorkflowCopyContent wcc = hostWFM.expandMetaNode(m_id);
+            m_pastedNodes = wcc.getNodeIDs();
+            m_pastedAnnotations = wcc.getAnnotations();
         } catch (Exception e) {
             String error = "Expanding Metanode failed: " + e.getMessage();
             LOGGER.error(error, e);
@@ -134,6 +138,9 @@ public class ExpandMetaNodeCommand extends AbstractKNIMECommand {
         WorkflowManager hostWFM = getHostWFM();
         for (NodeID id : m_pastedNodes) {
             hostWFM.removeNode(id);
+        }
+        for (WorkflowAnnotation anno : m_pastedAnnotations) {
+            hostWFM.removeAnnotation(anno);
         }
         hostWFM.paste(m_undoCopyPersistor);
         m_pastedNodes = null;
