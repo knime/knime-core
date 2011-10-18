@@ -1,21 +1,14 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: KNIME Base Nodes (Preview)
-Bundle-SymbolicName: org.knime.base.preview;singleton:=true
+Bundle-Name: KNIME Java Snippet Nodes (draft)
+Bundle-SymbolicName: org.knime.jsnippets;singleton:=true
 Bundle-Version: 2.5.0.qualifier
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Require-Bundle: org.knime.distmatrix,
- org.knime.base;bundle-version="2.5.0",
+Require-Bundle: org.knime.base;bundle-version="2.5.0",
  org.knime.ext.sun;bundle-version="2.5.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
-Export-Package: org.knime.base.node.mine.bayes.newnaivebayes.datamodel,
- org.knime.base.node.mine.bayes.newnaivebayes.learner,
- org.knime.base.node.mine.bayes.newnaivebayes.port,
- org.knime.base.node.mine.bayes.newnaivebayes.predictor,
- org.knime.base.node.preproc.stringmanipulation,
- org.knime.base.node.viz.property.color.extract,
- org.knime.base.node.workflow.save
+Export-Package: org.knime.base.node.preproc.stringmanipulation
 Bundle-ClassPath: .,
  lib/commons-lang3-3.0.1.jar,
  lib/org.knime.core.string.manipulator.jar,
