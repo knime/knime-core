@@ -58,8 +58,6 @@ import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
 import java.util.logging.Logger;
 
-import org.knime.core.node.NodeLogger;
-
 /**
  * Wraps an <code>java.sql.Driver</code> object.
  * 
@@ -77,13 +75,6 @@ public final class DatabaseWrappedDriver implements Driver {
      */
     DatabaseWrappedDriver(final Driver d) {
         m_d = d;
-        try {
-            NodeLogger.getLogger(DatabaseWrappedDriver.class).fatal(
-                this.getParentLogger());
-            System.err.println("done");
-        } catch (Throwable t) {
-            t.printStackTrace();
-        }
     }
 
     /**
