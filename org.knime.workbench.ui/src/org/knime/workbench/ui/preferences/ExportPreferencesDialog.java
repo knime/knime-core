@@ -57,6 +57,9 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -65,6 +68,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.FileDialog;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
@@ -108,32 +112,53 @@ public class ExportPreferencesDialog extends Dialog {
         GridData fillBoth = new GridData(GridData.FILL_BOTH);
         overall.setLayoutData(fillBoth);
         overall.setLayout(new GridLayout(1, true));
-        createMessage(overall);
+        createHeader(overall);
         createFileSelection(overall);
         createOverwrite(overall);
         createError(overall);
         return overall;
     }
 
-    protected void createMessage(final Composite parent) {
-        Label msg = new Label(parent, SWT.LEFT);
-        msg.setLayoutData(new GridData(GridData.FILL_BOTH));
-        msg.setText("Please enter the location where the "
-                + "preferences should be stored:");
+    private void createHeader(final Composite parent) {
+        Composite header = new Composite(parent, SWT.FILL);
+        Color white = Display.getDefault().getSystemColor(SWT.COLOR_WHITE);
+        header.setBackground(white);
+        GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
+        header.setLayoutData(gridData);
+        header.setLayout(new GridLayout(2, false));
+        Label exec = new Label(header, SWT.NONE);
+        exec.setBackground(white);
+        exec.setText("Export KNIME Preferences");
+        FontData[] fd = parent.getFont().getFontData();
+        for (FontData f : fd) {
+            f.setStyle(SWT.BOLD);
+            f.setHeight(f.getHeight() + 2);
+        }
+        exec.setFont(new Font(parent.getDisplay(), fd));
+        exec.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
+        Label mkdirIcon = new Label(header, SWT.NONE);
+        mkdirIcon.setBackground(white);
+        Label txt = new Label(header, SWT.NONE);
+        txt.setBackground(white);
+        txt.setText("Please enter the name of the file the preferences should "
+                + "be saved to. Or select a destination.");
+        txt.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
     }
 
     protected void createFileSelection(final Composite parent) {
         Composite panel = new Composite(parent, SWT.FILL);
         GridData fillBoth = new GridData(GridData.FILL_BOTH);
         panel.setLayoutData(fillBoth);
-        panel.setLayout(new GridLayout(3, false));
+        panel.setLayout(new GridLayout(1, true));
 
-        Label msg = new Label(panel, SWT.RIGHT);
-        msg.setLayoutData(new GridData(GridData.FILL_BOTH));
-        msg.setText("File:");
+        Group border = new Group(panel, SWT.SHADOW_IN);
+        border.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
+        border.setLayout(new GridLayout(2, false));
+        border.setText("File to store preferences:");
 
-        final Text filenameUI = new Text(panel, SWT.NONE);
-        filenameUI.setLayoutData(fillBoth);
+        final Text filenameUI =
+                new Text(border, SWT.FILL | SWT.SINGLE | SWT.BORDER);
+        filenameUI.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, false));
         filenameUI.addListener(SWT.Modify, new Listener() {
             @Override
             public void handleEvent(final Event event) {
@@ -141,7 +166,7 @@ public class ExportPreferencesDialog extends Dialog {
                 validate();
             }
         });
-        final Button browse = new Button(panel, SWT.PUSH);
+        final Button browse = new Button(border, SWT.PUSH);
         browse.setText("Select...");
         browse.setToolTipText("Opens a file selection dialog.");
         browse.addSelectionListener(new SelectionListener() {
