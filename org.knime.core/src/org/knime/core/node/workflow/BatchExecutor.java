@@ -219,42 +219,58 @@ public final class BatchExecutor {
     }
 
     private static void usage() {
-        System.err
-                .println("Usage: The following options are available:\n"
-                        + " -nosave => do not save the workflow after execution has finished\n"
-                        + " -reset => reset workflow prior to execution\n"
-                        + " -failonloaderror => don't execute if there are errors during workflow loading\n"
-                        + " -updateLinks => update meta node links to latest version\n"
-                        + " -credential=name[;login[;password]] => for each credential enter credential\n"
-                        + "                 name and optional login/password, otherwise its prompted for\n"
-                        + " -masterkey[=...] => prompt for master passwort (used in e.g. database nodes),\n"
-                        + "                 if provided with argument, use argument instead of prompting\n"
-                        + " -preferences=... => path to the file containing eclipse/knime preferences,\n"
-                        + " -workflowFile=... => ZIP file with a ready-to-execute workflow in the root \n"
-                        + "                  of the ZIP\n"
-                        + " -workflowDir=... => directory with a ready-to-execute workflow\n"
-                        + " -destFile=... => ZIP file where the executed workflow should be written to\n"
-                        + "                  if omitted the workflow is only saved in place\n"
-                        + " -destDir=... => directory where the executed workflow is saved to\n"
-                        + "                  if omitted the workflow is only saved in place\n"
-                        + " -workflow.variable=name,value,type => define or overwrite workflow variable\n"
-                        + "                  'name' with value 'value' (possibly enclosed by quotes). The\n"
-                        + "                  'type' must be one of \"String\", \"int\" or \"double\".\n"
-                        + " -option=nodeID,name,value,type => set the option with name 'name' of the node\n"
-                        + "                  with ID 'nodeID' to the given 'value', which has type 'type'.\n"
-                        + "                  'type' can be any of the primitive Java types, \"String\"\n"
-                        + "                  or any of \"StringCell\", \"DoubleCell\" or \"IntCell\".\n"
-                        + "                  If 'name' addresses a nested element (for instance \n"
-                        + "                  \"rowFilter\" -> \"ColValRowFilterUpperBound\"), the entire\n"
-                        + "                  path must be given, separated by \"/\".\n"
-                        + "                  If the node is part of a meta node, provide also the node\n"
-                        + "                  ids of the parent node(s), e.g. 90/56.\n"
-                        + "\n"
-                        + "Some KNIME settings can also be adjusted by Java properties;\n"
-                        + "they need to be provided as last option in the command line:\n"
-                        + " -vmargs -Dorg.knime.core.maxThreads=n => sets the maximum\n"
-                        + "                  number of threads used by KNIME\n");
+        System.err.println(getOptionsString() + getPropertiesString());
     }
+
+    /**
+     * @return a string explaining the options available for the batch executor
+     */
+    public static String getOptionsString() {
+        return
+        "Usage: The following options are available:\n"
+        + " -nosave => do not save the workflow after execution has finished\n"
+        + " -reset => reset workflow prior to execution\n"
+        + " -failonloaderror => don't execute if there are errors during workflow loading\n"
+        + " -updateLinks => update meta node links to latest version\n"
+        + " -credential=name[;login[;password]] => for each credential enter credential\n"
+        + "                 name and optional login/password, otherwise its prompted for\n"
+        + " -masterkey[=...] => prompt for master passwort (used in e.g. database nodes),\n"
+        + "                 if provided with argument, use argument instead of prompting\n"
+        + " -preferences=... => path to the file containing eclipse/knime preferences,\n"
+        + " -workflowFile=... => ZIP file with a ready-to-execute workflow in the root \n"
+        + "                  of the ZIP\n"
+        + " -workflowDir=... => directory with a ready-to-execute workflow\n"
+        + " -destFile=... => ZIP file where the executed workflow should be written to\n"
+        + "                  if omitted the workflow is only saved in place\n"
+        + " -destDir=... => directory where the executed workflow is saved to\n"
+        + "                  if omitted the workflow is only saved in place\n"
+        + " -workflow.variable=name,value,type => define or overwrite workflow variable\n"
+        + "                  'name' with value 'value' (possibly enclosed by quotes). The\n"
+        + "                  'type' must be one of \"String\", \"int\" or \"double\".\n"
+        + " -option=nodeID,name,value,type => set the option with name 'name' of the node\n"
+        + "                  with ID 'nodeID' to the given 'value', which has type 'type'.\n"
+        + "                  'type' can be any of the primitive Java types, \"String\"\n"
+        + "                  or any of \"StringCell\", \"DoubleCell\" or \"IntCell\".\n"
+        + "                  If 'name' addresses a nested element (for instance \n"
+        + "                  \"rowFilter\" -> \"ColValRowFilterUpperBound\"), the entire\n"
+        + "                  path must be given, separated by \"/\".\n"
+        + "                  If the node is part of a meta node, provide also the node\n"
+        + "                  ids of the parent node(s), e.g. 90/56.\n";
+    }
+
+    /**
+     * @return a string explaining the usage of Java properties for certain
+     *          KNIME parameters
+     */
+    public static String getPropertiesString() {
+        return "\n"
+        + "Some KNIME settings can also be adjusted by Java properties;\n"
+        + "they need to be provided as last option in the command line:\n"
+        + " -vmargs -Dorg.knime.core.maxThreads=n => sets the maximum\n"
+        + "                  number of threads used by KNIME\n";
+    }
+
+
 
     /**
      * Main method.
