@@ -50,16 +50,33 @@
  */
 package org.knime.base.node.preproc.stringmanipulation;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
 
-import org.knime.core.string.manipulator.StringManipulator;
+import javax.swing.tree.DefaultMutableTreeNode;
+
+import org.knime.base.node.preproc.stringmanipulation.manipulator.CapitalizeDelimManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.CapitalizeManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.LowerCaseManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveCharacterManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveDuplicatesManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveSpecificCharacterManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.StringManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.SubstringManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.UpperCaseManipulator;
+import org.knime.core.util.FileUtil;
 
 /**
  *
@@ -71,6 +88,7 @@ public final class StringManipulatorProvider {
      */
     static final String ALL_CATEGORY = "All";
     private Map<String, Collection<StringManipulator>> m_manipulators;
+    private File m_jarFile;
 
 
     private static StringManipulatorProvider provider;
@@ -103,10 +121,15 @@ public final class StringManipulatorProvider {
                 }
             });
 
-        for (StringManipulator m
-                : ServiceLoader.load(StringManipulator.class)) {
-            manipulators.add(m);
-        }
+        manipulators.add(new CapitalizeDelimManipulator());
+        manipulators.add(new CapitalizeManipulator());
+        manipulators.add(new IndexOfManipulator());
+        manipulators.add(new LowerCaseManipulator());
+        manipulators.add(new RemoveCharacterManipulator());
+        manipulators.add(new RemoveDuplicatesManipulator());
+        manipulators.add(new RemoveSpecificCharacterManipulator());
+        manipulators.add(new SubstringManipulator());
+        manipulators.add(new UpperCaseManipulator());
 
         Set<String> categories = new TreeSet<String>();
         for (StringManipulator m : manipulators) {
@@ -147,6 +170,109 @@ public final class StringManipulatorProvider {
     public Collection<StringManipulator> getManipulators(
             final String category) {
         return m_manipulators.get(category);
+    }
+
+    public File getJarFile() throws IOException {
+        if (m_jarFile == null) {
+            File tempClassPathDir = FileUtil
+                    .createTempDir("knime_stringmanipulation");
+            tempClassPathDir.deleteOnExit();
+            m_jarFile = new File(tempClassPathDir.getPath()
+                    + File.separator + "manipulators.jar");
+            m_jarFile.deleteOnExit();
+            FileOutputStream out = new FileOutputStream(m_jarFile);
+            JarOutputStream jar = new JarOutputStream(out);
+
+            Collection<Object> classes = new ArrayList<Object>();
+            classes.add(StringManipulator.class);
+            classes.addAll(m_manipulators.get(ALL_CATEGORY));
+            // create tree structure for classes
+            DefaultMutableTreeNode root = createTree(classes);
+            try {
+                createJar(root, jar, null);
+            } catch (IOException ioe) {
+                throw ioe;
+            } finally {
+                jar.close();
+                out.close();
+            }
+
+        }
+        return m_jarFile;
+    }
+
+    private DefaultMutableTreeNode createTree(
+    		final Collection<? extends Object> classes) {
+        DefaultMutableTreeNode root = new DefaultMutableTreeNode("build");
+        for (Object o : classes) {
+            Class<?> cl = o instanceof Class ? (Class<?>)o : o.getClass();
+            Package pack = cl.getPackage();
+            DefaultMutableTreeNode curr = root;
+            for (String p : pack.getName().split("\\.")) {
+                DefaultMutableTreeNode child = getChild(curr, p);
+                if (null == child) {
+                    DefaultMutableTreeNode h = new DefaultMutableTreeNode(p);
+                    curr.add(h);
+                    curr = h;
+                } else {
+                    curr = child;
+                }
+            }
+            curr.add(new DefaultMutableTreeNode(cl));
+        }
+
+        return root;
+    }
+
+
+    private DefaultMutableTreeNode getChild(final DefaultMutableTreeNode curr,
+            final String p) {
+        for (int i = 0; i < curr.getChildCount(); i++) {
+            DefaultMutableTreeNode child =
+                (DefaultMutableTreeNode)curr.getChildAt(i);
+            if (child.getUserObject().toString().equals(p)) {
+                return child;
+            }
+        }
+        return null;
+    }
+
+
+    private void createJar(final DefaultMutableTreeNode node,
+            final JarOutputStream jar,
+            final String path) throws IOException {
+        Object o = node.getUserObject();
+        if (o instanceof String) {
+        	// folders must end with a "/"
+            String subPath = null == path ? "" : (path + (String)o + "/");
+            if (path != null) {
+                JarEntry je = new JarEntry(subPath);
+                jar.putNextEntry(je);
+                jar.flush();
+                jar.closeEntry();
+            }
+            for (int i = 0; i < node.getChildCount(); i++) {
+                DefaultMutableTreeNode child =
+                    (DefaultMutableTreeNode) node.getChildAt(i);
+                createJar(child, jar, subPath);
+            }
+        } else {
+            Class<?> cl = (Class<?>)o;
+            String className = cl.getSimpleName();
+            className = className.concat(".class");
+            JarEntry entry = new JarEntry(path + className);
+            jar.putNextEntry(entry);
+
+            ClassLoader loader = cl.getClassLoader();
+            InputStream inStream = loader.getResourceAsStream(
+                    cl.getName().replace('.', '/') + ".class");
+
+            FileUtil.copy(inStream, jar);
+            inStream.close();
+            jar.flush();
+            jar.closeEntry();
+
+        }
     }
 
 }

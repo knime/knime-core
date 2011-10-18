@@ -63,6 +63,7 @@ import java.util.List;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.StringManipulator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -70,7 +71,6 @@ import org.knime.core.data.DataType;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.string.manipulator.StringManipulator;
 import org.knime.ext.sun.nodes.script.calculator.ColumnCalculator;
 import org.knime.ext.sun.nodes.script.expression.Expression;
 import org.knime.ext.sun.nodes.script.settings.JavaScriptingSettings;
@@ -460,13 +460,13 @@ public class StringManipulationSettings {
         s.setExpressionVersion(Expression.VERSION_2X);
         s.setHeader("");
         s.setInsertMissingAsNull(this.isInsertMissingAsNull());
-        Bundle bundle = Platform.getBundle("org.knime.base.preview");
+        Bundle bundle = Platform.getBundle("org.knime.jsnippets");
         try {
-            URL commonsLangURL = FileLocator.find(bundle,
+        	URL commonsLangURL = FileLocator.find(bundle,
                     new Path("/lib/commons-lang3-3.0.1.jar"), null);
-            URL manipulatorsURL = FileLocator.find(bundle,
-                    new Path("/lib/org.knime.core.string.manipulator.jar"),
-                    null);
+        	StringManipulatorProvider provider =
+        		StringManipulatorProvider.getDefault();
+            URL manipulatorsURL = provider.getJarFile().toURI().toURL();
             s.setJarFiles(new String[] {
                     FileLocator.toFileURL(commonsLangURL).toURI().getPath(),
                     FileLocator.toFileURL(manipulatorsURL).toURI().getPath()

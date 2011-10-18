@@ -3,12 +3,6 @@
 <plugin>
    <extension
          point="org.knime.workbench.repository.nodes">
-<!--      <node
-            category-path="/preview"
-            factory-class="org.knime.base.node.similaritysearch.SimilaritySearchNodeFactory"
-            id="org.knime.base.node.similaritysearch.SimilaritySearchNodeFactory">
-      </node>
--->
       <node
             category-path="/preview"
             factory-class="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeFactory"

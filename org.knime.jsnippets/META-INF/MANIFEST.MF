@@ -11,6 +11,5 @@ Bundle-ActivationPolicy: lazy
 Export-Package: org.knime.base.node.preproc.stringmanipulation
 Bundle-ClassPath: .,
  lib/commons-lang3-3.0.1.jar,
- lib/org.knime.core.string.manipulator.jar,
  lib/autocomplete_1.5.2/autocomplete.jar,
  lib/autocomplete_1.5.2/rsyntaxtextarea.jar
