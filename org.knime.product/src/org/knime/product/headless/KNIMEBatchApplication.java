@@ -76,6 +76,27 @@ public class KNIMEBatchApplication implements IApplication {
         Platform.getBundle("org.knime.workbench.core").start(
                 Bundle.START_TRANSIENT);
 
+        String[] stringArgs = retrieveApplicationArguments(context);
+        // this actually returns with a non-0 value when failed,
+        // we ignore it here
+        try {
+            BatchExecutor.mainRun(stringArgs);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
+        return EXIT_OK;
+    }
+
+    /**
+     * Returns the application's arguments as String array with the pdelaunch
+     * argument removed if applicable.
+     *
+     * @param context the application context
+     * @return the arguments the application was called with as string array
+     */
+    protected String[] retrieveApplicationArguments(
+            final IApplicationContext context) {
         Object args =
                 context.getArguments()
                         .get(IApplicationContext.APPLICATION_ARGS);
@@ -97,15 +118,7 @@ public class KNIMEBatchApplication implements IApplication {
         } else {
             stringArgs = new String[0];
         }
-        // this actually returns with a non-0 value when failed,
-        // we ignore it here
-        try {
-            BatchExecutor.mainRun(stringArgs);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
-        return EXIT_OK;
+        return stringArgs;
     }
 
     /**
