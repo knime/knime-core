@@ -1,0 +1,31 @@
+body {
+	background: #fff;
+	color: #000;
+	font-family: Arial,Helvetica,sans-serif;
+	font-size: 13px;
+}
+
+p {
+    margin: 0 0 1em;
+    line-height: 1.3em;
+    text-align: justify;
+}
+
+
+div.views-field-title {
+    font-weight: bold;
+    font-size: 120%;
+    margin-bottom: 0.5em;
+}
+
+
+#noConnection {
+	margin-left: auto;
+	margin-right: auto;
+	max-width: 650px;
+    color: #EE0000;
+    font-size: 150%;
+    font-weight: bold;
+    padding: 0.5em;
+    text-align: justify;
+}

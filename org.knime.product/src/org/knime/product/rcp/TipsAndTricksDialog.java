@@ -67,6 +67,10 @@ import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 
 import org.ccil.cowan.tagsoup.Parser;
 import org.eclipse.core.runtime.FileLocator;
@@ -76,6 +80,7 @@ import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
@@ -97,7 +102,7 @@ import org.xml.sax.XMLReader;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class TipsAndTricksDialog extends Dialog {
-    private static final Point INITIAL_SIZE = new Point(400, 300);
+    private static final Point INITIAL_SIZE = new Point(400, 250);
 
     static final URL TIPS_AND_TRICKS_URL;
 
@@ -172,7 +177,7 @@ public class TipsAndTricksDialog extends Dialog {
         Browser browser = new Browser(composite, SWT.EMBEDDED | SWT.FILL);
         browser.setLayoutData(gd);
         try {
-            browser.setText(getHtml());
+            browser.setText(getHtml(parent));
         } catch (TransformerFactoryConfigurationError ex) {
             LOGGER.error(ex.getMessage(), ex);
         } catch (IOException ex) {
@@ -200,28 +205,34 @@ public class TipsAndTricksDialog extends Dialog {
                 true);
     }
 
-    private String getHtml() throws IOException,
+    private String getHtml(final Composite parent) throws IOException,
             TransformerFactoryConfigurationError, TransformerException {
         URL cssUrl =
                 FileLocator.toFileURL(FileLocator.find(FrameworkUtil
-                        .getBundle(getClass()),
-                        new Path("/intro/css/knime.css"), null));
+                        .getBundle(getClass()), new Path(
+                        "/intro/css/tipstricks.css"), null));
         StringBuilder content = new StringBuilder();
         content.append("<html><head>");
         content.append("<meta http-equiv=\"content-type\" "
                 + "content=\"text/html; charset=UTF-8\"></meta>");
         content.append("<style>");
-        content.append("@import url(\"" + cssUrl + "\");");
+        content.append("@import url(\"" + cssUrl + "\");\n");
+
+        RGB bgColor = parent.getBackground().getRGB();
+        content.append("body { background-color: rgb(" + bgColor.red + ", "
+                + bgColor.green + ", " + bgColor.blue + ") };\n");
+
         content.append("</style>");
         content.append("</head><body>");
         content.append(m_tipsAndTricks);
         content.append("</body></html>");
+        System.out.println(content);
         return content.toString();
     }
 
     private static String extractOnlineTips(final InputStream in)
             throws TransformerFactoryConfigurationError, TransformerException,
-            SAXException {
+            SAXException, XPathExpressionException {
         XMLReader reader = new Parser();
         reader.setFeature(Parser.namespacesFeature, false);
         reader.setFeature(Parser.namespacePrefixesFeature, false);
@@ -232,17 +243,12 @@ public class TipsAndTricksDialog extends Dialog {
                 result);
 
         Document doc = (Document)result.getNode();
-        Element tat = null;
 
-        // extract the right div
-        NodeList nl = doc.getDocumentElement().getElementsByTagName("div");
-        for (int i = 0; i < nl.getLength(); i++) {
-            Element div = (Element)nl.item(i);
-            if ("colWrapper".equals(div.getAttribute("id"))) {
-                tat = div;
-                break;
-            }
-        }
+        XPath xpath = XPathFactory.newInstance().newXPath();
+        Element tat =
+                (Element)xpath.evaluate(
+                        "//div[@id='colRight']/div[@class='contentWrapper']",
+                        doc.getDocumentElement(), XPathConstants.NODE);
         if (tat == null) {
             return null;
         }
@@ -251,7 +257,7 @@ public class TipsAndTricksDialog extends Dialog {
         String linkBase =
                 TIPS_AND_TRICKS_URL.getProtocol() + "://"
                         + TIPS_AND_TRICKS_URL.getHost();
-        nl = tat.getElementsByTagName("a");
+        NodeList nl = tat.getElementsByTagName("a");
         for (int i = 0; i < nl.getLength(); i++) {
             Element a = (Element)nl.item(i);
             String href = a.getAttribute("href");
@@ -270,6 +276,7 @@ public class TipsAndTricksDialog extends Dialog {
 
         Transformer t = TransformerFactory.newInstance().newTransformer();
         t.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+        t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
         ByteArrayOutputStream bos = new ByteArrayOutputStream(16384);
         t.transform(new DOMSource(tat), new StreamResult(bos));
         return new String(bos.toByteArray());
