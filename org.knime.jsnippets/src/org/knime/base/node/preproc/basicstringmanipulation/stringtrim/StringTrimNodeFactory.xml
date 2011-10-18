@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="stringtrim.png" type="Manipulator">
+    <name>Trim String</name>
+
+    <shortDescription>
+        Removes spaces at the beginning and end of strings.
+    </shortDescription>
+
+    <fullDescription>
+        <intro>
+            <p>
+                Removes string at the beginning and end of all strings
+                in the selected columns.
+            </p>
+        </intro>
+        <option name="Select Columns">
+          Select the column in the input table to apply the string manipulation
+          to.
+        </option>
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="Input to be processed">
+            Arbitrary input data with one or more string columns.
+        </inPort>
+        <outPort index="0" name="Processed data">
+            Input table with modified columns.
+        </outPort>
+    </ports>
+</knimeNode>

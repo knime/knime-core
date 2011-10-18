@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+   <extension
+         point="org.knime.workbench.repository.nodes">
+<!--      <node
+            category-path="/preview"
+            factory-class="org.knime.base.node.similaritysearch.SimilaritySearchNodeFactory"
+            id="org.knime.base.node.similaritysearch.SimilaritySearchNodeFactory">
+      </node>
+-->
+      <node
+            category-path="/preview"
+            factory-class="org.knime.base.node.workflow.save.SaveWorkflowNodeFactory"
+            id="org.knime.base.node.workflow.save.SaveWorkflowNodeFactory">
+      </node>
+      <node
+            category-path="/preview"
+            factory-class="org.knime.base.node.preproc.basicstringmanipulation.stringtrim.StringTrimNodeFactory"
+            id="org.knime.base.node.preproc.basicstringmanipulation.stringtrim.StringTrimNodeFactory">
+      </node>
+      <node
+            category-path="/preview"
+            factory-class="org.knime.base.node.mine.bayes.newnaivebayes.learner.NewNaiveBayesLearnerNodeFactory"
+            id="org.knime.base.node.mine.bayes.newnaivebayes.learner.NewNaiveBayesLearnerNodeFactory">
+      </node>
+      <node
+            category-path="/preview"
+            factory-class="org.knime.base.node.mine.bayes.newnaivebayes.predictor.NewNaiveBayesPredictorNodeFactory"
+            id="org.knime.base.node.mine.bayes.newnaivebayes.predictor.NewNaiveBayesPredictorNodeFactory">
+      </node>
+      <node
+            category-path="/preview"
+            factory-class="org.knime.base.node.viz.property.color.extract.ColorExtractNodeFactory"
+            id="org.knime.base.node.viz.property.color.extract.ColorExtractNodeFactory">
+      </node>
+      <node
+            category-path="/preview"
+            factory-class="org.knime.base.node.preproc.colconvert.categorytonumber.CategoryToNumberNodeFactory"
+            id="org.knime.base.node.preproc.colconvert.categorytonumber.CategoryToNumberNodeFactory">
+      </node>
+      <node
+            category-path="/preview"
+            factory-class="org.knime.base.node.preproc.colconvert.categorytonumber.CategoryToNumberApplyNodeFactory"
+            id="org.knime.base.node.preproc.colconvert.categorytonumber.CategoryToNumberApplyNodeFactory">
+      </node>
+      <node
+            category-path="/preview"
+            factory-class="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeFactory"
+            id="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeFactory">
+      </node>          
+   </extension>
+   <extension
+         point="org.knime.workbench.repository.categories">
+      <category
+            description="KNIME Preview nodes -- part of future KNIME releases"
+            icon="icons/preview.png"
+            level-id="preview"
+            name="Preview"
+            path="/">
+      </category>
+   </extension>
+
+</plugin>

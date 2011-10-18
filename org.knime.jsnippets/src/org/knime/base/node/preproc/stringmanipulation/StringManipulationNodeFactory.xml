@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./string_manipulation.png" type="Manipulator">
+    <name>String Manipulation</name>
+    <shortDescription>Can do various string manipulations on the input columns,
+    appending result as a new column.</shortDescription>
+    <fullDescription>
+        <intro>
+	        <p>
+				This node ...
+	        </p>
+
+		</intro>
+		<option name="Column List">
+		  The list contains the column that are available in the input table.
+		  Double click any of the column names to insert the respective field
+		  in the expression editor. It will replace your current selection or
+		  simply insert at the current caret position.
+		</option>
+		<option name="Flow Variable List">
+		  The list contains the flow variables that are currently available at
+		  the node input. Double clicking any of the entries will insert the
+		  respective identifier at the current cursor position (replacing the
+		  selection, if any).
+		</option>		
+		<option name="Insert Missing As Null">
+		  If selected, missing values in the input table will be represented
+		  by <tt>null</tt> in the expression. It is your responsibility to check
+		  for <tt>null</tt> in this case. If unselected,
+		  a missing value in the relevant input cell will immediately produce
+		  a missing output cell (snippet not called). 
+		</option>
+		<option name="Compile on close">
+		  If unchecked, the syntax test is skipped when the settings are 
+		  applied to the model, allowing the dialog to close even if there are
+		  syntax errors encountered. This enables the user to temporarily close
+		  the dialog, investigate the input table and then return to the
+		  almost-complete-and-running snippet code in the dialog. The node will
+		  not be executable (it will be red) if the code contains syntax errors.
+		  This option is only for convenience, it does not have any effect on
+		  the output of this node.
+		</option>
+		<option name="Array Return">
+		  If the result is an array, check this box. It will be represented
+		  by a KNIME collection cell.  
+		</option>
+		<option name="Replace/Append">
+		  Specify here if you want the result to be put into a separate or 
+		  existing column.
+		</option>
+	</fullDescription>
+    <ports>
+        <inPort name="Input table" index="0">Input table with columns of string type.</inPort>
+        <outPort name="Appended table" index="0">Input table with an additional calculated column
+	        or one column replaced.
+        </outPort>
+	</ports>
+</knimeNode>
