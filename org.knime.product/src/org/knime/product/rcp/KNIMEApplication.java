@@ -21,16 +21,32 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
 
 import javax.swing.JOptionPane;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubMonitor;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
+import org.eclipse.equinox.internal.p2.core.helpers.LogHelper;
+import org.eclipse.equinox.internal.p2.core.helpers.ServiceHelper;
+import org.eclipse.equinox.p2.core.IProvisioningAgent;
+import org.eclipse.equinox.p2.operations.ProvisioningJob;
+import org.eclipse.equinox.p2.operations.ProvisioningSession;
+import org.eclipse.equinox.p2.operations.UpdateOperation;
+import org.eclipse.equinox.p2.ui.ProvisioningUI;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.dialogs.ProgressMonitorDialog;
+import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
@@ -43,11 +59,18 @@ import org.eclipse.ui.application.WorkbenchAdvisor;
 import org.eclipse.ui.internal.ide.ChooseWorkspaceData;
 import org.eclipse.ui.internal.ide.ChooseWorkspaceDialog;
 import org.eclipse.ui.internal.ide.IDEWorkbenchMessages;
+import org.knime.core.util.MutableBoolean;
+import org.knime.product.ProductPlugin;
 
 /**
  * This class controls all aspects of the application's execution.
  */
+@SuppressWarnings("restriction")
 public class KNIMEApplication implements IApplication {
+    private static final String JUSTUPDATED = "justUpdated";
+
+    private boolean m_checkForUpdates = false;
+
     /**
      * The name of the folder containing metadata information for the workspace.
      */
@@ -86,14 +109,24 @@ public class KNIMEApplication implements IApplication {
             } finally {
                 shell.dispose();
             }
+            parseApplicationArguments(appContext);
 
-            // create the workbench with this advisor and run it until it exits
-            // N.B. createWorkbench remembers the advisor, and also registers
-            // the workbench globally so that all UI plug-ins can find it using
-            // PlatformUI.getWorkbench() or AbstractUIPlugin.getWorkbench()
-            int returnCode =
-                    PlatformUI.createAndRunWorkbench(display,
-                            getWorkbenchAdvisor());
+            int returnCode;
+            if (m_checkForUpdates && checkForUpdates(shell)) {
+                returnCode = PlatformUI.RETURN_RESTART;
+            } else {
+                // create the workbench with this advisor and run it until it
+                // exits
+                // N.B. createWorkbench remembers the advisor, and also
+                // registers
+                // the workbench globally so that all UI plug-ins can find it
+                // using
+                // PlatformUI.getWorkbench() or AbstractUIPlugin.getWorkbench()
+                returnCode =
+                        PlatformUI.createAndRunWorkbench(display,
+                                getWorkbenchAdvisor());
+
+            }
 
             // the workbench doesn't support relaunch yet (bug 61809) so
             // for now restart is used, and exit data properties are checked
@@ -110,8 +143,7 @@ public class KNIMEApplication implements IApplication {
                         "\nDue to a known issue with Windows 64bit the "
                                 + "automatic restart is disabled.\n\n"
                                 + "Please restart KNIME manually.\n\n",
-                                "Manually restart KNIME",
-                                JOptionPane.WARNING_MESSAGE);
+                        "Manually restart KNIME", JOptionPane.WARNING_MESSAGE);
                 return EXIT_OK;
             }
 
@@ -126,6 +158,25 @@ public class KNIMEApplication implements IApplication {
         }
     }
 
+    private void parseApplicationArguments(final IApplicationContext context) {
+        Object args =
+                context.getArguments()
+                        .get(IApplicationContext.APPLICATION_ARGS);
+        if (args instanceof String[]) {
+            String[] stringArgs = (String[])args;
+            for (int i = 0; i < stringArgs.length; i++) {
+                if ("-checkForUpdates".equals(stringArgs[i])) {
+                    m_checkForUpdates = true;
+                }
+            }
+        } else if (args != null) {
+            System.err
+                    .println("Unable to cast class "
+                            + args.getClass().getName()
+                            + " to string array, toString() returns "
+                            + args.toString());
+        }
+    }
 
     private WorkbenchAdvisor getWorkbenchAdvisor() {
         return new KNIMEApplicationWorkbenchAdvisor();
@@ -431,7 +482,8 @@ public class KNIMEApplication implements IApplication {
      * @return An url to the file or null if the version file does not exist or
      *         could not be created.
      */
-    private static File getVersionFile(final URL workspaceUrl, final boolean create) {
+    private static File getVersionFile(final URL workspaceUrl,
+            final boolean create) {
         if (workspaceUrl == null) {
             return null;
         }
@@ -475,5 +527,78 @@ public class KNIMEApplication implements IApplication {
                 }
             }
         });
+    }
+
+    private boolean checkForUpdates(final Shell shell) {
+        final IPreferenceStore prefStore =
+                ProductPlugin.getDefault().getPreferenceStore();
+        if (prefStore.getBoolean(JUSTUPDATED)) {
+            prefStore.setValue(JUSTUPDATED, false);
+            return false;
+        }
+
+        final ProvisioningUI provUI = ProvisioningUI.getDefaultUI();
+        if (provUI.getRepositoryTracker() == null) {
+            MessageBox mbox = new MessageBox(shell, SWT.ICON_WARNING | SWT.OK);
+            mbox.setText("Action impossible");
+            mbox.setMessage("It seems you are running KNIME from an SDK. "
+                    + "Installing/updating extension is not possible in this case.");
+            mbox.open();
+            return false;
+        }
+
+        final IProvisioningAgent agent =
+                (IProvisioningAgent)ServiceHelper.getService(ProductPlugin
+                        .getDefault().getBundle().getBundleContext(),
+                        IProvisioningAgent.SERVICE_NAME);
+        if (agent == null) {
+            LogHelper
+                    .log(new Status(IStatus.ERROR, ProductPlugin.getDefault()
+                            .getBundle().getSymbolicName(),
+                            "No provisioning agent found. This application is not set up for updates."));
+        }
+
+        final MutableBoolean restart = new MutableBoolean(false);
+        IRunnableWithProgress runnable = new IRunnableWithProgress() {
+            @Override
+            public void run(final IProgressMonitor monitor)
+                    throws InvocationTargetException, InterruptedException {
+                ProvisioningSession session = new ProvisioningSession(agent);
+                UpdateOperation operation = new UpdateOperation(session);
+                SubMonitor sub =
+                        SubMonitor.convert(monitor,
+                                "Checking for application updates...", 200);
+                IStatus status = operation.resolveModal(sub.newChild(100));
+                if (status.getSeverity() == IStatus.CANCEL) {
+                    throw new OperationCanceledException();
+                } else if (status.getSeverity() != IStatus.ERROR) {
+                    ProvisioningJob job = operation.getProvisioningJob(null);
+                    status = job.runModal(sub.newChild(100));
+                    if (status.getSeverity() == IStatus.CANCEL) {
+                        throw new OperationCanceledException();
+                    }
+                    if (status.getCode() == UpdateOperation.STATUS_NOTHING_TO_UPDATE) {
+                        // ok, just proceed
+                        LogHelper.log(new Status(IStatus.INFO, ProductPlugin
+                                .getDefault().getBundle().getSymbolicName(),
+                                "No updates found."));
+                    } else if (status.getSeverity() != IStatus.ERROR) {
+                        prefStore.setValue(JUSTUPDATED, true);
+                        restart.setValue(true);
+                    } else {
+                        LogHelper.log(status);
+                    }
+                } else {
+                    LogHelper.log(status);
+                }
+            }
+        };
+        try {
+            new ProgressMonitorDialog(null).run(true, true, runnable);
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+        }
+        return restart.booleanValue();
     }
 }
