@@ -58,6 +58,7 @@ import java.sql.Array;
 import java.sql.Blob;
 import java.sql.Clob;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.Date;
 import java.sql.NClob;
 import java.sql.PreparedStatement;
@@ -69,6 +70,7 @@ import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
+import java.util.Arrays;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -144,6 +146,27 @@ public final class DatabaseReaderConnection {
     public DatabaseQueryConnectionSettings getQueryConnection() {
         return m_conn;
     }
+    
+    /**
+     * Returns the database meta data on the connection.
+     * @param cp CredentialsProvider to receive user/password from
+     * @return DatabaseMetaData on this connection
+     * @throws SQLException if the connection to the database or the statement
+     *         could not be created
+     */
+    public final DatabaseMetaData getDatabaseMetaData(
+            final CredentialsProvider cp) throws SQLException {
+        try {
+            final Connection conn = m_conn.createConnection(cp);
+            synchronized (m_conn.syncConnection(conn)) {
+                return conn.getMetaData();
+            }
+        } catch (SQLException sql) {
+            throw sql;
+        } catch (Throwable t) {
+            throw new SQLException(t);
+        }
+    }
 
     /**
      * Inits the statement and - if necessary - the database connection.
@@ -203,21 +226,37 @@ public final class DatabaseReaderConnection {
                 throw new SQLException(t);
             }
             synchronized (m_conn.syncConnection(conn)) {
+                final String[] oQueries =  m_conn.getQuery().split("\n");
+                final String selectQuery = oQueries[oQueries.length - 1];
                 final int hashAlias = System.identityHashCode(this);
-                String pQuery = "SELECT * FROM (" + m_conn.getQuery()
-                    + ") table_" + hashAlias + " WHERE 1 = 0";
+                final String pQuery = "SELECT * FROM (" + selectQuery + ") "
+                    + "table_" + hashAlias + " WHERE 1 = 0";
                 ResultSet result = null;
                 try {
-                    // try to see if prepared statements are supported
-                    LOGGER.debug("Executing SQL statement \"" + pQuery + "\"");
-                    m_stmt = conn.prepareStatement(pQuery);
-                    ((PreparedStatement) m_stmt).execute();
-                    m_spec = createTableSpec(
-                        ((PreparedStatement) m_stmt).getMetaData());
+                    // if only one SQL statement is being executed
+                    if (oQueries.length == 1) {
+                        // try to see if prepared statements are supported
+                        LOGGER.debug("Executing SQL statement \"" 
+                                + selectQuery + "\"");
+                        m_stmt = conn.prepareStatement(selectQuery);
+                        ((PreparedStatement) m_stmt).execute();
+                        m_spec = createTableSpec(
+                                ((PreparedStatement) m_stmt).getMetaData());
+                    } else {
+                        // otherwise use standard statement
+                        m_stmt = conn.createStatement();
+                        LOGGER.debug("Executing SQL statement(s) \"" 
+                                + Arrays.toString(oQueries) + "\"");
+                        for (int i = 0; i < oQueries.length - 1; i++) {
+                            m_stmt.execute(oQueries[i]);
+                        }
+                        result = m_stmt.executeQuery(selectQuery);
+                        m_spec = createTableSpec(result.getMetaData());
+                    }
                 } catch (Exception e) {
+                    // otherwise use standard statement
                     LOGGER.warn("PreparedStatment not support by database: "
                             + e.getMessage(), e);
-                    // otherwise use standard statement
                     m_stmt = conn.createStatement();
                     LOGGER.debug("Executing SQL statement \"" + pQuery + "\"");
                     result = m_stmt.executeQuery(pQuery);
@@ -272,9 +311,14 @@ public final class DatabaseReaderConnection {
                                 + " to \"" + Integer.MIN_VALUE + "\".");
                     }
                 }
-                final String query = m_conn.getQuery();
-                LOGGER.debug("Executing SQL statement \"" + query + "\"");
-                final ResultSet result = m_stmt.executeQuery(query);
+                final String[] oQueries = m_conn.getQuery().split("\n");
+                LOGGER.debug("Executing SQL statement(s) \"" 
+                        + Arrays.toString(oQueries) + "\"");
+                for (int i = 0; i < oQueries.length - 1; i++) {
+                    m_stmt.execute(oQueries[i]);
+                }
+                final String selectQuery = oQueries[oQueries.length - 1];
+                final ResultSet result = m_stmt.executeQuery(selectQuery);
                 m_spec = createTableSpec(result.getMetaData());
                 return exec.createBufferedDataTable(new DataTable() {
                     /** {@inheritDoc} */
@@ -309,9 +353,8 @@ public final class DatabaseReaderConnection {
         initStatement(cp);
         synchronized (m_conn.syncConnection(m_stmt.getConnection())) {
             try {
-                final String query;
+                final String[] oQueries = m_conn.getQuery().split("\n");
                 if (cachedNoRows < 0) {
-                    query = m_conn.getQuery();
                     if (DatabaseConnectionSettings.FETCH_SIZE != null) {
                         // fix 2741: postgresql databases ignore fetchsize when 
                         // AUTOCOMMIT on; setting it to false
@@ -331,16 +374,29 @@ public final class DatabaseReaderConnection {
                             m_stmt.setFetchSize(Integer.MIN_VALUE);
                             LOGGER.info("Database fetchsize for mySQL database "
                                     + "set to \"" + Integer.MIN_VALUE + "\".");
-                }
+                        }
                     }
                 } else {
                     final int hashAlias = System.identityHashCode(this);
-                    query = "SELECT * FROM (" + m_conn.getQuery()
-                        + ") table_" + hashAlias;
-                    m_stmt.setMaxRows(cachedNoRows);
+                    final int selectIdx = oQueries.length - 1;
+                    // replace last element in statement(s) with wrapped SQL
+                    oQueries[selectIdx] = "SELECT * FROM " 
+                            + "(" + oQueries[selectIdx] + ") " 
+                            + "table_" + hashAlias;
+                    try {
+                        // bugfix 2925: may fail, e.g. on sqlite
+                        m_stmt.setMaxRows(cachedNoRows);
+                    } catch (SQLException sqle) {
+                        LOGGER.warn("Can't set max rows on statement, reason: "
+                                + sqle.getMessage());
+                    }
                 }
-                LOGGER.debug("Executing SQL statement \"" + query + "\"");
-                m_stmt.execute(query);
+                LOGGER.debug("Executing SQL statement(s) \"" 
+                        + Arrays.toString(oQueries) + "\"");
+                // note: execute last, SELECT statement using Statement#execute
+                for (int i = 0; i < oQueries.length; i++) {
+                    m_stmt.execute(oQueries[i]);
+                }
                 final ResultSet result = m_stmt.getResultSet();
                 m_spec = createTableSpec(result.getMetaData());
                 DBRowIterator it = new DBRowIterator(result);
