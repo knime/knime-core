@@ -48,11 +48,17 @@
  */
 package org.knime.core.node.port.database;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.DriverPropertyInfo;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.util.Properties;
+import java.util.logging.Logger;
+
+import org.knime.core.node.NodeLogger;
 
 /**
  * Wraps an <code>java.sql.Driver</code> object.
@@ -60,6 +66,8 @@ import java.util.Properties;
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class DatabaseWrappedDriver implements Driver {
+    
+    /** Underlying java.sql.Driver wrapped by this instance. */
     private final Driver m_d;
 
     /**
@@ -69,6 +77,13 @@ public final class DatabaseWrappedDriver implements Driver {
      */
     DatabaseWrappedDriver(final Driver d) {
         m_d = d;
+        try {
+            NodeLogger.getLogger(DatabaseWrappedDriver.class).fatal(
+                this.getParentLogger());
+            System.err.println("done");
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
     }
 
     /**
@@ -135,5 +150,23 @@ public final class DatabaseWrappedDriver implements Driver {
     @Override
     public int hashCode() {
         return m_d.hashCode();
+    }
+    
+    /**
+     * Added to be compatible with Java 1.7, needs to be flagged with @Override.
+     * @since KNIME v2.5
+     */
+    public Logger getParentLogger() throws SQLFeatureNotSupportedException {
+        try {
+            final Method m = m_d.getClass().getDeclaredMethod(
+                    "getParentLogger", null);
+            return (Logger) m.invoke(m_d);
+        } catch (IllegalAccessException iae) {
+            throw new SQLFeatureNotSupportedException(iae);
+        } catch (InvocationTargetException ite) {
+            throw new SQLFeatureNotSupportedException(ite);
+        } catch (NoSuchMethodException nsme) {
+            throw new SQLFeatureNotSupportedException(nsme);
+        }
     }
 }
