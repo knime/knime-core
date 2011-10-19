@@ -120,7 +120,7 @@ public final class StringHistory {
         load();
     }
 
-    /** Adds a new String to the history. If this string alread exists
+    /** Adds a new String to the history. If this string already exists
      * in the history, it is marked as most recently added and will be returned
      * first on a immediate call of <code>getHistory()</code>
      * @param str The string to add.
@@ -147,6 +147,12 @@ public final class StringHistory {
      */
     public synchronized String[] getHistory() {
         return m_list.toArray(new String[0]);
+    }
+
+    /** Removes all entries from the history. */
+    public synchronized void clearHistory() {
+        m_list.clear();
+        save();
     }
 
     /** Loads from file. */
