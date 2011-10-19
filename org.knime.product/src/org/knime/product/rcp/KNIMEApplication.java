@@ -539,11 +539,10 @@ public class KNIMEApplication implements IApplication {
 
         final ProvisioningUI provUI = ProvisioningUI.getDefaultUI();
         if (provUI.getRepositoryTracker() == null) {
-            MessageBox mbox = new MessageBox(shell, SWT.ICON_WARNING | SWT.OK);
-            mbox.setText("Action impossible");
-            mbox.setMessage("It seems you are running KNIME from an SDK. "
-                    + "Installing/updating extension is not possible in this case.");
-            mbox.open();
+            LogHelper.log(new Status(IStatus.WARNING, ProductPlugin
+                    .getDefault().getBundle().getSymbolicName(),
+                    "Updating is not possible of KNIME is started from "
+                            + "within the IDE."));
             return false;
         }
 
@@ -552,10 +551,10 @@ public class KNIMEApplication implements IApplication {
                         .getDefault().getBundle().getBundleContext(),
                         IProvisioningAgent.SERVICE_NAME);
         if (agent == null) {
-            LogHelper
-                    .log(new Status(IStatus.ERROR, ProductPlugin.getDefault()
-                            .getBundle().getSymbolicName(),
-                            "No provisioning agent found. This application is not set up for updates."));
+            LogHelper.log(new Status(IStatus.ERROR, ProductPlugin.getDefault()
+                    .getBundle().getSymbolicName(),
+                    "No provisioning agent found. This application is "
+                            + "not set up for updates."));
         }
 
         final MutableBoolean restart = new MutableBoolean(false);
