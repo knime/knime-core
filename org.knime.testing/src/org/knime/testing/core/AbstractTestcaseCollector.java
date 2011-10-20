@@ -80,13 +80,11 @@ public abstract class AbstractTestcaseCollector {
     public AbstractTestcaseCollector() {
     }
 
-
     public AbstractTestcaseCollector(final Class... excludedTestcases) {
         for (Class<?> c : excludedTestcases) {
             m_excludedTestcases.add(c.getName());
         }
     }
-
 
     public List<String> getUnittestsClasses() throws IOException {
         BaseClassLoader cl = (BaseClassLoader)getClass().getClassLoader();
@@ -117,7 +115,6 @@ public abstract class AbstractTestcaseCollector {
         return classNames;
     }
 
-
     private void filterClasses(final List<String> classNames) {
         Iterator<String> it = classNames.iterator();
         while (it.hasNext()) {
@@ -126,7 +123,9 @@ public abstract class AbstractTestcaseCollector {
                 it.remove();
             } else {
                 try {
-                    Class<?> c = Class.forName(className);
+                    Class<?> c =
+                            Class.forName(className, true, getClass()
+                                    .getClassLoader());
                     if (((c.getModifiers() & Modifier.ABSTRACT) != 0)
                             || ((c.getModifiers() & Modifier.PUBLIC) == 0)) {
                         it.remove();
