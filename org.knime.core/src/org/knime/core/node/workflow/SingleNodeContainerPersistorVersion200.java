@@ -53,6 +53,7 @@ package org.knime.core.node.workflow;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -211,9 +212,13 @@ public class SingleNodeContainerPersistorVersion200 extends
             final ReferencedFile nodeDirRef, final ExecutionMonitor exec,
             final boolean isSaveData) throws CanceledExecutionException,
             IOException {
+        String settingsDotXML = SETTINGS_FILE_NAME;
+        if (snc.getParent().isEncrypted()) {
+            settingsDotXML = settingsDotXML.concat(".encrypted");
+        }
         ReferencedFile sncWorkingDirRef = snc.getNodeContainerDirectory();
         if (nodeDirRef.equals(sncWorkingDirRef) && !snc.isDirty()) {
-            return SETTINGS_FILE_NAME;
+            return settingsDotXML;
         }
         File nodeDir = nodeDirRef.getFile();
         boolean nodeDirExists = nodeDir.exists();
@@ -263,15 +268,19 @@ public class SingleNodeContainerPersistorVersion200 extends
         }
         NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
         saveNodeFactoryClassName(settings, snc);
-        ReferencedFile nodeXMLFileRef = saveNodeFileName(settings, nodeDirRef);
+        ReferencedFile nodeXMLFileRef =
+            saveNodeFileName(snc, settings, nodeDirRef);
         saveFlowObjectStack(settings, snc);
         saveSNCSettings(settings, snc);
         NodeContainerMetaPersistorVersion200.save(settings, snc, nodeDirRef);
-        NodePersistorVersion200.save(snc.getNode(), nodeXMLFileRef, exec,
-                isSaveData
+        NodePersistorVersion200.save(snc, nodeXMLFileRef, exec, isSaveData
                 && snc.getState().equals(NodeContainer.State.EXECUTED));
-        File nodeSettingsXMLFile = new File(nodeDir, SETTINGS_FILE_NAME);
-        settings.saveToXML(new FileOutputStream(nodeSettingsXMLFile));
+        File nodeSettingsXMLFile = new File(nodeDir, settingsDotXML);
+        OutputStream os = new FileOutputStream(nodeSettingsXMLFile);
+        if (snc.getParent().isEncrypted()) {
+            os = snc.getParent().cipherOutput(os);
+        }
+        settings.saveToXML(os);
         if (sncWorkingDirRef == null) {
             // set working dir so that we can unset the dirty flag
             sncWorkingDirRef = nodeDirRef;
@@ -281,7 +290,7 @@ public class SingleNodeContainerPersistorVersion200 extends
             snc.unsetDirty();
         }
         exec.setProgress(1.0);
-        return SETTINGS_FILE_NAME;
+        return settingsDotXML;
     }
 
     protected static void saveNodeFactoryClassName(final NodeSettingsWO settings,
@@ -290,9 +299,13 @@ public class SingleNodeContainerPersistorVersion200 extends
         settings.addString(KEY_FACTORY_NAME, cl);
     }
 
-    protected static ReferencedFile saveNodeFileName(final NodeSettingsWO settings,
+    protected static ReferencedFile saveNodeFileName(
+            final SingleNodeContainer snc, final NodeSettingsWO settings,
             final ReferencedFile nodeDirectoryRef) {
         String fileName = NODE_FILE;
+        if (snc.getParent().isEncrypted()) {
+            fileName = fileName.concat(".encrypted");
+        }
         settings.addString("node_file", fileName);
         return new ReferencedFile(nodeDirectoryRef, fileName);
     }

@@ -54,6 +54,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Collections;
@@ -99,6 +100,7 @@ public class SingleNodeContainerPersistorVersion1xx
     /** WFM persistor, only set when used to load a workflow. */
     private final WorkflowPersistorVersion1xx m_wfmPersistor;
 
+    private WorkflowPersistor m_parentPersistor;
     private NodeSettingsRO m_nodeSettings;
     private SingleNodeContainerSettings m_sncSettings;
     private boolean m_needsResetAfterLoad;
@@ -108,6 +110,7 @@ public class SingleNodeContainerPersistorVersion1xx
 
     private static final Method REPOS_LOAD_METHOD;
     private static final Object REPOS_MANAGER;
+
     static {
         Class<?> repManClass;
         try {
@@ -225,9 +228,10 @@ public class SingleNodeContainerPersistorVersion1xx
 
     /** {@inheritDoc} */
     @Override
-    public void preLoadNodeContainer(final NodeSettingsRO parentSettings,
-            final LoadResult result)
+    public void preLoadNodeContainer(final WorkflowPersistor parentPersistor,
+            final NodeSettingsRO parentSettings, final LoadResult result)
     throws InvalidSettingsException, IOException {
+        m_parentPersistor = parentPersistor;
         NodeContainerMetaPersistorVersion1xx meta = getMetaPersistor();
         final ReferencedFile settingsFileRef = meta.getNodeSettingsFile();
         File settingsFile = settingsFileRef.getFile();
@@ -239,8 +243,9 @@ public class SingleNodeContainerPersistorVersion1xx
         }
         NodeSettingsRO settings;
         try {
-            settings = NodeSettings.loadFromXML(
-                    new BufferedInputStream(new FileInputStream(settingsFile)));
+            InputStream in = new FileInputStream(settingsFile);
+            in = parentPersistor.decipherInput(in);
+            settings = NodeSettings.loadFromXML(new BufferedInputStream(in));
         } catch (IOException ioe) {
             setDirtyAfterLoad();
             throw ioe;
@@ -307,7 +312,7 @@ public class SingleNodeContainerPersistorVersion1xx
         try {
             HashMap<Integer, ContainerTable> globalTableRepository =
                 getWorkflowManagerPersistor().getGlobalTableRepository();
-            nodePersistor.load(m_node, nodeFile,
+            nodePersistor.load(m_node, nodeFile, m_parentPersistor,
                     exec, tblRep, globalTableRepository, result);
         } catch (final Exception e) {
             String error = "Error loading node content: " + e.getMessage();

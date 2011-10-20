@@ -157,6 +157,19 @@ public final class KNIMEConstants {
     public static final String PROPERTY_ENABLE_FAST_LOADING =
         "knime.enable.fastload";
 
+    /** Java property to add a context menu entry on meta nodes to allow the
+     * user to lock the workflow. This feature is likely to be a KNIME.com
+     * extension and is in beta stage - the action will eventually be moved
+     * to a KNIME.com plugin but is currently contained in
+     * org.knime.workbench.editor (though hidden unless this property is
+     * specified).
+     *
+     * <br />
+     * This flag only affects the KNIME desktop.
+     * @since v2.5 */
+    public static final String PROPERTY_SHOW_METANODE_LOCK_ACTION =
+        "knime.showaction.metanodelock";
+
     /**
      * The name of the system property whose value is - if set - used as knime
      * home directory. If no (or an invalid) value is set, ~user/knime will be

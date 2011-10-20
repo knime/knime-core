@@ -52,19 +52,27 @@ import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.EventObject;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.IResourceDelta;
 import org.eclipse.core.resources.IResourceDeltaVisitor;
+import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.draw2d.FigureCanvas;
@@ -97,6 +105,7 @@ import org.eclipse.gef.ui.actions.WorkbenchPartAction;
 import org.eclipse.gef.ui.parts.GraphicalEditor;
 import org.eclipse.gef.ui.properties.UndoablePropertySheetEntry;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -168,6 +177,7 @@ import org.knime.workbench.editor2.actions.ExecuteAllAction;
 import org.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
 import org.knime.workbench.editor2.actions.ExpandMetaNodeAction;
 import org.knime.workbench.editor2.actions.HideNodeNamesAction;
+import org.knime.workbench.editor2.actions.LockMetaNodeAction;
 import org.knime.workbench.editor2.actions.MetaNodeSetNameAction;
 import org.knime.workbench.editor2.actions.NodeConnectionContainerDeleteAction;
 import org.knime.workbench.editor2.actions.OpenDialogAction;
@@ -184,6 +194,7 @@ import org.knime.workbench.editor2.commands.CreateNewConnectedNodeCommand;
 import org.knime.workbench.editor2.commands.CreateNodeCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
+import org.knime.workbench.explorer.view.actions.validators.FileStoreNameValidator;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.SyncExecQueueDispatcher;
@@ -504,6 +515,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             new CheckUpdateMetaNodeLinkAction(this);
         AbstractNodeAction disconnectMetaNodeLink =
             new DisconnectMetaNodeLinkAction(this);
+        AbstractNodeAction lockMetaLink = new LockMetaNodeAction(this);
 
         // new annotation action
         AddAnnotationAction annotation = new AddAnnotationAction(this);
@@ -548,6 +560,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(metaNodeSetName);
         m_actionRegistry.registerAction(checkUpdateMetaNodeLink);
         m_actionRegistry.registerAction(disconnectMetaNodeLink);
+        m_actionRegistry.registerAction(lockMetaLink);
         m_actionRegistry.registerAction(annotation);
 
         // remember ids for later updates via 'updateActions'
@@ -743,9 +756,13 @@ public class WorkflowEditor extends GraphicalEditor implements
         if (input instanceof WorkflowManagerInput) {
             setWorkflowManagerInput((WorkflowManagerInput)input);
         } else {
-
             // input is the (full, absolute) path to the workflow.knime file
             File wfFile = new File(((IURIEditorInput)input).getURI());
+
+            // non-null if the workflow editor was open and a doSaveAs is
+            // called -- need to re-register listeners
+            URI oldFileResource = m_fileResource;
+
             // store the workflow directory
             m_fileResource = wfFile.getParentFile().toURI();
 
@@ -753,8 +770,14 @@ public class WorkflowEditor extends GraphicalEditor implements
 
             // register listener to check whether the underlying knime file
             // (input) has been deleted or renamed (in case it is a resource)
+            IWorkspace workspaceRoot = ResourcesPlugin.getWorkspace();
+            if (oldFileResource != null && KnimeResourceUtil.getResourceForURI(
+                    oldFileResource) != null) {
+                // relocated editor (new input after doSaveAs)
+                workspaceRoot.removeResourceChangeListener(this);
+            }
             if (KnimeResourceUtil.getResourceForURI(m_fileResource) != null) {
-                ResourcesPlugin.getWorkspace().addResourceChangeListener(this,
+                workspaceRoot.addResourceChangeListener(this,
                         IResourceChangeEvent.POST_CHANGE);
             }
 
@@ -1049,7 +1072,8 @@ public class WorkflowEditor extends GraphicalEditor implements
     private boolean m_isClosing;
 
     /**
-     * Brings up the Save-Dialog and sets the m_isClosing flag. {@inheritDoc}
+     * Brings up the Save-Dialog and sets the m_isClosing flag.
+     * {@inheritDoc}
      */
     @Override
     public int promptToSaveOnClose() {
@@ -1087,15 +1111,14 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public void doSave(final IProgressMonitor monitor) {
+    private void saveTo(final URI fileResource,
+            final IProgressMonitor monitor) {
         LOGGER.debug("Saving workflow ...");
 
         // Exception messages from the inner thread
         final StringBuffer exceptionMessage = new StringBuffer();
 
-        if (m_fileResource == null && m_parentEditor != null) {
+        if (fileResource == null && m_parentEditor != null) {
             m_parentEditor.doSave(monitor);
             m_isDirty = false;
             Display.getDefault().asyncExec(new Runnable() {
@@ -1112,7 +1135,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         // this flag is evaluated at the end of this method
         boolean wasInProgress = false;
         try {
-            final File file = new File(new File(m_fileResource),
+            final File file = new File(new File(fileResource),
                     WorkflowPersistor.WORKFLOW_FILE);
 
             // If something fails an empty workflow is created
@@ -1153,7 +1176,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             public void run() {
                 try {
                     IResource r =
-                            KnimeResourceUtil.getResourceForURI(m_fileResource);
+                            KnimeResourceUtil.getResourceForURI(fileResource);
                     if (r != null) {
                         String pName = r.getProject().getName();
                         monitor.setTaskName("Refreshing " + pName + "...");
@@ -1231,20 +1254,10 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
     }
 
-    /**
-     * Shows a simple information message.
-     *
-     * @param message the info message to display
-     */
-    private void showInfoMessage(final String header, final String message) {
-        // inform the user
-
-        MessageBox mb =
-                new MessageBox(this.getSite().getShell(), SWT.ICON_INFORMATION
-                        | SWT.OK);
-        mb.setText(header);
-        mb.setMessage(message);
-        mb.open();
+    /** {@inheritDoc} */
+    @Override
+    public void doSave(final IProgressMonitor monitor) {
+        saveTo(m_fileResource, monitor);
     }
 
     /**
@@ -1252,7 +1265,98 @@ public class WorkflowEditor extends GraphicalEditor implements
      */
     @Override
     public void doSaveAs() {
-        throw new UnsupportedOperationException("saveAs not implemented");
+        /** This code is almost functional but is not actually called
+         * (see isSaveAsAllowed). In order to enable this code we need to
+         * - change input to this editor (review setInput)
+         * - verify that the workflow is then looking to the new file resource
+         * - change open editors (subeditors (dunno) and report editors)
+         */
+        URI fileResource = m_fileResource;
+        WorkflowEditor parentEditor = m_parentEditor;
+        while (fileResource == null && parentEditor != null) {
+            fileResource = m_parentEditor.m_fileResource;
+            m_parentEditor = parentEditor.m_parentEditor;
+        }
+        if (fileResource == null) {
+            assert false : "Workflow doesn't have default save location";
+            URI newDirURI =
+                ResourcesPlugin.getWorkspace().getRoot().getRawLocationURI();
+            if (newDirURI == null || !"file".equals(newDirURI.getScheme())) {
+                throw new RuntimeException("Can't access workspace root");
+            }
+            fileResource = new File(new File(newDirURI),
+                    "KNIME_project").toURI();
+        }
+        File workflowDir = new File(fileResource);
+        File workflowDirParent = workflowDir.getParentFile();
+        final Set<String> invalidFileNames = new HashSet<String>(
+                Arrays.asList(workflowDirParent.list()));
+        String workflowDirName = workflowDir.getName();
+        String workflowDirNewName = guessNewWorkflowNameOnSaveAs(
+                invalidFileNames, workflowDirName);
+        Display display = Display.getDefault();
+        Shell activeShell = display.getActiveShell();
+        final InputDialog newNameDialog = new InputDialog(activeShell,
+                "Save as new workflow", "New workflow name",
+                workflowDirNewName, new FileStoreNameValidator() {
+            @Override
+            public String isValid(final String name) {
+                if (invalidFileNames.contains(name)) {
+                    return "Workflow/Directory already exists";
+                }
+                return super.isValid(name);
+            }
+        });
+        newNameDialog.setBlockOnOpen(true);
+        final AtomicBoolean proceed = new AtomicBoolean(false);
+        display.syncExec(new Runnable() {
+            @Override
+            public void run() {
+                proceed.set(newNameDialog.open() == InputDialog.OK);
+            }
+        });
+        if (!proceed.get()) {
+            return;
+        }
+        workflowDirNewName = newNameDialog.getValue();
+        final URI newFileResource = new File(
+                workflowDirParent, workflowDirNewName).toURI();
+        saveTo(newFileResource, new NullProgressMonitor());
+        IWorkspace workspaceRoot = ResourcesPlugin.getWorkspace();
+        if (m_fileResource != null && KnimeResourceUtil.getResourceForURI(
+                m_fileResource) != null) {
+            // relocated editor (new input after doSaveAs)
+            workspaceRoot.removeResourceChangeListener(this);
+        }
+    }
+
+    /** Derives new name, e.g. KNIME_project_2 -> KNIME_project_3.
+     * Separator between name and number can be empty, space, dash, underscore
+     * @param invalidFileNames Names of files/folders that already exist
+     * @param workflowDirName The name of the old workflow
+     * @return The new suggested name (shown in rename prompt). */
+    private static String guessNewWorkflowNameOnSaveAs(
+            final Set<String> invalidFileNames, final String workflowDirName) {
+        Pattern pattern = Pattern.compile("(^.*[ _\\-]?)(\\d)");
+        Matcher matcher = pattern.matcher(workflowDirName);
+        String baseName = workflowDirName;
+        int index;
+        if (matcher.matches()) {
+            try {
+                index = Integer.parseInt(matcher.group(2));
+            } catch (Exception e) {
+                index = 0;
+            }
+            baseName = matcher.group(1);
+        } else {
+            index = 0;
+            baseName = workflowDirName + " ";
+        }
+        String workflowDirNewName = workflowDirName;
+        while (invalidFileNames.contains(workflowDirNewName)) {
+            workflowDirNewName = baseName + (++index);
+        }
+        return workflowDirNewName;
     }
 
     /**
@@ -1273,6 +1377,22 @@ public class WorkflowEditor extends GraphicalEditor implements
     @Override
     public boolean isSaveAsAllowed() {
         return false;
+    }
+
+    /**
+     * Shows a simple information message.
+     *
+     * @param message the info message to display
+     */
+    private void showInfoMessage(final String header, final String message) {
+        // inform the user
+
+        MessageBox mb =
+                new MessageBox(this.getSite().getShell(), SWT.ICON_INFORMATION
+                        | SWT.OK);
+        mb.setText(header);
+        mb.setMessage(message);
+        mb.open();
     }
 
     /**

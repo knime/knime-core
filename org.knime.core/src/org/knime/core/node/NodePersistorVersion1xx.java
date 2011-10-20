@@ -54,6 +54,7 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -71,6 +72,7 @@ import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion1xx;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
+import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
@@ -463,6 +465,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
      *  invoke the
      *  {@link Node#load(NodePersistor, ExecutionMonitor, LoadResult)} on
      * @param configFileRef The configuration file for the node.
+     * @param parentPersistor workflow persistor for decryption
      * @param exec For progress/cancelation
      * @param loadTblRep The table repository used during load
      * @param tblRep The table repository for blob handling
@@ -471,6 +474,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
      * @throws CanceledExecutionException If canceled
      */
     public void load(final Node node, final ReferencedFile configFileRef,
+            final WorkflowPersistor parentPersistor,
             final ExecutionMonitor exec,
             final Map<Integer, BufferedDataTable> loadTblRep,
             final HashMap<Integer, ContainerTable> tblRep,
@@ -499,8 +503,9 @@ public class NodePersistorVersion1xx implements NodePersistor {
             settings = new NodeSettings("empty");
             setNeedsResetAfterLoad(); // also implies dirty
         } else {
-            settings =
-                NodeSettings.loadFromXML(new FileInputStream(configFile));
+            InputStream in = new FileInputStream(configFile);
+            in = parentPersistor.decipherInput(in);
+            settings = NodeSettings.loadFromXML(new BufferedInputStream(in));
         }
 
         m_modelSettings = settings;

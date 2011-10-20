@@ -65,6 +65,7 @@ import org.eclipse.swt.events.MenuDetectEvent;
 import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.IWorkbenchActionConstants;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
@@ -79,6 +80,7 @@ import org.knime.workbench.editor2.actions.DisconnectMetaNodeLinkAction;
 import org.knime.workbench.editor2.actions.ExecuteAction;
 import org.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
 import org.knime.workbench.editor2.actions.ExpandMetaNodeAction;
+import org.knime.workbench.editor2.actions.LockMetaNodeAction;
 import org.knime.workbench.editor2.actions.MetaNodeSetNameAction;
 import org.knime.workbench.editor2.actions.OpenDialogAction;
 import org.knime.workbench.editor2.actions.OpenPortViewAction;
@@ -357,6 +359,16 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
             manager.appendToGroup(
                     IWorkbenchActionConstants.GROUP_APP, action);
             ((AbstractNodeAction)action).update();
+
+            if (Boolean.getBoolean(
+                    KNIMEConstants.PROPERTY_SHOW_METANODE_LOCK_ACTION)) {
+                action = m_actionRegistry.getAction(
+                        LockMetaNodeAction.ID);
+                manager.appendToGroup(
+                        IWorkbenchActionConstants.GROUP_APP, action);
+                ((AbstractNodeAction)action).update();
+            }
+
         }
 
         manager.updateAll(true);

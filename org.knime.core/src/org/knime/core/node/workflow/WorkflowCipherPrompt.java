@@ -40,64 +40,40 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
+ *
+ * History
+ *   Oct 19, 2011 (wiswedel): created
  */
 package org.knime.core.node.workflow;
 
-import java.util.EventObject;
-
-/**
- * Event fired when properties of a node change. Monitored properties are
- * represented by the {@link NodeProperty} enum.
+/** Callback method to query the unlock password for a meta node. This class
+ * is overwritten in the UI plugins.
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-@SuppressWarnings("serial")
-public class NodePropertyChangedEvent extends EventObject {
+public class WorkflowCipherPrompt {
 
-    private final NodeProperty m_property;
-
-    /** Property types that can possibly change. */
-    public enum NodeProperty {
-        /** Job manager (e.g. to SGE job executor) has changed. */
-        JobManager,
-        /** Name (of a meta node) has changed. */
-        Name,
-        /** Meta node template information has changed. */
-        TemplateConnection,
-        /** Meta node encryption/lock status has changed. */
-        LockStatus
+    /** Prompt the user (called repeatedly if password is wrong).
+     * @param message The message/hint
+     * @param errorFromPrevious non-null if previous unlock fails
+     * @return The entered password.
+     * @throws PromptCancelled If cancelled by user.*/
+    public String prompt(final String message,
+            final String errorFromPrevious) throws PromptCancelled {
+        throw new PromptCancelled();
     }
 
-    /** Create new event.
-     *
-     * @param src the {@link NodeID} of the {@link NodeContainer} whose
-     * property has changed (not null)
-     * @param property The property that changed (not null)
-     */
-    public NodePropertyChangedEvent(final NodeID src,
-            final NodeProperty property) {
-        super(src);
-        if (property == null) {
-            throw new NullPointerException("Argument must not be null.");
+    /** Thrown to indicate that user gives up entering the password. */
+    @SuppressWarnings("serial")
+    public static final class PromptCancelled extends Exception {
+
+        /**  Empty constructor. */
+        public PromptCancelled() {
+            // no op
         }
-        m_property = property;
     }
-
-    /**
-     *
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeID getSource() {
-        return (NodeID)super.getSource();
-    }
-
-    /** @return the property */
-    public NodeProperty getProperty() {
-        return m_property;
-    }
-
 }

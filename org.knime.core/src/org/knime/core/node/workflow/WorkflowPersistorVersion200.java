@@ -53,6 +53,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -252,6 +253,18 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
 
     /** {@inheritDoc} */
     @Override
+    protected WorkflowCipher loadWorkflowCipher(final LoadVersion loadVersion,
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        // added in v2.5 - no check necessary
+        if (settings.containsKey("cipher")) {
+            NodeSettingsRO cipherSettings = settings.getNodeSettings("cipher");
+            return WorkflowCipher.load(loadVersion, cipherSettings);
+        }
+        return WorkflowCipher.NULL_CIPHER;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     protected MetaNodeTemplateInformation loadTemplateInformation(
             final NodeSettingsRO settings) throws InvalidSettingsException {
 //        if (getLoadVersion().ordinal() < LoadVersion.V240.ordinal()) {
@@ -267,7 +280,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
 
     /** {@inheritDoc} */
     @Override
-    protected NodeSettingsRO readParentSettings() throws IOException {
+    protected NodeSettingsRO readParentSettings() {
         return null; // only used in 1.3.x
     }
 
@@ -500,6 +513,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
                     WorkflowManager.CFG_CREATED_BY, KNIMEConstants.VERSION);
             settings.addString(WorkflowManager.CFG_VERSION, getSaveVersion());
             saveWorkflowName(settings, wm.getNameField());
+            saveWorkflowCipher(settings, wm.getWorkflowCipher());
             saveTemplateInformation(wm.getTemplateInformation(), settings);
                 NodeContainerMetaPersistorVersion200.save(
                         settings, wm, workflowDirRef);
@@ -543,8 +557,8 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
                 inPortsSettsEnum = saveInPortsEnumSetting(inPortsSetts);
             }
             for (int i = 0; i < inCount; i++) {
-                    NodeSettingsWO sPort = saveInPortSetting(inPortsSettsEnum, i);
-                    saveInPort(sPort, wm, i);
+                NodeSettingsWO sPort = saveInPortSetting(inPortsSettsEnum, i);
+                saveInPort(sPort, wm, i);
             }
             int outCount = wm.getNrOutPorts();
             NodeSettingsWO outPortsSetts = outCount > 0
@@ -562,8 +576,14 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
                     saveOutPortSetting(outPortsSettsEnum, i);
                 saveOutPort(singlePort, wm, i);
             }
+
+            if (wm.getParent().isEncrypted()) {
+                fName = fName.concat(".encryped");
+            }
             File workflowFile = new File(workflowDir, fName);
-            settings.saveToXML(new FileOutputStream(workflowFile));
+            OutputStream os = new FileOutputStream(workflowFile);
+            os = wm.getParent().cipherOutput(os);
+            settings.saveToXML(os);
             File saveWithDataFile = new File(workflowDir, SAVED_WITH_DATA_FILE);
                 BufferedWriter o =
                     new BufferedWriter(new FileWriter(saveWithDataFile));
@@ -594,6 +614,17 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     protected static void saveWorkflowName(
             final NodeSettingsWO settings, final String name) {
         settings.addString("name", name);
+    }
+
+    /** Metanode locking information.
+     * @param settings
+     * @param workflowCipher */
+    protected static void saveWorkflowCipher(final NodeSettings settings,
+            final WorkflowCipher workflowCipher) {
+        if (!workflowCipher.isNullCipher()) {
+            NodeSettingsWO cipherSettings = settings.addNodeSettings("cipher");
+            workflowCipher.save(cipherSettings);
+        }
     }
 
     protected static void saveTemplateInformation(

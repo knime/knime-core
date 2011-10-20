@@ -56,6 +56,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -75,6 +76,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortUtil;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200;
 import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 import org.knime.core.util.FileUtil;
@@ -139,9 +141,11 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
      * @throws IOException If the node file can't be found or read.
      * @throws CanceledExecutionException If the saving has been canceled.
      */
-    public static void save(final Node node, final ReferencedFile nodeFile,
-            final ExecutionMonitor execMon, final boolean isSaveData)
-            throws IOException, CanceledExecutionException {
+    public static void save(final SingleNodeContainer snc,
+            final ReferencedFile nodeFile, final ExecutionMonitor execMon,
+            final boolean isSaveData)
+    throws IOException, CanceledExecutionException {
+        final Node node = snc.getNode();
         NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
         final ReferencedFile nodeDirRef = nodeFile.getParent();
         if (nodeDirRef == null) {
@@ -179,8 +183,12 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         execMon.setMessage("Internal Tables");
         saveInternalHeldTables(node, nodeDirRef, settings, portMon, isSaveData);
         intTblsMon.setProgress(1.0);
-        settings.saveToXML(new BufferedOutputStream(new FileOutputStream(
-                nodeFile.getFile())));
+        // file name has already correct ending
+        OutputStream os = new FileOutputStream(nodeFile.getFile());
+        if (snc.getParent().isEncrypted()) {
+            os = snc.getParent().cipherOutput(os);
+        }
+        settings.saveToXML(new BufferedOutputStream(os));
         execMon.setProgress(1.0);
     }
 

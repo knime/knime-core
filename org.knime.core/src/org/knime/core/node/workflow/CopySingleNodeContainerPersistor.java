@@ -180,8 +180,9 @@ final class CopySingleNodeContainerPersistor implements
 
     /** {@inheritDoc} */
     @Override
-    public void preLoadNodeContainer(final NodeSettingsRO parentSettings,
-            final LoadResult loadResult) {
+    public void preLoadNodeContainer(final WorkflowPersistor parentPersistor,
+            final NodeSettingsRO parentSettings, final LoadResult loadResult) {
+        // no op
     }
 
 }

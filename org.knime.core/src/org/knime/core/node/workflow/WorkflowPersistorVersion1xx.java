@@ -108,9 +108,14 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     private UIInformation m_inPortsBarUIInfo;
     private UIInformation m_outPortsBarUIInfo;
 
+    /** Parent persistor, used to create (nested) decryption stream for locked
+     * meta nodes. */
+    private WorkflowPersistor m_parentPersistor;
     private String m_name;
+    private WorkflowCipher m_workflowCipher;
     private MetaNodeTemplateInformation m_templateInformation;
     private URI m_templateInformationURI;
+    /** see {@link #setNameOverwrite(String)}. */
     private String m_nameOverwrite;
     private List<FlowVariable> m_workflowVariables;
     private List<Credentials> m_credentials;
@@ -247,6 +252,12 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         return m_name;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public WorkflowCipher getWorkflowCipher() {
+        return m_workflowCipher;
+    }
+
     /** @param templateInformationURI the uri to set */
     public void setTemplateInformationLinkURI(
             final URI templateInformationURI) {
@@ -265,6 +276,18 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     @Override
     public MetaNodeTemplateInformation getTemplateInformation() {
         return m_templateInformation;
+    }
+
+    /** {@inheritDoc}
+     * @throws IOException */
+    @Override
+    public InputStream decipherInput(final InputStream input) throws IOException {
+        InputStream myInput = m_workflowCipher.decipherInput(input);
+        if (m_parentPersistor != null) {
+            return m_parentPersistor.decipherInput(myInput);
+        }
+        // top most persistor, i.e. for workflow project
+        return myInput;
     }
 
     /** {@inheritDoc} */
@@ -347,15 +370,17 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public void preLoadNodeContainer(
+    public void preLoadNodeContainer(final WorkflowPersistor parentPersistor,
             final NodeSettingsRO parentSettings, final LoadResult loadResult)
     throws InvalidSettingsException, IOException {
+        m_parentPersistor = parentPersistor;
         final ReferencedFile knimeFile = getWorkflowKNIMEFile();
         if (knimeFile == null || !knimeFile.getFile().isFile()) {
             setDirtyAfterLoad();
             String error = "Can't read workflow file \"" + knimeFile + "\"";
             throw new IOException(error);
         }
+        // workflow.knime (or template.knime)
         File nodeFile = knimeFile.getFile();
         ReferencedFile parentRef = knimeFile.getParent();
         if (parentRef == null) {
@@ -368,8 +393,14 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             loadIfMustWarnOnDataLoadError(parentRef.getFile());
         NodeSettingsRO subWFSettings;
         try {
-            InputStream in = new BufferedInputStream(
-                    new FileInputStream(nodeFile));
+            InputStream in = new FileInputStream(nodeFile);
+            if (m_parentPersistor != null) { // real meta node, not a project
+                // the workflow.knime (or template.knime) file is not encrypted
+                // with this meta node's cipher but possibly with a parent
+                // cipher
+                in = m_parentPersistor.decipherInput(in);
+            }
+            in = new BufferedInputStream(in);
             subWFSettings = NodeSettings.loadFromXML(in);
         } catch (IOException ioe) {
             setDirtyAfterLoad();
@@ -389,6 +420,17 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             setDirtyAfterLoad();
             loadResult.addError(error);
             m_name = null;
+        }
+
+        try {
+            m_workflowCipher = loadWorkflowCipher(
+                    getLoadVersion(), m_workflowSett);
+        } catch (InvalidSettingsException e) {
+            String error = "Unable to load workflow cipher: " + e.getMessage();
+            getLogger().debug(error, e);
+            setDirtyAfterLoad();
+            loadResult.addError(error);
+            m_workflowCipher = WorkflowCipher.NULL_CIPHER;
         }
 
         try {
@@ -700,7 +742,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             try {
                 LoadResult childResult = new LoadResult((isMeta ? "meta " : "")
                         + "node with ID suffix " + nodeIDSuffix);
-                persistor.preLoadNodeContainer(nodeSetting, childResult);
+                persistor.preLoadNodeContainer(this, nodeSetting, childResult);
                 loadResult.addChildError(childResult);
             } catch (Throwable e) {
                 String error = "Unable to load node with ID suffix "
@@ -1155,6 +1197,11 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     protected String loadWorkflowName(final NodeSettingsRO set)
             throws InvalidSettingsException {
         return "Workflow Manager";
+    }
+
+    protected WorkflowCipher loadWorkflowCipher(final LoadVersion loadVersion,
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        return WorkflowCipher.NULL_CIPHER;
     }
 
     /** Load template information (in this version always

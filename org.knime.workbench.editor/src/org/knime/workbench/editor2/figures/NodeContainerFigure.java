@@ -215,6 +215,8 @@ public class NodeContainerFigure extends RectangleFigure {
 
     private Image m_metaNodeLinkIcon;
 
+    private Image m_metaNodeLockIcon;
+
     private boolean m_showFlowVarPorts;
 
     /**
@@ -363,6 +365,13 @@ public class NodeContainerFigure extends RectangleFigure {
         if (!ConvenienceMethods.areEqual(m_metaNodeLinkIcon, icon)) {
             m_metaNodeLinkIcon = icon;
             m_symbolFigure.refreshMetaNodeLinkIcon();
+        }
+    }
+
+    public void setMetaNodeLockIcon(final Image icon) {
+        if (!ConvenienceMethods.areEqual(m_metaNodeLockIcon, icon)) {
+            m_metaNodeLockIcon = icon;
+            m_symbolFigure.refreshMetaNodeLockIcon();
         }
     }
 
@@ -759,6 +768,9 @@ public class NodeContainerFigure extends RectangleFigure {
 
         private Label m_metaNodeLinkedLabel;
 
+        private Label m_metaNodeLockLabel;
+
+
         /**
          * Creates a new figure containing the symbol. That is the background
          * icon (depending on the type of the node) and the node's icon. Also
@@ -829,6 +841,24 @@ public class NodeContainerFigure extends RectangleFigure {
                             new RelativeLocator(m_backgroundIcon, 0.21, .84));
                 }
                 m_metaNodeLinkedLabel.setIcon(m_metaNodeLinkIcon);
+                repaint();
+            }
+        }
+
+        protected void refreshMetaNodeLockIcon() {
+            // do we have to remove it?
+            if (m_metaNodeLockLabel != null && m_metaNodeLockIcon == null) {
+                m_backgroundIcon.remove(m_metaNodeLockLabel);
+                m_metaNodeLockLabel = null;
+            } else {
+                if (m_metaNodeLockLabel == null) {
+                    m_metaNodeLockLabel = new Label();
+                    m_metaNodeLockLabel.setOpaque(false);
+                    m_backgroundIcon.add(m_metaNodeLockLabel);
+                    m_backgroundIcon.setConstraint(m_metaNodeLockLabel,
+                            new RelativeLocator(m_backgroundIcon, 0.79, .24));
+                }
+                m_metaNodeLockLabel.setIcon(m_metaNodeLockIcon);
                 repaint();
             }
         }

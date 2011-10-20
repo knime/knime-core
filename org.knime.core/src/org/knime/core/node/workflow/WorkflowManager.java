@@ -54,8 +54,10 @@ import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -241,7 +243,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * semaphore will be used by all "connected" children of this node. Isolated
      * workflows create a new semaphore.
      */
-    private Object m_workflowMutex;
+    private final Object m_workflowMutex;
+
+    /** A lock handle identifying this workflow/meta node as encrypted. See
+     * {@link WorkflowCipher} for details on what is locked/encrypted.
+     * @since 2.5 */
+    private WorkflowCipher m_cipher = WorkflowCipher.NULL_CIPHER;
 
     /** The root of everything, a workflow with no in- or outputs.
      * This workflow holds the top level projects. */
@@ -312,6 +319,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             new Vector<FlowVariable>(persistor.getWorkflowVariables());
         m_credentialsStore =
             new CredentialsStore(this, persistor.getCredentials());
+        m_cipher = persistor.getWorkflowCipher();
         WorkflowPortTemplate[] inPortTemplates = persistor.getInPortTemplates();
         m_inPorts = new WorkflowInPort[inPortTemplates.length];
         for (int i = 0; i < inPortTemplates.length; i++) {
@@ -2726,7 +2734,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             cc.setUIInfo(newUI);
                         }
                     }
-                    
+
                 }
             }
             // and finally remove old sub workflow
@@ -4766,7 +4774,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             File localDir = CorePlugin.resolveURItoLocalFile(sourceURI);
             loadPersistor = WorkflowManager.createLoadPersistor(
                     localDir, loadHelper);
-            loadPersistor.preLoadNodeContainer(null, new LoadResult("ignored"));
+            loadPersistor.preLoadNodeContainer(null, null, new LoadResult("ignored"));
         } catch (IOException e) {
             throw e;
         } catch (UnsupportedWorkflowVersionException e) {
@@ -5027,6 +5035,83 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             meta.setTemplateInformation(templateInformation);
             return old;
         }
+    }
+
+    ///////////////////////////////////
+    // Workflow Encryption & Locking
+    ///////////////////////////////////
+
+    /** Set password on this meta node. See {@link WorkflowCipher} for details
+     * on what is protected/locked.
+     * @param password The new password (or null to always unlock)
+     * @param hint The hint/copyright.
+     * @throws NoSuchAlgorithmException If encryption fails. */
+    public void setWorkflowPassword(final String password, final String hint)
+        throws NoSuchAlgorithmException {
+        if (this == ROOT) {
+            throw new IllegalStateException("Can't set cipher on ROOT wfm.");
+        }
+        WorkflowCipher cipher = WorkflowCipher.newCipher(password, hint);
+        if (cipher.equals(m_cipher)) {
+            return;
+        }
+        synchronized (m_workflowMutex) {
+            setDirtyAll(); // first set dirty to decrypt with old cipher
+            m_cipher = cipher;
+            String msg = " cipher on meta node \"" + getNameWithID() + "\"";
+            if (m_cipher.isNullCipher()) {
+                LOGGER.debug("Unsetting " + msg);
+            } else {
+                LOGGER.debug("Setting " + msg);
+            }
+        }
+        notifyNodePropertyChangedListener(NodeProperty.LockStatus);
+        notifyWorkflowListeners(new WorkflowEvent(
+                WorkflowEvent.Type.WORKFLOW_DIRTY, getID(), null, null));
+    }
+
+    /** @return the cipher (used in persistor). */
+    WorkflowCipher getWorkflowCipher() {
+        return m_cipher;
+    }
+
+    /** @return see {@link WorkflowCipher#isUnlocked()}. */
+    public boolean isUnlocked() {
+        return m_cipher.isUnlocked();
+    }
+
+    /** @return see {@link WorkflowCipher#getPasswordHint()}. */
+    public String getPasswordHint() {
+        return m_cipher.getPasswordHint();
+    }
+
+    /** @param prompt The prompt
+     * @return see {@link WorkflowCipher#unlock(WorkflowCipherPrompt)}. */
+    public boolean unlock(final WorkflowCipherPrompt prompt) {
+        boolean isNowUnlocked;
+        boolean wasUnlocked;
+        synchronized (m_workflowMutex) {
+            wasUnlocked = isUnlocked();
+            isNowUnlocked = m_cipher.unlock(prompt);
+        }
+        if (wasUnlocked != isNowUnlocked) {
+            notifyNodePropertyChangedListener(NodeProperty.LockStatus);
+        }
+        return isNowUnlocked;
+    }
+
+    /** @return see {@link WorkflowCipher#isEncrypted()}. */
+    public boolean isEncrypted() {
+        return this != ROOT && m_cipher.isEncrypted();
+    }
+
+    /** @param out The output
+     * @return see {@link WorkflowCipher#cipherOutput(
+     * WorkflowManager, OutputStream)}.
+     * @throws IOException If fails */
+    public OutputStream cipherOutput(final OutputStream out)
+        throws IOException {
+        return m_cipher.cipherOutput(this, out);
     }
 
     ///////////////////////////////////
@@ -5501,7 +5586,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         Map<Integer, BufferedDataTable> tblRep =
             new HashMap<Integer, BufferedDataTable>();
         WorkflowLoadResult result = new WorkflowLoadResult(dirName);
-        persistor.preLoadNodeContainer(null, result);
+        persistor.preLoadNodeContainer(null, null, result);
         WorkflowManager manager = null;
         boolean fixDataLoadProblems = false;
         boolean isIsolatedProject =

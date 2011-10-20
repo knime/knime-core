@@ -50,6 +50,8 @@
  */
 package org.knime.core.node.workflow;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -114,6 +116,10 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
 
     String getName();
 
+    /** @return cipher associated with the metanode/workflow, often just
+     * {@link WorkflowCipher#NULL_CIPHER}, never null. */
+    WorkflowCipher getWorkflowCipher();
+
     /** Get the workflow variables associated with this meta node/workflow.
      * This method must not return null (but possibly an empty list). The result
      * may be unmodifiable.
@@ -157,6 +163,15 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
      * @return The template info
      */
     public MetaNodeTemplateInformation getTemplateInformation();
+
+    /** Open decryption stream for locked meta nodes. Implementations will
+     * also call the decipher method on their parent workflow persistors.
+     * @param input The input to decipher.
+     * @return The decipherd input, mostly just the input.
+     * @throws IOException If that fails, e.g. crypto init fails
+     */
+    public InputStream decipherInput(
+            final InputStream input) throws IOException;
 
     /** Helper class representing a connection. */
     static class ConnectionContainerTemplate {

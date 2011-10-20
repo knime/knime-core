@@ -50,6 +50,7 @@
  */
 package org.knime.core.node.workflow;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -77,6 +78,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     private final UIInformation m_outportUIInfo;
     private final WorkflowPortTemplate[] m_outportTemplates;
     private final String m_name;
+    private final WorkflowCipher m_workflowCipher;
     private final MetaNodeTemplateInformation m_templateInformation;
     private final CopyNodeContainerMetaPersistor m_metaPersistor;
     private final HashMap<Integer, ContainerTable> m_tableRep;
@@ -116,6 +118,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
                 new WorkflowPortTemplate(i, in.getPortType());
         }
         m_name = original.getNameField();
+        m_workflowCipher = original.getWorkflowCipher().clone();
         m_templateInformation = original.getTemplateInformation().clone();
         m_metaPersistor = new CopyNodeContainerMetaPersistor(
                 original, preserveDeletableFlags, isUndoableDeleteCommand);
@@ -182,6 +185,12 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     @Override
     public String getName() {
         return m_name;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public WorkflowCipher getWorkflowCipher() {
+        return m_workflowCipher;
     }
 
     /** {@inheritDoc} */
@@ -277,9 +286,15 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public void preLoadNodeContainer(final NodeSettingsRO parentSettings,
-            final LoadResult loadResult) {
+    public void preLoadNodeContainer(final WorkflowPersistor parentPersistor,
+            final NodeSettingsRO parentSettings, final LoadResult loadResult) {
         // no op
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public InputStream decipherInput(final InputStream input) {
+        throw new IllegalStateException("Method not to be called");
     }
 
     /** {@inheritDoc} */

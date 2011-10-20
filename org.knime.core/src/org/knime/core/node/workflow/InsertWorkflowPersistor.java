@@ -51,6 +51,7 @@
 package org.knime.core.node.workflow;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -123,6 +124,12 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
     @Override
     public String getName() {
         throw new IllegalStateException("can't set name on root");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public WorkflowCipher getWorkflowCipher() {
+        throw new IllegalStateException("no workflow cipher on root");
     }
 
     /** {@inheritDoc} */
@@ -210,6 +217,7 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
     @Override
     public void loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep,
             final ExecutionMonitor exec, final LoadResult loadResult) {
+        // no op
     }
 
     /** {@inheritDoc} */
@@ -220,10 +228,16 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public void preLoadNodeContainer(final NodeSettingsRO parentSettings,
-            final LoadResult loadResult)
+    public void preLoadNodeContainer(final WorkflowPersistor parentPersistor,
+            final NodeSettingsRO parentSettings, final LoadResult loadResult)
             throws InvalidSettingsException, IOException {
         throw new IllegalStateException("root can't be loaded");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public InputStream decipherInput(final InputStream input) {
+        throw new IllegalStateException("Method not to be called.");
     }
 
 }

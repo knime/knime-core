@@ -35,7 +35,7 @@
  *  Extension (and in particular that are based on subclasses of NodeModel,
  *  NodeDialog, and NodeView) and that only interoperate with KNIME through
  *  standard APIs ("Nodes"):
- *  Nodes are deemed to be separate and independent programs and to not be
+ *  Nodes are deemed to be separCopyOfCheckUpdateate and independent programs and to not be
  *  covered works.  Notwithstanding anything to the contrary in the
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
@@ -43,44 +43,44 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
+ * History
+ *   15.10.2011 (Bernd Wiswedel): created
  */
 package org.knime.workbench.editor2.actions;
 
+import java.security.NoSuchAlgorithmException;
+
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.commands.ExpandMetaNodeCommand;
 import org.knime.workbench.editor2.editparts.GUIWorkflowCipherPrompt;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
-/**
- * Action to expand selected metanode.
- *
- * @author M. Berthold, University of Konstanz
+/** Action to set locking on meta node.
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class ExpandMetaNodeAction extends AbstractNodeAction {
+public class LockMetaNodeAction extends AbstractNodeAction {
+
     private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(ExpandMetaNodeAction.class);
+        NodeLogger.getLogger(LockMetaNodeAction.class);
 
-    /**
-     * unique ID for this action.
-     */
-    public static final String ID = "knime.action.expandmetanode";
+    /** Action ID. */
+    public static final String ID = "knime.action.meta_node_lock";
 
-    /**
-     * @param editor The workflow editor
+
+    /** Create new action based on given editor.
+     * @param editor The associated editor.
      */
-    public ExpandMetaNodeAction(final WorkflowEditor editor) {
+    public LockMetaNodeAction(final WorkflowEditor editor) {
         super(editor);
     }
-
     /**
      * {@inheritDoc}
      */
@@ -90,12 +90,23 @@ public class ExpandMetaNodeAction extends AbstractNodeAction {
     }
 
     /**
+     *
      * {@inheritDoc}
      */
     @Override
     public String getText() {
-        return "Expand Meta Node";
+        return "Lock Metanode";
     }
+
+    /**
+     *
+     * {@inheritDoc}
+     */
+    @Override
+    public String getToolTipText() {
+        return "Set password protection";
+    }
+
 
     /**
      * {@inheritDoc}
@@ -103,75 +114,59 @@ public class ExpandMetaNodeAction extends AbstractNodeAction {
     @Override
     public ImageDescriptor getImageDescriptor() {
         return ImageRepository.getImageDescriptor(
-                "icons/meta/metanode_expand.png");
+                "icons/meta/metanode_lock.png");
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getToolTipText() {
-        return "Expand selected Meta Node";
-    }
-
-    /**
-     * @return <code>true</code>, if exactly one metanode is selected.
-     *
-     * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
+     * @return true, if underlying model instance of
+     *         <code>WorkflowManager</code>, otherwise false
      */
     @Override
     protected boolean calculateEnabled() {
         if (getManager().isWriteProtected()) {
             return false;
         }
-        NodeContainerEditPart[] parts =
+        NodeContainerEditPart[] nodes =
             getSelectedParts(NodeContainerEditPart.class);
-        if (parts.length != 1) {
+        if (nodes.length != 1) {
             return false;
         }
-        if (parts[0].getNodeContainer() instanceof WorkflowManager) {
-            WorkflowManager wm = (WorkflowManager)parts[0].getNodeContainer();
-            return !wm.isWriteProtected();
+        Object model = nodes[0].getModel();
+        if (!(model instanceof WorkflowManager)) {
+            return false;
         }
-        return false;
+        return true;
     }
 
-    /**
-     * Expand metanode!
-     *
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        LOGGER.debug("Creating 'Expand MetaNode' job for "
-                + nodeParts.length + " node(s)...");
-        try {
-            WorkflowManager manager = getManager();
-            WorkflowManager metaNode =
-                (WorkflowManager)nodeParts[0].getNodeContainer();
-            if (!metaNode.unlock(new GUIWorkflowCipherPrompt())) {
-                return;
-            }
-            String res = manager.canExpandMetaNode(metaNode.getID());
-            if (res != null) {
-                throw new IllegalArgumentException(res);
-            }
-            ExpandMetaNodeCommand emnc =
-                new ExpandMetaNodeCommand(manager, metaNode.getID());
-            execute(emnc);
-        } catch (IllegalArgumentException e) {
-            MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(),
-                    SWT.ERROR);
-            mb.setMessage("Sorry, expanding Metanode failed: " + e.getMessage());
-            mb.setText("Expand failed");
-            mb.open();
+    public void runOnNodes(final NodeContainerEditPart[] nodes) {
+        if (nodes.length != 1) {
+            return;
         }
+        Object model = nodes[0].getModel();
+        if (!(model instanceof WorkflowManager)) {
+            return;
+        }
+        WorkflowManager metaNodeWFM = (WorkflowManager)model;
+        final Shell shell = Display.getCurrent().getActiveShell();
+        if (!metaNodeWFM.unlock(new GUIWorkflowCipherPrompt())) {
+            return;
+        }
+        LockMetaNodeDialog lockDialog =
+            new LockMetaNodeDialog(shell, metaNodeWFM);
+        if (lockDialog.open() != LockMetaNodeDialog.OK) {
+            return;
+        }
+        String password = lockDialog.getPassword();
+        String hint = lockDialog.getPasswordHint();
         try {
-            // Give focus to the editor again. Otherwise the actions (selection)
-            // is not updated correctly.
-            getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
-        } catch (Exception e) {
-            // ignore
+            metaNodeWFM.setWorkflowPassword(password, hint);
+        } catch (NoSuchAlgorithmException e) {
+            String msg = "Unable to encrypt meta node: " + e.getMessage();
+            LOGGER.error(msg, e);
+            MessageDialog.openError(shell, "Metanode encrypt", msg);
         }
     }
+
 }

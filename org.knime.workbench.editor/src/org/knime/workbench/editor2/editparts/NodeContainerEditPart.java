@@ -102,6 +102,7 @@ import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer.LoopStatus;
+import org.knime.core.node.workflow.WorkflowCipherPrompt;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -136,14 +137,25 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(NodeContainerEditPart.class);
 
-    private final Image META_NODE_LINK_GREEN_ICON =
-        ImageRepository.getImage("icons/meta/metanode_link_green_decorator.png");
+    private static final Image META_NODE_LINK_GREEN_ICON =
+        ImageRepository.getImage(
+                "icons/meta/metanode_link_green_decorator.png");
 
-    private final Image META_NODE_LINK_RED_ICON =
-        ImageRepository.getImage("icons/meta/metanode_link_red_decorator.png");
+    private static final Image META_NODE_LINK_RED_ICON =
+        ImageRepository.getImage(
+            "icons/meta/metanode_link_red_decorator.png");
 
-    private final Image META_NODE_LINK_PROBLEM_ICON =
-        ImageRepository.getImage("icons/meta/metanode_link_problem_decorator.png");
+    private static final Image META_NODE_LINK_PROBLEM_ICON =
+        ImageRepository.getImage(
+            "icons/meta/metanode_link_problem_decorator.png");
+
+    private static final Image META_NODE_LOCK_ICON =
+        ImageRepository.getImage(
+            "icons/meta/metanode_lock_decorator.png");
+
+    private static final Image META_NODE_UNLOCK_ICON =
+        ImageRepository.getImage(
+            "icons/meta/metanode_unlock_decorator.png");
 
     /**
      * true, if the figure was initialized from the node extra info object.
@@ -226,6 +238,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             setJobManagerIcon(iconURL);
         }
         checkMetaNodeTemplateIcon();
+        checkMetaNodeLockIcon();
         // set the active (or disabled) state
         boolean isInactive = false;
         LoopStatus loopStatus = LoopStatus.NONE;
@@ -717,7 +730,11 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     }
 
     public void openSubWorkflowEditor() {
-
+        WorkflowCipherPrompt prompt = new GUIWorkflowCipherPrompt();
+        WorkflowManager wm = (WorkflowManager)getModel();
+        if (!wm.unlock(prompt)) {
+            return;
+        }
         // open new editor for subworkflow
         LOGGER.debug("opening new editor for sub-workflow");
         try {
@@ -759,6 +776,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                 case TemplateConnection:
                     checkMetaNodeTemplateIcon();
                     break;
+                case LockStatus:
+                    checkMetaNodeLockIcon();
+                    break;
                 default:
                     // unknown, ignore
                 }
@@ -798,6 +818,25 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             default:
                 fig.setMetaNodeLinkIcon(null);
             }
+        }
+    }
+
+    private void checkMetaNodeLockIcon() {
+        NodeContainer nc = getNodeContainer();
+        if (nc instanceof WorkflowManager) {
+            WorkflowManager wm = (WorkflowManager)nc;
+            Image i;
+            if (wm.isEncrypted()) {
+                if (wm.isUnlocked()) {
+                    i = META_NODE_UNLOCK_ICON;
+                } else {
+                    i = META_NODE_LOCK_ICON;
+                }
+            } else {
+                i = null;
+            }
+            NodeContainerFigure fig = (NodeContainerFigure)getFigure();
+            fig.setMetaNodeLockIcon(i);
         }
     }
 

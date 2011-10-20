@@ -195,8 +195,7 @@ class NodeContainerMetaPersistorVersion200 extends
     }
 
     public static void save(final NodeSettingsWO settings,
-            final NodeContainer nc, final ReferencedFile targetDir)
-        throws IOException {
+            final NodeContainer nc, final ReferencedFile targetDir) {
         synchronized (nc.m_nodeMutex) {
             saveCustomName(settings, nc);
             saveCustomDescription(settings, nc);

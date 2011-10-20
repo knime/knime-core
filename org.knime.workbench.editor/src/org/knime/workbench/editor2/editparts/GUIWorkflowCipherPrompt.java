@@ -43,61 +43,39 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * -------------------------------------------------------------------
+ *
+ * History
+ *   19.10.2011 (Bernd Wiswedel): created
  */
-package org.knime.core.node.workflow;
+package org.knime.workbench.editor2.editparts;
 
-import java.util.EventObject;
+import org.eclipse.jface.dialogs.InputDialog;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
+import org.knime.core.node.workflow.WorkflowCipherPrompt;
 
 /**
- * Event fired when properties of a node change. Monitored properties are
- * represented by the {@link NodeProperty} enum.
+ * Callback prompt to unlock meta node.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-@SuppressWarnings("serial")
-public class NodePropertyChangedEvent extends EventObject {
+public final class GUIWorkflowCipherPrompt extends WorkflowCipherPrompt {
 
-    private final NodeProperty m_property;
-
-    /** Property types that can possibly change. */
-    public enum NodeProperty {
-        /** Job manager (e.g. to SGE job executor) has changed. */
-        JobManager,
-        /** Name (of a meta node) has changed. */
-        Name,
-        /** Meta node template information has changed. */
-        TemplateConnection,
-        /** Meta node encryption/lock status has changed. */
-        LockStatus
-    }
-
-    /** Create new event.
-     *
-     * @param src the {@link NodeID} of the {@link NodeContainer} whose
-     * property has changed (not null)
-     * @param property The property that changed (not null)
-     */
-    public NodePropertyChangedEvent(final NodeID src,
-            final NodeProperty property) {
-        super(src);
-        if (property == null) {
-            throw new NullPointerException("Argument must not be null.");
-        }
-        m_property = property;
-    }
-
-    /**
-     *
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    public NodeID getSource() {
-        return (NodeID)super.getSource();
+    public String prompt(final String message,
+            final String errorFromPrevious) throws PromptCancelled {
+        Shell shell = Display.getCurrent().getActiveShell();
+        String msg = message;
+        if (errorFromPrevious != null) {
+            msg = msg.concat("\n\n").concat(errorFromPrevious);
+        }
+        InputDialog inputDialog = new InputDialog(shell,
+                "Metanode lock", msg, null, null);
+        if (inputDialog.open() == InputDialog.OK) {
+            return inputDialog.getValue();
+        } else {
+            throw new PromptCancelled();
+        }
     }
-
-    /** @return the property */
-    public NodeProperty getProperty() {
-        return m_property;
-    }
-
 }

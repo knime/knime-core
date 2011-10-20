@@ -51,6 +51,7 @@
 package org.knime.core.node.workflow;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -143,6 +144,13 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
     /** {@inheritDoc} */
     @Override
     public String getName() {
+        throwUnsupportedOperationException();
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public WorkflowCipher getWorkflowCipher() {
         throwUnsupportedOperationException();
         return null;
     }
@@ -259,10 +267,17 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public void preLoadNodeContainer(final NodeSettingsRO parentSettings,
-            final LoadResult loadResult)
+    public void preLoadNodeContainer(final WorkflowPersistor parentPersistor,
+            final NodeSettingsRO parentSettings, final LoadResult loadResult)
             throws InvalidSettingsException, IOException {
         throwUnsupportedOperationException();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public InputStream decipherInput(final InputStream input) {
+        throwUnsupportedOperationException();
+        return null;
     }
 
     /** Throws a new exception with a meaningful error message.

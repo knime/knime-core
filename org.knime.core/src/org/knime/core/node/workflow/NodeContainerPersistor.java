@@ -83,8 +83,8 @@ public interface NodeContainerPersistor {
      */
     boolean mustComplainIfStateDoesNotMatch();
 
-    void preLoadNodeContainer(final NodeSettingsRO parentSettings,
-            LoadResult loadResult)
+    void preLoadNodeContainer(final WorkflowPersistor parentPersistor,
+            final NodeSettingsRO parentSettings, LoadResult loadResult)
             throws InvalidSettingsException, IOException;
 
     void loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep,
