@@ -1,0 +1,13 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Unit-Tests for org.knime.jsnippets
+Bundle-SymbolicName: org.knime.jsnippets.testing;singleton:=true
+Bundle-Version: 2.5.0.qualifier
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Fragment-Host: org.knime.jsnippets;bundle-version="2.5.0"
+Export-Package: org.knime.base,
+ org.knime.base.node.preproc.stringmanipulation,
+ org.knime.base.node.preproc.stringmanipulation.manipulator
+Require-Bundle: org.junit;bundle-version="4.8.1",
+ org.knime.testing;bundle-version="2.3.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
