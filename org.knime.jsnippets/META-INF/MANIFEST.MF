@@ -10,7 +10,7 @@ Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.knime.base.node.preproc.stringmanipulation,
  org.knime.base.node.preproc.stringmanipulation.manipulator
-Bundle-ClassPath: .,
+Bundle-ClassPath: knime-jsnippets.jar,
  lib/commons-lang3-3.0.1.jar,
  lib/autocomplete_1.5.2/autocomplete.jar,
  lib/autocomplete_1.5.2/rsyntaxtextarea.jar
