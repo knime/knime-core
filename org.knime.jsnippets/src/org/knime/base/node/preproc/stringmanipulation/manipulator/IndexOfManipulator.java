@@ -53,15 +53,23 @@ package org.knime.base.node.preproc.stringmanipulation.manipulator;
 import org.apache.commons.lang3.StringUtils;
 
 /**
+ * A StringManipulator to search for a substring.
  *
  * @author Heiko Hofer
  */
 public class IndexOfManipulator implements StringManipulator {
 
+    /**
+     * Gives the first index of toSearch in the string or -1 if toSearch is
+     * not found.
+     *
+     * @param s the string
+     * @param needle the character sequence to search
+     * @return the index of the first occurrence of needle in s
+     */
     public static int indexOf(final CharSequence s,
-            final CharSequence needle,
-            final int start) {
-        return StringUtils.indexOf(s, needle, start);
+            final CharSequence needle) {
+        return StringUtils.indexOf(s, needle);
     }
 
     /**
@@ -86,7 +94,7 @@ public class IndexOfManipulator implements StringManipulator {
      */
     @Override
     public String getDisplayName() {
-        return getName() + "(str, toSearch, start)";
+        return getName() + "(str, toSearch)";
     }
 
 
@@ -95,7 +103,7 @@ public class IndexOfManipulator implements StringManipulator {
      */
     @Override
     public int getNrArgs() {
-        return 3;
+        return 2;
     }
 
     /**
@@ -137,5 +145,4 @@ public class IndexOfManipulator implements StringManipulator {
                 + "</table>"
                 + "* can be any character sequence.";
     }
-
 }
