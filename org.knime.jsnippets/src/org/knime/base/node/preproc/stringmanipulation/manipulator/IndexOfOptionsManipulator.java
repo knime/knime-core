@@ -50,29 +50,37 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
+import java.util.Locale;
+
 import org.apache.commons.lang3.StringUtils;
 
+
 /**
- * A StringManipulator to search for a substring. The search is performed
- * from an offset to the right.
+ * A StringManipulator to search for a substring. This Manipulator has
+ * various binary options like 'ignore case' and 'right to left'.
  *
  * @author Heiko Hofer
  */
-public class IndexOfOffsetManipulator implements StringManipulator {
+public class IndexOfOptionsManipulator implements StringManipulator {
 
     /**
      * Gives the first index of toSearch in the string or -1 if toSearch is
      * not found.
      *
-     * @param s the string
+     * @param str the string
      * @param needle the character sequence to search
-     * @param start characters in s before this will be ignored
+     * @param options string with binary options
      * @return the index of the first occurrence of needle in s
      */
-    public static int indexOf(final CharSequence s,
+    public static int indexOf(final CharSequence str,
             final CharSequence needle,
-            final int start) {
-        return StringUtils.indexOf(s, needle, start);
+            final String options) {
+        String opt = null != options ? options : "";
+        boolean backward = StringUtils.contains(
+                opt.toLowerCase(Locale.ENGLISH), 'b');
+        int start = backward ? str.length() : 0;
+        return IndexOfOffsetOptionsManipulator.indexOf(str, needle,
+                start, options);
     }
 
     /**
@@ -97,7 +105,7 @@ public class IndexOfOffsetManipulator implements StringManipulator {
      */
     @Override
     public String getDisplayName() {
-        return getName() + "(str, toSearch, start)";
+        return getName() + "(str, toSearch, options)";
     }
 
 
@@ -115,41 +123,53 @@ public class IndexOfOffsetManipulator implements StringManipulator {
     @Override
     public String getDescription() {
         return "Gives the first index of <i>toSearch</i> in the string. "
-                + "The search is performed from the <i>start</i> to the right."
-                + "The function returns -1 if "
-                + "<i>toSearch</i> is not found. A negative value of "
-                + "<i>start</i> is treated as zero."
-                + ""
-                + "<br/><br/>"
-                + "<strong>Examples:</strong>"
-                + "<br/>"
-                + "<table>"
-                + "<tr><td>indexOf(\"abcabc\", \"ab\", 0)</td>"
-                + "<td>=</td><td>0</td></tr>"
+        + " <i>modifiers</i> gives several options "
+        + "to control the search:"
+        + "<br/>"
+        + "<table style=\"padding: 0px 0px 0px 5px;\">"
+        + "<tr><td>i</td><td>ignore case</td></tr>"
+        + "<tr><td>b</td><td>backward search</td></tr>"
+        + "<tr><td>w</td><td>whole word (word boundaries are "
+        + "whitespace characters)</td></tr>"
+        + "</table>"
+        + ""
+        + "<br/>"
+        + "<strong>Examples:</strong>"
+        + "<br/>"
+        + "<table>"
+        + "<tr><td>indexOf(\"abcABCabc\", \"ab\", \"\")</td>"
+        + "<td>=</td><td>0</td></tr>"
 
-                + "<tr><td>indexOf(\"abcabc\", \"ab\", 1)</td>"
-                + "<td>=</td><td>3</td></tr>"
+        + "<tr><td>indexOf(\"abcABCabc\", \"ab\", \"b\")</td>"
+        + "<td>=</td><td>6</td></tr>"
 
-                + "<tr><td>indexOf(\"abcabc\", \"ab\", 4)</td>"
-                + "<td>=</td><td>-1</td></tr>"
+        + "<tr><td>indexOf(\"ab abAB AB\", \"ab\", \"w\")</td>"
+        + "<td>=</td><td>0</td></tr>"
 
-                + "<tr><td>indexOf(\"abcabc\", \"ab\", -10)</td>"
-                + "<td>=</td><td>0</td></tr>"
+        + "<tr><td>indexOf(\"ab abAB AB\", \"AB\", \"w\")</td>"
+        + "<td>=</td><td>8</td></tr>"
 
-                + "<tr><td>indexOf(\"\", \"\", 0)</td>"
-                + "<td>=</td><td>0</td></tr>"
+        + "<tr><td>indexOf(\"ab abAB AB\", \"abAB\", \"w\")</td>"
+        + "<td>=</td><td>3</td></tr>"
 
-                + "<tr><td>indexOf(\"\", *, 0)</td>"
-                + "<td>=</td><td>-1 (except when * = \"\")</td></tr>"
+        + "<tr><td>indexOf(\"ab abAB AB\", \"abab\", \"iw\")</td>"
+        + "<td>=</td><td>3</td></tr>"
 
-                + "<tr><td>indexOf(null, *, **)</td>"
-                + "<td>=</td><td>-1</td></tr>"
+        + "<tr><td>indexOf(\"\", \"\", \"\")</td>"
+        + "<td>=</td><td>0</td></tr>"
 
-                + "<tr><td>indexOf(*, null, **)</td>"
-                + "<td>=</td><td>-1</td></tr>"
-                + "</table>"
-                + "* can be any character sequence.<br/>"
-                + "** can be any integer.";
+        + "<tr><td>indexOf(\"\", *, \"\")</td>"
+        + "<td>=</td><td>-1 (except when * = \"\")</td></tr>"
+
+        + "<tr><td>indexOf(null, *, \"\")</td>"
+        + "<td>=</td><td>-1 (except when * = \"\")</td></tr>"
+
+        + "<tr><td>indexOf(\"\", null, \"\")</td>"
+        + "<td>=</td><td>-1 (except when * = \"\")</td></tr>"
+
+        + "<tr><td>indexOf(\"\", *, null)</td>"
+        + "<td>=</td><td>-1 (except when * = \"\")</td></tr>"
+        + "</table>"
+        + "* can be any character sequence.<br/>";
     }
-
 }
