@@ -430,7 +430,8 @@ public final class PMMLPortObject implements PortObject {
          * to active MiningFields of the model's MiningSchema. Therefore we
          * have to add all referred DataFields to the MiningSchema. */
         String fullPath = NAMESPACE_DECLARATION
-                + "$this/pmml:DerivedField/*/@field";
+                + "$this/pmml:DerivedField/*/@field"
+                + "| $this/pmml:DerivedField//pmml:FieldColumnPair/@field";
         XmlObject[] xmlDescendants = localTransformations.selectPath(fullPath);
         Set<String> referencedFields = new LinkedHashSet<String>();
         // collect all referred field names
