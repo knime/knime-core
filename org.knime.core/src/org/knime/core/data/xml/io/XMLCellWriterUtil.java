@@ -197,14 +197,17 @@ class XMLCellWriterUtil {
 		}
 		String nsContextURI = writer.getNamespaceContext().getNamespaceURI(
 				elementPrefix);
+		String name = null != element.getLocalName()
+			? element.getLocalName() : element.getNodeName();
 
-		writer.writeStartElement(elementPrefix, element.getLocalName(),
-				elementUri);
+		writer.writeStartElement(elementPrefix, name, elementUri);
 		// Write attributes
 		for (int i = 0, len = attrs.getLength(); i < len; ++i) {
 			Attr attr = (Attr) attrs.item(i);
 			String attrPrefix = attr.getPrefix();
-			String attrLocalName = attr.getLocalName();
+			String attrLocalName = null != attr.getLocalName()
+				? attr.getLocalName()
+				: attr.getName();
 			String attrValue = attr.getValue();
 
 			if (null == attrPrefix || attrPrefix.isEmpty()) {
