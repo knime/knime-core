@@ -152,6 +152,25 @@ public class ExpandMetaNodeAction extends AbstractNodeAction {
             if (!metaNode.unlock(new GUIWorkflowCipherPrompt())) {
                 return;
             }
+            // before we do anything, let's see if an expand will
+            // reset the metanode
+            if (manager.canResetNode(metaNode.getID())) {
+                // yes: ask if we can reset, otherwise bail
+                MessageBox mb = new MessageBox(
+                      Display.getCurrent().getActiveShell(),
+                        SWT.OK | SWT.CANCEL);
+                mb.setMessage("Executed Nodes inside Metanode will be reset" +
+                        " - are you sure?");
+                mb.setText("Reset Executed Nodes");
+                int dialogreturn = mb.open();
+                if (dialogreturn == SWT.CANCEL) {
+                    return;
+                }
+                // perform reset
+                if (manager.canResetNode(metaNode.getID())) {
+                    manager.resetAndConfigureNode(metaNode.getID());
+                }
+            }
             String res = manager.canExpandMetaNode(metaNode.getID());
             if (res != null) {
                 throw new IllegalArgumentException(res);
