@@ -54,6 +54,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
+import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 
 
@@ -67,6 +68,9 @@ public class PNGImageCell extends DataCell implements PNGImageValue {
     public static Class<? extends DataValue> getPreferredValueClass() {
         return PNGImageValue.class;
     }
+
+    /** Type for this cell implementation. */
+    public static final DataType TYPE = DataType.getType(PNGImageCell.class);
 
     /** Serializer as required by parent class.
      * @return A serializer for reading/writing cells of this kind.
