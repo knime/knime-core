@@ -57,11 +57,11 @@ import org.apache.commons.lang3.StringUtils;
 
 /**
  * A StringManipulator to search for a substring. This Manipulator has
- * various binary options like 'ignore case' and 'right to left'.
+ * various binary modifiers like 'ignore case' and 'right to left'.
  *
  * @author Heiko Hofer
  */
-public class IndexOfOptionsManipulator implements StringManipulator {
+public class IndexOfModifiersManipulator implements StringManipulator {
 
     /**
      * Gives the first index of toSearch in the string or -1 if toSearch is
@@ -79,7 +79,7 @@ public class IndexOfOptionsManipulator implements StringManipulator {
         boolean backward = StringUtils.contains(
                 opt.toLowerCase(Locale.ENGLISH), 'b');
         int start = backward ? str.length() : 0;
-        return IndexOfOffsetOptionsManipulator.indexOf(str, needle,
+        return IndexOfOffsetModifiersManipulator.indexOf(str, needle,
                 start, options);
     }
 
@@ -105,7 +105,7 @@ public class IndexOfOptionsManipulator implements StringManipulator {
      */
     @Override
     public String getDisplayName() {
-        return getName() + "(str, toSearch, options)";
+        return getName() + "(str, toSearch, modifiers)";
     }
 
 
@@ -122,14 +122,17 @@ public class IndexOfOptionsManipulator implements StringManipulator {
      */
     @Override
     public String getDescription() {
-        return "Gives the first index of <i>toSearch</i> in the string. "
+        return "Gives the first position of <i>toSearch</i> in the string. "
         + " <i>modifiers</i> gives several options "
         + "to control the search:"
         + "<br/>"
         + "<table style=\"padding: 0px 0px 0px 5px;\">"
-        + "<tr><td>i</td><td>ignore case</td></tr>"
-        + "<tr><td>b</td><td>backward search</td></tr>"
-        + "<tr><td>w</td><td>whole word (word boundaries are "
+        + "<tr><td style=\"padding: 0px 8px 0px 0px;\">i</td> "
+        + "<td>ignore case</td></tr>"
+        + "<tr><td style=\"padding: 0px 8px 0px 0px;\">b</td> "
+        + "<td>backward search</td></tr>"
+        + "<tr><td style=\"padding: 0px 8px 0px 0px;\">w</td> "
+        + "<td>whole word (word boundaries are "
         + "whitespace characters)</td></tr>"
         + "</table>"
         + ""

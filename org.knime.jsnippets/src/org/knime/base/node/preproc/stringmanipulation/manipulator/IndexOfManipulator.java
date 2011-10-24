@@ -110,11 +110,11 @@ public class IndexOfManipulator implements StringManipulator {
      */
     @Override
     public String getDescription() {
-        return "Gives the first index of toSearch in the string or -1 if "
-                + "toSearch is not found in the string. The given index "
-                + "is an integer between 0 (the first character) and "
+        return "Gives the first positon of <i>toSearch</i> in the string or -1 "
+                + "if <i>toSearch</i> is not found in the string. The returned "
+                + "value is an integer between 0 (the first character) and "
                 + "length(str) - 1 (the last character).<br/>"
-                + "<br/><br/>"
+                + "<br/>"
                 + "<strong>Examples:</strong>"
                 + "<br/>"
                 + "<table>"

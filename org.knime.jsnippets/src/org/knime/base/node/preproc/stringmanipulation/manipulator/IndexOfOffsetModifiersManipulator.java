@@ -56,11 +56,11 @@ import org.apache.commons.lang3.StringUtils;
 
 /**
  * A StringManipulator to search for a substring. This Manipulator has
- * various binary options like 'ignore case' and 'right to left'.
+ * various binary modifiers like 'ignore case' and 'right to left'.
  *
  * @author Heiko Hofer
  */
-public class IndexOfOffsetOptionsManipulator implements StringManipulator {
+public class IndexOfOffsetModifiersManipulator implements StringManipulator {
 
     /**
      * Gives the first index of toSearch in the string or -1 if toSearch is
@@ -207,15 +207,18 @@ public class IndexOfOffsetOptionsManipulator implements StringManipulator {
      */
     @Override
     public String getDescription() {
-        return "Gives the first index of <i>toSearch</i> in the string. "
+        return "Gives the first position of <i>toSearch</i> in the string. "
                 + "The search is performed from the character at "
                 + "<i>start</i>. <i>modifiers</i> gives several options "
                 + "to control the search:"
                 + "<br/>"
-                + "<table style=\"padding: 0px 0px 0px 5px;\">"
-                + "<tr><td>i</td><td>ignore case</td></tr>"
-                + "<tr><td>b</td><td>backward search</td></tr>"
-                + "<tr><td>w</td><td>whole word (word boundaries are "
+                + "<table>"
+                + "<tr><td style=\"padding: 0px 8px 0px 5px;\">i</td> "
+                + "<td>ignore case</td></tr>"
+                + "<tr><td style=\"padding: 0px 8px 0px 5px;\">b</td> "
+                + "<td>backward search</td></tr>"
+                + "<tr><td style=\"padding: 0px 8px 0px 5px;\">w</td> "
+                + "<td>whole word (word boundaries are "
                 + "whitespace characters)</td></tr>"
                 + "</table>"
                 + ""

@@ -114,8 +114,8 @@ public class IndexOfOffsetManipulator implements StringManipulator {
      */
     @Override
     public String getDescription() {
-        return "Gives the first index of <i>toSearch</i> in the string. "
-                + "The search is performed from the <i>start</i> to the right."
+        return "Gives the first position of <i>toSearch</i> in the string. "
+                + "The search is performed from the <i>start</i> to the right. "
                 + "The function returns -1 if "
                 + "<i>toSearch</i> is not found. A negative value of "
                 + "<i>start</i> is treated as zero."
