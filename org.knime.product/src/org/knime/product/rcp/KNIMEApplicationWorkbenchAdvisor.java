@@ -47,17 +47,26 @@
  */
 package org.knime.product.rcp;
 
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.net.HttpURLConnection;
+
 import org.eclipse.core.net.proxy.IProxyService;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.application.IWorkbenchConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchAdvisor;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
+import org.knime.core.node.NodeLogger;
+import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.preferences.PreferenceConstants;
 import org.osgi.framework.Bundle;
 
 /**
@@ -66,6 +75,9 @@ import org.osgi.framework.Bundle;
  * @author Florian Georg, University of Konstanz
  */
 public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(KNIMEApplicationWorkbenchAdvisor.class);
+
     /**
      * {@inheritDoc}
      */
@@ -112,7 +124,6 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
         // if the Update Site is password protected
         IProxyService.class.getName();
 
-
         // show a tips&tricks dialog only if the intro page is not shown
         if (PlatformUI.getWorkbench().getIntroManager().getIntro() == null) {
             // try to open T&T in a separate thread because if DNS resolution
@@ -120,8 +131,7 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
             Thread t = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    // FIXME: enable again if web page is ready
-                    // tryOpenTipsAndTricks();
+                    tryOpenTipsAndTricks();
                 }
             });
             t.setDaemon(true);
@@ -145,6 +155,43 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
                                 "Error while saving workspace", ex);
                 Platform.getLog(myself).log(error);
             }
+        }
+    }
+
+    private void tryOpenTipsAndTricks() {
+        boolean showTipsAndTricks = true;
+        try {
+            HttpURLConnection conn =
+                    (HttpURLConnection)TipsAndTrickProvider.TIPS_AND_TRICKS_URL
+                            .openConnection();
+            conn.setConnectTimeout(500);
+            conn.connect();
+            conn.disconnect();
+            Class<?> c = Class.forName("com.knime.licenses.LicenseStore");
+            Method m = c.getMethod("validLicense", String.class);
+            if ((Boolean)m.invoke(null, "Professional")) {
+                IPreferenceStore pStore =
+                        KNIMEUIPlugin.getDefault().getPreferenceStore();
+                showTipsAndTricks =
+                        pStore.getBoolean(PreferenceConstants.P_TIPS_AND_TRICKS);
+            }
+        } catch (IOException ex) {
+            // no internet connection
+            LOGGER.info("Cannot connect to knime.org, not showing tips&tricks",
+                    ex);
+            showTipsAndTricks = false;
+        } catch (Exception ex) {
+            // likely no license classes found
+            LOGGER.info("Error while reading preferences", ex);
+        }
+
+        if (showTipsAndTricks) {
+            Display.getDefault().asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    TipsAndTricksAction.openTipsAndTricks();
+                }
+            });
         }
     }
 }
