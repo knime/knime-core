@@ -79,6 +79,8 @@ import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
+import org.eclipse.swt.browser.LocationEvent;
+import org.eclipse.swt.browser.LocationListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
@@ -86,6 +88,8 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
 import org.osgi.framework.FrameworkUtil;
 import org.w3c.dom.Document;
@@ -145,6 +149,7 @@ public class TipsAndTricksDialog extends Dialog {
                     extractOnlineTips(new BufferedInputStream(
                             conn.getInputStream()));
             conn.disconnect();
+
         } catch (IOException ex) {
             // timeout, unknown host, ...
             LOGGER.warn("Cannot connect to knime.org", ex);
@@ -178,6 +183,34 @@ public class TipsAndTricksDialog extends Dialog {
         browser.setLayoutData(gd);
         try {
             browser.setText(getHtml(parent));
+            browser.addLocationListener(new LocationListener() {
+                @Override
+                public void changing(final LocationEvent event) {
+                    // do nothing
+
+                }
+
+                @Override
+                public void changed(final LocationEvent event) {
+                    if (event.location.startsWith("about")) {
+                        // ignore about:blank
+                        return;
+                    }
+                    try {
+                        //  Open default external browser
+                        PlatformUI.getWorkbench().getBrowserSupport()
+                                .getExternalBrowser().openURL(
+                                        new URL(event.location));
+                    } catch (PartInitException e) {
+                       LOGGER.error("Could not open external webbrowser for "
+                               + "URL \"" + event.location + "\"." + e);
+                    } catch (MalformedURLException e) {
+                        LOGGER.error("Invalid URL or unknown protocol: \""
+                                + event.location + "\"" + e);
+                    }
+
+                }
+            });
         } catch (TransformerFactoryConfigurationError ex) {
             LOGGER.error(ex.getMessage(), ex);
         } catch (IOException ex) {
