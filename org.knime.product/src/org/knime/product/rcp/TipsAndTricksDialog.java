@@ -186,12 +186,6 @@ public class TipsAndTricksDialog extends Dialog {
             browser.addLocationListener(new LocationListener() {
                 @Override
                 public void changing(final LocationEvent event) {
-                    // do nothing
-
-                }
-
-                @Override
-                public void changed(final LocationEvent event) {
                     if (event.location.startsWith("about")) {
                         // ignore about:blank
                         return;
@@ -199,16 +193,22 @@ public class TipsAndTricksDialog extends Dialog {
                     try {
                         //  Open default external browser
                         PlatformUI.getWorkbench().getBrowserSupport()
-                                .getExternalBrowser().openURL(
-                                        new URL(event.location));
+                        .getExternalBrowser().openURL(
+                                new URL(event.location));
                     } catch (PartInitException e) {
-                       LOGGER.error("Could not open external webbrowser for "
-                               + "URL \"" + event.location + "\"." + e);
+                        LOGGER.error("Could not open external webbrowser for "
+                                + "URL \"" + event.location + "\"." + e);
                     } catch (MalformedURLException e) {
                         LOGGER.error("Invalid URL or unknown protocol: \""
                                 + event.location + "\"" + e);
+                    } finally {
+                        event.doit = false;
                     }
+                }
 
+                @Override
+                public void changed(final LocationEvent event) {
+                    // do nothing
                 }
             });
         } catch (TransformerFactoryConfigurationError ex) {
