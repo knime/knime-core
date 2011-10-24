@@ -70,8 +70,8 @@ import org.knime.base.node.preproc.stringmanipulation.manipulator.CapitalizeDeli
 import org.knime.base.node.preproc.stringmanipulation.manipulator.CapitalizeManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfOffsetManipulator;
-import org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfOffsetOptionsManipulator;
-import org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfOptionsManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfOffsetModifiersManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfModifiersManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.LowerCaseManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveCharacterManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveDuplicatesManipulator;
@@ -128,8 +128,8 @@ public final class StringManipulatorProvider {
         manipulators.add(new CapitalizeManipulator());
         manipulators.add(new IndexOfManipulator());
         manipulators.add(new IndexOfOffsetManipulator());
-        manipulators.add(new IndexOfOffsetOptionsManipulator());
-        manipulators.add(new IndexOfOptionsManipulator());
+        manipulators.add(new IndexOfOffsetModifiersManipulator());
+        manipulators.add(new IndexOfModifiersManipulator());
         manipulators.add(new LowerCaseManipulator());
         manipulators.add(new RemoveCharacterManipulator());
         manipulators.add(new RemoveDuplicatesManipulator());
