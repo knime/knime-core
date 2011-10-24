@@ -61,38 +61,38 @@ public class IndexOfOffsetOptionsManipulatorTest {
 
 	/**
 	 * Test method for
-	 * {@link IndexOfOffsetOptionsManipulator#indexOf(CharSequence,
+	 * {@link IndexOfOffsetModifiersManipulator#indexOf(CharSequence,
 	 * CharSequence, int, String)}.
 	 */
 	@Test
 	public void testIndexOfExamples() {
 		// Test the examples in the description of the indexOf function
-		Assert.assertEquals(0, IndexOfOffsetOptionsManipulator.indexOf(
+		Assert.assertEquals(0, IndexOfOffsetModifiersManipulator.indexOf(
 				"abcABCabc", "ab", 0, ""));
-		Assert.assertEquals(6, IndexOfOffsetOptionsManipulator.indexOf(
+		Assert.assertEquals(6, IndexOfOffsetModifiersManipulator.indexOf(
 				"abcABCabc", "ab", 1, ""));
-		Assert.assertEquals(3, IndexOfOffsetOptionsManipulator.indexOf(
+		Assert.assertEquals(3, IndexOfOffsetModifiersManipulator.indexOf(
 				"abcABCabc", "ab", 1, "i"));
 
-		Assert.assertEquals(0, IndexOfOffsetOptionsManipulator.indexOf(
+		Assert.assertEquals(0, IndexOfOffsetModifiersManipulator.indexOf(
 				"abcABCabc", "ab", 0, "b"));
-		Assert.assertEquals(6, IndexOfOffsetOptionsManipulator.indexOf(
+		Assert.assertEquals(6, IndexOfOffsetModifiersManipulator.indexOf(
 				"abcABCabc", "ab", 9, "b"));
 
-		Assert.assertEquals(0, IndexOfOffsetOptionsManipulator.indexOf(
+		Assert.assertEquals(0, IndexOfOffsetModifiersManipulator.indexOf(
 				"ab abab ab", "ab", 0, "w"));
-		Assert.assertEquals(8, IndexOfOffsetOptionsManipulator.indexOf(
+		Assert.assertEquals(8, IndexOfOffsetModifiersManipulator.indexOf(
 				"ab abab ab", "ab", 1, "w"));
-		Assert.assertEquals(3, IndexOfOffsetOptionsManipulator.indexOf(
+		Assert.assertEquals(3, IndexOfOffsetModifiersManipulator.indexOf(
 				"ab abab ab", "abab", 1, "w"));
 
-		Assert.assertEquals(0, IndexOfOffsetOptionsManipulator.indexOf(
+		Assert.assertEquals(0, IndexOfOffsetModifiersManipulator.indexOf(
 				"", "", 0, ""));
-		Assert.assertEquals(-1, IndexOfOffsetOptionsManipulator.indexOf(
+		Assert.assertEquals(-1, IndexOfOffsetModifiersManipulator.indexOf(
 				"", "x", 0, ""));
-		Assert.assertEquals(-1, IndexOfOffsetOptionsManipulator.indexOf(
+		Assert.assertEquals(-1, IndexOfOffsetModifiersManipulator.indexOf(
 				null, "x", 1, ""));
-		Assert.assertEquals(-1, IndexOfOffsetOptionsManipulator.indexOf(
+		Assert.assertEquals(-1, IndexOfOffsetModifiersManipulator.indexOf(
 				"x", null, 1, ""));
 	}
 

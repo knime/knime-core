@@ -61,35 +61,35 @@ public class IndexOfOptionsManipulatorTest {
 
 	/**
 	 * Test method for
-	 * {@link IndexOfOptionsManipulator#indexOf(CharSequence,
+	 * {@link IndexOfModifiersManipulator#indexOf(CharSequence,
 	 * CharSequence, String)}.
 	 */
 	@Test
 	public void testIndexOfExamples() {
 		// Test the examples in the description of the indexOf function
-		Assert.assertEquals(0, IndexOfOptionsManipulator.indexOf(
+		Assert.assertEquals(0, IndexOfModifiersManipulator.indexOf(
 				"abcABCabc", "ab", ""));
 
-		Assert.assertEquals(6, IndexOfOptionsManipulator.indexOf(
+		Assert.assertEquals(6, IndexOfModifiersManipulator.indexOf(
 				"abcABCabc", "ab", "b"));
 
-		Assert.assertEquals(0, IndexOfOptionsManipulator.indexOf(
+		Assert.assertEquals(0, IndexOfModifiersManipulator.indexOf(
 				"ab abAB AB", "ab", "w"));
 
-		Assert.assertEquals(8, IndexOfOptionsManipulator.indexOf(
+		Assert.assertEquals(8, IndexOfModifiersManipulator.indexOf(
 				"ab abAB AB", "AB", "w"));
 
-		Assert.assertEquals(3, IndexOfOptionsManipulator.indexOf(
+		Assert.assertEquals(3, IndexOfModifiersManipulator.indexOf(
 				"ab abAB AB", "abAB", "w"));
 
-		Assert.assertEquals(3, IndexOfOptionsManipulator.indexOf(
+		Assert.assertEquals(3, IndexOfModifiersManipulator.indexOf(
 				"ab abAB AB", "abab", "iw"));
 
 
-		Assert.assertEquals(0, IndexOfOptionsManipulator.indexOf(
+		Assert.assertEquals(0, IndexOfModifiersManipulator.indexOf(
 				"", "", ""));
 
-		Assert.assertEquals(-1, IndexOfOptionsManipulator.indexOf(
+		Assert.assertEquals(-1, IndexOfModifiersManipulator.indexOf(
 				"", "x", ""));
 	}
 
