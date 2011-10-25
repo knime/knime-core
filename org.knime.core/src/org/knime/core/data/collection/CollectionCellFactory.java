@@ -184,7 +184,7 @@ public final class CollectionCellFactory {
             final Collection<? extends DataCell> cells,
             final DataCell defaultElement) {
         if (cells == null || cells.isEmpty()) {
-            throw new IllegalArgumentException("coll must not be empty");
+            throw new IllegalArgumentException("cells must not be empty");
         }
         if (defaultElement == null) {
             throw new NullPointerException("defaultElement must not be null");
@@ -209,7 +209,7 @@ public final class CollectionCellFactory {
         } else {
             elementIdxs = Arrays.copyOf(idxs, idxIdx);
         }
-        return new SparseListCell(coll.size(), elements,
+        return new SparseListCell(cells.size(), elements,
                 elementIdxs, defaultElement);
     }
 
