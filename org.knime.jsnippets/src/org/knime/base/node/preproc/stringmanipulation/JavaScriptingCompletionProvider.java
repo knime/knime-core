@@ -159,9 +159,11 @@ public class JavaScriptingCompletionProvider extends DefaultCompletionProvider {
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("unchecked")
     @Override
-    public void addCompletions(final List completions) {
-        m_completions.addAll(completions);
+    public void addCompletions(
+            @SuppressWarnings("rawtypes") final List compltns) {
+        m_completions.addAll(compltns);
         recreateCompletions();
     }
 

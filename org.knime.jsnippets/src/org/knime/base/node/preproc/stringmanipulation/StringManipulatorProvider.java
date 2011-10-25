@@ -76,6 +76,8 @@ import org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfManipul
 import org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfModifiersManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfOffsetManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfOffsetModifiersManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.JoinManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.JoinSepManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.LowerCaseManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveCharacterManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveDuplicatesManipulator;
@@ -138,6 +140,8 @@ public final class StringManipulatorProvider {
         manipulators.add(new IndexOfOffsetManipulator());
         manipulators.add(new IndexOfOffsetModifiersManipulator());
         manipulators.add(new IndexOfModifiersManipulator());
+        manipulators.add(new JoinManipulator());
+        manipulators.add(new JoinSepManipulator());
         manipulators.add(new LowerCaseManipulator());
         manipulators.add(new RemoveCharacterManipulator());
         manipulators.add(new RemoveDuplicatesManipulator());
@@ -186,6 +190,13 @@ public final class StringManipulatorProvider {
         return m_manipulators.get(category);
     }
 
+    /**
+     * Give jar file with all *.class files returned by
+     * getManipulators(ALL_CATEGORY).
+     *
+     * @return file object of a jar file with all compiled manipulators
+     * @throws IOException if jar file cannot be created
+     */
     public File getJarFile() throws IOException {
         if (m_jarFile == null) {
             File tempClassPathDir = FileUtil
@@ -216,7 +227,7 @@ public final class StringManipulatorProvider {
     }
 
     private DefaultMutableTreeNode createTree(
-    		final Collection<? extends Object> classes) {
+            final Collection<? extends Object> classes) {
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("build");
         for (Object o : classes) {
             Class<?> cl = o instanceof Class ? (Class<?>)o : o.getClass();
@@ -257,7 +268,7 @@ public final class StringManipulatorProvider {
             final String path) throws IOException {
         Object o = node.getUserObject();
         if (o instanceof String) {
-        	// folders must end with a "/"
+            // folders must end with a "/"
             String subPath = null == path ? "" : (path + (String)o + "/");
             if (path != null) {
                 JarEntry je = new JarEntry(subPath);

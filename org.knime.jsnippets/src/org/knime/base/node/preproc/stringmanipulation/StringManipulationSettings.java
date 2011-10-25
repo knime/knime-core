@@ -462,10 +462,10 @@ public class StringManipulationSettings {
         s.setInsertMissingAsNull(this.isInsertMissingAsNull());
         Bundle bundle = Platform.getBundle("org.knime.jsnippets");
         try {
-        	URL commonsLangURL = FileLocator.find(bundle,
+            URL commonsLangURL = FileLocator.find(bundle,
                     new Path("/lib/commons-lang3-3.0.1.jar"), null);
-        	StringManipulatorProvider provider =
-        		StringManipulatorProvider.getDefault();
+            StringManipulatorProvider provider =
+                StringManipulatorProvider.getDefault();
             URL manipulatorsURL = provider.getJarFile().toURI().toURL();
             s.setJarFiles(new String[] {
                     FileLocator.toFileURL(commonsLangURL).toURI().getPath(),
