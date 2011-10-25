@@ -49,10 +49,7 @@
 package org.knime.base.node.io.database;
 
 import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Font;
-import java.awt.GridLayout;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
@@ -63,6 +60,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
+import javax.swing.BoxLayout;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
@@ -81,6 +79,8 @@ import org.knime.core.node.port.database.DatabaseDriverLoader;
 import org.knime.core.util.KnimeEncryption;
 
 /**
+ * Creates a panel to select database driver, enter database URL, user and 
+ * password - optionally from credentials.
  *
  * @author Thomas Gabriel, University of Konstanz
  */
@@ -109,24 +109,23 @@ final class DBDialogPane extends JPanel {
      * Creates new dialog.
      */
     DBDialogPane() {
-        super(new GridLayout(0, 1));
+        // super(new GridLayout(0, 1));
+        super();
+        super.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        
+// create and driver component        
         m_driver.setEditable(false);
         m_driver.setFont(FONT);
-        m_driver.setPreferredSize(new Dimension(400, 20));
-        m_driver.setMaximumSize(new Dimension(400, 20));
-        JPanel driverPanel = new JPanel(new BorderLayout());
+        final JPanel driverPanel = new JPanel(new BorderLayout());
         driverPanel.setBorder(BorderFactory
                 .createTitledBorder(" Database driver "));
         driverPanel.add(m_driver, BorderLayout.CENTER);
         driverPanel.add(new JLabel(" (Additional Database Drivers can be loaded"
                 + " in the KNIME preference page.) "), BorderLayout.SOUTH);
         super.add(driverPanel);
-        JPanel dbPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        dbPanel.setBorder(BorderFactory.createTitledBorder(
-                " Database URL "));
+
+// create and add database URL
         m_db.setFont(FONT);
-        m_db.setPreferredSize(new Dimension(400, 20));
-        m_db.setMaximumSize(new Dimension(400, 20));
         m_db.setEditable(true);
         m_driver.addItemListener(new ItemListener() {
             @Override
@@ -136,10 +135,14 @@ final class DBDialogPane extends JPanel {
                 m_db.setSelectedItem(url);
             }
         });
-        dbPanel.add(m_db);
+        final JPanel dbPanel = new JPanel(new BorderLayout());
+        dbPanel.setBorder(BorderFactory.createTitledBorder(
+                " Database URL "));
+        dbPanel.add(m_db, BorderLayout.CENTER);
         super.add(dbPanel);
 
-        JPanel credPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+// create and add credential box
+        final JPanel credPanel = new JPanel(new BorderLayout());
         credPanel.setBorder(BorderFactory.createTitledBorder(
             " Workflow Credentials "));
         credPanel.add(m_credCheckBox);
@@ -151,19 +154,19 @@ final class DBDialogPane extends JPanel {
         });
         m_credBox.setEditable(false);
         m_credBox.setFont(FONT);
-        m_credBox.setPreferredSize(new Dimension(375, 20));
-        credPanel.add(m_credBox);
+        credPanel.add(m_credBox, BorderLayout.CENTER);
         super.add(credPanel);
 
-        JPanel userPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+// create and user name field        
+        final JPanel userPanel = new JPanel(new BorderLayout());
         userPanel.setBorder(BorderFactory.createTitledBorder(" User name "));
-        m_user.setPreferredSize(new Dimension(400, 20));
         m_user.setFont(FONT);
-        userPanel.add(m_user);
+        userPanel.add(m_user, BorderLayout.CENTER);
         super.add(userPanel);
-        JPanel passPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        
+// create and add password panel        
+        final JPanel passPanel = new JPanel(new BorderLayout()); 
         passPanel.setBorder(BorderFactory.createTitledBorder(" Password "));
-        m_pass.setPreferredSize(new Dimension(400, 20));
         m_pass.setFont(FONT);
         m_pass.getDocument().addDocumentListener(new DocumentListener() {
             @Override
@@ -187,7 +190,7 @@ final class DBDialogPane extends JPanel {
                 }
             }
         });
-        passPanel.add(m_pass);
+        passPanel.add(m_pass, BorderLayout.CENTER);
         super.add(passPanel);
     }
 
@@ -306,6 +309,20 @@ final class DBDialogPane extends JPanel {
             DatabaseDriverLoader.getDriverFileForDriverClass(driverName);
         settings.addString("loaded_driver",
                 (driverFile == null ? null : driverFile.getAbsolutePath()));
+    }
+    
+    /**
+     * Settings object holding the current database connection properties.
+     * @return a <code>DatabaseConnectionSettings</code> object
+     */
+    protected final DatabaseConnectionSettings getConnectionSettings() {
+        return new DatabaseConnectionSettings(
+                m_driver.getSelectedItem().toString(), 
+                m_db.getSelectedItem().toString(), 
+                m_user.getText(), 
+                new String(m_pass.getPassword()),
+                m_credCheckBox.isSelected() 
+                    ? m_credBox.getSelectedItem().toString() : null);
     }
 }
 
