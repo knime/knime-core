@@ -50,13 +50,17 @@ package org.knime.base.node.io.database;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.sql.DatabaseMetaData;
 import java.util.Collection;
 import java.util.Map;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListModel;
+import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JEditorPane;
 import javax.swing.JList;
@@ -65,15 +69,18 @@ import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.ListSelectionModel;
 import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingWorker;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
 import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
+import org.knime.core.node.port.database.DatabaseReaderConnection;
 import org.knime.core.node.util.FlowVariableListCellRenderer;
 import org.knime.core.node.workflow.FlowVariable;
 
@@ -95,7 +102,12 @@ class DBReaderDialogPane extends NodeDialogPane {
     static final String EXECUTE_WITHOUT_CONFIGURE = "execute_without_configure";
 
     private final JCheckBox m_configureBox = new JCheckBox(
-            "Run SQL query without configure");
+            "Run SQL query only during execute, skips configure");
+    
+    private static final NodeLogger LOGGER = 
+            NodeLogger.getLogger(DBReaderDialogPane.class);
+    
+    private SwingWorker<Void, Void> m_worker;
 
     /**
      * Creates new dialog.
@@ -103,10 +115,71 @@ class DBReaderDialogPane extends NodeDialogPane {
      */
     DBReaderDialogPane(final boolean hasLoginPane) {
         super();
+        
+// init SQL statement component
         m_statmnt.setPreferredSize(new Dimension(350, 200));
         m_statmnt.setFont(DBDialogPane.FONT);
         m_statmnt.setText("SELECT * FROM "
                 + DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER);
+        
+// init database table browser
+        final JPanel browserPanel = new JPanel(new BorderLayout());
+        if (hasLoginPane) {
+            browserPanel.setBorder(
+                    BorderFactory.createTitledBorder(" Database Browser "));
+            final JButton updateButton = new JButton("Fetch Metadata");
+            browserPanel.add(updateButton, BorderLayout.NORTH);
+            final DBTreeBrowser browser = new DBTreeBrowser(m_statmnt);
+            browserPanel.add(browser, BorderLayout.CENTER);
+            // init database update button
+            updateButton.addActionListener(new ActionListener() {
+                /** {@inheritDoc} */
+                @Override
+                public void actionPerformed(final ActionEvent ae) {
+                    updateButton.setEnabled(false);
+                    updateButton.setText("Fetching...");
+                    try {
+                        final DatabaseConnectionSettings settings = 
+                                m_loginPane.getConnectionSettings();
+                        DatabaseReaderConnection conn = 
+                                new DatabaseReaderConnection(
+                                    new DatabaseQueryConnectionSettings(
+                                        settings, ""));
+                        browser.update((DatabaseMetaData) null);
+                        final DatabaseMetaData meta = conn.getDatabaseMetaData(
+                                 getCredentialsProvider());
+                        m_worker = new SwingWorker<Void, Void>() {
+                             /** {@inheritDoc} */
+                             @Override
+                             protected Void doInBackground() throws Exception {
+                                 try {
+                                     browser.update(meta);
+                                 } catch (Exception e) {
+                                     LOGGER.warn("Error during fetching "
+                                         + "metadata from database, reason: " 
+                                         + e.getMessage());
+                                 }
+                                 return null;
+                             }
+                             /** {@inheritDoc} */
+                             @Override
+                             protected void done() {
+                                 updateButton.setText("Fetch Metadata");
+                                 updateButton.setEnabled(true);
+                             }
+                         };
+                         m_worker.execute();
+                    } catch (final Exception e) {
+                        browser.update((DatabaseMetaData) null);
+                        updateButton.setText("Fetch Metadata");
+                        updateButton.setEnabled(true);
+                        LOGGER.warn("Error during fetching metadata "
+                            + "from database, reason: " + e.getMessage(), e);
+                    }
+                }
+            });
+        }
+        
         final JScrollPane scrollPane = new JScrollPane(m_statmnt,
                 ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED,
                 ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
@@ -127,14 +200,9 @@ class DBReaderDialogPane extends NodeDialogPane {
             allPanel.add(m_loginPane, BorderLayout.NORTH);
         }
 
-        // init variable list
+// init variable list
         m_listModelVars = new DefaultListModel();
         m_listVars = new JList(m_listModelVars);
-
-        JSplitPane jsp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        jsp.setResizeWeight(0.25);
-        jsp.setRightComponent(configurePanel);
-
         m_listVars.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         m_listVars.setCellRenderer(new FlowVariableListCellRenderer());
         m_listVars.addMouseListener(new MouseAdapter() {
@@ -153,16 +221,29 @@ class DBReaderDialogPane extends NodeDialogPane {
                 }
             }
         });
-        JScrollPane scrollVars = new JScrollPane(m_listVars,
+        final JScrollPane scrollVars = new JScrollPane(m_listVars,
                 ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS,
                 ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
         scrollVars.setBorder(BorderFactory.createTitledBorder(
             " Flow Variable List "));
-        jsp.setLeftComponent(scrollVars);
+        
+        final JSplitPane jsp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        jsp.setResizeWeight(0.4);
+        if (hasLoginPane) {
+            final JSplitPane browserTables = new JSplitPane(
+                    JSplitPane.VERTICAL_SPLIT);
+            browserTables.setResizeWeight(0.5);
+            browserTables.setTopComponent(browserPanel);
+            browserTables.setBottomComponent(scrollVars);
+            jsp.setLeftComponent(browserTables);
+        } else {
+            jsp.setLeftComponent(scrollVars);
+        }
+        jsp.setRightComponent(configurePanel);
         allPanel.add(jsp, BorderLayout.CENTER);
         super.addTab("Settings", allPanel);
     }
-
+    
     /**
      * @return false (default), or true if the option to run the SQL query
      *         without configure should be visible.
@@ -171,9 +252,7 @@ class DBReaderDialogPane extends NodeDialogPane {
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
@@ -201,9 +280,7 @@ class DBReaderDialogPane extends NodeDialogPane {
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
@@ -215,6 +292,15 @@ class DBReaderDialogPane extends NodeDialogPane {
         if (runWithoutConfigure()) {
             settings.addBoolean(EXECUTE_WITHOUT_CONFIGURE,
                 m_configureBox.isSelected());
+        }
+    }
+    
+    /** {@inheritDoc} */
+    @Override
+    public void onClose() {
+        super.onClose();
+        if (m_worker != null && !m_worker.isDone()) {
+            m_worker.cancel(true);
         }
     }
 }
