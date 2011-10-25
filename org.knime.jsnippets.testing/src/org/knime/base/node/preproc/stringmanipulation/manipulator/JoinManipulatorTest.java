@@ -60,18 +60,20 @@ import org.junit.Test;
  */
 public class JoinManipulatorTest {
 
-	/**
-	 * Test method for
-	 * {@link JoinManipulator#join(String...)}.
-	 */
-	@Test
-	public void testJoinExamples() {
-		// Test the examples in the description of the join function
-		Assert.assertEquals("abc",
-				JoinManipulator.join("a", "b", "c"));
-		Assert.assertEquals("a",
-				JoinManipulator.join(null, "", "a"));
-		Assert.assertEquals(null,
-				JoinManipulator.join((String[])null));
-	}
+    /**
+     * Test method for
+     * {@link JoinManipulator#join(String...)}.
+     */
+    @Test
+    public void testJoinExamples() {
+        // Test the examples in the description of the join function
+        Assert.assertEquals("abc",
+                JoinManipulator.join("a", "b", "c"));
+        Assert.assertEquals("a",
+                JoinManipulator.join(null, "", "a"));
+        Assert.assertEquals(null,
+                JoinManipulator.join(null, null));
+        Assert.assertEquals(null,
+                JoinManipulator.join((String[])null));
+    }
 }

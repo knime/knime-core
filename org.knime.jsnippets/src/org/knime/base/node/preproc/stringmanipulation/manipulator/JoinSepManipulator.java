@@ -67,6 +67,22 @@ public class JoinSepManipulator implements StringManipulator {
      * @return the concatenated strings with separator
      */
     public static String joinSep(final String sep, final String... str) {
+        if (null == str) {
+            return null;
+        }
+        if (str.length > 0) {
+            // test for solely null elements
+            boolean allNull = true;
+            for (int i = 0; i < str.length; i++) {
+                if (str[i] != null) {
+                    allNull = false;
+                    break;
+                }
+            }
+            if (allNull) {
+                return null;
+            }
+        }
         return StringUtils.join(str, sep);
     }
 

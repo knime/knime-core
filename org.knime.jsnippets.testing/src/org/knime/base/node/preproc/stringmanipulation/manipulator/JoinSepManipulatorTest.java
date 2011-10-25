@@ -60,26 +60,26 @@ import org.junit.Test;
  */
 public class JoinSepManipulatorTest {
 
-	/**
-	 * Test method for
-	 * {@link JoinSepManipulator#joinSep(String, String...)}.
-	 */
-	@Test
-	public void testJoinSepExamples() {
-		// Test the examples in the description of the joinSep function
-		Assert.assertEquals("a | b | c",
-				JoinSepManipulator.joinSep(" | ", "a", "b", "c"));
-		Assert.assertEquals(";;a",
-				JoinSepManipulator.joinSep(";", null, "", "a"));
-		Assert.assertEquals(null,
-				JoinSepManipulator.joinSep("x", null));
-		Assert.assertEquals("",
-				JoinSepManipulator.joinSep("x", ""));
-		Assert.assertEquals("x",
-				JoinSepManipulator.joinSep(null, "x"));
-		Assert.assertEquals("xx",
-				JoinSepManipulator.joinSep(null, "x", "x"));
-		Assert.assertEquals("xx",
-				JoinSepManipulator.joinSep("", "x", "x"));
-	}
+    /**
+     * Test method for
+     * {@link JoinSepManipulator#joinSep(String, String...)}.
+     */
+    @Test
+    public void testJoinSepExamples() {
+        // Test the examples in the description of the joinSep function
+        Assert.assertEquals("a | b | c",
+                JoinSepManipulator.joinSep(" | ", "a", "b", "c"));
+        Assert.assertEquals(";;a",
+                JoinSepManipulator.joinSep(";", null, "", "a"));
+        Assert.assertEquals(null,
+                JoinSepManipulator.joinSep("x", (String[])null));
+        Assert.assertEquals("",
+                JoinSepManipulator.joinSep("x", ""));
+        Assert.assertEquals("x",
+                JoinSepManipulator.joinSep(null, "x"));
+        Assert.assertEquals("xx",
+                JoinSepManipulator.joinSep(null, "x", "x"));
+        Assert.assertEquals("xx",
+                JoinSepManipulator.joinSep("", "x", "x"));
+    }
 }

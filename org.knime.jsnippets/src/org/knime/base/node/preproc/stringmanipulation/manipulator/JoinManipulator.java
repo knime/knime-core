@@ -50,7 +50,6 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * The join string manipulator for concatenating strings.
@@ -66,7 +65,7 @@ public class JoinManipulator implements StringManipulator {
      * @return the concatenated strings with separator
      */
     public static String join(final String... str) {
-        return StringUtils.join(str, "");
+        return JoinSepManipulator.joinSep(null, str);
     }
 
     /**
@@ -113,13 +112,13 @@ public class JoinManipulator implements StringManipulator {
             + "<strong>Examples:</strong>"
             + "<br/>"
             + "<table>"
-            + "<tr><td>joinSep(\"a\", \"b\", \"c\")</td>"
+            + "<tr><td>join(\"a\", \"b\", \"c\")</td>"
             + "<td>=</td><td>\"abc\"</td></tr>"
 
-            + "<tr><td>joinSep(null, \"\", \"a\")</td>"
+            + "<tr><td>join(null, \"\", \"a\")</td>"
             + "<td>=</td><td>\"a\"</td></tr>"
 
-            + "<tr><td>joinSep(null)</td>"
+            + "<tr><td>join(null)</td>"
             + "<td>=</td><td>null</td></tr>"
 
             + "</table>"
