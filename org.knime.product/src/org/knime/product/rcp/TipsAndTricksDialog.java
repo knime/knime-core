@@ -259,7 +259,6 @@ public class TipsAndTricksDialog extends Dialog {
         content.append("</head><body>");
         content.append(m_tipsAndTricks);
         content.append("</body></html>");
-        System.out.println(content);
         return content.toString();
     }
 
