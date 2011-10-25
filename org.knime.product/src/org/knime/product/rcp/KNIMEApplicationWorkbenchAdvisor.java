@@ -48,7 +48,6 @@
 package org.knime.product.rcp;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 
 import org.eclipse.core.net.proxy.IProxyService;
@@ -167,14 +166,10 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
             conn.setConnectTimeout(500);
             conn.connect();
             conn.disconnect();
-            Class<?> c = Class.forName("com.knime.licenses.LicenseStore");
-            Method m = c.getMethod("validLicense", String.class);
-            if ((Boolean)m.invoke(null, "Professional")) {
-                IPreferenceStore pStore =
-                        KNIMEUIPlugin.getDefault().getPreferenceStore();
-                showTipsAndTricks =
-                        pStore.getBoolean(PreferenceConstants.P_TIPS_AND_TRICKS);
-            }
+            IPreferenceStore pStore =
+                    KNIMEUIPlugin.getDefault().getPreferenceStore();
+            showTipsAndTricks =
+                    !pStore.getBoolean(PreferenceConstants.P_HIDE_TIPS_AND_TRICKS);
         } catch (IOException ex) {
             // no internet connection
             LOGGER.info("Cannot connect to knime.org, not showing tips&tricks",

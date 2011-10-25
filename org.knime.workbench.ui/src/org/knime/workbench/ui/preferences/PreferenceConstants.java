@@ -55,9 +55,9 @@ package org.knime.workbench.ui.preferences;
  * @author Florian Georg, University of Konstanz
  */
 public interface PreferenceConstants {
-    /** Preference constant: whether the tips&amp;tricks window should be shown.
+    /** Preference constant: whether the tips&amp;tricks window should be hidden.
      */
-    public static final String P_TIPS_AND_TRICKS = "knime.tipsandtricks";
+    public static final String P_HIDE_TIPS_AND_TRICKS = "knime.hidetipsandtricks";
 
     /** Preference constant: whether user needs to confirm reset actions. */
     public static final String P_CONFIRM_RESET = "knime.confirm.reset";

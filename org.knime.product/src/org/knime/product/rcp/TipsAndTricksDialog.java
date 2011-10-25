@@ -50,15 +50,15 @@
  */
 package org.knime.product.rcp;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.Charset;
 
 import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
@@ -67,10 +67,7 @@ import javax.xml.transform.dom.DOMResult;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.sax.SAXSource;
 import javax.xml.transform.stream.StreamResult;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathExpressionException;
-import javax.xml.xpath.XPathFactory;
+import javax.xml.transform.stream.StreamSource;
 
 import org.ccil.cowan.tagsoup.Parser;
 import org.eclipse.core.runtime.FileLocator;
@@ -92,11 +89,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
 import org.osgi.framework.FrameworkUtil;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
-import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
 /**
@@ -112,13 +105,6 @@ public class TipsAndTricksDialog extends Dialog {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(TipsAndTricksDialog.class);
-
-    private final String m_tipsAndTricks;
-
-    private static final String NO_TIPS =
-            "<div id=\"noConnection\">The KNIME webserver cannot be reached. "
-                    + "Maybe your internet connection is down. Therefore we "
-                    + "cannot show you the latest tips and tricks.</div>";
 
     static {
         URL url = null;
@@ -138,25 +124,6 @@ public class TipsAndTricksDialog extends Dialog {
      */
     public TipsAndTricksDialog(final Shell parentShell) {
         super(parentShell);
-
-        String s = null;
-        try {
-            HttpURLConnection conn =
-                    (HttpURLConnection)TIPS_AND_TRICKS_URL.openConnection();
-            conn.setConnectTimeout(500);
-            conn.connect();
-            s =
-                    extractOnlineTips(new BufferedInputStream(
-                            conn.getInputStream()));
-            conn.disconnect();
-
-        } catch (IOException ex) {
-            // timeout, unknown host, ...
-            LOGGER.warn("Cannot connect to knime.org", ex);
-        } catch (Exception ex) {
-            LOGGER.error("Cannot get tips and tricks", ex);
-        }
-        m_tipsAndTricks = (s != null) ? s : NO_TIPS;
     }
 
     /**
@@ -191,10 +158,10 @@ public class TipsAndTricksDialog extends Dialog {
                         return;
                     }
                     try {
-                        //  Open default external browser
+                        // Open default external browser
                         PlatformUI.getWorkbench().getBrowserSupport()
-                        .getExternalBrowser().openURL(
-                                new URL(event.location));
+                                .getExternalBrowser()
+                                .openURL(new URL(event.location));
                     } catch (PartInitException e) {
                         LOGGER.error("Could not open external webbrowser for "
                                 + "URL \"" + event.location + "\"." + e);
@@ -244,73 +211,54 @@ public class TipsAndTricksDialog extends Dialog {
                 FileLocator.toFileURL(FileLocator.find(FrameworkUtil
                         .getBundle(getClass()), new Path(
                         "/intro/css/tipstricks.css"), null));
-        StringBuilder content = new StringBuilder();
-        content.append("<html><head>");
-        content.append("<meta http-equiv=\"content-type\" "
-                + "content=\"text/html; charset=UTF-8\"></meta>");
-        content.append("<style>");
-        content.append("@import url(\"" + cssUrl + "\");\n");
 
         RGB bgColor = parent.getBackground().getRGB();
-        content.append("body { background-color: rgb(" + bgColor.red + ", "
-                + bgColor.green + ", " + bgColor.blue + ") };\n");
 
-        content.append("</style>");
-        content.append("</head><body>");
-        content.append(m_tipsAndTricks);
-        content.append("</body></html>");
-        return content.toString();
-    }
+        String content = null;
+        try {
+            HttpURLConnection conn =
+                    (HttpURLConnection)TIPS_AND_TRICKS_URL.openConnection();
+            conn.setConnectTimeout(500);
+            conn.connect();
 
-    private static String extractOnlineTips(final InputStream in)
-            throws TransformerFactoryConfigurationError, TransformerException,
-            SAXException, XPathExpressionException {
-        XMLReader reader = new Parser();
-        reader.setFeature(Parser.namespacesFeature, false);
-        reader.setFeature(Parser.namespacePrefixesFeature, false);
-        Transformer transformer =
-                TransformerFactory.newInstance().newTransformer();
-        DOMResult result = new DOMResult();
-        transformer.transform(new SAXSource(reader, new InputSource(in)),
-                result);
+            Transformer transformer =
+                    TransformerFactory.newInstance().newTransformer();
+            XMLReader reader = new Parser();
+            reader.setFeature(Parser.namespacesFeature, false);
+            reader.setFeature(Parser.namespacePrefixesFeature, false);
+            DOMResult res = new DOMResult();
+            transformer.transform(
+                    new SAXSource(reader,
+                            new InputSource(conn.getInputStream())), res);
 
-        Document doc = (Document)result.getNode();
+            Source xslt =
+                    new StreamSource(getClass().getResourceAsStream(
+                            "tipsAndTricks.xslt"));
+            transformer = TransformerFactory.newInstance().newTransformer(xslt);
+            transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+            transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION,
+                    "yes");
+            transformer.setParameter("cssUrl", cssUrl.toString());
+            transformer.setParameter("bgColor", "rgb(" + bgColor.red + ","
+                    + bgColor.green + "," + bgColor.blue + ")");
+            transformer.setParameter("linkBase",
+                    TIPS_AND_TRICKS_URL.getProtocol() + "://"
+                            + TIPS_AND_TRICKS_URL.getHost());
 
-        XPath xpath = XPathFactory.newInstance().newXPath();
-        Element tat =
-                (Element)xpath.evaluate(
-                        "//div[@id='colRight']/div[@class='contentWrapper']",
-                        doc.getDocumentElement(), XPathConstants.NODE);
-        if (tat == null) {
-            return null;
+            ByteArrayOutputStream bos = new ByteArrayOutputStream(16384);
+            transformer.transform(new DOMSource(res.getNode()),
+                    new StreamResult(bos));
+            content = new String(bos.toByteArray(), Charset.forName("UTF-8"));
+
+            // System.out.println(content);
+            conn.disconnect();
+        } catch (IOException ex) {
+            // timeout, unknown host, ...
+            LOGGER.warn("Cannot connect to knime.org", ex);
+        } catch (Exception ex) {
+            LOGGER.error("Cannot get tips and tricks", ex);
         }
 
-        // fix relative links
-        String linkBase =
-                TIPS_AND_TRICKS_URL.getProtocol() + "://"
-                        + TIPS_AND_TRICKS_URL.getHost();
-        NodeList nl = tat.getElementsByTagName("a");
-        for (int i = 0; i < nl.getLength(); i++) {
-            Element a = (Element)nl.item(i);
-            String href = a.getAttribute("href");
-            if (!href.startsWith("http")) {
-                a.setAttribute("href", linkBase + "/" + href);
-                a.setAttribute("target", "_blank");
-            }
-        }
-
-        // remove inline styles
-        nl = tat.getElementsByTagName("style");
-        for (int i = 0; i < nl.getLength(); i++) {
-            Element style = (Element)nl.item(i);
-            style.getParentNode().removeChild(style);
-        }
-
-        Transformer t = TransformerFactory.newInstance().newTransformer();
-        t.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-        t.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "yes");
-        ByteArrayOutputStream bos = new ByteArrayOutputStream(16384);
-        t.transform(new DOMSource(tat), new StreamResult(bos));
-        return new String(bos.toByteArray());
+        return content;
     }
 }
