@@ -17,13 +17,23 @@
                tooltip="Auto Layout"/>
             <action
                class="org.knime.workbench.ui.layout.actions.HorizAlignLayoutEditorAction"
-               disabledIcon="icons/align_disabled.png"
-               icon="icons/align.png"
+               disabledIcon="icons/halign_disabled.png"
+               icon="icons/halign.png"
                id="org.knime.workbench.ui.layout.horizalignlayout"
                label="Align Horizontally"
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="Align Selected Nodes Horizontally"/>
+            <action
+                  class="org.knime.workbench.ui.layout.actions.VerticAlignLayoutEditorAction"
+                  disabledIcon="icons/valign_disabled.png"
+                  icon="icons/valign.png"
+                  id="org.knime.workbench.ui.layout.verticalignlayout"
+                  label="Align Vertically"
+                  style="push"
+                  toolbarPath="org.knime.workbench.editor.menu/group1"
+                  tooltip="Align Selected Nodes Vertically">
+            </action>
       </editorContribution>
    </extension>
 

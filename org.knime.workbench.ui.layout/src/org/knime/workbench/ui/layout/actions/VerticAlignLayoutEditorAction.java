@@ -45,91 +45,27 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
- * Created 28 March 2011
+ * Created 25 October 2011
  * Author: Peter Ohl, KNIME.com, Zurich, Switzerland
  *
  */
 package org.knime.workbench.ui.layout.actions;
 
-import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
-import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
-import org.knime.workbench.ui.layout.commands.HorizAlignCommand;
+import org.knime.workbench.editor2.actions.delegates.AbstractEditorAction;
 
 /**
- * Action to trigger auto layout.
+ * Editor action to start vertical alignment.
  *
- * @author Peter Ohl, KNIME.com GmbH, Zurich
+ * @author Peter Ohl, KNIME.com, Zurich, Switzerland
  */
-public class HorizAlignLayoutAction extends AbstractNodeAction {
+public class VerticAlignLayoutEditorAction extends AbstractEditorAction {
 
-    /** unique ID for this action. */
-    public static final String ID = "knime.action.horizalignlayout";
-
-    /**
-     * @param editor The workflow editor
-     */
-    public HorizAlignLayoutAction(final WorkflowEditor editor) {
-        super(editor);
-        setLazyEnablementCalculation(true);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    public String getId() {
-        return ID;
+    protected AbstractNodeAction createAction(final WorkflowEditor editor) {
+        return new VerticAlignLayoutAction(editor);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/halign.png");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/halign_disabled.png");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getToolTipText() {
-        return "Align horizontally";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public synchronized void runOnNodes(final NodeContainerEditPart[] parts) {
-        HorizAlignCommand hac = new HorizAlignCommand(getManager(), parts);
-        getCommandStack().execute(hac); // enables undo
-
-        // update the actions
-        getEditor().updateActions();
-
-        // Give focus to the editor again. Otherwise the actions (selection)
-        // is not updated correctly.
-        getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean calculateEnabled() {
-        return !getSelectedObjects().isEmpty();
-    }
 }

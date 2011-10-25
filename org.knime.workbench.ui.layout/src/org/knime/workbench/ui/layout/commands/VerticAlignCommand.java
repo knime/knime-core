@@ -40,96 +40,94 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
- * Created 28 March 2011
- * Author: Peter Ohl, KNIME.com, Zurich, Switzerland
- *
+ * History
+ *   2010 03 28 (ohl): created
  */
-package org.knime.workbench.ui.layout.actions;
+package org.knime.workbench.ui.layout.commands;
 
-import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.workbench.editor2.ImageRepository;
-import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.actions.AbstractNodeAction;
+import java.util.Map;
+
+import org.eclipse.gef.commands.Command;
+import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.ConnectionID;
+import org.knime.core.node.workflow.ConnectionUIInformation;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
-import org.knime.workbench.ui.layout.commands.HorizAlignCommand;
+import org.knime.workbench.ui.layout.align.VerticAlignManager;
 
 /**
- * Action to trigger auto layout.
  *
- * @author Peter Ohl, KNIME.com GmbH, Zurich
+ * @author ohl, KNIME.com, Zurich, Switzerland
  */
-public class HorizAlignLayoutAction extends AbstractNodeAction {
+public class VerticAlignCommand extends Command {
 
-    /** unique ID for this action. */
-    public static final String ID = "knime.action.horizalignlayout";
+    private final WorkflowManager m_wfm;
+
+    private VerticAlignManager m_alignMgr;
+
+    private final NodeContainerEditPart[] m_nodes;
 
     /**
-     * @param editor The workflow editor
+     * @param wfm the workflow manager holding the nodes
+     * @param nodes the nodes to align.
      */
-    public HorizAlignLayoutAction(final WorkflowEditor editor) {
-        super(editor);
-        setLazyEnablementCalculation(true);
+    public VerticAlignCommand(final WorkflowManager wfm,
+            final NodeContainerEditPart[] nodes) {
+        m_wfm = wfm;
+        m_nodes = nodes.clone();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getId() {
-        return ID;
+    public void execute() {
+        m_alignMgr = new VerticAlignManager(m_wfm, m_nodes);
+        m_alignMgr.doLayout();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/halign.png");
+    public boolean canUndo() {
+        return m_alignMgr != null;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/halign_disabled.png");
-    }
+    public void undo() {
+        Map<NodeID, NodeUIInformation> oldPositions =
+                m_alignMgr.getOldNodeCoordinates();
+        Map<ConnectionID, ConnectionUIInformation> oldBendpoints =
+                m_alignMgr.getOldBendpoints();
+        // re-position nodes
+        for (Map.Entry<NodeID, NodeUIInformation> e : oldPositions.entrySet()) {
+            NodeContainer nc = m_wfm.getNodeContainer(e.getKey());
+            if (nc == null) {
+                continue;
+            }
+            nc.setUIInformation(e.getValue());
+        }
+        // re-create bendpoints
+        for (Map.Entry<ConnectionID, ConnectionUIInformation> e : oldBendpoints
+                .entrySet()) {
+            ConnectionContainer cc = m_wfm.getConnection(e.getKey());
+            if (cc == null) {
+                continue;
+            }
+            cc.setUIInfo(e.getValue());
+        }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getToolTipText() {
-        return "Align horizontally";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public synchronized void runOnNodes(final NodeContainerEditPart[] parts) {
-        HorizAlignCommand hac = new HorizAlignCommand(getManager(), parts);
-        getCommandStack().execute(hac); // enables undo
-
-        // update the actions
-        getEditor().updateActions();
-
-        // Give focus to the editor again. Otherwise the actions (selection)
-        // is not updated correctly.
-        getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean calculateEnabled() {
-        return !getSelectedObjects().isEmpty();
     }
 }

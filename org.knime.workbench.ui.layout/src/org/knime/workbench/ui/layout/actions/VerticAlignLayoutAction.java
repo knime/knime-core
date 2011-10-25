@@ -45,7 +45,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
- * Created 28 March 2011
+ * Created 25 October 2011
  * Author: Peter Ohl, KNIME.com, Zurich, Switzerland
  *
  */
@@ -56,22 +56,22 @@ import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
-import org.knime.workbench.ui.layout.commands.HorizAlignCommand;
+import org.knime.workbench.ui.layout.commands.VerticAlignCommand;
 
 /**
- * Action to trigger auto layout.
+ * Action to trigger vertical layout.
  *
  * @author Peter Ohl, KNIME.com GmbH, Zurich
  */
-public class HorizAlignLayoutAction extends AbstractNodeAction {
+public class VerticAlignLayoutAction extends AbstractNodeAction {
 
     /** unique ID for this action. */
-    public static final String ID = "knime.action.horizalignlayout";
+    public static final String ID = "knime.action.verticalignlayout";
 
     /**
      * @param editor The workflow editor
      */
-    public HorizAlignLayoutAction(final WorkflowEditor editor) {
+    public VerticAlignLayoutAction(final WorkflowEditor editor) {
         super(editor);
         setLazyEnablementCalculation(true);
     }
@@ -89,7 +89,7 @@ public class HorizAlignLayoutAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/halign.png");
+        return ImageRepository.getImageDescriptor("icons/valign.png");
     }
 
     /**
@@ -97,7 +97,7 @@ public class HorizAlignLayoutAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/halign_disabled.png");
+        return ImageRepository.getImageDescriptor("icons/valign_disabled.png");
     }
 
     /**
@@ -105,7 +105,7 @@ public class HorizAlignLayoutAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Align horizontally";
+        return "Align vertically";
     }
 
     /**
@@ -113,7 +113,7 @@ public class HorizAlignLayoutAction extends AbstractNodeAction {
      */
     @Override
     public synchronized void runOnNodes(final NodeContainerEditPart[] parts) {
-        HorizAlignCommand hac = new HorizAlignCommand(getManager(), parts);
+        VerticAlignCommand hac = new VerticAlignCommand(getManager(), parts);
         getCommandStack().execute(hac); // enables undo
 
         // update the actions
