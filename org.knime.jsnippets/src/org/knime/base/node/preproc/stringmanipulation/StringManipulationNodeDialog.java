@@ -425,7 +425,7 @@ public class StringManipulationNodeDialog  extends NodeDialogPane {
         JPanel p = new JPanel(new BorderLayout());
         p.add(centerPanel, BorderLayout.CENTER);
         p.add(southPanel, BorderLayout.SOUTH);
-        p.setPreferredSize(new Dimension(600, 400));
+        p.setPreferredSize(new Dimension(820, 420));
         return p;
     }
 
