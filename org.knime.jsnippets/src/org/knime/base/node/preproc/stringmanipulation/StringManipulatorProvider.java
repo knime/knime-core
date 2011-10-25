@@ -83,6 +83,9 @@ import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveCharacte
 import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveDuplicatesManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveSpecificCharacterManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.StringManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.StripEndManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.StripManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.StripStartManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.SubstringManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.UpperCaseManipulator;
 import org.knime.core.util.FileUtil;
@@ -146,6 +149,9 @@ public final class StringManipulatorProvider {
         manipulators.add(new RemoveCharacterManipulator());
         manipulators.add(new RemoveDuplicatesManipulator());
         manipulators.add(new RemoveSpecificCharacterManipulator());
+        manipulators.add(new StripEndManipulator());
+        manipulators.add(new StripManipulator());
+        manipulators.add(new StripStartManipulator());
         manipulators.add(new SubstringManipulator());
         manipulators.add(new UpperCaseManipulator());
 
