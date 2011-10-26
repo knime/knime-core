@@ -176,10 +176,10 @@ public final class DatabaseWriterConnection {
                                 // types must be compatible to IntValue
                                 if (!cspec.getType().isCompatible(IntValue.class)) {
                                     throw new RuntimeException("Column \"" + name
-                                            + "\" of type \"" + cspec.getType()
-                                            + "\" from input does not match type "
-                                            + "\"" + rsmd.getColumnTypeName(i + 1)
-                                            + "\" in database at position " + i);
+                                        + "\" of type \"" + cspec.getType()
+                                        + "\" from input does not match type "
+                                        + "\"" + rsmd.getColumnTypeName(i + 1)
+                                        + "\" in database at position " + i);
                                 }
                                 break;
                             // check all double compatible types
@@ -192,24 +192,24 @@ public final class DatabaseWriterConnection {
                                 // types must also be compatible to DoubleValue
                                 if (!cspec.getType().isCompatible(DoubleValue.class)) {
                                     throw new RuntimeException("Column \"" + name
-                                            + "\" of type \"" + cspec.getType()
-                                            + "\" from input does not match type "
-                                            + "\"" + rsmd.getColumnTypeName(i + 1)
-                                            + "\" in database at position " + i);
+                                        + "\" of type \"" + cspec.getType()
+                                        + "\" from input does not match type "
+                                        + "\"" + rsmd.getColumnTypeName(i + 1)
+                                        + "\" in database at position " + i);
                                 }
                                 break;
                             // check for data compatible types
                             case Types.DATE:
                             case Types.TIME:
                             case Types.TIMESTAMP:
-                                // those types must also be compatible to DataValue
+                                // types must also be compatible to DataValue
                                 if (!cspec.getType().isCompatible(
                                         DateAndTimeValue.class)) {
                                     throw new RuntimeException("Column \"" + name
-                                            + "\" of type \"" + cspec.getType()
-                                            + "\" from input does not match type "
-                                            + "\"" + rsmd.getColumnTypeName(i + 1)
-                                            + "\" in database at position " + i);
+                                        + "\" of type \"" + cspec.getType()
+                                        + "\" from input does not match type "
+                                        + "\"" + rsmd.getColumnTypeName(i + 1)
+                                        + "\" in database at position " + i);
                                 }
                                 break;
                             // all other cases are defined as StringValue types
