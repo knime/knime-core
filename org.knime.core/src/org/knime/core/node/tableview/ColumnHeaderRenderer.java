@@ -60,7 +60,6 @@ import javax.swing.table.JTableHeader;
 import javax.swing.table.TableModel;
 
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataType;
 import org.knime.core.node.tableview.TableSortOrder.TableSortKey;
 import org.knime.core.node.util.ViewUtils;
 
@@ -131,10 +130,12 @@ public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
         Icon typeIcon = null;
         Icon sortIcon = null;
         Object newValue = value;
-        if (isShowIcon() && value instanceof DataColumnSpec) {
-            DataType columnType = ((DataColumnSpec)value).getType();
-            newValue =  ((DataColumnSpec)value).getName();
-            typeIcon = columnType.getIcon();
+        if (value instanceof DataColumnSpec) {
+            DataColumnSpec colSpec = (DataColumnSpec)value;
+            newValue =  colSpec.getName();
+            if (isShowIcon()) {
+                typeIcon = colSpec.getType().getIcon();
+            }
         }
         sortIcon = getSortIcon(table, column);
         if (typeIcon == null && sortIcon == null) {
