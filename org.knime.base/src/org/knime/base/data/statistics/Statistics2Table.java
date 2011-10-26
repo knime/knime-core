@@ -244,8 +244,8 @@ public class Statistics2Table {
                         	} else {
                         		warn.append(",");
                         	}
-                            warn.append("\"" + 
-                            		m_spec.getColumnSpec(c).getName() + "\"");
+                            warn.append("\"" 
+                            		+ m_spec.getColumnSpec(c).getName() + "\"");
                             nominalValues[colIdx].clear();
                         }
                     }
@@ -417,7 +417,7 @@ public class Statistics2Table {
             boolean addEnd = true;
             DataCell[] cells = new DataCell[2 * it.length];
             for (int i = 0; i < it.length; i++) {
-               if (it[i].hasNext()) {
+               if (it[i] != null && it[i].hasNext()) {
                    Map.Entry<DataCell, Integer> e = 
                        (Map.Entry<DataCell, Integer>) it[i].next();
                    cells[2 * i] = e.getKey();

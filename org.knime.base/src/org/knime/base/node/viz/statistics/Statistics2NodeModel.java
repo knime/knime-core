@@ -146,15 +146,15 @@ public class Statistics2NodeModel extends NodeModel {
                 numOfNominalValuesOutput(), m_nominalFilter.getIncludeList(), 
                 exec);
         if (m_statTable.getWarning() != null) {
-        	super.setWarningMessage(m_statTable.getWarning());
+            super.setWarningMessage(m_statTable.getWarning());
         }
         BufferedDataTable outTable1 = exec.createBufferedDataTable(
                 m_statTable.createStatisticMomentsTable(), 
                 exec.createSubProgress(0.5));
         BufferedDataTable outTable2 = exec.createBufferedDataTable(
                 m_statTable.createNominalValueTable(
-                		m_nominalFilter.getIncludeList()), 
-                		exec.createSubProgress(0.5));
+                        m_nominalFilter.getIncludeList()), 
+                        exec.createSubProgress(0.5));
         return new BufferedDataTable[]{outTable1, outTable2};
     }
 
