@@ -50,38 +50,40 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import org.apache.commons.lang3.StringUtils;
 
 /**
- * The stripEnd string manipulator for stripping white space characters.
+ * Converts empty strings to null.
  *
  * @author Heiko Hofer
  */
-public class StripEndManipulator implements StringManipulator {
-
+public class ToNullManipulator implements StringManipulator {
     /**
-     * Strips any whitespace characters from the end of string.
+     * Converts empty string to null.
      *
-     * @param str the string to strip
-     * @return the stripped string
+     * @param str the value to convert
+     * @return the converted string
      */
-    public static String stripEnd(final String str) {
-        return StringUtils.stripEnd(str, null);
+    public static String toNull(final String str) {
+        if (str != null && str.isEmpty()) {
+            return null;
+        } else {
+        	return str;
+        }
     }
 
     /**
-     * Strips any whitespace characters from the end of strings.
+     * Converts empty strings to null.
      *
-     * @param str the strings to strip
-     * @return the list of stripped strings
+     * @param str the values to convert
+     * @return the converted strings
      */
-    public static String[] stripEnd(final String... str) {
+    public static String[] toNull(final String... str) {
         if (str == null || (str.length) == 0) {
             return str;
         }
         String[] newArr = new String[str.length];
         for (int i = 0; i < str.length; i++) {
-            newArr[i] = StringUtils.stripEnd(str[i], null);
+            newArr[i] = null != str[i] && str[i].isEmpty() ? null : str[i];
         }
         return newArr;
     }
@@ -91,7 +93,7 @@ public class StripEndManipulator implements StringManipulator {
      */
     @Override
     public String getName() {
-        return "stripEnd";
+        return "toNull";
     }
 
     /**
@@ -115,7 +117,7 @@ public class StripEndManipulator implements StringManipulator {
      */
     @Override
     public String getCategory() {
-        return "Remove parts";
+        return "Replace parts";
     }
 
     /**
@@ -123,27 +125,23 @@ public class StripEndManipulator implements StringManipulator {
      */
     @Override
     public String getDescription() {
-        return "Strips any whitespace characters from the end of given "
-            + "strings. "
+        return "Converts empty strings to null. "
             + ""
             + "<br/>"
             + "<br/>"
             + "<strong>Examples:</strong>"
             + "<br/>"
             + "<table>"
-            + "<tr><td>stripEnd(\"&nbsp;&nbsp;KNIME&nbsp;&nbsp;&nbsp;&nbsp;"
-            + "\")</td>"
-            + "<td>=</td><td>\"&nbsp;&nbsp;KNIME\"</td></tr>"
+            + "<tr><td>toNull(\"\")</td>"
+            + "<td>=</td><td>null</td></tr>"
 
-            + "<tr><td>stripEnd(\"KNIME&nbsp;&nbsp;\", "
-            + "\"&nbsp;&nbsp;KNIME\")</td>"
-            + "<td>=</td><td>[\"KNIME\", \"&nbsp;&nbsp;KNIME\"]</td></tr>"
+            + "<tr><td>toNull(\"KNIME\")</td>"
+            + "<td>=</td><td>\"KNIME\"</td></tr>"
 
-            + "<tr><td>stripEnd(null, \"\", \"a&nbsp;&nbsp;\")</td>"
-            + "<td>=</td><td>[null, \"\", \"a\"]</td></tr>"
+            + "<tr><td>toNull(null, \"\", \"a\")</td>"
+            + "<td>=</td><td>[null, null, \"a\"]</td></tr>"
 
-            + "</table>"
-            + "* can be any character sequence.<br/>";
+            + "</table>";
     }
 
 }

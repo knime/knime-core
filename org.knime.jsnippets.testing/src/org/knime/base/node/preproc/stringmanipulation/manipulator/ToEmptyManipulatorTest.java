@@ -46,104 +46,34 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   25.10.2011 (hofer): created
+ *   20.10.2011 (hofer): created
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import org.apache.commons.lang3.StringUtils;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
- * The stripEnd string manipulator for stripping white space characters.
+ * Basic test for the toEmpty string manipulator.
  *
  * @author Heiko Hofer
  */
-public class StripEndManipulator implements StringManipulator {
+public class ToEmptyManipulatorTest {
 
     /**
-     * Strips any whitespace characters from the end of string.
-     *
-     * @param str the string to strip
-     * @return the stripped string
+     * Test method for
+     * {@link ToEmptyManipulator#toEmpty(String...)} and
+     * {@link ToEmptyManipulator#toEmpty(String)}.
      */
-    public static String stripEnd(final String str) {
-        return StringUtils.stripEnd(str, null);
+    @Test
+    public void testToEmptyExamples() {
+        // Test the examples in the description of the toEmpty function
+        Assert.assertEquals("",
+                ToEmptyManipulator.toEmpty((String)null));
+        Assert.assertEquals("KNIME",
+                ToEmptyManipulator.toEmpty("KNIME"));
+        Assert.assertArrayEquals(new String[]{"", "", "a"},
+                ToEmptyManipulator.toEmpty(null, "", "a"));
+
     }
-
-    /**
-     * Strips any whitespace characters from the end of strings.
-     *
-     * @param str the strings to strip
-     * @return the list of stripped strings
-     */
-    public static String[] stripEnd(final String... str) {
-        if (str == null || (str.length) == 0) {
-            return str;
-        }
-        String[] newArr = new String[str.length];
-        for (int i = 0; i < str.length; i++) {
-            newArr[i] = StringUtils.stripEnd(str[i], null);
-        }
-        return newArr;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getName() {
-        return "stripEnd";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDisplayName() {
-        return getName() + "(str...)";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrArgs() {
-        return 1;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getCategory() {
-        return "Remove parts";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return "Strips any whitespace characters from the end of given "
-            + "strings. "
-            + ""
-            + "<br/>"
-            + "<br/>"
-            + "<strong>Examples:</strong>"
-            + "<br/>"
-            + "<table>"
-            + "<tr><td>stripEnd(\"&nbsp;&nbsp;KNIME&nbsp;&nbsp;&nbsp;&nbsp;"
-            + "\")</td>"
-            + "<td>=</td><td>\"&nbsp;&nbsp;KNIME\"</td></tr>"
-
-            + "<tr><td>stripEnd(\"KNIME&nbsp;&nbsp;\", "
-            + "\"&nbsp;&nbsp;KNIME\")</td>"
-            + "<td>=</td><td>[\"KNIME\", \"&nbsp;&nbsp;KNIME\"]</td></tr>"
-
-            + "<tr><td>stripEnd(null, \"\", \"a&nbsp;&nbsp;\")</td>"
-            + "<td>=</td><td>[null, \"\", \"a\"]</td></tr>"
-
-            + "</table>"
-            + "* can be any character sequence.<br/>";
-    }
-
 }

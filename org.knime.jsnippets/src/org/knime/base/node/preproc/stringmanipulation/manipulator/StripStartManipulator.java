@@ -131,13 +131,14 @@ public class StripStartManipulator implements StringManipulator {
             + "<strong>Examples:</strong>"
             + "<br/>"
             + "<table>"
-            + "<tr><td>stripStart(\"   KNIME   \")</td>"
-            + "<td>=</td><td>\"KNIME   \"</td></tr>"
+            + "<tr><td>stripStart(\"&nbsp;&nbsp;KNIME&nbsp;&nbsp;\")</td>"
+            + "<td>=</td><td>\"KNIME&nbsp;&nbsp;\"</td></tr>"
 
-            + "<tr><td>stripStart(\"KNIME   \", \"   KNIME\")</td>"
-            + "<td>=</td><td>[\"KNIME   \", \"KNIME\"]</td></tr>"
+            + "<tr><td>stripStart(\"KNIME&nbsp;&nbsp;\", "
+            + "\"&nbsp;&nbsp;KNIME\")</td>"
+            + "<td>=</td><td>[\"KNIME&nbsp;&nbsp;\", \"KNIME\"]</td></tr>"
 
-            + "<tr><td>stripStart(null, \"\", \"   a\")</td>"
+            + "<tr><td>stripStart(null, \"\", \"&nbsp;&nbsp;a\")</td>"
             + "<td>=</td><td>[null, \"\", \"a\"]</td></tr>"
 
             + "</table>"
