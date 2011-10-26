@@ -121,8 +121,7 @@ public class JoinManipulator implements StringManipulator {
             + "<tr><td>join(null)</td>"
             + "<td>=</td><td>null</td></tr>"
 
-            + "</table>"
-            + "* can be any character sequence.<br/>";
+            + "</table>";
     }
 
 }

@@ -46,86 +46,46 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   04.10.2011 (hofer): created
+ *   20.10.2011 (hofer): created
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import org.apache.commons.lang3.text.WordUtils;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
- * The capitalize string manipulator to capitalize all delimiter separated
- * words in a string.
+ * Basic test for the capitalize string manipulator.
  *
  * @author Heiko Hofer
  */
-public class CapitalizeDelimManipulator implements StringManipulator {
+public class CapitalizeDelimManipulatorTest {
 
     /**
-     * Capitalizes all delimiter separated words in a string.
-     *
-     * @param str the string
-     * @param delim the delimiter
-     * @return the capitalized string
+     * Test method for
+     * {@link CapitalizeDelimManipulator#capitalize(String, char...)}.
      */
-    public static String capitalize(final String str, final char... delim) {
-        return WordUtils.capitalizeFully(str, delim);
-    }
+    @Test
+    public void testCapitalizeDelimExamples() {
+        // Test the examples in the description of the capitalize function
+        Assert.assertEquals("Processed By Knime",
+        		CapitalizeDelimManipulator.capitalize(
+                		"processed by KNIME", ' '));
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getCategory() {
-        return "Change case";
-    }
+        Assert.assertEquals("ProceSseD by knime",
+        		CapitalizeDelimManipulator.capitalize(
+                		"processed by KNIME", 'e'));
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getName() {
-        return "capitalize";
-    }
+        Assert.assertEquals("ProceSseD By Knime",
+        		CapitalizeDelimManipulator.capitalize(
+                		"processed by KNIME", ' ', 'e'));
 
+        Assert.assertEquals("",
+        		CapitalizeDelimManipulator.capitalize(
+                		"", ' ', 'e'));
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDisplayName() {
-        return getName() + "(str, char...)";
-    }
+        Assert.assertEquals(null,
+        		CapitalizeDelimManipulator.capitalize(
+                		null, ' ', 'e'));
 
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrArgs() {
-        return 2;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return "Capitalizes all delimiter separated words in a string, "
-                + "so that each word is made up of a titlecase "
-                + "character and then a series of lowercase characters."
-                + "<br/><br/>"
-                + "<strong>Examples:</strong>"
-                + "<br/>"
-                + "<table>"
-                + "<tr><td>capitalize(\"processed by KNIME\", ' ')</td>"
-                + "<td>=</td><td>\"Processed By Knime\"</td></tr>"
-                + "<tr><td>capitalize(\"processed by KNIME\", 'e')</td>"
-                + "<td>=</td><td>\"ProceSseD by knime\"</td></tr>"
-                + "<tr><td>capitalize(\"processed by KNIME\", 'e', ' ')</td>"
-                + "<td>=</td><td>\"ProceSseD By Knime\"</td></tr>"
-                + "<tr><td>capitalize(\"\", *)</td><td>=</td><td>\"\"</td></tr>"
-                + "<tr><td>capitalize(null, *)</td><td>=</td><td>null</td></tr>"
-                + "</table>"
-                + "* can be any character.";
     }
 }

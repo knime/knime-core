@@ -52,13 +52,21 @@ package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
 import org.apache.commons.lang3.text.WordUtils;
 /**
+ * The capitalize string manipulator to capitalize all white space separated
+ * words in a string.
  *
  * @author Heiko Hofer
  */
 public class CapitalizeManipulator implements StringManipulator {
 
-    public static String capitalize(final String s) {
-        return WordUtils.capitalizeFully(s);
+    /**
+     * Capitalizes all white space separated words in a string.
+     *
+     * @param str the string
+     * @return the capitalized string
+     */
+    public static String capitalize(final String str) {
+        return WordUtils.capitalizeFully(str);
     }
 
     /**

@@ -46,77 +46,36 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   04.10.2011 (hofer): created
+ *   20.10.2011 (hofer): created
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
+ * Basic test for the capitalize string manipulator.
  *
  * @author Heiko Hofer
  */
-public class RemoveDuplicatesManipulator implements StringManipulator {
-
-    public static String removeDuplicates(final String s) {
-        if (null == s) {
-            return null;
-        }
-        return s.replaceAll("[ ]+", " ");
-    }
+public class CapitalizeManipulatorTest {
 
     /**
-     * {@inheritDoc}
+     * Test method for
+     * {@link CapitalizeManipulator#capitalize(String)}.
      */
-    @Override
-    public String getCategory() {
-        return "Remove parts";
-    }
+    @Test
+    public void testCapitalizeExamples() {
+        // Test the examples in the description of the capitalize function
+        Assert.assertEquals("Processed By Knime",
+        		CapitalizeManipulator.capitalize(
+                		"processed by KNIME"));
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getName() {
-        return "removeDuplicates";
-    }
+        Assert.assertEquals("",
+        		CapitalizeManipulator.capitalize(""));
 
+        Assert.assertEquals(null,
+        		CapitalizeManipulator.capitalize(null));
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDisplayName() {
-        return getName() + "(str)";
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrArgs() {
-        return 1;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return "Replaces all occurrences of two or more spaces with a single "
-                + "space character."
-                + "<br/><br/>"
-                + "<strong>Examples:</strong>"
-                + "<br/>"
-                + "<table>"
-                + "<tr><td>removeDuplicates(\"processed   by  KNIME\")</td>"
-                + "<td>=</td><td>\"processed by KNIME\"</td></tr>"
-
-                + "<tr><td>removeDuplicates(\"\")</td>"
-                + "<td>=</td><td>\"\"</td></tr>"
-
-                + "<tr><td>removeDuplicates(null)</td>"
-                + "<td>=</td><td>null</td></tr>"
-                + "</table>";
     }
 }

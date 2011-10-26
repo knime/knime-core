@@ -52,16 +52,23 @@ package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
 
 /**
+ * Remove all space characters from a string.
  *
  * @author Heiko Hofer
  */
-public class RemoveCharacterManipulator implements StringManipulator {
+public class RemoveSpaceCharsManipulator implements StringManipulator {
 
-    public static String removeCharacter(final String s) {
-        if (null == s) {
+    /**
+     * Remove all space characters from a string.
+     *
+     * @param str the string
+     * @return the string without space characters
+     */
+    public static String removeChars(final String str) {
+        if (null == str) {
             return null;
         }
-        return s.replaceAll("[ ]+", "");
+        return str.replaceAll("[ ]+", "");
     }
 
     /**
@@ -69,7 +76,7 @@ public class RemoveCharacterManipulator implements StringManipulator {
      */
     @Override
     public String getCategory() {
-        return "Remove parts";
+        return "Remove";
     }
 
     /**
@@ -77,7 +84,7 @@ public class RemoveCharacterManipulator implements StringManipulator {
      */
     @Override
     public String getName() {
-        return "removeCharacter";
+        return "removeChars";
     }
 
 
@@ -103,23 +110,19 @@ public class RemoveCharacterManipulator implements StringManipulator {
      */
     @Override
     public String getDescription() {
-        return "Removes all spaces."
+        return "Removes all space characters."
                 + "<br/><br/>"
                 + "<strong>Examples:</strong>"
                 + "<br/>"
                 + "<table>"
-                + "<tr><td>removeCharacter(\"a,  b , c\")</td>"
+                + "<tr><td>removeChars(\"a,&nbsp;&nbsp;b&nbsp;,&nbsp;c\")</td>"
                 + "<td>=</td><td>\"a,b,c\"</td></tr>"
 
-                + "<tr><td>removeCharacter(\"\")</td>"
+                + "<tr><td>removeChars(\"\")</td>"
                 + "<td>=</td><td>\"\"</td></tr>"
 
-                + "<tr><td>removeCharacter(null)</td>"
+                + "<tr><td>removeChars(null)</td>"
                 + "<td>=</td><td>null</td></tr>"
                 + "</table>";
-    }
-
-    public static void main(final String args[]) {
-        System.out.println("removeCharacter(\"a,  b , c\") = " + removeCharacter("a,  b , c"));
     }
 }

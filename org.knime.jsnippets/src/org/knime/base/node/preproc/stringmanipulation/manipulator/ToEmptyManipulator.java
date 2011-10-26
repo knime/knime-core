@@ -117,7 +117,7 @@ public class ToEmptyManipulator implements StringManipulator {
      */
     @Override
     public String getCategory() {
-        return "Replace parts";
+        return "Replace";
     }
 
     /**

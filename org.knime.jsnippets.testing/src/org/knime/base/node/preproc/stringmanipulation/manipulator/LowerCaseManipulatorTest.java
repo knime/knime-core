@@ -46,86 +46,36 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   04.10.2011 (hofer): created
+ *   20.10.2011 (hofer): created
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import org.apache.commons.lang3.text.WordUtils;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
- * The capitalize string manipulator to capitalize all delimiter separated
- * words in a string.
+ * Basic test for the lowerCase string manipulator.
  *
  * @author Heiko Hofer
  */
-public class CapitalizeDelimManipulator implements StringManipulator {
+public class LowerCaseManipulatorTest {
 
     /**
-     * Capitalizes all delimiter separated words in a string.
-     *
-     * @param str the string
-     * @param delim the delimiter
-     * @return the capitalized string
+     * Test method for
+     * {@link LowerCaseManipulator#lowerCase(String)}.
      */
-    public static String capitalize(final String str, final char... delim) {
-        return WordUtils.capitalizeFully(str, delim);
-    }
+    @Test
+    public void testLowerCaseExamples() {
+        // Test the examples in the description of the lowerCase function
+        Assert.assertEquals("processed by knime",
+        		LowerCaseManipulator.lowerCase(
+                		"processed by KNIME"));
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getCategory() {
-        return "Change case";
-    }
+        Assert.assertEquals("",
+        		LowerCaseManipulator.lowerCase(""));
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getName() {
-        return "capitalize";
-    }
+        Assert.assertEquals(null,
+        		LowerCaseManipulator.lowerCase(null));
 
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDisplayName() {
-        return getName() + "(str, char...)";
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrArgs() {
-        return 2;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return "Capitalizes all delimiter separated words in a string, "
-                + "so that each word is made up of a titlecase "
-                + "character and then a series of lowercase characters."
-                + "<br/><br/>"
-                + "<strong>Examples:</strong>"
-                + "<br/>"
-                + "<table>"
-                + "<tr><td>capitalize(\"processed by KNIME\", ' ')</td>"
-                + "<td>=</td><td>\"Processed By Knime\"</td></tr>"
-                + "<tr><td>capitalize(\"processed by KNIME\", 'e')</td>"
-                + "<td>=</td><td>\"ProceSseD by knime\"</td></tr>"
-                + "<tr><td>capitalize(\"processed by KNIME\", 'e', ' ')</td>"
-                + "<td>=</td><td>\"ProceSseD By Knime\"</td></tr>"
-                + "<tr><td>capitalize(\"\", *)</td><td>=</td><td>\"\"</td></tr>"
-                + "<tr><td>capitalize(null, *)</td><td>=</td><td>null</td></tr>"
-                + "</table>"
-                + "* can be any character.";
     }
 }

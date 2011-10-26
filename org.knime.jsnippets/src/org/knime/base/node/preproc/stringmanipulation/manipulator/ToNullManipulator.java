@@ -67,7 +67,7 @@ public class ToNullManipulator implements StringManipulator {
         if (str != null && str.isEmpty()) {
             return null;
         } else {
-        	return str;
+            return str;
         }
     }
 
@@ -117,7 +117,7 @@ public class ToNullManipulator implements StringManipulator {
      */
     @Override
     public String getCategory() {
-        return "Replace parts";
+        return "Replace";
     }
 
     /**

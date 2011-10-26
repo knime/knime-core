@@ -55,13 +55,20 @@ import java.util.Locale;
 import org.apache.commons.lang3.StringUtils;
 
 /**
+ * The upperCase string manipulator to convert characters in a string
+ * to upper case.
  *
  * @author Heiko Hofer
  */
 public class UpperCaseManipulator implements StringManipulator {
 
-    public static String upperCase(final String s) {
-        return StringUtils.upperCase(s, Locale.ENGLISH);
+    /**
+     * Convert characters in a string to upper case.
+     * @param str the string
+     * @return the converted string
+     */
+    public static String upperCase(final String str) {
+        return StringUtils.upperCase(str, Locale.ENGLISH);
     }
 
     /**

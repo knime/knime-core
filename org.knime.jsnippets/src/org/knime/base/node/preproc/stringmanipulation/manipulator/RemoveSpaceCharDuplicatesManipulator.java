@@ -50,25 +50,24 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import org.apache.commons.lang3.text.WordUtils;
 
 /**
- * The capitalize string manipulator to capitalize all delimiter separated
- * words in a string.
- *
+ * The removeDuplicates string manipulator to remove duplicated spaces in a
+ * string.
  * @author Heiko Hofer
  */
-public class CapitalizeDelimManipulator implements StringManipulator {
+public class RemoveSpaceCharDuplicatesManipulator implements StringManipulator {
 
     /**
-     * Capitalizes all delimiter separated words in a string.
-     *
+     * Remove duplicated spaces in a string.
      * @param str the string
-     * @param delim the delimiter
-     * @return the capitalized string
+     * @return the string without duplicated spaces
      */
-    public static String capitalize(final String str, final char... delim) {
-        return WordUtils.capitalizeFully(str, delim);
+    public static String removeDuplicates(final String str) {
+        if (null == str) {
+            return null;
+        }
+        return str.replaceAll("[ ]+", " ");
     }
 
     /**
@@ -76,7 +75,7 @@ public class CapitalizeDelimManipulator implements StringManipulator {
      */
     @Override
     public String getCategory() {
-        return "Change case";
+        return "Remove";
     }
 
     /**
@@ -84,7 +83,7 @@ public class CapitalizeDelimManipulator implements StringManipulator {
      */
     @Override
     public String getName() {
-        return "capitalize";
+        return "removeDuplicates";
     }
 
 
@@ -93,7 +92,7 @@ public class CapitalizeDelimManipulator implements StringManipulator {
      */
     @Override
     public String getDisplayName() {
-        return getName() + "(str, char...)";
+        return getName() + "(str)";
     }
 
 
@@ -102,7 +101,7 @@ public class CapitalizeDelimManipulator implements StringManipulator {
      */
     @Override
     public int getNrArgs() {
-        return 2;
+        return 1;
     }
 
     /**
@@ -110,22 +109,21 @@ public class CapitalizeDelimManipulator implements StringManipulator {
      */
     @Override
     public String getDescription() {
-        return "Capitalizes all delimiter separated words in a string, "
-                + "so that each word is made up of a titlecase "
-                + "character and then a series of lowercase characters."
+        return "Replaces all occurrences of two or more spaces with a single "
+                + "space character."
                 + "<br/><br/>"
                 + "<strong>Examples:</strong>"
                 + "<br/>"
                 + "<table>"
-                + "<tr><td>capitalize(\"processed by KNIME\", ' ')</td>"
-                + "<td>=</td><td>\"Processed By Knime\"</td></tr>"
-                + "<tr><td>capitalize(\"processed by KNIME\", 'e')</td>"
-                + "<td>=</td><td>\"ProceSseD by knime\"</td></tr>"
-                + "<tr><td>capitalize(\"processed by KNIME\", 'e', ' ')</td>"
-                + "<td>=</td><td>\"ProceSseD By Knime\"</td></tr>"
-                + "<tr><td>capitalize(\"\", *)</td><td>=</td><td>\"\"</td></tr>"
-                + "<tr><td>capitalize(null, *)</td><td>=</td><td>null</td></tr>"
-                + "</table>"
-                + "* can be any character.";
+                + "<tr><td>removeDuplicates(\"processed&nbsp;&nbsp;&nbsp;"
+                + "by&nbsp;&nbsp;KNIME\")</td>"
+                + "<td>=</td><td>\"processed by KNIME\"</td></tr>"
+
+                + "<tr><td>removeDuplicates(\"\")</td>"
+                + "<td>=</td><td>\"\"</td></tr>"
+
+                + "<tr><td>removeDuplicates(null)</td>"
+                + "<td>=</td><td>null</td></tr>"
+                + "</table>";
     }
 }

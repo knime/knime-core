@@ -53,6 +53,7 @@ package org.knime.base.node.preproc.stringmanipulation.manipulator;
 import org.apache.commons.lang3.StringUtils;
 
 /**
+ * The substr maninpulator for extracting a substring.
  *
  * @author Heiko Hofer
  */
@@ -62,27 +63,13 @@ public class SubstringManipulator implements StringManipulator {
      * Get a substring.
      *
      * @param str the string to get the substring from
-     * @param start the start position starting from 0. Negative means to count
-     *  back from the end of the string.
+     * @param start the start position starting from 0.
      * @param length the length of the substring
-     * @return the substring of size length to the
+     * @return the substring
      */
     public static String substr(final String str, final int start,
             final int length) {
-        // the start
-        int s = start < 0 ? str.length() + start : start;
-        // the end
-        int e = s + length;
-        // when end position is lower thatn start position
-        if (e < s) {
-            // swap
-            int h = s;
-            s = e;
-            e = h;
-        }
-        // when start is negativ
-        s = s < 0 ? 0 : s;
-        return StringUtils.mid(str, s, e - s);
+        return StringUtils.mid(str, start, length);
     }
 
     /**
@@ -90,7 +77,7 @@ public class SubstringManipulator implements StringManipulator {
      */
     @Override
     public String getCategory() {
-        return "Extract parts";
+        return "Extract";
     }
 
     /**
@@ -106,7 +93,7 @@ public class SubstringManipulator implements StringManipulator {
      */
     @Override
     public String getDisplayName() {
-        return getName() + "(str, pos, length)";
+        return getName() + "(str, start, length)";
     }
 
     /**
@@ -122,53 +109,34 @@ public class SubstringManipulator implements StringManipulator {
      */
     @Override
     public String getDescription() {
-        return "Get <i>length</i> characters starting from <i>pos</i>."
-            + "The position counting is zero based, i.e. to start from the "
-            + "beginning use <i>pos = 0</i>. Negative <i>pos</i> values are"
-            + "offsets counting from the end of the string."
+        return "Get <i>length</i> characters starting from <i>start</i>. "
+            + "<i>start</i> is zero based, i.e. to start from the "
+            + "beginning use <i>start = 0</i>. A negative value of "
+            + "<i>start</i> is treated as zero. "
             + "<br/><br/>"
-            + "A <i>length</i> of zero gives an empty string and a negative "
-            + "length gives the characters at the left of <i>pos</i>. The "
-            + "absolute value of pos may exceed the number of characters at"
-            + "the right or at the left of <i>pos</i>, respectively."
+            + "A <i>length</i> of zero or a negative value of <i>length</i> "
+            + "gives an empty string. If <i>start</i> + <i>length</i> "
+            + "exceeds the length of the string, the remainder characters are "
+            + "returned."
             + "<br/><br/>"
             + "<strong>Examples:</strong>"
             + "<br/>"
             + "<table>"
             + "<tr><td>substr(\"abcdef\", 0, 2)</td>"
             + "<td>=</td><td>\"ab\"</td></tr>"
-            + ""
-            + "<tr><td>substr(\"abcdef\", 3, 10)</td>"
-            + "<td>=</td><td>\"456\"</td></tr>"
-            + ""
-            + "<tr><td>substr(\"123456\", 3, -2)</td>"
-            + "<td>=</td><td>\"23\"</td></tr>"
-            + ""
-            + "<tr><td>substr(\"123456\", -2, 1)</td>"
-            + "<td>=</td><td>\"5\"</td></tr>"
-            + ""
-            + "<tr><td>substr(\"123456\", -2, -3)</td>"
-            + "<td>=</td><td>\"234\"</td></tr>"
-            + ""
-            + "<tr><td>substr(\"123456\", 10, 2)</td>"
+
+            + "<tr><td>substr(\"abcdef\", -3, 2)</td>"
+            + "<td>=</td><td>\"ab\"</td></tr>"
+
+            + "<tr><td>substr(\"abcdef\", 2, 10)</td>"
+            + "<td>=</td><td>\"cdef\"</td></tr>"
+
+            + "<tr><td>substr(\"abcdef\", 10, 2)</td>"
             + "<td>=</td><td>\"\"</td></tr>"
-            + ""
+
             + "<tr><td>substr(\"\", *, *)</td><td>=</td><td>\"\"</td></tr>"
             + "<tr><td>substr(null, *, *)</td><td>=</td><td>null</td></tr>"
             + "</table>"
             + "* can be any number.";
-    }
-
-    public static void main(final String args[]) {
-        System.out.println("substr(..., 0, 2) " + SubstringManipulator.substr("123456", 0, 2));
-        System.out.println("substr(..., 1, 20) " + SubstringManipulator.substr("123456", 1, 20));
-        System.out.println("substr(..., -2, 1) " + SubstringManipulator.substr("123456", -2, 1));
-        System.out.println("substr(..., -2, -3) " + SubstringManipulator.substr("123456", -2, -3));
-        System.out.println("substr(..., -10, 2) " + SubstringManipulator.substr("123456", -10, 2));
-        System.out.println("substr(..., -10, 6) " + SubstringManipulator.substr("123456", -10, 6));
-        System.out.println("substr(..., -10, 10) " + SubstringManipulator.substr("123456", -10, 20));
-        System.out.println("substr(..., 10, -2) " + SubstringManipulator.substr("123456", 10, -2));
-        System.out.println("substr(..., 10, -6) " + SubstringManipulator.substr("123456", 10, -6));
-        System.out.println("substr(..., 10, -20) " + SubstringManipulator.substr("123456", 10, -20));
     }
 }

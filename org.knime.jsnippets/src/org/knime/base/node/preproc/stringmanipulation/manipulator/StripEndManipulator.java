@@ -115,7 +115,7 @@ public class StripEndManipulator implements StringManipulator {
      */
     @Override
     public String getCategory() {
-        return "Remove parts";
+        return "Remove";
     }
 
     /**

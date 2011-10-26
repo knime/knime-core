@@ -55,13 +55,20 @@ import java.util.Locale;
 import org.apache.commons.lang3.StringUtils;
 
 /**
+ * The lowerCase string manipulator to convert characters in a string
+ * to lower case.
  *
  * @author Heiko Hofer
  */
 public class LowerCaseManipulator implements StringManipulator {
 
-    public static String lowerCase(final String s) {
-        return StringUtils.lowerCase(s, Locale.ENGLISH);
+    /**
+     * Convert characters in a string to lower case.
+     * @param str the string
+     * @return the converted string
+     */
+    public static String lowerCase(final String str) {
+        return StringUtils.lowerCase(str, Locale.ENGLISH);
     }
 
     /**

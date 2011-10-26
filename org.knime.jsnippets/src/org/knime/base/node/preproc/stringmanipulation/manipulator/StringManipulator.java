@@ -55,13 +55,39 @@ package org.knime.base.node.preproc.stringmanipulation.manipulator;
  * @author Heiko Hofer
  */
 public interface StringManipulator {
-    String getDisplayName();
-
-    String getName();
-
+    /**
+     * The category of this string manipulator. Used to categorize
+     * string manipulators
+     * @return the category
+     */
     String getCategory();
 
-    String getDescription();
-    
+    /**
+     * The name of the method. This must match the java method name.
+     * @return the method name
+     */
+    String getName();
+
+
+    /**
+     * The number of arguments. This must match the number of arguments of the
+     * java method. Varargs are counted as one.
+     *
+     * @return the number of arguments
+     */
     int getNrArgs();
+
+    /**
+     * This name should be a brief description. Usually this is the name plus
+     * arguments.
+     * @return the display name
+     */
+    String getDisplayName();
+
+    /**
+     * A full description which can have html tags.
+     * @return the full description of the string manipulator.
+     */
+    String getDescription();
+
 }

@@ -50,25 +50,31 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import org.apache.commons.lang3.text.WordUtils;
 
 /**
- * The capitalize string manipulator to capitalize all delimiter separated
- * words in a string.
+ * The removeChars string manipulator to remove all occurrences of given
+ * characters from a string.
  *
  * @author Heiko Hofer
  */
-public class CapitalizeDelimManipulator implements StringManipulator {
+public class RemoveCharsManipulator implements StringManipulator {
 
     /**
-     * Capitalizes all delimiter separated words in a string.
+     * Remove all occurrences of given characters from a string.
      *
      * @param str the string
-     * @param delim the delimiter
-     * @return the capitalized string
+     * @param chars the characters that will be removed
+     * @return the processed string
      */
-    public static String capitalize(final String str, final char... delim) {
-        return WordUtils.capitalizeFully(str, delim);
+    public static String removeChars(final String str, final int... chars) {
+        if (null == str) {
+            return null;
+        }
+        StringBuilder b = new StringBuilder();
+        for (int cc : chars) {
+            b.appendCodePoint(cc);
+        }
+        return str.replaceAll("[" + b.toString() + "]+", "");
     }
 
     /**
@@ -76,7 +82,7 @@ public class CapitalizeDelimManipulator implements StringManipulator {
      */
     @Override
     public String getCategory() {
-        return "Change case";
+        return "Remove";
     }
 
     /**
@@ -84,7 +90,7 @@ public class CapitalizeDelimManipulator implements StringManipulator {
      */
     @Override
     public String getName() {
-        return "capitalize";
+        return "removeChars";
     }
 
 
@@ -110,22 +116,25 @@ public class CapitalizeDelimManipulator implements StringManipulator {
      */
     @Override
     public String getDescription() {
-        return "Capitalizes all delimiter separated words in a string, "
-                + "so that each word is made up of a titlecase "
-                + "character and then a series of lowercase characters."
-                + "<br/><br/>"
-                + "<strong>Examples:</strong>"
-                + "<br/>"
-                + "<table>"
-                + "<tr><td>capitalize(\"processed by KNIME\", ' ')</td>"
-                + "<td>=</td><td>\"Processed By Knime\"</td></tr>"
-                + "<tr><td>capitalize(\"processed by KNIME\", 'e')</td>"
-                + "<td>=</td><td>\"ProceSseD by knime\"</td></tr>"
-                + "<tr><td>capitalize(\"processed by KNIME\", 'e', ' ')</td>"
-                + "<td>=</td><td>\"ProceSseD By Knime\"</td></tr>"
-                + "<tr><td>capitalize(\"\", *)</td><td>=</td><td>\"\"</td></tr>"
-                + "<tr><td>capitalize(null, *)</td><td>=</td><td>null</td></tr>"
-                + "</table>"
-                + "* can be any character.";
+        return "Removes specific characters."
+            + "<br/><br/>"
+            + "<strong>Examples:</strong>"
+            + "<br/>"
+            + "<table>"
+            + "<tr><td>removeChars(\"a,&nbsp;&nbsp;b&nbsp;,&nbsp;c\", ' ')</td>"
+            + "<td>=</td><td>\"a,b,c\"</td></tr>"
+
+            + "<tr><td>removeChars(\"a,&nbsp;&nbsp;b&nbsp;,&nbsp;c\", "
+            + "' ', ',')</td>"
+            + "<td>=</td><td>\"abc\"</td></tr>"
+
+            + "<tr><td>removeChars(\"\", *)</td>"
+            + "<td>=</td><td>\"\"</td></tr>"
+
+            + "<tr><td>removeChars(null, *)</td>"
+            + "<td>=</td><td>null</td></tr>"
+            + "</table>"
+            + "* can be any character.";
     }
+
 }

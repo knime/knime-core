@@ -46,86 +46,59 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   04.10.2011 (hofer): created
+ *   20.10.2011 (hofer): created
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import org.apache.commons.lang3.text.WordUtils;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
- * The capitalize string manipulator to capitalize all delimiter separated
- * words in a string.
+ * Basic test for the removeChars string manipulator.
  *
  * @author Heiko Hofer
  */
-public class CapitalizeDelimManipulator implements StringManipulator {
+public class RemoveCharsManipulatorTest {
 
     /**
-     * Capitalizes all delimiter separated words in a string.
-     *
-     * @param str the string
-     * @param delim the delimiter
-     * @return the capitalized string
+     * Test method for
+     * {@link RemoveCharsManipulator#removeChars(String, int...)}.
      */
-    public static String capitalize(final String str, final char... delim) {
-        return WordUtils.capitalizeFully(str, delim);
+    @Test
+    public void testRemoveCharsExamples() {
+        // Test the examples in the description of the removeChars function
+        Assert.assertEquals("a,b,c",
+        		RemoveCharsManipulator.removeChars(
+                		"a,  b , c", ' '));
+
+        Assert.assertEquals("abc",
+        		RemoveCharsManipulator.removeChars(
+                		"a,  b , c", ' ', ','));
+
+        Assert.assertEquals("",
+        		RemoveCharsManipulator.removeChars("", ' ', ','));
+
+        Assert.assertEquals(null,
+        		RemoveCharsManipulator.removeChars(null, ' ', ','));
+
     }
 
     /**
-     * {@inheritDoc}
+     * Test method for
+     * {@link RemoveCharsManipulator#removeChars(String, int...)}.
      */
-    @Override
-    public String getCategory() {
-        return "Change case";
-    }
+    @Test
+    public void testUnicodeExamples() {
+        // Test unicode 4.0, a character above 0xffff
+        StringBuilder b = new StringBuilder();
+        b.append("a");
+        b.appendCodePoint(0x2F9E9);
+        b.append(" b ");
+        b.appendCodePoint(0x2F9E9);
+        b.append(" c");
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getName() {
-        return "capitalize";
-    }
+        Assert.assertEquals("abc",
+        		RemoveCharsManipulator.removeChars(b.toString(), ' ', 0x2F9E9));
 
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDisplayName() {
-        return getName() + "(str, char...)";
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrArgs() {
-        return 2;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return "Capitalizes all delimiter separated words in a string, "
-                + "so that each word is made up of a titlecase "
-                + "character and then a series of lowercase characters."
-                + "<br/><br/>"
-                + "<strong>Examples:</strong>"
-                + "<br/>"
-                + "<table>"
-                + "<tr><td>capitalize(\"processed by KNIME\", ' ')</td>"
-                + "<td>=</td><td>\"Processed By Knime\"</td></tr>"
-                + "<tr><td>capitalize(\"processed by KNIME\", 'e')</td>"
-                + "<td>=</td><td>\"ProceSseD by knime\"</td></tr>"
-                + "<tr><td>capitalize(\"processed by KNIME\", 'e', ' ')</td>"
-                + "<td>=</td><td>\"ProceSseD By Knime\"</td></tr>"
-                + "<tr><td>capitalize(\"\", *)</td><td>=</td><td>\"\"</td></tr>"
-                + "<tr><td>capitalize(null, *)</td><td>=</td><td>null</td></tr>"
-                + "</table>"
-                + "* can be any character.";
     }
 }

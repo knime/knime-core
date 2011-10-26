@@ -46,98 +46,36 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   04.10.2011 (hofer): created
+ *   20.10.2011 (hofer): created
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
+ * Basic test for the upperCase string manipulator.
  *
  * @author Heiko Hofer
  */
-public class RemoveSpecificCharacterManipulator implements StringManipulator {
-
-    public static String removeCharacter(final String s, final int... c) {
-        if (null == s) {
-            return null;
-        }
-        StringBuilder b = new StringBuilder();
-        for (int cc : c) {
-            b.appendCodePoint(cc);
-        }
-        return s.replaceAll("[" + b.toString() + "]+", "");
-    }
+public class UpperCaseManipulatorTest {
 
     /**
-     * {@inheritDoc}
+     * Test method for
+     * {@link UpperCaseManipulator#upperCase(String)}.
      */
-    @Override
-    public String getCategory() {
-        return "Remove parts";
-    }
+    @Test
+    public void testUpperCaseExamples() {
+        // Test the examples in the description of the upperCase function
+        Assert.assertEquals("PROCESSED BY KNIME",
+        		UpperCaseManipulator.upperCase(
+                		"processed by KNIME"));
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getName() {
-        return "removeCharacter";
-    }
+        Assert.assertEquals("",
+        		UpperCaseManipulator.upperCase(""));
 
+        Assert.assertEquals(null,
+        		UpperCaseManipulator.upperCase(null));
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDisplayName() {
-        return getName() + "(str, char...)";
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrArgs() {
-        return 2;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return "Removes specific characters."
-            + "<br/><br/>"
-            + "<strong>Examples:</strong>"
-            + "<br/>"
-            + "<table>"
-            + "<tr><td>removeCharacter(\"a,  b , c\", ' ')</td>"
-            + "<td>=</td><td>\"a,b,c\"</td></tr>"
-
-            + "<tr><td>removeCharacter(\"a,  b , c\", ' ', ',')</td>"
-            + "<td>=</td><td>\"abc\"</td></tr>"
-
-            + "<tr><td>removeCharacter(\"\")</td>"
-            + "<td>=</td><td>\"\"</td></tr>"
-
-            + "<tr><td>removeCharacter(null)</td>"
-            + "<td>=</td><td>null</td></tr>"
-            + "</table>";
-    }
-
-    public static void main(final String args[]) {
-        System.out.println("removeCharacter(\"a,  b , c\", ' ') = " + removeCharacter("a,  b , c", ' '));
-        System.out.println("removeCharacter(\"a,  b , c\", ' ', ',') = " + removeCharacter("a,  b , c", ' ', ','));
-        System.out.println("removeCharacter(\"a,  b , c\", ' ', '\\u002C') = " + removeCharacter("a,  b , c", ' ', '\u002C'));
-        // Test unicode 4.0, a character above 0xffff
-        StringBuilder b = new StringBuilder();
-        b.append("a");
-        b.appendCodePoint(0x2F9E9);
-        b.append(" b ");
-        b.appendCodePoint(0x2F9E9);
-        b.append(" c");
-        System.out.println("removeCharacter(\"" + b.toString() + "\", ' ', 0x2F9E9) = " + removeCharacter(b.toString(), ' ', 0x2F9E9));
-        System.out.println("removeCharacter(\"a\\tb\\tc\", ' ') = " + removeCharacter("a\tb\tc", '\t'));
     }
 }
