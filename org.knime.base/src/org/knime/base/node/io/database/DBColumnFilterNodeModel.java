@@ -48,6 +48,8 @@
  */
 package org.knime.base.node.io.database;
 
+import java.util.List;
+
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -164,13 +166,22 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
     }
 
     private String createQuery(final String query, final String driver) {
-        StringBuilder buf = new StringBuilder();
+        final StringBuilder buf = new StringBuilder();
+        final String[] queries = query.split("\n");
+        for (int i = 0; i < queries.length - 1; i++) {
+            buf.append(queries[i]);
+            buf.append("\n");
+        }
+        // build SELECT statement
+        buf.append("SELECT ");
         if (m_filter.getExcludeList().isEmpty()) {
             super.setWarningMessage("All columns retained.");
             buf.append("*"); // selects all columns
         } else {
-            for (String colName : m_filter.getIncludeList()) {
-                if (buf.length() > 0) {
+            final List<String> columnNames = m_filter.getIncludeList();
+            for (int i = 0; i < columnNames.size(); i++) {
+                final String colName = columnNames.get(i);
+                if (i > 0) {
                     buf.append(",");
                 }
                 if (!colName.matches("\\w*")) { // if no word chars in name
@@ -184,8 +195,10 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
                 }
             }
         }
-        return "SELECT " + buf + " FROM (" + query + ") table_"
-            + System.identityHashCode(this);
+        final String selectQuery = queries[queries.length - 1];
+        buf.append(" FROM (" + selectQuery + ") table_" 
+                + System.identityHashCode(this));
+        return buf.toString();
     }
 
 }

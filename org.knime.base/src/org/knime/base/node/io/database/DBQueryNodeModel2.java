@@ -166,18 +166,33 @@ final class DBQueryNodeModel2 extends DBNodeModel
     }
 
     /**
-     * Parses the given R command and replaces the variables.
-     * @param rCommand the R command to parse
-     * @param model delegator to to retrieve variables
-     * @return the R script where the variables have been replace with
-     *         their actual value
+     * Parses the given SQL query and resolves the table placeholder and 
+     * variables.
+     * @param query to be replaced (the incoming query from the Database 
+     *              Connector)
+     * @return a new query string
      */
     private String parseQuery(final String query) {
-        String command = new String(m_query).replaceAll(
-            DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER,
-            "(" + query + ")");
-        return DBVariableSupportNodeModel.Resolver.parse(command, this);
-
+        final StringBuilder resultQueries = new StringBuilder();
+        String[] inQueries = query.split("\n");
+        String inSelect = inQueries[inQueries.length - 1];
+        for (int i = 0; i < inQueries.length - 1; i++) {
+            resultQueries.append(inQueries[i]);
+            resultQueries.append("\n");
+        }
+        String[] thisQueries = m_query.split("\n");
+        String thisSelect = thisQueries[thisQueries.length - 1];
+        for (int i = 0; i < thisQueries.length - 1; i++) {
+            resultQueries.append(thisQueries[i]);
+            resultQueries.append("\n");
+        }        
+        thisSelect = new String(thisSelect).replaceAll(
+                DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER,  
+                "(" + inSelect + ")");
+        thisSelect = DBVariableSupportNodeModel.Resolver.parse(
+                thisSelect, this);
+        resultQueries.append(thisSelect);
+        return resultQueries.toString();
     }
 
     /**

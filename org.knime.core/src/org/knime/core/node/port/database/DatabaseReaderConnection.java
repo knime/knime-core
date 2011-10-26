@@ -227,18 +227,20 @@ public final class DatabaseReaderConnection {
             }
             synchronized (m_conn.syncConnection(conn)) {
                 final String[] oQueries =  m_conn.getQuery().split("\n");
-                final String selectQuery = oQueries[oQueries.length - 1];
+                final int selectIndex = oQueries.length - 1;
                 final int hashAlias = System.identityHashCode(this);
-                final String pQuery = "SELECT * FROM (" + selectQuery + ") "
-                    + "table_" + hashAlias + " WHERE 1 = 0";
+                // replace SELECT (last) query with wrapped statement
+                oQueries[selectIndex] = "SELECT * FROM (" 
+                        + oQueries[selectIndex] + ") "  
+                        + "table_" + hashAlias + " WHERE 1 = 0";
                 ResultSet result = null;
                 try {
                     // if only one SQL statement is being executed
                     if (oQueries.length == 1) {
                         // try to see if prepared statements are supported
                         LOGGER.debug("Executing SQL statement \"" 
-                                + selectQuery + "\"");
-                        m_stmt = conn.prepareStatement(selectQuery);
+                                + oQueries[selectIndex] + "\"");
+                        m_stmt = conn.prepareStatement(oQueries[selectIndex]);
                         ((PreparedStatement) m_stmt).execute();
                         m_spec = createTableSpec(
                                 ((PreparedStatement) m_stmt).getMetaData());
@@ -250,7 +252,7 @@ public final class DatabaseReaderConnection {
                         for (int i = 0; i < oQueries.length - 1; i++) {
                             m_stmt.execute(oQueries[i]);
                         }
-                        result = m_stmt.executeQuery(selectQuery);
+                        result = m_stmt.executeQuery(oQueries[selectIndex]);
                         m_spec = createTableSpec(result.getMetaData());
                     }
                 } catch (Exception e) {
@@ -258,8 +260,18 @@ public final class DatabaseReaderConnection {
                     LOGGER.warn("PreparedStatment not support by database: "
                             + e.getMessage(), e);
                     m_stmt = conn.createStatement();
-                    LOGGER.debug("Executing SQL statement \"" + pQuery + "\"");
-                    result = m_stmt.executeQuery(pQuery);
+                    // if more than one SQL statement is being executed
+                    if (oQueries.length > 1) {
+                        LOGGER.debug("Executing SQL statement(s) \"" 
+                                + Arrays.toString(oQueries) + "\"");
+                        for (int i = 0; i < oQueries.length - 1; i++) {
+                            m_stmt.execute(oQueries[i]);
+                        }
+                    } else {
+                        LOGGER.debug("Executing SQL statement \"" 
+                                + oQueries[selectIndex] + "\"");
+                    }
+                    result = m_stmt.executeQuery(oQueries[selectIndex]);
                     m_spec = createTableSpec(result.getMetaData());
                 } finally {
                     if (result != null) {

@@ -163,7 +163,16 @@ final class DBRowFilterNodeModel extends DBNodeModel {
     }
 
     private String createQuery(final String query, final String driver) {
-        StringBuilder buf = new StringBuilder();
+        final StringBuilder buf = new StringBuilder();
+        final String[] queries = query.split("\n");
+        for (int i = 0; i < queries.length - 1; i++) {
+            buf.append(queries[i]);
+            buf.append("\n");
+        }
+        final String selectQuery = queries[queries.length - 1];
+        buf.append("SELECT * FROM (" + selectQuery + ") "
+                + "table_" + System.identityHashCode(this) + " WHERE ");
+        // build WHERE clause
         String colName = m_column.getStringValue();
         if (!colName.matches("\\w*")) { // if no word chars in column name
             if (driver.contains("mysql")) {
@@ -178,9 +187,7 @@ final class DBRowFilterNodeModel extends DBNodeModel {
         if (!m_value.getStringValue().trim().isEmpty()) {
             buf.append(" " + m_value.getStringValue().trim());
         }
-        return "SELECT * FROM (" + query + ") "
-            + "table_" + System.identityHashCode(this)
-            + " WHERE " + buf.toString();
+        return buf.toString();
     }
 
 }
