@@ -105,11 +105,8 @@ final class DBDialogPane extends JPanel {
     /** Default font used for all components within the database dialogs. */
     static final Font FONT = new Font("Monospaced", Font.PLAIN, 12);
 
-    /**
-     * Creates new dialog.
-     */
+    /** Creates new dialog. */
     DBDialogPane() {
-        // super(new GridLayout(0, 1));
         super();
         super.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         
@@ -118,7 +115,7 @@ final class DBDialogPane extends JPanel {
         m_driver.setFont(FONT);
         final JPanel driverPanel = new JPanel(new BorderLayout());
         driverPanel.setBorder(BorderFactory
-                .createTitledBorder(" Database driver "));
+                .createTitledBorder(" Database Driver "));
         driverPanel.add(m_driver, BorderLayout.CENTER);
         driverPanel.add(new JLabel(" (Additional Database Drivers can be loaded"
                 + " in the KNIME preference page.) "), BorderLayout.SOUTH);
@@ -154,12 +151,13 @@ final class DBDialogPane extends JPanel {
         });
         m_credBox.setEditable(false);
         m_credBox.setFont(FONT);
+        credPanel.add(m_credCheckBox, BorderLayout.WEST);
         credPanel.add(m_credBox, BorderLayout.CENTER);
         super.add(credPanel);
 
 // create and user name field        
         final JPanel userPanel = new JPanel(new BorderLayout());
-        userPanel.setBorder(BorderFactory.createTitledBorder(" User name "));
+        userPanel.setBorder(BorderFactory.createTitledBorder(" User Name "));
         m_user.setFont(FONT);
         userPanel.add(m_user, BorderLayout.CENTER);
         super.add(userPanel);
