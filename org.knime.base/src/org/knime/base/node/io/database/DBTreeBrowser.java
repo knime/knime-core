@@ -183,6 +183,9 @@ public class DBTreeBrowser extends JPanel implements TreeSelectionListener {
     /** {@inheritDoc} */
     @Override
     public void valueChanged(final TreeSelectionEvent event) {
+        if (m_meta == null) {
+            return;
+        }
         final DefaultMutableTreeNode node = (DefaultMutableTreeNode)
                 m_tree.getLastSelectedPathComponent();
         if (node == null) {
