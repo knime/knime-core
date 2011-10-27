@@ -116,10 +116,14 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
     /** Icon representing a node in the resource navigator. */
     public static final Image NODE = KNIMEUIPlugin.getDefault().getImage(
             KNIMEUIPlugin.PLUGIN_ID, "icons/node.png");
-    /** Icon represneting a workflow group in the resource navigator. */
+    /** Icon representing a workflow group in the resource navigator. */
     public static final Image WORKFLOW_GROUP
         = KNIMEUIPlugin.imageDescriptorFromPlugin(KNIMEUIPlugin.PLUGIN_ID,
                 "icons/wf_set.png").createImage();
+    /** Icon representing a metanode template in the resource navigator. */
+    public static final Image TEMPLATE
+        = KNIMEUIPlugin.imageDescriptorFromPlugin(KNIMEUIPlugin.PLUGIN_ID,
+        "icons/meta/metanode_template_repository.png").createImage();
 
 //    private static final NodeLogger LOGGER = NodeLogger.getLogger(
 //            KnimeResourceLableProvider.class);
