@@ -171,6 +171,8 @@ final class MissingValuePanel extends JPanel {
             border = BorderFactory.createLineBorder(Color.BLACK);
             JButton requestRemoveButton = new JButton("Remove");
             requestRemoveButton.addActionListener(new ActionListener() {
+                /** {@inheritDoc} */
+                @Override
                 public void actionPerformed(final ActionEvent e) {
                     firePropertyChange(REMOVE_ACTION, null, null);
                 }
@@ -422,9 +424,8 @@ final class MissingValuePanel extends JPanel {
 
     /** Action Listener for buttons. */
     private class ButtonListener implements ActionListener {
-        /**
-         * {@inheritDoc}
-         */
+        /** {@inheritDoc} */
+        @Override
         public void actionPerformed(final ActionEvent e) {
             if (m_fixButton == null) {
                 return;

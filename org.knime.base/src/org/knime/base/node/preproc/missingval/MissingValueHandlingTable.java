@@ -138,16 +138,14 @@ public final class MissingValueHandlingTable implements DataTable {
         return -1;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
+    @Override
     public DataTableSpec getDataTableSpec() {
         return m_spec;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
+    @Override
     public RowIterator iterator() {
         return new MissingValueHandlingTableIterator(this);
     }
