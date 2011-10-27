@@ -2808,6 +2808,24 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return null;
     }
 
+    /* Little helper class to enable vertical sorting of collapsed meta
+     * node in- and outports.
+     */
+    private class VerticalPortIndex implements Comparable<VerticalPortIndex> {
+        private int m_index = -1;
+        private int m_yPos;
+        public VerticalPortIndex(final int y) {
+            m_yPos = y;
+        }
+        public int getIndex() { return m_index; }
+        public void setIndex(final int i) { m_index = i; }
+        /** {@inheritDoc} */
+        @Override
+        public int compareTo(VerticalPortIndex arg) {
+            return Double.compare(m_yPos, arg.m_yPos);
+        }
+    }
+    
     /** Collapse selected set of nodes into a metanode. Make sure connections
      * from and to nodes not contained in this set are passed through
      * appropriate ports of the new metanode.
@@ -2832,12 +2850,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             HashSet<NodeID> orgIDsHash = new HashSet<NodeID>(Arrays.asList(orgIDs));
             // find outside Nodes/Ports that have connections to the inside.
             // Map will hold SourceNodeID/PortIndex + Index of new MetanodeInport.
-            HashMap<Pair<NodeID, Integer>, Integer> exposedIncomingPorts =
-                new HashMap<Pair<NodeID, Integer>, Integer>();
+            HashMap<Pair<NodeID, Integer>, VerticalPortIndex> exposedIncomingPorts =
+                new HashMap<Pair<NodeID, Integer>, VerticalPortIndex>();
             // second Map holds list of affected connections
-            HashMap<ConnectionContainer, Integer> inportConnections =
-                         new HashMap<ConnectionContainer, Integer>();
-            int inMNindex = 0;
+            HashMap<ConnectionContainer, VerticalPortIndex> inportConnections =
+                         new HashMap<ConnectionContainer, VerticalPortIndex>();
             for (NodeID id : orgIDs) {
                 if (m_workflow.getConnectionsByDest(id) != null)
                 for (ConnectionContainer cc : m_workflow.getConnectionsByDest(id)) {
@@ -2846,19 +2863,43 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                                 = new Pair<NodeID, Integer>(cc.getSource(),
                                                             cc.getSourcePort());
                         if (!exposedIncomingPorts.containsKey(npi)) {
-                            exposedIncomingPorts.put(npi, inMNindex);
-                            inMNindex++;
+                            NodeContainer nc = getNodeContainer(npi.getFirst());
+                            NodeUIInformation uii = nc.getUIInformation();
+                            // also include source port index into the ypos
+                            // to make sure ports of the same node are sorted
+                            // correctly!
+                            int yPos = npi.getSecond();
+                            if (uii != null) {
+                                int x[] = uii.getBounds();
+                                if ((x != null) && (x.length >= 2)) {
+                                    // add node y position to port index
+                                    yPos += x[1];
+                                }
+                            }
+                            VerticalPortIndex vpi = new VerticalPortIndex(yPos);
+                            exposedIncomingPorts.put(npi, vpi);
                         }
-                        int inportIndex = exposedIncomingPorts.get(npi);
+                        VerticalPortIndex inportIndex = exposedIncomingPorts.get(npi);
                         inportConnections.put(cc, inportIndex);
                     }
                 }
             }
+            // sort new input ports by vertical position of source nodes
+            VerticalPortIndex[] vpis =
+                new VerticalPortIndex[exposedIncomingPorts.size()];
+            int vi = 0;
+            for (VerticalPortIndex vpi : exposedIncomingPorts.values()) {
+                vpis[vi] = vpi;
+                vi++;
+            }
+            Arrays.sort(vpis);
+            for (int i = 0; i < vpis.length; i++) {
+                vpis[i].setIndex(i);
+            }
             // find Nodes/Ports that have outgoing connections to the outside.
             // Map will hold SourceNodeID/PortIndex + Index of new MetanodeOutport.
-            HashMap<Pair<NodeID, Integer>, Integer> exposedOutports =
-                new HashMap<Pair<NodeID, Integer>, Integer>();
-            int outMNindex = 0;
+            HashMap<Pair<NodeID, Integer>, VerticalPortIndex> exposedOutports =
+                new HashMap<Pair<NodeID, Integer>, VerticalPortIndex>();
             for (NodeID id : orgIDs) {
                 for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
                     if (!orgIDsHash.contains(cc.getDest())) {
@@ -2866,11 +2907,35 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                                 = new Pair<NodeID, Integer>(cc.getSource(),
                                                             cc.getSourcePort());
                         if (!exposedOutports.containsKey(npi)) {
-                            exposedOutports.put(npi, outMNindex);
-                            outMNindex++;
+                            NodeContainer nc = getNodeContainer(npi.getFirst());
+                            NodeUIInformation uii = nc.getUIInformation();
+                            // also include source port index into the ypos
+                            // to make sure ports of the same node are sorted
+                            // correctly!
+                            int yPos = npi.getSecond();
+                            if (uii != null) {
+                                int x[] = uii.getBounds();
+                                if ((x != null) && (x.length >= 2)) {
+                                    // add node y position to port index
+                                    yPos += x[1];
+                                }
+                            }
+                            VerticalPortIndex vpi = new VerticalPortIndex(yPos);
+                            exposedOutports.put(npi, vpi);
                         }
                     }
                 }
+            }
+            // also sort new output ports by vertical position of source nodes
+            vpis = new VerticalPortIndex[exposedOutports.size()];
+            vi = 0;
+            for (VerticalPortIndex vpi : exposedOutports.values()) {
+                vpis[vi] = vpi;
+                vi++;
+            }
+            Arrays.sort(vpis);
+            for (int i = 0; i < vpis.length; i++) {
+                vpis[i].setIndex(i);
             }
             // determine types of new Metanode in- and outports:
             // (note that we reach directly into the Node to get the port type
@@ -2878,14 +2943,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             //  port.)
             PortType[] exposedIncomingPortTypes = new PortType[exposedIncomingPorts.size()];
             for (Pair<NodeID, Integer> npi : exposedIncomingPorts.keySet()) {
-                int index = exposedIncomingPorts.get(npi);
+                int index = exposedIncomingPorts.get(npi).getIndex();
                 NodeContainer nc = getNodeContainer(npi.getFirst());
                 int portIndex = npi.getSecond();
                 exposedIncomingPortTypes[index] = nc.getOutPort(portIndex).getPortType();
             }
             PortType[] exposedOutportTypes = new PortType[exposedOutports.size()];
             for (Pair<NodeID, Integer> npi : exposedOutports.keySet()) {
-                int index = exposedOutports.get(npi);
+                int index = exposedOutports.get(npi).getIndex();
                 NodeContainer nc = getNodeContainer(npi.getFirst());
                 int portIndex = npi.getSecond();
               exposedOutportTypes[index]
@@ -2981,7 +3046,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             // create connections INSIDE the new workflow (from incoming ports)
             for (ConnectionContainer cc : inportConnections.keySet()) {
-                int portIndex = inportConnections.get(cc);
+                int portIndex = inportConnections.get(cc).getIndex();
                 NodeID newID = oldIDsHash.get(cc.getDest());
                 newWFM.addConnection(newWFM.getID(), portIndex,
                         newID, cc.getDestPort());
@@ -2989,13 +3054,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             // create connections INSIDE the new workflow (to outgoing ports)
             for (Pair<NodeID, Integer> npi : exposedOutports.keySet()) {
-                int index = exposedOutports.get(npi);
+                int index = exposedOutports.get(npi).getIndex();
                 NodeID newID = oldIDsHash.get(npi.getFirst());
                 newWFM.addConnection(newID, npi.getSecond(), newWFM.getID(), index);
             }
             // create OUTSIDE connections to the new workflow
             for (Pair<NodeID, Integer> npi : exposedIncomingPorts.keySet()) {
-                int index = exposedIncomingPorts.get(npi);
+                int index = exposedIncomingPorts.get(npi).getIndex();
                 this.addConnection(npi.getFirst(), npi.getSecond(),
                         newWFM.getID(), index);
             }
@@ -3009,7 +3074,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         Pair<NodeID, Integer> npi
                                 = new Pair<NodeID, Integer>(cc.getSource(),
                                                             cc.getSourcePort());
-                        int newPort = exposedOutports.get(npi);
+                        int newPort = exposedOutports.get(npi).getIndex();
                         this.removeConnection(cc);
                         this.addConnection(newWFM.getID(), newPort,
                                 cc.getDest(), cc.getDestPort());
