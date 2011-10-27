@@ -63,6 +63,7 @@ import org.knime.core.data.DataValue;
 @SuppressWarnings("serial")
 public class PNGImageCell extends DataCell implements PNGImageValue {
 
+
     /** @return PNGImageValue.class */
     public static Class<? extends DataValue> getPreferredValueClass() {
         return PNGImageValue.class;
@@ -128,6 +129,15 @@ public class PNGImageCell extends DataCell implements PNGImageValue {
     @Override
     public int hashCode() {
         return m_content.hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getImageExtension() {
+        
+        return "png";
     }
 
 }

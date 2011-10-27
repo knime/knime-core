@@ -130,5 +130,13 @@ public class PNGImageBlobCell extends BlobDataCell implements PNGImageValue {
     public int hashCode() {
         return m_content.hashCode();
     }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getImageExtension() {
+        
+        return "png";
+    }
 
 }
