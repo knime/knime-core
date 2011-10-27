@@ -58,4 +58,7 @@ public interface ImageValue extends DataValue {
     /** @return underlying image content for this image type/value */
     public ImageContent getImageContent();
 
+    /** @return extension of the image */
+    public String getImageExtension();
+
 }
