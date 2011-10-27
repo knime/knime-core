@@ -78,10 +78,11 @@ import org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfOffsetM
 import org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfOffsetModifiersManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.JoinManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.JoinSepManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.LengthManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.LowerCaseManipulator;
-import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveSpaceCharsManipulator;
-import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveSpaceCharDuplicatesManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveCharsManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveSpaceCharDuplicatesManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveSpaceCharsManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.StringManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.StripEndManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.StripManipulator;
@@ -147,6 +148,7 @@ public final class StringManipulatorProvider {
         manipulators.add(new IndexOfModifiersManipulator());
         manipulators.add(new JoinManipulator());
         manipulators.add(new JoinSepManipulator());
+        manipulators.add(new LengthManipulator());
         manipulators.add(new LowerCaseManipulator());
         manipulators.add(new RemoveSpaceCharsManipulator());
         manipulators.add(new RemoveSpaceCharDuplicatesManipulator());
