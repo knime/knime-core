@@ -157,10 +157,8 @@ public class StacktraceDumper {
     }
 
     private final class Collector implements Runnable {
-
-        /**
-         * {@inheritDoc}
-         */
+        /** {@inheritDoc} */
+        @Override
         public void run() {
             while (!m_cancel) {
 
@@ -199,9 +197,8 @@ public class StacktraceDumper {
 
     private final class Dumper implements Runnable {
 
-        /**
-         * {@inheritDoc}
-         */
+        /** {@inheritDoc}  */
+        @Override
         public void run() {
             int intFirst;
             int intLast;

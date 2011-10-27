@@ -422,14 +422,14 @@ public class StackDumpAnalyzer {
             String thread = e.getKey();
             StackElementCount methods = e.getValue();
 
-            /*
-             * count how many stack traces we got for this thread (a thread
-             * spends all its time in its methods called)
-             */
-            int count = 0;
-            for (StackElementCount m : methods.getSubMethods()) {
-                count += m.getCount();
-            }
+//            /*
+//             * count how many stack traces we got for this thread (a thread
+//             * spends all its time in its methods called)
+//             */
+//            int count = 0;
+//            for (StackElementCount m : methods.getSubMethods()) {
+//                count += m.getCount();
+//            }
             // first line contains thread name plus 2 empty cells
             w.write("<tr>");
             w.write("<td>" + thread + "</td>" + CRLF);
@@ -533,6 +533,7 @@ public class StackDumpAnalyzer {
         SortedSet<StackElementCount> sorted =
                 new TreeSet<StackElementCount>(
                         new Comparator<StackElementCount>() {
+                            @Override
                             public int compare(final StackElementCount o1,
                                     final StackElementCount o2) {
                                 if (o1.getCount() == o2.getCount()) {
