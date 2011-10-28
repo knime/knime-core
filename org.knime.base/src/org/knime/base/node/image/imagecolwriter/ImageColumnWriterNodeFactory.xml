@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode type="Sink" icon="./img_writer_16.png">
-    <name>Image (Column) Writer</name>
-    <shortDescription>Writes all images to a directory.</shortDescription>
+    <name>Image Column Writer</name>
+    <shortDescription>Writes all in a column images to a directory.</shortDescription>
     <fullDescription>
         <intro>This node takes all images in a certain column of the input table
             and writes them, each as a separate

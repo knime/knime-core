@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode type="Sink" icon="./writeimg.png">
-	<name>Write Image</name>
-	<shortDescription>Writes a image object to a file.</shortDescription>
+	<name>Image Port Writer</name>
+	<shortDescription>Writes a image port object to a file.</shortDescription>
 	<fullDescription>
-		<intro>Writes a image object to a  file. The image input object must
-	       contain a valid  image as otherwise the node will fail 
+		<intro>Writes a image port object to a  file. The image input object must
+	       contain a valid image as otherwise the node will fail 
 	       during executing. The Image extension is chosen based on the given image type.</intro>
 		<option name="Output file">
 		  Specify the output file. The target folder must already exist.
