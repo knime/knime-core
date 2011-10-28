@@ -67,7 +67,7 @@ public class CountCharsManipulator implements StringManipulator {
      * @return the count
      */
     public static int countChars(final String str, final String chars) {
-    	return CountCharsModifiersManipulator.countChars(str, chars, "");
+        return CountCharsModifiersManipulator.countChars(str, chars, "");
     }
 
     /**
@@ -108,6 +108,7 @@ public class CountCharsManipulator implements StringManipulator {
     @Override
     public String getDescription() {
         return "Counts the number of specific characters in a string. "
+        + "<br/>"
         + "<br/>"
         + "<strong>Examples:</strong>"
         + "<br/>"
