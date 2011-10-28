@@ -78,7 +78,6 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.ListCellRenderer;
-import javax.swing.ListModel;
 import javax.swing.ListSelectionModel;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
@@ -88,6 +87,7 @@ import javax.swing.event.ChangeListener;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.util.ListModelFilterUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
@@ -281,7 +281,8 @@ class FilterColumnPanel extends JPanel {
         m_searchButtonIncl = new JButton("Search");
         ActionListener actionListenerIncl = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                onSearch(m_inclList, m_inclMdl, m_searchFieldIncl,
+                ListModelFilterUtils.onSearch(m_inclList, m_inclMdl, 
+                        m_searchFieldIncl.getText(), 
                         m_markAllHitsIncl.isSelected());
             }
         };
@@ -297,7 +298,8 @@ class FilterColumnPanel extends JPanel {
         ActionListener actionListenerAllIncl = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 m_inclList.clearSelection();
-                onSearch(m_inclList, m_inclMdl, m_searchFieldIncl,
+                ListModelFilterUtils.onSearch(m_inclList, m_inclMdl, 
+                        m_searchFieldIncl.getText(), 
                         m_markAllHitsIncl.isSelected());
             }
         };
@@ -332,7 +334,8 @@ class FilterColumnPanel extends JPanel {
         m_searchButtonExcl = new JButton("Search");
         ActionListener actionListenerExcl = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
-                onSearch(m_exclList, m_exclMdl, m_searchFieldExcl,
+                ListModelFilterUtils.onSearch(m_exclList, m_exclMdl, 
+                        m_searchFieldExcl.getText(), 
                         m_markAllHitsExcl.isSelected());
             }
         };
@@ -348,7 +351,8 @@ class FilterColumnPanel extends JPanel {
         ActionListener actionListenerAllExcl = new ActionListener() {
             public void actionPerformed(final ActionEvent e) {
                 m_exclList.clearSelection();
-                onSearch(m_exclList, m_exclMdl, m_searchFieldExcl,
+                ListModelFilterUtils.onSearch(m_exclList, m_exclMdl, 
+                        m_searchFieldExcl.getText(), 
                         m_markAllHitsExcl.isSelected());
             }
         };
@@ -598,7 +602,7 @@ class FilterColumnPanel extends JPanel {
      * @return a set of all columns from the exclude list
      */
     public Set<String> getExcludedColumnSet() {
-        return getColumnList(m_exclMdl);
+        return ListModelFilterUtils.getColumnList(m_exclMdl);
     }
 
     /**
@@ -607,7 +611,7 @@ class FilterColumnPanel extends JPanel {
      * @return a list of all columns from the include list
      */
     public Set<String> getIncludedColumnSet() {
-        return getColumnList(m_inclMdl);
+        return ListModelFilterUtils.getColumnList(m_inclMdl);
     }
     
     public SelectionOption getSelectionOption() {
@@ -617,22 +621,7 @@ class FilterColumnPanel extends JPanel {
             return SelectionOption.EnforceInclusion;
         }
     }
-
-    /**
-     * Helper for the get***ColumnList methods.
-     *
-     * @param model The list from which to retrieve the elements
-     */
-    private static Set<String> getColumnList(final ListModel model) {
-        final Set<String> list = new LinkedHashSet<String>();
-        for (int i = 0; i < model.getSize(); i++) {
-            Object o = model.getElementAt(i);
-            String cell = ((DataColumnSpec)o).getName();
-            list.add(cell);
-        }
-        return list;
-    }
-
+    
     /**
      * Returns the data type for the given cell retrieving it from the initial
      * {@link DataTableSpec}. If this name could not found, return
@@ -650,138 +639,6 @@ class FilterColumnPanel extends JPanel {
         return null;
     }
 
-    /**
-     * This method is called when the user wants to search the given
-     * {@link JList} for the text of the given {@link JTextField}.
-     *
-     * @param list the list to search in
-     * @param model the list model on which the list is based on
-     * @param searchField the text field with the text to search for
-     * @param markAllHits if set to <code>true</code> the method will mark all
-     *            occurrences of the given search text in the given list. If set
-     *            to <code>false</code> the method will mark the next
-     *            occurrences of the search text after the current marked list
-     *            element.
-     */
-    private static void onSearch(final JList list,
-            final DefaultListModel model, final JTextField searchField,
-            final boolean markAllHits) {
-        if (list == null || model == null || searchField == null) {
-            return;
-        }
-        final String searchStr = searchField.getText().trim();
-        if (model.isEmpty() || searchStr.equals("")) {
-            list.clearSelection();
-            return;
-        }
-        if (markAllHits) {
-            int[] searchHits = getAllSearchHits(list, searchStr);
-            list.clearSelection();
-            if (searchHits.length > 0) {
-                list.setSelectedIndices(searchHits);
-                list.scrollRectToVisible(list.getCellBounds(searchHits[0],
-                        searchHits[0]));
-            }
-        } else {
-            int start = Math.max(0, list.getSelectedIndex() + 1);
-            if (start >= model.getSize()) {
-                start = 0;
-            }
-            int f = searchInList(list, searchStr, start);
-            if (f >= 0) {
-                list.scrollRectToVisible(list.getCellBounds(f, f));
-                list.setSelectedIndex(f);
-            }
-        }
-    }
-
-    /*
-     * Finds in the list any occurrence of the argument string (as substring).
-     */
-    private static int searchInList(final JList list, final String str,
-            final int startIndex) {
-        // this method was (slightly modified) copied from
-        // JList#getNextMatch
-        ListModel model = list.getModel();
-        int max = model.getSize();
-        String prefix = str;
-        if (prefix == null) {
-            throw new IllegalArgumentException();
-        }
-        if (startIndex < 0 || startIndex >= max) {
-            throw new IllegalArgumentException();
-        }
-        prefix = prefix.toUpperCase();
-
-        int index = startIndex;
-        do {
-            Object o = model.getElementAt(index);
-
-            if (o != null) {
-                String string;
-                if (o instanceof String) {
-                    string = ((String)o).toUpperCase();
-                } else if (o instanceof DataColumnSpec) {
-                    string = ((DataColumnSpec)o).getName().toString()
-                            .toUpperCase();
-                } else {
-                    string = o.toString();
-                    if (string != null) {
-                        string = string.toUpperCase();
-                    }
-                }
-
-                if (string != null && string.indexOf(prefix) >= 0) {
-                    return index;
-                }
-            }
-            index = (index + 1 + max) % max;
-        } while (index != startIndex);
-        return -1;
-    }
-
-    /**
-     * Uses the {@link #searchInList(JList, String, int)} method to get all
-     * occurrences of the given string in the given list and returns the index
-     * off all occurrences as a <code>int[]</code>.
-     *
-     * @see #searchInList(JList, String, int)
-     * @param list the list to search in
-     * @param str the string to search for
-     * @return <code>int[]</code> with the indices off all objects from the
-     *         given list which match the given string. If no hits exists the
-     *         method returns an empty <code>int[]</code>.
-     *
-     */
-    private static int[] getAllSearchHits(final JList list, final String str) {
-
-        ListModel model = list.getModel();
-        int max = model.getSize();
-        final ArrayList<Integer> hits = new ArrayList<Integer>(max);
-        int index = 0;
-        do {
-            int tempIndex = searchInList(list, str, index);
-            // if the search returns no hit or returns a hit before the
-            // current search position exit the while loop
-            if (tempIndex < index || tempIndex < 0) {
-                break;
-            }
-            index = tempIndex;
-            hits.add(new Integer(index));
-            // increase the index to start the search from the next position
-            // after the current hit
-            index++;
-        } while (index < max);
-
-        if (hits.size() > 0) {
-            final int[] resultArray = new int[hits.size()];
-            for (int i = 0, length = hits.size(); i < length; i++) {
-                resultArray[i] = hits.get(i).intValue();
-            }
-            return resultArray;
-        }
-        return new int[0];
-    }
 
     /**
      * Set the renderer that is used for both list in this panel.

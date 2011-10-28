@@ -13,10 +13,11 @@
 		    explicitly mentioned in the second tab, labeled "Individual". This
 		    second tab permits individual settings for each available column 
 		    (thus, overriding the default). To make use of this second approach,
-		    select a column which needs extra handling, click "add", and
-		    set the parameters. To remove this extra handling (and instead use the 
-		    default handling), click the "remove" button for this column. The possible 
-		    options are summarized below:
+		    select a column or a list of columns (with the same type) which needs
+		    extra handling, click "Add", and set the parameters. To remove this 
+		    extra handling (and instead use the default handling), click the 
+		    "Remove" button for this column. The possible options are summarized
+		    below:
 		</intro>
         <option name="Do nothing">
 	        The missing values are retained, i.e. those missing cells are not 

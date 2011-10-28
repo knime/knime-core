@@ -48,7 +48,9 @@
  */
 package org.knime.base.node.preproc.missingval;
 
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.knime.core.data.DataCell;
@@ -161,8 +163,8 @@ final class ColSetting {
      */
     protected static final String CFG_META_OTHER = "meta_other";
 
-    /** Name of the column or null if meta column. */
-    private String m_name;
+    /** String array with names of the column or null if meta column. */
+    private String[] m_names;
 
     /** Type of the column, e.g. TYPE_INT. */
     private int m_type;
@@ -175,15 +177,15 @@ final class ColSetting {
 
     /** Private constructor, used by the load method. */
     private ColSetting() {
+        // no op
     }
 
     /**
      * Constructor for meta column setting.
-     * 
      * @param type the type of the meta column
      */
     public ColSetting(final int type) {
-        m_name = null;
+        m_names = null;
         switch (type) {
         case TYPE_UNKNOWN:
         case TYPE_DOUBLE:
@@ -196,14 +198,30 @@ final class ColSetting {
         m_type = type;
         setMethod(METHOD_NO_HANDLING);
     }
+    
+    /**
+     * Constructor for a list of columns.
+     * @param specs list of column specs
+     */
+    public ColSetting(final List<DataColumnSpec> specs) {
+        this(initType(specs.get(0)));
+        m_names = new String[specs.size()];
+        for (int i = 0; i < m_names.length; i++) {
+            m_names[i] = specs.get(i).getName();
+        }
+    }
 
     /**
      * Constructor for individual column.
-     * 
      * @param spec the spec to the column
      */
     public ColSetting(final DataColumnSpec spec) {
-        m_name = spec.getName();
+        m_names = new String[]{spec.getName()};
+        m_type = initType(spec);
+        setMethod(METHOD_NO_HANDLING);
+    }
+    
+    private static int initType(final DataColumnSpec spec) {
         DataType type = spec.getType();
         // NOTE: It's important here to check first for double since
         // DoubleCell.TYPE is a super type of IntCell.TYPE.
@@ -211,15 +229,14 @@ final class ColSetting {
         // the type.isOneSuperTypeOf(IntCell.TYPE) is true
         // (that is the second check below)
         if (type.isASuperTypeOf(DoubleCell.TYPE)) {
-            m_type = TYPE_DOUBLE;
+            return TYPE_DOUBLE;
         } else if (type.isASuperTypeOf(IntCell.TYPE)) {
-            m_type = TYPE_INT;
+            return TYPE_INT;
         } else if (type.isASuperTypeOf(StringCell.TYPE)) {
-            m_type = TYPE_STRING;
+            return TYPE_STRING;
         } else {
-            m_type = TYPE_UNKNOWN;
+            return TYPE_UNKNOWN;
         }
-        setMethod(METHOD_NO_HANDLING);
     }
 
     /**
@@ -258,20 +275,46 @@ final class ColSetting {
     }
 
     /**
-     * @return returns the name or <code>null</code> if
+     * @return returns the display name or <code>null</code> if
      *         {@link #isMetaConfig()} returns <code>true</code>
      */
-    public String getName() {
-        return m_name;
+    public String getDisplayName() {
+        if (isMetaConfig()) {
+            return null;
+        }
+        assert m_names.length > 0;
+        final StringBuilder buf = new StringBuilder();
+        for (String name : m_names) {
+            if (buf.length() > 0) {
+                buf.append(",");
+            }
+            buf.append(name);
+        }
+        return buf.toString();
+    }
+    
+    /**
+     * @return returns the name(s) or <code>null</code> if
+     *         {@link #isMetaConfig()} returns <code>true</code>
+     */
+    final String[] getNames() {
+        return m_names; 
+    }
+    
+    /**
+     * Set a new list of column names.
+     * @param names a list of column names
+     */
+    final void setNames(final String[] names) {
+        m_names = names; 
     }
 
     /**
      * Is this config a meta-config?
-     * 
      * @return <code>true</code> if it is
      */
     public boolean isMetaConfig() {
-        return getName() == null;
+        return m_names == null;
     }
 
     /**
@@ -284,9 +327,17 @@ final class ColSetting {
     protected void loadSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // may be null to indicate meta config
-        String name = null;
+        String[] names = null;
         if (settings.containsKey(CFG_COLNAME)) {
-            name = settings.getString(CFG_COLNAME);
+            try {
+                names = settings.getStringArray(CFG_COLNAME);
+            } catch (InvalidSettingsException ise) {
+                // fallback to be compatible with <2.5
+                String name = settings.getString(CFG_COLNAME);
+                if (name != null) {
+                    names = new String[]{name};
+                }
+            }
         }
         int method = settings.getInt(CFG_METHOD);
         int type = settings.getInt(CFG_TYPE);
@@ -324,21 +375,21 @@ final class ColSetting {
             }
             if (fixVal == null) {
                 throw new InvalidSettingsException(
-                        "No replacement value for column: "
-                                + (isMetaConfig() ? "meta" : m_name.toString())
-                                + "(" + errorType + ")");
+                    "No replacement value for column: "
+                        + (isMetaConfig() ? "meta" : Arrays.toString(m_names))
+                        + "(" + errorType + ")");
             }
             if (!superType.isASuperTypeOf(fixVal.getType())) {
                 throw new InvalidSettingsException(
-                        "Wrong type of replacement value for column: "
-                                + (isMetaConfig() ? "meta" : m_name.toString())
-                                + "(" + errorType + "): " + fixVal.getType());
+                    "Wrong type of replacement value for column: "
+                        + (isMetaConfig() ? "meta" : Arrays.toString(m_names))
+                        + "(" + errorType + "): " + fixVal.getType());
             }
             break;
         default:
             throw new InvalidSettingsException("Unknown method: " + method);
         }
-        m_name = name;
+        m_names = names;
         m_method = method;
         m_type = type;
         m_fixCell = fixVal;
@@ -351,7 +402,7 @@ final class ColSetting {
      */
     protected void saveSettings(final NodeSettingsWO settings) {
         if (!isMetaConfig()) {
-            settings.addString(CFG_COLNAME, m_name);
+            settings.addStringArray(CFG_COLNAME, m_names);
         }
         settings.addInt(CFG_METHOD, m_method);
         settings.addInt(CFG_TYPE, m_type);
@@ -369,7 +420,8 @@ final class ColSetting {
                 break;
             default:
                 throw new RuntimeException("Cannot use fixed value "
-                        + "for unknown type. (Column name '" + m_name + "')");
+                        + "for unknown type. (Column name(s) '" 
+                        + Arrays.toString(m_names) + "')");
             }
         }
     }
@@ -500,7 +552,7 @@ final class ColSetting {
             if (colSettings[i].isMetaConfig()) {
                 continue;
             }
-            String id = colSettings[i].getName().toString();
+            String id = colSettings[i].getDisplayName();
             NodeSettingsWO subConfig = individuals.addNodeSettings(id);
             colSettings[i].saveSettings(subConfig);
         }
@@ -549,9 +601,17 @@ final class ColSetting {
      */
     @Override
     public String toString() {
-        StringBuffer buffer = new StringBuffer();
+        final StringBuffer buffer = new StringBuffer();
         buffer.append("[");
-        buffer.append(isMetaConfig() ? "META" : m_name.toString());
+        if (isMetaConfig()) {
+            buffer.append("META");
+        } else {
+            if (m_names.length == 1) {
+                buffer.append(m_names[0].toString());
+            } else {
+                buffer.append(Arrays.toString(m_names));
+            }
+        }
         buffer.append(":");
         switch (m_type) {
         case TYPE_STRING:
