@@ -68,6 +68,8 @@ import javax.swing.tree.DefaultMutableTreeNode;
 
 import org.knime.base.node.preproc.stringmanipulation.manipulator.CapitalizeDelimManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.CapitalizeManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.CountCharsManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.CountCharsModifiersManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfCharsManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfCharsModifiersManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfCharsOffsetManipulator;
@@ -138,6 +140,8 @@ public final class StringManipulatorProvider {
 
         manipulators.add(new CapitalizeDelimManipulator());
         manipulators.add(new CapitalizeManipulator());
+        manipulators.add(new CountCharsManipulator());
+        manipulators.add(new CountCharsModifiersManipulator());
         manipulators.add(new IndexOfCharsManipulator());
         manipulators.add(new IndexOfCharsModifiersManipulator());
         manipulators.add(new IndexOfCharsOffsetManipulator());
