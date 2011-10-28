@@ -1248,12 +1248,6 @@
             id="org.knime.base.node.util.createtempdir.CreateTempDirectoryNodeFactory">
       </node>
       <node
-            after="org.knime.base.node.image.readpng.ReadPNGFromURLNodeFactory"
-            category-path="/io/io-other"
-            factory-class="org.knime.base.node.image.writepng.WritePNGNodeFactory"
-            id="org.knime.base.node.image.writepng.WritePNGNodeFactory">
-      </node>
-      <node
             category-path="/manipulation/pmml"
             factory-class="org.knime.base.node.preproc.pmml.normalize.NormalizerPMMLDeNodeFactory"
             id="org.knime.base.node.preproc.normalize.PMMLNormalizerDeNodeFactory">
