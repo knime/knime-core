@@ -53,6 +53,7 @@ package org.knime.base.node.image.imagecolwriter;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -71,11 +72,12 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * This is the model for the SVG writer node. It takes an SVG column from the
- * input table and writes each cell into a separate file in the output
+ * This is the model for the Image writer node. It takes an image column from
+ * the input table and writes each cell into a separate file in the output
  * directory.
  *
  * @author Thorsten Meinl, University of Konstanz
+ * @author Sebastian Peter, University of Konstanz
  */
 public class ImageColumnWriterNodeModel extends NodeModel {
     private final SettingsModelString m_imageColumn = new SettingsModelString(
@@ -127,7 +129,8 @@ public class ImageColumnWriterNodeModel extends NodeModel {
             }
         }
 
-        int colIndex = inSpecs[0].findColumnIndex(m_imageColumn.getStringValue());
+        int colIndex =
+                inSpecs[0].findColumnIndex(m_imageColumn.getStringValue());
         if (colIndex == -1) {
             throw new InvalidSettingsException("Image column '"
                     + m_imageColumn.getStringValue() + "' does not exist");
@@ -157,22 +160,23 @@ public class ImageColumnWriterNodeModel extends NodeModel {
                 inData[0].getDataTableSpec().findColumnIndex(
                         m_imageColumn.getStringValue());
 
-
         for (DataRow row : inData[0]) {
             exec.checkCanceled();
-            exec.setProgress(count++ / max, "Writing " + row.getKey() + ".svg");
-
             ImageValue v = (ImageValue)row.getCell(colIndex);
+            final String ext = v.getImageExtension();
+            exec.setProgress(count++ / max, "Writing " + row.getKey() + "."
+                    + ext);
 
-            File imageFile = new File(dir, row.getKey() + "."+v.getImageExtension());
+            File imageFile = new File(dir, row.getKey() + "." + ext);
             if (!m_overwrite.getBooleanValue() && imageFile.exists()) {
                 throw new IOException("File '" + imageFile.getAbsolutePath()
                         + "' already exists");
             }
             ImageContent content = v.getImageContent();
-            content.save(new FileOutputStream(imageFile));
-       }
-
+            OutputStream os = new FileOutputStream(imageFile);
+            content.save(os);
+            os.close();
+        }
 
         return new BufferedDataTable[0];
     }

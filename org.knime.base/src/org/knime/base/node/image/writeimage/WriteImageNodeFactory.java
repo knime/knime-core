@@ -55,6 +55,7 @@ import org.knime.core.node.NodeView;
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Sebastian Peter, University of Konstanz
  */
 public final class WriteImageNodeFactory extends NodeFactory<WriteImageNodeModel> {
 

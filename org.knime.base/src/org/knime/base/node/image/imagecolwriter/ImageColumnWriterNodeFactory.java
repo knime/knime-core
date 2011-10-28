@@ -55,9 +55,10 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * This is the factory for the SVG writer node.
+ * This is the factory for the Image writer node.
  *
  * @author Thorsten Meinl, University of Konstanz
+ * @author Sebastian Peter, University of Konstanz
  */
 public class ImageColumnWriterNodeFactory extends NodeFactory<ImageColumnWriterNodeModel> {
     /**

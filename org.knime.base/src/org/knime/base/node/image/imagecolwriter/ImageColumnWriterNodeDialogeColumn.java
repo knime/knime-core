@@ -61,13 +61,14 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * This is the dialog for the SVG writer.
+ * This is the dialog for the Image writer.
  *
  * @author Thorsten Meinl, University of Konstanz
+ * @author Sebastian Peter, University of Konstanz
  */
 public class ImageColumnWriterNodeDialogeColumn extends DefaultNodeSettingsPane {
     @SuppressWarnings("unchecked")
-    private final DialogComponentColumnNameSelection m_svgColumn =
+    private final DialogComponentColumnNameSelection m_imageColumn =
             new DialogComponentColumnNameSelection(new SettingsModelString(
                     "imageColumn", null), "Image column", 0, ImageValue.class);
 
@@ -84,7 +85,7 @@ public class ImageColumnWriterNodeDialogeColumn extends DefaultNodeSettingsPane 
      * Creates a new dialog.
      */
     public ImageColumnWriterNodeDialogeColumn() {
-        addDialogComponent(m_svgColumn);
+        addDialogComponent(m_imageColumn);
         addDialogComponent(m_dirChooser);
         addDialogComponent(m_overwrite);
     }

@@ -60,6 +60,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Sebastian Peter, University of Konstanz
  */
 final class WriteImageNodeDialogPane extends DefaultNodeSettingsPane {
 
@@ -81,5 +82,4 @@ final class WriteImageNodeDialogPane extends DefaultNodeSettingsPane {
                 overwriteOKSettings, "Overwrite OK"));
 
     }
-
 }

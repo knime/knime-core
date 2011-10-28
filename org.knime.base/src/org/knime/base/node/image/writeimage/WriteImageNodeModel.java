@@ -74,6 +74,7 @@ import org.knime.core.node.port.image.ImagePortObjectSpec;
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author Sebastian Peter, University of Konstanz
  */
 final class WriteImageNodeModel extends NodeModel {
 
@@ -129,19 +130,16 @@ final class WriteImageNodeModel extends NodeModel {
         ImagePortObject imageObj = (ImagePortObject)inObjects[0];
         DataCell imageCellDC = imageObj.toDataCell();
 
-
-
         if (!(imageCellDC instanceof ImageValue)) {
             throw new InvalidSettingsException("Image object does not produce"
                     + " valid image object but " + imageCellDC == null ? null
                     : imageCellDC.getClass().getName());
         }
 
-
         ImageValue v = (ImageValue)imageCellDC;
         ImageContent content = v.getImageContent();
-        content.save(new FileOutputStream(
-                new File(outPath+"."+v.getImageExtension())));
+        content.save(new FileOutputStream(new File(outPath + "."
+                + v.getImageExtension())));
 
         return new PortObject[0];
     }
@@ -191,14 +189,18 @@ final class WriteImageNodeModel extends NodeModel {
         // no op
     }
 
-    /** Create settings for file output path.
+    /**
+     * Create settings for file output path.
+     *
      * @return New settings object.
      */
     static final SettingsModelString createFileOutSettings() {
         return new SettingsModelString("file_out_path", null);
     }
 
-    /** Create settings for overwrite OK flag.
+    /**
+     * Create settings for overwrite OK flag.
+     *
      * @return New settings object.
      */
     static final SettingsModelBoolean createOverwriteOKSettings() {
