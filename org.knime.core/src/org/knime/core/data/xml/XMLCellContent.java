@@ -195,7 +195,7 @@ public class XMLCellContent implements XMLValue {
     private static Document parse(final String xmlString) throws IOException,
             ParserConfigurationException {
         ByteArrayInputStream is =
-                new ByteArrayInputStream(xmlString.getBytes());
+                new ByteArrayInputStream(xmlString.getBytes("UTF-8"));
         return parse(is);
     }
 
