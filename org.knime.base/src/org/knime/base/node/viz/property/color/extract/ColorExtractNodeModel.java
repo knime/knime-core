@@ -67,6 +67,7 @@ import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.property.ColorHandler;
+import org.knime.core.data.property.ColorHandler.ColorModel;
 import org.knime.core.data.property.ColorModelNominal;
 import org.knime.core.data.property.ColorModelRange;
 import org.knime.core.node.BufferedDataTable;
@@ -74,11 +75,9 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContent;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -123,21 +122,16 @@ final class ColorExtractNodeModel extends NodeModel {
         throws InvalidSettingsException {
         // first column has column handler (convention in ColorHandlerPO)
         ColorHandler clrHdl = colorSpec.getColumnSpec(0).getColorHandler();
-        ModelContent cnt = new ModelContent("color_model");
-        clrHdl.save(cnt);
-
-        String modelClass = cnt.getString("color_model_class");
-        if (modelClass.equals(ColorModelNominal.class.getName())) {
-            ConfigRO subConfig = cnt.getConfig("color_model");
-            ColorModelNominal nom = ColorModelNominal.load(subConfig);
+        final ColorModel model = clrHdl.getColorModel();
+        if (model.getClass() == ColorModelNominal.class) {
+            ColorModelNominal nom = (ColorModelNominal) model;
             return extractColorTable(nom);
-        } else if (modelClass.equals(ColorModelRange.class.getName())) {
-            ConfigRO subConfig = cnt.getConfig("color_model");
-            ColorModelRange range = ColorModelRange.load(subConfig);
+        } else if (model.getClass() == ColorModelRange.class) {
+            ColorModelRange range = (ColorModelRange) model;
             return extractColorTable(range);
         } else {
             throw new InvalidSettingsException("Unknown ColorModel class: "
-                    + modelClass);
+                    + model.getClass());
         }
     }
 

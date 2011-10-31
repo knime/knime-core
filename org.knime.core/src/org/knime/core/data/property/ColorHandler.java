@@ -150,6 +150,15 @@ public final class ColorHandler implements PropertyHandler {
     }
     
     /**
+     * Returns the underlying color model that is derived from class
+     * <code>ColorModel</code>.
+     * @return the <code>ColorModel</code> of this handler
+     */
+    public ColorModel getColorModel() {
+        return m_model;
+    }
+    
+    /**
      * Returns a String summary of the underlying 
      * {@link org.knime.core.data.property.ColorHandler.ColorModel}.
      * 
@@ -185,7 +194,7 @@ public final class ColorHandler implements PropertyHandler {
     /**
      * Interface allowing requests for {@link ColorAttr} by {@link DataCell}.
      */
-    interface ColorModel {
+    public interface ColorModel {
         /**
          * Returns a <code>ColorAttr</code> for the given <code>DataCell</code>.
          * @param dc the <code>DataCell</code> to get the color for
