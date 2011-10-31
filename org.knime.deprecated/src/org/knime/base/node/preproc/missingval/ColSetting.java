@@ -48,9 +48,7 @@
  */
 package org.knime.base.node.preproc.missingval;
 
-import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.knime.core.data.DataCell;
@@ -163,8 +161,8 @@ final class ColSetting {
      */
     protected static final String CFG_META_OTHER = "meta_other";
 
-    /** String array with names of the column or null if meta column. */
-    private String[] m_names;
+    /** Name of the column or null if meta column. */
+    private String m_name;
 
     /** Type of the column, e.g. TYPE_INT. */
     private int m_type;
@@ -177,15 +175,15 @@ final class ColSetting {
 
     /** Private constructor, used by the load method. */
     private ColSetting() {
-        // no op
     }
 
     /**
      * Constructor for meta column setting.
+     * 
      * @param type the type of the meta column
      */
     public ColSetting(final int type) {
-        m_names = null;
+        m_name = null;
         switch (type) {
         case TYPE_UNKNOWN:
         case TYPE_DOUBLE:
@@ -198,30 +196,14 @@ final class ColSetting {
         m_type = type;
         setMethod(METHOD_NO_HANDLING);
     }
-    
-    /**
-     * Constructor for a list of columns.
-     * @param specs list of column specs
-     */
-    public ColSetting(final List<DataColumnSpec> specs) {
-        this(initType(specs.get(0)));
-        m_names = new String[specs.size()];
-        for (int i = 0; i < m_names.length; i++) {
-            m_names[i] = specs.get(i).getName();
-        }
-    }
 
     /**
      * Constructor for individual column.
+     * 
      * @param spec the spec to the column
      */
     public ColSetting(final DataColumnSpec spec) {
-        m_names = new String[]{spec.getName()};
-        m_type = initType(spec);
-        setMethod(METHOD_NO_HANDLING);
-    }
-    
-    private static int initType(final DataColumnSpec spec) {
+        m_name = spec.getName();
         DataType type = spec.getType();
         // NOTE: It's important here to check first for double since
         // DoubleCell.TYPE is a super type of IntCell.TYPE.
@@ -229,14 +211,15 @@ final class ColSetting {
         // the type.isOneSuperTypeOf(IntCell.TYPE) is true
         // (that is the second check below)
         if (type.isASuperTypeOf(DoubleCell.TYPE)) {
-            return TYPE_DOUBLE;
+            m_type = TYPE_DOUBLE;
         } else if (type.isASuperTypeOf(IntCell.TYPE)) {
-            return TYPE_INT;
+            m_type = TYPE_INT;
         } else if (type.isASuperTypeOf(StringCell.TYPE)) {
-            return TYPE_STRING;
+            m_type = TYPE_STRING;
         } else {
-            return TYPE_UNKNOWN;
+            m_type = TYPE_UNKNOWN;
         }
+        setMethod(METHOD_NO_HANDLING);
     }
 
     /**
@@ -275,46 +258,20 @@ final class ColSetting {
     }
 
     /**
-     * @return returns the display name or <code>null</code> if
+     * @return returns the name or <code>null</code> if
      *         {@link #isMetaConfig()} returns <code>true</code>
      */
-    public String getDisplayName() {
-        if (isMetaConfig()) {
-            return null;
-        }
-        assert m_names.length > 0;
-        final StringBuilder buf = new StringBuilder();
-        for (String name : m_names) {
-            if (buf.length() > 0) {
-                buf.append(",");
-            }
-            buf.append(name);
-        }
-        return buf.toString();
-    }
-    
-    /**
-     * @return returns the name(s) or <code>null</code> if
-     *         {@link #isMetaConfig()} returns <code>true</code>
-     */
-    final String[] getNames() {
-        return m_names; 
-    }
-    
-    /**
-     * Set a new list of column names.
-     * @param names a list of column names
-     */
-    final void setNames(final String[] names) {
-        m_names = names; 
+    public String getName() {
+        return m_name;
     }
 
     /**
      * Is this config a meta-config?
+     * 
      * @return <code>true</code> if it is
      */
     public boolean isMetaConfig() {
-        return m_names == null;
+        return getName() == null;
     }
 
     /**
@@ -327,17 +284,9 @@ final class ColSetting {
     protected void loadSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // may be null to indicate meta config
-        String[] names = null;
+        String name = null;
         if (settings.containsKey(CFG_COLNAME)) {
-            try {
-                names = settings.getStringArray(CFG_COLNAME);
-            } catch (InvalidSettingsException ise) {
-                // fallback to be compatible with <2.5
-                String name = settings.getString(CFG_COLNAME);
-                if (name != null) {
-                    names = new String[]{name};
-                }
-            }
+            name = settings.getString(CFG_COLNAME);
         }
         int method = settings.getInt(CFG_METHOD);
         int type = settings.getInt(CFG_TYPE);
@@ -375,21 +324,21 @@ final class ColSetting {
             }
             if (fixVal == null) {
                 throw new InvalidSettingsException(
-                    "No replacement value for column: "
-                        + (isMetaConfig() ? "meta" : Arrays.toString(m_names))
-                        + "(" + errorType + ")");
+                        "No replacement value for column: "
+                                + (isMetaConfig() ? "meta" : m_name.toString())
+                                + "(" + errorType + ")");
             }
             if (!superType.isASuperTypeOf(fixVal.getType())) {
                 throw new InvalidSettingsException(
-                    "Wrong type of replacement value for column: "
-                        + (isMetaConfig() ? "meta" : Arrays.toString(m_names))
-                        + "(" + errorType + "): " + fixVal.getType());
+                        "Wrong type of replacement value for column: "
+                                + (isMetaConfig() ? "meta" : m_name.toString())
+                                + "(" + errorType + "): " + fixVal.getType());
             }
             break;
         default:
             throw new InvalidSettingsException("Unknown method: " + method);
         }
-        m_names = names;
+        m_name = name;
         m_method = method;
         m_type = type;
         m_fixCell = fixVal;
@@ -402,7 +351,7 @@ final class ColSetting {
      */
     protected void saveSettings(final NodeSettingsWO settings) {
         if (!isMetaConfig()) {
-            settings.addStringArray(CFG_COLNAME, m_names);
+            settings.addString(CFG_COLNAME, m_name);
         }
         settings.addInt(CFG_METHOD, m_method);
         settings.addInt(CFG_TYPE, m_type);
@@ -420,8 +369,7 @@ final class ColSetting {
                 break;
             default:
                 throw new RuntimeException("Cannot use fixed value "
-                        + "for unknown type. (Column name(s) '" 
-                        + Arrays.toString(m_names) + "')");
+                        + "for unknown type. (Column name '" + m_name + "')");
             }
         }
     }
@@ -433,7 +381,7 @@ final class ColSetting {
      * @return meta settings
      * @throws InvalidSettingsException if errors occur
      */
-    protected static ColSetting[] loadMetaColSettings(
+    protected static ColSetting[] loadMetaColSetting(
             final NodeSettingsRO settings) throws InvalidSettingsException {
         NodeSettingsRO subConfig = settings.getNodeSettings(CFG_META);
         Map<String, ColSetting> map = loadSubConfigs(subConfig);
@@ -447,7 +395,7 @@ final class ColSetting {
      * @param spec To be used for default init
      * @return meta settings
      */
-    protected static ColSetting[] loadMetaColSettings(
+    protected static ColSetting[] loadMetaColSetting(
             final NodeSettingsRO settings, final DataTableSpec spec) {
         LinkedHashMap<String, ColSetting> defaultsHash = 
             new LinkedHashMap<String, ColSetting>();
@@ -484,7 +432,7 @@ final class ColSetting {
      * @return individual settings
      * @throws InvalidSettingsException if errors occur
      */
-    protected static ColSetting[] loadIndividualColSettings(
+    protected static ColSetting[] loadIndividualColSetting(
             final NodeSettingsRO settings) throws InvalidSettingsException {
         NodeSettingsRO subConfig = settings.getNodeSettings(CFG_INDIVIDUAL);
         Map<String, ColSetting> map = loadSubConfigs(subConfig);
@@ -499,7 +447,7 @@ final class ColSetting {
      *            {@link org.knime.core.node.NodeModel}
      * @return individual settings
      */
-    protected static ColSetting[] loadIndividualColSettings(
+    protected static ColSetting[] loadIndividualColSetting(
             final NodeSettingsRO settings, final DataTableSpec spec) {
         assert (spec == spec); // avoid checkstyle complain
         Map<String, ColSetting> individHash = 
@@ -541,38 +489,38 @@ final class ColSetting {
     /**
      * Saves the individual settings to a config object.
      * 
-     * @param colSettings the settings to write, may include meta settings
+     * @param ColSetting the settings to write, may include meta settings
      *            (ignored)
      * @param settings to write to
      */
-    protected static void saveIndividualsColSettings(
-            final ColSetting[] colSettings, final NodeSettingsWO settings) {
+    protected static void saveIndividualsColSetting(
+            final ColSetting[] ColSetting, final NodeSettingsWO settings) {
         NodeSettingsWO individuals = settings.addNodeSettings(CFG_INDIVIDUAL);
-        for (int i = 0; i < colSettings.length; i++) {
-            if (colSettings[i].isMetaConfig()) {
+        for (int i = 0; i < ColSetting.length; i++) {
+            if (ColSetting[i].isMetaConfig()) {
                 continue;
             }
-            String id = colSettings[i].getDisplayName();
+            String id = ColSetting[i].getName().toString();
             NodeSettingsWO subConfig = individuals.addNodeSettings(id);
-            colSettings[i].saveSettings(subConfig);
+            ColSetting[i].saveSettings(subConfig);
         }
     }
 
     /**
      * Saves the meta settings to a config object.
      * 
-     * @param colSettings the settings to write, may include individual settings
+     * @param ColSetting the settings to write, may include individual settings
      *            (ignored)
      * @param settings to write to
      */
-    protected static void saveMetaColSettings(final ColSetting[] colSettings,
+    protected static void saveMetaColSetting(final ColSetting[] ColSetting,
             final NodeSettingsWO settings) {
         NodeSettingsWO defaults = settings.addNodeSettings(CFG_META);
-        for (int i = 0; i < colSettings.length; i++) {
-            if (!colSettings[i].isMetaConfig()) {
+        for (int i = 0; i < ColSetting.length; i++) {
+            if (!ColSetting[i].isMetaConfig()) {
                 continue;
             }
-            int type = colSettings[i].getType();
+            int type = ColSetting[i].getType();
             String id;
             switch (type) {
             case TYPE_STRING:
@@ -592,7 +540,7 @@ final class ColSetting {
                 id = CFG_META_OTHER;
             }
             NodeSettingsWO subConfig = defaults.addNodeSettings(id);
-            colSettings[i].saveSettings(subConfig);
+            ColSetting[i].saveSettings(subConfig);
         }
     }
 
@@ -601,17 +549,9 @@ final class ColSetting {
      */
     @Override
     public String toString() {
-        final StringBuffer buffer = new StringBuffer();
+        StringBuffer buffer = new StringBuffer();
         buffer.append("[");
-        if (isMetaConfig()) {
-            buffer.append("META");
-        } else {
-            if (m_names.length == 1) {
-                buffer.append(m_names[0].toString());
-            } else {
-                buffer.append(Arrays.toString(m_names));
-            }
-        }
+        buffer.append(isMetaConfig() ? "META" : m_name.toString());
         buffer.append(":");
         switch (m_type) {
         case TYPE_STRING:

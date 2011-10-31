@@ -66,13 +66,13 @@ import org.knime.core.node.NodeSettingsWO;
  * NodeModel for missing value node. 
  * @author wiswedel, University of Konstanz
  */
-public class MissingValueHandlingNodeModel extends NodeModel {
-    private ColSetting[] m_colSettings;
+public class MissingValueHandling2NodeModel extends NodeModel {
+    private MissingValueHandling2ColSetting[] m_colSettings;
 
     /** One input, one output. */
-    public MissingValueHandlingNodeModel() {
+    public MissingValueHandling2NodeModel() {
         super(1, 1);
-        m_colSettings = new ColSetting[0];
+        m_colSettings = new MissingValueHandling2ColSetting[0];
     }
 
     /**
@@ -80,8 +80,8 @@ public class MissingValueHandlingNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        ColSetting.saveMetaColSettings(m_colSettings, settings);
-        ColSetting.saveIndividualsColSettings(m_colSettings, settings);
+        MissingValueHandling2ColSetting.saveMetaColSettings(m_colSettings, settings);
+        MissingValueHandling2ColSetting.saveIndividualsColSettings(m_colSettings, settings);
     }
 
     /**
@@ -90,8 +90,8 @@ public class MissingValueHandlingNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        ColSetting.loadMetaColSettings(settings);
-        ColSetting.loadIndividualColSettings(settings);
+        MissingValueHandling2ColSetting.loadMetaColSettings(settings);
+        MissingValueHandling2ColSetting.loadIndividualColSettings(settings);
     }
 
     /**
@@ -100,9 +100,9 @@ public class MissingValueHandlingNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        ColSetting[] def = ColSetting.loadMetaColSettings(settings);
-        ColSetting[] ind = ColSetting.loadIndividualColSettings(settings);
-        m_colSettings = new ColSetting[def.length + ind.length];
+        MissingValueHandling2ColSetting[] def = MissingValueHandling2ColSetting.loadMetaColSettings(settings);
+        MissingValueHandling2ColSetting[] ind = MissingValueHandling2ColSetting.loadIndividualColSettings(settings);
+        m_colSettings = new MissingValueHandling2ColSetting[def.length + ind.length];
         System.arraycopy(def, 0, m_colSettings, 0, def.length);
         System.arraycopy(ind, 0, m_colSettings, def.length, ind.length);
     }
@@ -114,7 +114,7 @@ public class MissingValueHandlingNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         StringBuffer warningMessageBuffer = new StringBuffer();
-        BufferedDataTable out = MissingValueHandlingTable.
+        BufferedDataTable out = MissingValueHandling2Table.
             createMissingValueHandlingTable(
                     inData[0], m_colSettings, exec, warningMessageBuffer);
         if (warningMessageBuffer.length() > 0) {
@@ -159,7 +159,7 @@ public class MissingValueHandlingNodeModel extends NodeModel {
             throws InvalidSettingsException {
         DataTableSpec in = inSpecs[0];
         // column domain may changed when using fixed replacement
-        DataTableSpec out = MissingValueHandlingTable.createTableSpec(in,
+        DataTableSpec out = MissingValueHandling2Table.createTableSpec(in,
                 m_colSettings);
         return new DataTableSpec[]{out};
     }

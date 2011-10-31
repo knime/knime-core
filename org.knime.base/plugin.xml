@@ -539,9 +539,9 @@
             factory-class="org.knime.base.node.mine.cluster.fuzzycmeans.FuzzyClusterNodeFactory"
             id="org.knime.base.node.mine.cluster.fuzzycmeans.FuzzyClusterNodeFactory"/>
       <node
-            factory-class="org.knime.base.node.preproc.missingval.MissingValueHandlingNodeFactory"
+            factory-class="org.knime.base.node.preproc.missingval.MissingValueHandling2NodeFactory"
             category-path="/manipulation/column/column-transform"
-            id="org.knime.base.node.preproc.missingval.MissingValueHandlingNodeFactory"/>
+            id="org.knime.base.node.preproc.missingval.MissingValueHandling2NodeFactory"/>
       <node
             category-path="/mining/nn/mlp"
             factory-class="org.knime.base.node.mine.neural.rprop.RPropNodeFactory"

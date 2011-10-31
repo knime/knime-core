@@ -335,62 +335,59 @@ public final class MissingValueHandlingTable implements DataTable {
             if (sets[i].isMetaConfig()) {
                 continue;
             }
-            String[] names = sets[i].getNames();
-            for (int j = 0; j < names.length; j++) {
-                String name = names[j];
-                int type = sets[i].getType();
-                final int index = spec.findColumnIndex(name);
-                if (index < 0) {
-                    String error = "Unable to do missing value handling for"
-                            + " column '" + name + "', no such column in table";
-                    if (throwExeception) {
-                        throw new InvalidSettingsException(error);
-                    } else {
-                        error = error + "; skip it.";
-                        LOGGER.warn(error);
-                    }
-                    continue;
+            String name = sets[i].getName();
+            int type = sets[i].getType();
+            final int index = spec.findColumnIndex(name);
+            if (index < 0) {
+                String error = "Unable to do missing value handling for column"
+                        + " '" + name + "', no such column in table";
+                if (throwExeception) {
+                    throw new InvalidSettingsException(error);
+                } else {
+                    error = error + "; skip it.";
+                    LOGGER.warn(error);
                 }
-                DataColumnSpec colSpec = spec.getColumnSpec(index);
-                DataType colType = colSpec.getType();
-                if (type == ColSetting.TYPE_INT
-                        && !colType.isASuperTypeOf(IntCell.TYPE)) {
-                    String error = "Missing value handling for column '" + name
-                            + "' failed, incompatible types: " + colType
-                            + " is not super type of int type";
-                    if (throwExeception) {
-                        throw new InvalidSettingsException(error);
-                    } else {
-                        error = error + "; skip it.";
-                        LOGGER.warn(error);
-                    }
-                }
-                if (type == ColSetting.TYPE_DOUBLE
-                        && !colType.isASuperTypeOf(DoubleCell.TYPE)) {
-                    String error = "Missing value handling for column '" + name
-                            + "' failed, incompatible types: " + colType
-                            + " is not super type of double type";
-                    if (throwExeception) {
-                        throw new InvalidSettingsException(error);
-                    } else {
-                        error = error + "; skip it.";
-                        LOGGER.warn(error);
-                    }
-                }
-                if (type == ColSetting.TYPE_STRING
-                        && !colType.isASuperTypeOf(StringCell.TYPE)) {
-                    String error = "Missing value handling for column '" + name
-                            + "' failed, incompatible types: " + colType
-                            + " is not super type of string type";
-                    if (throwExeception) {
-                        throw new InvalidSettingsException(error);
-                    } else {
-                        error = error + "; skip it.";
-                        LOGGER.warn(error);
-                    }
-                }
-                results[index] = sets[i];
+                continue;
             }
+            DataColumnSpec colSpec = spec.getColumnSpec(index);
+            DataType colType = colSpec.getType();
+            if (type == ColSetting.TYPE_INT
+                    && !colType.isASuperTypeOf(IntCell.TYPE)) {
+                String error = "Missing value handling for column '" + name
+                        + "' failed, incompatible types: " + colType
+                        + " is not super type of int type";
+                if (throwExeception) {
+                    throw new InvalidSettingsException(error);
+                } else {
+                    error = error + "; skip it.";
+                    LOGGER.warn(error);
+                }
+            }
+            if (type == ColSetting.TYPE_DOUBLE
+                    && !colType.isASuperTypeOf(DoubleCell.TYPE)) {
+                String error = "Missing value handling for column '" + name
+                        + "' failed, incompatible types: " + colType
+                        + " is not super type of double type";
+                if (throwExeception) {
+                    throw new InvalidSettingsException(error);
+                } else {
+                    error = error + "; skip it.";
+                    LOGGER.warn(error);
+                }
+            }
+            if (type == ColSetting.TYPE_STRING
+                    && !colType.isASuperTypeOf(StringCell.TYPE)) {
+                String error = "Missing value handling for column '" + name
+                        + "' failed, incompatible types: " + colType
+                        + " is not super type of string type";
+                if (throwExeception) {
+                    throw new InvalidSettingsException(error);
+                } else {
+                    error = error + "; skip it.";
+                    LOGGER.warn(error);
+                }
+            }
+            results[index] = sets[i];
         }
         return results;
     } // getColSetting(DataTableSpec, ColSetting[])

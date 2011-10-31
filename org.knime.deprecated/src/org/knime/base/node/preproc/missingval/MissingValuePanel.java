@@ -54,9 +54,6 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -122,30 +119,22 @@ final class MissingValuePanel extends JPanel {
     public MissingValuePanel(final DataColumnSpec spec) {
         this(new ColSetting(spec), spec);
     }
-    
-    /**
-     * Constructor for one individual column, invoked when Add in dialog was
-     * pressed.
-     * @param specs list of column specs
-     */
-    public MissingValuePanel(final List<DataColumnSpec> specs) {
-        this(new ColSetting(specs), specs.toArray(new DataColumnSpec[0]));
-    }
 
     /**
      * Constructor that uses settings from <code>setting</code> given a column
      * spec or <code>null</code> if the ColSetting is a meta-config.
+     * 
      * @param setting to get settings from
      * @param spec the spec of the column or <code>null</code>
      */
     public MissingValuePanel(
-            final ColSetting setting, final DataColumnSpec... spec) {
+            final ColSetting setting, final DataColumnSpec spec) {
         super(new FlowLayout(FlowLayout.CENTER, 10, 10));
-        final JPanel panel = new JPanel(new GridLayout(0, 2));
-        final Icon icon;
-        final String name;
-        final Border border;
-        final JComponent removePanel;
+        JPanel panel = new JPanel(new GridLayout(0, 2));
+        Icon icon;
+        String name;
+        Border border;
+        JComponent removePanel;
         if (setting.isMetaConfig()) {
             switch (setting.getType()) {
             case ColSetting.TYPE_INT:
@@ -173,18 +162,12 @@ final class MissingValuePanel extends JPanel {
             }
             removePanel = new JLabel();
         } else {
-            final List<String> names = new ArrayList<String>(
-                    Arrays.asList(setting.getNames()));
-            for (DataColumnSpec cspec : spec) {
-                names.remove(cspec.getName());
+            name = setting.getName();
+            if (!spec.getName().equals(name)) {
+                throw new NullPointerException("Not equal on init: '" + name
+                        + "' vs. '" + spec.getName() + "'");
             }
-            if (!names.isEmpty()) {
-                throw new NullPointerException("Not equal on init: '" 
-                        + Arrays.toString(setting.getNames()) + "' vs. '" 
-                        + Arrays.toString(spec) + "'.");
-            }
-            name = setting.getDisplayName();
-            icon = spec[0].getType().getIcon();
+            icon = spec.getType().getIcon();
             border = BorderFactory.createLineBorder(Color.BLACK);
             JButton requestRemoveButton = new JButton("Remove");
             requestRemoveButton.addActionListener(new ActionListener() {
@@ -367,7 +350,7 @@ final class MissingValuePanel extends JPanel {
      * value.
      */
     private static JComponent getFixTextField(final ColSetting setting,
-            final DataColumnSpec... specs) {
+            final DataColumnSpec spec) {
         JComponent fixText;
         // FIX text field
         DataCell fixCell = setting.getFixCell();
@@ -397,16 +380,13 @@ final class MissingValuePanel extends JPanel {
             ((JFormattedTextField)fixText).setValue(integer);
             break;
         case ColSetting.TYPE_STRING:
-            final ArrayList<DataCell> vals = new ArrayList<DataCell>();
-            if (specs != null) {
-                for (DataColumnSpec spec : specs) {
-                    if (spec != null && spec.getDomain().hasValues()) {
-                        vals.addAll(spec.getDomain().getValues());
-                    }
-                }
+            DataCell[] vals;
+            if (spec != null && spec.getDomain().hasValues()) {
+                vals = spec.getDomain().getValues().toArray(new DataCell[0]);
+            } else {
+                vals = new DataCell[0];
             }
-            DefaultComboBoxModel model = new DefaultComboBoxModel(
-                    vals.toArray(new DataCell[0]));
+            DefaultComboBoxModel model = new DefaultComboBoxModel(vals);
             fixText = new JComboBox(model);
             ((JComboBox)fixText).setPrototypeDisplayValue("#########");
             ((JComboBox)fixText).setEditable(true);
