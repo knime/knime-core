@@ -206,9 +206,14 @@ public class MissingValueHandlingNodeDialog extends NodeDialogPane {
             /** {@inheritDoc} */
             @Override
             public void actionPerformed(final ActionEvent e) {
-                final List<DataColumnSpec> selectedCols = 
-                        m_colList.getSelectedValuesList();
-                onAdd(selectedCols);
+                final Object[] selectedCols = m_colList.getSelectedValues();
+                final List<DataColumnSpec> selectList = 
+                        new ArrayList<DataColumnSpec>();
+                for (Object o : selectedCols) {
+                    final DataColumnSpec dcs = (DataColumnSpec) o;
+                    selectList.add(dcs);
+                }
+                onAdd(selectList);
             }
         });
         buttonPanel.add(m_addButton);
@@ -221,11 +226,13 @@ public class MissingValueHandlingNodeDialog extends NodeDialogPane {
         if (m_colList.isSelectionEmpty()) {
             m_addButton.setEnabled(false);
         } else {
-            final List<DataColumnSpec> selectedCols = 
-                    m_colList.getSelectedValuesList();
-            final DataType type = selectedCols.get(0).getType();
-            for (DataColumnSpec cspec : selectedCols) {
-                if (!type.equals(cspec.getType())) {
+            final Object[] selectedCols = m_colList.getSelectedValues();
+            // at least one item is selected, get its type and compare it
+            // with all the other selected elements
+            final DataType type = ((DataColumnSpec) selectedCols[0]).getType();
+            for (Object o : selectedCols) {
+                final DataColumnSpec dcs = (DataColumnSpec) o;
+                if (!type.equals(dcs.getType())) {
                     m_addButton.setEnabled(false);
                     return;
                 }
@@ -238,8 +245,9 @@ public class MissingValueHandlingNodeDialog extends NodeDialogPane {
                 }
                 final List<String> names = Arrays.asList(
                         p.getSettings().getNames());
-                for (DataColumnSpec cspec : selectedCols) {
-                    if (names.contains(cspec.getName())) {
+                for (Object o : selectedCols) {
+                    final DataColumnSpec dcs = (DataColumnSpec) o;
+                    if (names.contains(dcs.getName())) {
                         m_addButton.setEnabled(false);
                         return;
                     }
