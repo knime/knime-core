@@ -70,8 +70,22 @@ public interface URIToFileResolve {
      * file).
      * @param uri The URI, e.g. "knime:/MOUNT_ID/some/path/workflow.knime"
      * @return the local file represented by the URI.
-     * @throws IOException If the URI can't be
+     * @throws IOException If the URI can't be resolved
      */
     public File resolveToFile(final URI uri) throws IOException;
+
+    /**
+    * Resolves the given URI into a local file. If the URI does not represent
+    * a local file (e.g. a remote file on a server) it is downloaded first to
+    * a temporary directory and the the temporary copy is returned. If it
+    * represents a local file the behavior is the same as in
+    * {@link #resolveToFile(URI)}.
+    *
+    * @param uri The URI, e.g. "knime:/MOUNT_ID/some/path/workflow.knime"
+    * @return the file represented by the URI or a temporary copy of that file
+    *       if it represents a remote file
+    * @throws IOException If the URI can't be resolved
+    */
+   public File resolveToLocalOrTempFile(final URI uri) throws IOException;
 
 }
