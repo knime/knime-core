@@ -178,10 +178,41 @@ public class MissingValueHandlingNodeDialog extends NodeDialogPane {
                 int[] searchHits = ListModelFilterUtils.getAllSearchHits(
                         m_colList, searchField.getText());
                 m_colList.clearSelection();
-                if (searchHits.length > 0) {
-                    m_colList.setSelectedIndices(searchHits);
-                    m_colList.scrollRectToVisible(m_colList.getCellBounds(
-                                searchHits[0], searchHits[0]));
+                if (searchHits.length == 0) {
+                    // nothing to select
+                    return;
+                }
+                final ArrayList<Integer> hitList = new ArrayList<Integer>(); 
+                for (int i = 0; i < searchHits.length; i++) {
+                    int hit = searchHits[i];
+                    DataColumnSpec cspec = (DataColumnSpec) 
+                            m_colListModel.getElementAt(hit);
+                    final Component[] c = m_individualsPanel.getComponents();
+                    for (int j = 0; j < c.length; j++) {
+                        final MissingValuePanel p = (MissingValuePanel) c[j];
+                        if (p.getSettings().isMetaConfig()) {
+                            continue;
+                        }
+                        final List<String> names = Arrays.asList(
+                                p.getSettings().getNames());
+                        if (names.contains(cspec.getName())) {
+                            // no hit: item is already in use
+                            hit = -1;
+                            break;
+                        }
+                    }
+                    if (hit >= 0) { // only add element here when enabled
+                        hitList.add(hit);
+                    }
+                }
+                if (hitList.size() > 0) {
+                    final int[] hits = new int[hitList.size()];
+                    for (int i = 0; i < hits.length; i++) {
+                        hits[i] = hitList.get(i);
+                    }
+                    m_colList.setSelectedIndices(hits);
+                    m_colList.scrollRectToVisible(
+                            m_colList.getCellBounds(hits[0], hits[0]));
                 }
             }
         };
