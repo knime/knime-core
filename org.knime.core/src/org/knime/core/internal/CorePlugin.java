@@ -171,4 +171,27 @@ public class CorePlugin extends org.eclipse.core.runtime.Plugin {
         }
         return res.resolveToFile(uri);
     }
+
+    /** Fetches a service implementing the {@link URIToFileResolve} interface
+     * and returns the resolved file.
+     * @param uri The URI to resolve
+     * @return The local file or temporary copy of a remote file underlying the
+     *      URI (if any)
+     * @throws IOException If no service is registered or the URI can't be
+     *      resolved.
+     */
+    public static File resolveURItoLocalOrTempFile(final URI uri)
+            throws IOException {
+        File localFile = resolveURItoLocalFile(uri);
+        if (localFile != null) {
+            return localFile;
+        }
+        ServiceTracker serviceTracker = instance.m_serviceTracker;
+        URIToFileResolve res = (URIToFileResolve)serviceTracker.getService();
+        if (res == null) {
+            throw new IOException("Can't resolve URI \"" + uri
+                    + "\"; no URI resolve service registered");
+        }
+        return res.resolveToLocalOrTempFile(uri);
+    }
 }

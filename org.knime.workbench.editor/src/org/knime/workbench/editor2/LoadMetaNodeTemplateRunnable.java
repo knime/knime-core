@@ -57,11 +57,11 @@ import java.net.URI;
 
 import javax.swing.UIManager;
 
-import org.eclipse.core.filesystem.EFS;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.internal.CorePlugin;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -71,7 +71,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistorVersion1xx;
-import org.knime.workbench.explorer.filesystem.LocalExplorerFileStore;
+import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 
 
 /**
@@ -91,7 +91,7 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
 
     private WorkflowManager m_parentWFM;
 
-    private LocalExplorerFileStore m_templateKNIMEFolder;
+    private AbstractExplorerFileStore m_templateKNIMEFolder;
 
     private Throwable m_throwable = null;
 
@@ -107,7 +107,7 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
      *        should be loaded
      */
     public LoadMetaNodeTemplateRunnable(final WorkflowManager wfm,
-            final LocalExplorerFileStore templateKNIMEFolder) {
+            final AbstractExplorerFileStore templateKNIMEFolder) {
         m_parentWFM = wfm;
         m_templateKNIMEFolder = templateKNIMEFolder;
     }
@@ -136,14 +136,15 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
                 = new CheckCancelNodeProgressMonitor(pm);
             progressMonitor.addProgressListener(progressHandler);
 
-            File parentFile = m_templateKNIMEFolder.toLocalFile(EFS.NONE, null);
+            URI sourceURI = m_templateKNIMEFolder.toURI();
+            File parentFile = CorePlugin.resolveURItoLocalOrTempFile(
+                    sourceURI);
             Display d = Display.getDefault();
 
             GUIWorkflowLoadHelper loadHelper =
                 new GUIWorkflowLoadHelper(d, parentFile.getName(), true);
             WorkflowPersistorVersion1xx loadPersistor =
                 WorkflowManager.createLoadPersistor(parentFile, loadHelper);
-            URI sourceURI = m_templateKNIMEFolder.toURI();
             loadPersistor.setTemplateInformationLinkURI(sourceURI);
             loadPersistor.setNameOverwrite(parentFile.getName());
             m_result = m_parentWFM.load(loadPersistor,
@@ -196,7 +197,8 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
             LOGGER.info(m_loadingCanceledMessage, uve);
         } catch (CanceledExecutionException cee) {
             m_loadingCanceledMessage =
-                "Canceled loading meta node: " + m_templateKNIMEFolder.getName();
+                "Canceled loading meta node: "
+                + m_templateKNIMEFolder.getName();
             LOGGER.info(m_loadingCanceledMessage, cee);
         } catch (Throwable e) {
             m_throwable = e;

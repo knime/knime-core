@@ -68,7 +68,7 @@ import org.knime.workbench.editor2.commands.CreateMetaNodeTemplateCommand;
 import org.knime.workbench.editor2.commands.CreateNodeCommand;
 import org.knime.workbench.editor2.commands.DropNodeCommand;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
-import org.knime.workbench.explorer.filesystem.LocalExplorerFileStore;
+import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
 
 /**
  * Container policy, handles the creation of new nodes that are inserted into
@@ -119,9 +119,9 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
             NodeFactory<? extends NodeModel> factory
                 = (NodeFactory<? extends NodeModel>)obj;
             return new CreateNodeCommand(manager, factory, location);
-        } else if (obj instanceof LocalExplorerFileStore) {
-            LocalExplorerFileStore fs = (LocalExplorerFileStore)obj;
-            if (LocalExplorerFileStore.isWorkflowTemplate(fs)) {
+        } else if (obj instanceof AbstractExplorerFileStore) {
+            AbstractExplorerFileStore fs = (AbstractExplorerFileStore)obj;
+            if (AbstractExplorerFileStore.isWorkflowTemplate(fs)) {
                 return new CreateMetaNodeTemplateCommand(manager, fs, location);
             }
         } else if (obj instanceof ReaderNodeSettings) {

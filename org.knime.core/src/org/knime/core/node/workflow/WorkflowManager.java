@@ -2813,7 +2813,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     private class VerticalPortIndex implements Comparable<VerticalPortIndex> {
         private int m_index = -1;
-        private int m_yPos;
+        private final int m_yPos;
         public VerticalPortIndex(final int y) {
             m_yPos = y;
         }
@@ -2821,11 +2821,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         public void setIndex(final int i) { m_index = i; }
         /** {@inheritDoc} */
         @Override
-        public int compareTo(VerticalPortIndex arg) {
+        public int compareTo(final VerticalPortIndex arg) {
             return Double.compare(m_yPos, arg.m_yPos);
         }
     }
-    
+
     /** Collapse selected set of nodes into a metanode. Make sure connections
      * from and to nodes not contained in this set are passed through
      * appropriate ports of the new metanode.
@@ -4836,10 +4836,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         URI sourceURI = linkInfo.getSourceURI();
         WorkflowPersistorVersion1xx loadPersistor;
         try {
-            File localDir = CorePlugin.resolveURItoLocalFile(sourceURI);
+            File localDir = CorePlugin.resolveURItoLocalOrTempFile(sourceURI);
             loadPersistor = WorkflowManager.createLoadPersistor(
                     localDir, loadHelper);
-            loadPersistor.preLoadNodeContainer(null, null, new LoadResult("ignored"));
+            loadPersistor.preLoadNodeContainer(null, null,
+                    new LoadResult("ignored"));
         } catch (IOException e) {
             throw e;
         } catch (UnsupportedWorkflowVersionException e) {
@@ -4928,7 +4929,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         URI sourceURI = templInfo.getSourceURI();
         File localDir;
         try {
-            localDir = CorePlugin.resolveURItoLocalFile(sourceURI);
+            localDir = CorePlugin.resolveURItoLocalOrTempFile(sourceURI);
         } catch (IOException e) {
             String error = "Failed to update meta node reference: "
                 + e.getMessage();
