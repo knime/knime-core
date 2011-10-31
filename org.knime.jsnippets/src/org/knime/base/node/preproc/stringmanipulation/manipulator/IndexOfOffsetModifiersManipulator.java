@@ -150,6 +150,9 @@ public class IndexOfOffsetModifiersManipulator implements StringManipulator {
      */
     private static boolean hasWordBoundaries(final CharSequence str,
             final CharSequence needle, final int index) {
+        if (-1 == index) {
+            return true;
+        }
         return isWordBoundary(str, index - 1)
             && isWordBoundary(str, index + needle.length());
     }
