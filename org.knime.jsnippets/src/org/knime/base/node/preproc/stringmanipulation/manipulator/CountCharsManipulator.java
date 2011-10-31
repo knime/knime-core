@@ -138,7 +138,7 @@ public class CountCharsManipulator implements StringManipulator {
         + "<td>=</td><td>0</td></tr>"
 
         + "</table>"
-        + "* can be any characters sequence.";
+        + "* can be any character sequence.";
     }
 
 }
