@@ -67,8 +67,6 @@ public class SubworkflowEditPart extends NodeContainerEditPart {
         final SubworkflowFigure nodeFigure =
                 new SubworkflowFigure(new ProgressFigure());
 
-        // init the user specified node name
-        nodeFigure.setCustomName(getCustomName());
         if (getRootEditPart() != null) {
             nodeFigure.hideNodeName(getRootEditPart().hideNodeNames());
         }

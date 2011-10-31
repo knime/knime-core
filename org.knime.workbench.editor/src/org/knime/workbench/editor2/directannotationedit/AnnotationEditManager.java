@@ -54,6 +54,8 @@ import org.eclipse.gef.GraphicalEditPart;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.tools.CellEditorLocator;
 import org.eclipse.gef.tools.DirectEditManager;
+import org.knime.core.node.workflow.Annotation;
+import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 
 /**
  *
@@ -77,7 +79,8 @@ public class AnnotationEditManager extends DirectEditManager {
     protected void initCellEditor() {
         StyledTextEditor stw = (StyledTextEditor)getCellEditor();
         stw.setZoomFactor(getZoomfactor());
-        stw.setValue(getEditPart().getModel());
+        Annotation anno = ((AnnotationEditPart)getEditPart()).getModel();
+        stw.setValue(anno);
     }
 
     private double getZoomfactor() {

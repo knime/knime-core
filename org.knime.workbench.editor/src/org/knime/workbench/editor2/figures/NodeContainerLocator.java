@@ -72,8 +72,8 @@ public class NodeContainerLocator implements Locator {
 
     /**
      * Places the components in the node figure. (I.e. the Node Name, the icon
-     * (symbol figure), the custom name and the status or progress indicator.
-     * Ports have their own locators.
+     * (symbol figure) and the status or progress indicator. Ports have their
+     * own locators.
      *
      * @param container the node to layout
      */
@@ -84,6 +84,7 @@ public class NodeContainerLocator implements Locator {
     /**
      * {@inheritDoc}
      */
+    @Override
     @SuppressWarnings("unchecked")
     public void relocate(final IFigure fig) {
         // lets assume the figure above got layouted already

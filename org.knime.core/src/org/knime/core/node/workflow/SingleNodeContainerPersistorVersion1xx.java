@@ -81,6 +81,7 @@ import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
 /**
  *
@@ -91,7 +92,7 @@ public class SingleNodeContainerPersistorVersion1xx
 
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
-    private final String m_versionString;
+    private final LoadVersion m_version;
 
     private Node m_node;
 
@@ -129,31 +130,31 @@ public class SingleNodeContainerPersistorVersion1xx
             final WorkflowPersistorVersion1xx workflowPersistor,
             final ReferencedFile nodeSettingsFile,
             final WorkflowLoadHelper loadHelper,
-            final String versionString) {
+            final LoadVersion version) {
         this(workflowPersistor, new NodeContainerMetaPersistorVersion1xx(
-                nodeSettingsFile, loadHelper), versionString);
+                nodeSettingsFile, loadHelper, version), version);
     }
 
     /** Constructor used internally, not used outside this class or its
      * derivates.
-     * @param versionString
+     * @param version
      * @param metaPersistor
      * @param wfmPersistor
      */
     SingleNodeContainerPersistorVersion1xx(
             final WorkflowPersistorVersion1xx wfmPersistor,
             final NodeContainerMetaPersistorVersion1xx metaPersistor,
-            final String versionString) {
-        if (versionString == null || wfmPersistor == null) {
+            final LoadVersion version) {
+        if (version == null || wfmPersistor == null) {
             throw new NullPointerException();
         }
-        m_versionString = versionString;
+        m_version = version;
         m_metaPersistor = metaPersistor;
         m_wfmPersistor = wfmPersistor;
     }
 
-    protected final String getVersionString() {
-        return m_versionString;
+    protected final LoadVersion getLoadVersion() {
+        return m_version;
     }
 
     protected NodeLogger getLogger() {

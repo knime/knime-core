@@ -93,25 +93,15 @@ public class SingleNodeContainerPersistorVersion200 extends
     /** Load persistor.
      * @param workflowPersistor
      * @param nodeSettingsFile
-     * @param versionString
+     * @param version
      */
     public SingleNodeContainerPersistorVersion200(
             final WorkflowPersistorVersion1xx workflowPersistor,
             final ReferencedFile nodeSettingsFile,
             final WorkflowLoadHelper loadHelper,
-            final String versionString) {
+            final LoadVersion version) {
         super(workflowPersistor, new NodeContainerMetaPersistorVersion200(
-                nodeSettingsFile, loadHelper), versionString);
-        if (LoadVersion.get(versionString) == null) {
-            throw new IllegalStateException("Unsupported version \""
-                    + versionString + "\" in " + getClass().getName());
-        }
-    }
-
-    /** @return load version, never null. */
-    LoadVersion getLoadVersion() {
-        // returns non-null version (asserted in constructor)
-        return LoadVersion.get(getVersionString());
+                nodeSettingsFile, loadHelper, version), version);
     }
 
     /** {@inheritDoc} */

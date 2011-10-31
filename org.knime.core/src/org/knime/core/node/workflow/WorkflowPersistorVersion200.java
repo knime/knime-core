@@ -101,6 +101,8 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
      * Ordinal numbering is important. */
     public static enum LoadVersion {
         // Don't modify order, ordinal number are important.
+        /** Pre v2.0. */
+        UNKNOWN("<unknown>"),
         /** Version 2.0.0 - 2.0.x. */
         V200("2.0.0"),
         /** Trunk version when 2.0.x was out, covers cluster and
@@ -114,7 +116,9 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         /** Version 2.3.x, introduces workflow annotations & switches. */
         V230("2.3.0"),
         /** Version 2.4.x, introduces meta node templates. */
-        V240("2.4.0");
+        V240("2.4.0"),
+        /** Version 2.5.x, lockable meta nodes, node-relative annotations. */
+        V250("2.5.0");
 
         private final String m_versionString;
 
@@ -140,41 +144,30 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             return null;
         }
     }
-    static final String VERSION_LATEST = LoadVersion.V230.getVersionString();
+    static final LoadVersion VERSION_LATEST = LoadVersion.V250;
 
-    static boolean canReadVersion(final String versionString) {
-        return LoadVersion.get(versionString) != null;
+    static LoadVersion canReadVersionV200(final String versionString) {
+        return LoadVersion.get(versionString);
     }
 
     /** Create persistor for load.
      * @param tableRep Table repository
-     * @param workflowKNIMEFile
+     * @param workflowKNIMEFile workflow.knime or template.knime file
      * @param loadHelper As required by meta persistor.
-     * @param versionString Version string,
-     * must pass {@link #canReadVersion(String)}
+     * @param version Version must pass {@link #canReadVersionV200(String)}.
      * @throws IllegalStateException If version string is unsupported.
      */
     WorkflowPersistorVersion200(final HashMap<Integer, ContainerTable> tableRep,
             final ReferencedFile workflowKNIMEFile,
             final WorkflowLoadHelper loadHelper,
-            final String versionString) {
+            final LoadVersion version) {
         super(tableRep, new NodeContainerMetaPersistorVersion200(
-                workflowKNIMEFile, loadHelper), versionString);
-        if (LoadVersion.get(versionString) == null) {
-            throw new IllegalStateException("Unsupported version \""
-                    + versionString + "\" in " + getClass().getName());
+                workflowKNIMEFile, loadHelper, version), version);
         }
-    }
 
     /** @return version that is saved, {@value #VERSION_LATEST}. */
-    protected static String getSaveVersion() {
+    protected static LoadVersion getSaveVersion() {
         return VERSION_LATEST;
-    }
-
-    /** @return version being loaded, never null. */
-    @Override
-    public LoadVersion getLoadVersion() {
-        return LoadVersion.get(super.getLoadVersionString());
     }
 
     /** {@inheritDoc} */
@@ -256,20 +249,20 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     protected WorkflowCipher loadWorkflowCipher(final LoadVersion loadVersion,
             final NodeSettingsRO settings) throws InvalidSettingsException {
         // added in v2.5 - no check necessary
-        if (settings.containsKey("cipher")) {
+        if (getLoadVersion().ordinal() < LoadVersion.V250.ordinal()) {
+            return WorkflowCipher.NULL_CIPHER;
+        }
+        if (!settings.containsKey("cipher")) {
+            return WorkflowCipher.NULL_CIPHER;
+        }
             NodeSettingsRO cipherSettings = settings.getNodeSettings("cipher");
             return WorkflowCipher.load(loadVersion, cipherSettings);
         }
-        return WorkflowCipher.NULL_CIPHER;
-    }
 
     /** {@inheritDoc} */
     @Override
     protected MetaNodeTemplateInformation loadTemplateInformation(
             final NodeSettingsRO settings) throws InvalidSettingsException {
-//        if (getLoadVersion().ordinal() < LoadVersion.V240.ordinal()) {
-//            return MetaNodeTemplateInformation.NONE;
-//        }
         if (settings.containsKey(CFG_TEMPLATE_INFO)) {
             NodeSettingsRO s = settings.getNodeSettings(CFG_TEMPLATE_INFO);
             return MetaNodeTemplateInformation.load(s, getLoadVersion());
@@ -470,7 +463,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     protected WorkflowPersistorVersion200 createWorkflowPersistorLoad(
             final ReferencedFile wfmFile) {
         return new WorkflowPersistorVersion200(getGlobalTableRepository(),
-                wfmFile, getLoadHelper(), getVersionString());
+                wfmFile, getLoadHelper(), getLoadVersion());
     }
 
     /** {@inheritDoc} */
@@ -478,7 +471,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     protected SingleNodeContainerPersistorVersion200
         createSingleNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
         return new SingleNodeContainerPersistorVersion200(
-                this, nodeFile, getLoadHelper(), getVersionString());
+                this, nodeFile, getLoadHelper(), getLoadVersion());
     }
 
     public static String save(final WorkflowManager wm,
@@ -511,7 +504,8 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             NodeSettings settings = new NodeSettings(fName);
             settings.addString(
                     WorkflowManager.CFG_CREATED_BY, KNIMEConstants.VERSION);
-            settings.addString(WorkflowManager.CFG_VERSION, getSaveVersion());
+            settings.addString(WorkflowManager.CFG_VERSION,
+                    getSaveVersion().getVersionString());
             saveWorkflowName(settings, wm.getNameField());
             saveWorkflowCipher(settings, wm.getWorkflowCipher());
             saveTemplateInformation(wm.getTemplateInformation(), settings);
@@ -674,7 +668,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         }
         NodeSettingsWO annoSettings = settings.addNodeSettings("annotations");
         int i = 0;
-        for (WorkflowAnnotation a : annotations) {
+        for (Annotation a : annotations) {
             NodeSettingsWO t = annoSettings.addNodeSettings("annotation_" + i);
             a.save(t);
             i += 1;

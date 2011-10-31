@@ -319,9 +319,10 @@ public final class DynamicNodeDescriptionCreator {
             bld.append("<h1>");
             bld.append(nc.getName());
             bld.append("</h1>");
-            if (nc.getCustomDescription() != null) {
+            if (nc.getNodeAnnotation() != null) {
                 bld.append("<h2>Description:</h2>");
-                bld.append("<p>" + nc.getCustomDescription() + "</p>");
+                bld.append("<p>" + nc.getNodeAnnotation().getText() + "</p>");
+
             }
             bld.append("<h2>Contained nodes: </h2>");
             WorkflowManager wfm = (WorkflowManager)nc;

@@ -61,6 +61,7 @@ import java.util.Set;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
 /**
  *
@@ -93,7 +94,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     /** Constant for the meta info file name. */
     public static final String METAINFO_FILE = "workflowset.meta";
 
-    String getLoadVersionString();
+    LoadVersion getLoadVersion();
 
     /** The map of node ID suffix to persistor.
      * @return The persistor map. */

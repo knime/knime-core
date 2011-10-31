@@ -96,14 +96,10 @@ public class WorkflowManagerInput implements IEditorInput {
      * {@inheritDoc}
      */
     public String getName() {
-        String name = m_manager.getID().getIDWithoutRoot();
-        if (m_manager.getCustomName() != null) {
-            return name + ": " + m_manager.getCustomName(); 
-        }
-         return name  + ": " + m_manager.getName();
+         return m_manager.getDisplayLabel();
     }
 
-    
+
     /**
      * {@inheritDoc}
      */

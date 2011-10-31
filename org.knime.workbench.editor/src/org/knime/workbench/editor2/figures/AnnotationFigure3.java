@@ -56,7 +56,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import org.eclipse.draw2d.BorderLayout;
-import org.eclipse.draw2d.Panel;
+import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.PositionConstants;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.draw2d.text.BlockFlow;
@@ -68,24 +68,25 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.WorkflowAnnotation;
+import org.knime.core.node.workflow.Annotation;
+import org.knime.core.node.workflow.AnnotationData;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 
 /**
  *
  * @author ohl, KNIME.com, Zurich, Switzerland
  */
-public class AnnotationFigure3 extends Panel {
+public class AnnotationFigure3 extends Figure {
 
     private final FlowPage m_page;
 
     /**
      * @param annotation the annotation to display
      */
-    public AnnotationFigure3(final WorkflowAnnotation annotation) {
+    public AnnotationFigure3(final Annotation annotation) {
 
         setLayoutManager(new BorderLayout());
-        Color bg = AnnotationEditPart.getAnnotationDefaultBackgroundColor();
+        Color bg = AnnotationEditPart.getWorkflowAnnotationDefaultBackgroundColor();
         m_page = new FlowPage();
         m_page.setLayoutManager(new PageFlowLayout(m_page));
         m_page.setBackgroundColor(bg);
@@ -95,22 +96,29 @@ public class AnnotationFigure3 extends Panel {
         newContent(annotation);
     }
 
-    public void newContent(final WorkflowAnnotation annotation) {
-        WorkflowAnnotation.StyleRange[] sr;
-        if (annotation.getStyleRanges() != null) {
-            sr =
-                    Arrays.copyOf(annotation.getStyleRanges(),
-                            annotation.getStyleRanges().length);
+    public void newContent(final Annotation annotation) {
+        String text;
+        AnnotationData.StyleRange[] sr;
+        if (AnnotationEditPart.isDefaultNodeAnnotation(annotation)) {
+            text = AnnotationEditPart.getAnnotationText(annotation);
+            sr = new AnnotationData.StyleRange[0];
         } else {
-            sr = new WorkflowAnnotation.StyleRange[0];
+            text = annotation.getText();
+            if (annotation.getStyleRanges() != null) {
+                sr =
+                        Arrays.copyOf(annotation.getStyleRanges(),
+                                annotation.getStyleRanges().length);
+            } else {
+                sr = new AnnotationData.StyleRange[0];
+            }
         }
-        Arrays.sort(sr, new Comparator<WorkflowAnnotation.StyleRange>() {
+        Arrays.sort(sr, new Comparator<AnnotationData.StyleRange>() {
             /**
              * {@inheritDoc}
              */
             @Override
-            public int compare(final WorkflowAnnotation.StyleRange o1,
-                    final WorkflowAnnotation.StyleRange o2) {
+            public int compare(final AnnotationData.StyleRange o1,
+                    final AnnotationData.StyleRange o2) {
                 if (o1.getStart() == o2.getStart()) {
                     NodeLogger.getLogger(AnnotationEditPart.class).error(
                             "Ranges overlap");
@@ -125,8 +133,7 @@ public class AnnotationFigure3 extends Panel {
         m_page.setBackgroundColor(bg);
         int i = 0;
         List<TextFlow> segments = new ArrayList<TextFlow>(sr.length);
-        String text = annotation.getText();
-        for (WorkflowAnnotation.StyleRange r : sr) {
+        for (AnnotationData.StyleRange r : sr) {
             // create text from last range to beginning of this range
             if (i < r.getStart()) {
                 String noStyle = text.substring(i, r.getStart());
@@ -146,7 +153,18 @@ public class AnnotationFigure3 extends Panel {
         BlockFlowLayout bfl = new BlockFlowLayout(bf);
         bfl.setContinueOnSameLine(true);
         bf.setLayoutManager(bfl);
-        bf.setHorizontalAligment(PositionConstants.ALWAYS_LEFT);
+        int position;
+        switch (annotation.getAlignment()) {
+        case CENTER:
+            position = PositionConstants.CENTER;
+            break;
+        case RIGHT:
+            position = PositionConstants.RIGHT;
+            break;
+        default:
+            position = PositionConstants.LEFT;
+        }
+        bf.setHorizontalAligment(position);
         bf.setOrientation(SWT.LEFT_TO_RIGHT);
         bf.setBackgroundColor(bg);
         for (TextFlow tf : segments) {
@@ -182,7 +200,7 @@ public class AnnotationFigure3 extends Panel {
     }
 
     private TextFlow getStyled(final String text,
-            final WorkflowAnnotation.StyleRange style, final Color bg) {
+            final AnnotationData.StyleRange style, final Color bg) {
 
         Font styledFont =
                 AnnotationEditPart.FONT_STORE.getFont(style.getFontName(),

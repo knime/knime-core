@@ -103,7 +103,8 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
 public class NodeContainerFigure extends RectangleFigure {
 
     /** absolute width of this figure. */
-    public static final int WIDTH = 80;
+    public static final int WIDTH = SymbolFigure.SYMBOL_FIG_WIDTH
+            + (2 * AbstractPortFigure.NODE_PORT_SIZE);
 
     /** absolute height of this figure. */
     public static final int HEIGHT = 48;
@@ -197,20 +198,6 @@ public class NodeContainerFigure extends RectangleFigure {
     /** The node name, e.g File Reader. */
     private final Label m_heading;
 
-    /** The user specified node name, e.g. Molecule Data 4. */
-    private final Label m_name;
-
-    /**
-     * Tooltip for displaying the custom description. This tooltip is displayed
-     * with the custom name.
-     */
-    private final NewToolTipFigure m_nameTooltip;
-
-    /**
-     * An optional custom description.
-     */
-    private String m_description;
-
     private Image m_jobExec;
 
     private Image m_metaNodeLinkIcon;
@@ -229,14 +216,9 @@ public class NodeContainerFigure extends RectangleFigure {
         m_backgroundColor = ColorConstants.white;
         m_showFlowVarPorts = false;
 
-        m_description = null;
-
         setOpaque(false);
         setFill(false);
         setOutline(false);
-
-        // no border
-        // setBorder(SimpleEtchedBorder.singleton);
 
         // add sub-figures
         setLayoutManager(new DelegatingLayout());
@@ -246,19 +228,14 @@ public class NodeContainerFigure extends RectangleFigure {
         final int height = store.getInt(PreferenceConstants.P_NODE_LABEL_FONT_SIZE);
         final String fontName = fontName();
         final Display current = Display.getDefault();
-        final Font normalFont = new Font(current, fontName, height, SWT.NORMAL);
         final Font boldFont = new Font(current, fontName, height, SWT.BOLD);
+        final Font normalFont = new Font(current, fontName, height, SWT.NORMAL);
 
         // Heading (Label)
         m_heading = new Label();
         m_headingTooltip = new NewToolTipFigure("");
         m_heading.setToolTip(m_headingTooltip);
         m_heading.setFont(boldFont);
-
-        // Name (Label)
-        m_name = new Label();
-        m_nameTooltip = new NewToolTipFigure("");
-        m_name.setFont(normalFont);
         super.setFont(normalFont);
 
         // icon
@@ -282,20 +259,24 @@ public class NodeContainerFigure extends RectangleFigure {
         add(m_symbolFigure);
         add(m_infoWarnErrorPanel);
         add(m_statusFigure);
-        add(m_name);
 
         // layout the components
         setConstraint(m_heading, new NodeContainerLocator(this));
         setConstraint(m_symbolFigure, new NodeContainerLocator(this));
         setConstraint(m_infoWarnErrorPanel, new NodeContainerLocator(this));
         setConstraint(m_statusFigure, new NodeContainerLocator(this));
-        setConstraint(m_name, new NodeContainerLocator(this));
     }
 
+    /**
+     * @return true if implicit flow variable ports are currently shown
+     */
     boolean getShowFlowVarPorts() {
         return m_showFlowVarPorts;
     }
 
+    /**
+     * @param showPorts true if implicit flow variable ports should be shown
+     */
     public void setShowFlowVarPorts(final boolean showPorts) {
         m_showFlowVarPorts = showPorts;
     }
@@ -329,12 +310,11 @@ public class NodeContainerFigure extends RectangleFigure {
         return m_progressFigure;
     }
 
+    /**
+     * @return the figure showing the status (traffic light)
+     */
     public StatusFigure getStatusFigure() {
         return m_statusFigure;
-    }
-
-    Label getHeader() {
-        return m_heading;
     }
 
     /**
@@ -417,65 +397,12 @@ public class NodeContainerFigure extends RectangleFigure {
         return text;
     }
 
-    /**
-     * Sets the user name of the figure.
-     *
-     * @param name The name to set.
-     */
-    public void setCustomName(final String name) {
-        if (name == null || name.trim().equals("")) {
-            m_name.setText("");
-        } else {
-            // if the name is not already set
-            m_name.setText(name.trim());
-
-            // if the tooltip (description) contains content, set it
-            String toolTipText = m_name.getText();
-            if (m_description != null && !m_description.trim().equals("")) {
-                toolTipText =
-                        toolTipText + ":\n\n Description:\n" + m_description;
-            }
-
-            m_nameTooltip.setText(toolTipText);
-            m_name.setToolTip(m_nameTooltip);
-        }
-    }
-
-    /**
-     * Sets the description for this node as the name's tooltip.
-     *
-     * @param description the description to set as tooltip
-     */
-    public void setCustomDescription(final String description) {
-
-        if (description == null || description.trim().equals("")) {
-
-            // if there is no description, reset the description
-            // and invoke the set name method once more to
-            // adjust the tooltip text
-            m_description = null;
-            setCustomName(m_name.getText());
-            return;
-        }
-
-        m_description = description;
-
-        String toolTipText = m_name.getText();
-
-        toolTipText = toolTipText + ":\n\n Description:\n" + m_description;
-
-        m_nameTooltip.setText(toolTipText);
-        m_name.setToolTip(m_nameTooltip);
-
-    }
-
     private boolean isChild(final Figure figure) {
         for (final Object contentFigure : getChildren()) {
             if (contentFigure == figure) {
                 return true;
             }
         }
-
         return false;
     }
 
@@ -637,18 +564,12 @@ public class NodeContainerFigure extends RectangleFigure {
     public Dimension getPreferredSize(final int wHint, final int hHint) {
 
         int prefWidth = Math.max(WIDTH, m_heading.getTextBounds().width);
-        // add some offset, that the selection border is not directly at
-        // the label
-        prefWidth += 10;
-
         int prefHeight = 0;
         prefHeight += m_heading.getPreferredSize().height;
         prefHeight += m_symbolFigure.getPreferredSize().height;
-        prefHeight += m_progressFigure.getPreferredSize().height;
         prefHeight += m_statusFigure.getPreferredSize().height;
-        prefHeight += 20; // fixed size for the info error warn panel
-        prefHeight += m_name.getPreferredSize().height;
-
+        prefHeight += m_infoWarnErrorPanel.getPreferredSize().height;
+        prefHeight += (4 * NodeContainerLocator.GAP);
         return new Dimension(prefWidth, prefHeight);
     }
 
@@ -1070,6 +991,21 @@ public class NodeContainerFigure extends RectangleFigure {
 
             repaint();
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Dimension getPreferredSize(final int wHint, final int hHint) {
+            if (getChildren().size() == 0) {
+                return new Dimension(0, 0);
+            }
+            org.eclipse.swt.graphics.Rectangle err_bnds = ERROR_SIGN.getBounds();
+            org.eclipse.swt.graphics.Rectangle wrn_bnds = WARNING_SIGN.getBounds();
+            int h = Math.max(0, Math.max(err_bnds.height, wrn_bnds.height));
+            int w = Math.max(0, Math.max(err_bnds.width, wrn_bnds.width));
+            return new Dimension(w, h);
+        }
     }
 
     /**
@@ -1184,20 +1120,6 @@ public class NodeContainerFigure extends RectangleFigure {
     }
 
     /**
-     * @return the rectangle of the name label.
-     */
-    public Rectangle getNameLabelRectangle() {
-        return m_name.getClientArea().getCopy();
-    }
-
-    /**
-     * @return the user node name of this figure
-     */
-    public String getCustomName() {
-        return m_name.getText();
-    }
-
-    /**
      * Marks this node parts figure. Used to hilite it from the rest of the
      * parts.
      *
@@ -1225,18 +1147,17 @@ public class NodeContainerFigure extends RectangleFigure {
      * @param fontSize the new font size to ba applied.
      */
     public void setFontSize(final int fontSize) {
-        // apply new font for node name
+        // apply new font size for node name (bold)
         final Font font1 = m_heading.getFont();
         final FontData fontData1 = font1.getFontData()[0];
         fontData1.setHeight(fontSize);
         m_heading.setFont(new Font(Display.getDefault(), fontData1));
         font1.dispose();
         // apply new font for node label
-        final Font font2 = m_name.getFont();
+        final Font font2 = super.getFont();
         final FontData fontData2 = font2.getFontData()[0];
         fontData2.setHeight(fontSize);
         final Font newFont2 = new Font(Display.getDefault(), fontData2);
-        m_name.setFont(newFont2);
         // apply the standard node label font also to its parent figure to allow
         // editing the node label with the same font (size)
         super.setFont(newFont2);

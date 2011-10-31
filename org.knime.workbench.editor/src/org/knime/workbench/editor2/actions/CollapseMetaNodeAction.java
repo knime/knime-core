@@ -155,14 +155,12 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
         for (int i = 0; i < nodeParts.length; i++) {
             nodeIds[i] = nodeParts[i].getNodeContainer().getID();
         }
-        WorkflowAnnotation[] annos = new WorkflowAnnotation[annoParts.length];
-        for (int i = 0; i < annoParts.length; i++) {
-            annos[i] = annoParts[i].getModel();
-        }
+        WorkflowAnnotation[] annos =
+            AnnotationEditPart.extractWorkflowAnnotations(annoParts);
         try {
             // before testing anything, let's see if we should reset
             // the selected nodes:
-            Vector<NodeID> resetableIDs = new Vector<NodeID>(); 
+            Vector<NodeID> resetableIDs = new Vector<NodeID>();
             for (NodeID id : nodeIds) {
                 if (manager.canResetNode(id)) {
                     resetableIDs.add(id);
@@ -220,7 +218,7 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
             // ignore
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {

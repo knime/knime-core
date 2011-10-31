@@ -92,8 +92,7 @@ public class ChangeNodeBoundsCommand extends AbstractKNIMECommand {
         Point offset = figure.getOffsetToRefPoint(uiInfo);
         m_oldBounds = uiInfo.getBounds();
         m_newBounds = new int[]{figureBounds.x + offset.x,
-                figureBounds.y + offset.y, figureBounds.width,
-                figureBounds.height};
+                figureBounds.y + offset.y, -1, -1};
         m_nodeID = container.getID();
     }
 

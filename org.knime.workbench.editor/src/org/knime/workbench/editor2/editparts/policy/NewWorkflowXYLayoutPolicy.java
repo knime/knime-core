@@ -50,10 +50,14 @@
  */
 package org.knime.workbench.editor2.editparts.policy;
 
+import org.eclipse.draw2d.PositionConstants;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.EditPart;
+import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.commands.Command;
+import org.eclipse.gef.editpolicies.NonResizableEditPolicy;
+import org.eclipse.gef.editpolicies.ResizableEditPolicy;
 import org.eclipse.gef.editpolicies.XYLayoutEditPolicy;
 import org.eclipse.gef.requests.CreateRequest;
 import org.knime.core.node.workflow.NodeContainer;
@@ -63,6 +67,7 @@ import org.knime.workbench.editor2.commands.ChangeNodeBoundsCommand;
 import org.knime.workbench.editor2.commands.ChangeWorkflowPortBarCommand;
 import org.knime.workbench.editor2.editparts.AbstractWorkflowPortBarEditPart;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
+import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
@@ -117,7 +122,7 @@ public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
             AnnotationEditPart annoPart = (AnnotationEditPart)child;
             // TODO the workflow annotation could know what its WFM is?
             WorkflowRootEditPart root =
-                (WorkflowRootEditPart)annoPart.getParent();
+                    (WorkflowRootEditPart)annoPart.getParent();
             WorkflowManager wm = root.getWorkflowManager();
             command = new ChangeAnnotationBoundsCommand(wm, annoPart, rect);
         }
@@ -145,4 +150,21 @@ public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
     protected Command getDeleteDependantCommand(final Request request) {
         return null;
     }
+
+    @Override
+    protected EditPolicy createChildEditPolicy(final EditPart child) {
+        if (child instanceof NodeContainerEditPart) {
+            NonResizableEditPolicy pol = new NonResizableEditPolicy();
+            return pol;
+        }
+        if (child instanceof NodeAnnotationEditPart) {
+            ResizableEditPolicy pol = new ResizableEditPolicy();
+            pol.setResizeDirections(PositionConstants.EAST_WEST
+                    + PositionConstants.SOUTH);
+            pol.setDragAllowed(false);
+            return pol;
+        }
+        return super.createChildEditPolicy(child);
+    }
+
 }

@@ -85,6 +85,7 @@ import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
+import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeMessage;
@@ -108,9 +109,6 @@ import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.WorkflowManagerInput;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
-import org.knime.workbench.editor2.directnodeedit.NodeEditManager;
-import org.knime.workbench.editor2.directnodeedit.UserNodeNameCellEditorLocator;
-import org.knime.workbench.editor2.directnodeedit.UserNodeNameDirectEditPolicy;
 import org.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 import org.knime.workbench.editor2.figures.ProgressFigure;
@@ -162,11 +160,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      */
     private boolean m_uiListenerActive = true;
 
-    /**
-     * The manager for the direct editing of the node name.
-     */
-    private NodeEditManager m_directEditManager;
-
     private boolean m_showFlowVarPorts = false;
 
     /**
@@ -216,8 +209,19 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             // set a new empty UI info
             NodeUIInformation info = new NodeUIInformation();
             info.setNodeLocation(0, 0, -1, -1);
-            // we not yet a listener to ui info changes
+            // not yet a listener -- no event received
             cont.setUIInformation(info);
+        }
+
+        // need to notify node annotation about our presence
+        // the annotation is a child that's added first (placed in background)
+        // to the viewer - so it doesn't know about the correct location yet
+        NodeAnnotation nodeAnnotation = cont.getNodeAnnotation();
+        NodeAnnotationEditPart nodeAnnotationEditPart =
+            (NodeAnnotationEditPart)getViewer().getEditPartRegistry().get(
+                    nodeAnnotation);
+        if (nodeAnnotationEditPart != null) {
+            nodeAnnotationEditPart.nodeUIInformationChanged(null);
         }
 
         IPreferenceStore store =
@@ -289,7 +293,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         final NodeContainerFigure nodeFigure =
                 new NodeContainerFigure(new ProgressFigure());
         // init the user specified node name
-        nodeFigure.setCustomName(getCustomName());
         if (getRootEditPart() != null) {
             nodeFigure.hideNodeName(getRootEditPart().hideNodeNames());
         }
@@ -297,26 +300,11 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
-     * Enable direct edit: edit custom name.
-     */
-    public void performDirectEdit() {
-        if (m_directEditManager == null) {
-            m_directEditManager =
-                    new NodeEditManager(this,
-                            new UserNodeNameCellEditorLocator(
-                                    (NodeContainerFigure)getFigure()));
-        }
-        m_directEditManager.show();
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
     public void performRequest(final Request request) {
-        if (request.getType() == RequestConstants.REQ_DIRECT_EDIT) {
-            performDirectEdit();
-        } else if (request.getType() == RequestConstants.REQ_OPEN) {
+        if (request.getType() == RequestConstants.REQ_OPEN) {
             // caused by a double click on this edit part
              openDialog();
         }
@@ -334,11 +322,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         // are associated with ports of this node
         this.installEditPolicy(EditPolicy.GRAPHICAL_NODE_ROLE,
                 new PortGraphicalRoleEditPolicy());
-
-        // Installs the edit policy to directly edit the user node name
-        // inside the node figure (by a CellEditor)
-        installEditPolicy(EditPolicy.DIRECT_EDIT_ROLE,
-                new UserNodeNameDirectEditPolicy());
     }
 
     /**
@@ -426,6 +409,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                 NodeContainerFigure fig = (NodeContainerFigure)getFigure();
                 fig.setMessage(messageEvent.getMessage());
                 updateNodeMessage();
+                refreshBounds();
                 // always refresh visuals
                 refreshVisuals();
             }
@@ -457,12 +441,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
     private void updateFigureFromUIinfo(final NodeUIInformation uiInfo) {
 
-        NodeContainerFigure fig = (NodeContainerFigure)getFigure();
         setBoundsFromUIinfo(uiInfo);
 
-        // update node custom name and description too
-        fig.setCustomName(getCustomName());
-        fig.setCustomDescription(getNodeContainer().getCustomDescription());
         // check status of node
         updateNodeMessage();
 
@@ -476,12 +456,10 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
         // always refresh visuals
         refreshVisuals();
-
     }
 
     private void setBoundsFromUIinfo(final NodeUIInformation uiInfo) {
         NodeContainerFigure fig = (NodeContainerFigure)getFigure();
-        WorkflowRootEditPart parent = (WorkflowRootEditPart)getParent();
         int[] bounds = uiInfo.getBounds();
         if (!uiInfo.hasAbsoluteCoordinates()) {
             // make it absolute coordinates taking scrolling into account
@@ -511,56 +489,54 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                     bounds[0], bounds[1], bounds[2], bounds[3], true));
             m_uiListenerActive = true;
         }
+
+        // since v2.5 we ignore any width and height and keep bounds minimal
+        refreshBounds();
+    }
+
+    /**
+     * Adjusts the height and width of the node's figure. It automatically sets
+     * them to the preferred height/width of the figure (which might change if
+     * the warning icons change). It doesn't change x/y position of the figure.
+     * It does change width and height.
+     */
+    private void refreshBounds() {
+        NodeUIInformation uiInfo = getNodeContainer().getUIInformation();
+        int[] bounds = uiInfo.getBounds();
+        WorkflowRootEditPart parent = (WorkflowRootEditPart)getParent();
+        NodeContainerFigure fig = (NodeContainerFigure)getFigure();
+        Dimension pref = fig.getPreferredSize();
+        boolean set = false;
+        if (pref.width != bounds[2]) {
+            bounds[2] = pref.width;
+            set = true;
+        }
+        if (pref.height != bounds[3]) {
+            bounds[3] = pref.height;
+            set = true;
+        }
+        if (set) {
+            // notify uiInfo listeners (e.g. node annotations)
+            m_uiListenerActive = false;
+            getNodeContainer().setUIInformation(new NodeUIInformation(
+                    bounds[0], bounds[1], bounds[2], bounds[3], true));
+            m_uiListenerActive = true;
+        }
+
         // since ver2.3.0 all coordinates are relative to the icon
         Point offset = fig.getOffsetToRefPoint(uiInfo);
         bounds[0] -= offset.x;
         bounds[1] -= offset.y;
-        // set the new constraints in the parent edit part layouter
-        Dimension pref = fig.getPreferredSize();
-        if (bounds[2] < 0) {
-            bounds[2] = pref.width;
-        }
-        if (bounds[3] < 0) {
-            bounds[3] = pref.height;
-        }
         Rectangle rect =
                 new Rectangle(bounds[0], bounds[1], bounds[2], bounds[3]);
         fig.setBounds(rect);
-        parent.setLayoutConstraint(NodeContainerEditPart.this, getFigure(),
-                rect);
-
-    }
-
-    /**
-     * @return custom name
-     */
-    protected String getCustomName() {
-        String customName = getNodeContainer().getCustomName();
-        if (customName != null) {
-            return customName;
-        }
-        String name = "Node";
-        IPreferenceStore store =
-                KNIMEUIPlugin.getDefault().getPreferenceStore();
-        if (store.contains(PreferenceConstants.P_SET_NODE_LABEL)) {
-            if (store.getBoolean(PreferenceConstants.P_SET_NODE_LABEL)) {
-                if (store.contains(PreferenceConstants.P_DEFAULT_NODE_LABEL)) {
-                    name =
-                            store.getString(PreferenceConstants.P_DEFAULT_NODE_LABEL);
-                    if (name == null || name.trim().isEmpty()) {
-                        return "";
-                    }
-                }
-            }
-        }
-        return name + " " + getNodeContainer().getID().getIndex();
+        parent.setLayoutConstraint(this, fig, rect);
     }
 
     private void initFigure() {
         NodeContainerFigure f = (NodeContainerFigure)getFigure();
         NodeType type = getNodeContainer().getType();
         String name = getNodeContainer().getName();
-        String description = getNodeContainer().getCustomDescription();
 
         // get the icon
         Image icon =
@@ -577,9 +553,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         }
         f.setType(type);
         f.setLabelText(name);
-        f.setCustomName(getCustomName());
-        f.setCustomDescription(description);
-
     }
 
     /**
@@ -593,6 +566,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         NodeMessage nodeMessage = nc.getNodeMessage();
         if (nodeMessage != null) {
             containerFigure.setMessage(nodeMessage);
+            refreshBounds();
         }
     }
 
@@ -907,13 +881,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                 }
             });
             }
-            return;
-        }
-        if (pce.getProperty().equals(PreferenceConstants.P_SET_NODE_LABEL)
-                || pce.getProperty().equals(
-                        PreferenceConstants.P_DEFAULT_NODE_LABEL)) {
-            String newName = getCustomName();
-            ((NodeContainerFigure)getFigure()).setCustomName(newName);
             return;
         }
     }

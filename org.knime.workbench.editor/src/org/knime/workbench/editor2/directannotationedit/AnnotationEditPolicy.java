@@ -53,7 +53,8 @@ package org.knime.workbench.editor2.directannotationedit;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editpolicies.DirectEditPolicy;
 import org.eclipse.gef.requests.DirectEditRequest;
-import org.knime.core.node.workflow.WorkflowAnnotation;
+import org.knime.core.node.workflow.Annotation;
+import org.knime.core.node.workflow.AnnotationData;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 
 /**
@@ -67,12 +68,32 @@ public class AnnotationEditPolicy extends DirectEditPolicy {
     @Override
     protected Command getDirectEditCommand(final DirectEditRequest edit) {
         StyledTextEditor ste = (StyledTextEditor)edit.getCellEditor();
-        WorkflowAnnotation newAnno = (WorkflowAnnotation)ste.getValue();
+        AnnotationData newAnnoData = (AnnotationData)ste.getValue();
         AnnotationEditPart annoPart = (AnnotationEditPart)getHost();
-        WorkflowAnnotation oldAnno = (WorkflowAnnotation)annoPart.getModel();
-        AnnotationEditCommand command =
-                new AnnotationEditCommand(annoPart, oldAnno, newAnno);
-        return command;
+        Annotation oldAnno = annoPart.getModel();
+        if (hasAnnotationDataChanged(oldAnno, newAnnoData)) {
+            return new AnnotationEditCommand(annoPart, oldAnno, newAnnoData);
+        }
+        return null;
+    }
+
+    /** Compares the content of the new and the old annotation data. If they
+     * are equal, no change command is executed.
+     * @param oldAnno Old annotation (may be a default node annotation)
+     * @param newAnnoData The new annotation data (not a default one)
+     * @return If they are equally (a default with "Node x" equals a non-default
+     * with "Node x")
+     */
+    private static boolean hasAnnotationDataChanged(
+            final Annotation oldAnno, final AnnotationData newAnnoData) {
+        AnnotationData oldAnnoRealData = new AnnotationData();
+        // copy bounds, overwrite text later
+        oldAnnoRealData.copyFrom(newAnnoData, true);
+        oldAnnoRealData.copyFrom(oldAnno.getData(), false);
+        // need to set text explicitely - default node annotations have
+        // no text (it's determined during rendering)
+        oldAnnoRealData.setText(AnnotationEditPart.getAnnotationText(oldAnno));
+        return !oldAnnoRealData.equals(newAnnoData);
     }
 
     /**

@@ -69,8 +69,7 @@ implements NodeContainerMetaPersistor {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(CopyNodeContainerMetaPersistor.class);
 
-    private final String m_customName;
-    private final String m_customDescription;
+    private final NodeAnnotationData m_nodeAnnotationData;
     private int m_nodeIDSuffix;
     private final NodeSettingsRO m_jobManagerSettings;
     private final State m_state;
@@ -91,8 +90,9 @@ implements NodeContainerMetaPersistor {
     CopyNodeContainerMetaPersistor(final NodeContainer original,
             final boolean preserveDeletableFlag,
             final boolean isUndoableDeleteCommand) {
-        m_customName = original.getCustomName();
-        m_customDescription = original.getCustomDescription();
+        NodeAnnotation nodeAnn = original.getNodeAnnotation();
+        m_nodeAnnotationData = nodeAnn == null ? null
+                : nodeAnn.getData().clone();
         m_nodeIDSuffix = original.getID().getIndex();
         NodeExecutionJobManager orig = original.getJobManager();
         NodeSettings jobMgrSettings = null;
@@ -131,14 +131,8 @@ implements NodeContainerMetaPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public String getCustomDescription() {
-        return m_customDescription;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String getCustomName() {
-        return m_customName;
+    public NodeAnnotationData getNodeAnnotationData() {
+        return m_nodeAnnotationData;
     }
 
     /** {@inheritDoc} */

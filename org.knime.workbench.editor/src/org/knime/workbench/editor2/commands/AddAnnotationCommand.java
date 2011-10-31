@@ -56,6 +56,8 @@ import org.eclipse.draw2d.geometry.PrecisionPoint;
 import org.eclipse.gef.GraphicalViewer;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.swt.graphics.Point;
+import org.knime.core.node.workflow.Annotation;
+import org.knime.core.node.workflow.AnnotationData;
 import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -81,16 +83,22 @@ public class AddAnnotationCommand extends AbstractKNIMECommand {
         DEFAULT_WIDTH = Math.max(175, StyledTextEditor.TOOLBAR_MIN_WIDTH);
         DEFAULT_HEIGHT = (int)Math.round(DEFAULT_WIDTH * 0.38);
     }
-    private static final int INITIAL_COLOR = AnnotationEditPart
-            .colorToRGBint(AnnotationEditPart
-                    .getAnnotationDefaultBackgroundColor());
 
-    public static final String INITIAL_TEXT = "Double-click to edit.";
+    private static final int INITIAL_FLOWANNO_COLOR = AnnotationEditPart
+            .colorToRGBint(AnnotationEditPart
+                    .getWorkflowAnnotationDefaultBackgroundColor());
+
+    private static final int INITIAL_NODEANNO_COLOR = AnnotationEditPart
+            .colorToRGBint(AnnotationEditPart
+                    .getNodeAnnotationDefaultBackgroundColor());
+
+    public static final String INITIAL_FLOWANNO_TEXT = "Double-click to edit.";
 
     // remember the new annotation for undo
-    private WorkflowAnnotation m_anno;
+    private Annotation m_anno;
 
     /**
+     * Adds a workflow annotation.
      * @param wfm
      * @param viewer
      * @param location
@@ -127,13 +135,16 @@ public class AddAnnotationCommand extends AbstractKNIMECommand {
         WorkflowEditor.adaptZoom(zoomManager, location, true);
 
         m_anno = new WorkflowAnnotation();
-        m_anno.setText(INITIAL_TEXT);
-        m_anno.setBgColor(INITIAL_COLOR);
-        m_anno.setStyleRanges(new WorkflowAnnotation.StyleRange[0]);
-        m_anno.setDimension((int)location.preciseX, (int)location.preciseY,
+        AnnotationData data = new AnnotationData();
+        // it is a workflow annotation
+        data.setBgColor(INITIAL_FLOWANNO_COLOR);
+        data.setDimension((int)location.preciseX, (int)location.preciseY,
                 DEFAULT_WIDTH, DEFAULT_HEIGHT);
+        data.setText(INITIAL_FLOWANNO_TEXT);
+        data.setStyleRanges(new AnnotationData.StyleRange[0]);
+        m_anno.copyFrom(data, true);
         WorkflowManager hostWFM = getHostWFM();
-        hostWFM.addWorkflowAnnotation(m_anno);
+        hostWFM.addWorkflowAnnotation((WorkflowAnnotation)m_anno);
         m_viewer.deselectAll();
         // select the new ones....
         if (m_viewer.getRootEditPart().getContents() != null
@@ -157,7 +168,7 @@ public class AddAnnotationCommand extends AbstractKNIMECommand {
      */
     @Override
     public void undo() {
-        getHostWFM().removeAnnotation(m_anno);
+        getHostWFM().removeAnnotation((WorkflowAnnotation)m_anno);
         m_anno = null;
     }
 }

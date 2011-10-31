@@ -61,6 +61,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeMessage.Type;
+import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -82,10 +83,11 @@ class NodeContainerMetaPersistorVersion200 extends
     /** Create load persistor.
      * @param settingsFile The node file (only important while load)
      * @param loadHelper As required by super constructor.
+     * @param version The load version
      */
     NodeContainerMetaPersistorVersion200(final ReferencedFile settingsFile,
-            final WorkflowLoadHelper loadHelper) {
-        super(settingsFile, loadHelper);
+            final WorkflowLoadHelper loadHelper, final LoadVersion version) {
+        super(settingsFile, loadHelper, version);
     }
 
     /** {@inheritDoc} */
@@ -150,24 +152,26 @@ class NodeContainerMetaPersistorVersion200 extends
 
     /** {@inheritDoc} */
     @Override
-    protected String loadCustomName(final NodeSettingsRO settings,
-            final NodeSettingsRO parentSettings)
-    throws InvalidSettingsException {
-        if (!settings.containsKey(KEY_CUSTOM_NAME)) {
-            return null;
-        }
-        return settings.getString(KEY_CUSTOM_NAME);
-    }
+    protected NodeAnnotationData loadNodeAnnotationData(
+            final NodeSettingsRO settings, final NodeSettingsRO parentSettings)
+        throws InvalidSettingsException {
+        if (getLoadVersion().ordinal() < LoadVersion.V250.ordinal()) {
+            String customName = settings.getString(KEY_CUSTOM_NAME, null);
+            String customDescr =
+                settings.getString(KEY_CUSTOM_DESCRIPTION, null);
 
-    /** {@inheritDoc} */
-    @Override
-    protected String loadCustomDescription(final NodeSettingsRO settings,
-            final NodeSettingsRO parentSettings)
-    throws InvalidSettingsException {
-        if (!settings.containsKey(KEY_CUSTOM_DESCRIPTION)) {
-            return null;
+            return NodeAnnotationData.createFromObsoleteCustomDescription(
+                    customName, customDescr);
+        } else {
+            if (settings.containsKey("nodeAnnotation")) {
+                NodeSettingsRO anno =
+                    settings.getNodeSettings("nodeAnnotation");
+                NodeAnnotationData result = new NodeAnnotationData(false);
+                result.load(anno, getLoadVersion());
+                return result;
+            }
+            return new NodeAnnotationData(true);
         }
-        return settings.getString(KEY_CUSTOM_DESCRIPTION);
     }
 
     /** {@inheritDoc} */
@@ -197,8 +201,7 @@ class NodeContainerMetaPersistorVersion200 extends
     public static void save(final NodeSettingsWO settings,
             final NodeContainer nc, final ReferencedFile targetDir) {
         synchronized (nc.m_nodeMutex) {
-            saveCustomName(settings, nc);
-            saveCustomDescription(settings, nc);
+            saveNodeAnnotation(settings, nc);
             saveNodeExecutionJobManager(settings, nc);
             boolean mustAlsoSaveExecutorSettings = saveState(settings, nc);
             if (mustAlsoSaveExecutorSettings) {
@@ -287,14 +290,13 @@ class NodeContainerMetaPersistorVersion200 extends
         return mustAlsoSaveExecutorSettings;
     }
 
-    protected static void saveCustomName(final NodeSettingsWO settings,
+    protected static void saveNodeAnnotation(final NodeSettingsWO settings,
             final NodeContainer nc) {
-        settings.addString(KEY_CUSTOM_NAME, nc.getCustomName());
-    }
-
-    protected static void saveCustomDescription(final NodeSettingsWO settings,
-            final NodeContainer nc) {
-        settings.addString(KEY_CUSTOM_DESCRIPTION, nc.getCustomDescription());
+        NodeAnnotation annotation = nc.getNodeAnnotation();
+        if (annotation != null && !annotation.getData().isDefault()) {
+            NodeSettingsWO anno = settings.addNodeSettings("nodeAnnotation");
+            annotation.save(anno);
+        }
     }
 
     protected static void saveIsDeletable(final NodeSettingsWO settings,

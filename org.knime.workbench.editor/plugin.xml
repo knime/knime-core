@@ -56,11 +56,6 @@
             name="Execute and Open View"/>
       <command
             categoryId="knime.command.category"
-            description="Edit custom name and description for the selected node"
-            id="knime.commands.setNameAndDescription"
-            name="Edit Node Name and Description..."/>
-      <command
-            categoryId="knime.command.category"
             description="Open first out-port view for selected nodes"
             id="knime.commands.openFirstOutPortView"
             name="Open First Out-port View"/>
@@ -196,17 +191,6 @@
                toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="Opens the first out-port view of the selected nodes"/>
          <action
-               class="org.knime.workbench.editor2.actions.delegates.SetNameAndDescriptionEditorAction"
-               definitionId="knime.commands.setNameAndDescription"
-               disabledIcon="icons/setNameDescription_disabled.PNG"
-               icon="icons/setNameDescription.PNG"
-               id="org.knime.workbench.editor.actions.setnameanddescription"
-               label="Edit Node Name and Description..."
-               menubarPath="org.knime.workbench.editor.menu/group1"
-               style="push"
-               toolbarPath="org.knime.workbench.editor.menu/group1"
-               tooltip="Edit custom node name and node description"/>
-         <action
                class="org.knime.workbench.editor2.actions.delegates.ResetEditorAction"
                definitionId="knime.commands.reset"
                disabledIcon="icons/resetNode_disabled.gif"
@@ -296,11 +280,6 @@
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="CTRL+ALT+U"/>
-      <key
-            commandId="knime.commands.setNameAndDescription"
-            contextId="org.eclipse.ui.contexts.window"
-            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="ALT+F2"/>
       <key
             commandId="knime.commands.openDialog"
             contextId="org.eclipse.ui.contexts.window"

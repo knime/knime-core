@@ -68,6 +68,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
@@ -128,6 +129,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResult
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowPortTemplate;
+import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionResult;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 import org.knime.core.node.workflow.execresult.WorkflowExecutionResult;
@@ -221,11 +223,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     private final List<ReferencedFile> m_deletedNodesFileLocations
         = new ArrayList<ReferencedFile>();
 
-    /** The version string as read from workflow.knime file during load
+    /** The version as read from workflow.knime file during load
      * (or null if not loaded but newly created). This field is used to
      * determine whether the workflow needs to be converted to any newer version
      * upon save. */
-    private String m_loadVersion;
+    private LoadVersion m_loadVersion;
 
     /** Template information encapsulating template source URI and reference
      * date. This field is {@link MetaNodeTemplateInformation#NONE} for workflow
@@ -314,7 +316,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         m_workflow = new Workflow(id);
         m_name = persistor.getName();
         m_templateInformation = persistor.getTemplateInformation();
-        m_loadVersion = persistor.getLoadVersionString();
+        m_loadVersion = persistor.getLoadVersion();
         m_workflowVariables =
             new Vector<FlowVariable>(persistor.getWorkflowVariables());
         m_credentialsStore =
@@ -2617,13 +2619,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 i++;
             }
             // retrieve all workflow annotations
-            Collection<WorkflowAnnotation> annos = subWFM.getWorkflowAnnotations();
-            WorkflowAnnotation[] orgAnnos = new WorkflowAnnotation[annos.size()];
-            i = 0;
-            for (WorkflowAnnotation anno : annos) {
-                orgAnnos[i] = anno;
-                i++;
-            }
+            Collection<WorkflowAnnotation> annos =
+                subWFM.getWorkflowAnnotations();
+            WorkflowAnnotation[] orgAnnos = annos.toArray(
+                    new WorkflowAnnotation[annos.size()]);
             // copy the nodes from the sub workflow manager:
             WorkflowCopyContent orgContent = new WorkflowCopyContent();
             orgContent.setNodeIDs(orgIDs);
@@ -2631,7 +2630,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             WorkflowCopyContent newContent
                     = this.copyFromAndPasteHere(subWFM, orgContent);
             NodeID[] newIDs = newContent.getNodeIDs();
-            WorkflowAnnotation[] newAnnos = newContent.getAnnotations();
+            Annotation[] newAnnos = newContent.getAnnotations();
             // create map and set of quick lookup/search
             Map<NodeID, NodeID> oldIDsHash = new HashMap<NodeID, NodeID>();
             HashSet<NodeID> newIDsHashSet = new HashSet<NodeID>();
@@ -2719,7 +2718,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         nc.setUIInformation(newUii);
                     }
                 }
-                for (WorkflowAnnotation anno : newAnnos) {
+                for (Annotation anno : newAnnos) {
                     anno.shiftPosition(xShift, yShift);
                 }
                 // move bendpoints of connections between moved nodes
@@ -2837,8 +2836,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws IllegalArgumentException if collapse can not be done
      */
     public WorkflowManager collapseIntoMetaNode(final NodeID[] orgIDs,
-            final WorkflowAnnotation[] orgAnnos,
-            final String name)
+            final WorkflowAnnotation[] orgAnnos, final String name)
     throws IllegalArgumentException {
         synchronized (m_workflowMutex) {
             // make sure this is still true:
@@ -3027,7 +3025,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     }
                 }
                 // move new annotations
-                for (WorkflowAnnotation anno : newWFM.m_annotations) {
+                for (Annotation anno : newWFM.m_annotations) {
                     anno.shiftPosition(xshift, yshift);
                 }
                 // move bendpoints of all internal connections
@@ -5508,33 +5506,29 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             NodeSettings.loadFromXML(new BufferedInputStream(
                     new FileInputStream(workflowknime)));
         // CeBIT 2006 version did not contain a version string.
-        String version;
         String versionString;
         if (settings.containsKey(CFG_VERSION)) {
             try {
-                version = settings.getString(CFG_VERSION);
+                versionString = settings.getString(CFG_VERSION);
             } catch (InvalidSettingsException e) {
                 throw new IOException("Can't read version number from \""
                         + workflowknime.getAbsolutePath() + "\"", e);
             }
-            versionString = version;
         } else {
-            version = "0.9.0";
-            versionString = "<unknown>";
+            versionString = "0.9.0";
         }
 
-        if (version == null) {
-            throw new UnsupportedWorkflowVersionException(
-            "Refuse to load workflow: Workflow version not available.");
-        }
         WorkflowPersistorVersion1xx persistor;
         // TODO only create new hash map if workflow is a project?
         HashMap<Integer, ContainerTable> tableRep =
             new HashMap<Integer, ContainerTable>();
-        if (WorkflowPersistorVersion200.canReadVersion(version)) {
+        LoadVersion version;
+        if ((version = WorkflowPersistorVersion200.canReadVersionV200(
+                versionString)) != null) {
             persistor = new WorkflowPersistorVersion200(
                     tableRep, workflowknimeRef, lh, version);
-        } else if (WorkflowPersistorVersion1xx.canReadVersion(version)) {
+        } else if ((version = WorkflowPersistorVersion1xx.canReadVersionV1X0(
+                versionString)) != null) {
             LOGGER.warn("The current KNIME version (" + KNIMEConstants.VERSION
                     + ") is different from the one that created the"
                     + " workflow (" + version
@@ -5644,9 +5638,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         exec.setMessage("Loading workflow structure from \""
                 + refDirectory + "\"");
 
-        String versionString = persistor.getLoadVersionString();
+        LoadVersion version = persistor.getLoadVersion();
         LOGGER.debug("Loading workflow from \"" + refDirectory
-                + "\" (version \"" + versionString + "\" with loader class \""
+                + "\" (version \"" + version + "\" with loader class \""
                 + persistor.getClass().getSimpleName() + "\")");
         // data files are loaded using a repository of reference tables;
         Map<Integer, BufferedDataTable> tblRep =
@@ -5662,7 +5656,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             new InsertWorkflowPersistor(persistor);
         Object mutex = isIsolatedProject ? new Object() : m_workflowMutex;
         synchronized (mutex) {
-            m_loadVersion = persistor.getLoadVersionString();
+            m_loadVersion = persistor.getLoadVersion();
             NodeID[] newIDs =
                 loadContent(insertPersistor, tblRep, null, exec, result,
                         keepNodeMessages).getNodeIDs();
@@ -6132,7 +6126,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             try {
                 final boolean isWorkingDirectory =
                     workflowDirRef.equals(getNodeContainerDirectory());
-                final String saveVersion =
+                final LoadVersion saveVersion =
                     WorkflowPersistorVersion200.VERSION_LATEST;
                 if (m_loadVersion != null
                         && !m_loadVersion.equals(saveVersion)) {
@@ -6764,6 +6758,23 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /* -------------------------------------------------------------------*/
 
+    /* --------Node Annotations ------------------------------------------*/
+
+    /**
+     * @return a list of all node annotations in the contained flow.
+     */
+    public List<NodeAnnotation> getNodeAnnotations() {
+        synchronized (m_workflowMutex) {
+            Collection<NodeContainer> nodeContainers = getNodeContainers();
+            List<NodeAnnotation> result = new LinkedList<NodeAnnotation>();
+            for (NodeContainer node : nodeContainers) {
+                result.add(node.getNodeAnnotation());
+            }
+            return result;
+        }
+    }
+
+    /* -------------------------------------------------------------------*/
 
     /**
      * Retrieves the node with the given ID, fetches the underlying

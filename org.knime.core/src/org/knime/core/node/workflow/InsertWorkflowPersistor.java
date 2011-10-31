@@ -64,6 +64,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
 /**
  * Persistor that is used when a workflow (a project) is loaded. It is used
@@ -116,8 +117,8 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public String getLoadVersionString() {
-        return m_wfmPersistor.getLoadVersionString();
+    public LoadVersion getLoadVersion() {
+        return m_wfmPersistor.getLoadVersion();
     }
 
     /** {@inheritDoc} */

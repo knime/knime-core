@@ -53,6 +53,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EventObject;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -186,12 +187,12 @@ import org.knime.workbench.editor2.actions.PasteActionContextMenu;
 import org.knime.workbench.editor2.actions.PauseLoopExecutionAction;
 import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.ResumeLoopAction;
-import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
 import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
 import org.knime.workbench.editor2.commands.CreateNewConnectedMetaNodeCommand;
 import org.knime.workbench.editor2.commands.CreateNewConnectedNodeCommand;
 import org.knime.workbench.editor2.commands.CreateNodeCommand;
+import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.explorer.view.actions.validators.FileStoreNameValidator;
@@ -503,8 +504,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         AbstractNodeAction resume = new ResumeLoopAction(this);
         AbstractNodeAction executeAndView = new ExecuteAndOpenViewAction(this);
         AbstractNodeAction reset = new ResetAction(this);
-        AbstractNodeAction setNameAndDescription =
-                new SetNameAndDescriptionAction(this);
         AbstractNodeAction toggleFlowVarPorts =
             new ToggleFlowVarPortsAction(this);
         AbstractNodeAction defaultOpenView = new DefaultOpenViewAction(this);
@@ -546,7 +545,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(executeAndView);
         m_actionRegistry.registerAction(reset);
         m_actionRegistry.registerAction(toggleFlowVarPorts);
-        m_actionRegistry.registerAction(setNameAndDescription);
         m_actionRegistry.registerAction(defaultOpenView);
 
         m_actionRegistry.registerAction(copy);
@@ -576,7 +574,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(cancelAll.getId());
         m_editorActions.add(executeAndView.getId());
         m_editorActions.add(reset.getId());
-        m_editorActions.add(setNameAndDescription.getId());
         m_editorActions.add(toggleFlowVarPorts.getId());
         m_editorActions.add(defaultOpenView.getId());
         m_editorActions.add(hideNodeName.getId());
@@ -589,7 +586,6 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(metaNodeSetName.getId());
         m_editorActions.add(checkUpdateMetaNodeLink.getId());
         m_editorActions.add(annotation.getId());
-
     }
 
     /**
@@ -602,9 +598,9 @@ public class WorkflowEditor extends GraphicalEditor implements
             @Override
             public boolean keyPressed(final org.eclipse.swt.events.KeyEvent e) {
                 if (e.keyCode == SWT.F2) {
-                    NodeContainerEditPart[] parts = getNodeParts();
-                    if (parts.length == 1) {
-                        parts[0].performDirectEdit();
+                    List<NodeAnnotationEditPart> parts = getSelectedNodeAnnotations();
+                    if (parts.size() == 1) {
+                        parts.get(0).performEdit();
                     }
                 }
                 return super.keyPressed(e);
@@ -613,34 +609,30 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     /**
-     * Returns a list of selected NodeContainerEditPart objects.
+     * Returns a list of selected NodeAnnotationEditPart objects.
      *
-     * @return list of node containers
+     * @return list of selected node annotations
      */
-    private NodeContainerEditPart[] getNodeParts() {
+    private List<NodeAnnotationEditPart> getSelectedNodeAnnotations() {
         ISelectionProvider provider = getEditorSite().getSelectionProvider();
         if (provider == null) {
-            return new NodeContainerEditPart[0];
+            return Collections.emptyList();
         }
         ISelection sel = provider.getSelection();
         if (!(sel instanceof IStructuredSelection)) {
-            return new NodeContainerEditPart[0];
+            return Collections.emptyList();
         }
 
-        ArrayList<NodeContainerEditPart> objects =
-                new ArrayList<NodeContainerEditPart>(
-                        ((IStructuredSelection)sel).toList());
-        // remove all objects that are not instance of NodeContainerEditPart
-        for (Iterator iter = objects.iterator(); iter.hasNext();) {
-            Object element = iter.next();
-            if (!(element instanceof NodeContainerEditPart)) {
-                iter.remove();
-                continue;
+        ArrayList<NodeAnnotationEditPart> parts =
+                new ArrayList<NodeAnnotationEditPart>();
+        @SuppressWarnings("rawtypes")
+        Iterator selIter = ((IStructuredSelection)sel).iterator();
+        while (selIter.hasNext()) {
+            Object next = selIter.next();
+            if (next instanceof NodeAnnotationEditPart) {
+                parts.add((NodeAnnotationEditPart)next);
             }
         }
-        final NodeContainerEditPart[] parts =
-                objects.toArray(new NodeContainerEditPart[objects.size()]);
-
         return parts;
     }
 
@@ -897,13 +889,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         } else {
             // we are a meta node editor
             // return id and node name (custom name)
-            String name =
-                    m_manager.getID().getIDWithoutRoot() + ": "
-                            + m_manager.getName();
-            if (m_manager.getCustomName() != null) {
-                name += " (" + m_manager.getCustomName() + ")";
-            }
-            return name;
+            return m_manager.getDisplayLabel();
         }
     }
 

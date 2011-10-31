@@ -150,7 +150,7 @@ public class LayoutManager {
         for (NodeContainer nc : allNodes) {
             Node gNode = createGraphNodeForNC(nc);
             m_workbenchToGraphNodes.put(nc, gNode);
-            NodeUIInformation ui = (NodeUIInformation)nc.getUIInformation();
+            NodeUIInformation ui = nc.getUIInformation();
             minX = (ui.getBounds()[0] < minX) ? ui.getBounds()[0] : minX;
             minY = (ui.getBounds()[1] < minY) ? ui.getBounds()[1] : minY;
         }

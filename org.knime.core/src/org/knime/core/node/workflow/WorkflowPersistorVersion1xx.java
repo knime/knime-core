@@ -95,7 +95,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     private static final NodeSettingsRO EMPTY_SETTINGS =
         new NodeSettings("<<empty>>");
 
-    private final String m_versionString;
+    private final LoadVersion m_versionString;
     private final TreeMap<Integer, NodeContainerPersistor>
         m_nodeContainerLoaderMap;
 
@@ -128,11 +128,11 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     private NodeSettingsRO m_workflowSett;
     private final List<ReferencedFile> m_obsoleteNodeDirectories;
 
-    static boolean canReadVersion(final String versionString) {
+    static LoadVersion canReadVersionV1X0(final String versionString) {
         boolean result = versionString.equals("0.9.0");
         result |= versionString.equals("1.0");
         result |= versionString.matches("1\\.[01234]\\.[0-9].*");
-        return result;
+        return result ? LoadVersion.UNKNOWN : null;
     }
 
     /** Create persistor for load.
@@ -145,9 +145,9 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             final HashMap<Integer, ContainerTable> tableRep,
             final ReferencedFile workflowKNIMEFile,
             final WorkflowLoadHelper loadHelper,
-            final String versionString) {
+            final LoadVersion version) {
         this(tableRep, new NodeContainerMetaPersistorVersion1xx(
-                workflowKNIMEFile, loadHelper), versionString);
+                workflowKNIMEFile, loadHelper, version), version);
     }
 
     /** Internal constructor, not to be called outside this class or its
@@ -155,9 +155,9 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     WorkflowPersistorVersion1xx(
             final HashMap<Integer, ContainerTable> tableRep,
             final NodeContainerMetaPersistorVersion1xx metaPersistor,
-            final String versionString) {
+            final LoadVersion version) {
         m_globalTableRepository = tableRep;
-        m_versionString = versionString;
+        m_versionString = version;
         m_metaPersistor = metaPersistor;
         m_nodeContainerLoaderMap =
             new TreeMap<Integer, NodeContainerPersistor>();
@@ -165,24 +165,14 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         m_obsoleteNodeDirectories = new ArrayList<ReferencedFile>();
     }
 
-    protected final String getVersionString() {
+    /** {@inheritDoc} */
+    @Override
+    public final LoadVersion getLoadVersion() {
         return m_versionString;
     }
 
     protected NodeLogger getLogger() {
         return m_logger;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String getLoadVersionString() {
-        return getVersionString();
-    }
-
-    /** @return load version, never null. */
-    LoadVersion getLoadVersion() {
-        // returns non-null version (asserted in constructor)
-        return LoadVersion.get(getVersionString());
     }
 
     /** @return The load helper as set on the meta persistor. Will be passed on
@@ -1330,14 +1320,14 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     protected SingleNodeContainerPersistorVersion1xx
     createSingleNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
         return new SingleNodeContainerPersistorVersion1xx(
-                this, nodeFile, getLoadHelper(), getVersionString());
+                this, nodeFile, getLoadHelper(), getLoadVersion());
     }
 
     protected WorkflowPersistorVersion1xx createWorkflowPersistorLoad(
             final ReferencedFile wfmFile) {
         return new ObsoleteMetaNodeWorkflowPersistorVersion1xx(
                 getGlobalTableRepository(), wfmFile, getLoadHelper(),
-                getVersionString());
+                getLoadVersion());
     }
 
     private int getRandomNodeID() {

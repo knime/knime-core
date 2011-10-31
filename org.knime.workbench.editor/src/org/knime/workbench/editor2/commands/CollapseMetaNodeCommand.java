@@ -102,7 +102,7 @@ public class CollapseMetaNodeCommand extends AbstractKNIMECommand {
     @Override
     public void execute() {
         try {
-            m_wrapper = 
+            m_wrapper =
                 getHostWFM().collapseIntoMetaNode(m_nodes, m_annos,
                         m_name).getID();
         } catch (Exception e) {

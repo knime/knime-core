@@ -51,13 +51,18 @@
 package org.knime.workbench.editor2.editparts;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.TextUtilities;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.RequestConstants;
+import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
@@ -66,6 +71,10 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.node.workflow.Annotation;
+import org.knime.core.node.workflow.AnnotationData;
+import org.knime.core.node.workflow.AnnotationData.TextAlignment;
+import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.workflow.WorkflowAnnotation;
@@ -73,17 +82,23 @@ import org.knime.workbench.editor2.directannotationedit.AnnotationEditManager;
 import org.knime.workbench.editor2.directannotationedit.AnnotationEditPolicy;
 import org.knime.workbench.editor2.directannotationedit.StyledTextEditorLocator;
 import org.knime.workbench.editor2.figures.AnnotationFigure3;
+import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
  *
  * @author ohl, KNIME.com, Zurich, Switzerland
  */
 public class AnnotationEditPart extends AbstractWorkflowEditPart implements
-        NodeUIInformationListener {
+        NodeUIInformationListener, IPropertyChangeListener {
 
     private static final Color DEFAULT_FG = ColorConstants.black;
 
-    private static final Color DEFAULT_BG = new Color(null, 255, 255, 225);
+    // light yellow
+    private static final Color DEFAULT_BG_WORKFLOW =
+        new Color(null, 255, 255, 225);
+    // white
+    private static final Color DEFAULT_BG_NODE = new Color(null, 255, 255, 255);
 
     private static final Font DEFAULT_FONT = Display.getCurrent()
             .getSystemFont();
@@ -104,13 +119,33 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
-     * If no background color is set, this one should be used.
-     *
-     * @return the default background color of annotation figures
+     * @return the height of one line in default font
      */
-    public static Color getAnnotationDefaultBackgroundColor() {
+    public static int defaultOneLineHeight() {
+        TextUtilities iNSTANCE = TextUtilities.INSTANCE;
+        Font font = getAnnotationDefaultFont();
+        return iNSTANCE.getStringExtents("Agq|_ÊZ", font).height;
+    }
+
+    /**
+     * If no background color is set, this one should be used for workflow
+     * annotations.
+     *
+     * @return the default background color of workflow annotation figures
+     */
+    public static Color getWorkflowAnnotationDefaultBackgroundColor() {
         // TODO: read it from a pref page...
-        return DEFAULT_BG;
+        return DEFAULT_BG_WORKFLOW;
+    }
+    /**
+     * If no background color is set, this one should be used for node
+     * annotations.
+     *
+     * @return the default background color of node annotation figures
+     */
+    public static Color getNodeAnnotationDefaultBackgroundColor() {
+        // TODO: read it from a pref page...
+        return DEFAULT_BG_NODE;
     }
 
     /**
@@ -171,16 +206,17 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
 
     /** {@inheritDoc} */
     @Override
-    public WorkflowAnnotation getModel() {
-        return (WorkflowAnnotation)super.getModel();
+    public Annotation getModel() {
+        return (Annotation)super.getModel();
     }
     /**
      * {@inheritDoc}
      */
     @Override
     protected IFigure createFigure() {
-        WorkflowAnnotation anno = getModel();
+        Annotation anno = getModel();
         AnnotationFigure3 f = new AnnotationFigure3(anno);
+        f.setOpaque(true);
         // f.setBounds(new Rectangle(anno.getX(), anno.getY(), anno.getWidth(),
         // anno.getHeight()));
         return f;
@@ -192,7 +228,11 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
     @Override
     public void activate() {
         super.activate();
-        WorkflowAnnotation anno = getModel();
+        IPreferenceStore store =
+            KNIMEUIPlugin.getDefault().getPreferenceStore();
+        store.addPropertyChangeListener(this);
+
+        Annotation anno = getModel();
         anno.addUIInformationListener(this);
         // update the ui info now
         nodeUIInformationChanged(null);
@@ -203,7 +243,10 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
      */
     @Override
     public void deactivate() {
-        WorkflowAnnotation anno = getModel();
+        IPreferenceStore store =
+            KNIMEUIPlugin.getDefault().getPreferenceStore();
+        store.removePropertyChangeListener(this);
+        Annotation anno = getModel();
         anno.removeUIInformationListener(this);
         super.deactivate();
     }
@@ -213,8 +256,8 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
      */
     @Override
     protected void createEditPolicies() {
-        // Installs the edit policy to directly edit the user node name
-        // inside the node figure (by a CellEditor)
+        // Installs the edit policy to directly edit the annotation in its
+        // editpart (through the StyledTextEditor) after clicking it twice.
         installEditPolicy(EditPolicy.DIRECT_EDIT_ROLE,
                 new AnnotationEditPolicy());
     }
@@ -224,7 +267,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
      */
     @Override
     public void nodeUIInformationChanged(final NodeUIInformationEvent evt) {
-        WorkflowAnnotation anno = getModel();
+        Annotation anno = getModel();
         AnnotationFigure3 annoFig = (AnnotationFigure3)getFigure();
         annoFig.newContent(anno);
         WorkflowRootEditPart parent = (WorkflowRootEditPart)getParent();
@@ -235,6 +278,16 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
         parent.refresh();
     }
 
+
+    /** {@inheritDoc} */
+    @Override
+    public void propertyChange(final PropertyChangeEvent p) {
+        if (p.getProperty().equals(PreferenceConstants.P_DEFAULT_NODE_LABEL)) {
+            AnnotationFigure3 fig = (AnnotationFigure3)getFigure();
+            fig.newContent(getModel());
+        }
+    }
+
     /**
      *
      * @param t
@@ -242,20 +295,59 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
      * @param zoomFactor a factor the font size is multiplied by.
      * @return
      */
-    public static StyledText toStyledText(final WorkflowAnnotation t,
+    public static StyledText toStyledText(final Annotation t,
             final Composite parent, final double zoomFactor) {
         StyledText stext = new StyledText(parent, SWT.NONE);
-        stext.setText(t.getText());
-        stext.setStyleRanges(toSWTStyleRanges(t, zoomFactor));
+        String text;
+        StyleRange[] styles;
+        boolean isDefaultNodeAnnotation = isDefaultNodeAnnotation(t);
+        if (isDefaultNodeAnnotation) {
+            text = getAnnotationText(t);
+            styles = new StyleRange[0];
+        } else {
+            text = t.getText();
+            styles = toSWTStyleRanges(t.getData(), zoomFactor);
+        }
+        stext.setText(text);
+        stext.setStyleRanges(styles);
         return stext;
     }
 
-    public static StyleRange[] toSWTStyleRanges(final WorkflowAnnotation t,
+    /** Returns the text contained in the annotation or the default text if
+     * the argument annotation is a default node annotation ("Node 1", "Node 2",
+     * ...).
+     * @param t The annotation, not null.
+     * @return The above text. */
+    public static String getAnnotationText(final Annotation t) {
+        if (!isDefaultNodeAnnotation(t)) {
+            return t.getText();
+        }
+        String text;
+        int id = ((NodeAnnotation)t).getNodeContainer().getID().getIndex();
+        String prefix = KNIMEUIPlugin.getDefault().getPreferenceStore().
+            getString(PreferenceConstants.P_DEFAULT_NODE_LABEL);
+        if (prefix == null || prefix.isEmpty()) {
+            text = "";
+        } else {
+            text = prefix + " " + id;
+        }
+        return text;
+    }
+
+    /**
+     * @param t
+     * @return */
+    public static boolean isDefaultNodeAnnotation(final Annotation t) {
+        return t instanceof NodeAnnotation
+        && (((NodeAnnotation)t).getData()).isDefault();
+    }
+
+    public static StyleRange[] toSWTStyleRanges(final AnnotationData t,
             final double zoomFactor) {
-        WorkflowAnnotation.StyleRange[] waStyleRange = t.getStyleRanges();
+        AnnotationData.StyleRange[] waStyleRange = t.getStyleRanges();
         ArrayList<StyleRange> swtStyleRange =
                 new ArrayList<StyleRange>(waStyleRange.length);
-        for (WorkflowAnnotation.StyleRange waSr : waStyleRange) {
+        for (AnnotationData.StyleRange waSr : waStyleRange) {
             StyleRange swtStyle = new StyleRange();
             Font f =
                     FONT_STORE.getFont(waSr.getFontName(), waSr.getFontSize(),
@@ -265,9 +357,9 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
                 swtStyle.font = f;
             }
             if (waSr.getFgColor() >= 0) {
-            int rgb = waSr.getFgColor();
+                int rgb = waSr.getFgColor();
                 RGB rgbObj = RGBintToRGBObj(rgb);
-            swtStyle.foreground = new Color(null, rgbObj);
+                swtStyle.foreground = new Color(null, rgbObj);
             }
             swtStyle.start = waSr.getStart();
             swtStyle.length = waSr.getLength();
@@ -282,21 +374,34 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
      * @param zoomFactor factor the font size is divided by. If unsure, use 1.0.
      * @return
      */
-    public static WorkflowAnnotation toAnnotation(final StyledText s,
+    public static AnnotationData toAnnotation(final StyledText s,
             final double zoomFactor) {
-        WorkflowAnnotation result = new WorkflowAnnotation();
+        AnnotationData result = new AnnotationData();
         result.setText(s.getText());
         result.setBgColor(colorToRGBint(s.getBackground()));
+        TextAlignment alignment;
+        switch (s.getAlignment()) {
+        case SWT.RIGHT:
+            alignment = TextAlignment.RIGHT;
+            break;
+        case SWT.CENTER:
+            alignment = TextAlignment.CENTER;
+            break;
+        default:
+            alignment = TextAlignment.LEFT;
+        }
+        result.setAlignment(alignment);
+
         StyleRange[] swtStyleRange = s.getStyleRanges();
-        ArrayList<WorkflowAnnotation.StyleRange> wfStyleRanges =
-                new ArrayList<WorkflowAnnotation.StyleRange>(
+        ArrayList<AnnotationData.StyleRange> wfStyleRanges =
+                new ArrayList<AnnotationData.StyleRange>(
                         swtStyleRange.length);
         for (StyleRange sr : swtStyleRange) {
             if (sr.isUnstyled()) {
                 continue;
             }
-            WorkflowAnnotation.StyleRange waSr =
-                    new WorkflowAnnotation.StyleRange();
+            AnnotationData.StyleRange waSr =
+                    new AnnotationData.StyleRange();
             Color fg = sr.foreground;
             if (fg != null) {
                 int rgb = colorToRGBint(fg);
@@ -313,7 +418,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
             wfStyleRanges.add(waSr);
         }
         result.setStyleRanges(wfStyleRanges
-                .toArray(new WorkflowAnnotation.StyleRange[wfStyleRanges.size()]));
+                .toArray(new AnnotationData.StyleRange[wfStyleRanges.size()]));
         return result;
     }
 
@@ -321,7 +426,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
     public void performRequest(final Request request) {
         if (request.getType() == RequestConstants.REQ_DIRECT_EDIT) {
             // enter edit mode only after a double-click
-            super.performRequest(request);
+            performEdit();
         } else if (request.getType() == RequestConstants.REQ_OPEN) {
             // caused by a double click on this edit part
             performEdit();
@@ -330,7 +435,10 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
         }
     }
 
-    private void performEdit() {
+    /**
+     * Opens the editor to directoy edit the annotation in place.
+     */
+    public void performEdit() {
         if (m_directEditManager == null) {
             m_directEditManager =
                     new AnnotationEditManager(this,
@@ -340,5 +448,24 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
 
         m_directEditManager.show();
     }
+
+    /** Extract the WorkflowAnnotation models from the argument list. It will
+     * ignore NodeAnnotations (which have the same edit part).
+     * @param annoParts The selected annotation parts
+     * @return The workflow annotation models (possibly fewer than selected
+     * edit parts!!!)
+     */
+    public static WorkflowAnnotation[] extractWorkflowAnnotations(
+            final AnnotationEditPart[] annoParts) {
+        List<WorkflowAnnotation> annoList = new ArrayList<WorkflowAnnotation>();
+        for (int i = 0; i < annoParts.length; i++) {
+            Annotation model = annoParts[i].getModel();
+            if (model instanceof WorkflowAnnotation) {
+                annoList.add((WorkflowAnnotation)model);
+            }
+        }
+        return annoList.toArray(new WorkflowAnnotation[annoList.size()]);
+    }
+
 
 }

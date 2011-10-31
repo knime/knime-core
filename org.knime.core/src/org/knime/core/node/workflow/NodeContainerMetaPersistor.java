@@ -82,9 +82,7 @@ interface NodeContainerMetaPersistor {
 
     void setNodeIDSuffix(final int nodeIDSuffix);
 
-    String getCustomName();
-
-    String getCustomDescription();
+    NodeAnnotationData getNodeAnnotationData();
 
     NodeExecutionJobManager getExecutionJobManager();
 

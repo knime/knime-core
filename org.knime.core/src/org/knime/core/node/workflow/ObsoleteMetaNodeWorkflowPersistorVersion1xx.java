@@ -67,6 +67,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
 /**
  *
@@ -108,13 +109,13 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
             final HashMap<Integer, ContainerTable> globalRep,
             final ReferencedFile workflowKNIMEFile,
             final WorkflowLoadHelper loadHelper,
-            final String versionString) {
-        super(globalRep, workflowKNIMEFile, loadHelper, versionString);
+            final LoadVersion version) {
+        super(globalRep, workflowKNIMEFile, loadHelper, version);
     }
 
     /** {@inheritDoc} */
     @Override
-    public void preLoadNodeContainer(WorkflowPersistor parentPersistor,
+    public void preLoadNodeContainer(final WorkflowPersistor parentPersistor,
             final NodeSettingsRO parentSettings, final LoadResult result)
     throws IOException, InvalidSettingsException {
         ReferencedFile workflowKNIMEFile = super.getWorkflowKNIMEFile();
@@ -196,7 +197,7 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
     protected SingleNodeContainerPersistorVersion1xx
         createSingleNodeContainerPersistorLoad(final ReferencedFile nodeFile) {
         return new ObsoleteSpecialNodeSingleNodeContainerPersistorVersion1xx(
-                this, nodeFile, getLoadHelper(), getVersionString());
+                this, nodeFile, getLoadHelper(), getLoadVersion());
     }
 
     /** {@inheritDoc} */
@@ -421,9 +422,8 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
                 final WorkflowPersistorVersion1xx workflowPersistor,
                 final ReferencedFile nodeSettingsFile,
                 final WorkflowLoadHelper loadHelper,
-                final String versionString) {
-            super(workflowPersistor, nodeSettingsFile,
-                    loadHelper, versionString);
+                final LoadVersion version) {
+            super(workflowPersistor, nodeSettingsFile, loadHelper, version);
         }
 
         /** {@inheritDoc} */

@@ -56,6 +56,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.gef.EditPartViewer;
+import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
@@ -185,7 +186,7 @@ public final class PasteFromWorkflowPersistorCommand
     public boolean canUndo() {
         WorkflowManager manager = m_editor.getWorkflowManager();
         NodeID[] pastedNodes = m_pastedContent.getNodeIDs();
-        WorkflowAnnotation[] pastedAnnos = m_pastedContent.getAnnotations();
+        Annotation[] pastedAnnos = m_pastedContent.getAnnotations();
         if ((pastedNodes == null || pastedNodes.length == 0)
                 && (pastedAnnos == null || pastedAnnos.length == 0)) {
             return false;

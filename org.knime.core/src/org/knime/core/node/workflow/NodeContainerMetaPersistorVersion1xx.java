@@ -57,6 +57,7 @@ import org.knime.core.node.NodePersistorVersion1xx;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
 /**
  *
@@ -68,9 +69,9 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
 
     private final WorkflowLoadHelper m_loadHelper;
 
-    private String m_customDescription;
-
     private String m_customName;
+
+    private NodeAnnotationData m_nodeAnnotationData;
 
     private int m_nodeIDSuffix;
 
@@ -90,11 +91,14 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
 
     private final ReferencedFile m_nodeSettingsFile;
 
+    private final LoadVersion m_loadVersion;
+
     /** @param settingsFile The settings file associated with this node.
      * @param loadHelper The load helper to query for additional information.
+     * @param version The load version, not null.
      */
     NodeContainerMetaPersistorVersion1xx(final ReferencedFile settingsFile,
-            final WorkflowLoadHelper loadHelper) {
+            final WorkflowLoadHelper loadHelper, final LoadVersion version) {
         m_nodeSettingsFile = settingsFile;
         // the root folder is usually locked during load, one exception
         // is the loading from templates in the node repository (X-Val, e.g.)
@@ -104,6 +108,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
                     + "\") is not locked");
         }
         m_loadHelper = loadHelper;
+        m_loadVersion = version;
     }
 
     protected NodeLogger getLogger() {
@@ -116,16 +121,15 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
         return m_loadHelper;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public String getCustomDescription() {
-        return m_customDescription;
+    /** @return the loadVersion */
+    protected LoadVersion getLoadVersion() {
+        return m_loadVersion;
     }
 
     /** {@inheritDoc} */
     @Override
-    public String getCustomName() {
-        return m_customName;
+    public NodeAnnotationData getNodeAnnotationData() {
+        return m_nodeAnnotationData;
     }
 
     /** {@inheritDoc} */
@@ -208,25 +212,17 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     public boolean load(final NodeSettingsRO settings,
             final NodeSettingsRO parentSettings, final LoadResult loadResult) {
         boolean isResetRequired = false;
+
         try {
-            m_customName = loadCustomName(settings, parentSettings);
-        } catch (InvalidSettingsException e) {
-            String error = "Invalid custom name in settings: " + e.getMessage();
-            loadResult.addError(error);
-            getLogger().debug(error, e);
-            setDirtyAfterLoad();
-            m_customName = null;
-        }
-        try {
-            m_customDescription =
-                loadCustomDescription(settings, parentSettings);
+            m_nodeAnnotationData =
+                loadNodeAnnotationData(settings, parentSettings);
         } catch (InvalidSettingsException e) {
             String error =
-                "Invalid custom description in settings: " + e.getMessage();
+                "Can't load node annotation: " + e.getMessage();
             loadResult.addError(error);
             getLogger().debug(error, e);
             setDirtyAfterLoad();
-            m_customDescription = null;
+            m_nodeAnnotationData = null;
         }
         try {
             m_jobManager = loadNodeExecutionJobManager(settings);
@@ -304,34 +300,22 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
         return isResetRequired;
     }
 
-    /** Read the custom name.
-     * @param settings The settings associated with the node (used in 2.0+)
-     * @param parentSettings The parent settings (workflow.knime, used in 1.3x)
-     * @return The custom name or null
-     * @throws InvalidSettingsException In case of errors reading the argument
-     */
-    protected String loadCustomName(final NodeSettingsRO settings,
-            final NodeSettingsRO parentSettings)
-        throws InvalidSettingsException {
-        if (!parentSettings.containsKey(KEY_CUSTOM_NAME)) {
-            return null;
-        }
-        return parentSettings.getString(KEY_CUSTOM_NAME);
-    }
-
     /** Read the custom description.
      * @param settings The settings associated with the node (used in 2.0+)
      * @param parentSettings The parent settings (workflow.knime, used in 1.3x)
      * @return The custom name or null
      * @throws InvalidSettingsException In case of errors reading the argument
      */
-    protected String loadCustomDescription(final NodeSettingsRO settings,
-            final NodeSettingsRO parentSettings)
+    protected NodeAnnotationData loadNodeAnnotationData(
+            final NodeSettingsRO settings, final NodeSettingsRO parentSettings)
         throws InvalidSettingsException {
-        if (!parentSettings.containsKey(KEY_CUSTOM_DESCRIPTION)) {
-            return null;
-        }
-        return parentSettings.getString(KEY_CUSTOM_DESCRIPTION);
+        String customName = parentSettings.getString(KEY_CUSTOM_NAME, null);
+
+        String customDescr =
+            parentSettings.getString(KEY_CUSTOM_DESCRIPTION, null);
+
+        return NodeAnnotationData.createFromObsoleteCustomDescription(
+                customName, customDescr);
     }
 
     /** Load the execution manager responsible for this node. This methods

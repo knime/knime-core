@@ -53,19 +53,21 @@ package org.knime.workbench.editor2;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPartFactory;
 import org.eclipse.gef.GraphicalViewer;
+import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeInPort;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.NodePort;
 import org.knime.core.node.workflow.SingleNodeContainer;
-import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowInPort;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowOutPort;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.ConnectionContainerEditPart;
 import org.knime.workbench.editor2.editparts.MetaNodeOutPortEditPart;
+import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.NodeInPortEditPart;
 import org.knime.workbench.editor2.editparts.NodeOutPortEditPart;
@@ -157,7 +159,13 @@ public final class WorkflowEditPartFactory implements EditPartFactory {
 //                part = new NodeContainerEditPart();
                 part = new SubworkflowEditPart();
             }
-        } else if (model instanceof WorkflowAnnotation) {
+        } else if (model instanceof NodeAnnotation) {
+            /* IMPORTANT: first test NodeAnnotation then Annotation (as the
+             * first derives from the latter! */
+            part = new NodeAnnotationEditPart();
+        } else if (model instanceof Annotation) {
+            /* IMPORTANT: first test NodeAnnotation then Annotation (as the
+             * first derives from the latter! */
             /* workflow annotations hang off the workflow manager */
             part = new AnnotationEditPart();
         } else if (model instanceof WorkflowPortBar) {

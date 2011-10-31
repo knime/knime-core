@@ -60,21 +60,14 @@ public class NodeUIInformationEvent extends EventObject {
 
     private final UIInformation m_uiInformation;
 
-    private final String m_customName;
-
-    private final String m_description;
-
     /**
      * @param src the node id of the source node
      * @param uiInformation the new UI information
      */
     public NodeUIInformationEvent(final NodeID src,
-            final UIInformation uiInformation, final String customName,
-            final String description) {
+            final UIInformation uiInformation) {
         super(src);
         m_uiInformation = uiInformation;
-        m_customName = customName;
-        m_description = description;
     }
 
     /**
@@ -92,14 +85,6 @@ public class NodeUIInformationEvent extends EventObject {
     @Override
     public NodeID getSource() {
         return (NodeID)super.getSource();
-    }
-
-    public String getCustomName() {
-        return m_customName;
-    }
-
-    public String getDescription() {
-        return m_description;
     }
 
 }

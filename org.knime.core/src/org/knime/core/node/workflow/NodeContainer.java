@@ -78,7 +78,6 @@ import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodePropertyChangedEvent.NodeProperty;
@@ -152,13 +151,11 @@ public abstract class NodeContainer implements NodeProgressListener {
     private final ArrayList<FlowLoopContext> m_listOfWaitingLoops
                                         = new ArrayList<FlowLoopContext>();
 
-    private String m_customName;
-
-    private String m_customDescription;
-
     private ReferencedFile m_nodeContainerDirectory;
 
     private boolean m_isDirty;
+
+    private final NodeAnnotation m_annotation;
 
     /**
      * semaphore to make sure never try to work on inconsistent internal node
@@ -206,6 +203,8 @@ public abstract class NodeContainer implements NodeProgressListener {
         m_id = id;
         m_state = State.IDLE;
         m_isDeletable = true;
+        m_annotation = new NodeAnnotation(new NodeAnnotationData(true));
+        m_annotation.registerOnNodeContainer(this);
     }
 
     NodeContainer(final WorkflowManager parent, final NodeID id,
@@ -216,8 +215,11 @@ public abstract class NodeContainer implements NodeProgressListener {
         + "\" in \"" + persistor.getClass().getSimpleName() + "\" is null";
         m_state = persistor.getState();
         m_jobManager = persistor.getExecutionJobManager();
-        m_customDescription = persistor.getCustomDescription();
-        m_customName = persistor.getCustomName();
+        NodeAnnotationData annoData = persistor.getNodeAnnotationData();
+        if (annoData != null && !annoData.isDefault()) {
+            m_annotation.getData().copyFrom(annoData, true);
+        }
+
         m_uiInformation = persistor.getUIInfo();
         m_isDeletable = persistor.isDeletable();
         setNodeMessage(persistor.getNodeMessage());
@@ -749,15 +751,14 @@ public abstract class NodeContainer implements NodeProgressListener {
    /**
     *
     * @param uiInformation new user interface information of the node such as
-    *   coordinates on workbench and custom name.
+    *   coordinates on workbench.
     */
    public void setUIInformation(final NodeUIInformation uiInformation) {
        // ui info is a property of the outer workflow (it just happened
        // to be a field member of this class)
        // there is no reason on settings the dirty flag when changed.
        m_uiInformation = uiInformation;
-       notifyUIListeners(new NodeUIInformationEvent(m_id, m_uiInformation,
-               m_customName, m_customDescription));
+       notifyUIListeners(new NodeUIInformationEvent(m_id, m_uiInformation));
    }
 
 
@@ -1084,50 +1085,81 @@ public abstract class NodeContainer implements NodeProgressListener {
     public String getDisplayLabel() {
         String label = getID().getIDWithoutRoot() + " - "
             + getName();
-        String customName = getCustomName();
-        if (customName != null && customName.trim().length() > 0) {
-            label += " (" + customName + ")";
+        // if this node has an annotation add the first line to the label
+        String customLabel = getDisplayCustomLine();
+        if (!customLabel.isEmpty()) {
+            label += "(" + customLabel + ")";
         }
         return label;
     }
 
+    /**
+     * @return the first line of the annotation - if the node has any, otherwise
+     *         an empty string. At max 33 chars.
+     */
+    protected String getDisplayCustomLine() {
+        String annoLine = getFirstAnnotationLine();
+        if (annoLine.length() > 30) {
+            return annoLine.substring(0, 30) + "...";
+        } else {
+            return annoLine;
+        }
+    }
+
+    /**
+     * @return the first line of the annotation (trimmed) - if the node has any,
+     *         otherwise an empty string.
+     */
+    private String getFirstAnnotationLine() {
+        String result = "";
+        if (m_annotation != null) {
+            String annoStr = m_annotation.getText();
+            if (annoStr != null && !annoStr.isEmpty()) {
+                // extract the (not-empty) first line (or 30 chars max)
+                int lf = 0;
+                while (lf < annoStr.length()) {
+                    if (annoStr.charAt(lf) == '\n'
+                            || annoStr.charAt(lf) == '\r'
+                            || annoStr.charAt(lf) == ' ') {
+                    lf++;
+                    } else {
+                        break;
+                }
+                }
+                int firstLF = annoStr.indexOf('\n', lf);
+                if (firstLF < 0) {
+                    // no LF - use entire string.
+                    firstLF = annoStr.length();
+                }
+                result = annoStr.substring(lf, firstLF).trim();
+            }
+        }
+        return result;
+    }
+
+    /**
+     * For reporting backward compatibility. If no custom name is set the
+     * reporting creates new names (depending on the node id). (The preference
+     * page prefix is ignored then.)
+     *
+     * @return the first line of the annotation (which contains in old (pre 2.5)
+     *         flows the custom name) or null, if no annotation or no old custom
+     *         name is set.
+     */
     public String getCustomName() {
-        return m_customName;
-    }
-
-    public void setCustomName(final String customName) {
-        boolean notify = false;
-        synchronized (m_nodeMutex) {
-            if (!ConvenienceMethods.areEqual(customName, m_customName)) {
-                m_customName = customName;
-                setDirty();
-                notify = true;
-            }
-        }
-        if (notify) {
-            notifyUIListeners(new NodeUIInformationEvent(m_id, m_uiInformation,
-                    m_customName, m_customDescription));
+        String annoLine = getFirstAnnotationLine();
+        if (annoLine.isEmpty()) {
+            return null;
+        } else {
+            return annoLine;
         }
     }
 
-    public String getCustomDescription() {
-        return m_customDescription;
-    }
-
-    public void setCustomDescription(final String customDescription) {
-        boolean notify = false;
-        synchronized (m_nodeMutex) {
-            if (!ConvenienceMethods.areEqual(
-                    customDescription, m_customDescription)) {
-                m_customDescription = customDescription;
-                setDirty();
-                notify = true;
-            }
-        }
-        if (notify) {
-            notifyUIListeners(new NodeUIInformationEvent(m_id, m_uiInformation,
-                    m_customName, m_customDescription));
-        }
+    /**
+     * @return the annotation associated with the node, never null.
+     */
+    public NodeAnnotation getNodeAnnotation() {
+        return m_annotation;
     }
 
     /** Is this node a to be locally executed workflow. In contrast to remotely
@@ -1151,6 +1183,9 @@ public abstract class NodeContainer implements NodeProgressListener {
      * node (deletes temp files).
      */
     void cleanup() {
+        if (m_annotation != null) {
+            m_annotation.unregisterFromNodeContainer();
+        }
         closeAllJobManagerViews();
     }
 

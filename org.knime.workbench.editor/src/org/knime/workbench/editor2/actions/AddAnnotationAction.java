@@ -48,6 +48,8 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import java.util.List;
+
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Point;
 import org.knime.workbench.editor2.ImageRepository;
@@ -87,7 +89,16 @@ public class AddAnnotationAction extends AbstractNodeAction {
      */
     @Override
     protected boolean calculateEnabled() {
-        return !getManager().isWriteProtected();
+        if (getManager().isWriteProtected()) {
+            return false;
+        }
+        @SuppressWarnings("rawtypes")
+        List selectedObjects = getSelectedObjects();
+        if (selectedObjects.size() != 1) {
+            return true;
+        }
+
+        return !(selectedObjects.get(0) instanceof NodeContainerEditPart);
     }
 
     /**

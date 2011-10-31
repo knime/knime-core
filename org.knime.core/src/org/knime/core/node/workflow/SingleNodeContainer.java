@@ -283,8 +283,9 @@ public final class SingleNodeContainer extends NodeContainer {
     @Override
     public AbstractNodeView<NodeModel> getNodeView(final int i) {
         String title = getNameWithID() + " (" + getViewName(i) + ")";
-        if (getCustomName() != null) {
-            title += " - " + getCustomName();
+        String customName = getDisplayCustomLine();
+        if (!customName.isEmpty()) {
+            title += " - " + customName;
         }
         return (AbstractNodeView<NodeModel>)m_node.getView(i, title);
     }

@@ -71,7 +71,6 @@ import org.knime.core.node.workflow.NodeInPort;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 
 /**
  * Creates a new node - and may auto connect it to another one.
@@ -132,8 +131,6 @@ public class CreateNewConnectedNodeCommand extends AbstractKNIMECommand {
         }
         // make sure the new node is selected and visible
         m_viewer.deselectAll();
-        ((WorkflowRootEditPart)m_viewer.getRootEditPart().getContents())
-                .setFutureSelection(new NodeID[]{m_newNode});
     }
 
     protected NodeID createNewNode() {

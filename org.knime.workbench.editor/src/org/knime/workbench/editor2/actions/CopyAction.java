@@ -116,11 +116,13 @@ public class CopyAction extends AbstractClipboardAction {
      */
     @Override
     protected boolean calculateEnabled() {
-        NodeContainerEditPart[] parts =
+        NodeContainerEditPart[] nodeParts =
             getSelectedParts(NodeContainerEditPart.class);
-        AnnotationEditPart[] anno =
+        AnnotationEditPart[] annoParts =
             getSelectedParts(AnnotationEditPart.class);
-        return parts.length > 0 || anno.length > 0;
+        WorkflowAnnotation[] annos =
+            AnnotationEditPart.extractWorkflowAnnotations(annoParts);
+        return nodeParts.length > 0 || annos.length > 0;
     }
 
     /** {@inheritDoc} */
@@ -135,10 +137,7 @@ public class CopyAction extends AbstractClipboardAction {
             ids[i] = nodeEP.getNodeContainer().getID();
         }
         WorkflowAnnotation[] annotations =
-            new WorkflowAnnotation[m_annotationParts.length];
-        for (int i = 0; i < m_annotationParts.length; i++) {
-            annotations[i] = m_annotationParts[i].getModel();
-        }
+            AnnotationEditPart.extractWorkflowAnnotations(m_annotationParts);
 
         WorkflowCopyContent content = new WorkflowCopyContent();
         content.setNodeIDs(ids);

@@ -76,12 +76,13 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.Annotation;
+import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
-import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -128,8 +129,8 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     private final Set<NodeID> m_futureSelection = new LinkedHashSet<NodeID>();
 
     /* same deal for added annotations */
-    private final Set<WorkflowAnnotation> m_annotationSelection =
-            new LinkedHashSet<WorkflowAnnotation>();
+    private final Set<Annotation> m_annotationSelection =
+            new LinkedHashSet<Annotation>();
 
     /**
      * @return The <code>WorkflowManager</code> that is used as model for this
@@ -154,7 +155,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         }
     }
 
-    public void setFutureAnnotationSelection(final Collection<WorkflowAnnotation> annos) {
+    public void setFutureAnnotationSelection(final Collection<Annotation> annos) {
         m_annotationSelection.clear();
         m_annotationSelection.addAll(annos);
     }
@@ -183,9 +184,15 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
 
         // Add workflow annotations as children of the workflow manager.
         // Add them first so they appear behind everything else
-        for (WorkflowAnnotation anno : wfm.getWorkflowAnnotations()) {
+        for (Annotation anno : wfm.getWorkflowAnnotations()) {
             modelChildren.add(anno);
         }
+        // Add the annotations associated with nodes (add them after the
+        // workflow annotations so they appear above them)
+        for (NodeAnnotation nodeAnno : wfm.getNodeAnnotations()) {
+            modelChildren.add(nodeAnno);
+        }
+
         modelChildren.addAll(wfm.getNodeContainers());
         if (wfm.getNrWorkflowIncomingPorts() > 0) {
             if (m_inBar == null) {
@@ -477,7 +484,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
                 });
             }
         }
-        if (model instanceof WorkflowAnnotation) {
+        if (model instanceof Annotation) {
             getViewer().deselect(this);
             if (m_annotationSelection.isEmpty()) {
                 getViewer().deselectAll();

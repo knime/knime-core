@@ -85,7 +85,8 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FontDialog;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.WorkflowAnnotation;
+import org.knime.core.node.workflow.Annotation;
+import org.knime.core.node.workflow.AnnotationData;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.commands.AddAnnotationCommand;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
@@ -96,23 +97,24 @@ import org.knime.workbench.editor2.editparts.AnnotationEditPart;
  */
 public class StyledTextEditor extends CellEditor {
 
-    /** height of the font style toolbar in the editor control. */
-    public static final int TOOLBAR_HEIGHT;
+    private static final int BUTTON_SIZE;
     static {
         if (Platform.OS_LINUX.equals(Platform.getOS())) {
-            TOOLBAR_HEIGHT = 22;
+            BUTTON_SIZE = 22;
         } else if (Platform.OS_MACOSX.equals(Platform.getOS())) {
-            TOOLBAR_HEIGHT = 28;
+            BUTTON_SIZE = 28;
         } else {
-            TOOLBAR_HEIGHT = 16;
+            BUTTON_SIZE = 16;
         }
     }
+    /** height of the font style toolbar in the editor control. */
+    public static final int TOOLBAR_HEIGHT = BUTTON_SIZE * 2;
 
     /** the minimum width of the editor window in order to show all buttons even
      * under MacOS. Seems the default distance between buttons is seven. And we
      * currently have seven buttons in the toolbar.
      */
-    public static final int TOOLBAR_MIN_WIDTH = (TOOLBAR_HEIGHT + 7) * 7;
+    public static final int TOOLBAR_MIN_WIDTH = (BUTTON_SIZE + 7) * 4;
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(StyledTextEditor.class);
@@ -279,9 +281,38 @@ public class StyledTextEditor extends CellEditor {
         ImageDescriptor imgDescr;
         Image img;
 
-        // mother of all buttons
         m_toolbar = new Composite(parent, SWT.NONE);
-        m_toolbar.setLayout(createPanelGridLayout(4, false));
+        m_toolbar.setLayout(createPanelGridLayout(1, false));
+
+        Composite otherButtons = new Composite(m_toolbar, SWT.NONE);
+        otherButtons.setLayout(createPanelGridLayout(4, true));
+
+        // background color
+        imgDescr =
+                ImageRepository
+                        .getImageDescriptor("icons/annotations/bgcolor_10.png");
+        img = imgDescr.createImage();
+        createButton(otherButtons, "bg", null, img,
+                "Background - change the background color");
+        // alignment
+        imgDescr =
+            ImageRepository
+            .getImageDescriptor("icons/annotations/center_10.png");
+        img = imgDescr.createImage();
+        createButton(otherButtons, "alignment", null, img,
+        "Alignment - change text alignment");
+        // ok button
+        imgDescr =
+                ImageRepository
+                        .getImageDescriptor("icons/annotations/ok_10.png");
+        img = imgDescr.createImage();
+        createButton(otherButtons, "ok", null, img, "OK - commit changes");
+        // cancel button
+        imgDescr =
+                ImageRepository
+                        .getImageDescriptor("icons/annotations/cancel_10.png");
+        img = imgDescr.createImage();
+        createButton(otherButtons, "cancel", null, img, "Cancel - discard changes");
 
         // contains buttons being en/disabled with selection
         m_styleButtons = new Composite(m_toolbar, SWT.NONE);
@@ -311,25 +342,6 @@ public class StyledTextEditor extends CellEditor {
         img = imgDescr.createImage();
         createButton(m_styleButtons, "italic", null, img,
                 "Italic - change selection font style");
-        // background color
-        imgDescr =
-                ImageRepository
-                        .getImageDescriptor("icons/annotations/bgcolor_10.png");
-        img = imgDescr.createImage();
-        createButton(m_toolbar, "bg", null, img,
-                "Background - change the background color");
-        // ok button
-        imgDescr =
-                ImageRepository
-                        .getImageDescriptor("icons/annotations/ok_10.png");
-        img = imgDescr.createImage();
-        createButton(m_toolbar, "ok", null, img, "OK - commit changes");
-        // cancel button
-        imgDescr =
-                ImageRepository
-                        .getImageDescriptor("icons/annotations/cancel_10.png");
-        img = imgDescr.createImage();
-        createButton(m_toolbar, "cancel", null, img, "Cancel - discard changes");
 
         return m_toolbar;
     }
@@ -342,8 +354,8 @@ public class StyledTextEditor extends CellEditor {
         GridData buttonData = new GridData();
         buttonData.grabExcessHorizontalSpace = false;
         buttonData.grabExcessVerticalSpace = false;
-        buttonData.heightHint = TOOLBAR_HEIGHT;
-        buttonData.widthHint = TOOLBAR_HEIGHT;
+        buttonData.heightHint = BUTTON_SIZE;
+        buttonData.widthHint = BUTTON_SIZE;
         b.setLayoutData(buttonData);
         b.addSelectionListener(new SelectionListener() {
             @Override
@@ -384,6 +396,8 @@ public class StyledTextEditor extends CellEditor {
             italic();
         } else if (src.equals("bg")) {
             bgColor();
+        } else if (src.equals("alignment")) {
+            alignment();
         } else if (src.equals("ok")) {
             ok();
         } else if (src.equals("cancel")) {
@@ -466,7 +480,7 @@ public class StyledTextEditor extends CellEditor {
     /**
      * {@inheritDoc}
      *
-     * @return a {@link WorkflowAnnotation} with the new text and style ranges -
+     * @return a {@link AnnotationData} with the new text and style ranges -
      *         and with the same ID as the original annotation (the one the
      *         editor was initialized with) - but in a new object.
      */
@@ -483,7 +497,7 @@ public class StyledTextEditor extends CellEditor {
     protected void doSetFocus() {
         assert m_styledText != null : "Control not created!";
         String text = m_styledText.getText();
-        if (text.equals(AddAnnotationCommand.INITIAL_TEXT)) {
+        if (text.equals(AddAnnotationCommand.INITIAL_FLOWANNO_TEXT)) {
             m_styledText.setSelection(0, text.length());
             selectionChanged();
         }
@@ -496,11 +510,29 @@ public class StyledTextEditor extends CellEditor {
      */
     @Override
     protected void doSetValue(final Object value) {
-        assert value instanceof WorkflowAnnotation : "Wrong value object!";
-        WorkflowAnnotation wa = (WorkflowAnnotation)value;
-        m_styledText.setText(wa.getText());
-        m_styledText.setStyleRanges(AnnotationEditPart.toSWTStyleRanges(wa,
-                m_zoomFactor));
+        assert value instanceof Annotation : "Wrong value object!";
+        Annotation wa = (Annotation)value;
+        int alignment;
+        switch (wa.getAlignment()) {
+        case CENTER:
+            alignment = SWT.CENTER;
+            break;
+        case RIGHT:
+            alignment = SWT.RIGHT;
+            break;
+        default:
+            alignment = SWT.LEFT;
+        }
+        String text;
+        if (AnnotationEditPart.isDefaultNodeAnnotation(wa)) {
+            text = AnnotationEditPart.getAnnotationText(wa);
+        } else {
+            text = wa.getText();
+        }
+        m_styledText.setAlignment(alignment);
+        m_styledText.setText(text);
+        m_styledText.setStyleRanges(AnnotationEditPart.toSWTStyleRanges(
+                wa.getData(), m_zoomFactor));
         setBackgroundColor(AnnotationEditPart.RGBintToColor(wa
                 .getBgColor()));
     }
@@ -605,6 +637,22 @@ public class StyledTextEditor extends CellEditor {
         }
         m_backgroundColor = new Color(null, newBGCol);
         applyBackgroundColor();
+    }
+
+    private void alignment() {
+        int currentAlignment = m_styledText.getAlignment();
+        int newAlignment;
+        switch (currentAlignment) {
+        case SWT.LEFT:
+            newAlignment = SWT.CENTER;
+            break;
+        case SWT.CENTER:
+            newAlignment = SWT.RIGHT;
+            break;
+        default:
+            newAlignment = SWT.LEFT;
+        }
+        m_styledText.setAlignment(newAlignment);
     }
 
     private void fontColor() {

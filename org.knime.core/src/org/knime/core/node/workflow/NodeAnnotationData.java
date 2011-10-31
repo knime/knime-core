@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -40,79 +40,69 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
- * 
+ * ------------------------------------------------------------------------
+ *
  * History
- *   10.05.2005 (sieb): created
+ *   Oct 27, 2011 (wiswedel): created
  */
-package org.knime.workbench.editor2.directnodeedit;
-
-import org.eclipse.gef.commands.Command;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
+package org.knime.core.node.workflow;
 
 
 /**
- * Command to change the user node name in the figure.
- * 
- * @author Christoph Sieb, University of Konstanz
+ *
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class UserNodeNameCommand extends Command {
-    
-    private String m_newName, m_oldName;
+public final class NodeAnnotationData extends AnnotationData {
 
-    // must not keep reference to NodeContainer (may be obsolete
-    // as part of undo/redo sequence)
-    private final NodeID m_nodeID;
-    private final WorkflowManager m_manager; 
+    private boolean m_isDefault;
 
-    /**
-     * Creates a new command to change the user node name.
-     * 
-     * @param nodeID the nodeID of the node to change the name
-     * @param manager The manager containing the node
-     * @param newName the new name to set
-     */
-    public UserNodeNameCommand(final NodeID nodeID, 
-            final WorkflowManager manager, final String newName) {
-        m_nodeID = nodeID;
-        m_manager = manager;
+    /**  */
+    NodeAnnotationData(final boolean isDefault) {
+        m_isDefault = isDefault;
+        super.setAlignment(TextAlignment.CENTER);
+        super.setBgColor(0xFFFFFF);
+    }
 
-        if (newName != null) {
-            m_newName = newName;
-        } else {
-            m_newName = "";
+    /** {@inheritDoc} */
+    @Override
+    public void copyFrom(final AnnotationData otherData,
+            final boolean includeBounds) {
+        m_isDefault = false;
+        super.copyFrom(otherData, includeBounds);
+    }
+
+    /** @return the isDefault */
+    public boolean isDefault() {
+        return m_isDefault;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public NodeAnnotationData clone() {
+        return (NodeAnnotationData)super.clone();
+    }
+
+    public static NodeAnnotationData createFromObsoleteCustomDescription(
+            final String customName, final String customDescription) {
+        if (customName == null && customDescription == null) {
+            return new NodeAnnotationData(true);
         }
-    }
-    
-    /** @return the node container to be edited. */
-    private NodeContainer getNodeContainer() {
-        return m_manager.getNodeContainer(m_nodeID);
-    }
-
-    /**
-     * Sets the new name into the model and remembers the old one for undo.
-     * 
-     * @see org.eclipse.gef.commands.Command#execute()
-     */
-    @Override
-    public void execute() {
-        NodeContainer nodeContainer = getNodeContainer();
-        m_oldName = nodeContainer.getCustomName();
-        nodeContainer.setCustomName(m_newName);
+        NodeAnnotationData result = new NodeAnnotationData(false);
+        StringBuilder text = new StringBuilder();
+        if (customName != null) {
+            text.append(customName);
+            text.append("\n");
+        }
+        if (customDescription != null) {
+            text.append("\n");
+            text.append(customDescription);
+        }
+        result.setText(text.toString());
+        return result;
     }
 
-    /**
-     * Sets the old name into the model for undo purpose.
-     * 
-     * @see org.eclipse.gef.commands.Command#undo()
-     */
-    @Override
-    public void undo() {
-        getNodeContainer().setCustomName(m_oldName);
-    }
+
 }

@@ -56,6 +56,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.eclipse.gef.EditPartViewer;
+import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowAnnotation;
@@ -129,6 +130,7 @@ public class DeleteCommand extends AbstractKNIMECommand {
                     // render the command invalid (canExecute() returns false)
                     conSet.clear();
                     idSet.clear();
+                    annotationSet.clear();
                     break;
                 }
                 conSet.addAll(manager.getIncomingConnectionsFor(id));
@@ -141,8 +143,12 @@ public class DeleteCommand extends AbstractKNIMECommand {
                     viewer = ccep.getViewer();
                 }
             } else if (p instanceof AnnotationEditPart) {
+                // this gets the node annotations and the workflow annotations
                 AnnotationEditPart anno = (AnnotationEditPart)p;
-                annotationSet.add(anno.getModel());
+                Annotation annotationModel = anno.getModel();
+                if (annotationModel instanceof WorkflowAnnotation) {
+                    annotationSet.add((WorkflowAnnotation)annotationModel);
+                }
                 if (viewer == null && anno.getParent() != null) {
                     viewer = anno.getViewer();
                 }
@@ -162,6 +168,7 @@ public class DeleteCommand extends AbstractKNIMECommand {
                 it.remove();
             }
         }
+
         m_connections = conSet.toArray(new ConnectionContainer[conSet.size()]);
     }
 
@@ -200,14 +207,14 @@ public class DeleteCommand extends AbstractKNIMECommand {
             content.setAnnotation(m_annotations);
             m_undoPersitor = hostWFM.copy(true, content);
         }
+        for (WorkflowAnnotation anno : m_annotations) {
+            hostWFM.removeAnnotation(anno);
+        }
         for (NodeID id : m_nodeIDs) {
             hostWFM.removeNode(id);
         }
         for (ConnectionContainer cc : m_connections) {
             hostWFM.removeConnection(cc);
-        }
-        for (WorkflowAnnotation anno : m_annotations) {
-            hostWFM.removeAnnotation(anno);
         }
     }
 
@@ -231,7 +238,7 @@ public class DeleteCommand extends AbstractKNIMECommand {
                     cc.getSourcePort(), cc.getDest(), cc.getDestPort());
             newCC.setUIInfo(cc.getUIInfo());
         }
-    }
+     }
 
     /** {@inheritDoc} */
     @Override
