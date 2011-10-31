@@ -7,9 +7,9 @@
     <fullDescription>
         <intro>
 	        <p>
-				This node ...
+				Can do various string manipulations on the input columns,
+                appending result as a new column.
 	        </p>
-
 		</intro>
 		<option name="Column List">
 		  The list contains the column that are available in the input table.

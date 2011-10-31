@@ -83,15 +83,17 @@ public class ColumnPairsSelectionPanel extends JPanel {
 
     private DataTableSpec[] m_specs;
 
-    private List<JComboBox> m_leftComboBoxes;
-    private List<JComboBox> m_rightComboBoxes;
-    private List<JButton> m_addButtons;
-    private List<JButton> m_removeButtons;
+    private final List<JComboBox> m_leftComboBoxes;
+    private final List<JComboBox> m_rightComboBoxes;
+    private final List<JButton> m_addButtons;
+    private final List<JButton> m_removeButtons;
 
-    private ActionListener m_addButtonListener;
-    private ActionListener m_removeButtonListener;
+    private final ActionListener m_addButtonListener;
+    private final ActionListener m_removeButtonListener;
 
-    private JComponent m_fillComponent;
+    private final JComponent m_fillComponent;
+
+    private final JButton m_persistentAddButton;
 
 
     /**
@@ -110,6 +112,16 @@ public class ColumnPairsSelectionPanel extends JPanel {
 
         m_fillComponent = new JPanel();
         m_fillComponent.setBackground(Color.WHITE);
+        m_persistentAddButton = new JButton("Add row");
+        m_persistentAddButton.setToolTipText("Append row at the end");
+        m_persistentAddButton.addActionListener(new ActionListener() {
+            /**  {@inheritDoc} */
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                addUIControls(m_addButtons.size(), null, null);
+                updateLayout();
+            }
+        });
     }
 
 
@@ -174,9 +186,11 @@ public class ColumnPairsSelectionPanel extends JPanel {
     }
 
     private void initConstraints(final GridBagConstraints c) {
-        c.anchor = GridBagConstraints.PAGE_START;
-        c.fill = GridBagConstraints.BOTH;
-        c.weightx = 1;
+        if (m_leftComboBoxes.size() > 0) {
+            c.anchor = GridBagConstraints.PAGE_START;
+            c.fill = GridBagConstraints.BOTH;
+            c.weightx = 1;
+        }
         c.insets = new Insets(2, 2, 2, 2);
         c.gridx = 0;
         c.gridy = 0;
@@ -212,11 +226,18 @@ public class ColumnPairsSelectionPanel extends JPanel {
         m_rightComboBoxes.get(index).setRenderer(new ColumnSpecListRenderer());
         initComboBox(m_specs[1], m_rightComboBoxes.get(index), rightSelected);
         JButton addButton = new JButton("+");
+        addButton.setToolTipText("Add row preceding this.");
         addButton.addActionListener(m_addButtonListener);
         m_addButtons.add(index, addButton);
         JButton removeButton = new JButton("-");
         removeButton.addActionListener(m_removeButtonListener);
+        removeButton.setToolTipText("Remove this row.");
         m_removeButtons.add(index, removeButton);
+
+        // if the first row was added
+        if (m_leftComboBoxes.size() == 1) {
+            m_persistentAddButton.setText("+");
+        }
     }
 
     private void removeUIControls(final int index) {
@@ -228,6 +249,11 @@ public class ColumnPairsSelectionPanel extends JPanel {
         remove(c);
         c = m_removeButtons.remove(index);
         remove(c);
+
+        // if the last row was removed
+        if (m_leftComboBoxes.size() == 0) {
+            m_persistentAddButton.setText("Add row");
+        }
 
     }
 
@@ -257,14 +283,13 @@ public class ColumnPairsSelectionPanel extends JPanel {
             c.gridy++;
         }
 
+        c.gridx = 2;
+        addOrUpdate(m_persistentAddButton, c);
+
+        c.gridy++;
         c.weighty = 1;
         addOrUpdate(m_fillComponent, c);
 
-        if (m_leftComboBoxes.size() <= 1) {
-            m_removeButtons.get(0).setEnabled(false);
-        } else {
-            m_removeButtons.get(0).setEnabled(true);
-        }
         revalidate();
     }
 
@@ -281,21 +306,19 @@ public class ColumnPairsSelectionPanel extends JPanel {
 
 
     private class AddButtonListener implements ActionListener {
-        /**
-         * {@inheritDoc}
-         */
+        /** {@inheritDoc} */
+        @Override
         public void actionPerformed(final ActionEvent e) {
             JButton button = (JButton)e.getSource();
             int index = m_addButtons.indexOf(button);
-            addUIControls(index + 1, null, null);
+            addUIControls(index, null, null);
             updateLayout();
         }
     }
 
     private class RemoveButtonListener implements ActionListener {
-        /**
-         * {@inheritDoc}
-         */
+        /** {@inheritDoc}  */
+        @Override
         public void actionPerformed(final ActionEvent e) {
             JButton button = (JButton)e.getSource();
             int index = m_removeButtons.indexOf(button);

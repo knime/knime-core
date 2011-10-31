@@ -83,7 +83,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeSettingsRO;
 
 /**
  * The joiner implements a database like join of two tables.
@@ -177,11 +176,11 @@ public final class Joiner {
      */
     private DataTableSpec createSpec(final DataTableSpec[] specs)
     throws InvalidSettingsException {
+        validateSettings(m_settings);
+
         m_configWarnings.clear();
         List<String> leftCols = getLeftIncluded(specs[0]);
         List<String> rightCols = getRightIncluded(specs[1]);
-
-
 
         List<String> duplicates = new ArrayList<String>();
         duplicates.addAll(leftCols);
@@ -314,8 +313,8 @@ public final class Joiner {
             }
         }
 
-        return new DataTableSpec(takeSpecs.toArray(new DataColumnSpec[takeSpecs
-                                                                      .size()]));
+        return new DataTableSpec(takeSpecs.toArray(
+                new DataColumnSpec[takeSpecs.size()]));
     }
 
     /**
@@ -1038,35 +1037,31 @@ public final class Joiner {
         return inputDataRowSettings;
     }
 
+
     /**
      * Validates the settings in the passed <code>NodeSettings</code> object.
      * The specified settings is checked for completeness and
      * consistency.
      *
-     * @param settings The settings to validate.
+     * @param s The settings to validate.
      * @throws InvalidSettingsException If the validation of the settings
      *             failed.
      */
-    public static  void validateSettings(final NodeSettingsRO settings)
+    public static  void validateSettings(final Joiner2Settings s)
     throws InvalidSettingsException {
-        Joiner2Settings s = new Joiner2Settings();
-        s.loadSettings(settings);
         if (s.getDuplicateHandling() == null) {
             throw new InvalidSettingsException(
-            "No duplicate handling method selected");
+                "No duplicate handling method selected");
         }
         if (s.getJoinMode() == null) {
             throw new InvalidSettingsException("No join mode selected");
         }
         if ((s.getLeftJoinColumns() == null)
-                || (s.getLeftJoinColumns().length < 1)) {
+                || s.getLeftJoinColumns().length < 1
+                || s.getRightJoinColumns() == null
+                || s.getRightJoinColumns().length < 1) {
             throw new InvalidSettingsException(
-            "No column from the left table selected");
-        }
-        if ((s.getRightJoinColumns() == null)
-                || (s.getRightJoinColumns().length < 1)) {
-            throw new InvalidSettingsException(
-            "No column from the right table selected");
+                "Please define at least one joining column pair.");
         }
         if (s.getLeftJoinColumns() != null
                 && s.getRightJoinColumns() != null

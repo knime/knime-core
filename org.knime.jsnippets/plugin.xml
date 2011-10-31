@@ -4,20 +4,10 @@
    <extension
          point="org.knime.workbench.repository.nodes">
       <node
-            category-path="/preview"
+            category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeFactory"
             id="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeFactory">
       </node>          
-   </extension>
-   <extension
-         point="org.knime.workbench.repository.categories">
-      <category
-            description="KNIME Preview nodes -- part of future KNIME releases"
-            icon="icons/preview.png"
-            level-id="preview"
-            name="Preview"
-            path="/">
-      </category>
    </extension>
 
 </plugin>

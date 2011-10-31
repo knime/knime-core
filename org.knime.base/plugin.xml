@@ -1268,7 +1268,22 @@
             expert-flag="false"
             factory-class="org.knime.base.node.image.writeimage.WriteImageNodeFactory"
             id="org.knime.base.node.image.writemage.WriteImageNodeFactory">
-      </node>  
+      </node>
+      <node
+            category-path="/view/property"
+            factory-class="org.knime.base.node.viz.property.color.extract.ColorExtractNodeFactory"
+            id="org.knime.base.node.viz.property.color.extract.ColorExtractNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/column/column-convert+replace"
+            factory-class="org.knime.base.node.preproc.colconvert.categorytonumber.CategoryToNumberNodeFactory"
+            id="org.knime.base.node.preproc.colconvert.categorytonumber.CategoryToNumberNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/column/column-convert+replace"
+            factory-class="org.knime.base.node.preproc.colconvert.categorytonumber.CategoryToNumberApplyNodeFactory"
+            id="org.knime.base.node.preproc.colconvert.categorytonumber.CategoryToNumberApplyNodeFactory">
+      </node> 
       <!-- new ones -->
       
 

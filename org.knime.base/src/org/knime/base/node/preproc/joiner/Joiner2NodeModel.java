@@ -253,13 +253,14 @@ public class Joiner2NodeModel extends NodeModel {
         m_settings.saveSettings(settings);
     }
 
-
     /**
      * {@inheritDoc}
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        Joiner.validateSettings(settings);
+    	Joiner2Settings s = new Joiner2Settings();
+        s.loadSettings(settings);
+        Joiner.validateSettings(s);
     }
 }

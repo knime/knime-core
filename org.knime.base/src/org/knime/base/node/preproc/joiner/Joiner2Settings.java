@@ -149,10 +149,8 @@ public class Joiner2Settings {
 
     private JoinMode m_joinMode = JoinMode.InnerJoin;
 
-    private String[] m_leftJoinColumns =
-        new String[] {Joiner2Settings.ROW_KEY_IDENTIFIER};
-    private String[] m_rightJoinColumns =
-        new String[] {Joiner2Settings.ROW_KEY_IDENTIFIER};
+    private String[] m_leftJoinColumns = new String[0];
+    private String[] m_rightJoinColumns = new String[0];
     private CompositionMode m_compositionMode = CompositionMode.MatchAll;
 
     private String[] m_leftIncludeCols = new String[0];
@@ -551,5 +549,12 @@ public class Joiner2Settings {
         settings.addInt(MAX_OPEN_FILES, m_maxOpenFiles);
         settings.addString(ROW_KEY_SEPARATOR, m_rowKeySeparator);
         settings.addBoolean(ENABLE_HILITE, m_enableHiLite);
+        // save default values for settings that were removed in 2.5, so that
+        // a workflow created with 2.5 can be opened in 2.4.
+        settings.addInt("numBitsInitial", 6);
+        settings.addInt("numBitsMaximal", Integer.SIZE);
+        settings.addDouble("usedMemoryThreshold", 0.85);
+        settings.addLong("minAvailableMemory", 10000000L);
+        settings.addBoolean("memUseCollectionUsage", true);
     }
 }
