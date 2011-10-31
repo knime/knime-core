@@ -1611,7 +1611,8 @@ public final class Node implements NodeModelWarningListener {
                                 + "\", expected \""
                                 + t.getPortObjectSpecClass().getSimpleName()
                                 + "\"");
-            } else if (inSpecs[i] == null && BufferedDataTable.TYPE.equals(t)) {
+            } else if (inSpecs[i] == null && BufferedDataTable.TYPE.equals(t)
+                    && !t.isOptional()) {
                 corrInSpecs[i - 1] = new DataTableSpec();
             } else {
                 corrInSpecs[i - 1] = inSpecs[i];

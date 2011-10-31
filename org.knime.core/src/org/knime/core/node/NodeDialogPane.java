@@ -99,6 +99,7 @@ import org.knime.core.node.config.ConfigEditTreeModel;
 import org.knime.core.node.config.ConfigEditTreeModel.ConfigEditTreeNode;
 import org.knime.core.node.defaultnodesettings.SettingsModelFlowVariableCompatible;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.FlowObjectStack;
@@ -454,7 +455,12 @@ public abstract class NodeDialogPane {
      * @param settings The settings to load into the dialog. Could be an empty
      *            object or contain invalid settings. But will never be null.
      * @param specs The input data table specs. Items of the array could be null
-     *            if no spec is available from the corresponding input port.
+     *            if no spec is available from the corresponding input port
+     *            (i.e. not connected or upstream node does not produce an
+     *            output spec). If a port is of type
+     *            {@link BufferedDataTable#TYPE} and no spec is available the
+     *            framework will replace null by an empty {@link DataTableSpec}
+     *            (no columns) unless the port is marked as optional.
      * @throws NotConfigurableException if the dialog cannot be opened because
      * of real invalid settings or if any preconditions are not fulfilled, e.g.
      * no predecessor node, no nominal column in input table, etc.
@@ -494,8 +500,12 @@ public abstract class NodeDialogPane {
      *
      * @param settings The settings to load into the dialog. Could be an empty
      *            object or contain invalid settings. But will never be null.
-     * @param specs The input data table specs. Items of the array could be null
-     *            if no spec is available from the corresponding input port.
+     * @param specs The input data table specs. If no spec is available for any
+     *            given port (because the port is not connected or the previous
+     *            node does not produce a spec) the framework will pass an
+     *            empty {@link DataTableSpec} (no columns) unless the port is
+     *            marked as {@link PortType#isOptional() optional} (in which
+     *            case the array element is null).
      * @throws NotConfigurableException if the dialog cannot be opened because
      * of real invalid settings or if any preconditions are not fulfilled, e.g.
      * no predecessor node, no nominal column in input table, etc.

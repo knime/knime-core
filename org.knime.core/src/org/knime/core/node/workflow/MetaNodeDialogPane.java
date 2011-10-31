@@ -191,6 +191,9 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
+        // This method ignored the input specs - make sure to review optional
+        // inputs in case quickforms use the input data (e.g. at some point
+        // we may have quickform nodes to allow a column selection?)
         for (Map.Entry<Pair<NodeID, QuickFormInputNode>,
                 QuickFormConfigurationPanel<? extends AbstractQuickFormValueInConfiguration>> e
                     : m_nodes.entrySet()) {

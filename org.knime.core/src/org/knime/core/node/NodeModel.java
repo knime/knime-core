@@ -997,7 +997,13 @@ public abstract class NodeModel {
      * description of the specialized {@link #configure(DataTableSpec[])}
      * methods as it addresses more use cases.
      *
-     * @param inSpecs The input object specs.
+     * @param inSpecs The input data table specs. Items of the array could be
+     *            null if no spec is available from the corresponding input port
+     *            (i.e. not connected or upstream node does not produce an
+     *            output spec). If a port is of type
+     *            {@link BufferedDataTable#TYPE} and no spec is available the
+     *            framework will replace null by an empty {@link DataTableSpec}
+     *            (no columns) unless the port is marked as optional.
      * @return The output objects specs or null.
      * @throws InvalidSettingsException If this node can't be configured.
      */
@@ -1006,7 +1012,7 @@ public abstract class NodeModel {
         // default implementation: the standard version needs to hold: all
         // ports are data ports!
 
-        // (1) case PortObjectSpecs to DataTableSpecs
+        // (1) cast PortObjectSpecs to DataTableSpecs
         DataTableSpec[] inDataSpecs = new DataTableSpec[inSpecs.length];
         for (int i = 0; i < inSpecs.length; i++) {
             try {
@@ -1045,11 +1051,14 @@ public abstract class NodeModel {
      * {@link #configure(PortObjectSpec[])} method unless that method is
      * overwritten.
      *
-     * @param inSpecs An array of DataTableSpecs (as many as this model has
-     *            inputs). Do NOT modify the contents of this array. None of the
-     *            DataTableSpecs in the array can be <code>null</code> but
-     *            empty. If the predecessor node is not yet connected, or
-     *            doesn't provide a DataTableSpecs at its output port.
+     * @param inSpecs The input data table specs (as many as this model has
+     *            inputs). Do NOT modify the contents of this array. If no spec
+     *            is available for any given port (because the port is not
+     *            connected or the previous node does not produce a spec) the
+     *            framework will pass an empty {@link DataTableSpec} (no
+     *            columns) unless the port is marked as {@link
+     *            PortType#isOptional() optional} (in which case the array
+     *            element is null).
      * @return An array of DataTableSpecs (as many as this model has outputs)
      *         They will be propagated to connected successor nodes.
      *         <code>null</code> DataTableSpec elements are changed to empty
