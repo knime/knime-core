@@ -455,9 +455,9 @@ public class StringManipulationNodeDialog  extends NodeDialogPane {
         c.insets = new Insets(2, 6, 4, 6);
         JScrollPane manipScroller = new JScrollPane(m_manipulators);
         manipScroller.setHorizontalScrollBarPolicy(
-                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+                ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
         manipScroller.setMinimumSize(new Dimension(
-                manipScroller.getPreferredSize().width,
+                manipScroller.getPreferredSize().width - 45,
                 manipScroller.getMinimumSize().height));
         manipScroller.setPreferredSize(manipScroller.getMinimumSize());
         p.add(manipScroller, c);
@@ -470,7 +470,7 @@ public class StringManipulationNodeDialog  extends NodeDialogPane {
         c.insets = new Insets(2, 6, 4, 6);
         c.gridwidth = 2;
         c.weightx = 1;
-        c.weighty = 0.7;
+        c.weighty = 0.6;
 
         JComponent editor = createEditorComponent();
         editor.setPreferredSize(editor.getMinimumSize());
@@ -489,6 +489,8 @@ public class StringManipulationNodeDialog  extends NodeDialogPane {
         c.insets = new Insets(2, 2, 4, 6);
         m_description.setPreferredSize(m_description.getMinimumSize());
         JScrollPane descScroller = new JScrollPane(m_description);
+        descScroller.setVerticalScrollBarPolicy(
+                ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         descScroller.setHorizontalScrollBarPolicy(
                 ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         descScroller.setPreferredSize(descScroller.getMinimumSize());
