@@ -70,6 +70,8 @@ import org.knime.base.node.preproc.stringmanipulation.manipulator.CapitalizeDeli
 import org.knime.base.node.preproc.stringmanipulation.manipulator.CapitalizeManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.CountCharsManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.CountCharsModifiersManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.CountManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.CountModifiersManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfCharsManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfCharsModifiersManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfCharsOffsetManipulator;
@@ -140,6 +142,8 @@ public final class StringManipulatorProvider {
 
         manipulators.add(new CapitalizeDelimManipulator());
         manipulators.add(new CapitalizeManipulator());
+        manipulators.add(new CountManipulator());
+        manipulators.add(new CountModifiersManipulator());
         manipulators.add(new CountCharsManipulator());
         manipulators.add(new CountCharsModifiersManipulator());
         manipulators.add(new IndexOfCharsManipulator());
