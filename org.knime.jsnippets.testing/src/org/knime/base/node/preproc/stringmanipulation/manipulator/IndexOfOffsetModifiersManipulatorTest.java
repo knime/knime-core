@@ -59,41 +59,66 @@ import org.junit.Test;
  */
 public class IndexOfOffsetModifiersManipulatorTest {
 
-	/**
-	 * Test method for
-	 * {@link IndexOfOffsetModifiersManipulator#indexOf(CharSequence,
-	 * CharSequence, int, String)}.
-	 */
-	@Test
-	public void testIndexOfExamples() {
-		// Test the examples in the description of the indexOf function
-		Assert.assertEquals(0, IndexOfOffsetModifiersManipulator.indexOf(
-				"abcABCabc", "ab", 0, ""));
-		Assert.assertEquals(6, IndexOfOffsetModifiersManipulator.indexOf(
-				"abcABCabc", "ab", 1, ""));
-		Assert.assertEquals(3, IndexOfOffsetModifiersManipulator.indexOf(
-				"abcABCabc", "ab", 1, "i"));
+    /**
+     * Test method for
+     * {@link IndexOfOffsetModifiersManipulator#indexOf(CharSequence,
+     * CharSequence, int, String)}.
+     */
+    @Test
+    public void testIndexOfExamples() {
+        // Test the examples in the description of the indexOf function
+        Assert.assertEquals(0, IndexOfOffsetModifiersManipulator.indexOf(
+                "abcABCabc", "ab", 0, ""));
+        Assert.assertEquals(6, IndexOfOffsetModifiersManipulator.indexOf(
+                "abcABCabc", "ab", 1, ""));
+        Assert.assertEquals(3, IndexOfOffsetModifiersManipulator.indexOf(
+                "abcABCabc", "ab", 1, "i"));
 
-		Assert.assertEquals(0, IndexOfOffsetModifiersManipulator.indexOf(
-				"abcABCabc", "ab", 0, "b"));
-		Assert.assertEquals(6, IndexOfOffsetModifiersManipulator.indexOf(
-				"abcABCabc", "ab", 9, "b"));
+        Assert.assertEquals(0, IndexOfOffsetModifiersManipulator.indexOf(
+                "abcABCabc", "ab", 0, "b"));
+        Assert.assertEquals(6, IndexOfOffsetModifiersManipulator.indexOf(
+                "abcABCabc", "ab", 9, "b"));
 
-		Assert.assertEquals(0, IndexOfOffsetModifiersManipulator.indexOf(
-				"ab abab ab", "ab", 0, "w"));
-		Assert.assertEquals(8, IndexOfOffsetModifiersManipulator.indexOf(
-				"ab abab ab", "ab", 1, "w"));
-		Assert.assertEquals(3, IndexOfOffsetModifiersManipulator.indexOf(
-				"ab abab ab", "abab", 1, "w"));
+        Assert.assertEquals(0, IndexOfOffsetModifiersManipulator.indexOf(
+                "ab abab ab", "ab", 0, "w"));
+        Assert.assertEquals(8, IndexOfOffsetModifiersManipulator.indexOf(
+                "ab abab ab", "ab", 1, "w"));
+        Assert.assertEquals(3, IndexOfOffsetModifiersManipulator.indexOf(
+                "ab abab ab", "abab", 1, "w"));
 
-		Assert.assertEquals(0, IndexOfOffsetModifiersManipulator.indexOf(
-				"", "", 0, ""));
-		Assert.assertEquals(-1, IndexOfOffsetModifiersManipulator.indexOf(
-				"", "x", 0, ""));
-		Assert.assertEquals(-1, IndexOfOffsetModifiersManipulator.indexOf(
-				null, "x", 1, ""));
-		Assert.assertEquals(-1, IndexOfOffsetModifiersManipulator.indexOf(
-				"x", null, 1, ""));
-	}
+        Assert.assertEquals(0, IndexOfOffsetModifiersManipulator.indexOf(
+                "", "", 0, ""));
+        Assert.assertEquals(-1, IndexOfOffsetModifiersManipulator.indexOf(
+                "", "x", 0, ""));
+        Assert.assertEquals(-1, IndexOfOffsetModifiersManipulator.indexOf(
+                null, "x", 1, ""));
+        Assert.assertEquals(-1, IndexOfOffsetModifiersManipulator.indexOf(
+                "x", null, 1, ""));
+    }
+
+    /**
+     * Test word modifier
+     */
+    @Test
+    public void testIndexWordModifier() {
+        Assert.assertEquals(0,
+                IndexOfOffsetModifiersManipulator.indexOf(
+                "ab abab ab", "ab", 0, "w"));
+        Assert.assertEquals(8,
+                IndexOfOffsetModifiersManipulator.indexOf(
+                "ab abab ab", "ab", 1, "w"));
+        Assert.assertEquals(8,
+                IndexOfOffsetModifiersManipulator.indexOf(
+                "ab abab ab", "ab", 2, "w"));
+        Assert.assertEquals(8,
+                IndexOfOffsetModifiersManipulator.indexOf(
+                "ab abab ab", "ab", 8, "w"));
+        Assert.assertEquals(-1,
+                IndexOfOffsetModifiersManipulator.indexOf(
+                "ab abab ab", "ab", 9, "w"));
+        Assert.assertEquals(-1,
+                IndexOfOffsetModifiersManipulator.indexOf(
+                "ab abab ab", "ab", 10, "w"));
+    }
 
 }
