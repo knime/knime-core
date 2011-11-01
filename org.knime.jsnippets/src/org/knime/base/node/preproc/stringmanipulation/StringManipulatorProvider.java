@@ -87,6 +87,8 @@ import org.knime.base.node.preproc.stringmanipulation.manipulator.LowerCaseManip
 import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveCharsManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveSpaceCharDuplicatesManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveSpaceCharsManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceCharsManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceCharsModifiersManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceModifiersManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ReverseManipulator;
@@ -164,6 +166,8 @@ public final class StringManipulatorProvider {
         manipulators.add(new RemoveSpaceCharsManipulator());
         manipulators.add(new RemoveSpaceCharDuplicatesManipulator());
         manipulators.add(new RemoveCharsManipulator());
+        manipulators.add(new ReplaceCharsManipulator());
+        manipulators.add(new ReplaceCharsModifiersManipulator());
         manipulators.add(new ReplaceManipulator());
         manipulators.add(new ReplaceModifiersManipulator());
         manipulators.add(new ReverseManipulator());
