@@ -123,7 +123,7 @@ public class CountManipulator implements StringManipulator {
         + "<tr><td>count(\"abcABCabc\", \"abc\")</td>"
         + "<td>=</td><td>2</td></tr>"
 
-        + "<tr><td>count(\"abcABCabc\", \"ABC\",)</td>"
+        + "<tr><td>count(\"abcABCabc\", \"ABC\")</td>"
         + "<td>=</td><td>1</td></tr>"
 
         + "<tr><td>count(*, \"\")</td>"
