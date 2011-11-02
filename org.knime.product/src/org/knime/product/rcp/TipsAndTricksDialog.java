@@ -60,7 +60,6 @@ import java.nio.charset.Charset;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMResult;
@@ -99,9 +98,10 @@ import org.xml.sax.XMLReader;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class TipsAndTricksDialog extends Dialog {
-    private static final Point INITIAL_SIZE = new Point(400, 270);
+    
+    private static final Point INITIAL_SIZE = new Point(400, 325);
 
-    static final URL TIPS_AND_TRICKS_URL;
+    private static final URL TIPS_AND_TRICKS_URL;
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(TipsAndTricksDialog.class);
@@ -117,7 +117,7 @@ public class TipsAndTricksDialog extends Dialog {
     }
 
     /**
-     * Creates a new dialog
+     * Creates a new dialog.
      *
      * @param parentShell the parent shell, or <code>null</code> to create a
      *            top-level shell
@@ -182,8 +182,6 @@ public class TipsAndTricksDialog extends Dialog {
             LOGGER.error(ex.getMessage(), ex);
         } catch (IOException ex) {
             LOGGER.error(ex.getMessage(), ex);
-        } catch (TransformerException ex) {
-            LOGGER.error(ex.getMessage(), ex);
         }
         return composite;
     }
@@ -206,7 +204,7 @@ public class TipsAndTricksDialog extends Dialog {
     }
 
     private String getHtml(final Composite parent) throws IOException,
-            TransformerFactoryConfigurationError, TransformerException {
+            TransformerFactoryConfigurationError {
         URL cssUrl =
                 FileLocator.toFileURL(FileLocator.find(FrameworkUtil
                         .getBundle(getClass()), new Path(
@@ -250,7 +248,6 @@ public class TipsAndTricksDialog extends Dialog {
                     new StreamResult(bos));
             content = new String(bos.toByteArray(), Charset.forName("UTF-8"));
 
-             System.out.println(content);
             conn.disconnect();
         } catch (IOException ex) {
             // timeout, unknown host, ...
