@@ -15,8 +15,8 @@
             </head>
             <body>
                 <xsl:apply-templates select="//div[@class='contentWrapper']" />
-                <xsl:apply-templates select="//div[@id='block-views-news-block_2']//div[@class='views-field-title']/span[@class='field-content']" />
-                <xsl:apply-templates select="//div[@id='block-views-events-block_2']//div[@class='views-field-title']/span[@class='field-content']" />
+                <xsl:apply-templates select="//div[@id='block-views-news-block_2']//div[@class='views-field-title']" />
+                <xsl:apply-templates select="//div[@id='block-views-events-block_2']//div[@class='views-field-title']" />
             </body>
         </html>
     </xsl:template>
@@ -25,7 +25,7 @@
         <xsl:apply-templates />
     </xsl:template>
 
-    <xsl:template match="span[@class='field-content']">
+    <xsl:template match="span[@class='views-field-title']">
         <div id="news-entry">
             <xsl:apply-templates />
         </div>

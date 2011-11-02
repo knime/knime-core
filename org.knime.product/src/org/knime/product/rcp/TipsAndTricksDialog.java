@@ -99,7 +99,7 @@ import org.xml.sax.XMLReader;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class TipsAndTricksDialog extends Dialog {
-    private static final Point INITIAL_SIZE = new Point(400, 250);
+    private static final Point INITIAL_SIZE = new Point(400, 270);
 
     static final URL TIPS_AND_TRICKS_URL;
 
@@ -250,7 +250,7 @@ public class TipsAndTricksDialog extends Dialog {
                     new StreamResult(bos));
             content = new String(bos.toByteArray(), Charset.forName("UTF-8"));
 
-            // System.out.println(content);
+             System.out.println(content);
             conn.disconnect();
         } catch (IOException ex) {
             // timeout, unknown host, ...
