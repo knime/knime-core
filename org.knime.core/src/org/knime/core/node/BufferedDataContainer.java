@@ -138,6 +138,9 @@ public class BufferedDataContainer extends DataContainer {
             final boolean forceCopyOfBlobs, final int maxCellsInMemory,
             final Map<Integer, ContainerTable> globalTableRepository,
             final Map<Integer, ContainerTable> localTableRepository) {
+        // force synchronous IO when the node is a loop end:
+        // rows containing blobs need to be written instantly as their owning
+        // buffer is discarded in the next loop iteration, see bug 2935
         super(spec, initDomain, maxCellsInMemory < 0
                 ? getMaxCellsInMemory(policy) : maxCellsInMemory,
                         LoopRole.END.equals(node.getLoopRole()));
