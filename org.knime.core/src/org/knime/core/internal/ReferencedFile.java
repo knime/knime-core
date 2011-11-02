@@ -101,6 +101,19 @@ public final class ReferencedFile {
         m_delegate.readUnlock();
     }
 
+    /** Locks this file location for writing.
+     * See {@link ReentrantReadWriteLock#writeLock()}. */
+    public void writeLock() {
+        m_delegate.writeLock();
+    }
+
+    /** Unlocks this file hierarchy. (Counterpart to {@link #writeLock()}).
+     * @throws IllegalMonitorStateException
+     *          If monitor is not held by current thread. */
+    public void writeUnlock() {
+        m_delegate.writeUnlock();
+    }
+
     public boolean fileLockRootForVM() {
         return m_delegate.fileLockRootForVM();
     }

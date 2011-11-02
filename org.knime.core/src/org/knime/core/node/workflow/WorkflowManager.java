@@ -6122,7 +6122,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             if (workflowDirRef.equals(getNodeContainerDirectory())) {
                 workflowDirRef = getNodeContainerDirectory();
             }
-            workflowDirRef.lock();
+            workflowDirRef.writeLock();
             try {
                 final boolean isWorkingDirectory =
                     workflowDirRef.equals(getNodeContainerDirectory());
@@ -6135,15 +6135,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             + "), converting to current version. This may "
                             + "take some time.");
                     setDirtyAll();
-                    if (isWorkingDirectory) {
-                        for (NodeContainer nc : m_workflow.getNodeValues()) {
-                            ReferencedFile ncDir =
-                                nc.getNodeContainerDirectory();
-                            if (ncDir != null && ncDir.getFile().exists()) {
-                                FileUtil.deleteRecursively(ncDir.getFile());
-                            }
-                        }
-                    }
                 }
                 if (isWorkingDirectory) {
                     m_loadVersion = saveVersion;
@@ -6152,7 +6143,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 WorkflowPersistorVersion200.save(
                         this, workflowDirRef, exec, isSaveData);
             } finally {
-                workflowDirRef.unlock();
+                workflowDirRef.writeUnlock();
             }
         }
     }
