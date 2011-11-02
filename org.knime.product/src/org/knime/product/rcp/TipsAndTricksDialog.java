@@ -73,6 +73,7 @@ import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.LocationEvent;
@@ -83,10 +84,13 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.node.NodeLogger;
+import org.knime.product.ProductPlugin;
 import org.osgi.framework.FrameworkUtil;
 import org.xml.sax.InputSource;
 import org.xml.sax.XMLReader;
@@ -98,8 +102,12 @@ import org.xml.sax.XMLReader;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class TipsAndTricksDialog extends Dialog {
-    
+
     private static final Point INITIAL_SIZE = new Point(400, 325);
+
+    private static final ImageDescriptor IMG_BULB = AbstractUIPlugin
+        .imageDescriptorFromPlugin(ProductPlugin.PLUGIN_ID,
+            "icons/knime_light_bulb_icon.png");
 
     private static final URL TIPS_AND_TRICKS_URL;
 
@@ -141,7 +149,7 @@ public class TipsAndTricksDialog extends Dialog {
     @Override
     protected Control createDialogArea(final Composite parent) {
         Composite composite = new Composite(parent, SWT.NONE);
-        composite.setLayout(new GridLayout());
+        composite.setLayout(new GridLayout(2, false));
         GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
         composite.setLayoutData(gd);
         applyDialogFont(composite);
@@ -178,6 +186,12 @@ public class TipsAndTricksDialog extends Dialog {
                     // do nothing
                 }
             });
+
+            Label logo = new Label(composite, SWT.NONE);
+            logo.setImage(IMG_BULB.createImage());
+            logo.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING,
+                    false, false));
+
         } catch (TransformerFactoryConfigurationError ex) {
             LOGGER.error(ex.getMessage(), ex);
         } catch (IOException ex) {

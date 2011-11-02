@@ -60,6 +60,9 @@ public class ProductPlugin extends AbstractUIPlugin {
     // The shared instance.
     private static ProductPlugin plugin;
 
+    /** Plugin ID as defined in the plugin.xml file. */
+    public static final String PLUGIN_ID = "org.knime.product";
+
     // Resource bundle.
     private ResourceBundle m_resourceBundle;
 
@@ -73,7 +76,7 @@ public class ProductPlugin extends AbstractUIPlugin {
 
     /**
      * This method is called upon plug-in activation.
-     * 
+     *
      * @param context BundleContext
      * @throws Exception on error
      */
@@ -84,10 +87,10 @@ public class ProductPlugin extends AbstractUIPlugin {
 
     /**
      * This method is called when the plug-in is stopped.
-     * 
+     *
      * @param context BundleContext
      * @throws Exception on error
-     * 
+     *
      */
     @Override
     public void stop(final BundleContext context) throws Exception {
