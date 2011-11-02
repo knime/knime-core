@@ -64,6 +64,9 @@
     <xsl:template match="option">
         <dt>
             <xsl:value-of select="@name" />
+            <xsl:if test="@optional = 'true'">
+                <span style="font-style: normal; font-weight: normal;"> (optional)</span>
+            </xsl:if>            
         </dt>
         <dd>
             <xsl:apply-templates select="node()" />
@@ -101,6 +104,7 @@
                                 </td>
                                 <td>
                                     <xsl:apply-templates />
+                                    <xsl:if test="@optional = 'true'"> (optional)</xsl:if>
                                 </td>
                             </tr>
                         </xsl:for-each>

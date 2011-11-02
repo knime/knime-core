@@ -32,6 +32,7 @@
 <!ELEMENT intro (#PCDATA | p | h | br | b | i | u | tt | a | ul | ol | h3 | h4 | pre | sub | sup | table)* >
 <!ELEMENT option (#PCDATA | p | h | br | b | i | u | tt | a | ul | ol | pre | sub | sup)* >
 <!ATTLIST option name CDATA #REQUIRED>
+<!ATTLIST option optional (true|false) "false">
 <!ELEMENT tab (option+)>
 <!ATTLIST tab name CDATA #REQUIRED>
 
@@ -69,6 +70,7 @@
 <!ELEMENT inPort (#PCDATA | br | b | i | u | tt | ul | ol)* >
 <!ATTLIST inPort index CDATA #REQUIRED>
 <!ATTLIST inPort name CDATA #REQUIRED>
+<!ATTLIST inPort optional (true|false) "false">
 <!ELEMENT outPort (#PCDATA | br | b | i | u | tt | ul | ol)* >
 <!ATTLIST outPort index CDATA #REQUIRED>
 <!ATTLIST outPort name CDATA #REQUIRED>
