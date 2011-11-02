@@ -54,6 +54,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.event.HierarchyEvent;
 import java.awt.event.HierarchyListener;
@@ -1229,7 +1230,10 @@ public abstract class NodeDialogPane {
             // to take oversized dimensions
             JPanel panel = new JPanel(new BorderLayout());
             panel.add(m_tree, BorderLayout.CENTER);
-            add(new JScrollPane(panel), BorderLayout.CENTER);
+            panel.setPreferredSize(new Dimension(150, 100));
+            JScrollPane scrPanel = new JScrollPane(panel); 
+            scrPanel.setPreferredSize(new Dimension(150, 100));
+            add(scrPanel, BorderLayout.CENTER);
             add(m_errorLabel, BorderLayout.NORTH);
         }
 
