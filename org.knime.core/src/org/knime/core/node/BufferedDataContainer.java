@@ -56,6 +56,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.internal.ReferencedFile;
+import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 
 /**
@@ -122,7 +123,7 @@ public class BufferedDataContainer extends DataContainer {
      * @param initDomain Whether or not the spec's domain shall be used for
      * initialization.
      * @param node The owner of the outcome table.
-     * @param forceCopyOfBlobs The property whether to copy any blob cell 
+     * @param forceCopyOfBlobs The property whether to copy any blob cell
      * @param maxCellsInMemory Number of cells to be kept in memory, if negative
      * use user settings (according to node)
      * being added, see {@link DataContainer#setForceCopyOfBlobs(boolean)}.
@@ -133,12 +134,13 @@ public class BufferedDataContainer extends DataContainer {
      * @see DataContainer#DataContainer(DataTableSpec, boolean)
      */
     BufferedDataContainer(final DataTableSpec spec, final boolean initDomain,
-            final Node node, final MemoryPolicy policy, 
+            final Node node, final MemoryPolicy policy,
             final boolean forceCopyOfBlobs, final int maxCellsInMemory,
             final Map<Integer, ContainerTable> globalTableRepository,
             final Map<Integer, ContainerTable> localTableRepository) {
         super(spec, initDomain, maxCellsInMemory < 0
-                ? getMaxCellsInMemory(policy) : maxCellsInMemory);
+                ? getMaxCellsInMemory(policy) : maxCellsInMemory,
+                        LoopRole.END.equals(node.getLoopRole()));
         m_node = node;
         m_globalTableRepository = globalTableRepository;
         m_localTableRepository = localTableRepository;

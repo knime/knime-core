@@ -374,9 +374,29 @@ public class DataContainer implements RowAppender {
      * @throws IllegalArgumentException If <code>maxCellsInMemory</code> &lt; 0.
      * @throws NullPointerException If <code>spec</code> is <code>null</code>.
      */
-    @SuppressWarnings ("unchecked")
     public DataContainer(final DataTableSpec spec, final boolean initDomain,
             final int maxCellsInMemory) {
+        this(spec, initDomain, maxCellsInMemory, /*forceSyncIO*/false);
+    }
+
+    /**
+     * Opens the container so that rows can be added by
+     * <code>addRowToTable(DataRow)</code>.
+     * @param spec Table spec of the final table. Rows that are added to the
+     *        container must comply with this spec.
+     * @param initDomain if set to true, the column domains in the
+     *        container are initialized with the domains from spec.
+     * @param maxCellsInMemory Maximum count of cells in memory before swapping.
+     * @param forceSynchronousIO Whether to force synchronous IO. If this
+     * property is false, it's using the default (which is false unless
+     * specified otherwise through
+     * {@link KNIMEConstants#PROPERTY_SYNCHRONOUS_IO})
+     * @throws IllegalArgumentException If <code>maxCellsInMemory</code> &lt; 0.
+     * @throws NullPointerException If <code>spec</code> is <code>null</code>.
+     */
+    @SuppressWarnings ("unchecked")
+    protected DataContainer(final DataTableSpec spec, final boolean initDomain,
+            final int maxCellsInMemory, final boolean forceSynchronousIO) {
         if (maxCellsInMemory < 0) {
             throw new IllegalArgumentException(
                     "Cell count must be positive: " + maxCellsInMemory);
@@ -386,7 +406,7 @@ public class DataContainer implements RowAppender {
         }
         m_spec = spec;
         m_duplicateChecker = new DuplicateChecker();
-        boolean isSynchronousWrite = SYNCHRONOUS_IO;
+        boolean isSynchronousWrite = forceSynchronousIO || SYNCHRONOUS_IO;
         if (!isSynchronousWrite
                 && ASYNC_EXECUTORS.getActiveCount() > MAX_ASYNC_WRITE_THREADS) {
             LOGGER.debug("Number of Table IO write threads exceeds "
