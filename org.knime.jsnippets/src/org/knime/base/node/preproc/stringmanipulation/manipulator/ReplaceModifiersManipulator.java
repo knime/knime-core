@@ -61,7 +61,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author Heiko Hofer
  */
-public class ReplaceModifiersManipulator implements StringManipulator {
+public class ReplaceModifiersManipulator implements Manipulator {
 
     /**
      * Replaces all occurrences of a String within another String..
@@ -194,5 +194,14 @@ public class ReplaceModifiersManipulator implements StringManipulator {
 
         + "</table>"
         + "* can be any character sequence.<br/>";
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return String.class;
     }
 }

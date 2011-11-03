@@ -57,7 +57,7 @@ package org.knime.base.node.preproc.stringmanipulation.manipulator;
  *
  * @author Heiko Hofer
  */
-public class RemoveCharsManipulator implements StringManipulator {
+public class RemoveCharsManipulator implements Manipulator {
 
     /**
      * Remove all occurrences of given characters from a string.
@@ -137,4 +137,11 @@ public class RemoveCharsManipulator implements StringManipulator {
             + "* can be any character.";
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return String.class;
+    }
 }

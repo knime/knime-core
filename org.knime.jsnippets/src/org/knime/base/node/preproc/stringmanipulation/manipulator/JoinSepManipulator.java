@@ -57,7 +57,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author Heiko Hofer
  */
-public class JoinSepManipulator implements StringManipulator {
+public class JoinSepManipulator implements Manipulator {
 
     /**
      * Concatenates strings using the given separator.
@@ -154,4 +154,11 @@ public class JoinSepManipulator implements StringManipulator {
             + "* can be any character sequence.<br/>";
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return String.class;
+    }
 }

@@ -46,48 +46,128 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   04.10.2011 (hofer): created
+ *   25.10.2011 (hofer): created
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
+
 /**
+ * Converts input to string.
  *
  * @author Heiko Hofer
  */
-public interface StringManipulator {
+public class StringManipulator implements Manipulator {
     /**
-     * The category of this string manipulator. Used to categorize
-     * string manipulators
-     * @return the category
-     */
-    String getCategory();
-
-    /**
-     * The name of the method. This must match the java method name.
-     * @return the method name
-     */
-    String getName();
-
-
-    /**
-     * The number of arguments. This must match the number of arguments of the
-     * java method. Varargs are counted as one.
+     * Converts input to string.
      *
-     * @return the number of arguments
+     * @param x the value to convert
+     * @return the string
      */
-    int getNrArgs();
+    public static String string(final String x) {
+        return x;
+    }
 
     /**
-     * This name should be a brief description. Usually this is the name plus
-     * arguments.
-     * @return the display name
+     * Converts input to string.
+     *
+     * @param x the value to convert
+     * @return the string
      */
-    String getDisplayName();
+    public static String string(final Integer x) {
+        if (null == x) {
+            return null;
+        }
+        return x.toString();
+    }
 
     /**
-     * A full description which can have html tags.
-     * @return the full description of the string manipulator.
+     * Converts input to string.
+     *
+     * @param x the value to convert
+     * @return the string
      */
-    String getDescription();
+    public static String string(final Double x) {
+        if (null == x) {
+            return null;
+        }
+        return x.toString();
+    }
+
+    /**
+     * Converts input to string.
+     *
+     * @param x the value to convert
+     * @return the string
+     */
+    public static String string(final Long x) {
+        if (null == x) {
+            return null;
+        }
+        return x.toString();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getName() {
+        return "string";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDisplayName() {
+        return getName() + "(x)";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getNrArgs() {
+        return 1;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getCategory() {
+        return "Convert Type";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getDescription() {
+        return "Converts input to string. "
+            + ""
+            + "<br/>"
+            + "<br/>"
+            + "<strong>Examples:</strong>"
+            + "<br/>"
+            + "<table>"
+            + "<tr><td>string((String)null)</td>"
+            + "<td>=</td><td>\"\"</td></tr>"
+
+            + "<tr><td>string(\"KNIME\")</td>"
+            + "<td>=</td><td>\"KNIME\"</td></tr>"
+
+            + "<tr><td>string(null, \"\", \"a\")</td>"
+            + "<td>=</td><td>[\"\", \"\", \"a\"]</td></tr>"
+
+            + "</table>";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return String.class;
+    }
 
 }

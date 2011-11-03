@@ -61,7 +61,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author Heiko Hofer
  */
-public class IndexOfCharsModifiersManipulator implements StringManipulator {
+public class IndexOfCharsModifiersManipulator implements Manipulator {
 
     /**
      * Gives the occurrence of a character in searchChars in the string or
@@ -166,5 +166,13 @@ public class IndexOfCharsModifiersManipulator implements StringManipulator {
         + "<td>=</td><td>-1</td></tr>"
         + "</table>"
         + "* can be any character sequence.<br/>";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return Integer.class;
     }
 }

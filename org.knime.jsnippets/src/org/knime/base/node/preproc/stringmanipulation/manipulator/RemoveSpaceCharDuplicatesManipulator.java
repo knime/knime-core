@@ -56,7 +56,7 @@ package org.knime.base.node.preproc.stringmanipulation.manipulator;
  * string.
  * @author Heiko Hofer
  */
-public class RemoveSpaceCharDuplicatesManipulator implements StringManipulator {
+public class RemoveSpaceCharDuplicatesManipulator implements Manipulator {
 
     /**
      * Remove duplicated spaces in a string.
@@ -125,5 +125,14 @@ public class RemoveSpaceCharDuplicatesManipulator implements StringManipulator {
                 + "<tr><td>removeDuplicates(null)</td>"
                 + "<td>=</td><td>null</td></tr>"
                 + "</table>";
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return String.class;
     }
 }

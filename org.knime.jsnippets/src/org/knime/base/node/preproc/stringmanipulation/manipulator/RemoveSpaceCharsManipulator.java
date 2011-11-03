@@ -56,7 +56,7 @@ package org.knime.base.node.preproc.stringmanipulation.manipulator;
  *
  * @author Heiko Hofer
  */
-public class RemoveSpaceCharsManipulator implements StringManipulator {
+public class RemoveSpaceCharsManipulator implements Manipulator {
 
     /**
      * Remove all space characters from a string.
@@ -124,5 +124,14 @@ public class RemoveSpaceCharsManipulator implements StringManipulator {
                 + "<tr><td>removeChars(null)</td>"
                 + "<td>=</td><td>null</td></tr>"
                 + "</table>";
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return String.class;
     }
 }

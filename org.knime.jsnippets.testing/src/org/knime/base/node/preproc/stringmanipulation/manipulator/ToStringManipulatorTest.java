@@ -46,113 +46,47 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   25.10.2011 (hofer): created
+ *   20.10.2011 (hofer): created
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import org.apache.commons.lang3.StringUtils;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
- * The stripEnd string manipulator for stripping white space characters.
+ * Basic test for the toString string manipulator.
  *
  * @author Heiko Hofer
  */
-public class StripEndManipulator implements Manipulator {
+public class ToStringManipulatorTest {
 
     /**
-     * Strips any whitespace characters from the end of string.
-     *
-     * @param str the string to strip
-     * @return the stripped string
+     * Test method for
+     * {@link StringManipulator#string(String)},
+     * {@link StringManipulator#string(Integer)}
+     * {@link StringManipulator#string(Double)}
+     * {@link StringManipulator#string(Long)}.
      */
-    public static String stripEnd(final String str) {
-        return StringUtils.stripEnd(str, null);
+    @Test
+    public void testToStringExamples() {
+        // Test the examples in the description of the toString function
+        Assert.assertEquals(null,
+                StringManipulator.string((String)null));
+        Assert.assertEquals(null,
+                StringManipulator.string((Integer)null));
+        Assert.assertEquals(null,
+                StringManipulator.string((Double)null));
+        Assert.assertEquals(null,
+                StringManipulator.string((Long)null));
+        Assert.assertEquals("100",
+                StringManipulator.string(100));
+        Assert.assertEquals("100",
+                StringManipulator.string(100l));
+        Assert.assertEquals("0.5",
+                StringManipulator.string(0.5));
+        Assert.assertEquals("0.5",
+                StringManipulator.string(1.0/2.0));
+        Assert.assertEquals("KNIME",
+                StringManipulator.string("KNIME"));
     }
-
-    /**
-     * Strips any whitespace characters from the end of strings.
-     *
-     * @param str the strings to strip
-     * @return the list of stripped strings
-     */
-    public static String[] stripEnd(final String... str) {
-        if (str == null || (str.length) == 0) {
-            return str;
-        }
-        String[] newArr = new String[str.length];
-        for (int i = 0; i < str.length; i++) {
-            newArr[i] = StringUtils.stripEnd(str[i], null);
-        }
-        return newArr;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getName() {
-        return "stripEnd";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDisplayName() {
-        return getName() + "(str...)";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrArgs() {
-        return 1;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getCategory() {
-        return "Remove";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return "Strips any whitespace characters from the end of given "
-            + "strings. "
-            + ""
-            + "<br/>"
-            + "<br/>"
-            + "<strong>Examples:</strong>"
-            + "<br/>"
-            + "<table>"
-            + "<tr><td>stripEnd(\"&nbsp;&nbsp;KNIME&nbsp;&nbsp;&nbsp;&nbsp;"
-            + "\")</td>"
-            + "<td>=</td><td>\"&nbsp;&nbsp;KNIME\"</td></tr>"
-
-            + "<tr><td>stripEnd(\"KNIME&nbsp;&nbsp;\", "
-            + "\"&nbsp;&nbsp;KNIME\")</td>"
-            + "<td>=</td><td>[\"KNIME\", \"&nbsp;&nbsp;KNIME\"]</td></tr>"
-
-            + "<tr><td>stripEnd(null, \"\", \"a&nbsp;&nbsp;\")</td>"
-            + "<td>=</td><td>[null, \"\", \"a\"]</td></tr>"
-
-            + "</table>"
-            + "* can be any character sequence.<br/>";
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Class<?> getReturnType() {
-        return String.class;
-    }
-
 }

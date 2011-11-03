@@ -57,7 +57,7 @@ import org.apache.commons.lang3.text.WordUtils;
  *
  * @author Heiko Hofer
  */
-public class CapitalizeManipulator implements StringManipulator {
+public class CapitalizeManipulator implements Manipulator {
 
     /**
      * Capitalizes all white space separated words in a string.
@@ -120,5 +120,14 @@ public class CapitalizeManipulator implements StringManipulator {
                 + "<tr><td>capitalize(\"\")</td><td>=</td><td>\"\"</td></tr>"
                 + "<tr><td>capitalize(null)</td><td>=</td><td>null</td></tr>"
                 + "</table>";
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return String.class;
     }
 }

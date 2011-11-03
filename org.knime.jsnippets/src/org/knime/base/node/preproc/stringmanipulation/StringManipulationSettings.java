@@ -60,10 +60,11 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
-import org.knime.base.node.preproc.stringmanipulation.manipulator.StringManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -145,8 +146,9 @@ public class StringManipulationSettings {
         if (!m_isReplace && (m_colName == null || m_colName.length() == 0)) {
             throw new InvalidSettingsException("Column name must not be empty");
         }
-        String returnType = settings.getString(CFG_RETURN_TYPE);
-        m_returnType = getClassForReturnType(returnType);
+        String returnType = settings.getString(CFG_RETURN_TYPE, null);
+        m_returnType = null == returnType ? null
+                : getClassForReturnType(returnType);
         // this setting is not available in 1.2.x
         m_isTestCompilationOnDialogClose =
             settings.getBoolean(CFG_TEST_COMPILATION, true);
@@ -162,11 +164,12 @@ public class StringManipulationSettings {
     public void loadSettingsInDialog(final NodeSettingsRO settings,
             final DataTableSpec spec) {
         m_expression = settings.getString(CFG_EXPRESSION, "");
-        String r = settings.getString(CFG_RETURN_TYPE, Double.class.getName());
+        String returnType = settings.getString(CFG_RETURN_TYPE, null);
         try {
-            m_returnType = getClassForReturnType(r);
+            m_returnType = null == returnType ? null
+                    : getClassForReturnType(returnType);
         } catch (InvalidSettingsException e) {
-            m_returnType = Double.class;
+            m_returnType = null;
         }
         String defaultColName = "new column";
         m_colName = settings.getString(CFG_COLUMN_NAME, defaultColName);
@@ -190,6 +193,7 @@ public class StringManipulationSettings {
      */
     public void setExpression(final String expression) {
         m_expression = expression;
+        m_returnType = null;
     }
 
     /**
@@ -333,6 +337,38 @@ public class StringManipulationSettings {
         }
     }
 
+    private Class<?> determineReturnType(final String expression)
+        throws InvalidSettingsException {
+        if (expression.isEmpty()) {
+            throw new InvalidSettingsException(
+                    "Empty expressions are not supported.");
+        }
+        int endIndex = StringUtils.indexOf(expression, '(');
+        if (endIndex < 0) {
+            throw new InvalidSettingsException(
+            "Constant expressions are not supported. Please use a converter "
+            + "function like toString(x) to convert to the desired type.");
+        }
+        String function = expression.substring(0, endIndex);
+
+        StringManipulatorProvider provider =
+            StringManipulatorProvider.getDefault();
+        // Add StringManipulators to the imports
+        Collection<Manipulator> manipulators =
+            provider.getManipulators(StringManipulatorProvider.ALL_CATEGORY);
+        Class<?> returnType = null;
+        for (Manipulator manipulator : manipulators) {
+            if (function.equals(manipulator.getName())) {
+                returnType = manipulator.getReturnType();
+            }
+        }
+        if (null == returnType) {
+            throw new InvalidSettingsException("The function "
+                    + function + " ist not known.");
+        }
+        return returnType;
+
+    }
 
     /**
      * Create settings to be used by {@link ColumnCalculator} in order
@@ -343,6 +379,11 @@ public class StringManipulationSettings {
      */
     JavaScriptingSettings createJavaScriptingSettings()
         throws InvalidSettingsException {
+        // determine return type
+        m_returnType = null == m_returnType
+            ? determineReturnType(StringUtils.strip(m_expression))
+            : m_returnType;
+
         JavaScriptingSettings s = new JavaScriptingSettings(null);
         s.setArrayReturn(false);
         s.setColName(this.getColName());
@@ -369,7 +410,7 @@ public class StringManipulationSettings {
                     "Cannot locate necessary libraries.", e);
         }
         s.setReplace(this.isReplace());
-        s.setReturnType(String.class.getName());
+        s.setReturnType(m_returnType.getName());
         s.setTestCompilationOnDialogClose(
                 this.isTestCompilationOnDialogClose());
         List<String> imports = new ArrayList<String>();
@@ -378,9 +419,9 @@ public class StringManipulationSettings {
         StringManipulatorProvider provider =
             StringManipulatorProvider.getDefault();
         // Add StringManipulators to the imports
-        Collection<StringManipulator> manipulators =
+        Collection<Manipulator> manipulators =
             provider.getManipulators(StringManipulatorProvider.ALL_CATEGORY);
-        for (StringManipulator manipulator : manipulators) {
+        for (Manipulator manipulator : manipulators) {
             String toImport = manipulator.getClass().getName();
             imports.add("static " + toImport + ".*");
         }

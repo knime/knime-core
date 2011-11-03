@@ -57,7 +57,7 @@ package org.knime.base.node.preproc.stringmanipulation.manipulator;
  *
  * @author Heiko Hofer
  */
-public class CountCharsManipulator implements StringManipulator {
+public class CountCharsManipulator implements Manipulator {
 
     /**
      * Count specific characters in the string.
@@ -141,4 +141,11 @@ public class CountCharsManipulator implements StringManipulator {
         + "* can be any character sequence.";
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return Integer.class;
+    }
 }

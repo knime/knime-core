@@ -61,7 +61,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author Heiko Hofer
  */
-public class IndexOfModifiersManipulator implements StringManipulator {
+public class IndexOfModifiersManipulator implements Manipulator {
 
     /**
      * Gives the first index of toSearch in the string or -1 if toSearch is
@@ -174,5 +174,13 @@ public class IndexOfModifiersManipulator implements StringManipulator {
         + "<td>=</td><td>-1 (except when * = \"\")</td></tr>"
         + "</table>"
         + "* can be any character sequence.<br/>";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return Integer.class;
     }
 }

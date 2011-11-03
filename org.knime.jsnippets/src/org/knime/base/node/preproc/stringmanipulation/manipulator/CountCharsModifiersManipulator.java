@@ -60,7 +60,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author Heiko Hofer
  */
-public class CountCharsModifiersManipulator implements StringManipulator {
+public class CountCharsModifiersManipulator implements Manipulator {
 
     /**
      * Count specific characters in the string.
@@ -183,4 +183,11 @@ public class CountCharsModifiersManipulator implements StringManipulator {
         + "* can be any character sequence.";
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return Integer.class;
+    }
 }

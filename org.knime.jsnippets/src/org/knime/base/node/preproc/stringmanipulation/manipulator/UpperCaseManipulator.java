@@ -60,7 +60,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author Heiko Hofer
  */
-public class UpperCaseManipulator implements StringManipulator {
+public class UpperCaseManipulator implements Manipulator {
 
     /**
      * Convert characters in a string to upper case.
@@ -118,5 +118,13 @@ public class UpperCaseManipulator implements StringManipulator {
                 + "<tr><td>upperCase(\"\")</td><td>=</td><td>\"\"</td></tr>"
                 + "<tr><td>upperCase(null)</td><td>=</td><td>null</td></tr>"
                 + "</table>";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return String.class;
     }
 }

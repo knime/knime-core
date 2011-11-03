@@ -58,7 +58,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author Heiko Hofer
  */
-public class LengthManipulator implements StringManipulator {
+public class LengthManipulator implements Manipulator {
 
     /**
      * Get the length of the string.
@@ -129,4 +129,11 @@ public class LengthManipulator implements StringManipulator {
             + "</table>";
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return Integer.class;
+    }
 }

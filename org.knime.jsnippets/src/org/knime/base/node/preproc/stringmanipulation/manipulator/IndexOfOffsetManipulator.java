@@ -58,7 +58,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author Heiko Hofer
  */
-public class IndexOfOffsetManipulator implements StringManipulator {
+public class IndexOfOffsetManipulator implements Manipulator {
 
     /**
      * Gives the first index of toSearch in the string or -1 if toSearch is
@@ -152,4 +152,11 @@ public class IndexOfOffsetManipulator implements StringManipulator {
                 + "** can be any integer.";
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return Integer.class;
+    }
 }

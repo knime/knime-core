@@ -46,113 +46,56 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   25.10.2011 (hofer): created
+ *   04.10.2011 (hofer): created
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import org.apache.commons.lang3.StringUtils;
-
 /**
- * The stripEnd string manipulator for stripping white space characters.
  *
  * @author Heiko Hofer
  */
-public class StripEndManipulator implements Manipulator {
+public interface Manipulator {
+    /**
+     * The category of this string manipulator. Used to categorize
+     * string manipulators
+     * @return the category
+     */
+    String getCategory();
 
     /**
-     * Strips any whitespace characters from the end of string.
+     * The name of the method. This must match the java method name.
+     * @return the method name
+     */
+    String getName();
+
+
+    /**
+     * The number of arguments. This must match the number of arguments of the
+     * java method. Varargs are counted as one.
      *
-     * @param str the string to strip
-     * @return the stripped string
+     * @return the number of arguments
      */
-    public static String stripEnd(final String str) {
-        return StringUtils.stripEnd(str, null);
-    }
+    int getNrArgs();
 
     /**
-     * Strips any whitespace characters from the end of strings.
-     *
-     * @param str the strings to strip
-     * @return the list of stripped strings
+     * This name should be a brief description. Usually this is the name plus
+     * arguments.
+     * @return the display name
      */
-    public static String[] stripEnd(final String... str) {
-        if (str == null || (str.length) == 0) {
-            return str;
-        }
-        String[] newArr = new String[str.length];
-        for (int i = 0; i < str.length; i++) {
-            newArr[i] = StringUtils.stripEnd(str[i], null);
-        }
-        return newArr;
-    }
+    String getDisplayName();
 
     /**
-     * {@inheritDoc}
+     * A full description which can have html tags.
+     * @return the full description of the string manipulator.
      */
-    @Override
-    public String getName() {
-        return "stripEnd";
-    }
+    String getDescription();
 
     /**
-     * {@inheritDoc}
+     * Get the java type that is returned by the string manipulator. Supported
+     * types are Boolean.class, Integer.class, Long.class, Double.class,
+     * String.class, Data.class.
+     * @return the return type of the string manipulator
      */
-    @Override
-    public String getDisplayName() {
-        return getName() + "(str...)";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrArgs() {
-        return 1;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getCategory() {
-        return "Remove";
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return "Strips any whitespace characters from the end of given "
-            + "strings. "
-            + ""
-            + "<br/>"
-            + "<br/>"
-            + "<strong>Examples:</strong>"
-            + "<br/>"
-            + "<table>"
-            + "<tr><td>stripEnd(\"&nbsp;&nbsp;KNIME&nbsp;&nbsp;&nbsp;&nbsp;"
-            + "\")</td>"
-            + "<td>=</td><td>\"&nbsp;&nbsp;KNIME\"</td></tr>"
-
-            + "<tr><td>stripEnd(\"KNIME&nbsp;&nbsp;\", "
-            + "\"&nbsp;&nbsp;KNIME\")</td>"
-            + "<td>=</td><td>[\"KNIME\", \"&nbsp;&nbsp;KNIME\"]</td></tr>"
-
-            + "<tr><td>stripEnd(null, \"\", \"a&nbsp;&nbsp;\")</td>"
-            + "<td>=</td><td>[null, \"\", \"a\"]</td></tr>"
-
-            + "</table>"
-            + "* can be any character sequence.<br/>";
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Class<?> getReturnType() {
-        return String.class;
-    }
+    Class<?> getReturnType();
 
 }

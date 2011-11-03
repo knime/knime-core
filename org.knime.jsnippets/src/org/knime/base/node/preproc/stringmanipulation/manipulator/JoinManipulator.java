@@ -56,7 +56,7 @@ package org.knime.base.node.preproc.stringmanipulation.manipulator;
  *
  * @author Heiko Hofer
  */
-public class JoinManipulator implements StringManipulator {
+public class JoinManipulator implements Manipulator {
 
     /**
      * Concatenates strings.
@@ -124,4 +124,11 @@ public class JoinManipulator implements StringManipulator {
             + "</table>";
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return String.class;
+    }
 }

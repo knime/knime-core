@@ -97,7 +97,7 @@ import org.fife.ui.autocomplete.CompletionProvider;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rtextarea.RTextScrollPane;
-import org.knime.base.node.preproc.stringmanipulation.manipulator.StringManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
@@ -300,8 +300,8 @@ public class StringManipulationNodeDialog  extends NodeDialogPane {
             public void valueChanged(final ListSelectionEvent e) {
                 Object selected = m_manipulators.getSelectedValue();
                 if (selected != null) {
-                    StringManipulator manipulator =
-                        (StringManipulator) selected;
+                    Manipulator manipulator =
+                        (Manipulator) selected;
                     m_description.setText(manipulator.getDescription());
                     m_description.setCaretPosition(0);
                 } else {
@@ -366,10 +366,10 @@ public class StringManipulationNodeDialog  extends NodeDialogPane {
     private CompletionProvider createCompletionProvider() {
         m_completionProvider = new JavaScriptingCompletionProvider();
 
-        Collection<StringManipulator> manipulators =
+        Collection<Manipulator> manipulators =
             StringManipulatorProvider.getDefault().getManipulators(
                         StringManipulatorProvider.ALL_CATEGORY);
-        for (StringManipulator m : manipulators) {
+        for (Manipulator m : manipulators) {
             // A BasicCompletion is just a straightforward word completion.
             m_completionProvider.addCompletion(
                     new BasicCompletion(m_completionProvider,
@@ -386,7 +386,7 @@ public class StringManipulationNodeDialog  extends NodeDialogPane {
         model.clear();
         StringManipulatorProvider provider =
             StringManipulatorProvider.getDefault();
-        for (StringManipulator manipulator
+        for (Manipulator manipulator
                 : provider.getManipulators(category)) {
             model.addElement(manipulator);
         }
@@ -541,7 +541,7 @@ public class StringManipulationNodeDialog  extends NodeDialogPane {
 
     private void onSelectionInManipulatorList(final Object selected) {
         if (selected != null) {
-            StringManipulator manipulator = (StringManipulator) selected;
+            Manipulator manipulator = (Manipulator) selected;
             String selectedString = m_expEdit.getSelectedText();
             StringBuilder newStr = new StringBuilder(
                     manipulator.getName());
@@ -767,7 +767,7 @@ public class StringManipulationNodeDialog  extends NodeDialogPane {
         public Component getListCellRendererComponent(final JList list,
                 final Object value, final int index, final boolean isSelected,
                 final boolean cellHasFocus) {
-            StringManipulator m = (StringManipulator)value;
+            Manipulator m = (Manipulator)value;
             Component c = super.getListCellRendererComponent(list,
                     m.getDisplayName(),
                     index, isSelected, cellHasFocus);

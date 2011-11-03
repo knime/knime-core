@@ -56,7 +56,7 @@ package org.knime.base.node.preproc.stringmanipulation.manipulator;
  *
  * @author Heiko Hofer
  */
-public class ToNullManipulator implements StringManipulator {
+public class ToNullManipulator implements Manipulator {
     /**
      * Converts empty string to null.
      *
@@ -142,6 +142,15 @@ public class ToNullManipulator implements StringManipulator {
             + "<td>=</td><td>[null, null, \"a\"]</td></tr>"
 
             + "</table>";
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return String.class;
     }
 
 }

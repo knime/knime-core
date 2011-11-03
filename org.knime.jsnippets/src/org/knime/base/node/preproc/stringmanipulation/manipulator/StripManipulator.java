@@ -57,7 +57,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author Heiko Hofer
  */
-public class StripManipulator implements StringManipulator {
+public class StripManipulator implements Manipulator {
 
     /**
      * Strips any whitespace characters from from the start and
@@ -143,6 +143,15 @@ public class StripManipulator implements StringManipulator {
 
             + "</table>"
             + "* can be any character sequence.<br/>";
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return String.class;
     }
 
 }

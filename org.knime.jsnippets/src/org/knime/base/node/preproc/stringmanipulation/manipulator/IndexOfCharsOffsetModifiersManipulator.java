@@ -61,7 +61,7 @@ import org.apache.commons.lang3.StringUtils;
  * @author Heiko Hofer
  */
 public class IndexOfCharsOffsetModifiersManipulator
-    implements StringManipulator {
+    implements Manipulator {
 
     /**
      * Gives the occurrence of a character in searchChars in the string or
@@ -267,5 +267,13 @@ public class IndexOfCharsOffsetModifiersManipulator
                 + "</table>"
                 + "* can be any character sequence.<br/>"
                 + "** can be any integer.";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return Integer.class;
     }
 }

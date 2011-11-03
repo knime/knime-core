@@ -60,7 +60,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author Heiko Hofer
  */
-public class LowerCaseManipulator implements StringManipulator {
+public class LowerCaseManipulator implements Manipulator {
 
     /**
      * Convert characters in a string to lower case.
@@ -118,5 +118,13 @@ public class LowerCaseManipulator implements StringManipulator {
                 + "<tr><td>lowerCase(\"\")</td><td>=</td><td>\"\"</td></tr>"
                 + "<tr><td>lowerCase(null)</td><td>=</td><td>null</td></tr>"
                 + "</table>";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return String.class;
     }
 }

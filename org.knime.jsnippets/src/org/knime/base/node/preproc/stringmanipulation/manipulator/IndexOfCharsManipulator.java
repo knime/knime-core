@@ -56,7 +56,7 @@ package org.knime.base.node.preproc.stringmanipulation.manipulator;
  *
  * @author Heiko Hofer
  */
-public class IndexOfCharsManipulator implements StringManipulator {
+public class IndexOfCharsManipulator implements Manipulator {
 
     /**
      * Gives the first index of toSearch in the string or -1 if toSearch is
@@ -137,5 +137,13 @@ public class IndexOfCharsManipulator implements StringManipulator {
         + "<td>=</td><td>-1</td></tr>"
         + "</table>"
         + "* can be any character sequence.<br/>";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return Integer.class;
     }
 }

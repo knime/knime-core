@@ -123,9 +123,9 @@ public class StringManipulationNodeModel extends NodeModel
         }
         boolean isReplace = m_settings.isReplace();
         String colName = m_settings.getColName();
+        JavaScriptingSettings settings =
+            m_settings.createJavaScriptingSettings();
         try {
-            JavaScriptingSettings settings =
-                m_settings.createJavaScriptingSettings();
             settings.setInputAndCompile(spec);
             ColumnCalculator cc = new ColumnCalculator(settings, this);
             ColumnRearranger result = new ColumnRearranger(spec);

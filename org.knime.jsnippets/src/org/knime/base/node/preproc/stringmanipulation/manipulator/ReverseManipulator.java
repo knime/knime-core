@@ -57,7 +57,7 @@ package org.knime.base.node.preproc.stringmanipulation.manipulator;
  *
  * @author Heiko Hofer
  */
-public class ReverseManipulator implements StringManipulator {
+public class ReverseManipulator implements Manipulator {
 
     /**
      * Get the reverse of the string.
@@ -129,6 +129,15 @@ public class ReverseManipulator implements StringManipulator {
             + "<td>=</td><td>null</td></tr>"
 
             + "</table>";
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return String.class;
     }
 
 }

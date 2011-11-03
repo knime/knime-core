@@ -60,7 +60,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author Heiko Hofer
  */
-public class IndexOfOffsetModifiersManipulator implements StringManipulator {
+public class IndexOfOffsetModifiersManipulator implements Manipulator {
 
     /**
      * Gives the first index of toSearch in the string or -1 if toSearch is
@@ -270,5 +270,13 @@ public class IndexOfOffsetModifiersManipulator implements StringManipulator {
                 + "</table>"
                 + "* can be any character sequence.<br/>"
                 + "** can be any integer.";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return Integer.class;
     }
 }

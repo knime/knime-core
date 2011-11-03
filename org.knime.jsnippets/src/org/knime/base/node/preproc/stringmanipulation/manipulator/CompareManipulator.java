@@ -61,7 +61,7 @@ import java.util.Locale;
  *
  * @author Heiko Hofer
  */
-public class CompareManipulator implements StringManipulator {
+public class CompareManipulator implements Manipulator {
 
     /**
      * Compares two strings lexicographically.
@@ -154,4 +154,11 @@ public class CompareManipulator implements StringManipulator {
         + "* can be any character sequence.";
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return Integer.class;
+    }
 }

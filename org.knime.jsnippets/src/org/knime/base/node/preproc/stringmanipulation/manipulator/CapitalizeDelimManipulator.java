@@ -58,7 +58,7 @@ import org.apache.commons.lang3.text.WordUtils;
  *
  * @author Heiko Hofer
  */
-public class CapitalizeDelimManipulator implements StringManipulator {
+public class CapitalizeDelimManipulator implements Manipulator {
 
     /**
      * Capitalizes all delimiter separated words in a string.
@@ -127,5 +127,13 @@ public class CapitalizeDelimManipulator implements StringManipulator {
                 + "<tr><td>capitalize(null, *)</td><td>=</td><td>null</td></tr>"
                 + "</table>"
                 + "* can be any character.";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return String.class;
     }
 }

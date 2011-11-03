@@ -57,7 +57,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author Heiko Hofer
  */
-public class SubstringManipulator implements StringManipulator {
+public class SubstringManipulator implements Manipulator {
 
     /**
      * Get a substring.
@@ -138,5 +138,14 @@ public class SubstringManipulator implements StringManipulator {
             + "<tr><td>substr(null, *, *)</td><td>=</td><td>null</td></tr>"
             + "</table>"
             + "* can be any number.";
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return String.class;
     }
 }

@@ -93,13 +93,14 @@ import org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceCharsMo
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceModifiersManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ReverseManipulator;
-import org.knime.base.node.preproc.stringmanipulation.manipulator.StringManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.StripEndManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.StripManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.StripStartManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.SubstringManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ToEmptyManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ToNullManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.StringManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.UpperCaseManipulator;
 import org.knime.core.util.FileUtil;
 
@@ -112,7 +113,7 @@ public final class StringManipulatorProvider {
      * The display name of the category with all string manipulators.
      */
     static final String ALL_CATEGORY = "All";
-    private Map<String, Collection<StringManipulator>> m_manipulators;
+    private Map<String, Collection<Manipulator>> m_manipulators;
     private File m_jarFile;
 
 
@@ -134,14 +135,14 @@ public final class StringManipulatorProvider {
      */
     private StringManipulatorProvider() {
         m_manipulators = new LinkedHashMap<String,
-                                    Collection<StringManipulator>>();
+                                    Collection<Manipulator>>();
 
-        Collection<StringManipulator> manipulators =
-            new TreeSet<StringManipulator>(new Comparator<StringManipulator>() {
+        Collection<Manipulator> manipulators =
+            new TreeSet<Manipulator>(new Comparator<Manipulator>() {
 
                 @Override
-                public int compare(final StringManipulator o1,
-                        final StringManipulator o2) {
+                public int compare(final Manipulator o1,
+                        final Manipulator o2) {
                     return o1.getDisplayName().compareTo(o2.getDisplayName());
                 }
             });
@@ -179,10 +180,11 @@ public final class StringManipulatorProvider {
         manipulators.add(new SubstringManipulator());
         manipulators.add(new ToEmptyManipulator());
         manipulators.add(new ToNullManipulator());
+        manipulators.add(new StringManipulator());
         manipulators.add(new UpperCaseManipulator());
 
         Set<String> categories = new TreeSet<String>();
-        for (StringManipulator m : manipulators) {
+        for (Manipulator m : manipulators) {
             String category = m.getCategory();
             if (category.equals(ALL_CATEGORY)) {
                 throw new IllegalStateException(
@@ -192,10 +194,10 @@ public final class StringManipulatorProvider {
         }
         m_manipulators.put(ALL_CATEGORY, manipulators);
         for (String category : categories) {
-            m_manipulators.put(category, new ArrayList<StringManipulator>());
+            m_manipulators.put(category, new ArrayList<Manipulator>());
         }
-        for (StringManipulator m : manipulators) {
-            Collection<StringManipulator> list =
+        for (Manipulator m : manipulators) {
+            Collection<Manipulator> list =
                 m_manipulators.get(m.getCategory());
             list.add(m);
         }
@@ -213,11 +215,11 @@ public final class StringManipulatorProvider {
 
 
     /**
-     * Get the {@link StringManipulator}s in the given category.
+     * Get the {@link Manipulator}s in the given category.
      * @param category a category as given by getCategories()
-     * @return the {@link StringManipulator}s in the given category
+     * @return the {@link Manipulator}s in the given category
      */
-    public Collection<StringManipulator> getManipulators(
+    public Collection<Manipulator> getManipulators(
             final String category) {
         return m_manipulators.get(category);
     }
@@ -241,7 +243,7 @@ public final class StringManipulatorProvider {
             JarOutputStream jar = new JarOutputStream(out);
 
             Collection<Object> classes = new ArrayList<Object>();
-            classes.add(StringManipulator.class);
+            classes.add(Manipulator.class);
             classes.addAll(m_manipulators.get(ALL_CATEGORY));
             // create tree structure for classes
             DefaultMutableTreeNode root = createTree(classes);

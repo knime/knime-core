@@ -24,7 +24,12 @@
                 <i>replace($names$, "Mister", "Mr")</i><br/>
                 or you could combine it to<br/>
                 <i>replace(replace($names$, "Mister", "Mr"), "Miss", "Ms")</i>
-            </p>	        
+            </p>
+            <p>
+                Or if you want to have the number of characters of the strings
+                in a column with name <i>text</i>: <br/>
+                <i>length($text$)</i>
+            </p>
 		</intro>
 		<option name="Column List">
 		  The list contains the column that are available in the input table.
@@ -65,7 +70,7 @@
 		</option>
 	</fullDescription>
     <ports>
-        <inPort name="Input table" index="0">Input table with columns of string type.</inPort>
+        <inPort name="Input table" index="0">Input table.</inPort>
         <outPort name="Appended table" index="0">Input table with an additional calculated column
 	        or one column replaced.
         </outPort>

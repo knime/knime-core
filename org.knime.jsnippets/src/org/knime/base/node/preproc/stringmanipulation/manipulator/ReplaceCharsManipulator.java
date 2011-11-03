@@ -58,7 +58,7 @@ package org.knime.base.node.preproc.stringmanipulation.manipulator;
  *
  * @author Heiko Hofer
  */
-public class ReplaceCharsManipulator implements StringManipulator {
+public class ReplaceCharsManipulator implements Manipulator {
 
     /**
      * Replaces all occurrences of a String within another String..
@@ -148,5 +148,14 @@ public class ReplaceCharsManipulator implements StringManipulator {
 
         + "</table>"
         + "* can be any character sequence.<br/>";
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return String.class;
     }
 }

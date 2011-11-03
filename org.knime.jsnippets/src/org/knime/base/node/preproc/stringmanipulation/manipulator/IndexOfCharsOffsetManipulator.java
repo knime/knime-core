@@ -57,7 +57,7 @@ package org.knime.base.node.preproc.stringmanipulation.manipulator;
  *
  * @author Heiko Hofer
  */
-public class IndexOfCharsOffsetManipulator implements StringManipulator {
+public class IndexOfCharsOffsetManipulator implements Manipulator {
 
     /**
      * Gives the first index of toSearch in the string or -1 if toSearch is
@@ -150,4 +150,11 @@ public class IndexOfCharsOffsetManipulator implements StringManipulator {
         + "** can be any integer.";
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getReturnType() {
+        return Integer.class;
+    }
 }
