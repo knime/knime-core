@@ -343,17 +343,18 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
             spec = (DataTableSpec)specs[m_specIndex];
         } catch (final ClassCastException cce) {
             throw new NotConfigurableException("Wrong type of PortObject for"
-                    + " ColumnNameSelectio, expecting DataTableSpec!");
-        }
-        if (spec == null) {
-            throw new NotConfigurableException("Need input table spec to "
-                    + "configure dialog. Configure or execute predecessor "
-                    + "nodes.");
+                    + " ColumnNameSelection, expecting DataTableSpec!");
         }
         //if it's not required we don't need to check if at least one column
         //matches the criteria
         if (!m_isRequired) {
             return;
+        }
+        // spec is null if the port is not connected
+        if (spec == null) {
+            throw new NotConfigurableException("Need input table spec to "
+                    + "configure dialog. Configure or execute predecessor "
+                    + "nodes.");
         }
         // now check if at least one column is compatible to the column filter
         for (final DataColumnSpec col : spec) {
