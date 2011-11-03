@@ -718,11 +718,8 @@ public class StringManipulationNodeDialog  extends NodeDialogPane {
         }
         s.setReplace(isReplace);
         s.setColName(newColName);
-        String type = String.class.getName();
-        s.setReturnType(type);
         String exp = m_expEdit.getText();
         s.setExpression(exp);
-        s.setExpressionVersion(Expression.VERSION_2X);
         boolean isTestCompilation = m_compileOnCloseChecker.isSelected();
         s.setTestCompilationOnDialogClose(isTestCompilation);
         if (isTestCompilation && m_currentSpec != null) {

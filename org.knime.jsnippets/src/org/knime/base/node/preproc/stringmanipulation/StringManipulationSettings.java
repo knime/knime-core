@@ -83,16 +83,8 @@ import org.osgi.framework.Bundle;
  * @author Heiko Hofer
  */
 public class StringManipulationSettings {
-
-
     /** NodeSettings key for the expression. */
     private static final String CFG_EXPRESSION = "expression";
-
-    /** NodeSettings key for the expression. */
-    private static final String CFG_HEADER = "header";
-
-    /** NodeSettings key for the expression. */
-    private static final String CFG_EXPRESSION_VERSION = "expression_version";
 
     /** NodeSettings key which column is to be replaced or appended. */
     private static final String CFG_COLUMN_NAME = "replaced_column";
@@ -102,12 +94,6 @@ public class StringManipulationSettings {
 
     /** NodeSettings key for the return type of the expression. */
     private static final String CFG_RETURN_TYPE = "return_type";
-
-    /** NodeSettings key for whether the return type is an array (collection).*/
-    private static final String CFG_IS_ARRAY_RETURN = "is_array_return";
-
-    /** NodeSettings key for additional jar/zip files. */
-    private static final String CFG_JAR_FILES = "java_libraries";
 
     /** NodeSettings key whether to check for compilation problems when
      * dialog closes (not used in the nodemodel, though). */
@@ -119,16 +105,13 @@ public class StringManipulationSettings {
         "insert_missing_as_null";
 
     private String m_expression;
-    private String m_header; // added in 2.1
     private Class<?> m_returnType;
-    private boolean m_isArrayReturn; // added in 2.1
+
     private String m_colName;
     private boolean m_isReplace;
     /** Only important for dialog: Test the syntax of the snippet code
      * when the dialog closes, bug fix #1229. */
     private boolean m_isTestCompilationOnDialogClose = true;
-    private String[] m_jarFiles;
-    private int m_expressionVersion = Expression.VERSION_2X;
 
     /** if true any missing value in the (relevant) input will result
      * in a "missing" result. */
@@ -141,7 +124,6 @@ public class StringManipulationSettings {
      */
     public void saveSettingsTo(final NodeSettingsWO settings) {
         settings.addString(CFG_EXPRESSION, m_expression);
-        settings.addString(CFG_HEADER, m_header);
         settings.addString(CFG_COLUMN_NAME, m_colName);
         settings.addBoolean(CFG_IS_REPLACE, m_isReplace);
         String rType = m_returnType != null ? m_returnType.getName() : null;
@@ -149,10 +131,6 @@ public class StringManipulationSettings {
                 CFG_TEST_COMPILATION, m_isTestCompilationOnDialogClose);
         settings.addBoolean(CFG_INSERT_MISSING_AS_NULL, m_insertMissingAsNull);
         settings.addString(CFG_RETURN_TYPE, rType);
-        settings.addBoolean(CFG_IS_ARRAY_RETURN, m_isArrayReturn);
-        settings.addStringArray(CFG_JAR_FILES, m_jarFiles);
-        settings.addInt(CFG_EXPRESSION_VERSION, m_expressionVersion);
-
     }
 
     /** Loads parameters in NodeModel.
@@ -162,7 +140,6 @@ public class StringManipulationSettings {
     public void loadSettingsInModel(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_expression = settings.getString(CFG_EXPRESSION);
-        m_header = settings.getString(CFG_HEADER, "");
         m_colName = settings.getString(CFG_COLUMN_NAME);
         m_isReplace = settings.getBoolean(CFG_IS_REPLACE);
         if (!m_isReplace && (m_colName == null || m_colName.length() == 0)) {
@@ -176,10 +153,6 @@ public class StringManipulationSettings {
         // added in v2.3
         m_insertMissingAsNull  =
             settings.getBoolean(CFG_INSERT_MISSING_AS_NULL, false);
-        m_isArrayReturn = settings.getBoolean(CFG_IS_ARRAY_RETURN, false);
-        m_jarFiles = settings.getStringArray(CFG_JAR_FILES, (String[])null);
-        m_expressionVersion = settings.getInt(
-                CFG_EXPRESSION_VERSION, Expression.VERSION_1X);
     }
 
     /** Loads parameters in Dialog.
@@ -189,7 +162,6 @@ public class StringManipulationSettings {
     public void loadSettingsInDialog(final NodeSettingsRO settings,
             final DataTableSpec spec) {
         m_expression = settings.getString(CFG_EXPRESSION, "");
-        m_header = settings.getString(CFG_HEADER, "");
         String r = settings.getString(CFG_RETURN_TYPE, Double.class.getName());
         try {
             m_returnType = getClassForReturnType(r);
@@ -204,9 +176,6 @@ public class StringManipulationSettings {
         // added in v2.3
         m_insertMissingAsNull  =
             settings.getBoolean(CFG_INSERT_MISSING_AS_NULL, false);
-        m_jarFiles = settings.getStringArray(CFG_JAR_FILES, (String[])null);
-        m_isArrayReturn = settings.getBoolean(CFG_IS_ARRAY_RETURN, false);
-        m_expressionVersion = settings.getInt(CFG_EXPRESSION_VERSION, 1);
     }
 
     /**
@@ -224,47 +193,10 @@ public class StringManipulationSettings {
     }
 
     /**
-     * @return the header
-     */
-    public String getHeader() {
-        return m_header;
-    }
-
-    /**
-     * @param header the header to set
-     */
-    public void setHeader(final String header) {
-        m_header = header;
-    }
-
-    /**
      * @return the returnType
      */
     public Class<?> getReturnType() {
         return m_returnType;
-    }
-
-    /**
-     * @param className Name of the return class, for instance java.lang.String
-     * @throws InvalidSettingsException if invalid class name.
-     */
-    public void setReturnType(final String className)
-        throws InvalidSettingsException {
-        m_returnType = getClassForReturnType(className);
-    }
-
-    /**
-     * @return the isArrayReturn
-     */
-    public boolean isArrayReturn() {
-        return m_isArrayReturn;
-    }
-
-    /**
-     * @param isArrayReturn the isArrayReturn to set
-     */
-    public void setArrayReturn(final boolean isArrayReturn) {
-        m_isArrayReturn = isArrayReturn;
     }
 
     /**
@@ -320,41 +252,6 @@ public class StringManipulationSettings {
         m_insertMissingAsNull = insertMissingAsNull;
     }
 
-    /**
-     * @return the expressionVersion
-     */
-    public int getExpressionVersion() {
-        return m_expressionVersion;
-    }
-
-    /**
-     * @param expressionVersion the expressionVersion to set
-     */
-    public void setExpressionVersion(final int expressionVersion) {
-        m_expressionVersion = expressionVersion;
-    }
-
-    /**
-     * @return the jarFiles, never null
-     */
-    public String[] getJarFiles() {
-        return m_jarFiles == null ? new String[0] : m_jarFiles;
-    }
-
-    /** Get jar files as file objects. Will also handle the case where the
-     * file is specified via URL (file:/...)
-     * @return The registered jar files in a File[]
-     * @throws InvalidSettingsException If any file is not present.
-     */
-    public File[] getJarFilesAsFiles() throws InvalidSettingsException {
-        String[] jarLocations = getJarFiles();
-        File[] resultFiles = new File[jarLocations.length];
-        for (int i = 0; i < jarLocations.length; i++) {
-            resultFiles[i] = toFile(jarLocations[i]);
-        }
-        return resultFiles;
-    }
-
     /** Convert jar file location to File. Also accepts file in URL format
      * (e.g. local drop files as URL).
      * @param location The location string.
@@ -387,13 +284,6 @@ public class StringManipulationSettings {
         return result;
     }
 
-    /**
-     * @param jarFiles the jarFiles to set
-     */
-    public void setJarFiles(final String[] jarFiles) {
-        m_jarFiles = jarFiles;
-    }
-
     /** The column spec of the generated column.
      * @return The col spec.
      * @throws InvalidSettingsException If settings are inconsistent.
@@ -401,7 +291,7 @@ public class StringManipulationSettings {
     public DataColumnSpec getNewColSpec() throws InvalidSettingsException {
         Class<?> returnType = getReturnType();
         String colName = getColName();
-        boolean isArrayReturn = isArrayReturn();
+        boolean isArrayReturn = false;
         DataType type = null;
         for (JavaSnippetType<?, ?, ?> t : JavaSnippetType.TYPES) {
             if (t.getJavaClass(false).equals(returnType)) {
