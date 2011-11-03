@@ -58,7 +58,7 @@ import org.junit.Test;
  *
  * @author Heiko Hofer
  */
-public class ToStringManipulatorTest {
+public class StringManipulatorTest {
 
     /**
      * Test method for
@@ -77,7 +77,7 @@ public class ToStringManipulatorTest {
         Assert.assertEquals(null,
                 StringManipulator.string((Double)null));
         Assert.assertEquals(null,
-                StringManipulator.string((Long)null));
+                StringManipulator.string((Long)null));              
         Assert.assertEquals("100",
                 StringManipulator.string(100));
         Assert.assertEquals("100",
