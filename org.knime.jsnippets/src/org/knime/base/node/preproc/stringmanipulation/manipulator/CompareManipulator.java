@@ -52,7 +52,6 @@ package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
 import java.text.Collator;
 import java.text.RuleBasedCollator;
-import java.util.Locale;
 
 
 
@@ -74,7 +73,7 @@ public class CompareManipulator implements Manipulator {
         String s1 = null != str1 ? str1 : "";
         String s2 = null != str2 ? str2 : "";
 
-        Collator collator = RuleBasedCollator.getInstance(Locale.ENGLISH);
+        Collator collator = RuleBasedCollator.getInstance();
         return collator.compare(s1, s2);
     }
 

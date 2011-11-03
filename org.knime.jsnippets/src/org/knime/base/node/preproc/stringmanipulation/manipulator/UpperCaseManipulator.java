@@ -50,8 +50,6 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import java.util.Locale;
-
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -68,7 +66,7 @@ public class UpperCaseManipulator implements Manipulator {
      * @return the converted string
      */
     public static String upperCase(final String str) {
-        return StringUtils.upperCase(str, Locale.ENGLISH);
+        return StringUtils.upperCase(str);
     }
 
     /**

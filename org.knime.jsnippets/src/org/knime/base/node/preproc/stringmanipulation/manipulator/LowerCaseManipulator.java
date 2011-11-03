@@ -50,8 +50,6 @@
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import java.util.Locale;
-
 import org.apache.commons.lang3.StringUtils;
 
 /**
@@ -68,7 +66,7 @@ public class LowerCaseManipulator implements Manipulator {
      * @return the converted string
      */
     public static String lowerCase(final String str) {
-        return StringUtils.lowerCase(str, Locale.ENGLISH);
+        return StringUtils.lowerCase(str);
     }
 
     /**
