@@ -50,7 +50,6 @@ package org.knime.base.node.preproc.matcher;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.collection.CollectionCellFactory;
-import org.knime.core.data.collection.SetCell;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -185,54 +184,68 @@ public class SubsetMatcher implements Comparable<SubsetMatcher> {
      * @param idx the index to process
      * @param matchingSets all matching item sets
      * @param items all processed items
+     * @param mismatches the {@link MismatchCounter}
      */
     public void match(final DataCell[] transactionItems, final int idx,
-            final Collection<SetCell> matchingSets,
-            final Collection<DataCell> items) {
+            final Collection<SetMissmatches> matchingSets,
+            final Collection<DataCell> items,
+            final MismatchCounter mismatches) {
         //use this method to ensure that the children are sorted
         final List<SubsetMatcher> sortedChildren = getSortedChildren();
         final int itemSize = transactionItems.length;
-        if (idx >= itemSize) {
+        int itemIdx = idx;
+        if (itemIdx < itemSize && matches(transactionItems[itemIdx])) {
+            //the item matches this matcher process with the next item
+            itemIdx++;
+        } else if (!mismatches.mismatch()) {
+            //this item does not match and we do not have any mismatches left
             return;
         }
-        int itemIdx = idx;
-        final DataCell item = transactionItems[itemIdx++];
-        if (matches(item)) {
-          //add this item to the items list first
-            items.add(m_item);
-            if (isEnd()) {
-                //this is an end item create an item set with all
-                //previous items an this item
-                matchingSets.add(CollectionCellFactory.createSetCell(items));
-            }
-            //try to match the sorted transaction items and the sorted children
-            //until all items or all matchers are processed
-            int matcherStartIdx = 0;
-            while (itemIdx < itemSize
-                    && matcherStartIdx < sortedChildren.size()) {
-                final DataCell subItem = transactionItems[itemIdx];
-                //try to match the current item with all remaining
-                //child matchers
-                for (int i = matcherStartIdx; i < sortedChildren.size(); i++) {
-                    final SubsetMatcher matcher = sortedChildren.get(i);
-                    final int result = matcher.compare(subItem);
-                    if (result > 0) {
-                        //the smallest matcher is bigger then this item
-                        //exit the loop and continue with the next bigger item
-                        break;
-                    } else if (result == 0) {
-                        matcher.match(transactionItems, itemIdx, matchingSets,
-                                new LinkedList<DataCell>(items));
-                    }
-                    //this matcher has matched this time
-                    //                  or
-                    //the subItem is bigger than the matcher thus all subsequent
-                    //items will be bigger as well
-                    //-> start the next time with the next child matcher
-                    matcherStartIdx++;
+        //add this item to the items list first
+        items.add(m_item);
+        if (isEnd()) {
+            //this is an end item create an item set with all
+            //previous items an this item
+            matchingSets.add(new SetMissmatches(
+                    CollectionCellFactory.createSetCell(items),
+                    mismatches.getMismatches()));
+        }
+        //try to match the sorted transaction items and the sorted children
+        //until all items or all matchers are processed
+        int matcherStartIdx = 0;
+        while (itemIdx < itemSize
+                && matcherStartIdx < sortedChildren.size()) {
+            final DataCell subItem = transactionItems[itemIdx];
+            //try to match the current item with all remaining
+            //child matchers
+            for (int i = matcherStartIdx; i < sortedChildren.size(); i++) {
+                final SubsetMatcher matcher = sortedChildren.get(i);
+                final int result = matcher.compare(subItem);
+                if (result > 0) {
+                    //the smallest matcher is bigger then this item
+                    //exit the loop and continue with the next bigger item
+                    break;
                 }
-                //go to the next index
-                itemIdx++;
+                //the item either matches or is bigger than the matcher
+                //if it is bigger the matcher increases the mismatch and
+                //processes the next item
+                matcher.match(transactionItems, itemIdx, matchingSets,
+                        new LinkedList<DataCell>(items), mismatches.copy());
+                matcherStartIdx++;
+            }
+            //go to the next index
+            itemIdx++;
+        }
+        if (itemIdx >= itemSize && mismatches.mismatchesLeft()
+                && matcherStartIdx < sortedChildren.size()) {
+            //no items left in the item set to match but we have still
+            //some mismatches left that we have to use on the remaining
+            //children matchers
+            for (int i = matcherStartIdx; i < sortedChildren.size(); i++) {
+                final SubsetMatcher matcher = sortedChildren.get(i);
+                matcher.match(transactionItems, itemIdx, matchingSets,
+                        new LinkedList<DataCell>(items), mismatches.copy());
+                matcherStartIdx++;
             }
         }
     }
@@ -275,10 +288,7 @@ public class SubsetMatcher implements Comparable<SubsetMatcher> {
      * children
      */
     public int getItemSetCount() {
-        int itemSetCount = 0;
-        if (isEnd()) {
-            itemSetCount++;
-        }
+        int itemSetCount = isEnd() ? 1 : 0;
         for (final SubsetMatcher child : m_children) {
             itemSetCount += child.getItemSetCount();
         }

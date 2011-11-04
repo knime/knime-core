@@ -48,43 +48,41 @@
 
 package org.knime.base.node.preproc.matcher;
 
-import org.knime.core.data.DataValue;
-import org.knime.core.data.collection.CollectionDataValue;
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.data.collection.SetCell;
 
 
 /**
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class SubsetMatcherNodeDialog extends DefaultNodeSettingsPane {
+public class SetMissmatches {
 
+    private final SetCell m_set;
+    private final int m_mismatchCounter;
 
-    /**Constructor for class JIMNodeDialog.
+    /**Constructor for class SetMissmatches.
+     * @param set the set that matches
+     * @param mismatchCounter number of mismatches
      *
      */
-    @SuppressWarnings("unchecked")
-    public SubsetMatcherNodeDialog() {
-        createNewGroup(" Subset options ");
-        addDialogComponent(new DialogComponentColumnNameSelection(
-                SubsetMatcherNodeModel.createSubsetColNameModel(),
-                "Subset column:", 0, CollectionDataValue.class));
-        createNewGroup(" Set options ");
-        addDialogComponent(new DialogComponentColumnNameSelection(
-                SubsetMatcherNodeModel.createSetIDColNameModel(),
-                "ID column:", 1, DataValue.class));
-        addDialogComponent(new DialogComponentColumnNameSelection(
-                SubsetMatcherNodeModel.createSetColNameModel(),
-                "Collection column:", 1, CollectionDataValue.class));
-        addDialogComponent(new DialogComponentBoolean(
-                SubsetMatcherNodeModel.createAppendSetListColModel(),
-                "Append column with matching sets"));
-        addDialogComponent(new DialogComponentNumber(
-                SubsetMatcherNodeModel.createMaxMismatchesModel(),
-                "Maximum mismatches: ", Integer.valueOf(1)));
+    public SetMissmatches(final SetCell set, final int mismatchCounter) {
+        m_set = set;
+        m_mismatchCounter = mismatchCounter;
     }
 
+
+    /**
+     * @return the mismatch counter
+     */
+    public int getMismatchCounter() {
+        return m_mismatchCounter;
+    }
+
+
+    /**
+     * @return the matching set
+     */
+    public SetCell getSet() {
+        return m_set;
+    }
 }

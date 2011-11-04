@@ -48,43 +48,83 @@
 
 package org.knime.base.node.preproc.matcher;
 
-import org.knime.core.data.DataValue;
-import org.knime.core.data.collection.CollectionDataValue;
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
-
 
 /**
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class SubsetMatcherNodeDialog extends DefaultNodeSettingsPane {
+public class MismatchCounter {
+
+    private final int m_maxMismatches;
+
+    private int m_mismatches = 0;
 
 
-    /**Constructor for class JIMNodeDialog.
-     *
+    /**Constructor for class MismatchCounter.
+     * @param maxMismatches maximum number of allowed mismatches
      */
-    @SuppressWarnings("unchecked")
-    public SubsetMatcherNodeDialog() {
-        createNewGroup(" Subset options ");
-        addDialogComponent(new DialogComponentColumnNameSelection(
-                SubsetMatcherNodeModel.createSubsetColNameModel(),
-                "Subset column:", 0, CollectionDataValue.class));
-        createNewGroup(" Set options ");
-        addDialogComponent(new DialogComponentColumnNameSelection(
-                SubsetMatcherNodeModel.createSetIDColNameModel(),
-                "ID column:", 1, DataValue.class));
-        addDialogComponent(new DialogComponentColumnNameSelection(
-                SubsetMatcherNodeModel.createSetColNameModel(),
-                "Collection column:", 1, CollectionDataValue.class));
-        addDialogComponent(new DialogComponentBoolean(
-                SubsetMatcherNodeModel.createAppendSetListColModel(),
-                "Append column with matching sets"));
-        addDialogComponent(new DialogComponentNumber(
-                SubsetMatcherNodeModel.createMaxMismatchesModel(),
-                "Maximum mismatches: ", Integer.valueOf(1)));
+    public MismatchCounter(final int maxMismatches) {
+        if (maxMismatches < 0) {
+            throw new IllegalArgumentException(
+                    "Max missmatches should be positive: " + maxMismatches);
+        }
+        m_maxMismatches = maxMismatches;
     }
 
+    /**Constructor for class MismatchCounter.
+     * @param maxMismatches the maximum number of mismatches
+     * @param mismatches the current mismatches
+     */
+    MismatchCounter(final int maxMismatches, final int mismatches) {
+        m_maxMismatches = maxMismatches;
+        m_mismatches = mismatches;
+    }
+
+    /**
+     * Increments the mismatch counter.
+     * @return <code>true</code> if the the number of mismatches is below
+     * or equal the maximum allowed number of mismatches
+     */
+    public boolean mismatch() {
+        m_mismatches++;
+        return mismatchesLeft();
+    }
+
+    /**
+     * @return the maxMismatches
+     */
+    public int getMaxMismatches() {
+        return m_maxMismatches;
+    }
+
+    /**
+     * @return the mismatches
+     */
+    public int getMismatches() {
+        return m_mismatches;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return "(" + m_mismatches + "/" + m_maxMismatches + ")";
+    }
+
+    /**
+     * @return <code>true</code> if some mismatches are left otherwise
+     * <code>false</code>
+     */
+    public boolean mismatchesLeft() {
+        return m_mismatches <= m_maxMismatches;
+    }
+
+    /**
+     * @return a copy of this {@link MismatchCounter} object with all of it
+     * current variable values
+     */
+    public MismatchCounter copy() {
+        return new MismatchCounter(m_maxMismatches, m_mismatches);
+    }
 }

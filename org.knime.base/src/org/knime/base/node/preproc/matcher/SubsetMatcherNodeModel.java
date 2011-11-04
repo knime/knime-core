@@ -58,6 +58,7 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.collection.SetCell;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -72,6 +73,8 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnName;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.util.ThreadPool;
 
@@ -96,7 +99,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class SubsetMatcherNodeModel extends NodeModel {
 
     private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(SubsetMatcherNodeModel.class);
+        NodeLogger.getLogger(SubsetMatcherNodeModel.class);
 
     /**Processing the subset matching take {@value} times longer than the
      * subset matcher creation.**/
@@ -113,6 +116,9 @@ public class SubsetMatcherNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_appendSetListCol =
         createAppendSetListColModel();
+
+    private final SettingsModelInteger m_maxMismatches =
+        createMaxMismatchesModel();
 
     /**The internal used data container that is used in the analysis threads.*/
     private BufferedDataContainer m_dc;
@@ -160,11 +166,19 @@ public class SubsetMatcherNodeModel extends NodeModel {
     }
 
     /**
+     * @return the maximum mismatches model
+     */
+    static SettingsModelInteger createMaxMismatchesModel() {
+        return new SettingsModelIntegerBounded("maxMismatches", 0,
+                0, Integer.MAX_VALUE);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
+    throws InvalidSettingsException {
         final DataTableSpec subsetTableSpec = inSpecs[0];
         checkPresetColumn(subsetTableSpec, m_subsetCol, "Subset");
         final DataTableSpec setTableSpec = inSpecs[1];
@@ -178,8 +192,8 @@ public class SubsetMatcherNodeModel extends NodeModel {
             } else {
                 if (!setTableSpec.containsName(colName)) {
                     throw new InvalidSettingsException(
-                        "Set id column '" + colName
-                        + "' does not exist");
+                            "Set id column '" + colName
+                            + "' does not exist");
                 }
             }
             setIDSpec =
@@ -198,7 +212,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
             subsetTableSpec.getColumnSpec(m_subsetCol.getStringValue());
         if (setListSpec == null || subsetSpec == null) {
             throw new InvalidSettingsException("No set and/or"
-                + " subset column are selected.");
+                    + " subset column are selected.");
         }
         final DataType setType =
             setListSpec.getType().getCollectionElementType();
@@ -206,7 +220,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
             subsetSpec.getType().getCollectionElementType();
         if (setType == null || subsetType == null) {
             throw new InvalidSettingsException("Set and/or"
-                + " subset column are not a collection.");
+                    + " subset column are not a collection.");
         }
         if (!setType.equals(subsetType)) {
             throw new InvalidSettingsException("Set and "
@@ -226,7 +240,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
         final BufferedDataTable subsetTable = inData[0];
         final DataTableSpec subsetTableSpec = subsetTable.getSpec();
         final int subsetColIdx =
-                subsetTableSpec.findColumnIndex(m_subsetCol.getStringValue());
+            subsetTableSpec.findColumnIndex(m_subsetCol.getStringValue());
         //the comparator that should be used to sort the subset AND the
         //set list
         final Comparator<DataCell> comparator = subsetTableSpec.getColumnSpec(
@@ -268,7 +282,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
             return new BufferedDataTable[] {m_dc.getTable()};
         }
         final double totalRowCount = subsetRowCount
-                                        + setRowCount * SET_PROCESSING_FACTOR;
+        + setRowCount * SET_PROCESSING_FACTOR;
         final ExecutionMonitor subsetExec =
             exec.createSubProgress(subsetRowCount / totalRowCount);
 
@@ -290,7 +304,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
         // initialize the thread pool for parallelization of the set
         // analysis
         final ThreadPool pool =
-                KNIMEConstants.GLOBAL_THREAD_POOL.createSubPool();
+            KNIMEConstants.GLOBAL_THREAD_POOL.createSubPool(1);
         for (final DataRow row : setTable) {
             exec.checkCanceled();
             DataCell setIDCell;
@@ -319,7 +333,8 @@ public class SubsetMatcherNodeModel extends NodeModel {
             }
             // submit for each set a job in the thread pool
             pool.enqueue(createRunnable(setExec, setRowCount, setIDCell,
-                    setList, appendSetCol, comparator, sortedMatcher));
+                    setList, appendSetCol, comparator, sortedMatcher,
+                    m_maxMismatches.getIntValue()));
         }
         // wait until all jobs are finished before closing the container
         // and returning the method
@@ -339,7 +354,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
             final int noOfSets, final DataCell setIDCell,
             final CollectionDataValue setCell, final boolean appendSetCol,
             final Comparator<DataCell> comparator,
-            final SubsetMatcher[] sortedMatcher) {
+            final SubsetMatcher[] sortedMatcher, final int maxMismatches) {
         return new Runnable() {
             @Override
             public void run() {
@@ -351,7 +366,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
                     exec.setMessage(setIDCell.toString() + " ("
                             + transCounter + " of "
                             + noOfSets + ")");
-                    if (setCell.size() <= 0) {
+                    if (setCell.size() < 1) {
                         //skip empty collections
                         exec.setProgress(
                                 transCounter / (double)noOfSets);
@@ -360,39 +375,35 @@ public class SubsetMatcherNodeModel extends NodeModel {
                     }
                     final DataCell[] sortedItems = collectionCell2SortedArray(
                             setCell, comparator);
-                    if (sortedItems.length < 1) {
-                        exec.setProgress(
-                                transCounter / (double)noOfSets);
-                        m_skipCounter.incrementAndGet();
-                        return;
-                    }
                     //try to match the sorted transaction items and the sorted
                     //matcher until all items or all matchers are processed
                     int matcherStartIdx = 0;
                     int itemIdx = 0;
-                    final Collection<SetCell> matchingSets =
-                        new LinkedList<SetCell>();
+                    final Collection<SetMissmatches> matchingSets =
+                        new LinkedList<SetMissmatches>();
                     while (itemIdx < sortedItems.length
                             && matcherStartIdx < sortedMatcher.length) {
                         final DataCell subItem = sortedItems[itemIdx];
                         //match the current item with all remaining matchers
                         for (int i = matcherStartIdx;
-                                i < sortedMatcher.length; i++) {
+                        i < sortedMatcher.length; i++) {
                             final SubsetMatcher matcher = sortedMatcher[i];
                             final int result = matcher.compare(subItem);
                             if (result > 0) {
                                 //the smallest matcher is bigger then this item
-                                //exit the loop and continue with the next item
+                                //exit the matcher loop and continue with
+                                //the next item even if mismatches are allowed
                                 break;
-                            } else if (result == 0) {
-                                matcher.match(sortedItems, itemIdx,
-                                    matchingSets, new LinkedList<DataCell>());
                             }
-                            //this matcher has matched this time
+                            //this matcher matches the item (result == 0)
                             //                  or
-                            //the subItem is bigger than the matcher thus all
-                            //subsequent items will be bigger as well
-                            //-> start the next time with the next child matcher
+                            //the item is bigger than the matcher
+                            //since we may allow for mismatches we have to
+                            //check if subsequent matchers of the matcher
+                            //match the current item
+                            matcher.match(sortedItems, itemIdx,
+                                    matchingSets, new LinkedList<DataCell>(),
+                                    new MismatchCounter(maxMismatches));
                             matcherStartIdx++;
                         }
                         //go to the next index
@@ -404,7 +415,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
                         m_skipCounter.incrementAndGet();
                         return;
                     }
-                    for (final SetCell matchingSet : matchingSets) {
+                    for (final SetMissmatches matchingSet : matchingSets) {
                         exec.checkCanceled();
                         //create for each matching subset a result row
                         final List<DataCell> cells = new LinkedList<DataCell>();
@@ -413,7 +424,12 @@ public class SubsetMatcherNodeModel extends NodeModel {
                             cells.add((DataCell)setCell);
                         }
                         //the subset column
-                        cells.add(matchingSet);
+                        cells.add(matchingSet.getSet());
+                        if (maxMismatches > 0) {
+                            //append the mismatch counter if mismatches allowed
+                            cells.add(new IntCell(
+                                    matchingSet.getMismatchCounter()));
+                        }
                         final RowKey rowKey =
                             RowKey.createRowKey(m_rowId.getAndIncrement());
                         final DefaultRow row = new DefaultRow(rowKey, cells);
@@ -436,7 +452,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
     private SubsetMatcher[] createSortedMatcher(
             final ExecutionMonitor exec, final BufferedDataTable table,
             final int colIdx, final Comparator<DataCell> comparator)
-            throws CanceledExecutionException {
+    throws CanceledExecutionException {
         final Map<DataCell, SubsetMatcher> map =
             new HashMap<DataCell, SubsetMatcher>();
         final int rowCount = table.getRowCount();
@@ -526,12 +542,18 @@ public class SubsetMatcherNodeModel extends NodeModel {
         creator.setType(SetCell.getCollectionType(
                 subsetCol.getType().getCollectionElementType()));
         specs.add(creator.createSpec());
+        if (m_maxMismatches.getIntValue() > 0) {
+            //append a mismatch counter column
+            final DataColumnSpecCreator specCreator =
+                new DataColumnSpecCreator("Mismatches", IntCell.TYPE);
+            specs.add(specCreator.createSpec());
+        }
         return new DataTableSpec(specs.toArray(new DataColumnSpec[0]));
     }
 
     private void checkPresetColumn(final DataTableSpec spec,
             final SettingsModelString model, final String colType)
-            throws InvalidSettingsException {
+    throws InvalidSettingsException {
         final String colName = model.getStringValue();
         if (colName == null || colName.isEmpty()) {
             for (final DataColumnSpec colSpec : spec) {
@@ -580,7 +602,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    throws InvalidSettingsException {
         m_setCol.validateSettings(settings);
         m_subsetCol.validateSettings(settings);
         m_setIDCol.validateSettings(settings);
@@ -592,11 +614,17 @@ public class SubsetMatcherNodeModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    throws InvalidSettingsException {
         m_setCol.loadSettingsFrom(settings);
         m_subsetCol.loadSettingsFrom(settings);
         m_setIDCol.loadSettingsFrom(settings);
         m_appendSetListCol.loadSettingsFrom(settings);
+        try {
+            m_maxMismatches.loadSettingsFrom(settings);
+        } catch (final InvalidSettingsException e) {
+            //be compatible to versions prior 2.4
+            m_maxMismatches.setIntValue(0);
+        }
     }
 
     /**
@@ -608,6 +636,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
         m_subsetCol.saveSettingsTo(settings);
         m_setIDCol.saveSettingsTo(settings);
         m_appendSetListCol.saveSettingsTo(settings);
+        m_maxMismatches.saveSettingsTo(settings);
     }
 
     /**
@@ -628,7 +657,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
     @Override
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
+    throws IOException, CanceledExecutionException {
         //nothing to load
     }
 
@@ -638,7 +667,7 @@ public class SubsetMatcherNodeModel extends NodeModel {
     @Override
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
+    throws IOException, CanceledExecutionException {
         // nothing to do
     }
 }
