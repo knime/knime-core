@@ -58,11 +58,37 @@ import org.knime.core.data.DataValue;
 /**
  * Abstract class which has to be extended by all aggregation method operators
  * that can be registered using the AggregationOperator extension point.
+ * The extending classes have to provide an empty constructor that can
+ * call the {@link AggregationOperator#AggregationOperator(OperatorData)}
+ * constructor with the operator specific {@link OperatorData} implementation.
+ *
+ * The {@link OperatorData} class holds all operator specific information
+ * such as the name of the operator and if the operator supports missing values.
+ *
+ * The {@link GlobalSettings} class holds global informations such as the
+ * column delimiter to use or the maximum number of unique values per group.
+ * Implementations can use the {@link GlobalSettings#DEFAULT} object in the
+ * constructor which is a dummy object which gets replaced when the operator
+ * is created using the
+ * {@link #createInstance(GlobalSettings, OperatorColumnSettings)} method.
+ *
+ * The {@link OperatorColumnSettings} contain column specific information for
+ * the operator such as the {@link DataColumnSpec} of the column and if
+ * missing values should be considered when aggregating the column.
+ * The class also provides two default instances
+ * {@link OperatorColumnSettings#DEFAULT_INCL_MISSING} and
+ * {@link OperatorColumnSettings#DEFAULT_EXCL_MISSING} which can be used in
+ * the constructor. These get like the {@link GlobalSettings} replaced by the
+ * actual settings from the node dialog in the
+ * {@link #createInstance(GlobalSettings, OperatorColumnSettings)} method.
+ *
  * All registered classes can be used in the nodes that use the
- * aggregation operators such as the group by node.
+ * aggregation operators such as the group by or pivoting node.
  * AggregationMethods are sorted first by the supported data type and then
  * by the label.
- *
+ * @see OperatorData
+ * @see GlobalSettings
+ * @see OperatorColumnSettings
  * @author Tobias Koetter, University of Konstanz
  */
 public abstract class AggregationOperator implements AggregationMethod {
@@ -73,6 +99,19 @@ public abstract class AggregationOperator implements AggregationMethod {
     private final OperatorColumnSettings m_opColSettings;
     private final OperatorData m_operatorData;
 
+
+    /**Constructor for class AggregationOperator. Uses
+     * {@link GlobalSettings#DEFAULT} and
+     * {@link OperatorColumnSettings#DEFAULT_INCL_MISSING} and calls the
+     * {@link #AggregationOperator(OperatorData,
+     * GlobalSettings, OperatorColumnSettings)} constructor.
+     *
+     * @param operatorData the operator specific data
+     */
+    public AggregationOperator(final OperatorData operatorData) {
+        this(operatorData, GlobalSettings.DEFAULT,
+                OperatorColumnSettings.DEFAULT_INCL_MISSING);
+    }
 
     /**Constructor for class AggregationOperator.
      * @param operatorData the operator specific data

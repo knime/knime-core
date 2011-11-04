@@ -53,6 +53,10 @@ import org.knime.core.data.DataValue;
 
 
 /**
+ * This class holds all information of an <code>AggregationOperator</code>
+ * such as its name and the supported data types.
+ * These informations are used to register the operator and to provide
+ * information about the operator for the user.
  *
  * @author Tobias Koetter, University of Konstanz
  */

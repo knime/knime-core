@@ -52,11 +52,23 @@ import org.knime.core.data.DataColumnSpec;
 
 
 /**
- * Contains the operator specific settings for a specific column.
+ * Contains the operator specific settings for a specific column such as
+ * if missing values should be considered during aggregation.
+ * The informations might be provided by the user in the node dialog.
  *
  * @author Tobias Koetter, University of Konstanz
  */
 public class OperatorColumnSettings {
+
+    /**Default include missing values {@link OperatorColumnSettings} object
+     * used in operator templates.*/
+    public static final OperatorColumnSettings DEFAULT_INCL_MISSING =
+        new OperatorColumnSettings(true, null);
+
+    /**Default exclude missing values {@link OperatorColumnSettings} object
+     * used in operator templates.*/
+    public static final OperatorColumnSettings DEFAULT_EXCL_MISSING =
+        new OperatorColumnSettings(false, null);
 
     /**If missing values should be considered during calculation.*/
     private boolean m_inclMissingCells;

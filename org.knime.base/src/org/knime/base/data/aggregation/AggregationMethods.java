@@ -48,16 +48,11 @@
 
 package org.knime.base.data.aggregation;
 
-import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.collection.CollectionDataValue;
-import org.knime.core.data.collection.ListDataValue;
-import org.knime.core.data.collection.SetDataValue;
-import org.knime.core.data.date.DateAndTimeValue;
-import org.knime.core.data.vector.bitvector.BitVectorValue;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
@@ -101,6 +96,7 @@ import org.knime.base.data.aggregation.numerical.VarianceOperator;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -108,6 +104,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
 
 import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
@@ -126,6 +123,37 @@ import org.eclipse.core.runtime.Platform;
  * @author Tobias Koetter, University of Konstanz
  */
 public final class AggregationMethods {
+
+    private static final class DataValueClassComparator implements
+        Comparator<Class<? extends DataValue>> {
+
+        /**The only instance of this comparator.*/
+        static final AggregationMethods.DataValueClassComparator COMPARATOR =
+            new DataValueClassComparator();
+
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int compare(final Class<? extends DataValue> o1,
+                final Class<? extends DataValue> o2) {
+            if (o1 == null) {
+                if (o2 == null) {
+                    return 0;
+                }
+                return -1;
+            }
+            if (o2 == null) {
+                return 1;
+            }
+            final String name1 = getUserTypeLabel(o1);
+            final String name2 = getUserTypeLabel(o2);
+            return name1.compareTo(name2);
+        }
+
+    }
+
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(AggregationMethods.class);
 
@@ -135,16 +163,7 @@ public final class AggregationMethods {
 
     /**The attribute of the aggregation method extension point.*/
     public static final String EXT_POINT_ATTR_DF = "AggregationOperator";
-    /**Default global settings object used in operator templates.*/
-    private static final GlobalSettings GLOBAL_SETTINGS = new GlobalSettings();
-    /**Default include missing values {@link OperatorColumnSettings} object
-     * used in operator templates.*/
-    private static final OperatorColumnSettings INCL_MISSING =
-            new OperatorColumnSettings(true, null);
-    /**Default exclude missing values {@link OperatorColumnSettings} object
-     * used in operator templates.*/
-    private static final OperatorColumnSettings EXCL_MISSING =
-            new OperatorColumnSettings(false, null);
+
     /**Singleton instance.*/
     private static AggregationMethods instance = new AggregationMethods();
 
@@ -173,101 +192,135 @@ public final class AggregationMethods {
         try {
 //The collection methods
             /**And.*/
-            addOperator(new AndElementOperator(GLOBAL_SETTINGS, INCL_MISSING));
+            addOperator(new AndElementOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**And count.*/
             addOperator(
-                    new AndElementCountOperator(GLOBAL_SETTINGS, INCL_MISSING));
+                    new AndElementCountOperator(GlobalSettings.DEFAULT,
+                            OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Or.*/
-            addOperator(new OrElementOperator(GLOBAL_SETTINGS, INCL_MISSING));
+            addOperator(new OrElementOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Or count.*/
             addOperator(
-                    new OrElementCountOperator(GLOBAL_SETTINGS, INCL_MISSING));
+                    new OrElementCountOperator(GlobalSettings.DEFAULT,
+                            OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**XOR.*/
-            addOperator(new XORElementOperator(GLOBAL_SETTINGS, INCL_MISSING));
+            addOperator(new XORElementOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**XOR count.*/
             addOperator(
-                    new XORElementCountOperator(GLOBAL_SETTINGS, INCL_MISSING));
+                    new XORElementCountOperator(GlobalSettings.DEFAULT,
+                            OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Element counter.*/
             addOperator(
-                    new ElementCountOperator(GLOBAL_SETTINGS, INCL_MISSING));
+                    new ElementCountOperator(GlobalSettings.DEFAULT,
+                            OperatorColumnSettings.DEFAULT_INCL_MISSING));
 //The date methods
             /**Date mean operator.*/
-            addOperator(new DateMeanOperator(GLOBAL_SETTINGS, EXCL_MISSING));
+            addOperator(new DateMeanOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Median date operator.*/
-            addOperator(new MedianDateOperator(GLOBAL_SETTINGS, EXCL_MISSING));
+            addOperator(new MedianDateOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Day range operator.*/
-            addOperator(new DayRangeOperator(GLOBAL_SETTINGS, EXCL_MISSING));
+            addOperator(new DayRangeOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Milliseconds range operator.*/
-            addOperator(new MillisRangeOperator(GLOBAL_SETTINGS, EXCL_MISSING));
+            addOperator(new MillisRangeOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
 
 //The numerical methods
             /**Mean.*/
             final AggregationOperator meanOperator =
-                new MeanOperator(GLOBAL_SETTINGS, EXCL_MISSING);
+                new MeanOperator(GlobalSettings.DEFAULT,
+                        OperatorColumnSettings.DEFAULT_EXCL_MISSING);
             addOperator(meanOperator);
             m_defNumericalMeth = getOperator(meanOperator.getId());
             /**Geometric Mean.*/
-            addOperator(new GeometricMeanOperator(GLOBAL_SETTINGS,
-                    EXCL_MISSING));
+            addOperator(new GeometricMeanOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Median.*/
-            addOperator(new MedianOperator(GLOBAL_SETTINGS, EXCL_MISSING));
+            addOperator(new MedianOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Sum.*/
-            addOperator(new SumOperator(GLOBAL_SETTINGS, EXCL_MISSING));
+            addOperator(new SumOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Product.*/
-            addOperator(new ProductOperator(GLOBAL_SETTINGS, EXCL_MISSING));
+            addOperator(new ProductOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Range.*/
-            addOperator(new RangeOperator(GLOBAL_SETTINGS, EXCL_MISSING));
+            addOperator(new RangeOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Variance.*/
-            addOperator(new VarianceOperator(GLOBAL_SETTINGS, EXCL_MISSING));
+            addOperator(new VarianceOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Standard deviation.*/
             addOperator(
-                    new StdDeviationOperator(GLOBAL_SETTINGS, EXCL_MISSING));
+                    new StdDeviationOperator(GlobalSettings.DEFAULT,
+                            OperatorColumnSettings.DEFAULT_EXCL_MISSING));
 
 //The boolean methods
             /**True count operator.*/
-            addOperator(new TrueCountOperator(GLOBAL_SETTINGS, EXCL_MISSING));
+            addOperator(new TrueCountOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**False count operator.*/
-            addOperator(new FalseCountOperator(GLOBAL_SETTINGS, EXCL_MISSING));
+            addOperator(new FalseCountOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
 
 //The general methods that work with all DataCells
             /**Takes the first cell per group.*/
             final AggregationOperator firstOperator =
-                new FirstOperator(GLOBAL_SETTINGS, INCL_MISSING);
+                new FirstOperator(GlobalSettings.DEFAULT,
+                        OperatorColumnSettings.DEFAULT_INCL_MISSING);
             addOperator(firstOperator);
             m_defNotNumericalMeth = getOperator(firstOperator.getId());
-            m_rowOrderMethod = new FirstOperator(GLOBAL_SETTINGS, INCL_MISSING);
+            m_rowOrderMethod = new FirstOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_INCL_MISSING);
             /**Takes the last cell per group.*/
-            addOperator(new LastOperator(GLOBAL_SETTINGS, INCL_MISSING));
+            addOperator(new LastOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Minimum.*/
-            addOperator(new MinOperator(GLOBAL_SETTINGS, INCL_MISSING));
+            addOperator(new MinOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Maximum.*/
-            addOperator(new MaxOperator(GLOBAL_SETTINGS, INCL_MISSING));
+            addOperator(new MaxOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Takes the value which occurs most.*/
-            addOperator(new ModeOperator(GLOBAL_SETTINGS, INCL_MISSING));
+            addOperator(new ModeOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Concatenates all cell values.*/
-            addOperator(new ConcatenateOperator(GLOBAL_SETTINGS, INCL_MISSING));
+            addOperator(new ConcatenateOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Concatenates all distinct cell values.*/
-            addOperator(new UniqueConcatenateOperator(GLOBAL_SETTINGS,
-                    EXCL_MISSING));
+            addOperator(new UniqueConcatenateOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Concatenates all distinct cell values and counts the members.*/
             addOperator(new UniqueConcatenateWithCountOperator(
-                    GLOBAL_SETTINGS, EXCL_MISSING));
+                    GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Counts the number of unique group members.*/
-            addOperator(new UniqueCountOperator(GLOBAL_SETTINGS, INCL_MISSING));
+            addOperator(new UniqueCountOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Counts the number of group members.*/
-            addOperator(new CountOperator(GLOBAL_SETTINGS, INCL_MISSING));
+            addOperator(new CountOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Returns the percentage of the group.*/
-            addOperator(new PercentOperator(GLOBAL_SETTINGS, INCL_MISSING));
+            addOperator(new PercentOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /**Counts the number of missing values per group.*/
-            addOperator(new MissingValueCountOperator(GLOBAL_SETTINGS,
-                    INCL_MISSING));
+            addOperator(new MissingValueCountOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /** List collection.*/
-            addOperator(new ListCellOperator(GLOBAL_SETTINGS, INCL_MISSING));
+            addOperator(new ListCellOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /** Sorted list collection.*/
             addOperator(
-                    new SortedListCellOperator(GLOBAL_SETTINGS, INCL_MISSING));
+                    new SortedListCellOperator(GlobalSettings.DEFAULT,
+                            OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /** Set collection.*/
-            addOperator(new SetCellOperator(GLOBAL_SETTINGS, INCL_MISSING));
+            addOperator(new SetCellOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
 
             //add old and deprecated operators to be backward compatible
             registerDeprecatedOperators();
@@ -292,28 +345,34 @@ public final class AggregationMethods {
         throws DuplicateOperatorException {
         addDeprecatedOperator(new OrElementCountOperator(new OperatorData(
                 "Unique element count", true, false, CollectionDataValue.class,
-                false), GLOBAL_SETTINGS, INCL_MISSING));
+                false), GlobalSettings.DEFAULT,
+                OperatorColumnSettings.DEFAULT_INCL_MISSING));
         addDeprecatedOperator(new FirstOperator(new OperatorData("First value",
                     false, true, DataValue.class, false),
-                    GLOBAL_SETTINGS, EXCL_MISSING));
+                    GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
         addDeprecatedOperator(new LastOperator(new OperatorData("Last value",
                     false, true, DataValue.class, false),
-                    GLOBAL_SETTINGS, EXCL_MISSING));
+                    GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
         addDeprecatedOperator(new CountOperator(new OperatorData("Value count",
                     false, true, DataValue.class, false),
-                    GLOBAL_SETTINGS, EXCL_MISSING));
+                    GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_EXCL_MISSING));
 
         //methods changed in KNIME version 2.4
         /** Concatenates all cell values. */
         addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated
-                .ConcatenateOperator(GLOBAL_SETTINGS, INCL_MISSING));
+                .ConcatenateOperator(GlobalSettings.DEFAULT,
+                        OperatorColumnSettings.DEFAULT_INCL_MISSING));
         /** Concatenates all distinct cell values. */
         addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated
-                .UniqueConcatenateOperator(GLOBAL_SETTINGS, EXCL_MISSING));
+                .UniqueConcatenateOperator(GlobalSettings.DEFAULT,
+                        OperatorColumnSettings.DEFAULT_EXCL_MISSING));
         /** Concatenates all distinct cell values and counts the members. */
         addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated
-                .UniqueConcatenateWithCountOperator(GLOBAL_SETTINGS,
-                        EXCL_MISSING));
+                .UniqueConcatenateWithCountOperator(GlobalSettings.DEFAULT,
+                        OperatorColumnSettings.DEFAULT_EXCL_MISSING));
     }
 
     /**
@@ -514,30 +573,25 @@ public final class AggregationMethods {
         if (type == DoubleValue.class) {
              return "Numerical";
         }
-        if (type == DateAndTimeValue.class) {
-            return "Date";
+        final String typeName = type.getName();
+        final int idx = typeName.lastIndexOf('.');
+        String valueName = typeName;
+        if (idx >= 0) {
+            //remove all package names
+            valueName = typeName.substring(idx + 1);
         }
-        if (type == CollectionDataValue.class) {
-            return "Collection";
+        //remove DataValue and Value from the name
+        valueName = valueName.replace("DataValue", "");
+        valueName = valueName.replace("Value", "");
+        //Split the name at capital letters
+        final StringBuilder buf = new StringBuilder();
+        for (int i = 0; i < valueName.length(); i++) {
+            if (i > 0 && Character.isUpperCase(valueName.charAt(i))) {
+                buf.append(" ");
+            }
+            buf.append(valueName.charAt(i));
         }
-        if (type == ListDataValue.class) {
-            return "List";
-        }
-        if (type == SetDataValue.class) {
-            return "Set";
-        }
-        if (type == BooleanValue.class) {
-            return "Boolean";
-        }
-        if (type == BitVectorValue.class) {
-            return "Bit vector";
-        }
-        final String name = type.getName();
-        final int i = name.lastIndexOf('.');
-        if (i >= 0) {
-            return name.substring(i + 1);
-        }
-        return name;
+        return buf.toString();
     }
 
     /**
@@ -547,9 +601,10 @@ public final class AggregationMethods {
      */
     public static Map<Class<? extends DataValue>, List<AggregationMethod>>
         groupMethodsByType(final List<AggregationMethod> methods) {
-        final Map<Class<? extends DataValue>, List<AggregationMethod>>
+        final TreeMap<Class<? extends DataValue>, List<AggregationMethod>>
             methodGroups =
-            new HashMap<Class<? extends DataValue>, List<AggregationMethod>>();
+            new TreeMap<Class<? extends DataValue>, List<AggregationMethod>>(
+                    DataValueClassComparator.COMPARATOR);
         for (final AggregationMethod method : methods) {
             final Class<? extends DataValue> type = method.getSupportedType();
             List<AggregationMethod> list = methodGroups.get(type);

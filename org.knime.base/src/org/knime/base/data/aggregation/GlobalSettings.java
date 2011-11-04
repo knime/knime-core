@@ -55,10 +55,14 @@ import org.knime.core.data.DataTableSpec;
 /**
  * Utility class that contains general information such as the
  * column delimiter and the total number of rows.
+ * The informations might be provided by the user in the node dialog.
  *
  * @author Tobias Koetter, University of Konstanz
  */
 public class GlobalSettings {
+
+    /**Default global settings object used in operator templates.*/
+    public static final GlobalSettings DEFAULT = new GlobalSettings();
 
     /**The standard delimiter used in concatenation operators.*/
     public static final String STANDARD_DELIMITER = ", ";
@@ -73,7 +77,6 @@ public class GlobalSettings {
     private final DataTableSpec m_spec;
 
     private final int m_noOfRows;
-
 
     /**Constructor for class GlobalSettings.
      * This constructor is used to create a dummy object that contains
