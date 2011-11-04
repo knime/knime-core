@@ -349,14 +349,6 @@ public class SetOperationTable {
         //reset the rowid to minus 1 to use the ++m_rowId
         m_rowId = -1;
         final BufferedDataContainer dc = exec.createDataContainer(resultSpec);
-        if ((SetOperation.OR.equals(op) && (iter1.getRowCount() < 1
-                && iter2.getRowCount() < 1))
-                || iter1.getRowCount() < 1
-                || iter2.getRowCount() < 1) {
-            dc.close();
-            return dc.getTable();
-        }
-
         final int rowCount =
             iter1.getRowCount() + iter2.getRowCount();
         int rowCounter = 0;
