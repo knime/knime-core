@@ -397,23 +397,28 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                 pe.getNodeProgress());
     }
 
+    private final AtomicBoolean m_messageUpdateInProgress = new AtomicBoolean();
+
     /** {@inheritDoc} */
     @Override
-    public void messageChanged(final NodeMessageEvent messageEvent) {
-        //
-        // As this code updates the UI it must be executed in the UI thread.
-        //
-        SyncExecQueueDispatcher.asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                NodeContainerFigure fig = (NodeContainerFigure)getFigure();
-                fig.setMessage(messageEvent.getMessage());
-                updateNodeMessage();
-                refreshBounds();
-                // always refresh visuals
-                refreshVisuals();
-            }
-        });
+    public void messageChanged(final NodeMessageEvent ignored) {
+        if (m_messageUpdateInProgress.compareAndSet(false, true)) {
+            SyncExecQueueDispatcher.asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    Display.getDefault().asyncExec(new Runnable() {
+                        @Override
+                        public void run() {
+                            m_messageUpdateInProgress.set(false);
+                            // must ignore event content - as this runnable
+                            // may be processing another (following) event
+                            updateNodeMessage();
+                            refreshVisuals();
+                        }
+                    });
+                }
+            });
+        }
     }
 
     /** {@inheritDoc} */
@@ -564,10 +569,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         NodeContainer nc = getNodeContainer();
         NodeContainerFigure containerFigure = (NodeContainerFigure)getFigure();
         NodeMessage nodeMessage = nc.getNodeMessage();
-        if (nodeMessage != null) {
-            containerFigure.setMessage(nodeMessage);
-            refreshBounds();
-        }
+        containerFigure.setMessage(nodeMessage);
+        refreshBounds();
     }
 
     /**
