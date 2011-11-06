@@ -134,4 +134,19 @@ public class CollapseMetaNodeCommand extends AbstractKNIMECommand {
         m_wrapper = null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void redo() {
+        if (m_annos.length >= 0) {
+            String error = "Redo of Collapse-Command not possible.";
+            LOGGER.error(error);
+            MessageDialog.openError(Display.getCurrent().getActiveShell(),
+                    "Redo failed", error);
+            return;
+        }
+        execute();
+    }
+
 }
