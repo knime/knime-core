@@ -66,15 +66,14 @@ public class RemoveCharsManipulator implements Manipulator {
      * @param chars the characters that will be removed
      * @return the processed string
      */
-    public static String removeChars(final String str, final int... chars) {
+    public static String removeChars(final String str, final String chars) {
         if (null == str) {
             return null;
         }
-        StringBuilder b = new StringBuilder();
-        for (int cc : chars) {
-            b.appendCodePoint(cc);
+        if (null == chars || chars.isEmpty()) {
+            return str;
         }
-        return str.replaceAll("[" + b.toString() + "]+", "");
+        return str.replaceAll("[" + chars.toString() + "]+", "");
     }
 
     /**
@@ -99,7 +98,7 @@ public class RemoveCharsManipulator implements Manipulator {
      */
     @Override
     public String getDisplayName() {
-        return getName() + "(str, char...)";
+        return getName() + "(str, chars)";
     }
 
 
@@ -121,12 +120,18 @@ public class RemoveCharsManipulator implements Manipulator {
             + "<strong>Examples:</strong>"
             + "<br/>"
             + "<table>"
-            + "<tr><td>removeChars(\"a,&nbsp;&nbsp;b&nbsp;,&nbsp;c\", ' ')</td>"
+            + "<tr><td>removeChars(\"a,&nbsp;&nbsp;b&nbsp;,&nbsp;c\", "
+            + "\"&nbsp;\")</td>"
             + "<td>=&nbsp;\"a,b,c\"</td></tr>"
 
             + "<tr><td>removeChars(\"a,&nbsp;&nbsp;b&nbsp;,&nbsp;c\", "
-            + "' ', ',')</td>"
-            + "<td>=&nbsp;\"abc\"</td></tr>"
+            + "\",\")</td>"
+            + "<td>=&nbsp;\"a&nbsp;&nbsp;b&nbsp;&nbsp;c\"</td></tr>"
+
+            + "<tr><td>removeChars(\"a,&nbsp;&nbsp;b&nbsp;,&nbsp;c\", "
+            + "\",&nbsp;\")</td>"
+            + "<td>=&nbsp;\"abc\" (remove space character and the "
+            + "comma character)</td></tr>"
 
             + "<tr><td>removeChars(\"\", *)</td>"
             + "<td>=&nbsp;\"\"</td></tr>"
@@ -134,7 +139,7 @@ public class RemoveCharsManipulator implements Manipulator {
             + "<tr><td>removeChars(null, *)</td>"
             + "<td>=&nbsp;null</td></tr>"
             + "</table>"
-            + "* can be any character.";
+            + "* can be any character sequence.";
     }
 
     /**

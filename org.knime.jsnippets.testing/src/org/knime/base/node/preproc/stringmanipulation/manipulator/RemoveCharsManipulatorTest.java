@@ -62,30 +62,30 @@ public class RemoveCharsManipulatorTest {
 
     /**
      * Test method for
-     * {@link RemoveCharsManipulator#removeChars(String, int...)}.
+     * {@link RemoveCharsManipulator#removeChars(String, String)}.
      */
     @Test
     public void testRemoveCharsExamples() {
         // Test the examples in the description of the removeChars function
         Assert.assertEquals("a,b,c",
         		RemoveCharsManipulator.removeChars(
-                		"a,  b , c", ' '));
+                		"a,  b , c", " "));
 
         Assert.assertEquals("abc",
         		RemoveCharsManipulator.removeChars(
-                		"a,  b , c", ' ', ','));
+                		"a,  b , c", " ,"));
 
         Assert.assertEquals("",
-        		RemoveCharsManipulator.removeChars("", ' ', ','));
+        		RemoveCharsManipulator.removeChars("", " ,"));
 
         Assert.assertEquals(null,
-        		RemoveCharsManipulator.removeChars(null, ' ', ','));
+        		RemoveCharsManipulator.removeChars(null, " ,"));
 
     }
 
     /**
      * Test method for
-     * {@link RemoveCharsManipulator#removeChars(String, int...)}.
+     * {@link RemoveCharsManipulator#removeChars(String, String)}.
      */
     @Test
     public void testUnicodeExamples() {
@@ -97,8 +97,13 @@ public class RemoveCharsManipulatorTest {
         b.appendCodePoint(0x2F9E9);
         b.append(" c");
 
+        StringBuilder b1 = new StringBuilder();
+        b1.append(" ");
+        b1.appendCodePoint(0x2F9E9);
+
         Assert.assertEquals("abc",
-        		RemoveCharsManipulator.removeChars(b.toString(), ' ', 0x2F9E9));
+        		RemoveCharsManipulator.removeChars(b.toString(),
+        				b1.toString()));
 
     }
 }

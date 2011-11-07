@@ -62,30 +62,30 @@ public class CapitalizeDelimManipulatorTest {
 
     /**
      * Test method for
-     * {@link CapitalizeDelimManipulator#capitalize(String, char...)}.
+     * {@link CapitalizeDelimManipulator#capitalize(String, String)}.
      */
     @Test
     public void testCapitalizeDelimExamples() {
         // Test the examples in the description of the capitalize function
         Assert.assertEquals("Processed By Knime",
         		CapitalizeDelimManipulator.capitalize(
-                		"processed by KNIME", ' '));
+                		"processed by KNIME", " "));
 
         Assert.assertEquals("ProceSseD by knime",
         		CapitalizeDelimManipulator.capitalize(
-                		"processed by KNIME", 'e'));
+                		"processed by KNIME", "e"));
 
         Assert.assertEquals("ProceSseD By Knime",
         		CapitalizeDelimManipulator.capitalize(
-                		"processed by KNIME", ' ', 'e'));
+                		"processed by KNIME", "e "));
 
         Assert.assertEquals("",
         		CapitalizeDelimManipulator.capitalize(
-                		"", ' ', 'e'));
+                		"", "e "));
 
         Assert.assertEquals(null,
         		CapitalizeDelimManipulator.capitalize(
-                		null, ' ', 'e'));
+                		null, "e "));
 
     }
 }

@@ -67,8 +67,8 @@ public class CapitalizeDelimManipulator implements Manipulator {
      * @param delim the delimiter
      * @return the capitalized string
      */
-    public static String capitalize(final String str, final char... delim) {
-        return WordUtils.capitalizeFully(str, delim);
+    public static String capitalize(final String str, final String delim) {
+        return WordUtils.capitalizeFully(str, delim.toCharArray());
     }
 
     /**
@@ -93,7 +93,7 @@ public class CapitalizeDelimManipulator implements Manipulator {
      */
     @Override
     public String getDisplayName() {
-        return getName() + "(str, char...)";
+        return getName() + "(str, chars)";
     }
 
 
@@ -117,13 +117,18 @@ public class CapitalizeDelimManipulator implements Manipulator {
                 + "<strong>Examples:</strong>"
                 + "<br/>"
                 + "<table>"
-                + "<tr><td>capitalize(\"processed by KNIME\", ' ')</td>"
+                + "<tr><td>capitalize(\"processed by KNIME\", "
+                + "\"&nbsp;\")</td>"
                 + "<td>=&nbsp;\"Processed By Knime\"</td></tr>"
-                + "<tr><td>capitalize(\"processed by KNIME\", 'e')</td>"
+
+                + "<tr><td>capitalize(\"processed by KNIME\", \"e\")</td>"
                 + "<td>=&nbsp;\"ProceSseD by knime\"</td></tr>"
-                + "<tr><td>capitalize(\"processed by KNIME\", 'e', ' ')</td>"
+
+                + "<tr><td>capitalize(\"processed by KNIME\", \"e&nbsp;\")</td>"
                 + "<td>=&nbsp;\"ProceSseD By Knime\"</td></tr>"
+
                 + "<tr><td>capitalize(\"\", *)</td><td>=&nbsp;\"\"</td></tr>"
+
                 + "<tr><td>capitalize(null, *)</td><td>=&nbsp;null</td></tr>"
                 + "</table>"
                 + "* can be any character.";
