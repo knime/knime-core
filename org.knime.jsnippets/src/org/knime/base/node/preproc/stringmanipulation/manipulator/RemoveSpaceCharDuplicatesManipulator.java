@@ -115,9 +115,9 @@ public class RemoveSpaceCharDuplicatesManipulator implements Manipulator {
                 + "<strong>Examples:</strong>"
                 + "<br/>"
                 + "<table>"
-                + "<tr><td>removeDuplicates(\"processed&nbsp;&nbsp;&nbsp;"
-                + "by&nbsp;&nbsp;KNIME\")</td>"
-                + "<td>=&nbsp;\"processed by KNIME\"</td></tr>"
+                + "<tr><td>removeDuplicates(\"a&nbsp;&nbsp;&nbsp;&nbsp; "
+                + "b&nbsp;&nbsp;c\")</td>"
+                + "<td>=&nbsp;\"a b c\"</td></tr>"
 
                 + "<tr><td>removeDuplicates(\"\")</td>"
                 + "<td>=&nbsp;\"\"</td></tr>"
