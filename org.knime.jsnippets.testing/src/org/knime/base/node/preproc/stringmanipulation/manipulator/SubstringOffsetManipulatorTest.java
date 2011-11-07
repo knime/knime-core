@@ -46,106 +46,44 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   05.10.2011 (hofer): created
+ *   20.10.2011 (hofer): created
  */
 package org.knime.base.node.preproc.stringmanipulation.manipulator;
 
-import org.apache.commons.lang3.StringUtils;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
- * The substr maninpulator for extracting a substring.
+ * Basic test for the substr string manipulator.
  *
  * @author Heiko Hofer
  */
-public class SubstringManipulator implements Manipulator {
+public class SubstringOffsetManipulatorTest {
 
     /**
-     * Get a substring.
-     *
-     * @param str the string to get the substring from
-     * @param start the start position starting from 0.
-     * @param length the length of the substring
-     * @return the substring
+     * Test method for
+     * {@link SubstringOffsetManipulator#substr(String, int)}.
      */
-    public static String substr(final String str, final int start,
-            final int length) {
-        return StringUtils.mid(str, start, length);
-    }
+    @Test
+    public void testSubstringExamples() {
+        // Test the examples in the description of the substr function
+        Assert.assertEquals("abcdef",
+                SubstringOffsetManipulator.substr("abcdef", 0));
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getCategory() {
-        return "Extract";
-    }
+        Assert.assertEquals("cdef",
+                SubstringOffsetManipulator.substr("abcdef", 2));
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getName() {
-        return "substr";
-    }
+        Assert.assertEquals("abcdef",
+                SubstringOffsetManipulator.substr("abcdef", -3));
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDisplayName() {
-        return getName() + "(str, start, length)";
-    }
+        Assert.assertEquals("",
+                SubstringOffsetManipulator.substr("abcdef", 10));
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrArgs() {
-        return 3;
-    }
+        Assert.assertEquals("",
+                SubstringOffsetManipulator.substr("", 0));
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return "Get <i>length</i> characters starting from <i>start</i>. "
-            + "<i>start</i> is zero based, i.e. to start from the "
-            + "beginning use <i>start = 0</i>. A negative value of "
-            + "<i>start</i> is treated as zero. "
-            + "<br/><br/>"
-            + "A <i>length</i> of zero or a negative value of <i>length</i> "
-            + "gives an empty string. If <i>start</i> + <i>length</i> "
-            + "exceeds the length of the string, the remainder characters are "
-            + "returned."
-            + "<br/><br/>"
-            + "<strong>Examples:</strong>"
-            + "<br/>"
-            + "<table>"
-            + "<tr><td>substr(\"abcdef\", 0, 2)</td>"
-            + "<td>=</td><td>\"ab\"</td></tr>"
+        Assert.assertEquals(null,
+                SubstringOffsetManipulator.substr(null, 0));
 
-            + "<tr><td>substr(\"abcdef\", -3, 2)</td>"
-            + "<td>=</td><td>\"ab\"</td></tr>"
-
-            + "<tr><td>substr(\"abcdef\", 2, 10)</td>"
-            + "<td>=</td><td>\"cdef\"</td></tr>"
-
-            + "<tr><td>substr(\"abcdef\", 10, 2)</td>"
-            + "<td>=</td><td>\"\"</td></tr>"
-
-            + "<tr><td>substr(\"\", *, *)</td><td>=</td><td>\"\"</td></tr>"
-            + "<tr><td>substr(null, *, *)</td><td>=</td><td>null</td></tr>"
-            + "</table>"
-            + "* can be any number.";
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Class<?> getReturnType() {
-        return String.class;
     }
 }

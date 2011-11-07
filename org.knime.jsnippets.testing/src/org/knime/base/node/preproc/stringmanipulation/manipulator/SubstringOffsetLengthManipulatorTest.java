@@ -58,28 +58,28 @@ import org.junit.Test;
  *
  * @author Heiko Hofer
  */
-public class SubstrManipulatorTest {
+public class SubstringOffsetLengthManipulatorTest {
 
     /**
      * Test method for
-     * {@link SubstringManipulator#substr(String, int, int)}.
+     * {@link SubstringOffsetLengthManipulator#substr(String, int, int)}.
      */
     @Test
     public void testSubstringExamples() {
         // Test the examples in the description of the substr function
         Assert.assertEquals("ab",
-                SubstringManipulator.substr("abcdef", 0, 2));
+                SubstringOffsetLengthManipulator.substr("abcdef", 0, 2));
         Assert.assertEquals("ab",
-                SubstringManipulator.substr("abcdef", -3, 2));
+                SubstringOffsetLengthManipulator.substr("abcdef", -3, 2));
         Assert.assertEquals("cdef",
-                SubstringManipulator.substr("abcdef", 2, 10));
+                SubstringOffsetLengthManipulator.substr("abcdef", 2, 10));
         Assert.assertEquals("",
-                SubstringManipulator.substr("abcdef", 10, 2));
+                SubstringOffsetLengthManipulator.substr("abcdef", 10, 2));
 
         Assert.assertEquals("",
-                SubstringManipulator.substr("", 0, 2));
+                SubstringOffsetLengthManipulator.substr("", 0, 2));
         Assert.assertEquals(null,
-                SubstringManipulator.substr(null, 0, 2));
+                SubstringOffsetLengthManipulator.substr(null, 0, 2));
 
     }
 }

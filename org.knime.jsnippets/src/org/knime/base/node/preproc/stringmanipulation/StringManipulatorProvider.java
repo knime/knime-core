@@ -85,6 +85,7 @@ import org.knime.base.node.preproc.stringmanipulation.manipulator.JoinManipulato
 import org.knime.base.node.preproc.stringmanipulation.manipulator.JoinSepManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.LengthManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.LowerCaseManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveCharsManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveSpaceCharDuplicatesManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveSpaceCharsManipulator;
@@ -93,14 +94,14 @@ import org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceCharsMo
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceModifiersManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ReverseManipulator;
-import org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.StringManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.StripEndManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.StripManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.StripStartManipulator;
-import org.knime.base.node.preproc.stringmanipulation.manipulator.SubstringManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.SubstringOffsetLengthManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.SubstringOffsetManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ToEmptyManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ToNullManipulator;
-import org.knime.base.node.preproc.stringmanipulation.manipulator.StringManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.UpperCaseManipulator;
 import org.knime.core.util.FileUtil;
 
@@ -177,7 +178,8 @@ public final class StringManipulatorProvider {
         manipulators.add(new StripEndManipulator());
         manipulators.add(new StripManipulator());
         manipulators.add(new StripStartManipulator());
-        manipulators.add(new SubstringManipulator());
+        manipulators.add(new SubstringOffsetManipulator());
+        manipulators.add(new SubstringOffsetLengthManipulator());
         manipulators.add(new ToEmptyManipulator());
         manipulators.add(new ToNullManipulator());
         manipulators.add(new StringManipulator());
