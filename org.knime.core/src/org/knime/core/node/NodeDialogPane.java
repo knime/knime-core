@@ -1230,7 +1230,6 @@ public abstract class NodeDialogPane {
             // to take oversized dimensions
             JPanel panel = new JPanel(new BorderLayout());
             panel.add(m_tree, BorderLayout.CENTER);
-            panel.setPreferredSize(new Dimension(150, 100));
             JScrollPane scrPanel = new JScrollPane(panel); 
             scrPanel.setPreferredSize(new Dimension(150, 100));
             add(scrPanel, BorderLayout.CENTER);
