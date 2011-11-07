@@ -115,28 +115,28 @@ public class CountManipulator implements Manipulator {
         + "<br/>"
         + "<table>"
         + "<tr><td>count(\"abcABCabc\", \"a\")</td>"
-        + "<td>=</td><td>2</td></tr>"
+        + "<td>=&nbsp;2</td></tr>"
 
         + "<tr><td>count(\"abcABCabc\", \"ae\")</td>"
-        + "<td>=</td><td>0</td></tr>"
+        + "<td>=&nbsp;0</td></tr>"
 
         + "<tr><td>count(\"abcABCabc\", \"abc\")</td>"
-        + "<td>=</td><td>2</td></tr>"
+        + "<td>=&nbsp;2</td></tr>"
 
         + "<tr><td>count(\"abcABCabc\", \"ABC\")</td>"
-        + "<td>=</td><td>1</td></tr>"
+        + "<td>=&nbsp;1</td></tr>"
 
         + "<tr><td>count(*, \"\")</td>"
-        + "<td>=</td><td>0</td></tr>"
+        + "<td>=&nbsp;0</td></tr>"
 
         + "<tr><td>count(*, null)</td>"
-        + "<td>=</td><td>0</td></tr>"
+        + "<td>=&nbsp;0</td></tr>"
 
         + "<tr><td>count(\"\", *)</td>"
-        + "<td>=</td><td>0</td></tr>"
+        + "<td>=&nbsp;0</td></tr>"
 
         + "<tr><td>count(null, *)</td>"
-        + "<td>=</td><td>0</td></tr>"
+        + "<td>=&nbsp;0</td></tr>"
 
         + "</table>"
         + "* can be any character sequence.";

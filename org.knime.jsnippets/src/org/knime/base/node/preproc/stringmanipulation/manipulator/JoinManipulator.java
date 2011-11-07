@@ -113,13 +113,13 @@ public class JoinManipulator implements Manipulator {
             + "<br/>"
             + "<table>"
             + "<tr><td>join(\"a\", \"b\", \"c\")</td>"
-            + "<td>=</td><td>\"abc\"</td></tr>"
+            + "<td>=&nbsp;\"abc\"</td></tr>"
 
             + "<tr><td>join(null, \"\", \"a\")</td>"
-            + "<td>=</td><td>\"a\"</td></tr>"
+            + "<td>=&nbsp;\"a\"</td></tr>"
 
             + "<tr><td>join(null)</td>"
-            + "<td>=</td><td>null</td></tr>"
+            + "<td>=&nbsp;null</td></tr>"
 
             + "</table>";
     }

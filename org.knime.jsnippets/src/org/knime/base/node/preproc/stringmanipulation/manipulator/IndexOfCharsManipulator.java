@@ -119,22 +119,22 @@ public class IndexOfCharsManipulator implements Manipulator {
         + "<br/>"
         + "<table>"
         + "<tr><td>indexOf(\"abcABCabc\", \"ab\")</td>"
-        + "<td>=</td><td>0</td></tr>"
+        + "<td>=&nbsp;0</td></tr>"
 
         + "<tr><td>indexOf(\"abcABCabc\", \"A\")</td>"
-        + "<td>=</td><td>3</td></tr>"
+        + "<td>=&nbsp;3</td></tr>"
 
         + "<tr><td>indexOf(\"abcABCabc\", \"X\")</td>"
-        + "<td>=</td><td>-1</td></tr>"
+        + "<td>=&nbsp;-1</td></tr>"
 
         + "<tr><td>indexOf(\"\", *)</td>"
-        + "<td>=</td><td>-1</td></tr>"
+        + "<td>=&nbsp;-1</td></tr>"
 
         + "<tr><td>indexOf(null, *)</td>"
-        + "<td>=</td><td>-1</td></tr>"
+        + "<td>=&nbsp;-1</td></tr>"
 
         + "<tr><td>indexOf(*, null)</td>"
-        + "<td>=</td><td>-1</td></tr>"
+        + "<td>=&nbsp;-1</td></tr>"
         + "</table>"
         + "* can be any character sequence.<br/>";
     }

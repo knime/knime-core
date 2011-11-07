@@ -182,37 +182,37 @@ public class ReplaceCharsModifiersManipulator implements Manipulator {
         + "<br/>"
         + "<table>"
         + "<tr><td>replaceChars(\"abcABC\", \"ac\", \"\", \"\")</td>"
-        + "<td>=</td><td>\"bABC\"</td></tr>"
+        + "<td>=&nbsp;\"bABC\"</td></tr>"
 
         + "<tr><td>replaceChars(\"abcABC\", \"ac\", \"x\", \"\")</td>"
-        + "<td>=</td><td>\"xbABC\"</td></tr>"
+        + "<td>=&nbsp;\"xbABC\"</td></tr>"
 
         + "<tr><td>replaceChars(\"abcABC\", \"ac\", \"xy\", \"\")</td>"
-        + "<td>=</td><td>\"xbyABC\"</td></tr>"
+        + "<td>=&nbsp;\"xbyABC\"</td></tr>"
 
         + "<tr><td>replaceChars(\"abcABC\", \"ac\", \"xyz\", \"\")</td>"
-        + "<td>=</td><td>\"xbyABC\"</td></tr>"
+        + "<td>=&nbsp;\"xbyABC\"</td></tr>"
 
         + "<tr><td>replaceChars(\"abcABC\", \"ac\", \"xy\", \"i\")</td>"
-        + "<td>=</td><td>\"xbyxBy\"</td></tr>"
+        + "<td>=&nbsp;\"xbyxBy\"</td></tr>"
 
         + "<tr><td>replaceChars(\"abcABC\", \"acA\", \"xyX\", \"i\")</td>"
-        + "<td>=</td><td>\"xbyXBy\"</td></tr>"
+        + "<td>=&nbsp;\"xbyXBy\"</td></tr>"
 
         + "<tr><td>replaceChars(null, *, *, *)</td>"
-        + "<td>=</td><td>null</td></tr>"
+        + "<td>=&nbsp;null</td></tr>"
 
         + "<tr><td>replaceChars(\"\", *, *, *)</td>"
-        + "<td>=</td><td>\"\"</td></tr>"
+        + "<td>=&nbsp;\"\"</td></tr>"
 
         + "<tr><td>replaceChars(\"any\", null, *, *)</td>"
-        + "<td>=</td><td>\"any\"</td></tr>"
+        + "<td>=&nbsp;\"any\"</td></tr>"
 
         + "<tr><td>replaceChars(\"any\", *, null, *)</td>"
-        + "<td>=</td><td>\"any\"</td></tr>"
+        + "<td>=&nbsp;\"any\"</td></tr>"
 
         + "<tr><td>replaceChars(\"any\", \"\", *, *)</td>"
-        + "<td>=</td><td>\"any\"</td></tr>"
+        + "<td>=&nbsp;\"any\"</td></tr>"
 
         + "</table>"
         + "* can be any character sequence.<br/>";

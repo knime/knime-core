@@ -133,13 +133,13 @@ public class ToEmptyManipulator implements Manipulator {
             + "<br/>"
             + "<table>"
             + "<tr><td>toEmpty((String)null)</td>"
-            + "<td>=</td><td>\"\"</td></tr>"
+            + "<td>=&nbsp;\"\"</td></tr>"
 
             + "<tr><td>toEmpty(\"KNIME\")</td>"
-            + "<td>=</td><td>\"KNIME\"</td></tr>"
+            + "<td>=&nbsp;\"KNIME\"</td></tr>"
 
             + "<tr><td>toEmpty(null, \"\", \"a\")</td>"
-            + "<td>=</td><td>[\"\", \"\", \"a\"]</td></tr>"
+            + "<td>=&nbsp;[\"\", \"\", \"a\"]</td></tr>"
 
             + "</table>";
     }

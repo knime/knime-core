@@ -123,19 +123,19 @@ public class SubstringOffsetLengthManipulator implements Manipulator {
             + "<br/>"
             + "<table>"
             + "<tr><td>substr(\"abcdef\", 0, 2)</td>"
-            + "<td>=</td><td>\"ab\"</td></tr>"
+            + "<td>=&nbsp;\"ab\"</td></tr>"
 
             + "<tr><td>substr(\"abcdef\", -3, 2)</td>"
-            + "<td>=</td><td>\"ab\"</td></tr>"
+            + "<td>=&nbsp;\"ab\"</td></tr>"
 
             + "<tr><td>substr(\"abcdef\", 2, 10)</td>"
-            + "<td>=</td><td>\"cdef\"</td></tr>"
+            + "<td>=&nbsp;\"cdef\"</td></tr>"
 
             + "<tr><td>substr(\"abcdef\", 10, 2)</td>"
-            + "<td>=</td><td>\"\"</td></tr>"
+            + "<td>=&nbsp;\"\"</td></tr>"
 
-            + "<tr><td>substr(\"\", *, *)</td><td>=</td><td>\"\"</td></tr>"
-            + "<tr><td>substr(null, *, *)</td><td>=</td><td>null</td></tr>"
+            + "<tr><td>substr(\"\", *, *)</td><td>=&nbsp;\"\"</td></tr>"
+            + "<tr><td>substr(null, *, *)</td><td>=&nbsp;null</td></tr>"
             + "</table>"
             + "* can be any number.";
     }

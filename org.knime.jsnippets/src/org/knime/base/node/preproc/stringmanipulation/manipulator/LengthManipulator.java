@@ -115,16 +115,16 @@ public class LengthManipulator implements Manipulator {
             + "<br/>"
             + "<table>"
             + "<tr><td>length(\"KNIME\")</td>"
-            + "<td>=</td><td>5</td></tr>"
+            + "<td>=&nbsp;5</td></tr>"
 
             + "<tr><td>length(\"KNIME&nbsp;&nbsp;\")</td>"
-            + "<td>=</td><td>7 (with two trailing spaces)</td></tr>"
+            + "<td>=&nbsp;7 (with two trailing spaces)</td></tr>"
 
             + "<tr><td>length(\"\")</td>"
-            + "<td>=</td><td>0</td></tr>"
+            + "<td>=&nbsp;0</td></tr>"
 
             + "<tr><td>length(null)</td>"
-            + "<td>=</td><td>0</td></tr>"
+            + "<td>=&nbsp;0</td></tr>"
 
             + "</table>";
     }

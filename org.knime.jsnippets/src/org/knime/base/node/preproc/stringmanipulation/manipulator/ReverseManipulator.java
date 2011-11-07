@@ -117,16 +117,16 @@ public class ReverseManipulator implements Manipulator {
             + "<br/>"
             + "<table>"
             + "<tr><td>reverse(\"12345\")</td>"
-            + "<td>=</td><td>54321</td></tr>"
+            + "<td>=&nbsp;\"54321\"</td></tr>"
 
             + "<tr><td>reverse(\"123&nbsp;&nbsp;\")</td>"
-            + "<td>=</td><td>&nbsp;&nbsp;123 (two leading spaces)</td></tr>"
+            + "<td>=&nbsp;\"&nbsp;&nbsp;123\" (two leading spaces)</td></tr>"
 
             + "<tr><td>reverse(\"\")</td>"
-            + "<td>=</td><td>\"\"</td></tr>"
+            + "<td>=&nbsp;\"\"</td></tr>"
 
             + "<tr><td>reverse(null)</td>"
-            + "<td>=</td><td>null</td></tr>"
+            + "<td>=&nbsp;null</td></tr>"
 
             + "</table>";
     }

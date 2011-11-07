@@ -133,13 +133,13 @@ public class StripManipulator implements Manipulator {
             + "<br/>"
             + "<table>"
             + "<tr><td>strip(\"&nbsp;&nbsp;KNIME&nbsp;&nbsp;\")</td>"
-            + "<td>=</td><td>\"KNIME\"</td></tr>"
+            + "<td>=&nbsp;\"KNIME\"</td></tr>"
 
             + "<tr><td>strip(\"KNIME&nbsp;&nbsp;\", \"&nbsp;&nbsp;KNIME\")</td>"
-            + "<td>=</td><td>[\"KNIME\", \"KNIME\"]</td></tr>"
+            + "<td>=&nbsp;[\"KNIME\", \"KNIME\"]</td></tr>"
 
             + "<tr><td>strip(null, \"\", \"a&nbsp;&nbsp;\")</td>"
-            + "<td>=</td><td>[null, \"\", \"a\"]</td></tr>"
+            + "<td>=&nbsp;[null, \"\", \"a\"]</td></tr>"
 
             + "</table>"
             + "* can be any character sequence.<br/>";

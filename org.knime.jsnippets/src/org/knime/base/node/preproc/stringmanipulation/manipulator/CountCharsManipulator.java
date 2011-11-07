@@ -114,28 +114,28 @@ public class CountCharsManipulator implements Manipulator {
         + "<br/>"
         + "<table>"
         + "<tr><td>countChars(\"abcABCabc\", \"a\")</td>"
-        + "<td>=</td><td>2</td></tr>"
+        + "<td>=&nbsp;2</td></tr>"
 
         + "<tr><td>countChars(\"abcABCabc\", \"A\")</td>"
-        + "<td>=</td><td>1</td></tr>"
+        + "<td>=&nbsp;1</td></tr>"
 
         + "<tr><td>countChars(\"abcABCabc\", \"e\")</td>"
-        + "<td>=</td><td>0</td></tr>"
+        + "<td>=&nbsp;0</td></tr>"
 
         + "<tr><td>countChars(\"abcABCabc\", \"abc\")</td>"
-        + "<td>=</td><td>6</td></tr>"
+        + "<td>=&nbsp;6</td></tr>"
 
         + "<tr><td>countChars(*, \"\")</td>"
-        + "<td>=</td><td>0</td></tr>"
+        + "<td>=&nbsp;0</td></tr>"
 
         + "<tr><td>countChars(*, null)</td>"
-        + "<td>=</td><td>0</td></tr>"
+        + "<td>=&nbsp;0</td></tr>"
 
         + "<tr><td>countChars(\"\", *)</td>"
-        + "<td>=</td><td>0</td></tr>"
+        + "<td>=&nbsp;0</td></tr>"
 
         + "<tr><td>countChars(null, *)</td>"
-        + "<td>=</td><td>0</td></tr>"
+        + "<td>=&nbsp;0</td></tr>"
 
         + "</table>"
         + "* can be any character sequence.";

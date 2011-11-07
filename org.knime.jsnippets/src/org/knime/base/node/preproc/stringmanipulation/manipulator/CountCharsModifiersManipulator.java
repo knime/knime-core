@@ -150,34 +150,34 @@ public class CountCharsModifiersManipulator implements Manipulator {
         + "<br/>"
         + "<table>"
         + "<tr><td>countChars(\"abcABCabc\", \"a\", \"\")</td>"
-        + "<td>=</td><td>2</td></tr>"
+        + "<td>=&nbsp;2</td></tr>"
 
         + "<tr><td>countChars(\"abcABCabc\", \"ae\", \"\")</td>"
-        + "<td>=</td><td>2</td></tr>"
+        + "<td>=&nbsp;2</td></tr>"
 
         + "<tr><td>countChars(\"abcABCabc\", \"abc\", \"\")</td>"
-        + "<td>=</td><td>6</td></tr>"
+        + "<td>=&nbsp;6</td></tr>"
 
         + "<tr><td>countChars(\"abcABCabc\", \"abc\", \"i\")</td>"
-        + "<td>=</td><td>9</td></tr>"
+        + "<td>=&nbsp;9</td></tr>"
 
         + "<tr><td>countChars(\"abcABCabc\", \"abc\", \"v\")</td>"
-        + "<td>=</td><td>3</td></tr>"
+        + "<td>=&nbsp;3</td></tr>"
 
         + "<tr><td>countChars(\"abcABCabc\", \"abc\", \"iv\")</td>"
-        + "<td>=</td><td>0</td></tr>"
+        + "<td>=&nbsp;0</td></tr>"
 
         + "<tr><td>countChars(*, \"\", *)</td>"
-        + "<td>=</td><td>0 or length of string for modifier \"v\"</td></tr>"
+        + "<td>=&nbsp;0 or length of string for modifier \"v\"</td></tr>"
 
         + "<tr><td>countChars(*, null, *)</td>"
-        + "<td>=</td><td>0 or length of string for modifier \"v\"</td></tr>"
+        + "<td>=&nbsp;0 or length of string for modifier \"v\"</td></tr>"
 
         + "<tr><td>countChars(\"\", *, *)</td>"
-        + "<td>=</td><td>0</td></tr>"
+        + "<td>=&nbsp;0</td></tr>"
 
         + "<tr><td>countChars(null, *, *)</td>"
-        + "<td>=</td><td>0</td></tr>"
+        + "<td>=&nbsp;0</td></tr>"
 
         + "</table>"
         + "* can be any character sequence.";

@@ -117,25 +117,25 @@ public class ReplaceManipulator implements Manipulator {
         + "<br/>"
         + "<table>"
         + "<tr><td>replace(\"abcabc\", \"ab\", \"\")</td>"
-        + "<td>=</td><td>\"cc\"</td></tr>"
+        + "<td>=&nbsp;\"cc\"</td></tr>"
 
         + "<tr><td>replace(\"abcabc\", \"ab\", \"z\")</td>"
-        + "<td>=</td><td>\"zczc\"</td></tr>"
+        + "<td>=&nbsp;\"zczc\"</td></tr>"
 
         + "<tr><td>replace(null, *, *)</td>"
-        + "<td>=</td><td>null</td></tr>"
+        + "<td>=&nbsp;null</td></tr>"
 
         + "<tr><td>replace(\"\", *, *)</td>"
-        + "<td>=</td><td>\"\"</td></tr>"
+        + "<td>=&nbsp;\"\"</td></tr>"
 
         + "<tr><td>replace(\"any\", null, *)</td>"
-        + "<td>=</td><td>\"any\"</td></tr>"
+        + "<td>=&nbsp;\"any\"</td></tr>"
 
         + "<tr><td>replace(\"any\", *, null)</td>"
-        + "<td>=</td><td>\"any\"</td></tr>"
+        + "<td>=&nbsp;\"any\"</td></tr>"
 
         + "<tr><td>replace(\"any\", \"\", *)</td>"
-        + "<td>=</td><td>\"any\"</td></tr>"
+        + "<td>=&nbsp;\"any\"</td></tr>"
 
         + "</table>"
         + "* can be any character sequence.<br/>";

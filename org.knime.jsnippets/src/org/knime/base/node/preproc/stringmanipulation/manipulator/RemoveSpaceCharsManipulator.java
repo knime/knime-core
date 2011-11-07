@@ -116,13 +116,13 @@ public class RemoveSpaceCharsManipulator implements Manipulator {
                 + "<br/>"
                 + "<table>"
                 + "<tr><td>removeChars(\"a,&nbsp;&nbsp;b&nbsp;,&nbsp;c\")</td>"
-                + "<td>=</td><td>\"a,b,c\"</td></tr>"
+                + "<td>=&nbsp;\"a,b,c\"</td></tr>"
 
                 + "<tr><td>removeChars(\"\")</td>"
-                + "<td>=</td><td>\"\"</td></tr>"
+                + "<td>=&nbsp;\"\"</td></tr>"
 
                 + "<tr><td>removeChars(null)</td>"
-                + "<td>=</td><td>null</td></tr>"
+                + "<td>=&nbsp;null</td></tr>"
                 + "</table>";
     }
 

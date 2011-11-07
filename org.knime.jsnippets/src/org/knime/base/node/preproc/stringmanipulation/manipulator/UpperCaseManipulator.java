@@ -112,9 +112,9 @@ public class UpperCaseManipulator implements Manipulator {
                 + "<br/>"
                 + "<table>"
                 + "<tr><td>upperCase(\"processed by KNIME\")</td>"
-                + "<td>=</td><td>\"PROCESSED BY KNIME\"</td></tr>"
-                + "<tr><td>upperCase(\"\")</td><td>=</td><td>\"\"</td></tr>"
-                + "<tr><td>upperCase(null)</td><td>=</td><td>null</td></tr>"
+                + "<td>=&nbsp;\"PROCESSED BY KNIME\"</td></tr>"
+                + "<tr><td>upperCase(\"\")</td><td>=&nbsp;\"\"</td></tr>"
+                + "<tr><td>upperCase(null)</td><td>=&nbsp;null</td></tr>"
                 + "</table>";
     }
 

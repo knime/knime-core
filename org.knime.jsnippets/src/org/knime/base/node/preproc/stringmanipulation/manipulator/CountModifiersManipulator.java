@@ -141,34 +141,34 @@ public class CountModifiersManipulator implements Manipulator {
         + "<br/>"
         + "<table>"
         + "<tr><td>count(\"abcABCabc\", \"a\", \"\")</td>"
-        + "<td>=</td><td>2</td></tr>"
+        + "<td>=&nbsp;2</td></tr>"
 
         + "<tr><td>count(\"abcABCabc\", \"ae\", \"\")</td>"
-        + "<td>=</td><td>0</td></tr>"
+        + "<td>=&nbsp;0</td></tr>"
 
         + "<tr><td>count(\"abcABCabc\", \"abc\", \"\")</td>"
-        + "<td>=</td><td>2</td></tr>"
+        + "<td>=&nbsp;2</td></tr>"
 
         + "<tr><td>count(\"abcABCabc\", \"abc\", \"i\")</td>"
-        + "<td>=</td><td>3</td></tr>"
+        + "<td>=&nbsp;3</td></tr>"
 
         + "<tr><td>count(\"ab abab ab\", \"ab\", \"\")</td>"
-        + "<td>=</td><td>4</td></tr>"
+        + "<td>=&nbsp;4</td></tr>"
 
         + "<tr><td>count(\"ab abab ab\", \"ab\", \"w\")</td>"
-        + "<td>=</td><td>2</td></tr>"
+        + "<td>=&nbsp;2</td></tr>"
 
         + "<tr><td>count(*, \"\", *)</td>"
-        + "<td>=</td><td>0</td></tr>"
+        + "<td>=&nbsp;0</td></tr>"
 
         + "<tr><td>count(*, null, *)</td>"
-        + "<td>=</td><td>0</td></tr>"
+        + "<td>=&nbsp;0</td></tr>"
 
         + "<tr><td>count(\"\", *, *)</td>"
-        + "<td>=</td><td>0</td></tr>"
+        + "<td>=&nbsp;0</td></tr>"
 
         + "<tr><td>count(null, *, *)</td>"
-        + "<td>=</td><td>0</td></tr>"
+        + "<td>=&nbsp;0</td></tr>"
 
         + "</table>"
         + "* can be any character sequence.";

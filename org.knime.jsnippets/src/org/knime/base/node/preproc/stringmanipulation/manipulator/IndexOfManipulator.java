@@ -119,28 +119,28 @@ public class IndexOfManipulator implements Manipulator {
                 + "<br/>"
                 + "<table>"
                 + "<tr><td>indexOf(\"abcabc\", \"a\")</td>"
-                + "<td>=</td><td>0</td></tr>"
+                + "<td>=&nbsp;0</td></tr>"
 
                 + "<tr><td>indexOf(\"abcabc\", \"c\")</td>"
-                + "<td>=</td><td>2</td></tr>"
+                + "<td>=&nbsp;2</td></tr>"
 
                 + "<tr><td>indexOf(\"abcabc\", \"ca\")</td>"
-                + "<td>=</td><td>2</td></tr>"
+                + "<td>=&nbsp;2</td></tr>"
 
                 + "<tr><td>indexOf(\"abcabc\", \"d\")</td>"
-                + "<td>=</td><td>-1</td></tr>"
+                + "<td>=&nbsp;-1</td></tr>"
 
                 + "<tr><td>indexOf(\"\", \"\")</td>"
-                + "<td>=</td><td>0</td></tr>"
+                + "<td>=&nbsp;0</td></tr>"
 
                 + "<tr><td>indexOf(\"\", *)</td>"
-                + "<td>=</td><td>-1 (except when * = \"\")</td></tr>"
+                + "<td>=&nbsp;-1 (except when * = \"\")</td></tr>"
 
                 + "<tr><td>indexOf(null, *)</td>"
-                + "<td>=</td><td>-1</td></tr>"
+                + "<td>=&nbsp;-1</td></tr>"
 
                 + "<tr><td>indexOf(*, null)</td>"
-                + "<td>=</td><td>-1</td></tr>"
+                + "<td>=&nbsp;-1</td></tr>"
                 + "</table>"
                 + "* can be any character sequence.";
     }

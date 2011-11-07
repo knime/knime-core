@@ -141,37 +141,37 @@ public class IndexOfModifiersManipulator implements Manipulator {
         + "<br/>"
         + "<table>"
         + "<tr><td>indexOf(\"abcABCabc\", \"ab\", \"\")</td>"
-        + "<td>=</td><td>0</td></tr>"
+        + "<td>=&nbsp;0</td></tr>"
 
         + "<tr><td>indexOf(\"abcABCabc\", \"ab\", \"b\")</td>"
-        + "<td>=</td><td>6</td></tr>"
+        + "<td>=&nbsp;6</td></tr>"
 
         + "<tr><td>indexOf(\"ab abAB AB\", \"ab\", \"w\")</td>"
-        + "<td>=</td><td>0</td></tr>"
+        + "<td>=&nbsp;0</td></tr>"
 
         + "<tr><td>indexOf(\"ab abAB AB\", \"AB\", \"w\")</td>"
-        + "<td>=</td><td>8</td></tr>"
+        + "<td>=&nbsp;8</td></tr>"
 
         + "<tr><td>indexOf(\"ab abAB AB\", \"abAB\", \"w\")</td>"
-        + "<td>=</td><td>3</td></tr>"
+        + "<td>=&nbsp;3</td></tr>"
 
         + "<tr><td>indexOf(\"ab abAB AB\", \"abab\", \"iw\")</td>"
-        + "<td>=</td><td>3</td></tr>"
+        + "<td>=&nbsp;3</td></tr>"
 
         + "<tr><td>indexOf(\"\", \"\", \"\")</td>"
-        + "<td>=</td><td>0</td></tr>"
+        + "<td>=&nbsp;0</td></tr>"
 
         + "<tr><td>indexOf(\"\", *, \"\")</td>"
-        + "<td>=</td><td>-1 (except when * = \"\")</td></tr>"
+        + "<td>=&nbsp;-1 (except when * = \"\")</td></tr>"
 
         + "<tr><td>indexOf(null, *, \"\")</td>"
-        + "<td>=</td><td>-1 (except when * = \"\")</td></tr>"
+        + "<td>=&nbsp;-1 (except when * = \"\")</td></tr>"
 
         + "<tr><td>indexOf(\"\", null, \"\")</td>"
-        + "<td>=</td><td>-1 (except when * = \"\")</td></tr>"
+        + "<td>=&nbsp;-1 (except when * = \"\")</td></tr>"
 
         + "<tr><td>indexOf(\"\", *, null)</td>"
-        + "<td>=</td><td>-1 (except when * = \"\")</td></tr>"
+        + "<td>=&nbsp;-1 (except when * = \"\")</td></tr>"
         + "</table>"
         + "* can be any character sequence.<br/>";
     }

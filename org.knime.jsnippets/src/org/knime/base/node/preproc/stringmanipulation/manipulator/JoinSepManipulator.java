@@ -132,23 +132,23 @@ public class JoinSepManipulator implements Manipulator {
             + "<br/>"
             + "<table>"
             + "<tr><td>joinSep(\" | \", \"a\", \"b\", \"c\")</td>"
-            + "<td>=</td><td>\"a | b | c\"</td></tr>"
+            + "<td>=&nbsp;\"a | b | c\"</td></tr>"
 
             + "<tr><td>joinSep(\";\", null, \"\", \"a\")</td>"
-            + "<td>=</td><td>\";;a\"</td></tr>"
+            + "<td>=&nbsp;\";;a\"</td></tr>"
 
             + "<tr><td>joinSep(*, null)</td>"
-            + "<td>=</td><td>null</td></tr>"
+            + "<td>=&nbsp;null</td></tr>"
 
             + "<tr><td>joinSep(*, \"\")</td>"
-            + "<td>=</td><td>\"\"</td></tr>"
+            + "<td>=&nbsp;\"\"</td></tr>"
 
 
             + "<tr><td>joinSep(\"\", *)</td>"
-            + "<td>=</td><td>*</td></tr>"
+            + "<td>=&nbsp;*</td></tr>"
 
             + "<tr><td>joinSep(null, *)</td>"
-            + "<td>=</td><td>*</td></tr>"
+            + "<td>=&nbsp;*</td></tr>"
 
             + "</table>"
             + "* can be any character sequence.<br/>";

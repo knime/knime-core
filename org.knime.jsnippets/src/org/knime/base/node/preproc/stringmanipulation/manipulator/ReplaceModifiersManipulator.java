@@ -160,37 +160,37 @@ public class ReplaceModifiersManipulator implements Manipulator {
         + "<br/>"
         + "<table>"
         + "<tr><td>replace(\"abcABC\", \"ab\", \"\", \"\")</td>"
-        + "<td>=</td><td>\"cABC\"</td></tr>"
+        + "<td>=&nbsp;\"cABC\"</td></tr>"
 
         + "<tr><td>replace(\"abcABC\", \"ab\", \"z\", \"\")</td>"
-        + "<td>=</td><td>\"zcABC\"</td></tr>"
+        + "<td>=&nbsp;\"zcABC\"</td></tr>"
 
         + "<tr><td>replace(\"abcABC\", \"ab\", \"\", \"i\")</td>"
-        + "<td>=</td><td>\"cC\"</td></tr>"
+        + "<td>=&nbsp;\"cC\"</td></tr>"
 
         + "<tr><td>replace(\"abcABC\", \"ab\", \"z\", \"i\")</td>"
-        + "<td>=</td><td>\"zczC\"</td></tr>"
+        + "<td>=&nbsp;\"zczC\"</td></tr>"
 
         + "<tr><td>replace(\"ab abAB AB\", \"ab\", \"z\", \"w\")</td>"
-        + "<td>=</td><td>\"z abAB AB\"</td></tr>"
+        + "<td>=&nbsp;\"z abAB AB\"</td></tr>"
 
         + "<tr><td>replace(\"ab abAB AB\", \"ab\", \"z\", \"iw\")</td>"
-        + "<td>=</td><td>\"z abAB z\"</td></tr>"
+        + "<td>=&nbsp;\"z abAB z\"</td></tr>"
 
         + "<tr><td>replace(null, *, *, *)</td>"
-        + "<td>=</td><td>null</td></tr>"
+        + "<td>=&nbsp;null</td></tr>"
 
         + "<tr><td>replace(\"\", *, *, *)</td>"
-        + "<td>=</td><td>\"\"</td></tr>"
+        + "<td>=&nbsp;\"\"</td></tr>"
 
         + "<tr><td>replace(\"any\", null, *, *)</td>"
-        + "<td>=</td><td>\"any\"</td></tr>"
+        + "<td>=&nbsp;\"any\"</td></tr>"
 
         + "<tr><td>replace(\"any\", *, null, *)</td>"
-        + "<td>=</td><td>\"any\"</td></tr>"
+        + "<td>=&nbsp;\"any\"</td></tr>"
 
         + "<tr><td>replace(\"any\", \"\", *, *)</td>"
-        + "<td>=</td><td>\"any\"</td></tr>"
+        + "<td>=&nbsp;\"any\"</td></tr>"
 
         + "</table>"
         + "* can be any character sequence.<br/>";

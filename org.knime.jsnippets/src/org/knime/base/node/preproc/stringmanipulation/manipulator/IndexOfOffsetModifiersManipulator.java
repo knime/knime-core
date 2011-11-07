@@ -230,43 +230,43 @@ public class IndexOfOffsetModifiersManipulator implements Manipulator {
                 + "<br/>"
                 + "<table>"
                 + "<tr><td>indexOf(\"abcABCabc\", \"ab\", 0, \"\")</td>"
-                + "<td>=</td><td>0</td></tr>"
+                + "<td>=&nbsp;0</td></tr>"
 
                 + "<tr><td>indexOf(\"abcABCabc\", \"ab\", 1, \"\")</td>"
-                + "<td>=</td><td>6</td></tr>"
+                + "<td>=&nbsp;6</td></tr>"
 
                 + "<tr><td>indexOf(\"abcABCabc\", \"ab\", 1, \"i\")</td>"
-                + "<td>=</td><td>3</td></tr>"
+                + "<td>=&nbsp;3</td></tr>"
 
                 + "<tr><td>indexOf(\"abcABCabc\", \"ab\", 0, \"b\")</td>"
-                + "<td>=</td><td>0</td></tr>"
+                + "<td>=&nbsp;0</td></tr>"
 
                 + "<tr><td>indexOf(\"abcABCabc\", \"ab\", 9, \"b\")</td>"
-                + "<td>=</td><td>6</td></tr>"
+                + "<td>=&nbsp;6</td></tr>"
 
                 + "<tr><td>indexOf(\"ab abab ab\", \"ab\", 0, \"w\")</td>"
-                + "<td>=</td><td>0</td></tr>"
+                + "<td>=&nbsp;0</td></tr>"
 
                 + "<tr><td>indexOf(\"ab abab ab\", \"ab\", 1, \"w\")</td>"
-                + "<td>=</td><td>8</td></tr>"
+                + "<td>=&nbsp;8</td></tr>"
 
                 + "<tr><td>indexOf(\"ab abab ab\", \"abab\", 1, \"w\")</td>"
-                + "<td>=</td><td>3</td></tr>"
+                + "<td>=&nbsp;3</td></tr>"
 
                 + "<tr><td>indexOf(\"ab ABab ab\", \"abab\", 1, \"iw\")</td>"
-                + "<td>=</td><td>3</td></tr>"
+                + "<td>=&nbsp;3</td></tr>"
 
                 + "<tr><td>indexOf(\"\", \"\", 0, \"\")</td>"
-                + "<td>=</td><td>0</td></tr>"
+                + "<td>=&nbsp;0</td></tr>"
 
                 + "<tr><td>indexOf(\"\", *, 0, \"\")</td>"
-                + "<td>=</td><td>-1 (except when * = \"\")</td></tr>"
+                + "<td>=&nbsp;-1 (except when * = \"\")</td></tr>"
 
                 + "<tr><td>indexOf(null, *, **, \"\")</td>"
-                + "<td>=</td><td>-1</td></tr>"
+                + "<td>=&nbsp;-1</td></tr>"
 
                 + "<tr><td>indexOf(*, null, **, \"\")</td>"
-                + "<td>=</td><td>-1</td></tr>"
+                + "<td>=&nbsp;-1</td></tr>"
                 + "</table>"
                 + "* can be any character sequence.<br/>"
                 + "** can be any integer.";

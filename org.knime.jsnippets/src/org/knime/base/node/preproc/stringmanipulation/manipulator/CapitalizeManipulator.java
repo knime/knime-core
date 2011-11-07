@@ -116,9 +116,9 @@ public class CapitalizeManipulator implements Manipulator {
                 + "<br/>"
                 + "<table>"
                 + "<tr><td>capitalize(\"processed by KNIME\")</td>"
-                + "<td>=</td><td>\"Processed By Knime\"</td></tr>"
-                + "<tr><td>capitalize(\"\")</td><td>=</td><td>\"\"</td></tr>"
-                + "<tr><td>capitalize(null)</td><td>=</td><td>null</td></tr>"
+                + "<td>=&nbsp;\"Processed By Knime\"</td></tr>"
+                + "<tr><td>capitalize(\"\")</td><td>=&nbsp;\"\"</td></tr>"
+                + "<tr><td>capitalize(null)</td><td>=&nbsp;null</td></tr>"
                 + "</table>";
     }
 

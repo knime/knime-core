@@ -123,31 +123,31 @@ public class CompareManipulator implements Manipulator {
         + "<br/>"
         + "<table>"
         + "<tr><td>compare(\"abc\", \"abc\")</td>"
-        + "<td>=</td><td>0</td></tr>"
+        + "<td>=&nbsp;0</td></tr>"
 
         + "<tr><td>compare(\"abc\", \"ABC\")</td>"
-        + "<td>=</td><td>-1</td></tr>"
+        + "<td>=&nbsp;-1</td></tr>"
 
         + "<tr><td>compare(\"ABC\", \"abc\")</td>"
-        + "<td>=</td><td>1</td></tr>"
+        + "<td>=&nbsp;1</td></tr>"
 
         + "<tr><td>compare(\"ab\", \"abc\")</td>"
-        + "<td>=</td><td>-1</td></tr>"
+        + "<td>=&nbsp;-1</td></tr>"
 
         + "<tr><td>compare(\"ABC's\", \"ABCs\", \"\")</td>"
-        + "<td>=</td><td>-1</td></tr>"
+        + "<td>=&nbsp;-1</td></tr>"
 
         + "<tr><td>compare(\"\", \"ABC\")</td>"
-        + "<td>=</td><td>-1</td></tr>"
+        + "<td>=&nbsp;-1</td></tr>"
 
         + "<tr><td>compare(null, \"ABC\")</td>"
-        + "<td>=</td><td>-1</td></tr>"
+        + "<td>=&nbsp;-1</td></tr>"
 
         + "<tr><td>compare(\"ABC\", \"\")</td>"
-        + "<td>=</td><td>1</td></tr>"
+        + "<td>=&nbsp;1</td></tr>"
 
         + "<tr><td>compare(\"ABC\", null)</td>"
-        + "<td>=</td><td>1</td></tr>"
+        + "<td>=&nbsp;1</td></tr>"
 
         + "</table>"
         + "* can be any character sequence.";

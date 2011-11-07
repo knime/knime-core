@@ -133,14 +133,14 @@ public class StripEndManipulator implements Manipulator {
             + "<table>"
             + "<tr><td>stripEnd(\"&nbsp;&nbsp;KNIME&nbsp;&nbsp;&nbsp;&nbsp;"
             + "\")</td>"
-            + "<td>=</td><td>\"&nbsp;&nbsp;KNIME\"</td></tr>"
+            + "<td>=&nbsp;\"&nbsp;&nbsp;KNIME\"</td></tr>"
 
             + "<tr><td>stripEnd(\"KNIME&nbsp;&nbsp;\", "
             + "\"&nbsp;&nbsp;KNIME\")</td>"
-            + "<td>=</td><td>[\"KNIME\", \"&nbsp;&nbsp;KNIME\"]</td></tr>"
+            + "<td>=&nbsp;[\"KNIME\", \"&nbsp;&nbsp;KNIME\"]</td></tr>"
 
             + "<tr><td>stripEnd(null, \"\", \"a&nbsp;&nbsp;\")</td>"
-            + "<td>=</td><td>[null, \"\", \"a\"]</td></tr>"
+            + "<td>=&nbsp;[null, \"\", \"a\"]</td></tr>"
 
             + "</table>"
             + "* can be any character sequence.<br/>";

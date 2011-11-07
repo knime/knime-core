@@ -151,13 +151,13 @@ public class StringManipulator implements Manipulator {
             + "<br/>"
             + "<table>"
             + "<tr><td>string((String)null)</td>"
-            + "<td>=</td><td>\"\"</td></tr>"
+            + "<td>=&nbsp;\"\"</td></tr>"
 
             + "<tr><td>string(\"KNIME\")</td>"
-            + "<td>=</td><td>\"KNIME\"</td></tr>"
+            + "<td>=&nbsp;\"KNIME\"</td></tr>"
 
             + "<tr><td>string(null, \"\", \"a\")</td>"
-            + "<td>=</td><td>[\"\", \"\", \"a\"]</td></tr>"
+            + "<td>=&nbsp;[\"\", \"\", \"a\"]</td></tr>"
 
             + "</table>";
     }

@@ -133,13 +133,13 @@ public class ToNullManipulator implements Manipulator {
             + "<br/>"
             + "<table>"
             + "<tr><td>toNull(\"\")</td>"
-            + "<td>=</td><td>null</td></tr>"
+            + "<td>=&nbsp;null</td></tr>"
 
             + "<tr><td>toNull(\"KNIME\")</td>"
-            + "<td>=</td><td>\"KNIME\"</td></tr>"
+            + "<td>=&nbsp;\"KNIME\"</td></tr>"
 
             + "<tr><td>toNull(null, \"\", \"a\")</td>"
-            + "<td>=</td><td>[null, null, \"a\"]</td></tr>"
+            + "<td>=&nbsp;[null, null, \"a\"]</td></tr>"
 
             + "</table>";
     }

@@ -125,28 +125,28 @@ public class IndexOfOffsetManipulator implements Manipulator {
                 + "<br/>"
                 + "<table>"
                 + "<tr><td>indexOf(\"abcabc\", \"ab\", 0)</td>"
-                + "<td>=</td><td>0</td></tr>"
+                + "<td>=&nbsp;0</td></tr>"
 
                 + "<tr><td>indexOf(\"abcabc\", \"ab\", 1)</td>"
-                + "<td>=</td><td>3</td></tr>"
+                + "<td>=&nbsp;3</td></tr>"
 
                 + "<tr><td>indexOf(\"abcabc\", \"ab\", 4)</td>"
-                + "<td>=</td><td>-1</td></tr>"
+                + "<td>=&nbsp;-1</td></tr>"
 
                 + "<tr><td>indexOf(\"abcabc\", \"ab\", -10)</td>"
-                + "<td>=</td><td>0</td></tr>"
+                + "<td>=&nbsp;0</td></tr>"
 
                 + "<tr><td>indexOf(\"\", \"\", 0)</td>"
-                + "<td>=</td><td>0</td></tr>"
+                + "<td>=&nbsp;0</td></tr>"
 
                 + "<tr><td>indexOf(\"\", *, 0)</td>"
-                + "<td>=</td><td>-1 (except when * = \"\")</td></tr>"
+                + "<td>=&nbsp;-1 (except when * = \"\")</td></tr>"
 
                 + "<tr><td>indexOf(null, *, **)</td>"
-                + "<td>=</td><td>-1</td></tr>"
+                + "<td>=&nbsp;-1</td></tr>"
 
                 + "<tr><td>indexOf(*, null, **)</td>"
-                + "<td>=</td><td>-1</td></tr>"
+                + "<td>=&nbsp;-1</td></tr>"
                 + "</table>"
                 + "* can be any character sequence.<br/>"
                 + "** can be any integer.";
