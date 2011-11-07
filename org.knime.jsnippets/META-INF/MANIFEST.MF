@@ -8,7 +8,8 @@ Require-Bundle: org.knime.base;bundle-version="2.5.0",
  org.knime.ext.sun;bundle-version="2.5.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
-Export-Package: org.knime.base.node.preproc.stringmanipulation,
+Export-Package: org.apache.commons.lang3,
+ org.knime.base.node.preproc.stringmanipulation,
  org.knime.base.node.preproc.stringmanipulation.manipulator
 Bundle-ClassPath: knime-jsnippets.jar,
  lib/commons-lang3-3.0.1.jar,
