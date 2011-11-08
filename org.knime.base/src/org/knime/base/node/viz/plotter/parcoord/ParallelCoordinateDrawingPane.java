@@ -277,6 +277,10 @@ public class ParallelCoordinateDrawingPane extends BasicDrawingPane {
     }
     
     protected void drawLabels(final Graphics g) {
+        // bug 2936: axes can be null when the node is re-executed (open view) 
+        if (m_axes == null) {
+            return;
+        }
         // go through the axes
         for (ParallelAxis axis : m_axes) {
             if (axis.isNominal()) {
