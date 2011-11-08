@@ -217,7 +217,8 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
             cspecs = new DataColumnSpec[nrCols + 1];
             DataColumnSpecCreator crSpec =
                 new DataColumnSpecCreator(gridSpec);
-            crSpec.setType(ListCell.getCollectionType(StringCell.TYPE));
+            // fix 2971: use column type from underlying cell
+            crSpec.setType(ListCell.getCollectionType(gridSpec.getType()));
             if (spec.containsName(gridSpec.getName())) {
                 crSpec.setName(spec.getName() + "#" + gridSpec.getName());
             }
