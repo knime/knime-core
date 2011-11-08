@@ -167,10 +167,10 @@ final class DBColumnFilterNodeModel extends DBNodeModel {
 
     private String createQuery(final String query, final String driver) {
         final StringBuilder buf = new StringBuilder();
-        final String[] queries = query.split("\n");
+        final String[] queries = query.split(";");
         for (int i = 0; i < queries.length - 1; i++) {
             buf.append(queries[i]);
-            buf.append("\n");
+            buf.append(";");
         }
         // build SELECT statement
         buf.append("SELECT ");

@@ -226,7 +226,7 @@ public final class DatabaseReaderConnection {
                 throw new SQLException(t);
             }
             synchronized (m_conn.syncConnection(conn)) {
-                final String[] oQueries =  m_conn.getQuery().split("\n");
+                final String[] oQueries =  m_conn.getQuery().split(";");
                 final int selectIndex = oQueries.length - 1;
                 final int hashAlias = System.identityHashCode(this);
                 // replace SELECT (last) query with wrapped statement
@@ -323,7 +323,7 @@ public final class DatabaseReaderConnection {
                                 + " to \"" + Integer.MIN_VALUE + "\".");
                     }
                 }
-                final String[] oQueries = m_conn.getQuery().split("\n");
+                final String[] oQueries = m_conn.getQuery().split(";");
                 LOGGER.debug("Executing SQL statement(s) \"" 
                         + Arrays.toString(oQueries) + "\"");
                 for (int i = 0; i < oQueries.length - 1; i++) {
@@ -365,7 +365,7 @@ public final class DatabaseReaderConnection {
         initStatement(cp);
         synchronized (m_conn.syncConnection(m_stmt.getConnection())) {
             try {
-                final String[] oQueries = m_conn.getQuery().split("\n");
+                final String[] oQueries = m_conn.getQuery().split(";");
                 if (cachedNoRows < 0) {
                     if (DatabaseConnectionSettings.FETCH_SIZE != null) {
                         // fix 2741: postgresql databases ignore fetchsize when 

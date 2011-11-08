@@ -170,17 +170,17 @@ final class DBQueryNodeModel extends DBNodeModel {
 
     private String createQuery(final String query) {
         final StringBuilder resultQueries = new StringBuilder();
-        String[] inQueries = query.split("\n");
+        String[] inQueries = query.split(";");
         String inSelect = inQueries[inQueries.length - 1];
         for (int i = 0; i < inQueries.length - 1; i++) {
             resultQueries.append(inQueries[i]);
-            resultQueries.append("\n");
+            resultQueries.append(";");
         }
-        String[] thisQueries = m_query.getStringValue().split("\n");
+        String[] thisQueries = m_query.getStringValue().split(";");
         String thisSelect = thisQueries[thisQueries.length - 1];
         for (int i = 0; i < thisQueries.length - 1; i++) {
             resultQueries.append(thisQueries[i]);
-            resultQueries.append("\n");
+            resultQueries.append(";");
         }        
         thisSelect = new String(thisSelect).replaceAll(
                 DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER,  
