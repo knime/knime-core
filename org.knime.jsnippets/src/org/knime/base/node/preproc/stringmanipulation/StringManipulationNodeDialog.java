@@ -319,6 +319,16 @@ public class StringManipulationNodeDialog  extends NodeDialogPane {
     }
 
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean closeOnESC() {
+        // do not close the dialog when ESC is pressed.
+        // Allows the table to use ESC to cancel the edit mode of a cell.
+        return false;
+    }
+
 //    private JComponent createEditorComponent() {
 //        JEditorPane editor = new JEditorPane();
 //        Font font = editor.getFont();
