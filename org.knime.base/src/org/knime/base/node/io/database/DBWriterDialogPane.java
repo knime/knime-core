@@ -120,8 +120,8 @@ final class DBWriterDialogPane extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
-	// get workflow credentials
-	Collection<String> creds = super.getCredentialsNames();
+    // get workflow credentials
+    Collection<String> creds = super.getCredentialsNames();
         m_loginPane.loadSettingsFrom(settings, specs, creds);
         // table name
         m_table.setText(settings.getString("table", "<table_name>"));

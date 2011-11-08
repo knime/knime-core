@@ -57,7 +57,7 @@ public interface DBVariableSupportNodeModel {
     /**
      * Resolver providing methods to parse queries and wrap certain variables.
      */
-    public static class Resolver {
+    public static final class Resolver {
         private Resolver() {
             // empty
         }

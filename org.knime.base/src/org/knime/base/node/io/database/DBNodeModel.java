@@ -144,10 +144,10 @@ abstract class DBNodeModel extends NodeModel {
      */
     final DatabaseQueryConnectionSettings createDBQueryConnection(
             final DatabasePortObjectSpec spec, final String newQuery)
-    		throws InvalidSettingsException {
-    	DatabaseQueryConnectionSettings conn =
-    		new DatabaseQueryConnectionSettings(
-    			spec.getConnectionModel(), getCredentialsProvider());
+            throws InvalidSettingsException {
+        DatabaseQueryConnectionSettings conn =
+            new DatabaseQueryConnectionSettings(
+                spec.getConnectionModel(), getCredentialsProvider());
         return new DatabaseQueryConnectionSettings(conn, newQuery);
     }
 
