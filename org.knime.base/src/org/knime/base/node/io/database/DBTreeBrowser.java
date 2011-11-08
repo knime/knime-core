@@ -63,6 +63,7 @@ import javax.swing.JTree;
 import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 import javax.swing.tree.TreeSelectionModel;
@@ -137,6 +138,7 @@ public class DBTreeBrowser extends JPanel implements TreeSelectionListener {
         m_meta = meta;
         m_tree.collapsePath(new TreePath(m_root));
         m_root.removeAllChildren();
+        ((DefaultTreeModel) m_tree.getModel()).reload(m_root);
         if (meta != null) {
             ArrayList<String> tableTypes = new ArrayList<String>();
             try {
@@ -173,10 +175,12 @@ public class DBTreeBrowser extends JPanel implements TreeSelectionListener {
                      tableNode.setAllowsChildren(true);
                      typeNode.add(tableNode);
                 }
+                LOGGER.debug("DB Browser added table for type '" + type + "'.");
                 m_root.add(typeNode);
             }
         }
         m_tree.expandPath(new TreePath(m_root));
+        m_tree.validate();
         m_tree.repaint();
     }
     
