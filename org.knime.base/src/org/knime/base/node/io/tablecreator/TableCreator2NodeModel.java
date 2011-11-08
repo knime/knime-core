@@ -53,7 +53,9 @@ package org.knime.base.node.io.tablecreator;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.knime.base.node.io.filereader.ColProperty;
 import org.knime.base.node.io.filereader.DataCellFactory;
@@ -106,7 +108,7 @@ public class TableCreator2NodeModel extends NodeModel {
 
     private DataTableSpec createSpec() throws InvalidSettingsException {
         int numColumns = max(m_settings.getColumnIndices()) + 1;
-        if (! m_settings.getColumnProperties().isEmpty()) {
+        if (!m_settings.getColumnProperties().isEmpty()) {
             numColumns = Math.max(numColumns,
                     m_settings.getColumnProperties().lastKey() + 1);
         }
@@ -160,10 +162,18 @@ public class TableCreator2NodeModel extends NodeModel {
         String rowIdSuffix = m_settings.getRowIdSuffix();
         int rowIdStartWidth = m_settings.getRowIdStartValue();
         int c = 0;
+        // fix for bug #2969
+        Set<Integer> toRemove = new HashSet<Integer>();
         DataCellFactory cellFactory = new DataCellFactory();
         for (int i = 0; i < numRows; i++) {
             DataCell[] cells = new DataCell[outSpec.getNumColumns()];
             for (int k = 0; k < numColProps; k++) {
+                // fix for bug #2969
+                while (m_settings.getRowIndices()[c] < 0
+                        || m_settings.getColumnIndices()[c] < 0) {
+                    toRemove.add(c);
+                    c++;
+                }
                 String value = "";
                 if (c < m_settings.getRowIndices().length
                         && m_settings.getRowIndices()[c] == i
@@ -197,6 +207,26 @@ public class TableCreator2NodeModel extends NodeModel {
 
         BufferedDataTable out = cont.getTable();
 
+        // fix for bug #2969
+        if (!toRemove.isEmpty()) {
+            int oldLength = m_settings.getRowIndices().length;
+            int newLength = oldLength - toRemove.size();
+            int[] rowIndices = new int[newLength];
+            int[] colIndices = new int[newLength];
+            String[] values = new String[newLength];
+            c = 0;
+            for (int i = 0; i < newLength; i++) {
+                if (!toRemove.contains(i)) {
+                    rowIndices[c] = m_settings.getRowIndices()[i];
+                    colIndices[c] = m_settings.getColumnIndices()[i];
+                    values[c] = m_settings.getValues()[i];
+                    c++;
+                }
+            }
+            m_settings.setRowIndices(rowIndices);
+            m_settings.setColumnIndices(colIndices);
+            m_settings.setValues(values);
+        }
         return new BufferedDataTable[]{out};
     }
 
@@ -214,7 +244,7 @@ public class TableCreator2NodeModel extends NodeModel {
 
     private int max(final int[] values) {
         int max = -1;
-        for(int i = 0; i < values.length; i++) {
+        for (int i = 0; i < values.length; i++) {
             max = Math.max(max, values[i]);
         }
         return max;
