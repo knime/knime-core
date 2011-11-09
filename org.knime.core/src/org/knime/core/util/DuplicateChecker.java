@@ -55,6 +55,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -95,6 +96,33 @@ public class DuplicateChecker {
     private static final boolean DISABLE_DUPLICATE_CHECK =
         Boolean.getBoolean(
                 KNIMEConstants.PROPERTY_DISABLE_ROWID_DUPLICATE_CHECK);
+
+    /** Custom hash set to keep list of to-be-deleted files, see bug 2966:
+     * "DuplicateChecker always writes to disc (even for small tables) + temp
+     * file names are hashed in core java (increased mem consumption for loops)"
+     * for details. */
+    private static final Collection<File> TEMP_FILES = new HashSet<File>();
+
+    static {
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void run() {
+                removeTempFiles();
+            }
+        });
+    }
+
+    private static void removeTempFiles() {
+        synchronized (TEMP_FILES) {
+            for (File f : TEMP_FILES) {
+                f.delete();
+            }
+            TEMP_FILES.clear();
+        }
+    }
 
     /**
      * Creates a new duplicate checker with default parameters.
@@ -147,6 +175,12 @@ public class DuplicateChecker {
      * @throws IOException if an I/O error occurs
      */
     public void checkForDuplicates() throws DuplicateKeyException, IOException {
+        if (m_storedChunks.size() == 0) {
+            // less than MAX_CHUNK_SIZE keys, no need to write
+            // a file because the check for duplicates has already
+            // been done in addKey
+            return;
+        }
         writeChunk();
         checkForDuplicates(m_storedChunks);
     }
@@ -159,6 +193,7 @@ public class DuplicateChecker {
         for (File f : m_storedChunks) {
             f.delete();
         }
+        synchronized (TEMP_FILES) { TEMP_FILES.removeAll(m_storedChunks); }
         m_storedChunks.clear();
         m_chunk.clear();
     }
@@ -204,7 +239,7 @@ public class DuplicateChecker {
 
             final File f =
                 File.createTempFile("KNIME_DuplicateChecker", ".txt");
-            f.deleteOnExit();
+            synchronized (TEMP_FILES) { TEMP_FILES.add(f); }
             newChunks.add(f);
             BufferedWriter out = new BufferedWriter(new FileWriter(f));
             out.write(Integer.toString(entries));
@@ -258,6 +293,7 @@ public class DuplicateChecker {
         for (File f : newChunks) {
             f.delete();
         }
+        synchronized (TEMP_FILES) { TEMP_FILES.removeAll(newChunks); }
     }
 
     /**
@@ -274,7 +310,7 @@ public class DuplicateChecker {
         Arrays.sort(sorted);
 
         File f = File.createTempFile("KNIME_DuplicateChecker", ".txt");
-        f.deleteOnExit();
+        synchronized (TEMP_FILES) { TEMP_FILES.add(f); }
 
         BufferedWriter out = new BufferedWriter(new FileWriter(f));
         out.write(Integer.toString(sorted.length));
@@ -327,4 +363,12 @@ public class DuplicateChecker {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        clear();
+    }
 }
