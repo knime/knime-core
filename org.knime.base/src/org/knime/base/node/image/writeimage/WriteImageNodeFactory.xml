@@ -16,6 +16,6 @@
 		</option>
 	</fullDescription>
 	<ports>
-        <inPort name="Image Input" index="0">PNG image input</inPort>
+        <inPort name="Image Input" index="0">Image input</inPort>
     </ports>
 </knimeNode>
