@@ -95,16 +95,36 @@ final class WriteImageNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
+        // how ugly - we don't know the image extension upon execution, let's
+        // hope the user gave it the correct extension (e.g. ".png") already,
+        // otherwise the overwriteOK check may fail during configure
+        getOutputFile("");
+        ImagePortObjectSpec imageInObject = (ImagePortObjectSpec)inSpecs[0];
+        DataType dataType = imageInObject.getDataType();
+        if (!dataType.isCompatible(ImageValue.class)) {
+            throw new InvalidSettingsException("Unsupported image type");
+        }
+        return new PortObjectSpec[0];
+    }
+
+    /**
+     * @return
+     * @throws InvalidSettingsException */
+    private File getOutputFile(final String extension)
+        throws InvalidSettingsException {
         String outPath = m_fileOutSettings.getStringValue();
-        boolean overwriteOK = m_overwriteOKBoolean.getBooleanValue();
         if (outPath == null || outPath.length() == 0) {
             throw new InvalidSettingsException("No output path specified");
+        }
+        if (!outPath.endsWith(extension)) {
+            outPath = outPath.concat(extension);
         }
         File f = new File(outPath);
         if (f.isDirectory()) {
             throw new InvalidSettingsException("Can't write to \"" + outPath
                     + "\": it is a directory");
         }
+        boolean overwriteOK = m_overwriteOKBoolean.getBooleanValue();
         if (f.isFile() && !overwriteOK) {
             throw new InvalidSettingsException("Can't write to \"" + outPath
                     + "\": file exists (configure overwrite in dialog)");
@@ -114,19 +134,13 @@ final class WriteImageNodeModel extends NodeModel {
             throw new InvalidSettingsException("Can't write to \"" + outPath
                     + "\": parent directory does not exist");
         }
-        ImagePortObjectSpec imageInObject = (ImagePortObjectSpec)inSpecs[0];
-        DataType dataType = imageInObject.getDataType();
-        if (!dataType.isCompatible(ImageValue.class)) {
-            throw new InvalidSettingsException("Unsupported image type");
-        }
-        return new PortObjectSpec[0];
+        return f;
     }
 
     /** {@inheritDoc} */
     @Override
     protected PortObject[] execute(final PortObject[] inObjects,
             final ExecutionContext exec) throws Exception {
-        String outPath = m_fileOutSettings.getStringValue();
         ImagePortObject imageObj = (ImagePortObject)inObjects[0];
         DataCell imageCellDC = imageObj.toDataCell();
 
@@ -138,9 +152,14 @@ final class WriteImageNodeModel extends NodeModel {
 
         ImageValue v = (ImageValue)imageCellDC;
         ImageContent content = v.getImageContent();
-        content.save(new FileOutputStream(new File(outPath + "."
-                + v.getImageExtension())));
-
+        final String imageExtension = v.getImageExtension();
+        File outFile = getOutputFile("." + imageExtension);
+        final FileOutputStream out = new FileOutputStream(outFile);
+        try {
+            content.save(out);
+        } finally {
+            out.close();
+        }
         return new PortObject[0];
     }
 
