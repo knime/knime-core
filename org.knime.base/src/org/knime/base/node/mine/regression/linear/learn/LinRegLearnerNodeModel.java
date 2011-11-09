@@ -125,6 +125,9 @@ public class LinRegLearnerNodeModel extends NodeModel implements
     /** Key for flag if to compute error on training data. */
     static final String CFG_CALC_ERROR = "calc_error";
 
+    /** Key for flag which columns are included in the linear regression. */
+    static final String  CFG_USED_COLUMNS = "used_columns";
+
     /** The column names to include. */
     private String[] m_includes;
 
@@ -669,6 +672,8 @@ public class LinRegLearnerNodeModel extends NodeModel implements
             m_error = c.getDouble(CFG_ERROR);
             ModelContentRO specContent = c.getModelContent(CFG_SPEC);
             DataTableSpec outSpec = DataTableSpec.load(specContent);
+            m_actualUsedColumns = specContent.getStringArray(
+                    CFG_USED_COLUMNS, (String[]) null);
             ModelContentRO parContent = c.getModelContent(CFG_PARAMS);
             m_params = LinearRegressionContent.instantiateAndLoad(
                     parContent, outSpec);
@@ -697,6 +702,7 @@ public class LinRegLearnerNodeModel extends NodeModel implements
         content.addDouble(CFG_ERROR, m_error);
         ModelContentWO specContent = content.addModelContent(CFG_SPEC);
         m_params.getSpec().save(specContent);
+        specContent.addStringArray(CFG_USED_COLUMNS, m_actualUsedColumns);
         ModelContentWO parContent = content.addModelContent(CFG_PARAMS);
         m_params.save(parContent);
         File outFile = new File(internDir, FILE_SAVE);

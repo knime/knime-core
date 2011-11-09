@@ -1,4 +1,4 @@
-/*  
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 30, 2006 (wiswedel): created
  */
@@ -57,19 +57,35 @@ import org.knime.core.node.NodeModel;
  * 2D plot showing the linear regression line. The plot allows to choose one
  * input column as x-coordinate and has the y-coordinate fixed to the response
  * variable.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class LinRegLineNodeView extends DefaultVisualizationNodeView {
 
+    private final LinRegLinePlotter m_plotter;
+
     /**
      * Create new view with a scatter plot an the regression line.
-     * 
+     *
      * @param nodeModel the model to look at
      */
     public LinRegLineNodeView(final NodeModel nodeModel) {
-        super(nodeModel, new LinRegLinePlotter(new LinRegLineDrawingPane(),
+        this(nodeModel, new LinRegLinePlotter(
+                new LinRegLineDrawingPane(),
                 new LinRegLinePlotterProperties()));
+    }
+
+    private LinRegLineNodeView(final NodeModel nodeModel,
+            final LinRegLinePlotter plotter) {
+        super(nodeModel, plotter);
+        m_plotter = plotter;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected void modelChanged() {
+        super.modelChanged();
+        m_plotter.updatePaintModel();
     }
 
 
