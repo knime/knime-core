@@ -174,17 +174,19 @@ final class DBQueryNodeModel2 extends DBNodeModel
      */
     private String parseQuery(final String query) {
         final StringBuilder resultQueries = new StringBuilder();
-        String[] inQueries = query.split(";");
+        String[] inQueries = query.split(
+                DatabaseReaderConnection.SQL_QUERY_SEPARATOR);
         String inSelect = inQueries[inQueries.length - 1];
         for (int i = 0; i < inQueries.length - 1; i++) {
             resultQueries.append(inQueries[i]);
-            resultQueries.append(";");
+            resultQueries.append(DatabaseReaderConnection.SQL_QUERY_SEPARATOR);
         }
-        String[] thisQueries = m_query.split(";");
+        String[] thisQueries = m_query.split(
+                DatabaseReaderConnection.SQL_QUERY_SEPARATOR);
         String thisSelect = thisQueries[thisQueries.length - 1];
         for (int i = 0; i < thisQueries.length - 1; i++) {
             resultQueries.append(thisQueries[i]);
-            resultQueries.append(";");
+            resultQueries.append(DatabaseReaderConnection.SQL_QUERY_SEPARATOR);
         }        
         thisSelect = new String(thisSelect).replaceAll(
                 DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER,  

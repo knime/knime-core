@@ -20,7 +20,7 @@
 		</intro>
 
     <tab name="Settings">
-	  <option name="Database driver">
+	  <option name="Database Driver">
 		Enter the database driver here; it is a Java class (including the
 		package path), for example: sun.jdbc.odbc.JdbcOdbcDriver
 		Additional driver can be registered via KNIME's preference page
@@ -36,7 +36,7 @@
         password. Those can be replaced or edit using the 'Workflow Credentials'
         menu available in the workflow context menu.
       </option>
-	  <option name="User name">
+	  <option name="User Name">
         Your log-in user name for the database.
 	  </option>
 	  <option name="Password">
@@ -44,7 +44,7 @@
         de- and encrypted before handling it internally and is not 
         stored inside the settings.
 	  </option>
-	  <option name="Table name">
+	  <option name="Table Name">
         Enter the name of the table to which data should be written. Note, if 
         this table exists, the table is dropped before writing.
 	  </option>

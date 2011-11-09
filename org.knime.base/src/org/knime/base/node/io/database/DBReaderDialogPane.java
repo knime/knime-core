@@ -141,18 +141,19 @@ class DBReaderDialogPane extends NodeDialogPane {
                     try {
                         final DatabaseConnectionSettings settings = 
                                 m_loginPane.getConnectionSettings();
-                        DatabaseReaderConnection conn = 
+                        final DatabaseReaderConnection conn = 
                                 new DatabaseReaderConnection(
                                     new DatabaseQueryConnectionSettings(
                                         settings, ""));
                         browser.update((DatabaseMetaData) null);
-                        final DatabaseMetaData meta = conn.getDatabaseMetaData(
-                                 getCredentialsProvider());
                         m_worker = new SwingWorker<Void, Void>() {
                              /** {@inheritDoc} */
                              @Override
                              protected Void doInBackground() throws Exception {
                                  try {
+                                     final DatabaseMetaData meta = 
+                                          conn.getDatabaseMetaData(
+                                             getCredentialsProvider());
                                      browser.update(meta);
                                  } catch (Exception e) {
                                      LOGGER.warn("Error during fetching "

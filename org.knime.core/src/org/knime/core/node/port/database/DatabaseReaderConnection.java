@@ -102,6 +102,10 @@ import org.knime.core.util.FileUtil;
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class DatabaseReaderConnection {
+    
+    /** Separator used to decided which SQL statements should be execute 
+     * line-by-line; the semicolon is not part of the executed query. */
+    public static final String SQL_QUERY_SEPARATOR = ";\n";
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(DatabaseReaderConnection.class);
@@ -226,7 +230,8 @@ public final class DatabaseReaderConnection {
                 throw new SQLException(t);
             }
             synchronized (m_conn.syncConnection(conn)) {
-                final String[] oQueries =  m_conn.getQuery().split(";");
+                final String[] oQueries =  m_conn.getQuery().split(
+                        SQL_QUERY_SEPARATOR);
                 final int selectIndex = oQueries.length - 1;
                 final int hashAlias = System.identityHashCode(this);
                 // replace SELECT (last) query with wrapped statement
@@ -323,7 +328,8 @@ public final class DatabaseReaderConnection {
                                 + " to \"" + Integer.MIN_VALUE + "\".");
                     }
                 }
-                final String[] oQueries = m_conn.getQuery().split(";");
+                final String[] oQueries = m_conn.getQuery().split(
+                        SQL_QUERY_SEPARATOR);
                 LOGGER.debug("Executing SQL statement(s) \"" 
                         + Arrays.toString(oQueries) + "\"");
                 for (int i = 0; i < oQueries.length - 1; i++) {
@@ -365,7 +371,8 @@ public final class DatabaseReaderConnection {
         initStatement(cp);
         synchronized (m_conn.syncConnection(m_stmt.getConnection())) {
             try {
-                final String[] oQueries = m_conn.getQuery().split(";");
+                final String[] oQueries = m_conn.getQuery().split(
+                        SQL_QUERY_SEPARATOR);
                 if (cachedNoRows < 0) {
                     if (DatabaseConnectionSettings.FETCH_SIZE != null) {
                         // fix 2741: postgresql databases ignore fetchsize when 
