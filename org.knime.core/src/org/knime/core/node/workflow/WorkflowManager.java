@@ -3273,7 +3273,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // this method is called from the parent's doAfterExecute
             // we don't propagate state changes (i.e. argument flag is false)
             // since the check for state changes in the parent will happen next
-            if (!sweep(false)) {
+            if (!sweep(m_workflow.getNodeIDs(), false)) {
                 LOGGER.debug("Some states were invalid, old states are:");
                 LOGGER.debug(stateList);
                 LOGGER.debug("The new (corrected) states are: ");
@@ -5787,8 +5787,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // linked set because we need reverse order later on
         Collection<NodeID> failedNodes = new LinkedHashSet<NodeID>();
         boolean isStateChangePredictable = false;
+        final Set<NodeID> nodeIDsInPersistorSet = persistorMap.keySet();
         for (NodeID bfsID : m_workflow.createBreadthFirstSortedList(
-                persistorMap.keySet(), true).keySet()) {
+                nodeIDsInPersistorSet, true).keySet()) {
             NodeContainer cont = getNodeContainer(bfsID);
             // initialize node container with CredentialsStore
             if (cont instanceof SingleNodeContainer) {
@@ -6001,7 +6002,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         new NodeMessage(type, messageBuilder.toString()));
             }
         }
-        if (!sweep(false) && !isStateChangePredictable) {
+        if (!sweep(nodeIDsInPersistorSet, false) && !isStateChangePredictable) {
             loadResult.addError("Some node states were invalid");
         }
     }
@@ -6175,15 +6176,16 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return Whether everything was clean before (if false is returned,
      * something was wrong).
      */
-    boolean sweep(final boolean propagate) {
+    boolean sweep(final Set<NodeID> nodes, final boolean propagate) {
         boolean wasClean = true;
         synchronized (m_workflowMutex) {
             for (NodeID id : m_workflow.createBreadthFirstSortedList(
-                         m_workflow.getNodeIDs(), true).keySet()) {
+                         nodes, true).keySet()) {
                 NodeContainer nc = getNodeContainer(id);
                 if (nc instanceof WorkflowManager) {
                     WorkflowManager metaNode = (WorkflowManager)nc;
-                    if (!metaNode.sweep(false)) {
+                    Set<NodeID> metaContent = metaNode.m_workflow.getNodeIDs();
+                    if (!metaNode.sweep(metaContent, false)) {
                         wasClean = false;
                     }
                 }
