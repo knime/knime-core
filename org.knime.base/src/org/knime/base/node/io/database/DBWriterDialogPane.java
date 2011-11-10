@@ -49,8 +49,7 @@
  */
 package org.knime.base.node.io.database;
 
-import java.awt.Dimension;
-import java.awt.FlowLayout;
+import java.awt.BorderLayout;
 import java.util.Collection;
 
 import javax.swing.BorderFactory;
@@ -88,30 +87,30 @@ final class DBWriterDialogPane extends NodeDialogPane {
     DBWriterDialogPane() {
         super();
         
-        JPanel tablePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        tablePanel.setBorder(BorderFactory.createTitledBorder(" Table name "));
-        m_table.setPreferredSize(new Dimension(400, 20));
+        JPanel tablePanel = new JPanel(new BorderLayout());
+        tablePanel.setBorder(BorderFactory.createTitledBorder(" Table Name "));
         m_table.setFont(DBDialogPane.FONT);
-        tablePanel.add(m_table);
+        tablePanel.add(m_table, BorderLayout.CENTER);
         m_loginPane.add(tablePanel);
         
-        JPanel appendPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel appendPanel = new JPanel(new BorderLayout());
         appendPanel.setBorder(
-                BorderFactory.createTitledBorder(" Append data "));
-        m_append.setPreferredSize(new Dimension(400, 20));
+                BorderFactory.createTitledBorder(" Append Data "));
         m_append.setFont(DBDialogPane.FONT);
         m_append.setToolTipText("Table structure from input and database table"
                 + " must match!");
-        appendPanel.add(m_append);
+        appendPanel.add(m_append, BorderLayout.CENTER);
         m_loginPane.add(appendPanel);
         
-        super.addTab("Settings", m_loginPane);
+        final JPanel p = new JPanel(new BorderLayout());
+        p.add(m_loginPane, BorderLayout.NORTH);
+        super.addTab("Settings", p);
         
         // add SQL type panel
         m_typePanel = new DBSQLTypesPanel();
         JScrollPane scroll = new JScrollPane(m_typePanel);
         scroll.setPreferredSize(m_loginPane.getPreferredSize());
-        super.addTab("SQL types", scroll);
+        super.addTab("SQL Types", scroll);
     }
     
     /**

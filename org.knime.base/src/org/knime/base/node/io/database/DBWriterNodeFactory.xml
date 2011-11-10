@@ -48,14 +48,14 @@
         Enter the name of the table to which data should be written. Note, if 
         this table exists, the table is dropped before writing.
 	  </option>
-	  <option name="Append data">
+	  <option name="Append Data">
         Check this to append the input data to an existing table with the same
         data structure. If the table does not exist a new one will be created. 
         <b>Note, if this box is unchecked an existing table is dropped before 
         execution of this node.</b>
       </option>
     </tab>
-    <tab name="SQL types">
+    <tab name="SQL Types">
 	  <option name="Types">
 		Enter the SQL types here to write integer-, double-, or string-valued 
 		columns to the database. By default integers are defined as type 
