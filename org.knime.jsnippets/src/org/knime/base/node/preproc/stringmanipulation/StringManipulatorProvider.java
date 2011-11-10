@@ -94,7 +94,6 @@ import org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceCharsMo
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceModifiersManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ReverseManipulator;
-import org.knime.base.node.preproc.stringmanipulation.manipulator.StringManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.StripEndManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.StripManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.StripStartManipulator;
@@ -182,7 +181,7 @@ public final class StringManipulatorProvider {
         manipulators.add(new SubstringOffsetLengthManipulator());
         manipulators.add(new ToEmptyManipulator());
         manipulators.add(new ToNullManipulator());
-        manipulators.add(new StringManipulator());
+        //manipulators.add(new StringManipulator());
         manipulators.add(new UpperCaseManipulator());
 
         Set<String> categories = new TreeSet<String>();

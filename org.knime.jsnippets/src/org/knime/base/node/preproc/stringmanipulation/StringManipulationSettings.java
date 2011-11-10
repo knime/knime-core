@@ -346,8 +346,7 @@ public class StringManipulationSettings {
         int endIndex = StringUtils.indexOf(expression, '(');
         if (endIndex < 0) {
             throw new InvalidSettingsException(
-            "Constant expressions are not supported. Please use a converter "
-            + "function like toString(x) to convert to the desired type.");
+            "Constant expressions are not supported.");
         }
         String function = expression.substring(0, endIndex);
 
