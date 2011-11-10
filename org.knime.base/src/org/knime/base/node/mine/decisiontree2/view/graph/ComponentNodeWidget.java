@@ -116,6 +116,18 @@ public abstract class ComponentNodeWidget<K> extends NodeWidget<K> {
      * {@inheritDoc}
      */
     @Override
+    public void setScaleFactor(final float scale) {
+        if (scale != getScaleFactor()) {
+            // recreate component
+            m_component = null;
+            super.setScaleFactor(scale);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public final Dimension getPreferredSize() {
         return getComponent().getPreferredSize();
     }
@@ -127,6 +139,7 @@ public abstract class ComponentNodeWidget<K> extends NodeWidget<K> {
     protected void paint(final Component c, final Graphics2D g,
             final int x, final int y, final int width, final int height) {
         JComponent comp = getComponent();
+        comp.setFont(g.getFont());
         comp.setBounds(0, 0, width, height);
         comp.doLayout();
         adjustComponentProperties(comp);

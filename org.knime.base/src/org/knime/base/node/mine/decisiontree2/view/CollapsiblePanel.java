@@ -57,6 +57,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.Image;
 import java.awt.Insets;
 import java.awt.Rectangle;
 import java.awt.event.MouseEvent;
@@ -87,10 +88,12 @@ public class CollapsiblePanel extends JPanel {
      * @param title The title which will be displayed in the top left corner
      * of the border.
      * @param content The content of this {@link JPanel}
+     * @param scale a scale factor
      */
-    public CollapsiblePanel(final String title, final JPanel content) {
+    public CollapsiblePanel(final String title, final JPanel content,
+            final float scale) {
         super(new GridBagLayout());
-        m_border = new CollapsibleBorder(this, title, false);
+        m_border = new CollapsibleBorder(this, title, false, scale);
         m_content = content;
 
         GridBagConstraints c = new GridBagConstraints();
@@ -139,14 +142,20 @@ public class CollapsiblePanel extends JPanel {
         private JLabel m_label;
         // The border color
         private Color m_color;
+        // scaled version of collapsedIcon
+        private ImageIcon m_collapsedIcon;
+        // scaled version of expandedIcon
+        private ImageIcon m_expandedIcon;
+
 
         /**
          * @param container The Panel that this border surrounds
          * @param text The text displayed in the top left corner
          * @param collapsed Whether the initial state is collapsed or not
+         * @param scale a scale factor
          */
         public CollapsibleBorder(final CollapsiblePanel container,
-                final String text, final boolean collapsed) {
+                final String text, final boolean collapsed, final float scale) {
             m_collapsed = collapsed;
             m_offset = 3;
             m_container = container;
@@ -162,6 +171,7 @@ public class CollapsiblePanel extends JPanel {
                     collapsedIcon = new ImageIcon(collapsedUrl);
                 }
             }
+            m_collapsedIcon = scaled(collapsedIcon, scale);
             if (expandedIcon == null) {
                 URL expandedUrl =
                     this.getClass().getClassLoader().getResource(iconBase
@@ -172,8 +182,23 @@ public class CollapsiblePanel extends JPanel {
                     expandedIcon = new ImageIcon(expandedUrl);
                 }
             }
-            m_label = new JLabel(text, expandedIcon, SwingConstants.LEFT);
+            m_expandedIcon = scaled(expandedIcon, scale);
+
+            m_label = new JLabel(text, m_expandedIcon,
+                    SwingConstants.LEFT);
+            m_label.setFont(m_label.getFont().deriveFont(
+                    m_label.getFont().getSize() * scale));
             m_color = Color.lightGray;
+        }
+
+        /* Get a scaled version of the give icon */
+        private ImageIcon scaled(final ImageIcon icon, final float scale) {
+            Image img = icon.getImage();
+            Image newimg = img.getScaledInstance(
+                    Math.round(icon.getIconWidth() * scale),
+                    Math.round(icon.getIconHeight() * scale),
+                    java.awt.Image.SCALE_SMOOTH);
+            return new ImageIcon(newimg);
         }
 
         /**
@@ -182,9 +207,9 @@ public class CollapsiblePanel extends JPanel {
         public void setCollapsed(final boolean collapsed) {
             m_collapsed = collapsed;
             if (collapsed) {
-                m_label.setIcon(collapsedIcon);
+                m_label.setIcon(m_collapsedIcon);
             } else {
-                m_label.setIcon(expandedIcon);
+                m_label.setIcon(m_expandedIcon);
             }
         }
 

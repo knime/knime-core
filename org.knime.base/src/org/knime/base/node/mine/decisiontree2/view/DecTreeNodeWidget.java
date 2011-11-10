@@ -114,6 +114,7 @@ public final class DecTreeNodeWidget
      */
     @Override
     protected JComponent createComponent() {
+        float scale = getScaleFactor();
         JPanel p = new JPanel(new GridBagLayout());
         p.setOpaque(false);
         GridBagConstraints c = new GridBagConstraints();
@@ -124,14 +125,14 @@ public final class DecTreeNodeWidget
         c.gridy = 0;
         c.weightx = 1;
         c.weighty = 1;
-        JPanel nodePanel = createNodeLabelPanel();
+        JPanel nodePanel = createNodeLabelPanel(scale);
         nodePanel.setOpaque(false);
         p.add(nodePanel, c);
         // add table
         c.gridy++;
-        JPanel tablePanel = createTablePanel();
+        JPanel tablePanel = createTablePanel(scale);
         tablePanel.setOpaque(false);
-        m_table = new CollapsiblePanel("Table:", tablePanel);
+        m_table = new CollapsiblePanel("Table:", tablePanel, scale);
         m_table.setOpaque(false);
         m_table.setCollapsed(m_tableCollapsed);
         p.add(m_table, c);
@@ -142,9 +143,9 @@ public final class DecTreeNodeWidget
             : getUserObject().coveredColors();
         if (null != nodeColors && null != rootColors && rootColors.size() > 1) {
             c.gridy++;
-            JPanel chartPanel = createChartPanel(nodeColors, rootColors);
+            JPanel chartPanel = createChartPanel(nodeColors, rootColors, scale);
             chartPanel.setOpaque(false);
-            m_chart = new CollapsiblePanel("Chart:", chartPanel);
+            m_chart = new CollapsiblePanel("Chart:", chartPanel, scale);
             m_chart.setOpaque(false);
             m_chart.setCollapsed(m_chartCollapsed);
             p.add(m_chart, c);
@@ -168,7 +169,6 @@ public final class DecTreeNodeWidget
         if (m_table != null) {
             m_table.setCollapsed(collapsed);
         }
-
     }
 
     /**
@@ -189,9 +189,26 @@ public final class DecTreeNodeWidget
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setScaleFactor(final float scale) {
+        // remember if table is collapsed
+        if (null != m_table) {
+            m_tableCollapsed = m_table.isCollapsed();
+        }
+        // remember if chart is collapsed
+        if (null != m_chart) {
+            m_chartCollapsed = m_chart.isCollapsed();
+        }
+        super.setScaleFactor(scale);
+    }
+
     /** The panel at the top displaying the node label.
+     * @param scale
      * @return A label, e.g. "Iris-versicolor (45/46)" */
-    private JPanel createNodeLabelPanel() {
+    private JPanel createNodeLabelPanel(final float scale) {
         JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER));
         StringBuilder label = new StringBuilder();
         DecisionTreeNode node = getUserObject();
@@ -206,12 +223,12 @@ public final class DecTreeNodeWidget
         label.append(" (").append(convertCount(myClassCount));
         label.append("/").append(convertCount(totalClassCount)).append(")");
 
-        p.add(new JLabel(label.toString()));
+        p.add(scaledLabel(label.toString(), scale));
         return p;
     }
 
     // The table
-    private JPanel createTablePanel() {
+    private JPanel createTablePanel(final float scale) {
         LinkedHashMap<DataCell, Double> classCounts =
             getUserObject().getClassCounts();
         double entireClassCounts = getUserObject().getEntireClassCount();
@@ -226,11 +243,11 @@ public final class DecTreeNodeWidget
         c.weightx = 1;
         c.weighty = 1;
         c.gridwidth = 1;
-        p.add(new JLabel("Category"), c);
+        p.add(scaledLabel("Category", scale), c);
         c.gridx++;
-        p.add(new JLabel("% ", JLabel.RIGHT), c);
+        p.add(scaledLabel("% ", scale, JLabel.RIGHT), c);
         c.gridx++;
-        p.add(new JLabel("n ", JLabel.RIGHT), c);
+        p.add(scaledLabel("n ", scale, JLabel.RIGHT), c);
         c.gridy++;
         c.gridx = 0;
         c.gridwidth = GridBagConstraints.REMAINDER;
@@ -239,17 +256,19 @@ public final class DecTreeNodeWidget
         DataCell majorityClass = getUserObject().getMajorityClass();
         List<Double> classFreqList = new ArrayList<Double>();
         for (DataCell cell : classCounts.keySet()) {
-            JLabel classLabel = new JLabel(cell.toString());
+            JLabel classLabel = scaledLabel(cell.toString(), scale);
             c.gridy++;
             c.gridx = 0;
             p.add(classLabel, c);
             c.gridx++;
             double classFreq = classCounts.get(cell) / entireClassCounts;
             classFreqList.add(classFreq);
-            p.add(new JLabel(convertPercentage(classFreq), JLabel.RIGHT), c);
+            p.add(scaledLabel(convertPercentage(classFreq), scale,
+                    JLabel.RIGHT), c);
             c.gridx++;
             Double classCountValue = classCounts.get(cell);
-            p.add(new JLabel(convertCount(classCountValue), JLabel.RIGHT), c);
+            p.add(scaledLabel(convertCount(classCountValue), scale,
+                    JLabel.RIGHT), c);
             if (cell.equals(majorityClass)) {
                 c.gridx = 0;
                 JComponent comp = new JPanel();
@@ -267,21 +286,35 @@ public final class DecTreeNodeWidget
         c.gridwidth = 1;
         c.gridy++;
         c.gridx = 0;
-        p.add(new JLabel("Total"), c);
+        p.add(scaledLabel("Total", scale), c);
         c.gridx++;
         double nominator = null != getGraphView().getRootNode()
             ? getGraphView().getRootNode().getEntireClassCount()
             : getUserObject().getEntireClassCount();
         double covorage = entireClassCounts / nominator;
-        p.add(new JLabel(convertPercentage(covorage), JLabel.RIGHT), c);
+        p.add(scaledLabel(convertPercentage(covorage), scale, JLabel.RIGHT), c);
         c.gridx++;
-        p.add(new JLabel(convertCount(entireClassCounts), JLabel.RIGHT), c);
+        p.add(scaledLabel(convertCount(entireClassCounts), scale,
+                JLabel.RIGHT), c);
         return p;
+    }
+
+    private JLabel scaledLabel(final String label, final float scale) {
+        JLabel l = new JLabel(label);
+        l.setFont(l.getFont().deriveFont(l.getFont().getSize() * scale));
+        return l;
+    }
+
+    private JLabel scaledLabel(final String label, final float scale,
+            final int horizontalAlignment) {
+        JLabel l = new JLabel(label, horizontalAlignment);
+        l.setFont(l.getFont().deriveFont(l.getFont().getSize() * scale));
+        return l;
     }
 
     // the chart
     private JPanel createChartPanel(final HashMap<Color, Double> nodeColors,
-            final HashMap<Color, Double> rootColors) {
+            final HashMap<Color, Double> rootColors, final float scale) {
         JPanel p = new JPanel(new GridBagLayout());
         GridBagConstraints c = new GridBagConstraints();
         int gridwidth = 3;
@@ -294,7 +327,7 @@ public final class DecTreeNodeWidget
         c.weighty = 1;
         c.gridwidth = GridBagConstraints.REMAINDER;
         if (null != m_colorColumn) {
-            p.add(new JLabel("Color column: " + m_colorColumn), c);
+            p.add(scaledLabel("Color column: " + m_colorColumn, scale), c);
             c.gridy++;
         }
         double entireClassCounts = 0;
@@ -310,7 +343,8 @@ public final class DecTreeNodeWidget
             classFreq.add(freq / entireClassCounts);
         }
         c.gridwidth = gridwidth;
-        p.add(new MyHistogram(classFreq, color), c);
+        MyHistogram histogram = new MyHistogram(classFreq, color, scale);
+        p.add(histogram, c);
         c.gridwidth = 1;
 
         return p;
@@ -418,14 +452,18 @@ public final class DecTreeNodeWidget
         private List<Double> m_classFreqList;
         private List<Color> m_colorList;
 
+        private float m_scale;
+
         /**
          * @param classFreqList
          * @param colorList
+         * @param scale the scale factor
          */
         public MyHistogram(final List<Double> classFreqList,
-                final List<Color> colorList) {
+                final List<Color> colorList, final float scale) {
             m_classFreqList = classFreqList;
             m_colorList = colorList;
+            m_scale = scale;
 //            super.setDoubleBuffered(false);
 //            super.setBackground(ColorAttr.BACKGROUND);
         }
@@ -444,7 +482,8 @@ public final class DecTreeNodeWidget
          */
         @Override
         public Dimension getPreferredSize() {
-            return new Dimension(2, 40);
+            return new Dimension(2,
+                    Math.round(40 * m_scale));
         }
         /**
          * {@inheritDoc}

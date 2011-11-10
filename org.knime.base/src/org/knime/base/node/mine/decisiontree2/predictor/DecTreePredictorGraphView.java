@@ -50,20 +50,29 @@
  */
 package org.knime.base.node.mine.decisiontree2.predictor;
 
+import java.awt.Color;
 import java.awt.Dimension;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.swing.Action;
+import javax.swing.JComboBox;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
+import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
@@ -116,7 +125,7 @@ final class DecTreePredictorGraphView
         JSplitPane splitPane = new JSplitPane();
         splitPane.setResizeWeight(1.0);
         splitPane.setLeftComponent(treeView);
-        splitPane.setRightComponent(m_graph.createOutlineView());
+        splitPane.setRightComponent(createRightPanel());
 
         setComponent(splitPane);
 
@@ -184,6 +193,67 @@ final class DecTreePredictorGraphView
                 }
             }
         });
+    }
+
+    /* Create the Panel with the outline view and the controls */
+    private JPanel createRightPanel() {
+        JPanel p = new JPanel(new GridBagLayout());
+        p.setBackground(Color.white);
+        GridBagConstraints c = new GridBagConstraints();
+
+        c.fill = GridBagConstraints.BOTH;
+        c.anchor = GridBagConstraints.WEST;
+        c.insets = new Insets(6, 6, 4, 6);
+        c.gridx = 0;
+        c.gridy = 0;
+        c.gridwidth = 1;
+        c.weightx = 1.0;
+        c.weighty = 1.0;
+
+        p.add(m_graph.createOutlineView(), c);
+
+        c.weighty = 0;
+        c.gridy++;
+        p.add(new JLabel("Zoom:"), c);
+
+
+        c.gridy++;
+        final Map<Object, Float> scaleFactors =
+                new LinkedHashMap<Object, Float>();
+        scaleFactors.put("140%", 1.4f);
+        scaleFactors.put("120%", 1.2f);
+        scaleFactors.put("100%", 1.0f);
+        scaleFactors.put("80%", 0.8f);
+        scaleFactors.put("60%", 0.6f);
+
+        final JComboBox scaleFactorComboBox = new JComboBox(
+                scaleFactors.keySet().toArray());
+        scaleFactorComboBox.setEditable(true);
+        scaleFactorComboBox.setSelectedItem("100%");
+        scaleFactorComboBox.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                Object selected = scaleFactorComboBox.getSelectedItem();
+                Float scaleFactor = scaleFactors.get(selected);
+                if (null == scaleFactor) {
+                    String str = ((String)selected).trim();
+                    if (str.endsWith("%")) {
+                        scaleFactor = Float.parseFloat(
+                                str.substring(0, str.length() - 1));
+                        scaleFactor = scaleFactor / 100f;
+                    } else {
+                        scaleFactor = Float.parseFloat(str);
+                    }
+                }
+
+                m_graph.setScaleFactor(scaleFactor);
+                getComponent().validate();
+                getComponent().repaint();
+            }
+        });
+        p.add(scaleFactorComboBox, c);
+        return p;
     }
 
     /**
@@ -281,7 +351,8 @@ final class DecTreePredictorGraphView
             new JMenuItem(HiLiteHandler.HILITE_SELECTED + " Branch");
         item.setMnemonic('S');
         item.addActionListener(new ActionListener() {
-            public void actionPerformed(final ActionEvent e) {
+            @Override
+			public void actionPerformed(final ActionEvent e) {
                 assert (m_hiLiteHdl != null);
                 updateHiLite(true);
             }
@@ -294,7 +365,8 @@ final class DecTreePredictorGraphView
                 HiLiteHandler.UNHILITE_SELECTED + " Branch");
         item.setMnemonic('U');
         item.addActionListener(new ActionListener() {
-            public void actionPerformed(final ActionEvent e) {
+            @Override
+			public void actionPerformed(final ActionEvent e) {
                 assert (m_hiLiteHdl != null);
                 updateHiLite(false);
             }
@@ -306,7 +378,8 @@ final class DecTreePredictorGraphView
         JMenuItem item = new JMenuItem(HiLiteHandler.CLEAR_HILITE);
         item.setMnemonic('C');
         item.addActionListener(new ActionListener() {
-            public void actionPerformed(final ActionEvent e) {
+            @Override
+			public void actionPerformed(final ActionEvent e) {
                 assert (m_hiLiteHdl != null);
                 //m_graph.clearHilite();
                 m_hiLiteHdl.fireClearHiLiteEvent();

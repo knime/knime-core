@@ -66,6 +66,7 @@ public abstract class NodeWidget<K> implements MouseListener {
     private Dimension m_size;
     private HierarchicalGraphView<K> m_graph;
     private K m_object;
+    private float m_scale;
 
     /**
      * Creates a new instance.
@@ -77,6 +78,7 @@ public abstract class NodeWidget<K> implements MouseListener {
         m_graph = graph;
         m_object = object;
         m_size = new Dimension(0, 0);
+        m_scale = 1.0f;
     }
 
     /**
@@ -138,6 +140,23 @@ public abstract class NodeWidget<K> implements MouseListener {
         m_size = size;
     }
 
+    /**
+     * Set the scale factor.
+     *
+     * @return the scale factor
+     */
+    public float getScaleFactor() {
+        return m_scale;
+    }
+
+    /**
+     * Get the scale factor.
+     *
+     * @param scale the scale factor to set
+     */
+    public void setScaleFactor(final float scale) {
+        m_scale = scale;
+    }
 
     /**
      * Get the graph where this {@link NodeWidget} is element of.

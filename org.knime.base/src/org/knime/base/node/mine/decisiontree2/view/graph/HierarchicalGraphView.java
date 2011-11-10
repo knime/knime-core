@@ -108,6 +108,7 @@ public abstract class HierarchicalGraphView<K> {
     private int m_nodeWidth;
     private Map<K, DefaultMutableTreeNode> m_treeMap;
     private Map<Rectangle, String> m_toolTips;
+    private float m_scale;
 
     /**
      * Create a new instance.
@@ -136,6 +137,7 @@ public abstract class HierarchicalGraphView<K> {
 
         m_component = new HierarchicalGraphComponent<K>(this);
         m_nodeWidth = 100;
+        m_scale = 1.0f;
         init(root);
     }
 
@@ -169,6 +171,26 @@ public abstract class HierarchicalGraphView<K> {
         }
     }
 
+    /**
+     * Set the scale factor.
+     *
+     * @return the scale factor
+     */
+    public float getScaleFactor() {
+        return m_scale;
+    }
+
+    /**
+     * Get the scale factor.
+     *
+     * @param scale the scale factor to set
+     */
+    public void setScaleFactor(final float scale) {
+    	if (scale != m_scale) {
+    		m_scale = scale;
+    		layoutGraph();
+    	}
+    }
 
     /**
      * Replace the root which is the model for this view.
@@ -270,9 +292,12 @@ public abstract class HierarchicalGraphView<K> {
         NodeWidget<K> rootWidget = getWidgets().get(rootK);
         if (null == rootWidget) {
             rootWidget = getNodeWidgetFactory().createGraphNode(rootK);
+            rootWidget.setScaleFactor(m_scale);
             getWidgets().put(rootK, rootWidget);
+        } else {
+        	rootWidget.setScaleFactor(m_scale);
         }
-        m_layoutSettings = new LayoutSettings(getNodeWidth());
+        m_layoutSettings = new LayoutSettings(getNodeWidth(), m_scale);
 
         Stack<DefaultMutableTreeNode> stack =
             new Stack<DefaultMutableTreeNode>();
@@ -306,6 +331,7 @@ public abstract class HierarchicalGraphView<K> {
         K k = (K)node.getUserObject();
 
         NodeWidget<K> widget = getWidgets().get(k);
+        widget.setScaleFactor(m_scale);
         Dimension preferredSize = widget.getPreferredSize();
         layoutInfo.setYOffset(layoutInfo.getYOffset() - preferredSize.height
                 - m_layoutSettings.getLevelGap());
@@ -415,7 +441,10 @@ public abstract class HierarchicalGraphView<K> {
         NodeWidget<K> widget = getWidgets().get(k);
         if (null == widget) {
             widget = getNodeWidgetFactory().createGraphNode(k);
+            widget.setScaleFactor(m_scale);
             getWidgets().put(k, widget);
+        } else {
+        	widget.setScaleFactor(m_scale);
         }
         Dimension preferredSize = widget.getPreferredSize();
         layoutInfo.setYOffset(layoutInfo.getYOffset() + preferredSize.height
@@ -446,7 +475,10 @@ public abstract class HierarchicalGraphView<K> {
         NodeWidget<K> widget = getWidgets().get(k);
         if (null == widget) {
             widget = getNodeWidgetFactory().createGraphNode(k);
+            widget.setScaleFactor(m_scale);
             getWidgets().put(k, widget);
+        } else {
+        	widget.setScaleFactor(m_scale);
         }
         widget.setSize(new Dimension(bounds.width, bounds.height));
     }
@@ -473,6 +505,8 @@ public abstract class HierarchicalGraphView<K> {
         m_toolTips.clear();
         final Paint origPaint = g.getPaint();
         final Stroke origStroke = g.getStroke();
+        final Font origFont = g.getFont();
+        g.setFont(origFont.deriveFont(origFont.getSize() * m_scale));
         g.setColor(ColorAttr.BORDER);
         Enumeration<DefaultMutableTreeNode> breadthFirst =
             m_root.breadthFirstEnumeration();
@@ -552,17 +586,20 @@ public abstract class HierarchicalGraphView<K> {
             }
             // draw text on the connectors
             NodeWidget<K> widget = getWidgets().get(currK);
+            widget.setScaleFactor(m_scale);
             String labelAbove = widget.getConnectorLabelAbove();
             if (null != labelAbove && !labelAbove.isEmpty()) {
                 label.setText(labelAbove);
                 label.setOpaque(true);
                 label.setBackground(ColorAttr.BACKGROUND);
                 label.setFont(g.getFont().deriveFont(Font.BOLD | Font.ITALIC));
-                int w = Math.min(m_layoutSettings.getNodeWidth() - 10,
+                int wOffset =  Math.round(-10 * m_scale);
+                int w = Math.min(m_layoutSettings.getNodeWidth() + wOffset,
                         label.getPreferredSize().width);
                 int h = label.getPreferredSize().height;
                 int xx = bounds.x + (bounds.width - w) / 2;
-                int yy = bounds.y - h - 18;
+                int yyOffset = Math.round(-18 * m_scale);
+                int yy = bounds.y - h + yyOffset;
                 Rectangle labelBounds = new Rectangle(xx, yy, w, h);
                 m_toolTips.put(labelBounds, labelAbove);
                 SwingUtilities.paintComponent(g, label, (Container)c,
@@ -575,11 +612,13 @@ public abstract class HierarchicalGraphView<K> {
                 label.setOpaque(true);
                 label.setBackground(ColorAttr.BACKGROUND);
                 label.setFont(g.getFont().deriveFont(Font.BOLD | Font.ITALIC));
-                int w = Math.min(m_layoutSettings.getNodeWidth() - 10,
+                int wOffset =  Math.round(-10 * m_scale);
+                int w = Math.min(m_layoutSettings.getNodeWidth() + wOffset,
                         label.getPreferredSize().width);
                 int h = label.getPreferredSize().height;
                 int xx = bounds.x + (bounds.width - w) / 2;
-                int yy = bounds.y + bounds.height + 10;
+                int yyOffset = Math.round(10 * m_scale);
+                int yy = bounds.y + bounds.height + yyOffset;
                 Rectangle labelBounds = new Rectangle(xx, yy, w, h);
                 m_toolTips.put(labelBounds, labelBelow);
                 SwingUtilities.paintComponent(g, label, (Container)c,
@@ -605,6 +644,7 @@ public abstract class HierarchicalGraphView<K> {
         }
         g.setPaint(origPaint);
         g.setStroke(origStroke);
+        g.setFont(origFont);
         // notify listeners about the repaint
         for (GraphListener listener : m_graphListeners) {
             listener.graphRepaint();
@@ -619,6 +659,7 @@ public abstract class HierarchicalGraphView<K> {
             final Graphics2D g) {
         K k = (K)node.getUserObject();
         NodeWidget<K> widget = getWidgets().get(k);
+        widget.setScaleFactor(m_scale);
         Rectangle bounds = getVisible().get(k);
         boolean selected = m_selected == k;
         boolean hilited = m_hilited.contains(k);
@@ -942,19 +983,23 @@ public abstract class HierarchicalGraphView<K> {
 
     /** Constants for the layout. */
     static class LayoutSettings {
-        private int m_levelGap = 100;
-        private int m_branchGap = 20;
+        private int m_levelGap;
+        private int m_branchGap;
         private int m_nodeWidth;
         private Dimension m_signSize;
         private Point m_signOffset;
 
         /**
          * @param nodeWidth The width of the nodes.
+         * @param scale scale factor
          */
-        public LayoutSettings(final int nodeWidth) {
-            m_nodeWidth = nodeWidth;
-            m_signSize = new Dimension(12, 12);
-            int delta = 4;
+        public LayoutSettings(final int nodeWidth, final float scale) {
+            m_levelGap = Math.round(scale * 100);
+            m_branchGap = Math.round(scale * 20);
+            m_nodeWidth = Math.round(scale * nodeWidth);
+            int sign = Math.round(scale * 12);
+            m_signSize = new Dimension(sign, sign);
+            int delta = Math.round(scale * 4);
             m_signOffset = new Point(-m_signSize.width - delta,
                     m_levelGap / 2 - m_signSize.height - delta);
         }
@@ -1018,7 +1063,7 @@ public abstract class HierarchicalGraphView<K> {
             return 5;
         }
         /**
-         * @return the common width fo nodes
+         * @return the common width of nodes
          */
         final int getNodeWidth() {
             return m_nodeWidth;
