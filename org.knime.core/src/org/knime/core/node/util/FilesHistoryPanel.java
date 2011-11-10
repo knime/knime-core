@@ -281,8 +281,8 @@ public final class FilesHistoryPanel extends JPanel {
         fileChooser.setFileFilter(new SimpleFileFilter(m_suffixes));
         fileChooser.setFileSelectionMode(m_selectMode);
 
-        String f = m_textBox.getEditor().getItem().toString();
-        File dirOrFile = getFile(f);
+        String url = getSelectedFile();
+        File dirOrFile = getFile(url);
         if (dirOrFile.isDirectory()) {
             fileChooser.setCurrentDirectory(dirOrFile);
         } else {
@@ -442,13 +442,23 @@ public final class FilesHistoryPanel extends JPanel {
      * Return a file object for the given fileName. It makes sure that if the
      * fileName is not absolute it will be relative to the user's home dir.
      *
-     * @param fileName the file name to convert to a file
+     * @param fileOrUrl the file name to convert to a file
      * @return a file representing fileName
      */
-    public static final File getFile(final String fileName) {
-        File f = new File(fileName);
+    public static final File getFile(final String fileOrUrl) {
+        String path = fileOrUrl;
+        try {
+            URL u = new URL(fileOrUrl);
+            if ("file".equals(u.getProtocol())) {
+                path = u.getPath();
+            }
+        } catch (MalformedURLException ex) {
+        }
+
+
+        File f = new File(path);
         if (!f.isAbsolute()) {
-            f = new File(new File(System.getProperty("user.home")), fileName);
+            f = new File(new File(System.getProperty("user.home")), path);
         }
         return f;
     }
