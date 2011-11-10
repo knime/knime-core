@@ -61,7 +61,6 @@ import org.knime.core.node.workflow.AnnotationData;
 import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.directannotationedit.StyledTextEditor;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 
@@ -75,22 +74,13 @@ public class AddAnnotationCommand extends AbstractKNIMECommand {
 
     private final Point m_location;
 
-    private static final int DEFAULT_HEIGHT;
+    private static final int DEFAULT_HEIGHT = 140;
 
-    private static final int DEFAULT_WIDTH;
-
-    static {
-        DEFAULT_WIDTH = Math.max(175, StyledTextEditor.TOOLBAR_MIN_WIDTH);
-        DEFAULT_HEIGHT = (int)Math.round(DEFAULT_WIDTH * 0.38);
-    }
+    private static final int DEFAULT_WIDTH = 200;
 
     private static final int INITIAL_FLOWANNO_COLOR = AnnotationEditPart
             .colorToRGBint(AnnotationEditPart
                     .getWorkflowAnnotationDefaultBackgroundColor());
-
-    private static final int INITIAL_NODEANNO_COLOR = AnnotationEditPart
-            .colorToRGBint(AnnotationEditPart
-                    .getNodeAnnotationDefaultBackgroundColor());
 
     public static final String INITIAL_FLOWANNO_TEXT = "Double-click to edit.";
 

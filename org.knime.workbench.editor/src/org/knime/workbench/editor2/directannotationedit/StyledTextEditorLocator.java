@@ -83,6 +83,7 @@ public class StyledTextEditorLocator implements CellEditorLocator {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void relocate(final CellEditor celleditor) {
         Composite edit = (Composite)celleditor.getControl();
         Rectangle figBounds = m_figure.getBounds().getCopy();
@@ -104,8 +105,7 @@ public class StyledTextEditorLocator implements CellEditorLocator {
         figBounds.width = (int)((figBounds.width + trim.width) / zooFactor);
         figBounds.height = (int)((figBounds.height + trim.height) / zooFactor);
         edit.setBounds(new org.eclipse.swt.graphics.Rectangle(figBounds.x,
-                figBounds.y - StyledTextEditor.TOOLBAR_HEIGHT, figBounds.width,
-                figBounds.height + StyledTextEditor.TOOLBAR_HEIGHT));
+                figBounds.y, figBounds.width, figBounds.height));
     }
 
 }

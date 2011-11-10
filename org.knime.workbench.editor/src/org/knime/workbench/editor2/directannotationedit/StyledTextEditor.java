@@ -50,12 +50,17 @@
  */
 package org.knime.workbench.editor2.directannotationedit;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.eclipse.core.runtime.Platform;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.GroupMarker;
+import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.swt.SWT;
@@ -63,7 +68,6 @@ import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.custom.VerifyKeyListener;
 import org.eclipse.swt.events.FocusAdapter;
-import org.eclipse.swt.events.FocusEvent;
 import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.ModifyEvent;
@@ -74,16 +78,14 @@ import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.ColorDialog;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FontDialog;
+import org.eclipse.swt.widgets.Menu;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.AnnotationData;
@@ -97,33 +99,12 @@ import org.knime.workbench.editor2.editparts.AnnotationEditPart;
  */
 public class StyledTextEditor extends CellEditor {
 
-    private static final int BUTTON_SIZE;
-    static {
-        if (Platform.OS_LINUX.equals(Platform.getOS())) {
-            BUTTON_SIZE = 22;
-        } else if (Platform.OS_MACOSX.equals(Platform.getOS())) {
-            BUTTON_SIZE = 28;
-        } else {
-            BUTTON_SIZE = 16;
-        }
-    }
-    /** height of the font style toolbar in the editor control. */
-    public static final int TOOLBAR_HEIGHT = BUTTON_SIZE * 2;
-
-    /** the minimum width of the editor window in order to show all buttons even
-     * under MacOS. Seems the default distance between buttons is seven. And we
-     * currently have seven buttons in the toolbar.
-     */
-    public static final int TOOLBAR_MIN_WIDTH = (BUTTON_SIZE + 7) * 4;
-
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(StyledTextEditor.class);
 
     private StyledText m_styledText;
 
-    private Composite m_toolbar;
-
-    private Composite m_styleButtons;
+    private List<IAction> m_styleActions;
 
     private Composite m_panel;
 
@@ -131,7 +112,7 @@ public class StyledTextEditor extends CellEditor {
 
     private double m_zoomFactor = 1.0;
 
-    private final AtomicBoolean m_commitOnFocusLost = new AtomicBoolean(false);
+    private final AtomicBoolean m_allowFocusLost = new AtomicBoolean(true);
 
     /**
      *
@@ -163,9 +144,8 @@ public class StyledTextEditor extends CellEditor {
         m_panel = new Composite(parent, SWT.NONE);
         m_panel.setLayout(createPanelGridLayout(1, true));
 
-        // create toolbar first!
-        createToolbar(m_panel);
         createStyledText(m_panel);
+
         applyBackgroundColor();
         return m_panel;
     }
@@ -186,9 +166,8 @@ public class StyledTextEditor extends CellEditor {
     }
 
     private Control createStyledText(final Composite parent) {
-        m_styledText =
-                new StyledText(parent, SWT.MULTI | SWT.WRAP
-                        | SWT.FULL_SELECTION);
+        m_styledText = new StyledText(parent, SWT.MULTI | SWT.WRAP
+                | SWT.FULL_SELECTION);
         m_styledText.setFont(parent.getFont());
         m_styledText.setAlignment(SWT.LEFT);
         m_styledText.setText("");
@@ -217,21 +196,11 @@ public class StyledTextEditor extends CellEditor {
              */
             @Override
             public void focusLost(final org.eclipse.swt.events.FocusEvent e) {
-                // close the editor and commit changes if focus is lost.
-                // BUT only if the focus was not set on any other component
-                // in the panel (these components clear the flag in their
-                // focusGained).
-                m_commitOnFocusLost.set(true);
-
-                Display.getCurrent().asyncExec(new Runnable() {
-                    // execute this only after the focus event chain is done
-                    @Override
-                    public void run() {
-                        if (m_commitOnFocusLost.get()) {
-                            lostFocus();
-                        }
-                    }
-                });
+                // close the editor only if called directly (not as a side
+                // effect of an opening font editor, for instance)
+                if (m_allowFocusLost.get()) {
+                    lostFocus();
+                }
             }
         });
         m_styledText.addModifyListener(new ModifyListener() {
@@ -252,8 +221,9 @@ public class StyledTextEditor extends CellEditor {
                 selectionChanged();
             }
         });
-        m_styledText
-                .setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true));
+        m_styledText.setLayoutData(
+                new GridData(SWT.FILL, SWT.FILL, true, true));
+        addMenu(m_styledText);
         // toolbar gets created first - enable its style buttons!
         selectionChanged();
         return m_styledText;
@@ -272,117 +242,103 @@ public class StyledTextEditor extends CellEditor {
     }
 
     private void enableStyleButtons(final boolean enableThem) {
-        for (Control b : m_styleButtons.getChildren()) {
-            b.setEnabled(enableThem);
+        if (m_styleActions != null) {
+            for (IAction action : m_styleActions) {
+                action.setEnabled(enableThem);
+            }
         }
     }
 
-    private Control createToolbar(final Composite parent) {
-        ImageDescriptor imgDescr;
-        Image img;
-
-        m_toolbar = new Composite(parent, SWT.NONE);
-        m_toolbar.setLayout(createPanelGridLayout(1, false));
-
-        Composite otherButtons = new Composite(m_toolbar, SWT.NONE);
-        otherButtons.setLayout(createPanelGridLayout(4, true));
+    private void addMenu(final Composite parent) {
+        MenuManager menuMgr = new MenuManager();
+        menuMgr.add(new GroupMarker("default"));
+        ImageDescriptor img;
 
         // background color
-        imgDescr =
-                ImageRepository
-                        .getImageDescriptor("icons/annotations/bgcolor_10.png");
-        img = imgDescr.createImage();
-        createButton(otherButtons, "bg", null, img,
-                "Background - change the background color");
+        img = ImageRepository.getImageDescriptor(
+                "icons/annotations/bgcolor_10.png");
+        createAction(menuMgr, "bg", "Background", img,
+                "Change the background color", "default");
+
         // alignment
-        imgDescr =
-            ImageRepository
-            .getImageDescriptor("icons/annotations/center_10.png");
-        img = imgDescr.createImage();
-        createButton(otherButtons, "alignment", null, img,
-        "Alignment - change text alignment");
-        // ok button
-        imgDescr =
-                ImageRepository
-                        .getImageDescriptor("icons/annotations/ok_10.png");
-        img = imgDescr.createImage();
-        createButton(otherButtons, "ok", null, img, "OK - commit changes");
-        // cancel button
-        imgDescr =
-                ImageRepository
-                        .getImageDescriptor("icons/annotations/cancel_10.png");
-        img = imgDescr.createImage();
-        createButton(otherButtons, "cancel", null, img, "Cancel - discard changes");
+        img = ImageRepository.getImageDescriptor(
+                "icons/annotations/center_10.png");
+        createAction(menuMgr, "alignment", "Change Alignment", img,
+                "Alignment - change text alignment", "default");
+
+        menuMgr.add(new Separator("style"));
 
         // contains buttons being en/disabled with selection
-        m_styleButtons = new Composite(m_toolbar, SWT.NONE);
-        m_styleButtons.setLayout(createPanelGridLayout(4, true));
+        m_styleActions = new ArrayList<IAction>();
+        IAction action;
 
         // font/style button
-        createButton(m_styleButtons, "style", "F", null,
-                "Font - change selection font");
-        // foreground color button
-        imgDescr =
-                ImageRepository
-                        .getImageDescriptor("icons/annotations/color_10.png");
-        img = imgDescr.createImage();
-        createButton(m_styleButtons, "color", null, img,
-                "Color - change selection font color");
-        // bold button
-        imgDescr =
-                ImageRepository
-                        .getImageDescriptor("icons/annotations/bold_10.png");
-        img = imgDescr.createImage();
-        createButton(m_styleButtons, "bold", null, img,
-                "Bold - change selection font style");
-        // italic button
-        imgDescr =
-                ImageRepository
-                        .getImageDescriptor("icons/annotations/italic_10.png");
-        img = imgDescr.createImage();
-        createButton(m_styleButtons, "italic", null, img,
-                "Italic - change selection font style");
+        img = ImageRepository.getImageDescriptor(
+                "icons/annotations/font_10.png");
+        action = createAction(menuMgr, "style", "Font", img,
+                "Change selection font", "style");
+        m_styleActions.add(action);
 
-        return m_toolbar;
+        // foreground color button
+        img = ImageRepository.getImageDescriptor(
+                "icons/annotations/color_10.png");
+        action = createAction(menuMgr, "color", "Color", img,
+                "Change selection font color", "style");
+        m_styleActions.add(action);
+
+        // bold button
+        img = ImageRepository.getImageDescriptor(
+                "icons/annotations/bold_10.png");
+        action = createAction(menuMgr, "bold", "Bold", img,
+                "Change selection font style", "style");
+        m_styleActions.add(action);
+
+        // italic button
+        img = ImageRepository.getImageDescriptor(
+                "icons/annotations/italic_10.png");
+        action = createAction(menuMgr, "italic", "Italic", img,
+                "Change selection font style", "style");
+        m_styleActions.add(action);
+
+
+        menuMgr.add(new Separator("control"));
+
+        // ok button
+        img = ImageRepository.getImageDescriptor(
+                "icons/annotations/ok_10.png");
+        createAction(menuMgr, "ok", "OK (commit)", img,
+                "OK - commit changes", "control");
+
+        // cancel button
+        img = ImageRepository.getImageDescriptor(
+        "icons/annotations/cancel_10.png");
+        createAction(menuMgr, "cancel", "Cancel (discard)", img,
+                "Cancel - discard changes", "control");
+
+
+        Menu menu = menuMgr.createContextMenu(parent);
+        parent.setMenu(menu);
     }
 
-    private Button createButton(final Composite parent, final String id,
-            final String text, final Image icon, final String tooltip) {
-        final Button b = new Button(parent, SWT.PUSH);
-        b.setData("id", id);
+    private IAction createAction(final MenuManager menuMgr, final String id,
+            final String text, final ImageDescriptor imgDesc,
+            final String tooltip, final String menuGroup) {
+        IAction action = new Action(text, imgDesc) {
+            /** {@inheritDoc} */
+            @Override
+            public void run() {
+                m_allowFocusLost.set(false);
+                try {
+                    buttonClick(id);
+                } finally {
+                    m_allowFocusLost.set(true);
+                }
 
-        GridData buttonData = new GridData();
-        buttonData.grabExcessHorizontalSpace = false;
-        buttonData.grabExcessVerticalSpace = false;
-        buttonData.heightHint = BUTTON_SIZE;
-        buttonData.widthHint = BUTTON_SIZE;
-        b.setLayoutData(buttonData);
-        b.addSelectionListener(new SelectionListener() {
-            @Override
-            public void widgetSelected(final SelectionEvent e) {
-                buttonClick((String)b.getData("id"));
             }
-
-            @Override
-            public void widgetDefaultSelected(final SelectionEvent e) {
-                buttonClick((String)b.getData("id"));
-            }
-        });
-        if (text != null) {
-            b.setText(text);
-        }
-        b.setToolTipText(tooltip);
-        b.addFocusListener(new FocusAdapter() {
-            @Override
-            public void focusGained(final FocusEvent e) {
-                // focus stays in the editor panel - don't close it
-                m_commitOnFocusLost.set(false);
-            }
-        });
-        if (icon != null) {
-            b.setImage(icon);
-        }
-        return b;
+        };
+        menuMgr.appendToGroup(menuGroup, action);
+        action.setToolTipText(tooltip);
+        return action;
     }
 
     private void buttonClick(final String src) {
@@ -694,7 +650,13 @@ public class StyledTextEditor extends CellEditor {
         fd.setText("Change Font in Selection");
         FontData[] dlgFontData = f.getFontData();
         fd.setFontList(dlgFontData);
-        FontData newFontData = fd.open();
+        m_allowFocusLost.set(false);
+        FontData newFontData;
+        try {
+            newFontData = fd.open();
+        } finally {
+            m_allowFocusLost.set(true);
+        }
         if (newFontData == null) {
             // user canceled
             return;

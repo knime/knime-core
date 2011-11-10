@@ -70,6 +70,7 @@ import org.eclipse.swt.graphics.Font;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.AnnotationData;
+import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 
 /**
@@ -84,7 +85,6 @@ public class AnnotationFigure3 extends Figure {
      * @param annotation the annotation to display
      */
     public AnnotationFigure3(final Annotation annotation) {
-
         setLayoutManager(new BorderLayout());
         Color bg = AnnotationEditPart.getWorkflowAnnotationDefaultBackgroundColor();
         m_page = new FlowPage();
@@ -131,6 +131,13 @@ public class AnnotationFigure3 extends Figure {
         Color bg = AnnotationEditPart.RGBintToColor(annotation.getBgColor());
         setBackgroundColor(bg);
         m_page.setBackgroundColor(bg);
+        if (annotation instanceof NodeAnnotation
+                && AnnotationEditPart.DEFAULT_BG_NODE.equals(bg)) {
+            // node annotation are white if
+            setOpaque(false);
+        } else {
+            setOpaque(true);
+        }
         int i = 0;
         List<TextFlow> segments = new ArrayList<TextFlow>(sr.length);
         for (AnnotationData.StyleRange r : sr) {
@@ -176,7 +183,6 @@ public class AnnotationFigure3 extends Figure {
         m_page.add(bf);
         m_page.setVisible(true);
         revalidate();
-
     }
 
     /**

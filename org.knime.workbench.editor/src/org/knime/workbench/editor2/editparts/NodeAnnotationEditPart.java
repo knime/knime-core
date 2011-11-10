@@ -20,14 +20,12 @@
  */
 package org.knime.workbench.editor2.editparts;
 
-import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
-import org.knime.workbench.editor2.directannotationedit.StyledTextEditor;
 import org.knime.workbench.editor2.figures.AnnotationFigure3;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 
@@ -71,10 +69,6 @@ public class NodeAnnotationEditPart extends AnnotationEditPart {
             }
             h = NodeAnnotationEditPart.defaultOneLineHeight();
         }
-        if (w < StyledTextEditor.TOOLBAR_MIN_WIDTH) {
-            w = StyledTextEditor.TOOLBAR_MIN_WIDTH;
-            update = true;
-        }
         if (nodeUI != null) {
             NodeContainerEditPart nodePart =
                 (NodeContainerEditPart)getViewer().getEditPartRegistry().get(node);
@@ -104,13 +98,4 @@ public class NodeAnnotationEditPart extends AnnotationEditPart {
         refreshVisuals();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected IFigure createFigure() {
-        AnnotationFigure3 fig = (AnnotationFigure3)super.createFigure();
-        fig.setOpaque(false);
-        return fig;
-    }
 }

@@ -94,17 +94,18 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
 
     private static final Color DEFAULT_FG = ColorConstants.black;
 
-    // light yellow
-    private static final Color DEFAULT_BG_WORKFLOW =
+    /** Light yellow. */
+    public static final Color DEFAULT_BG_WORKFLOW =
         new Color(null, 255, 255, 225);
-    // white
-    private static final Color DEFAULT_BG_NODE = new Color(null, 255, 255, 255);
+
+    /** White. */
+    public static final Color DEFAULT_BG_NODE = new Color(null, 255, 255, 255);
 
     private static final Font DEFAULT_FONT = Display.getCurrent()
             .getSystemFont();
 
     /**
-     * Fonts used in the figure or the style editor must go through this
+     * Fonts used in the figure or the style editor must go through this.
      */
     public static final FontStore FONT_STORE = new FontStore(DEFAULT_FONT);
 
@@ -216,7 +217,6 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
     protected IFigure createFigure() {
         Annotation anno = getModel();
         AnnotationFigure3 f = new AnnotationFigure3(anno);
-        f.setOpaque(true);
         // f.setBounds(new Rectangle(anno.getX(), anno.getY(), anno.getWidth(),
         // anno.getHeight()));
         return f;
