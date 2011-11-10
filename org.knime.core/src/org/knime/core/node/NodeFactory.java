@@ -309,6 +309,10 @@ public abstract class NodeFactory<T extends NodeModel> {
                 // constructor - local fields in the derived NodeFactory have
                 // not been initialized
 
+                if ("true".equals(knimeNode.getAttribute("deprecated"))
+                        && !nodeName.matches("^.+\\s+\\(?[dD]eprecated\\)?$")) {
+                    nodeName += " (deprecated)";
+                }
             } catch (Exception ex) {
                 m_logger.coding(ex.getMessage() + " (" + path + ")", ex);
                 knimeNode = null;
@@ -866,7 +870,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      *
      * @param factoryClass a factory class
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("rawtypes")
     public static void addLoadedFactory(
             final Class<? extends NodeFactory> factoryClass) {
         LOADED_NODE_FACTORIES.add(factoryClass.getName());
