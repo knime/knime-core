@@ -129,7 +129,8 @@ final class MissingValueHandling2Panel extends JPanel {
      * @param specs list of column specs
      */
     public MissingValueHandling2Panel(final List<DataColumnSpec> specs) {
-        this(new MissingValueHandling2ColSetting(specs), specs.toArray(new DataColumnSpec[0]));
+        this(new MissingValueHandling2ColSetting(specs), 
+                specs.toArray(new DataColumnSpec[0]));
     }
 
     /**
@@ -139,7 +140,8 @@ final class MissingValueHandling2Panel extends JPanel {
      * @param spec the spec of the column or <code>null</code>
      */
     public MissingValueHandling2Panel(
-            final MissingValueHandling2ColSetting setting, final DataColumnSpec... spec) {
+            final MissingValueHandling2ColSetting setting,
+            final DataColumnSpec... spec) {
         super(new FlowLayout(FlowLayout.CENTER, 10, 10));
         final JPanel panel = new JPanel(new GridLayout(0, 2));
         final Icon icon;
@@ -225,7 +227,8 @@ final class MissingValueHandling2Panel extends JPanel {
         panel.add(m_removeButton);
 
         if (setting.getType() == MissingValueHandling2ColSetting.TYPE_DOUBLE
-                || setting.getType() == MissingValueHandling2ColSetting.TYPE_INT) {
+                || setting.getType() 
+                        == MissingValueHandling2ColSetting.TYPE_INT) {
             // MIN Button
             m_minButton = new JRadioButton("Min");
             m_minButton.setToolTipText("Replaces missing values by the minimum "
@@ -249,7 +252,8 @@ final class MissingValueHandling2Panel extends JPanel {
             m_meanButton.addActionListener(actionListener);
             buttonGroup.add(m_meanButton);
             panel.add(m_meanButton);
-            if (setting.getType() == MissingValueHandling2ColSetting.TYPE_DOUBLE) {
+            if (setting.getType() 
+                    == MissingValueHandling2ColSetting.TYPE_DOUBLE) {
                 panel.add(new JLabel()); // even number of components
             }
         } else {
@@ -258,14 +262,16 @@ final class MissingValueHandling2Panel extends JPanel {
             m_maxButton = null;
         }
         if (setting.getType() == MissingValueHandling2ColSetting.TYPE_INT
-                || setting.getType() == MissingValueHandling2ColSetting.TYPE_STRING) {
+                || setting.getType() 
+                        == MissingValueHandling2ColSetting.TYPE_STRING) {
             m_mostFrequentButton = new JRadioButton("Most Frequent");
             m_mostFrequentButton.setToolTipText("Replaces missing values "
                     + "by the most frequent value in a column");
             m_mostFrequentButton.addActionListener(actionListener);
             buttonGroup.add(m_mostFrequentButton);
             panel.add(m_mostFrequentButton);
-            if (setting.getType() == MissingValueHandling2ColSetting.TYPE_STRING) {
+            if (setting.getType() 
+                    == MissingValueHandling2ColSetting.TYPE_STRING) {
                 panel.add(new JLabel()); // even number of components
             }
         } else {
@@ -366,7 +372,8 @@ final class MissingValueHandling2Panel extends JPanel {
      * Helper in constructor, generates the text field to enter the replacement
      * value.
      */
-    private static JComponent getFixTextField(final MissingValueHandling2ColSetting setting,
+    private static JComponent getFixTextField(
+            final MissingValueHandling2ColSetting setting,
             final DataColumnSpec... specs) {
         JComponent fixText;
         // FIX text field
