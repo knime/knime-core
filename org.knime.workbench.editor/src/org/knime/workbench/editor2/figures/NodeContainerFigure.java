@@ -616,15 +616,23 @@ public class NodeContainerFigure extends RectangleFigure {
      * {@inheritDoc}
      */
     @Override
-    public void paintFigure(final Graphics graphics) {
-        graphics.setBackgroundColor(getBackgroundColor());
-        super.paintFigure(graphics);
+    public void paint(final Graphics graphics) {
+        // paints the figure and its children
+        super.paint(graphics);
         if (m_loopStatusFigure != null) {
             final Rectangle r = getSymbolFigure().getBounds();
             graphics.drawImage(m_loopStatusFigure,
-                    new Point(r.x + 32, r.y + 32));
+                    new Point(r.x + 24, r.y + 32));
         }
+    }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void paintFigure(final Graphics graphics) {
+        graphics.setBackgroundColor(getBackgroundColor());
+        super.paintFigure(graphics);
     }
 
     /**
