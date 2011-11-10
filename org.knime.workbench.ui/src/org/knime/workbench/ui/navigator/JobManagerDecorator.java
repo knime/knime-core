@@ -32,7 +32,7 @@ import org.knime.core.node.workflow.NodeContainer;
 
 /**
  *
- * @author Fabian Dill, KNIME.com GmbH
+ * @author Fabian Dill, KNIME.com AG
  */
 public class JobManagerDecorator implements
         ILabelDecorator {

@@ -59,7 +59,7 @@ import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 /**
  * Action to "hide node names".
  *
- * @author Thomas Gabriel, KNIME.com GmbH, Zurich
+ * @author Thomas Gabriel, KNIME.com AG, Zurich
  */
 public class HideNodeNamesAction extends AbstractClipboardAction {
 

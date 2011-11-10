@@ -96,7 +96,7 @@ import org.xml.sax.helpers.AttributesImpl;
 /**
  * A NeuralNetwork translator class between KNIME and PMML.
  *
- * @author Dominik Morent, KNIME.com GmbH, Zurich, Switzerland
+ * @author Dominik Morent, KNIME.com AG, Zurich, Switzerland
  * @author wenlin, Zementis, May 2011
  *
  */

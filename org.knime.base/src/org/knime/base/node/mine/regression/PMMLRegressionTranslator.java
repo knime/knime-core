@@ -71,7 +71,7 @@ import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
  * A regression model translator class between KNIME and PMML.
  *
  * @author wenlin, Zementis, May 2011
- * @author Dominik Morent, KNIME.com GmbH, Zurich, Switzerland
+ * @author Dominik Morent, KNIME.com AG, Zurich, Switzerland
  *
  */
 public class PMMLRegressionTranslator implements PMMLTranslator {

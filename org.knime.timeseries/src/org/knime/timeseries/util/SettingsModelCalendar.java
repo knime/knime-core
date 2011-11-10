@@ -66,7 +66,7 @@ import org.knime.core.node.port.PortObjectSpec;
  * Settings model that stores a {@link Calendar} in order to store either a 
  * date or a time with and without milliseconds. 
  * 
- * @author Fabian Dill, KNIME.com GmbH
+ * @author Fabian Dill, KNIME.com AG
  *
  */
 public class SettingsModelCalendar extends SettingsModel {

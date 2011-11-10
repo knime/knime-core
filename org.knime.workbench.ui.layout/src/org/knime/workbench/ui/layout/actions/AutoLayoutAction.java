@@ -65,7 +65,7 @@ import org.knime.workbench.ui.layout.commands.AutoLayoutCommand;
 /**
  * Action to trigger auto layout.
  *
- * @author Peter Ohl, KNIME.com GmbH, Zurich
+ * @author Peter Ohl, KNIME.com AG, Zurich
  */
 public class AutoLayoutAction extends AbstractNodeAction {
 

@@ -39,7 +39,7 @@ import org.xml.sax.helpers.AttributesImpl;
 
 /**
  *
- * @author Fabian Dill, KNIME.com GmbH
+ * @author Fabian Dill, KNIME.com AG
  */
 public class DateMetaGUIElement extends MetaGUIElement {
 

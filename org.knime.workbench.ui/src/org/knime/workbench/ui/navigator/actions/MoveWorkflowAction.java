@@ -50,7 +50,7 @@ import org.knime.workbench.ui.navigator.actions.selection.ResourceSelectDialog;
 
 /**
  *
- * @author Fabian Dill, KNIME.com GmbH
+ * @author Fabian Dill, KNIME.com AG
  */
 public class MoveWorkflowAction extends Action implements IRunnableWithProgress {
 

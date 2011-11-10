@@ -114,7 +114,7 @@ import org.xml.sax.SAXException;
 /**
  *
  * @author Fabian Dill, University of Konstanz
- * @author Dominik Morent, KNIME.com GmbH, Zurich, Switzerland
+ * @author Dominik Morent, KNIME.com AG, Zurich, Switzerland
  */
 public final class PMMLPortObject implements PortObject {
 

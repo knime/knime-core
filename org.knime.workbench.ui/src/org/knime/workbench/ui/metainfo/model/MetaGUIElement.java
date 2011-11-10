@@ -33,7 +33,7 @@ import org.xml.sax.SAXException;
 
 /**
  * 
- * @author Fabian Dill, KNIME.com GmbH
+ * @author Fabian Dill, KNIME.com AG
  */
 public abstract class MetaGUIElement {
 

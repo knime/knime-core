@@ -90,7 +90,7 @@ import org.knime.workbench.ui.navigator.KnimeResourceUtil;
  *
  *
  * @author Christoph Sieb, University of Konstanz
- * @author Fabian Dill, KNIME.com GmbH, Zurich, Switzerland
+ * @author Fabian Dill, KNIME.com AG, Zurich, Switzerland
  */
 public class WorkflowExportWizard extends ExportWizard
     implements IExportWizard {

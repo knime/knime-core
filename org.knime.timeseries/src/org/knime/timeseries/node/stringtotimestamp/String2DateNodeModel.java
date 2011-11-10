@@ -86,7 +86,7 @@ import org.knime.core.node.util.StringHistory;
  * {@link org.knime.core.data.def.StringCell}s into {@link DateAndTimeCell}s.
  *
  * @author Rosaria Silipo
- * @author Fabian Dill, KNIME.com GmbH, Zurich, Switzerland
+ * @author Fabian Dill, KNIME.com AG, Zurich, Switzerland
  */
 public class String2DateNodeModel extends NodeModel {
     

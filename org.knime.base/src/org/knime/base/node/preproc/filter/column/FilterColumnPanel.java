@@ -96,7 +96,7 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
  * buttons. This copy is pending API, the functionality will eventually be moved
  * to the public 
  * {@link org.knime.core.node.util.ColumnFilterPanel}.
- * @author Thomas Gabriel, KNIME.com GmbH, Zurich, Switzerland
+ * @author Thomas Gabriel, KNIME.com AG, Zurich, Switzerland
  */
 class FilterColumnPanel extends JPanel {
     

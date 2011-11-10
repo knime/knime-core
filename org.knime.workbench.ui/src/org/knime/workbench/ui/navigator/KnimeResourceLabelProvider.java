@@ -90,7 +90,7 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
  * another image.
  *
  * @author Christoph Sieb, University of Konstanz
- * @author Fabian Dill, KNIME.com GmbH
+ * @author Fabian Dill, KNIME.com AG
  */
 public class KnimeResourceLabelProvider extends LabelProvider implements
         IColorProvider, IFontProvider {

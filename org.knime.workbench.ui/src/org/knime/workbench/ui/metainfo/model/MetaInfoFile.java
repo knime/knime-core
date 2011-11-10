@@ -48,7 +48,7 @@ import org.xml.sax.helpers.AttributesImpl;
  * entered by the user for workflow groups and workflows, such as author, date,
  * comments.
  *
- * @author Fabian Dill, KNIME.com GmbH
+ * @author Fabian Dill, KNIME.com AG
  */
 public final class MetaInfoFile {
 

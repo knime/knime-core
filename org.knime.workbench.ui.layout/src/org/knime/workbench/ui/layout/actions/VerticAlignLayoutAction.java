@@ -61,7 +61,7 @@ import org.knime.workbench.ui.layout.commands.VerticAlignCommand;
 /**
  * Action to trigger vertical layout.
  *
- * @author Peter Ohl, KNIME.com GmbH, Zurich
+ * @author Peter Ohl, KNIME.com AG, Zurich
  */
 public class VerticAlignLayoutAction extends AbstractNodeAction {
 

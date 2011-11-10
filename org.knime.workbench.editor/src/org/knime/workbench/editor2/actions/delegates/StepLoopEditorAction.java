@@ -55,7 +55,7 @@ import org.knime.workbench.editor2.actions.StepLoopAction;
 /**
  * Editor action for stepping loop end nodes.
  *
- * @author Thomas Gabriel, KNIME.com GmbH, Zurich
+ * @author Thomas Gabriel, KNIME.com AG, Zurich
  */
 public class StepLoopEditorAction extends AbstractEditorAction {
 

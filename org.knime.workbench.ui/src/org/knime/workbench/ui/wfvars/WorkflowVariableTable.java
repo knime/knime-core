@@ -42,7 +42,7 @@ import org.knime.core.node.workflow.FlowVariable;
  * Displays workflow variables ({@link FlowVariable}s) with name, type and
  * default value in a table.
  *
- * @author Fabian Dill, KNIME.com GmbH
+ * @author Fabian Dill, KNIME.com AG
  */
 public class WorkflowVariableTable implements Iterable<FlowVariable> {
 

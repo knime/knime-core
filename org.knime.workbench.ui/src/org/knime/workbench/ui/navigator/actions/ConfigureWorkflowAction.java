@@ -27,7 +27,7 @@ import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 
 /**
  * 
- * @author Fabian Dill, KNIME.com GmbH
+ * @author Fabian Dill, KNIME.com AG
  */
 public class ConfigureWorkflowAction extends AbstractWorkflowAction {
     

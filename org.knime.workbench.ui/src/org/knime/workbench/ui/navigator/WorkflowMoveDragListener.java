@@ -65,7 +65,7 @@ import org.knime.core.node.workflow.WorkflowPersistor;
 
 /**
  *
- * @author Fabian Dill, KNIME.com GmbH
+ * @author Fabian Dill, KNIME.com AG
  */
 public class WorkflowMoveDragListener implements DragSourceListener {
 

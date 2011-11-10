@@ -77,7 +77,7 @@ import org.knime.core.node.util.StringHistory;
  * that should be converted into Smiles values.
  *
  * @author Rosaria Silipo
- * @author Fabian Dill, KNIME.com GmbH
+ * @author Fabian Dill, KNIME.com AG
  */
 public class String2DateDialog extends DefaultNodeSettingsPane {
     

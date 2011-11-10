@@ -72,8 +72,8 @@ import org.knime.workbench.ui.navigator.actions.MoveWorkflowAction;
 
 /**
  *
- * @author Fabian Dill, KNIME.com GmbH
- * @author Peter Ohl, KNIME.com GmbH
+ * @author Fabian Dill, KNIME.com AG
+ * @author Peter Ohl, KNIME.com AG
  */
 public class WorkflowMoveDropListener extends ViewerDropAdapter {
 

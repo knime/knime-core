@@ -65,7 +65,7 @@ import org.knime.workbench.ui.wizards.imports.WorkflowImportWizard;
  * Action to invoke the KNIME import wizard.
  * 
  * @author Christoph Sieb, University of Konstanz
- * @author Fabian Dill, KNIME.com GmbH, Zurich, Switzerland
+ * @author Fabian Dill, KNIME.com AG, Zurich, Switzerland
  */
 public class ImportKnimeWorkflowAction extends Action {
     

@@ -55,7 +55,7 @@ import org.knime.core.data.DataValueComparator;
 /**
  * A special DataCellComparator for the ImageCells.
  *
- * @author Thomas Gabriel, KNIME.com GmbH, Zurich
+ * @author Thomas Gabriel, KNIME.com AG, Zurich
  */
 public class PNGImageValueComparator extends DataValueComparator {
 

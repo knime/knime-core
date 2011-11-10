@@ -75,7 +75,7 @@ import org.knime.core.node.port.PortObjectSpec;
 /**
  * The node dialog of the pivot node.
  *
- * @author Thomas Gabriel, KNIME.com GmbH, Switzerland
+ * @author Thomas Gabriel, KNIME.com AG, Switzerland
  */
 public class Pivot2NodeDialog extends GroupByNodeDialog {
 

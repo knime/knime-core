@@ -47,7 +47,7 @@ import org.knime.core.node.workflow.CredentialsStore;
  * and password. Credentials can be added or edited with the
  * {@link CredentialVariablesEditDialog}.
  *
- * @author Thomas Gabriel, KNIME.com GmbH
+ * @author Thomas Gabriel, KNIME.com AG
  */
 public class CredentialVariablesDialog extends Dialog {
 

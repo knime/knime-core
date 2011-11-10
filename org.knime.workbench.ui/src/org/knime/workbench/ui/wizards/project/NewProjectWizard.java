@@ -87,7 +87,7 @@ import org.knime.workbench.ui.navigator.KnimeResourceUtil;
  * Wizard for the creation of a new workflow.
  *
  * @author Florian Georg, University of Konstanz
- * @author Fabian Dill, KNIME.com GmbH
+ * @author Fabian Dill, KNIME.com AG
  */
 public class NewProjectWizard extends Wizard implements INewWizard {
 

@@ -32,7 +32,7 @@ import org.knime.workbench.ui.wizards.workflowgroup.NewWorkflowGroupProjectWizar
 /**
  * Action to create a workflow group.
  * 
- * @author Fabian Dill, KNIME.com GmbH
+ * @author Fabian Dill, KNIME.com AG
  */
 public class CreateWorkflowGroupAction extends Action {
 

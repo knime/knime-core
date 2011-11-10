@@ -29,7 +29,7 @@ import org.knime.workbench.ui.masterkey.CredentialVariablesDialog;
 
 /**
  *
- * @author Thomas Gabriel, KNIME.com GmbH
+ * @author Thomas Gabriel, KNIME.com AG
  */
 public class OpenCredentialVariablesDialogAction
         extends AbstractWorkflowAction {

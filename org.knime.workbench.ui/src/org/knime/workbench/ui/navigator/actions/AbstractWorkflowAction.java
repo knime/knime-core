@@ -29,7 +29,7 @@ import org.knime.workbench.ui.navigator.ProjectWorkflowMap;
 
 /**
  *
- * @author Fabian Dill, KNIME.com GmbH
+ * @author Fabian Dill, KNIME.com AG
  */
 public abstract class AbstractWorkflowAction extends Action {
 

@@ -127,7 +127,7 @@ import org.knime.workbench.ui.navigator.actions.WFShowJobMgrViewAction;
  * the internals of a node.
  *
  * @author Christoph Sieb, University of Konstanz
- * @author Fabian Dill, KNIME.com GmbH, Zurich, Switzerland
+ * @author Fabian Dill, KNIME.com AG, Zurich, Switzerland
  */
 public class KnimeResourceNavigator extends ResourceNavigator implements
         NodeStateChangeListener, NodeMessageListener, NodePropertyChangedListener {

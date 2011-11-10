@@ -58,7 +58,7 @@ import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
 import org.knime.core.node.port.PortObject;
 
 /** DataValue interface for port objects.
- * @author Thomas Gabriel, KNIME.com GmbH, Zurich
+ * @author Thomas Gabriel, KNIME.com AG, Zurich
  */
 public interface PortObjectValue extends DataValue {
 

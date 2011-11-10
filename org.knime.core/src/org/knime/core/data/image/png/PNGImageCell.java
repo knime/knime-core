@@ -58,7 +58,7 @@ import org.knime.core.data.DataValue;
 
 
 /** Default implementation of a PNG image cell.
- * @author Thomas Gabriel, KNIME.com GmbH, Zurich
+ * @author Thomas Gabriel, KNIME.com AG, Zurich
  */
 @SuppressWarnings("serial")
 public class PNGImageCell extends DataCell implements PNGImageValue {

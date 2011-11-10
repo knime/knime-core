@@ -61,7 +61,7 @@ import org.knime.core.node.InvalidSettingsException;
 /**
  *
  * @author Fabian Dill, University of Konstanz
- * @author Dominik Morent, KNIME.com GmbH, Zuerich, Switzerland
+ * @author Dominik Morent, KNIME.com AG, Zuerich, Switzerland
  */
 public class PMMLPortObjectSpecCreator {
 

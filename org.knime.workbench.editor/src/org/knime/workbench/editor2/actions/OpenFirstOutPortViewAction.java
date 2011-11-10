@@ -61,7 +61,7 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 /**
  * Action that opens the first out-port view of all selected nodes.
  *
- * @author Thomas Gabriel, KNIME.com GmbH, Zurich
+ * @author Thomas Gabriel, KNIME.com AG, Zurich
  */
 public class OpenFirstOutPortViewAction extends AbstractNodeAction {
 

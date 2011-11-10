@@ -39,7 +39,7 @@ import org.knime.workbench.ui.metainfo.model.MetaInfoFile;
 
 /**
  *
- * @author Fabian Dill, KNIME.com GmbH
+ * @author Fabian Dill, KNIME.com AG
  */
 public class EditMetaInfoAction extends Action {
 

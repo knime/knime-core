@@ -61,7 +61,7 @@ import org.knime.workbench.ui.layout.commands.HorizAlignCommand;
 /**
  * Action to trigger auto layout.
  *
- * @author Peter Ohl, KNIME.com GmbH, Zurich
+ * @author Peter Ohl, KNIME.com AG, Zurich
  */
 public class HorizAlignLayoutAction extends AbstractNodeAction {
 

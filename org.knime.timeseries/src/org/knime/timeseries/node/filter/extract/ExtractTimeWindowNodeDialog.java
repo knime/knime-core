@@ -66,7 +66,7 @@ import org.knime.timeseries.util.SettingsModelCalendar;
  * that should be converted into Smiles values. 
  * 
  * @author Rosaria Silipo
- * @author Fabian Dill, KNIME.com GmbH
+ * @author Fabian Dill, KNIME.com AG
  */
 public class ExtractTimeWindowNodeDialog extends DefaultNodeSettingsPane {
 

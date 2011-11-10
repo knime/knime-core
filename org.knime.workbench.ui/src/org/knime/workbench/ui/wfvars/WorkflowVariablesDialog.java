@@ -51,7 +51,7 @@ import org.knime.core.node.workflow.WorkflowManager;
  * default (current) value. Workflow variables can be added or edited with the
  * {@link WorkflowVariablesEditDialog}.
  *
- * @author Fabian Dill, KNIME.com GmbH
+ * @author Fabian Dill, KNIME.com AG
  */
 public class WorkflowVariablesDialog extends Dialog {
 

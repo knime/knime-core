@@ -76,7 +76,7 @@ import org.knime.core.node.port.PortObjectSpec;
  * @see DialogComponentTime
  * @see SettingsModelCalendar
  * 
- * @author Fabian Dill, KNIME.com GmbH
+ * @author Fabian Dill, KNIME.com AG
  * 
  */
 public class DialogComponentCalendar extends DialogComponent {

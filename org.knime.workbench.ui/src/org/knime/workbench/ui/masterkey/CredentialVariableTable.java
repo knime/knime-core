@@ -37,7 +37,7 @@ import org.knime.core.node.workflow.FlowVariable;
 
 /**
  *
- * @author Thomas Gabriel, KNIME.com GmbH
+ * @author Thomas Gabriel, KNIME.com AG
  */
 public class CredentialVariableTable implements Iterable<Credentials> {
 

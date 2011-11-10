@@ -90,7 +90,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * the {@link GroupByNodeModel} class implementations to create an intermediate
  * group-by table from which the pivoting table is extracted.
  *
- * @author Thomas Gabriel, KNIME.com GmbH, Switzerland
+ * @author Thomas Gabriel, KNIME.com AG, Switzerland
  */
 public class Pivot2NodeModel extends GroupByNodeModel {
 

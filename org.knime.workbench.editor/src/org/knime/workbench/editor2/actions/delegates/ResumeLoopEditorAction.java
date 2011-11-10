@@ -55,7 +55,7 @@ import org.knime.workbench.editor2.actions.ResumeLoopAction;
 /**
  * Editor action for resume loop execution.
  *
- * @author Thomas Gabriel, KNIME.com GmbH, Zurich
+ * @author Thomas Gabriel, KNIME.com AG, Zurich
  */
 public class ResumeLoopEditorAction extends AbstractEditorAction {
 

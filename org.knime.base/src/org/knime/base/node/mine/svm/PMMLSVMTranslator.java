@@ -93,7 +93,7 @@ import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 /**
  * A SVM translator class between KNIME and PMML.
  *
- * @author Dominik Morent, KNIME.com GmbH, Zurich, Switzerland
+ * @author Dominik Morent, KNIME.com AG, Zurich, Switzerland
  * @author wenlin, Zementis, Apr 2011
  *
  */

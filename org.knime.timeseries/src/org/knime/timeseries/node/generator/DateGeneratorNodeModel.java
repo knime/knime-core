@@ -74,7 +74,7 @@ import org.knime.timeseries.util.SettingsModelCalendar;
 /**
  * Generates equidistant times.
  * 
- * @author Fabian Dill, KNIME.com GmbH, Zurich, Switzerland
+ * @author Fabian Dill, KNIME.com AG, Zurich, Switzerland
  *
  */
 public class DateGeneratorNodeModel extends NodeModel {

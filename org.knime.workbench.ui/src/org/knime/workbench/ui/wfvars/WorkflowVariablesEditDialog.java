@@ -42,7 +42,7 @@ import org.knime.core.node.workflow.FlowVariable.Scope;
  * value. The ScopeVariable is created here, but actually added to the workflow
  * in the {@link WorkflowVariablesDialog}.
  *
- * @author Fabian Dill, KNIME.com GmbH
+ * @author Fabian Dill, KNIME.com AG
  */
 public class WorkflowVariablesEditDialog extends Dialog {
 

@@ -26,7 +26,7 @@ import org.knime.workbench.ui.wfvars.WorkflowVariablesDialog;
  * Action which opens {@link WorkflowVariablesDialog} that let the user add, 
  * edit or remove workflow variables.
  * 
- * @author Fabian Dill, KNIME.com GmbH
+ * @author Fabian Dill, KNIME.com AG
  */
 public class OpenWorkflowVariablesDialogAction extends AbstractWorkflowAction {
     

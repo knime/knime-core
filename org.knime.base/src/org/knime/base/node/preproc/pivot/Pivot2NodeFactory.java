@@ -56,7 +56,7 @@ import org.knime.core.node.NodeView;
  * Factory class of the pivot node.
  *
  * @author Tobias Koetter, University of Konstanz, Germany
- * @author Thomas Gabriel, KNIME.com GmbH, Switzerland
+ * @author Thomas Gabriel, KNIME.com AG, Switzerland
  */
 public class Pivot2NodeFactory extends NodeFactory<Pivot2NodeModel> {
 

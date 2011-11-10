@@ -66,7 +66,7 @@ import org.knime.core.node.port.PortUtil;
 
 
 /** Default implementation for a general port object.
- * @author Thomas Gabriel, KNIME.com GmbH, Zurich
+ * @author Thomas Gabriel, KNIME.com AG, Zurich
  */
 public class PortObjectCell extends DataCell implements PortObjectValue {
 

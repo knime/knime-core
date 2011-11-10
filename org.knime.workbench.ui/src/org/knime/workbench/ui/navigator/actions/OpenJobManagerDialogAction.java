@@ -22,7 +22,7 @@ import org.eclipse.jface.action.Action;
 
 /**
  * 
- * @author Fabian Dill, KNIME.com GmbH
+ * @author Fabian Dill, KNIME.com AG
  */
 public class OpenJobManagerDialogAction extends Action {
 

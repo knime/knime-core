@@ -28,7 +28,7 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
  *
- * @author Fabian Dill, KNIME.com GmbH
+ * @author Fabian Dill, KNIME.com AG
  */
 public class WFShowJobMgrViewAction extends AbstractWorkflowAction {
 

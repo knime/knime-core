@@ -86,7 +86,7 @@ import org.knime.workbench.ui.wizards.workflowgroup.WorkflowGroupSelectionDialog
  * 
  * @author Florian Georg, University of Konstanz
  * @author Christoph Sieb, University of Konstanz
- * @author Fabian Dill, KNIME.com GmbH, Zurich, Switzerland
+ * @author Fabian Dill, KNIME.com AG, Zurich, Switzerland
  */
 public class NewProjectWizardPage extends WizardPage {
     private static final String INITIAL_PROJECT_NAME = "KNIME_project";

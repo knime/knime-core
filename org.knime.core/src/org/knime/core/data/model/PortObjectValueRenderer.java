@@ -52,7 +52,7 @@ import org.knime.core.data.renderer.DefaultDataValueRenderer;
 /**
  * Renderer for PortObject content that are compatible with
  * <code>PortObjectValue</code> classes.
- * @author Thomas Gabriel, KNIME.com GmbH, Zurich
+ * @author Thomas Gabriel, KNIME.com AG, Zurich
  */
 public final class PortObjectValueRenderer extends DefaultDataValueRenderer {
 
