@@ -50,10 +50,14 @@
  */
 package org.knime.core.node.port.database;
 
+import java.awt.BorderLayout;
 import java.io.IOException;
 import java.util.zip.ZipEntry;
 
 import javax.swing.JComponent;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.util.NonClosableInputStream;
@@ -65,7 +69,6 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectSpecZipInputStream;
 import org.knime.core.node.port.PortObjectSpecZipOutputStream;
 import org.knime.core.node.workflow.DataTableSpecView;
-import org.knime.core.node.workflow.ModelContentOutPortView;
 
 /**
  * Class used as database port object holding a {@link DataTableSpec}
@@ -186,10 +189,41 @@ public class DatabasePortObjectSpec implements PortObjectSpec {
      */
     @Override
     public JComponent[] getViews() {
-        JComponent connPanel = new ModelContentOutPortView(m_conn);
-        connPanel.setName("Connection");
         JComponent specPanel = new DataTableSpecView(m_spec);
-        return new JComponent[]{specPanel, connPanel};
+        return new JComponent[]{specPanel, new DatabaseConnectionView(m_conn)};
+    }
+    
+    private static final class DatabaseConnectionView extends JPanel {
+        private DatabaseConnectionView(final ModelContentRO sett) {
+            super(new BorderLayout());
+            super.setName("Connection");
+            StringBuilder buf = new StringBuilder("<html><body>");
+            buf.append("<h2>Database Connection</h2>");
+            buf.append("<br/>");
+            buf.append("<strong>Database Driver:</strong><br/>");
+            buf.append("<tt>" + sett.getString("driver", "") + "</tt>");
+            buf.append("<br/><br/>");
+            buf.append("<strong>Database URL:</strong><br/>");
+            buf.append("<tt>" + sett.getString("database", "") + "</tt>");
+            buf.append("<br/><br/>");
+            boolean useCredential = sett.containsKey("credential_name");
+            if (useCredential) {
+                String credName = sett.getString("credential_name", "");
+                buf.append("<strong>Credential Name:</strong><br/>");
+                buf.append("<tt>" + credName + "</tt>");
+            } else {
+                buf.append("<strong>User Name:</strong><br/>");
+                buf.append("<tt>" + sett.getString("user", "") + "</tt>");
+            }
+            buf.append("<br/><br/>");
+            buf.append("<strong>SQL Statement:</strong><br/>");
+            final String query = sett.getString("statement",
+                    "").replaceAll("\n", "<br/>");
+            buf.append("<tt>" + query + "</tt>");
+            buf.append("</body></html>");
+            final JScrollPane jsp = new JScrollPane(new JLabel(buf.toString()));
+            super.add(jsp, BorderLayout.CENTER);
+        }
     }
     
     /** {@inheritDoc} */
