@@ -57,6 +57,17 @@
 			If unchecked the split value is set to the largest
 			value of the lower partition (like C4.5).
 		</option>
+		<option name="Number threads">
+            This node can exploit multiple threads and thus multiple processors
+            or cores. This can improve performance. The default value is set to 
+            the number of processors or cores that are available to KNIME. If
+            set to 1, the algorithm is performed sequentially.
+        </option>
+        <option name="Skip nominal columns without domain information">
+            If checked, nominal columns containing no domain value information are
+            skipped. This is generally the case for nominal columns that have
+            too many different values.
+        </option>
 		<option name="Binary nominal splits">
 			If checked, nominal attributes are split in a binary fashion. Binary
 			splits are more difficult to calculate but result also in more 
@@ -73,13 +84,7 @@
 			Above this threshold, a heuristic is applied that first calculates the
 			best nominal value for the second partition, then the second best value, 
 			and so on; until no improvement can be achieved.
-		</option>
-		<option name="Number threads">
-			This node can exploit multiple threads and thus multiple processors
-			or cores. This can improve performance. The default value is set to 
-			the number of processors or cores that are available to KNIME. If
-			set to 1, the algorithm is performed sequentially.
-		</option>
+		</option>	
 	</fullDescription>
 	<ports>
 		<inPort index="0" name="Input data">

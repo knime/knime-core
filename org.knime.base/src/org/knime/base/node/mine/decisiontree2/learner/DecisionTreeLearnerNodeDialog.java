@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+5 *  Copyright (C) 2003 - 2011
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,6 +50,9 @@
  */
 package org.knime.base.node.mine.decisiontree2.learner;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.knime.core.data.NominalValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
@@ -73,7 +76,7 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
      * properties.
      */
     public DecisionTreeLearnerNodeDialog() {
-
+        createNewGroup("General");
         // class column selection
         this.addDialogComponent(new DialogComponentColumnNameSelection(
                 createSettingsClassColumn(),
@@ -117,20 +120,41 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
         this.addDialogComponent(new DialogComponentBoolean(
                 createSettingsSplitPoint(), "Average split point"));
 
-        // binary nominal split mode
-        this.addDialogComponent(new DialogComponentBoolean(
-             createSettingsBinaryNominalSplit(), "Binary nominal splits"));
-
-        // max number nominal values for complete subset calculation for binary
-        // nominal splits
-        this.addDialogComponent(new DialogComponentNumber(
-                createSettingsMaxNominalValues(), "Max #nominal", 1, 5));
-
         // number processors to use
         this.addDialogComponent(new DialogComponentNumber(
                 createSettingsNumProcessors(), "Number threads", 1, 5));
+
+        // skip columns with many nominal values
+        this.addDialogComponent(new DialogComponentBoolean(
+                createSettingsSkipNominalColumnsWithoutDomain(),
+                "Skip nominal columns without domain information"));
+
+        createNewGroup("Binary nominal splits");
+        // binary nominal split mode
+        DialogComponentBoolean binarySplit = new DialogComponentBoolean(
+                createSettingsBinaryNominalSplit(), "Binary nominal splits");
+        this.addDialogComponent(binarySplit);
+
+        // max number nominal values for complete subset calculation for binary
+        // nominal splits
+        final DialogComponentNumber maxNominalBinary
+                = new DialogComponentNumber(
+                createSettingsBinaryMaxNominalValues(), "Max #nominal",
+                1, 5);
+        this.addDialogComponent(maxNominalBinary);
+
+        /* Enable the max nominal binary settings if binary split is
+         * enabled. */
+        binarySplit.getModel().addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                boolean selected = ((SettingsModelBoolean)e.getSource())
+                        .getBooleanValue();
+                maxNominalBinary.getModel().setEnabled(selected);
+            }
+        });
     }
-    
+
     /**
      * @return class column selection
      */
@@ -138,7 +162,7 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
         return new SettingsModelString(
                     DecisionTreeLearnerNodeModel.KEY_CLASSIFYCOLUMN, null);
     }
-    
+
     /**
      * @return quality measure
      */
@@ -156,7 +180,7 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
                     DecisionTreeLearnerNodeModel.KEY_PRUNING_METHOD,
                     DecisionTreeLearnerNodeModel.DEFAULT_PRUNING_METHOD);
     }
-    
+
     /**
      * @return confidence value threshold for c4.5 pruning
      */
@@ -171,14 +195,14 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
      * @return minimum number of objects per node
      */
     static SettingsModelIntegerBounded createSettingsMinNumRecords() {
-        // min number records for a node also used for determine whether a 
+        // min number records for a node also used for determine whether a
         // partition is useful both are closely related
         return new SettingsModelIntegerBounded(
                 DecisionTreeLearnerNodeModel.KEY_MIN_NUMBER_RECORDS_PER_NODE,
                 DecisionTreeLearnerNodeModel.DEFAULT_MIN_NUM_RECORDS_PER_NODE,
                 1, Integer.MAX_VALUE);
     }
-    
+
     /**
      * @return number records to store for the view
      */
@@ -190,7 +214,7 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
     }
 
     /**
-     * @return split point set to average value or to upper value of lower 
+     * @return split point set to average value or to upper value of lower
      *         partition
      */
     static SettingsModelBoolean createSettingsSplitPoint() {
@@ -198,7 +222,7 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
                     DecisionTreeLearnerNodeModel.KEY_SPLIT_AVERAGE,
                     DecisionTreeLearnerNodeModel.DEFAULT_SPLIT_AVERAGE);
     }
-    
+
     /**
      * @return binary nominal split mode
      */
@@ -209,17 +233,32 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
     }
 
     /**
-     * @return max number nominal values for complete subset calculation for 
+     * @return binary nominal split mode
+     */
+    static SettingsModelBoolean
+            createSettingsSkipNominalColumnsWithoutDomain() {
+        SettingsModelBoolean setting = new SettingsModelBoolean(
+                DecisionTreeLearnerNodeModel.KEY_SKIP_COLUMNS,
+                DecisionTreeLearnerNodeModel.DEFAULT_BINARY_NOMINAL_SPLIT_MODE);
+        setting.setBooleanValue(true);
+        return setting;
+    }
+
+    /**
+     * @return max number nominal values for complete subset calculation for
      *         binary nominal splits
      */
-    static SettingsModelIntegerBounded createSettingsMaxNominalValues() {
-        return new SettingsModelIntegerBounded(
-                DecisionTreeLearnerNodeModel.KEY_MAX_NUM_NOMINAL_VALUES,
+    static SettingsModelIntegerBounded createSettingsBinaryMaxNominalValues() {
+        SettingsModelIntegerBounded model = new SettingsModelIntegerBounded(
+                DecisionTreeLearnerNodeModel.KEY_BINARY_MAX_NUM_NOMINAL_VALUES,
                 DecisionTreeLearnerNodeModel
                     .DEFAULT_MAX_BIN_NOMINAL_SPLIT_COMPUTATION,
                 1, Integer.MAX_VALUE);
+        model.setEnabled(DecisionTreeLearnerNodeModel
+                .DEFAULT_BINARY_NOMINAL_SPLIT_MODE);
+        return model;
     }
-    
+
     /**
      * @return number processors to use
      */

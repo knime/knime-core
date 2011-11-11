@@ -166,15 +166,21 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             "binaryNominalSplit";
 
     /**
+     * Key to store whether nominal columns without domain values should be 
+     * skipped for learning.
+     */
+    public static final String KEY_SKIP_COLUMNS = "skipColumnsWithoutDomain";
+
+    /**
      * Key to store the number of processors to use.
      */
     public static final String KEY_NUM_PROCESSORS = "numProcessors";
 
     /**
      * Key to store the max number of nominal values for which to compute all
-     * subsets.
+     * subsets for binary splits.
      */
-    public static final String KEY_MAX_NUM_NOMINAL_VALUES =
+    public static final String KEY_BINARY_MAX_NUM_NOMINAL_VALUES =
             "maxNumNominalValues";
 
     /** Index of input data port. */
@@ -329,14 +335,19 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
     private final SettingsModelBoolean m_binaryNominalSplitMode =
             DecisionTreeLearnerNodeDialog.createSettingsBinaryNominalSplit();
 
+    private final SettingsModelBoolean m_skipColumns =
+            DecisionTreeLearnerNodeDialog
+            .createSettingsSkipNominalColumnsWithoutDomain();
+
     /**
      * The maximum number of nominal values for which all subsets are calculated
      * (results in the optimal binary split); this parameter is only use if
      * <code>binaryNominalSplits</code> is <code>true</code>; if the number
      * of nominal values is higher, a heuristic is applied.
      */
-    private final SettingsModelIntegerBounded m_maxNumNominalsForCompleteComputation =
-            DecisionTreeLearnerNodeDialog.createSettingsMaxNominalValues();
+    private final SettingsModelIntegerBounded
+           m_maxNumNominalsForCompleteComputation =
+           DecisionTreeLearnerNodeDialog.createSettingsBinaryMaxNominalValues();
 
     private final SettingsModelIntegerBounded m_parallelProcessing =
             DecisionTreeLearnerNodeDialog.createSettingsNumProcessors();
@@ -408,9 +419,10 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
 
         // create initial In-Memory table
         exec.setProgress("Create initial In-Memory table...");
-        InMemoryTableCreator tableCreator =
-                new InMemoryTableCreator(inData, classColumnIndex,
-                        m_minNumberRecordsPerNode.getIntValue());
+        InMemoryTableCreator tableCreator = new InMemoryTableCreator(inData,
+                        classColumnIndex,
+                        m_minNumberRecordsPerNode.getIntValue(),
+                        m_skipColumns.getBooleanValue());
         InMemoryTable initialTable =
                 tableCreator.createInMemoryTable(exec
                         .createSubExecutionContext(0.05));
@@ -511,7 +523,9 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             String col = columnSpec.getName();
             if (!col.equals(targetCol)
                     && (columnSpec.getType().isCompatible(DoubleValue.class)
-                    || columnSpec.getType().isCompatible(NominalValue.class))) {
+                    || columnSpec.getType().isCompatible(NominalValue.class)
+                        && (!m_skipColumns.getBooleanValue() 
+                                || columnSpec.getDomain().hasValues()))) {
                 learnCols.add(spec.getColumnSpec(i).getName());
             }
         }
@@ -793,7 +807,6 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-
         DataTableSpec inSpec = (DataTableSpec)inSpecs[DATA_INPORT];
         PMMLPortObjectSpec modelSpec
                 = (PMMLPortObjectSpec)inSpecs[MODEL_INPORT];
@@ -820,8 +833,10 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
                     break;
                 }
             }
-            throw new InvalidSettingsException("Table contains no nominal"
-                    + " attribute for classification.");
+            if (m_classifyColumn.getStringValue() == null) {
+                throw new InvalidSettingsException("Table contains no nominal"
+                        + " attribute for classification.");
+            }
         }
         return new PortObjectSpec[]{createPMMLPortObjectSpec(modelSpec,
                 inSpec)};
@@ -838,7 +853,6 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-
         m_classifyColumn.loadSettingsFrom(settings);
         // m_pruningConfidenceThreshold.loadSettingsFrom(settings);
         m_numberRecordsStoredForView.loadSettingsFrom(settings);
@@ -849,6 +863,15 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         m_parallelProcessing.loadSettingsFrom(settings);
         m_maxNumNominalsForCompleteComputation.loadSettingsFrom(settings);
         m_binaryNominalSplitMode.loadSettingsFrom(settings);
+
+        /* Added with 2.5 to avoid running out of heap space with columns
+         * that have too many nominal values. */
+        if (settings.containsKey(KEY_SKIP_COLUMNS)) {
+            m_skipColumns.loadSettingsFrom(settings);
+        } else {
+            // for new models this is enabled by default but not for old ones
+            m_skipColumns.setBooleanValue(false);
+        }
     }
 
     /**
@@ -867,6 +890,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         m_parallelProcessing.saveSettingsTo(settings);
         m_maxNumNominalsForCompleteComputation.saveSettingsTo(settings);
         m_binaryNominalSplitMode.saveSettingsTo(settings);
+        m_skipColumns.saveSettingsTo(settings);
     }
 
     /**
@@ -899,6 +923,12 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         m_splitQualityMeasureType.validateSettings(settings);
         m_maxNumNominalsForCompleteComputation.validateSettings(settings);
         m_parallelProcessing.validateSettings(settings);
+
+        /* Added with 2.5 to avoid running out of heap space with columns
+         * that have too many nominal values. */
+        if (settings.containsKey(KEY_SKIP_COLUMNS)) {
+            m_skipColumns.loadSettingsFrom(settings);
+        }
     }
 
     /**

@@ -71,13 +71,15 @@ import org.knime.core.node.ExecutionContext;
  */
 public class InMemoryTableCreator {
 
-    private BufferedDataTable m_table;
+    private final BufferedDataTable m_table;
 
-    private int m_classColumnIndex;
+    private final int m_classColumnIndex;
 
     private int m_removedRowsDueToMissingClassValue;
 
-    private double m_minNumberRowsPerNode;
+    private final double m_minNumberRowsPerNode;
+
+    private final boolean m_skipColumns;
 
     /**
      * Creates a creator from the given table and the specified class index.
@@ -90,11 +92,31 @@ public class InMemoryTableCreator {
      */
     public InMemoryTableCreator(final BufferedDataTable table,
             final int classColumnIndex, final double minNumberRowsPerNode) {
+        this(table, classColumnIndex, minNumberRowsPerNode, false);
+    }
+
+
+    /**
+     * Creates a creator from the given table and the specified class index.
+     *
+     * @param table the data table from which to create the attribute lists
+     * @param classColumnIndex the class column index
+     * @param minNumberRowsPerNode the minimum number of nodes per leaf; used to
+     *            determine whether this tables distribution of class values is
+     *            pure enough
+     * @param skipColumns true to skip nominal columns that have no domain
+     *      values information
+     */
+    public InMemoryTableCreator(final BufferedDataTable table,
+            final int classColumnIndex, final double minNumberRowsPerNode,
+            final boolean skipColumns) {
         m_table = table;
         m_classColumnIndex = classColumnIndex;
         m_removedRowsDueToMissingClassValue = 0;
         m_minNumberRowsPerNode = minNumberRowsPerNode;
+        m_skipColumns = skipColumns;
     }
+
 
     /**
      * Creates the {@link InMemoryTable}.
@@ -115,7 +137,7 @@ public class InMemoryTableCreator {
         DataTableSpec spec = m_table.getDataTableSpec();
 
         // get the valid attribute indices
-        int[] attributeIndices = getValidColums(spec, m_classColumnIndex);
+        int[] attributeIndices = getValidColums(spec);
 
         // create the mapper objects
         ValueMapper<DataCell> classValueMapper = new ValueMapper<DataCell>();
@@ -219,23 +241,23 @@ public class InMemoryTableCreator {
      *
      * @param spec the {@link DataTableSpec} of the underlying
      *            {@link BufferedDataTable}
-     * @param classColumnIndex the class column index which is not included
      * @return an integer array with the valid attribute indices
      */
-    private static int[] getValidColums(final DataTableSpec spec,
-            final int classColumnIndex) {
+    private int[] getValidColums(final DataTableSpec spec) {
         // valid are those columns that are either double values or are nominal
         // values
         List<Integer> result = new ArrayList<Integer>();
         for (int i = 0; i < spec.getNumColumns(); i++) {
-            if (i == classColumnIndex) {
+            if (i == m_classColumnIndex) {
                 continue;
             }
             DataColumnSpec columnSpec = spec.getColumnSpec(i);
             if (columnSpec.getType().isCompatible(DoubleValue.class)) {
                 result.add(i);
             } else if (columnSpec.getType().isCompatible(NominalValue.class)) {
-                result.add(i);
+                if (!m_skipColumns || columnSpec.getDomain().hasValues()) {
+                    result.add(i);
+                }
             }
         }
         int[] resultArray = new int[result.size()];
