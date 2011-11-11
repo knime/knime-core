@@ -54,6 +54,7 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -112,6 +113,8 @@ final class MissingValueHandling2Panel extends JPanel {
     private final JComponent m_fixText;
 
     private final MissingValueHandling2ColSetting m_setting;
+    
+    private final JLabel m_label;
 
     /**
      * Constructor for one individual column, invoked when Add in dialog was
@@ -201,12 +204,16 @@ final class MissingValueHandling2Panel extends JPanel {
         }
         setBorder(border);
         String shortName = name;
-        if (name.length() > 15) {
-            shortName = name.substring(0, 14).concat("...");
+        if (setting.isMetaConfig() || setting.getNames().length == 1) {
+            if (name.length() > 15) {
+                shortName = name.substring(0, 14).concat("...");
+            }
+        } else {
+            shortName = setting.getNames().length + " Columns...";
         }
-        JLabel label = new JLabel(shortName, icon, SwingConstants.LEFT);
-        label.setToolTipText(name);
-        panel.add(label);
+        m_label = new JLabel(shortName, icon, SwingConstants.LEFT);
+        m_label.setToolTipText(name);
+        panel.add(m_label);
         panel.add(removePanel);
 
         ButtonGroup buttonGroup = new ButtonGroup();
@@ -318,6 +325,16 @@ final class MissingValueHandling2Panel extends JPanel {
         }
         m_setting = setting;
         add(panel);
+    }
+    
+    /**
+     * Register a <code>MouseListener</code> on the label used to display the 
+     * columns. Used to select all corresponding columns that fall into this 
+     * individual missing setting property.
+     * @param ml the mouse listener to be registered
+     */
+    protected void registerMouseListener(final MouseListener ml) {
+        m_label.addMouseListener(ml);
     }
 
     /**

@@ -306,8 +306,9 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
 
         m_defaultsPanel.removeAll();
         for (int i = 0; i < defaults.length; i++) {
-            m_defaultsPanel.add(new MissingValueHandling2Panel(
-                    defaults[i], (DataColumnSpec) null));
+            final MissingValueHandling2Panel p = new MissingValueHandling2Panel(
+                    defaults[i], (DataColumnSpec) null);
+            m_defaultsPanel.add(p);
         }
         m_individualsPanel.removeAll();
         for (int i = 0; i < individuals.length; i++) {
@@ -327,8 +328,16 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
                     names[j] = colSpecs.get(j).getName();
                 }
                 individuals[i].setNames(names);
-                addToIndividualPanel(new MissingValueHandling2Panel(individuals[i], 
-                    colSpecs.toArray(new DataColumnSpec[0])));
+                final MissingValueHandling2Panel p = new MissingValueHandling2Panel(
+                    individuals[i], colSpecs.toArray(new DataColumnSpec[0]));
+                p.registerMouseListener(new MouseAdapter() {
+                    /** {@inheritDoc} */
+                    @Override
+                    public void mouseClicked(final MouseEvent me) {
+                        selectColumns(p.getSettings());
+                    }
+                });
+                addToIndividualPanel(p);
             }
         }
         m_individualsPanel.setPreferredSize(m_defaultsPanel.getPreferredSize());
@@ -359,7 +368,14 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
         if (spec == null) {
             return;
         }
-        MissingValueHandling2Panel p = new MissingValueHandling2Panel(spec);
+        final MissingValueHandling2Panel p = new MissingValueHandling2Panel(spec);
+        p.registerMouseListener(new MouseAdapter() {
+            /** {@inheritDoc} */
+            @Override
+            public void mouseClicked(final MouseEvent me) {
+                selectColumns(p.getSettings());
+            }
+        });
         addToIndividualPanel(p);
         checkButtonStatus();
     }
@@ -368,7 +384,14 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
         if (specs == null || specs.isEmpty()) {
             return;
         }
-        MissingValueHandling2Panel p = new MissingValueHandling2Panel(specs);
+        final MissingValueHandling2Panel p = new MissingValueHandling2Panel(specs);
+        p.registerMouseListener(new MouseAdapter() {
+            /** {@inheritDoc} */
+            @Override
+            public void mouseClicked(final MouseEvent me) {
+                selectColumns(p.getSettings());
+            }
+        });
         addToIndividualPanel(p);
         checkButtonStatus();
     }
@@ -394,6 +417,26 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
                 });
         m_individualsPanel.add(panel);
         m_individualsPanel.revalidate();
+    }
+    
+    private void selectColumns(final MissingValueHandling2ColSetting setting) {
+        if (setting.isMetaConfig()) {
+            return;
+        }
+        final List<String> names = Arrays.asList(setting.getNames());
+        final int[] hits = new int[names.size()];
+        int j = 0;
+        m_colList.clearSelection();
+        for (int i = 0; i < m_colListModel.getSize(); i++) {
+            DataColumnSpec cspec = (DataColumnSpec) m_colListModel.getElementAt(i);
+            if (names.contains(cspec.getName())) {
+                hits[j++] = i;
+            }
+        }
+        m_colList.setSelectedIndices(hits);
+        m_colList.scrollRectToVisible(
+                m_colList.getCellBounds(hits[0], hits[0]));
+        
     }
     
     /** Panel hosting the individual panels. It implements {@link Scrollable}
