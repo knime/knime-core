@@ -104,6 +104,7 @@ import org.eclipse.gef.ui.actions.StackAction;
 import org.eclipse.gef.ui.actions.UndoAction;
 import org.eclipse.gef.ui.actions.WorkbenchPartAction;
 import org.eclipse.gef.ui.parts.GraphicalEditor;
+import org.eclipse.gef.ui.parts.GraphicalViewerKeyHandler;
 import org.eclipse.gef.ui.properties.UndoablePropertySheetEntry;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.InputDialog;
@@ -187,6 +188,7 @@ import org.knime.workbench.editor2.actions.PasteActionContextMenu;
 import org.knime.workbench.editor2.actions.PauseLoopExecutionAction;
 import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.ResumeLoopAction;
+import org.knime.workbench.editor2.actions.SaveAsMetaNodeTemplateAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
 import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
 import org.knime.workbench.editor2.commands.CreateNewConnectedMetaNodeCommand;
@@ -510,6 +512,8 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         AbstractNodeAction metaNodeSetName =
             new MetaNodeSetNameAction(this);
+        AbstractNodeAction defineMetaNodeTemplate =
+            new SaveAsMetaNodeTemplateAction(this);
         AbstractNodeAction checkUpdateMetaNodeLink =
             new CheckUpdateMetaNodeLinkAction(this);
         AbstractNodeAction disconnectMetaNodeLink =
@@ -556,6 +560,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(expand);
 
         m_actionRegistry.registerAction(metaNodeSetName);
+        m_actionRegistry.registerAction(defineMetaNodeTemplate);
         m_actionRegistry.registerAction(checkUpdateMetaNodeLink);
         m_actionRegistry.registerAction(disconnectMetaNodeLink);
         m_actionRegistry.registerAction(lockMetaLink);
@@ -584,6 +589,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(cut.getId());
         m_editorActions.add(paste.getId());
         m_editorActions.add(metaNodeSetName.getId());
+        m_editorActions.add(defineMetaNodeTemplate.getId());
         m_editorActions.add(checkUpdateMetaNodeLink.getId());
         m_editorActions.add(annotation.getId());
     }
@@ -669,8 +675,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         NodeProvider.INSTANCE.addListener(this);
 
         // Configure the key handler
-        ModifierKeyHandler keyHandler =
-                new ModifierKeyHandler(viewer);
+        GraphicalViewerKeyHandler keyHandler =
+            new GraphicalViewerKeyHandler(viewer);
 
         KeyHandler parentKeyHandler =
                 keyHandler.setParent(getCommonKeyHandler());

@@ -50,8 +50,10 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.WeakHashMap;
 
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
@@ -66,6 +68,10 @@ import org.knime.core.node.workflow.WorkflowManager;
  * @author Bernd Wiswedel, KNIME.com, Zurich
  */
 public class DisconnectMetaNodeLinkCommand extends AbstractKNIMECommand {
+
+    public static final WeakHashMap<NodeID, URI> RECENTLY_USED_URIS =
+        new WeakHashMap<NodeID, URI>();
+
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(DisconnectMetaNodeLinkCommand.class);
@@ -124,6 +130,7 @@ public class DisconnectMetaNodeLinkCommand extends AbstractKNIMECommand {
                     MetaNodeTemplateInformation old =
                             hostWFM.setTemplateInformation(id,
                                     MetaNodeTemplateInformation.NONE);
+                    RECENTLY_USED_URIS.put(wm.getID(), old.getSourceURI());
                     m_changedIDs.add(id);
                     m_oldTemplInfos.add(old);
                 }

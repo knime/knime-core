@@ -55,6 +55,7 @@ import org.eclipse.gef.GraphicalViewer;
 import org.eclipse.gef.editparts.ScalableFreeformRootEditPart;
 import org.eclipse.gef.ui.actions.ActionRegistry;
 import org.eclipse.gef.ui.parts.GraphicalViewerKeyHandler;
+import org.eclipse.gef.ui.parts.ScrollingGraphicalViewer;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IEditorSite;
 
@@ -109,7 +110,7 @@ public class WorkflowGraphicalViewerCreator {
 
         // StatusLineValidationMessageHandler validationMessageHandler = new
         // StatusLineValidationMessageHandler(editorSite);
-        WorkflowEditorViewer viewer = new WorkflowEditorViewer();
+        ScrollingGraphicalViewer viewer = new ScrollingGraphicalViewer();
         viewer.createControl(parent);
 
         // configure the m_viewer
