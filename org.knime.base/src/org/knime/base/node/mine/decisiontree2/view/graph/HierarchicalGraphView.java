@@ -186,10 +186,10 @@ public abstract class HierarchicalGraphView<K> {
      * @param scale the scale factor to set
      */
     public void setScaleFactor(final float scale) {
-    	if (scale != m_scale) {
-    		m_scale = scale;
-    		layoutGraph();
-    	}
+        if (scale != m_scale) {
+            m_scale = scale;
+            layoutGraph();
+        }
     }
 
     /**
@@ -295,7 +295,7 @@ public abstract class HierarchicalGraphView<K> {
             rootWidget.setScaleFactor(m_scale);
             getWidgets().put(rootK, rootWidget);
         } else {
-        	rootWidget.setScaleFactor(m_scale);
+            rootWidget.setScaleFactor(m_scale);
         }
         m_layoutSettings = new LayoutSettings(getNodeWidth(), m_scale);
 
@@ -444,7 +444,7 @@ public abstract class HierarchicalGraphView<K> {
             widget.setScaleFactor(m_scale);
             getWidgets().put(k, widget);
         } else {
-        	widget.setScaleFactor(m_scale);
+            widget.setScaleFactor(m_scale);
         }
         Dimension preferredSize = widget.getPreferredSize();
         layoutInfo.setYOffset(layoutInfo.getYOffset() + preferredSize.height
@@ -478,7 +478,7 @@ public abstract class HierarchicalGraphView<K> {
             widget.setScaleFactor(m_scale);
             getWidgets().put(k, widget);
         } else {
-        	widget.setScaleFactor(m_scale);
+            widget.setScaleFactor(m_scale);
         }
         widget.setSize(new Dimension(bounds.width, bounds.height));
     }

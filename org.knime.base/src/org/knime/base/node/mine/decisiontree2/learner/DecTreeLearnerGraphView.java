@@ -84,6 +84,7 @@ import org.knime.base.node.mine.decisiontree2.view.DecTreeGraphView;
 import org.knime.base.node.mine.decisiontree2.view.graph.CollapseBranchAction;
 import org.knime.base.node.mine.decisiontree2.view.graph.ExpandBranchAction;
 import org.knime.core.data.RowKey;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteListener;
@@ -95,6 +96,9 @@ import org.knime.core.node.property.hilite.KeyEvent;
  */
 final class DecTreeLearnerGraphView extends
         NodeView<DecisionTreeLearnerNodeModel> implements HiLiteListener {
+    /** The node logger for this class. */
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(DecTreeLearnerGraphView.class);
     private DecTreeGraphView m_graph;
 
     private HiLiteHandler m_hiLiteHdl;
@@ -219,16 +223,16 @@ final class DecTreeLearnerGraphView extends
         c.gridy++;
         final Map<Object, Float> scaleFactors =
                 new LinkedHashMap<Object, Float>();
-        scaleFactors.put("140%", 1.4f);
-        scaleFactors.put("120%", 1.2f);
-        scaleFactors.put("100%", 1.0f);
-        scaleFactors.put("80%", 0.8f);
-        scaleFactors.put("60%", 0.6f);
+        scaleFactors.put("140.0%", 140f);
+        scaleFactors.put("120.0%", 120f);
+        scaleFactors.put("100.0%", 100f);
+        scaleFactors.put("80.0%", 80f);
+        scaleFactors.put("60.0%", 60f);
 
         final JComboBox scaleFactorComboBox = new JComboBox(
                 scaleFactors.keySet().toArray());
         scaleFactorComboBox.setEditable(true);
-        scaleFactorComboBox.setSelectedItem("100%");
+        scaleFactorComboBox.setSelectedItem("100.0%");
         scaleFactorComboBox.addActionListener(new ActionListener() {
 
             @Override
@@ -240,12 +244,23 @@ final class DecTreeLearnerGraphView extends
                     if (str.endsWith("%")) {
                         scaleFactor = Float.parseFloat(
                                 str.substring(0, str.length() - 1));
-                        scaleFactor = scaleFactor / 100f;
                     } else {
                         scaleFactor = Float.parseFloat(str);
                     }
                 }
-
+                if (scaleFactor < 10) {
+                    LOGGER.error("A zoom which is lower than 10% "
+                            + "is not supported");
+                    scaleFactor = 10f;
+                }
+                if (scaleFactor > 500) {
+                    LOGGER.error("A zoom which is greater than 500% "
+                            + "is not supported");
+                    scaleFactor = 500f;
+                }
+                String sf = Float.toString(scaleFactor) + "%";
+                scaleFactorComboBox.setSelectedItem(sf);
+                scaleFactor = scaleFactor / 100f;
                 m_graph.setScaleFactor(scaleFactor);
                 getComponent().validate();
                 getComponent().repaint();
