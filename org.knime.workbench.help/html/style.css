@@ -56,6 +56,9 @@ td{
 	vertical-align:top;
 }
 
+.column_title th {
+	padding-right: 1em;
+}
 
 .dt {
 	font-weight: bold;
