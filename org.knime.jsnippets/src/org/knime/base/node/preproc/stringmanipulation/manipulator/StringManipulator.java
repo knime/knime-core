@@ -86,7 +86,7 @@ public class StringManipulator implements Manipulator {
      * @param x the value to convert
      * @return the string
      */
-    public static String string(final Double x) {
+    public static String string(final Long x) {
         if (null == x) {
             return null;
         }
@@ -99,11 +99,51 @@ public class StringManipulator implements Manipulator {
      * @param x the value to convert
      * @return the string
      */
-    public static String string(final Long x) {
+    public static String string(final Double x) {
         if (null == x) {
             return null;
         }
         return x.toString();
+    }
+
+    /**
+     * Converts input to string.
+     *
+     * @param o the value to convert
+     * @return the string
+     */
+    public static String string(final Object o) {
+        if (null == o) {
+            return null;
+        }
+        if (o instanceof String) {
+            return string((String)o);
+        } else if (o instanceof Integer) {
+            return string((Integer)o);
+        } else if (o instanceof Long) {
+            return string((Long)o);
+        } else if (o instanceof Double) {
+            return string((Double)o);
+        } else {
+            return o.toString();
+        }
+    }
+
+    /**
+     * Converts input to string.
+     *
+     * @param o the value to convert
+     * @return the string
+     */
+    public static String[] string(final Object... o) {
+        if (null == o) {
+            return null;
+        }
+        String[] s = new String[o.length];
+        for (int i = 0; i < o.length; i++) {
+            s[i] = string(o[i]);
+        }
+        return s;
     }
 
     /**
@@ -151,13 +191,13 @@ public class StringManipulator implements Manipulator {
             + "<br/>"
             + "<table>"
             + "<tr><td>string((String)null)</td>"
-            + "<td>=&nbsp;\"\"</td></tr>"
+            + "<td>=&nbsp;null</td></tr>"
 
             + "<tr><td>string(\"KNIME\")</td>"
             + "<td>=&nbsp;\"KNIME\"</td></tr>"
 
-            + "<tr><td>string(null, \"\", \"a\")</td>"
-            + "<td>=&nbsp;[\"\", \"\", \"a\"]</td></tr>"
+            + "<tr><td>string(1, 2.1, null, \"3\")</td>"
+            + "<td>=&nbsp;[\"1\", \"2.1\", null, \"3\"]</td></tr>"
 
             + "</table>";
     }
