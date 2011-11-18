@@ -54,6 +54,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -77,6 +78,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JSeparator;
 import javax.swing.JSplitPane;
+import javax.swing.border.EmptyBorder;
 
 import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
@@ -84,6 +86,7 @@ import org.knime.base.node.mine.decisiontree2.view.DecTreeGraphView;
 import org.knime.base.node.mine.decisiontree2.view.graph.CollapseBranchAction;
 import org.knime.base.node.mine.decisiontree2.view.graph.ExpandBranchAction;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -122,7 +125,11 @@ final class DecTreePredictorGraphView
             null != model.getDecisionTree() ? model.getDecisionTree()
                     .getColorColumn() : null;
         m_graph = new DecTreeGraphView(root, colorColumn);
-        JScrollPane treeView = new JScrollPane(m_graph.getView());
+        JPanel p = new JPanel(new GridLayout());
+        p.setBackground(ColorAttr.BACKGROUND);
+        p.add(m_graph.getView());
+        p.setBorder(new EmptyBorder(5, 5, 5, 5));
+        JScrollPane treeView = new JScrollPane(p);
         Dimension prefSize = treeView.getPreferredSize();
         treeView.setPreferredSize(
                 new Dimension(Math.min(prefSize.width, 800), prefSize.height));

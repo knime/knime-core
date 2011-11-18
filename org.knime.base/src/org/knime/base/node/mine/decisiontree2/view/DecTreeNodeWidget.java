@@ -84,6 +84,8 @@ import org.knime.core.data.property.ColorAttr;
  */
 public final class DecTreeNodeWidget
             extends ComponentNodeWidget<DecisionTreeNode> {
+    private boolean m_displayTable;
+    private boolean m_displayChart;
     private boolean m_tableCollapsed;
     private boolean m_chartCollapsed;
     private CollapsiblePanel m_table;
@@ -107,6 +109,32 @@ public final class DecTreeNodeWidget
         m_tableCollapsed = tableCollapsed;
         m_chartCollapsed = chartCollapsed;
         m_colorColumn = colorColumn;
+        m_displayTable = true;
+        m_displayChart = true;
+    }
+
+    /**
+     * @param graph the graph this widget is element of
+     * @param decNode the model for this widget
+     * @param colorColumn the column used for coloring
+     *                      ({link DecisionTreeNode.covoredColors()})
+     * @param tableCollapsed true when table should be collapsed initially
+     * @param chartCollapsed true when chart should be collapsed initially
+     * @param displayTable true when the table should be displayed
+     * @param displayChart true when the chart should be displayed
+     */
+    public DecTreeNodeWidget(
+            final HierarchicalGraphView<DecisionTreeNode> graph,
+            final DecisionTreeNode decNode,
+            final String colorColumn, final boolean tableCollapsed,
+            final boolean chartCollapsed, final boolean displayTable,
+            final boolean displayChart) {
+        super(graph, decNode);
+        m_tableCollapsed = tableCollapsed;
+        m_chartCollapsed = chartCollapsed;
+        m_colorColumn = colorColumn;
+        m_displayTable = displayTable;
+        m_displayChart = displayChart;
     }
 
     /**
@@ -129,26 +157,33 @@ public final class DecTreeNodeWidget
         nodePanel.setOpaque(false);
         p.add(nodePanel, c);
         // add table
-        c.gridy++;
-        JPanel tablePanel = createTablePanel(scale);
-        tablePanel.setOpaque(false);
-        m_table = new CollapsiblePanel("Table:", tablePanel, scale);
-        m_table.setOpaque(false);
-        m_table.setCollapsed(m_tableCollapsed);
-        p.add(m_table, c);
-        // add histogram if colors are provided
-        HashMap<Color, Double> nodeColors = getUserObject().coveredColors();
-        HashMap<Color, Double> rootColors = null != getGraphView().getRootNode()
-            ? getGraphView().getRootNode().coveredColors()
-            : getUserObject().coveredColors();
-        if (null != nodeColors && null != rootColors && rootColors.size() > 1) {
+        if (m_displayTable) {
             c.gridy++;
-            JPanel chartPanel = createChartPanel(nodeColors, rootColors, scale);
-            chartPanel.setOpaque(false);
-            m_chart = new CollapsiblePanel("Chart:", chartPanel, scale);
-            m_chart.setOpaque(false);
-            m_chart.setCollapsed(m_chartCollapsed);
-            p.add(m_chart, c);
+            JPanel tablePanel = createTablePanel(scale);
+            tablePanel.setOpaque(false);
+            m_table = new CollapsiblePanel("Table:", tablePanel, scale);
+            m_table.setOpaque(false);
+            m_table.setCollapsed(m_tableCollapsed);
+            p.add(m_table, c);
+        }
+        // add histogram if colors are provided
+        if (m_displayChart) {
+            HashMap<Color, Double> nodeColors = getUserObject().coveredColors();
+            HashMap<Color, Double> rootColors =
+                null != getGraphView().getRootNode()
+                ? getGraphView().getRootNode().coveredColors()
+                : getUserObject().coveredColors();
+            if (null != nodeColors && null != rootColors
+                    && rootColors.size() > 1) {
+                c.gridy++;
+                JPanel chartPanel = createChartPanel(nodeColors, rootColors,
+                        scale);
+                chartPanel.setOpaque(false);
+                m_chart = new CollapsiblePanel("Chart:", chartPanel, scale);
+                m_chart.setOpaque(false);
+                m_chart.setCollapsed(m_chartCollapsed);
+                p.add(m_chart, c);
+            }
         }
         return p;
     }
@@ -209,7 +244,8 @@ public final class DecTreeNodeWidget
      * @param scale
      * @return A label, e.g. "Iris-versicolor (45/46)" */
     private JPanel createNodeLabelPanel(final float scale) {
-        JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        int gap = Math.round(5 * scale);
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, gap, gap));
         StringBuilder label = new StringBuilder();
         DecisionTreeNode node = getUserObject();
         DataCell majorityClass = node.getMajorityClass();
@@ -237,7 +273,8 @@ public final class DecTreeNodeWidget
         int gridwidth = 3;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.NORTHWEST;
-        c.insets = new Insets(1, 1, 1, 1);
+        int bw = Math.round(1 * scale);
+        c.insets = new Insets(bw, bw, bw, bw);
         c.gridx = 0;
         c.gridy = 0;
         c.weightx = 1;
@@ -272,6 +309,7 @@ public final class DecTreeNodeWidget
             if (cell.equals(majorityClass)) {
                 c.gridx = 0;
                 JComponent comp = new JPanel();
+                comp.setMinimumSize(classLabel.getPreferredSize());
                 comp.setPreferredSize(classLabel.getPreferredSize());
                 comp.setBackground(new Color(225, 225, 225));
                 c.gridwidth = gridwidth;
@@ -291,8 +329,8 @@ public final class DecTreeNodeWidget
         double nominator = null != getGraphView().getRootNode()
             ? getGraphView().getRootNode().getEntireClassCount()
             : getUserObject().getEntireClassCount();
-        double covorage = entireClassCounts / nominator;
-        p.add(scaledLabel(convertPercentage(covorage), scale, JLabel.RIGHT), c);
+        double coverage = entireClassCounts / nominator;
+        p.add(scaledLabel(convertPercentage(coverage), scale, JLabel.RIGHT), c);
         c.gridx++;
         p.add(scaledLabel(convertCount(entireClassCounts), scale,
                 JLabel.RIGHT), c);
@@ -320,7 +358,8 @@ public final class DecTreeNodeWidget
         int gridwidth = 3;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.anchor = GridBagConstraints.NORTHWEST;
-        c.insets = new Insets(1, 1, 1, 1);
+        int bw = Math.round(1 * scale);
+        c.insets = new Insets(bw, bw, bw, bw);
         c.gridx = 0;
         c.gridy = 0;
         c.weightx = 1;

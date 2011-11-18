@@ -168,14 +168,14 @@ public final class OutlineView<K> extends JComponent
             m_translucentRect = new Rectangle(
                 (int) (graphVisRect.x * scale),
                 (int) (graphVisRect.y * scale),
-                (int) (graphVisRect.width * scale),
-                (int) (graphVisRect.height * scale)
+                (int) (graphVisRect.width * scale) + 1,
+                (int) (graphVisRect.height * scale) + 1
             );
             g2.setColor(new Color(254, 245, 228, 128));
             g2.fill(m_translucentRect);
             g2.setColor(new Color(250, 209, 132));
             g2.drawRect(m_translucentRect.x, m_translucentRect.y,
-                    m_translucentRect.width - 1, m_translucentRect.height - 1);
+                    m_translucentRect.width, m_translucentRect.height);
         }
     }
 

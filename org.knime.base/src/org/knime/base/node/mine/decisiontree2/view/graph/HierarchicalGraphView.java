@@ -314,7 +314,7 @@ public abstract class HierarchicalGraphView<K> {
                 new Dimension(m_layoutSettings.getLeftGap()
                         + graphBounds.width + m_layoutSettings.getRightGap(),
                         m_layoutSettings.getTopGap() + graphBounds.height
-                        + m_layoutSettings.getLevelGap() / 2
+//                        + m_layoutSettings.getLevelGap() / 2
                         + m_layoutSettings.getBottomGap()));
     }
 
@@ -406,7 +406,9 @@ public abstract class HierarchicalGraphView<K> {
             rectangle = rectangle.union(next);
         }
         for (Rectangle next : m_expandSign.keySet()) {
-            rectangle = rectangle.union(next);
+            Rectangle n = new Rectangle(next);
+            n.height = n.height + 5;
+            rectangle = rectangle.union(n);
         }
 
         return rectangle;
@@ -1022,14 +1024,14 @@ public abstract class HierarchicalGraphView<K> {
          * @return the gap at the bottom
          */
         public int getBottomGap() {
-            return 5;
+            return 0;
         }
 
         /**
          * @return the gap on the right side
          */
         public int getRightGap() {
-            return 5;
+            return 0;
         }
 
         /**
@@ -1054,13 +1056,13 @@ public abstract class HierarchicalGraphView<K> {
          * @return the gap on the left side
          */
         public int getLeftGap() {
-            return 5;
+            return 0;
         }
         /**
          * @return the gap on top
          */
         public int getTopGap() {
-            return 5;
+            return 0;
         }
         /**
          * @return the common width of nodes
