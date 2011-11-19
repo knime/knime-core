@@ -39,6 +39,7 @@ import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -49,6 +50,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 
 import java.io.File;
 import java.io.IOException;
@@ -57,6 +60,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
+import java.util.Random;
 
 
 /**
@@ -72,7 +76,10 @@ public class TestDataNodeModel extends NodeModel {
         "tab\ttab", "comma,comma", "single quote'single quote",
         "    ", ""};
     private static final int[] intVals = new int[] {Integer.MAX_VALUE,
-        Integer.MIN_VALUE, -1, 1, 0};
+        Integer.MIN_VALUE, -1, 1, 0, 65, 123789043, -489546568};
+    private static final long[] longVals = new long[] {Long.MAX_VALUE,
+        Long.MIN_VALUE, -1, 1, 0, 6782346868234l, 4327897691234567123l,
+        -3685468548523478l, -678546786868234l};
     private static final double[] doubleVals = new double[] {Double.NaN,
         Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY,
         Double.MAX_VALUE, Double.MIN_VALUE, Double.MIN_NORMAL,
@@ -94,11 +101,52 @@ public class TestDataNodeModel extends NodeModel {
         new GregorianCalendar(0, 1, 1, 24, 59, 59).getTime(),
         new GregorianCalendar(4000, 1, 1, 24, 59, 59).getTime()};
 
+    private final SettingsModelInteger m_noOfRows = createNoOfRowsModel();
+    private final SettingsModelInteger m_noOfListItems =
+        createNoOfListItemsModel();
+    private final SettingsModelInteger m_noOfSetItems =
+        createNoOfSetItemsModel();
+    private final SettingsModelInteger m_maxStringLength =
+        createMaxStringLengthModel();
+
+    private final static Random rnd = new Random();
 
     /**Constructor for class TestDataNodeModel.
      */
     protected TestDataNodeModel() {
         super(0, 1);
+    }
+
+    /**
+     * @return the max string length model
+     */
+    static SettingsModelInteger createMaxStringLengthModel() {
+        return new SettingsModelIntegerBounded("noStringLength", 350, 1,
+                Integer.MAX_VALUE);
+    }
+
+    /**
+     * @return the number of rows model
+     */
+    static SettingsModelInteger createNoOfRowsModel() {
+        return new SettingsModelIntegerBounded("noOfRows", 100, 1,
+                Integer.MAX_VALUE);
+    }
+
+    /**
+     * @return the number of list items model
+     */
+    static SettingsModelInteger createNoOfListItemsModel() {
+        return new SettingsModelIntegerBounded("noOfListItems", 50, 1,
+                Integer.MAX_VALUE);
+    }
+
+    /**
+     * @return the number of set items model
+     */
+    static SettingsModelInteger createNoOfSetItemsModel() {
+        return new SettingsModelIntegerBounded("noOfSetItems", 10, 1,
+                Integer.MAX_VALUE);
     }
 
     /**
@@ -118,19 +166,25 @@ public class TestDataNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         final BufferedDataContainer dc =
             exec.createDataContainer(createSpec());
-        final int noOfRows = Math.max(Math.max(Math.max(stringVals.length,
-                intVals.length), doubleVals.length), dateVals.length);
-        final int noOfListItems = noOfRows * 2;
-        final int noOfSetItems = noOfRows;
+        final int noOfRows = m_noOfRows.getIntValue();
+        final int noOfListItems = m_noOfListItems.getIntValue();
+        final int noOfSetItems = m_noOfSetItems.getIntValue();
         for (int rowIdx = 0; rowIdx < noOfRows; rowIdx++) {
+            exec.setProgress((double)rowIdx / noOfRows, "Generating row "
+                    + rowIdx + " of " + noOfRows);
+            exec.checkCanceled();
             final LinkedList<DataCell> cells = new LinkedList<DataCell>();
-            cells.add(getStringVal(rowIdx));
-            cells.add(getStringListVal(rowIdx, noOfListItems));
-            cells.add(getStringSetVal(rowIdx, noOfSetItems));
+            cells.add(getStringVal(exec, rowIdx));
+            cells.add(getStringListVal(exec, rowIdx, noOfListItems));
+            cells.add(getStringSetVal(exec, rowIdx, noOfSetItems));
 
             cells.add(getIntVal(rowIdx));
             cells.add(getIntListVal(rowIdx, noOfListItems));
             cells.add(getIntSetVal(rowIdx, noOfSetItems));
+
+            cells.add(getLongVal(rowIdx));
+            cells.add(getLongListVal(rowIdx, noOfListItems));
+            cells.add(getLongSetVal(rowIdx, noOfSetItems));
 
             cells.add(getDoubleVal(rowIdx));
             cells.add(getDoubleListVal(rowIdx, noOfListItems));
@@ -148,7 +202,7 @@ public class TestDataNodeModel extends NodeModel {
             cells.add(getMissingValListVal(rowIdx, noOfListItems));
             cells.add(getMissingValSetVal(rowIdx, noOfSetItems));
 
-            cells.add(getStringVal(rowIdx));
+            cells.add(getStringVal(exec, rowIdx));
             cells.add(getDoubleVal(rowIdx));
 
             final DefaultRow row =
@@ -216,8 +270,17 @@ public class TestDataNodeModel extends NodeModel {
     }
 
     private DataCell getTimestampVal(final int rowIdx) {
-        return new DateAndTimeCell(
-                dateVals[rowIdx % dateVals.length].getTime(), true, true, true);
+        Date val;
+        if (rowIdx >= dateVals.length) {
+            long nextLong = rnd.nextLong();
+            if (rowIdx % 2 == 0) {
+                nextLong *= -1;
+            }
+            val = new Date(nextLong);
+        } else {
+            val = dateVals[rowIdx];
+        }
+        return new DateAndTimeCell(val.getTime(), true, true, true);
     }
 
     private DataCell getTimestampSetVal(final int rowIdx, final int i) {
@@ -243,7 +306,11 @@ public class TestDataNodeModel extends NodeModel {
     private DataCell getDoubleVal(final int rowIdx) {
         double val;
         if (rowIdx >= doubleVals.length) {
-            val = Math.random();
+            final double random = Math.random();
+            val = random;
+            if (rowIdx % 2 == 0) {
+                val *= -1;
+            }
         } else {
             val = doubleVals[rowIdx];
         }
@@ -273,7 +340,10 @@ public class TestDataNodeModel extends NodeModel {
     private DataCell getIntVal(final int rowIdx) {
         int val;
         if (rowIdx >= intVals.length) {
-            val = (int)Math.round(Math.random() * 10000);
+            val = rnd.nextInt();
+            if (rowIdx % 2 == 0) {
+                val *= -1;
+            }
         } else {
             val = intVals[rowIdx];
         }
@@ -300,26 +370,87 @@ public class TestDataNodeModel extends NodeModel {
         return cells;
     }
 
-    private DataCell getStringVal(final int rowIdx) {
-        return new StringCell(stringVals[rowIdx % stringVals.length]);
+    private DataCell getLongVal(final int rowIdx) {
+        long val;
+        if (rowIdx >= longVals.length) {
+            val = rnd.nextLong();
+            if (rowIdx % 2 == 0) {
+                val *= -1;
+            }
+        } else {
+            val = longVals[rowIdx];
+        }
+        return new LongCell(val);
     }
 
-    private DataCell getStringSetVal(final int rowIdx, final int i) {
+    private DataCell getLongSetVal(final int rowIdx, final int i) {
         return CollectionCellFactory.createSetCell(
-                createStringCellCollection(rowIdx, i));
+                createLongCollection(rowIdx, i));
     }
 
-    private DataCell getStringListVal(final int rowIdx, final int i) {
+    private DataCell getLongListVal(final int rowIdx, final int i) {
         return CollectionCellFactory.createListCell(
-                createStringCellCollection(rowIdx, i));
+                createLongCollection(rowIdx, i));
     }
 
-    private Collection<DataCell> createStringCellCollection(final int start,
-            final int noOf) {
+    private Collection<DataCell> createLongCollection(
+            final int start, final int noOf) {
         final Collection<DataCell> cells =
             new ArrayList<DataCell>(noOf);
         for (int i = start; i < noOf + start; i++) {
-            cells.add(getStringVal(i));
+            cells.add(getLongVal(i));
+        }
+        return cells;
+    }
+
+    private DataCell getStringVal(final ExecutionContext exec, final int rowIdx)
+        throws CanceledExecutionException {
+        exec.checkCanceled();
+        String val;
+        if (rowIdx >= stringVals.length) {
+            final StringBuffer sb = new StringBuffer();
+            final int noOfChars = rnd.nextInt(m_maxStringLength.getIntValue());
+            for (int i = noOfChars; i > 0; i--) {
+                String string;
+                if (rnd.nextInt(6) == 5) {
+                    string = " ";
+                } else {
+                    exec.checkCanceled();
+                    final int n = Math.min(12, Math.abs(i));
+                    string = Long.toString(
+                          Math.round(Math.random() * Math.pow(36, n)), 36);
+                    if (rnd.nextBoolean()) {
+                        string = string.toUpperCase();
+                    }
+                }
+                sb.append(string);
+            }
+            val = sb.toString();
+        } else {
+            val = stringVals[rowIdx];
+        }
+        return new StringCell(val);
+    }
+
+    private DataCell getStringSetVal(final ExecutionContext exec,
+            final int rowIdx, final int i) throws CanceledExecutionException {
+        return CollectionCellFactory.createSetCell(
+                createStringCellCollection(exec, rowIdx, i));
+    }
+
+    private DataCell getStringListVal(final ExecutionContext exec,
+            final int rowIdx, final int i) throws CanceledExecutionException {
+        return CollectionCellFactory.createListCell(
+                createStringCellCollection(exec, rowIdx, i));
+    }
+
+    private Collection<DataCell> createStringCellCollection(
+            final ExecutionContext exec, final int start, final int noOf)
+            throws CanceledExecutionException {
+        final Collection<DataCell> cells =
+            new ArrayList<DataCell>(noOf);
+        for (int i = start; i < noOf + start; i++) {
+            cells.add(getStringVal(exec, i));
         }
         return cells;
     }
@@ -345,6 +476,16 @@ public class TestDataNodeModel extends NodeModel {
         specs.add(creator.createSpec());
         creator.setName("IntSetCol");
         creator.setType(SetCell.getCollectionType(IntCell.TYPE));
+        specs.add(creator.createSpec());
+
+        creator.setName("LongCol");
+        creator.setType(LongCell.TYPE);
+        specs.add(creator.createSpec());
+        creator.setName("LongListCol");
+        creator.setType(ListCell.getCollectionType(LongCell.TYPE));
+        specs.add(creator.createSpec());
+        creator.setName("LongSetCol");
+        creator.setType(SetCell.getCollectionType(LongCell.TYPE));
         specs.add(creator.createSpec());
 
         creator.setName("DoubleCol");
@@ -421,8 +562,8 @@ public class TestDataNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
+            throws IOException, CanceledExecutionException {
         // nothing to do
     }
 
@@ -438,9 +579,12 @@ public class TestDataNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
-        // nothing to do
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
+            throws InvalidSettingsException {
+        m_noOfRows.loadSettingsFrom(settings);
+        m_noOfListItems.loadSettingsFrom(settings);
+        m_noOfSetItems.loadSettingsFrom(settings);
+        m_maxStringLength.loadSettingsFrom(settings);
     }
 
     /**
@@ -448,7 +592,10 @@ public class TestDataNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        // nothing to do
+        m_noOfRows.saveSettingsTo(settings);
+        m_noOfListItems.saveSettingsTo(settings);
+        m_noOfSetItems.saveSettingsTo(settings);
+        m_maxStringLength.saveSettingsTo(settings);
     }
 
     /**
@@ -457,6 +604,9 @@ public class TestDataNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        // nothing to do
+        m_noOfRows.validateSettings(settings);
+        m_noOfListItems.validateSettings(settings);
+        m_noOfSetItems.validateSettings(settings);
+        m_maxStringLength.validateSettings(settings);
     }
 }

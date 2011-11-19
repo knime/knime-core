@@ -15,6 +15,16 @@
 			visualization nodes.
 			</p>
 		</intro>
+		<option name="No of rows"> The number of rows to create</option>
+		<option name="No of list items"> 
+		  The number of items the collection columns should contain
+	    </option>
+		<option name="Maximum no of set items">
+		  The given number is the maximum number of items a set may contain.
+		</option>
+		<option name="Maximum string length">
+          The given number is the maximum length for the generated strings.
+        </option>
 	</fullDescription>
 	
 	<ports>

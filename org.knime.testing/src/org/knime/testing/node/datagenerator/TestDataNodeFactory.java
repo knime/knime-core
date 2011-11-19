@@ -41,7 +41,7 @@ public class TestDataNodeFactory extends NodeFactory<TestDataNodeModel> {
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return null;
+        return new TestDataNodeDialog();
     }
 
     /**
@@ -74,7 +74,7 @@ public class TestDataNodeFactory extends NodeFactory<TestDataNodeModel> {
      */
     @Override
     protected boolean hasDialog() {
-        return false;
+        return true;
     }
 
 }
