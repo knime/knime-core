@@ -176,17 +176,16 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
                 if (dialogreturn == SWT.CANCEL) {
                     return;
                 }
-                // do quick&dirty reset: just reset them in random order
-                // and skip the ones that were already reset in passing.
-                for (NodeID id : resetableIDs) {
-                    if (manager.canResetNode(id)) {
-                        manager.resetAndConfigureNode(id);
-                    }
+            } else {
+                // if there are no resetable nodes we can check if
+                // we can collapse - otherwise we need to first reset
+                // those nodes (which we don't want to do before we
+                // have not gathered all info - and allowed the user
+                // to cancel the operation!)
+                String res = manager.canCollapseNodesIntoMetaNode(nodeIds);
+                if (res != null) {
+                    throw new IllegalArgumentException(res);
                 }
-            }
-            String res = manager.canCollapseNodesIntoMetaNode(nodeIds);
-            if (res != null) {
-                throw new IllegalArgumentException(res);
             }
             // let the user enter a name
             String name = "Metanode";
@@ -197,6 +196,20 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
                 return;
             }
             if (dialogreturn == Dialog.OK) {
+                if (resetableIDs.size() > 0) {
+                    // do quick&dirty reset: just reset them in random order
+                    // and skip the ones that were already reset in passing.
+                    for (NodeID id : resetableIDs) {
+                        if (manager.canResetNode(id)) {
+                            manager.resetAndConfigureNode(id);
+                        }
+                    }
+                }
+                // check if there is another reason why we can not collapse
+                String res = manager.canCollapseNodesIntoMetaNode(nodeIds);
+                if (res != null) {
+                    throw new IllegalArgumentException(res);
+                }
                 name = idia.getValue();
                 // create a command and push on stack to enable UNDO
                 CollapseMetaNodeCommand cmnc =
@@ -204,9 +217,12 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
                 getCommandStack().execute(cmnc);
             }
         } catch (IllegalArgumentException e) {
-            MessageBox mb = new MessageBox(Display.getCurrent().getActiveShell(),
-                    SWT.ERROR);
-            mb.setMessage("Collapsing to meta node failed: " + e.getMessage());
+            MessageBox mb = new MessageBox(
+                    Display.getCurrent().getActiveShell(), SWT.ERROR);
+            final String error =
+                "Collapsing to meta node failed: " + e.getMessage();
+            LOGGER.error(error, e);
+            mb.setMessage(error);
             mb.setText("Collapse failed");
             mb.open();
         }
