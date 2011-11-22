@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Sep 8, 2009 (uwe): created
  */
@@ -54,7 +54,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.text.ParseException;
 
 import javax.swing.BorderFactory;
 import javax.swing.ButtonGroup;
@@ -70,38 +69,51 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.port.PortObjectSpec;
-
 /**
- * dialog component for dimension selection in PCA configuration, used for
- * {@link SettingsModelPCADimensions}
- * 
- * @author uwe, University of Konstanz
+ * Implementation of a dialog component for dimension selection in PCA
+ * configuration, used for {@link SettingsModelPCADimensions}.
+ *
+ * Selection of either a number of dimensions to reduce to or a minimal amount
+ * of information to be preserved by the dimension reduction.
+ *
+ * @author Uwe Nagel, University of Konstanz
  */
 public class DialogComponentChoiceConfig extends DialogComponent {
+
     /** spinner for setting dimensions. */
     private final JSpinner m_dimSpinner;
 
     /** spinner for setting preserved quality. */
-    private final JSpinner m_qualitySlider;
+    private final JSpinner m_qualitySpinner;
 
     /** selection by dimension? */
     private final JRadioButton m_dimensionSelection;
 
     /** selection by preserved quality? */
     private final JRadioButton m_qualitySelection;
-
+    /**
+     * show fraction of total information to be preserved after reduction,
+     * corresponds to dimension selection.
+     */
     private JLabel m_qualityLabel;
-
+    /**
+     * Show the number of dimensions needed to preserve chosen information
+     * fraction, corresponds to minimum quality selection.
+     */
     private JLabel m_dimensionLabel;
 
     /**
-     * @param model corresponding settings model
-     * @param showAdditionalInfo if <code>true</code> additionally
+     * @param model
+     *            corresponding settings model
+     * @param showAdditionalInfo
+     *            if <code>true</code> additional information about number of
+     *            output dimensions and the fraction of information preserved is
+     *            shown.
      */
     public DialogComponentChoiceConfig(final SettingsModelPCADimensions model,
             final boolean showAdditionalInfo) {
         super(model);
-        // TODO make label showing number of dimensions
+
         final JPanel panel = getComponentPanel();
         panel.setBorder(BorderFactory.createTitledBorder("Target dimensions"));
         panel.setLayout(new GridBagLayout());
@@ -110,16 +122,20 @@ public class DialogComponentChoiceConfig extends DialogComponent {
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
+        // either choose number of dimensions to reduce to
         m_dimensionSelection = new JRadioButton("Dimensions to reduce to");
+        m_dimensionSelection.setSelected(model.getDimensionsSelected());
         panel.add(m_dimensionSelection, gbc);
         gbc.gridx++;
-        m_dimSpinner =
-                new JSpinner(new SpinnerNumberModel(2, 1, Integer.MAX_VALUE, 1));
+        // dimension selection
+        m_dimSpinner = new JSpinner(new SpinnerNumberModel(
+                model.getDimensions(), 1, Integer.MAX_VALUE, 1));
 
         panel.add(m_dimSpinner, gbc);
+        // label with additional information
         if (showAdditionalInfo) {
-            m_qualityLabel =
-                    new JLabel(" unknown fraction of information preserved");
+            m_qualityLabel = new JLabel(
+            " unknown fraction of information preserved");
             gbc.weightx = 1;
             gbc.gridx++;
             panel.add(m_qualityLabel, gbc);
@@ -127,17 +143,18 @@ public class DialogComponentChoiceConfig extends DialogComponent {
         }
         gbc.gridy++;
         gbc.gridx = 0;
-        m_qualitySelection =
-                new JRadioButton("Minimum information fraction "
-                        + "to preserve (%)");
+        // the part for minimum information fraction to be preserved
+        m_qualitySelection = new JRadioButton("Minimum information fraction "
+                + "to preserve (%)");
+        m_qualitySelection.setSelected(!model.getDimensionsSelected());
         panel.add(m_qualitySelection, gbc);
         gbc.gridx++;
-        m_qualitySlider =
-                new JSpinner(new SpinnerNumberModel(100d, 1d, 100d, 1d));
+        m_qualitySpinner = new JSpinner(new SpinnerNumberModel(
+                model.getMinQuality(), 1d, 100d, 1d));
 
-        setSliderLabels();
+
         gbc.anchor = GridBagConstraints.WEST;
-        panel.add(m_qualitySlider, gbc);
+        panel.add(m_qualitySpinner, gbc);
         if (showAdditionalInfo) {
             m_dimensionLabel = new JLabel(" all dimensions");
             gbc.gridx++;
@@ -151,117 +168,43 @@ public class DialogComponentChoiceConfig extends DialogComponent {
         bg.add(m_qualitySelection);
         final ActionListener al = new ActionListener() {
 
+            @Override
             public void actionPerformed(final ActionEvent e) {
-            	model.setDimensionsSelected(m_dimensionSelection.isSelected());
-                m_qualitySlider.setEnabled(m_qualitySelection.isSelected());
-                if (showAdditionalInfo) {
-                    m_dimensionLabel
-                            .setEnabled(m_qualitySelection.isSelected());
-
-                }
-                m_dimSpinner.setEnabled(m_dimensionSelection.isSelected());
-                if (showAdditionalInfo) {
-                    m_qualityLabel
-                            .setEnabled(m_dimensionSelection.isSelected());
-                    final int dim =
-                            m_dimensionSelection.isSelected() ? (Integer)m_dimSpinner
-                                    .getValue()
-                                    : ((SettingsModelPCADimensions)getModel())
-                                            .getNeededDimensions(-1);
-
-                    final String currentDimensions =
-                            ((SettingsModelPCADimensions)getModel())
-                                    .getInformationPreservation(dim);
-
-                    m_qualityLabel.setText(" (" + currentDimensions + ")");
-                }
+                model.setDimensionsSelected(m_dimensionSelection.isSelected());
+                updateComponent();
             }
 
         };
         m_dimensionSelection.addActionListener(al);
         m_qualitySelection.addActionListener(al);
-        m_qualitySelection.setSelected(true);
-        m_dimSpinner.setEnabled(false);
+        // m_qualitySelection.setSelected(true);
+        // m_dimSpinner.setEnabled(false);
         final ChangeListener cl = new ChangeListener() {
 
+            @Override
             public void stateChanged(final ChangeEvent arg0) {
                 final SettingsModelPCADimensions smodel =
-                        (SettingsModelPCADimensions)getModel();
-                smodel.setValues((Double)m_qualitySlider.getValue(),
-                        (Integer)m_dimSpinner.getValue(), m_dimensionSelection
-                                .isSelected());
-                if (showAdditionalInfo) {
-                    final int dim = smodel.getNeededDimensions(-1);
-                    // if(dim<0 && model.getEigenval)
-                    if (m_qualitySelection.isSelected()) {
-                        if (smodel.getEigenvalues() != null
-                                || m_qualitySlider.getValue().equals(100)) {
-                            m_dimensionLabel.setText(" ("
-                                    + (dim > 0 ? dim + "" : "all")
-                                    + " dimensions)");
-                        } else {
-                            m_dimensionLabel.setText("");
-                        }
-                    }
-                    if (m_dimensionSelection.isSelected()) {
-                        m_qualityLabel.setText(" ("
-                                + smodel.getInformationPreservation(dim) + ")");
-                    }
-
-                }
+                    (SettingsModelPCADimensions) getModel();
+                smodel.setValues((Double) m_qualitySpinner.getValue(),
+                        (Integer) m_dimSpinner.getValue(),
+                        m_dimensionSelection.isSelected());
+                updateComponent();
             }
 
         };
-        // m_qualitySelection.addActionListener(al)(cl);
         m_dimSpinner.addChangeListener(cl);
-        m_qualitySlider.addChangeListener(cl);
-        cl.stateChanged(null);
+        m_qualitySpinner.addChangeListener(cl);
+        updateComponent();
     }
 
-    /**
-     * 
-     */
-    private void setSliderLabels() {
 
-        final SettingsModelPCADimensions model =
-                (SettingsModelPCADimensions)getModel();
-        // model.configureQualitySlider(m_qualitySlider);
-
-        m_qualitySlider.repaint();
-        if (model.getEigenvalues() != null) {
-            model.setDimensions(Math.min(model.getEigenvalues().length, model
-                    .getDimensions()));
-            m_dimSpinner.setModel(new SpinnerNumberModel(model.getDimensions(),
-                    1, model.getEigenvalues().length, 1));
-
-        } else {
-            m_dimSpinner.setModel(new SpinnerNumberModel(model.getDimensions(),
-                    1, Integer.MAX_VALUE, 1));
-
-        }
-        ((JSpinner.NumberEditor)m_dimSpinner.getEditor()).getTextField()
-                .setText("" + model.getDimensions());
-
-        try {
-            m_dimSpinner.commitEdit();
-            // m_dimSpinner.repaint();
-        } catch (final ParseException e) {
-            // TODO Auto-generated catch block
-        }
-        if (m_qualityLabel != null) {
-            m_qualityLabel.setText(" ("
-                    + ((SettingsModelPCADimensions)getModel())
-                            .getInformationPreservation(model.getDimensions())
-                    + ")");
-        }
-    }
 
     /**
      * {@inheritDoc}
      */
     @Override
     protected void checkConfigurabilityBeforeLoad(final PortObjectSpec[] specs)
-            throws NotConfigurableException {
+    throws NotConfigurableException {
         // always
     }
 
@@ -270,8 +213,8 @@ public class DialogComponentChoiceConfig extends DialogComponent {
      */
     @Override
     protected void setEnabledComponents(final boolean enabled) {
-        m_dimSpinner.setEnabled(enabled && m_dimensionSelection.isSelected());
-        m_qualitySlider.setEnabled(enabled && m_qualitySelection.isSelected());
+        m_dimSpinner.setEnabled(enabled);
+        m_qualitySpinner.setEnabled(enabled);
         m_dimensionSelection.setEnabled(enabled);
         m_qualitySelection.setEnabled(enabled);
 
@@ -283,7 +226,7 @@ public class DialogComponentChoiceConfig extends DialogComponent {
     @Override
     public void setToolTipText(final String text) {
         m_dimSpinner.setToolTipText(text);
-        m_qualitySlider.setToolTipText(text);
+        m_qualitySpinner.setToolTipText(text);
         // getPanel().setToolTipText(text);
     }
 
@@ -292,7 +235,35 @@ public class DialogComponentChoiceConfig extends DialogComponent {
      */
     @Override
     protected void updateComponent() {
-        setSliderLabels();
+        final SettingsModelPCADimensions model =
+            (SettingsModelPCADimensions) getModel();
+
+        // model.configureQualitySlider(m_qualitySlider);
+        final int dimensions = model.getDimensions();
+        final boolean dimensionsSelected = model.getDimensionsSelected();
+        final double quality = model.getMinQuality();
+        // dimension parts
+        m_dimensionSelection.setSelected(dimensionsSelected);
+        m_dimSpinner.setEnabled(dimensionsSelected);
+        m_dimSpinner.setValue(dimensions);
+
+        if (m_qualityLabel != null) {
+            m_qualityLabel.setEnabled(dimensionsSelected);
+            m_qualityLabel.setText(" "
+                    + model.getInformationPreservation(dimensions));
+        }
+
+        // min quality parts
+
+        m_qualitySpinner.setEnabled(!dimensionsSelected);
+
+        m_qualitySpinner.setValue(quality);
+        if (m_dimensionLabel != null) {
+            m_dimensionLabel.setText(" "
+                    + model.getNeededDimensionDescription());
+            m_dimensionLabel.setEnabled(!dimensionsSelected);
+        }
+
     }
 
     /**

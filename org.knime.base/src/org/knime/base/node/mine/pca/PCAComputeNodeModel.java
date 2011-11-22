@@ -64,7 +64,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.port.PortObject;
@@ -89,15 +88,13 @@ public class PCAComputeNodeModel extends NodeModel {
 
     /** numeric columns to be used as input. */
     private final SettingsModelFilterString m_inputColumns =
-            new SettingsModelFilterString(PCANodeModel.INPUT_COLUMNS);
+        new SettingsModelFilterString(PCANodeModel.INPUT_COLUMNS);
 
     /** <code>true</code> if we fail on missing data. */
     private final SettingsModelBoolean m_failOnMissingValues =
-            new SettingsModelBoolean(PCANodeModel.FAIL_MISSING, false);
+        new SettingsModelBoolean(PCANodeModel.FAIL_MISSING, false);
 
-    /** all settings models of this node for iteration. */
-    private final SettingsModel[] m_settingsModels =
-            {m_inputColumns, m_failOnMissingValues};
+
 
     private String[] m_inputColumnNames;
 
@@ -120,22 +117,22 @@ public class PCAComputeNodeModel extends NodeModel {
             throw new IllegalArgumentException("Datatable as input expected");
         }
         final BufferedDataTable dataTable =
-                (BufferedDataTable)inData[DATA_INPORT];
+            (BufferedDataTable)inData[DATA_INPORT];
         if (dataTable.getRowCount() == 0) {
             throw new IllegalArgumentException("Input table is empty!");
         }
 
         final double[] meanVector =
-                PCANodeModel.getMeanVector(dataTable, m_inputColumnIndices,
-                        m_failOnMissingValues.getBooleanValue(), exec
-                                .createSubExecutionContext(0.4));
+            PCANodeModel.getMeanVector(dataTable, m_inputColumnIndices,
+                    m_failOnMissingValues.getBooleanValue(), exec
+                    .createSubExecutionContext(0.4));
         final double[][] m =
-                new double[m_inputColumnIndices.length][m_inputColumnIndices.length];
+            new double[m_inputColumnIndices.length][m_inputColumnIndices.length];
         exec.checkCanceled();
         final int missingValues =
-                PCANodeModel.getCovarianceMatrix(exec
-                        .createSubExecutionContext(0.4), dataTable,
-                        m_inputColumnIndices, meanVector, m);
+            PCANodeModel.getCovarianceMatrix(exec
+                    .createSubExecutionContext(0.4), dataTable,
+                    m_inputColumnIndices, meanVector, m);
         if (missingValues > 0) {
             if (m_failOnMissingValues.getBooleanValue()) {
                 throw new IllegalArgumentException(
@@ -162,8 +159,8 @@ public class PCAComputeNodeModel extends NodeModel {
                 PCANodeModel.createCovarianceTable(exec, m, m_inputColumnNames),
                 PCANodeModel.createDecompositionOutputTable(exec
                         .createSubExecutionContext(0.1), evd, m_inputColumnNames),
-                new PCAModelPortObject(evd.getV().getArray(), evs,
-                        m_inputColumnNames, meanVector)};
+                        new PCAModelPortObject(evd.getV().getArray(), evs,
+                                m_inputColumnNames, meanVector)};
 
     }
 
@@ -192,10 +189,9 @@ public class PCAComputeNodeModel extends NodeModel {
      */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        for (final SettingsModel s : this.m_settingsModels) {
-            s.loadSettingsFrom(settings);
-        }
+    throws InvalidSettingsException {
+        m_inputColumns.loadSettingsFrom(settings);
+        m_failOnMissingValues.loadSettingsFrom(settings);
 
     }
 
@@ -204,21 +200,21 @@ public class PCAComputeNodeModel extends NodeModel {
      */
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
-            throws InvalidSettingsException {
+    throws InvalidSettingsException {
         if (m_inputColumns.getIncludeList().size() == 0) {
             selectDefaultColumns(inSpecs);
         } else {
 
             m_inputColumnIndices =
-                    new int[m_inputColumns.getIncludeList().size()];
+                new int[m_inputColumns.getIncludeList().size()];
             m_inputColumnNames =
-                    new String[m_inputColumns.getIncludeList().size()];
+                new String[m_inputColumns.getIncludeList().size()];
 
             int colIndex = 0;
             for (final String colName : m_inputColumns.getIncludeList()) {
                 final DataColumnSpec colspec =
-                        ((DataTableSpec)inSpecs[DATA_INPORT])
-                                .getColumnSpec(colName);
+                    ((DataTableSpec)inSpecs[DATA_INPORT])
+                    .getColumnSpec(colName);
                 if (colspec == null
                         || !colspec.getType().isCompatible(DoubleValue.class)) {
                     setWarningMessage("column \"" + colName
@@ -227,8 +223,8 @@ public class PCAComputeNodeModel extends NodeModel {
                     break;
                 }
                 m_inputColumnIndices[colIndex] =
-                        ((DataTableSpec)inSpecs[DATA_INPORT])
-                                .findColumnIndex(colName);
+                    ((DataTableSpec)inSpecs[DATA_INPORT])
+                    .findColumnIndex(colName);
                 m_inputColumnNames[colIndex] = colName;
                 colIndex++;
             }
@@ -237,19 +233,19 @@ public class PCAComputeNodeModel extends NodeModel {
         return new PortObjectSpec[]{
                 PCANodeModel.createCovarianceMatrixSpec(m_inputColumnNames),
                 PCANodeModel
-                        .createDecompositionTableSpec(m_inputColumnNames),
+                .createDecompositionTableSpec(m_inputColumnNames),
                 new PCAModelPortObjectSpec(m_inputColumnNames)};
     }
 
     private void selectDefaultColumns(final PortObjectSpec[] inSpecs) {
         m_inputColumnIndices =
-                PCANodeModel
-                        .getDefaultColumns((DataTableSpec)inSpecs[DATA_INPORT]);
+            PCANodeModel
+            .getDefaultColumns((DataTableSpec)inSpecs[DATA_INPORT]);
         m_inputColumnNames = new String[m_inputColumnIndices.length];
         for (int i = 0; i < m_inputColumnIndices.length; i++) {
             m_inputColumnNames[i] =
-                    ((DataTableSpec)inSpecs[DATA_INPORT]).getColumnSpec(m_inputColumnIndices[i])
-                            .getName();
+                ((DataTableSpec)inSpecs[DATA_INPORT]).getColumnSpec(m_inputColumnIndices[i])
+                .getName();
         }
     }
 
@@ -266,10 +262,8 @@ public class PCAComputeNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        for (final SettingsModel s : this.m_settingsModels) {
-            s.saveSettingsTo(settings);
-        }
-
+        m_inputColumns.saveSettingsTo(settings);
+        m_failOnMissingValues.saveSettingsTo(settings);
     }
 
     /**
@@ -277,10 +271,9 @@ public class PCAComputeNodeModel extends NodeModel {
      */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        for (final SettingsModel s : this.m_settingsModels) {
-            s.validateSettings(settings);
-        }
+    throws InvalidSettingsException {
+        m_inputColumns.validateSettings(settings);
+        m_failOnMissingValues.validateSettings(settings);
     }
 
 }

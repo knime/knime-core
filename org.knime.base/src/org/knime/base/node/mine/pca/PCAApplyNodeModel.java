@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.mine.pca;
 
@@ -69,7 +69,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.defaultnodesettings.SettingsModel;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -79,10 +78,11 @@ import Jama.Matrix;
 
 /**
  * PCA Predictor.
- * 
+ *
  * @author uwe, University of Konstanz
  */
 public class PCAApplyNodeModel extends NodeModel {
+
     /** config string for determining if source columns are to be removed. */
     static final String REMOVE_COLUMNS = "removeColumns";
 
@@ -92,7 +92,6 @@ public class PCAApplyNodeModel extends NodeModel {
     protected PCAApplyNodeModel() {
         super(new PortType[]{PCAModelPortObject.TYPE, BufferedDataTable.TYPE},
                 new PortType[]{BufferedDataTable.TYPE});
-
     }
 
     /** Index of input data port. */
@@ -125,14 +124,13 @@ public class PCAApplyNodeModel extends NodeModel {
 
     private String[] m_inputColumnNames = {};
 
-    private final SettingsModel[] m_settingsModels =
-            {m_dimSelection, m_removeOriginalCols, m_failOnMissingValues};
+
 
     private int[] m_inputColumnIndices;
 
     /**
      * Performs the PCA.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -142,7 +140,7 @@ public class PCAApplyNodeModel extends NodeModel {
         final PCAModelPortObject model =
                 (PCAModelPortObject)inData[MODEL_INPORT];
         final int dimensions =
-                m_dimSelection.getNeededDimensions(m_inputColumnIndices.length);
+                m_dimSelection.getNeededDimensions();
         if (dimensions == -1) {
             throw new IllegalArgumentException(
                     "Number of dimensions not correct configured");
@@ -242,7 +240,7 @@ public class PCAApplyNodeModel extends NodeModel {
         m_dimSelection.setEigenValues(modelPort.getEigenValues());
 
         int dimensions =
-                m_dimSelection.getNeededDimensions(m_inputColumnIndices.length);
+                m_dimSelection.getNeededDimensions();
         if (dimensions <= 0) {
             return null;
         }
@@ -296,10 +294,9 @@ public class PCAApplyNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        for (final SettingsModel s : this.m_settingsModels) {
-            s.loadSettingsFrom(settings);
-        }
-
+        m_dimSelection.loadSettingsFrom(settings);
+        m_removeOriginalCols.loadSettingsFrom(settings);
+        m_failOnMissingValues.loadSettingsFrom(settings);
     }
 
     /**
@@ -316,10 +313,9 @@ public class PCAApplyNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        for (final SettingsModel s : this.m_settingsModels) {
-            s.saveSettingsTo(settings);
-        }
-
+        m_dimSelection.saveSettingsTo(settings);
+        m_removeOriginalCols.saveSettingsTo(settings);
+        m_failOnMissingValues.saveSettingsTo(settings);
     }
 
     /**
@@ -328,8 +324,9 @@ public class PCAApplyNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        for (final SettingsModel s : this.m_settingsModels) {
-            s.validateSettings(settings);
-        }
+
+        m_dimSelection.validateSettings(settings);
+        m_removeOriginalCols.validateSettings(settings);
+        m_failOnMissingValues.validateSettings(settings);
     }
 }

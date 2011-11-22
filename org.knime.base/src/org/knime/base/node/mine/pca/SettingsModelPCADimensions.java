@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Sep 8, 2009 (uwe): created
  */
@@ -66,11 +66,14 @@ import org.knime.core.node.port.PortObjectSpec;
 /**
  * Settings model, where either an integer (like number of dimensions) or a
  * double like reproduction percentage can be chosen.
- * 
- * @author uwe, University of Konstanz
+ *
+ * @author Uwe Nagel, University of Konstanz
  */
 public class SettingsModelPCADimensions extends SettingsModel {
 
+    /** eigenvalues smaller than <code>epsilon</code> are considered to
+     * be zero. */
+    private static final double EPSILON = 1e-15;
     private final String m_configName;
 
     private boolean m_dimensionsSelected;
@@ -80,7 +83,10 @@ public class SettingsModelPCADimensions extends SettingsModel {
         return m_dimensionsSelected;
     }
 
-    /** @param intChoosen set info by number of dimensions */
+    /**
+     * @param intChoosen
+     *            set info by number of dimensions
+     */
     public void setDimensionsSelected(final boolean intChoosen) {
         m_dimensionsSelected = intChoosen;
     }
@@ -90,7 +96,10 @@ public class SettingsModelPCADimensions extends SettingsModel {
         return m_dimensions;
     }
 
-    /** @param intValue dimensions to reduce to */
+    /**
+     * @param intValue
+     *            dimensions to reduce to
+     */
     public void setDimensions(final int intValue) {
         m_dimensions = intValue;
     }
@@ -103,21 +112,27 @@ public class SettingsModelPCADimensions extends SettingsModel {
     }
 
     /**
-     * @param doubleValue minimum information to preserve
+     * @param doubleValue
+     *            minimum information to preserve
      */
     public void setMinQuality(final double doubleValue) {
         m_minQuality = doubleValue;
     }
 
+    /** number of dimensions to reduce to */
     private int m_dimensions;
-
+    /** minimum information fraction to preserve */
     private double m_minQuality;
 
     /**
-     * @param configName key for the config
-     * @param intDefault default for integer value
-     * @param doubleDefault default for double value
-     * @param intChoosen default for "is integer value configured?"
+     * @param configName
+     *            key for the config
+     * @param intDefault
+     *            default for integer value, dimensions to preserve
+     * @param doubleDefault
+     *            default for double value, minimal information to preserve
+     * @param intChoosen
+     *            default for "is integer value configured?"
      */
     public SettingsModelPCADimensions(final String configName,
             final int intDefault, final double doubleDefault,
@@ -167,13 +182,14 @@ public class SettingsModelPCADimensions extends SettingsModel {
     protected void loadSettingsForDialog(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
         try {
-            final NodeSettingsRO mySettings =
-                    settings.getNodeSettings(m_configName);
-            setValues(mySettings.getDouble("doubleVal"), mySettings
-                    .getInt("intVal"), mySettings.getBoolean("choice"));
+            final NodeSettingsRO mySettings = settings
+            .getNodeSettings(m_configName);
+            setValues(mySettings.getDouble("doubleVal"),
+                    mySettings.getInt("intVal"),
+                    mySettings.getBoolean("choice"));
             if (specs.length > 1 && specs[1] instanceof PCAModelPortObjectSpec) {
-                m_eigenvalues =
-                        ((PCAModelPortObjectSpec)specs[1]).getEigenValues();
+                m_eigenvalues = ((PCAModelPortObjectSpec) specs[1])
+                .getEigenValues();
 
             } else {
                 m_eigenvalues = null;
@@ -182,14 +198,18 @@ public class SettingsModelPCADimensions extends SettingsModel {
         } catch (final InvalidSettingsException e) {
             setValues(100, 2, false);
         }
+
     }
 
     /**
      * set all values of the model.
-     * 
-     * @param quality min quality
-     * @param dimensions dimensions to reduce to
-     * @param dimensionsSelected selection by dimension
+     *
+     * @param quality
+     *            min quality
+     * @param dimensions
+     *            dimensions to reduce to
+     * @param dimensionsSelected
+     *            selection by dimension
      */
     void setValues(final double quality, final int dimensions,
             final boolean dimensionsSelected) {
@@ -205,13 +225,13 @@ public class SettingsModelPCADimensions extends SettingsModel {
      */
     @Override
     protected void loadSettingsForModel(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        final NodeSettingsRO mySettings =
-                settings.getNodeSettings(m_configName);
-        setValues(mySettings.getDouble("doubleVal"), mySettings
-                .getInt("intVal"), mySettings.getBoolean("choice"));
+    throws InvalidSettingsException {
+        final NodeSettingsRO mySettings = settings
+        .getNodeSettings(m_configName);
+        setValues(mySettings.getDouble("doubleVal"),
+                mySettings.getInt("intVal"), mySettings.getBoolean("choice"));
         m_eigenvalues = mySettings.getDoubleArray("eigenvalues", null);
-
+        notifyChangeListeners();
     }
 
     /**
@@ -219,7 +239,7 @@ public class SettingsModelPCADimensions extends SettingsModel {
      */
     @Override
     protected void saveSettingsForDialog(final NodeSettingsWO settings)
-            throws InvalidSettingsException {
+    throws InvalidSettingsException {
         saveSettingsForModel(settings);
 
     }
@@ -243,8 +263,8 @@ public class SettingsModelPCADimensions extends SettingsModel {
     @Override
     public String toString() {
         return getClass().getSimpleName() + " - " + m_configName + ":["
-                + (m_dimensionsSelected ? "int" : "double") + ", int:"
-                + m_dimensions + "double:" + m_minQuality + "]";
+        + (m_dimensionsSelected ? "int" : "double") + ", int:"
+        + m_dimensions + "double:" + m_minQuality + "]";
     }
 
     /**
@@ -252,42 +272,53 @@ public class SettingsModelPCADimensions extends SettingsModel {
      */
     @Override
     protected void validateSettingsForModel(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    throws InvalidSettingsException {
         // nothing
     }
 
     /**
-     * @param eigenvalues eigenvalues of pca matrix
+     * @param eigenvalues
+     *            eigenvalues of pca matrix
      */
     public void setEigenValues(final double[] eigenvalues) {
         m_eigenvalues = eigenvalues;
 
     }
 
+    /**
+     * Get the eigenvalues of the input covariance matrix.
+     *
+     * @return the eigenvalues
+     */
     public double[] getEigenvalues() {
         return m_eigenvalues;
     }
 
     /**
      * get number of dimensions to reduce to based on these settings.
-     * 
-     * @param maxDimensions dimensionality of input data
-     * 
+     *
      * @return number of output dimensions as configured, or -1 of it cannot be
      *         determined (i.e. <code>evs==null</code> and selection by quality
-     *         with quality <100)
+     *         with quality <code><100</code>)
      */
-    public int getNeededDimensions(final int maxDimensions) {
+    public int getNeededDimensions() {
         if (getDimensionsSelected()) {
             return getDimensions();
         }
+        return getNeededDimensionsByQuality();
+    }
+
+    /**
+     * get number of dimensions to reduce to based on the the minimal quality
+     * settings only
+     *
+     * @return number of output dimensions as configured, or -1 of it cannot be
+     *         determined (i.e. <code>evs==null</code> and selection by quality
+     *         with quality <code><100</code>)
+     */
+    private int getNeededDimensionsByQuality() {
         double qual = getMinQuality();
-        if (qual == 100) {
-            if (m_eigenvalues != null) {
-                return m_eigenvalues.length;
-            }
-            return maxDimensions;
-        }
+
         // no quality selection without eigenvalues
         if (m_eigenvalues == null) {
             return -1;
@@ -304,7 +335,9 @@ public class SettingsModelPCADimensions extends SettingsModel {
         for (int i = ev.length - 1; i >= 0; i--) {
             frac += ev[i];
             dim++;
-            if (frac / sum >= qual) {
+            // epsilon prevents "quasi-zero" eigenvalues to be considered for
+            // projection
+            if (frac / sum >= qual - EPSILON) {
                 return dim;
             }
         }
@@ -313,8 +346,9 @@ public class SettingsModelPCADimensions extends SettingsModel {
 
     /**
      * get copy of array sorted ascending.
-     * 
-     * @param evs ev array
+     *
+     * @param evs
+     *            ev array
      */
     private double[] getSortedCopy(final double[] evs) {
         final double[] ev = Arrays.copyOf(evs, evs.length);
@@ -322,12 +356,15 @@ public class SettingsModelPCADimensions extends SettingsModel {
         return ev;
     }
 
+    /** eigenvalues of the covariance matrix */
     private double[] m_eigenvalues;
 
+    /**
+     * @return output description necessary to preserve configured amount of
+     *         information as text
+     */
     public String getNeededDimensionDescription() {
-        final int dim =
-                getNeededDimensions(m_eigenvalues != null ? m_eigenvalues.length
-                        : -1);
+        final int dim = getNeededDimensionsByQuality();
         if (dim == -1) {
             return "target dimensionality unknown";
         }
@@ -335,7 +372,8 @@ public class SettingsModelPCADimensions extends SettingsModel {
     }
 
     /**
-     * @param spinner spinner component to be updated
+     * @param spinner
+     *            spinner component to be updated
      */
     public void configureQualitySlider(final JSpinner spinner) {
 
@@ -353,7 +391,7 @@ public class SettingsModelPCADimensions extends SettingsModel {
             for (int i = ev.length - 1; i >= 0; i--) {
                 frac += ev[i];
                 // floor
-                final int p = (int)(frac / sum * 100);
+                final int p = (int) (frac / sum * 100);
                 // care for duplicates
                 if (index == 0 || index != 0 && values[index - 1] != p) {
                     values[index++] = p;
@@ -374,8 +412,8 @@ public class SettingsModelPCADimensions extends SettingsModel {
             spinner.setValue(currentValue);
             spinner.setEditor(new JSpinner.NumberEditor(spinner, "###"));
         } else {
-            final int val =
-                    Math.max(Math.min((Integer)spinner.getValue(), 100), 25);
+            final int val = Math.max(
+                    Math.min((Integer) spinner.getValue(), 100), 25);
             spinner.setModel(new SpinnerNumberModel(val, 25, 100, 1));
         }
 
@@ -394,7 +432,7 @@ public class SettingsModelPCADimensions extends SettingsModel {
         @Override
         public Object getNextValue() {
             return index == m_values.length - 1 ? m_values[index]
-                    : m_values[index + 1];
+                                                           : m_values[index + 1];
 
         }
 
@@ -412,7 +450,7 @@ public class SettingsModelPCADimensions extends SettingsModel {
         @Override
         public void setValue(final Object value) {
             final int oldIndex = index;
-            final int v = (Integer)value;
+            final int v = (Integer) value;
             if (v <= m_values[0]) {
                 index = 0;
 
@@ -443,7 +481,8 @@ public class SettingsModelPCADimensions extends SettingsModel {
     }
 
     /**
-     * @param dim dimensions to reduce to
+     * @param dim
+     *            dimensions to reduce to
      * @return preserved information int percent, based on eigenvalues
      */
     public String getInformationPreservation(final int dim) {
@@ -464,8 +503,10 @@ public class SettingsModelPCADimensions extends SettingsModel {
             frac += m_eigenvalues[m_eigenvalues.length - 1 - i];
         }
         // floor
-        return (int)(100d * frac / sum) + "% information preservation";
+        return (int) (100d * frac / sum) + "% information preservation";
 
     }
+
+
 
 }
