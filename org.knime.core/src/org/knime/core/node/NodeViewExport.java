@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Aug 29, 2007 (wiswedel): created
  */
@@ -71,24 +71,24 @@ import javax.swing.JOptionPane;
 import org.knime.core.util.FileReaderFileFilter;
 
 /**
- * This class contains all available to-image-export options for node views. 
+ * This class contains all available to-image-export options for node views.
  * By default, only the PNG export option is available but customized exporters
- * can be added by calling the static function 
+ * can be added by calling the static function
  * {@link #addExportType(org.knime.core.node.NodeViewExport.ExportType)}.
- * 
+ *
  * <p>This class is used in a static way, it is not meant to be instantiated.
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class NodeViewExport {
-    
-    private static final NodeLogger LOGGER = 
+
+    private static final NodeLogger LOGGER =
         NodeLogger.getLogger(NodeViewExport.class);
     private static Map<String, ExportType> exportMap;
-    
+
     private static File lastExportFile;
-    
+
     private NodeViewExport() { }
-    
+
     /** Used to initialized the export type map in a lazy way. */
     private static void createExportMapLazy() {
         if (exportMap == null) {
@@ -96,15 +96,15 @@ public final class NodeViewExport {
             addExportType(new PNGExportType());
         }
     }
-    
+
     /** Adds a singleton export type to the list of available exporters. If you
-     * want to add your own image export type, you are advised to call this 
+     * want to add your own image export type, you are advised to call this
      * method in the start method of your knime node plugin. Make sure to call
      * it only once for each of the export types.
-     * <p>This method refuses to add an export type twice (according to 
+     * <p>This method refuses to add an export type twice (according to
      * arguments <code>equals()</code> method).
      * @param newType The export type to add, all necessary information are
-     * retrieved from the argument, the identifier name is uniquified, if 
+     * retrieved from the argument, the identifier name is uniquified, if
      * necessary.
      * @throws NullPointerException If the argument is null.
      */
@@ -112,7 +112,7 @@ public final class NodeViewExport {
         createExportMapLazy();
         String description = newType.getDescription();
         if (exportMap.containsValue(newType)) {
-            LOGGER.warn("Refusing to add view export " + description 
+            LOGGER.warn("Refusing to add view export " + description
                     + " twice (class " + newType.getClass() + ")");
             return;
         }
@@ -124,22 +124,22 @@ public final class NodeViewExport {
         }
         exportMap.put(description, newType);
     }
-    
-    /** Get a read only map containing pairs of export type identifier (as 
+
+    /** Get a read only map containing pairs of export type identifier (as
      * string) and the export type. This map can be used in a derived node view
      * (or any other view) to create a customized menu. You can also use the
      * {@link #createNewMenu(Container)} method for your convenience.
-     * @return Such a read only map. It contains at least one entry (the 
+     * @return Such a read only map. It contains at least one entry (the
      * png export).
      */
     public static Map<String, ExportType> getViewExportMap() {
         createExportMapLazy();
         return Collections.unmodifiableMap(exportMap);
     }
-    
+
     /**
      * Convenience method that create a menu entry containing all available
-     * export options. If the current export map (according to 
+     * export options. If the current export map (according to
      * {@link #getViewExportMap()}) contains only one entry, the returned
      * menu is a single menu item. Otherwise it's a {@link JMenu} with the
      * export options as its children.
@@ -176,15 +176,15 @@ public final class NodeViewExport {
             return parent;
         }
     }
-    
+
     /** Method called by the actions of the menu items. */
-    private static void onFileExport(final ExportType type, 
+    private static void onFileExport(final ExportType type,
             final Container cont) {
         int width = cont.getWidth();
         int height = cont.getHeight();
         if (width <= 0 || height <= 0) {
             String msg = "View is too small to be exported.";
-            JOptionPane.showConfirmDialog(cont, msg, "Warning", 
+            JOptionPane.showConfirmDialog(cont, msg, "Warning",
                     JOptionPane.DEFAULT_OPTION, JOptionPane.WARNING_MESSAGE);
 
             LOGGER.warn(msg);
@@ -231,24 +231,29 @@ public final class NodeViewExport {
                 JOptionPane.INFORMATION_MESSAGE);
 
     }
-    
-    /** Interface for export types. */
+
+    /**
+     * Interface for export types.
+     *
+     * <b>This interface is currently not considered part of the public API
+     * and will change in future versions without notice.</b>
+     */
     public interface ExportType {
         /** A description for export type, this should be a one-liner such as
-         * &quot;PNG - Portable Network Graphics&quot; or 
-         * &quot;SVG - Scalable Vector Graphics&quot;. It's displayed as 
+         * &quot;PNG - Portable Network Graphics&quot; or
+         * &quot;SVG - Scalable Vector Graphics&quot;. It's displayed as
          * tooltip for the default menus and also in a file chooser dialog.
          * @return The description of the export type, not <code>null</code>.
          */
         public String getDescription();
-        
+
         /** Suffix of the file being written. The suffix should not contain
          * a leading dot '.'. Use only, for instance &quot;png&quot; or
-         * &quot;svg&quot; 
+         * &quot;svg&quot;
          * @return The file suffix, not <code>null</code>.
          */
         public String getFileSuffix();
-        
+
         /** Called when the component is to be exported.
          * @param destination The destination file.
          * @param cont The component to draw.
@@ -256,17 +261,17 @@ public final class NodeViewExport {
          * @param height The height of the component.
          * @throws IOException If this fails for any reason.
          */
-        public void export(File destination, final Component cont, 
+        public void export(File destination, final Component cont,
                 final int width, final int height) throws IOException;
     }
-    
-    /** Default implementation of an export type, 
-     * which exports to a png file. */ 
+
+    /** Default implementation of an export type,
+     * which exports to a png file. */
     private static final class PNGExportType implements ExportType {
 
         /** {@inheritDoc} */
-        public void export(final File destination, final Component cont, 
-                final int width, final int height) 
+        public void export(final File destination, final Component cont,
+                final int width, final int height)
             throws IOException {
             BufferedImage image = new BufferedImage(width, height,
                     BufferedImage.TYPE_INT_RGB);
@@ -286,25 +291,25 @@ public final class NodeViewExport {
         public String getFileSuffix() {
             return "png";
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public String toString() {
             return "PNG Exporter";
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public int hashCode() {
             return getClass().hashCode();
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public boolean equals(final Object obj) {
             return getClass().equals(obj.getClass());
         }
-        
+
     }
 
 }
