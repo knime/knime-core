@@ -64,6 +64,8 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.custom.ExtendedModifyEvent;
+import org.eclipse.swt.custom.ExtendedModifyListener;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.custom.VerifyKeyListener;
@@ -211,6 +213,14 @@ public class StyledTextEditor extends CellEditor {
                 fireEditorValueChanged(true, true);
             }
         });
+        m_styledText.addExtendedModifyListener(new ExtendedModifyListener() {
+            @Override
+            public void modifyText(final ExtendedModifyEvent event) {
+                if (event.length > 0) {
+                    textInserted(event.start, event.length);
+                }
+            }
+        });
         m_styledText.addSelectionListener(new SelectionListener() {
             @Override
             public void widgetSelected(final SelectionEvent e) {
@@ -228,6 +238,40 @@ public class StyledTextEditor extends CellEditor {
         // toolbar gets created first - enable its style buttons!
         selectionChanged();
         return m_styledText;
+    }
+
+    /**
+     * Sets the style range for the new text. Copies it from the left neighbor
+     * (or from the right neighbor, if there is no left neighbor).
+     *
+     * @param startIdx
+     * @param length
+     */
+    private void textInserted(final int startIdx, final int length) {
+        if (m_styledText.getCharCount() <= length) {
+            // no left nor right neighbor
+            return;
+        }
+        StyleRange[] newStyles = m_styledText.getStyleRanges(startIdx, length);
+        if (newStyles != null && newStyles.length > 0 && newStyles[0] != null) {
+            // inserted text already has a style (shouldn't really happen)
+            return;
+        }
+        StyleRange[] extStyles;
+        if (startIdx == 0) {
+            extStyles = m_styledText.getStyleRanges(length, 1);
+        } else {
+            extStyles = m_styledText.getStyleRanges(startIdx - 1, 1);
+        }
+        if (extStyles == null || extStyles.length != 1 || extStyles[0] == null) {
+            // no style to extend over inserted text
+            return;
+        }
+        if (startIdx == 0) {
+            extStyles[0].start = 0;
+        }
+        extStyles[0].length += length;
+        m_styledText.setStyleRange(extStyles[0]);
     }
 
     private void selectionChanged() {
