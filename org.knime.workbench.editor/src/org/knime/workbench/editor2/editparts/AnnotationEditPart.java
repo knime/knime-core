@@ -129,6 +129,16 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
+     * @param text to test
+     * @return the width of the specified text with the annotation default font
+     */
+    public static int defaultLineWidth(final String text) {
+        TextUtilities INSTANCE = TextUtilities.INSTANCE;
+        Font font = getAnnotationDefaultFont();
+        return INSTANCE.getStringExtents(text, font).width;
+    }
+
+    /**
      * If no background color is set, this one should be used for workflow
      * annotations.
      *
@@ -372,10 +382,12 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
      *
      * @param s the component with the styled text to convert.
      * @param zoomFactor factor the font size is divided by. If unsure, use 1.0.
+     * @param bounds contains the bounds of the annotation. Could be null.
      * @return
      */
     public static AnnotationData toAnnotation(final StyledText s,
-            final double zoomFactor) {
+            final double zoomFactor,
+            final org.eclipse.swt.graphics.Rectangle bounds) {
         AnnotationData result = new AnnotationData();
         result.setText(s.getText());
         result.setBgColor(colorToRGBint(s.getBackground()));
@@ -419,6 +431,13 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
         }
         result.setStyleRanges(wfStyleRanges
                 .toArray(new AnnotationData.StyleRange[wfStyleRanges.size()]));
+        if (bounds != null) {
+            result.setDimension(
+                    (int)Math.round(bounds.x / zoomFactor),
+                    (int)Math.round(bounds.y / zoomFactor),
+                    (int)Math.round(bounds.width / zoomFactor),
+                    (int)Math.round(bounds.height / zoomFactor));
+        }
         return result;
     }
 

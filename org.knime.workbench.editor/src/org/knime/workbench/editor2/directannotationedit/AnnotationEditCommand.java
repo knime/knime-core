@@ -87,7 +87,7 @@ public class AnnotationEditCommand extends Command {
     public void execute() {
         // store the old value for undo
         m_oldAnnotation = m_theAnnotation.getData().clone();
-        m_theAnnotation.copyFrom(m_newAnnotation, false);
+        m_theAnnotation.copyFrom(m_newAnnotation, true);
     }
 
     /**

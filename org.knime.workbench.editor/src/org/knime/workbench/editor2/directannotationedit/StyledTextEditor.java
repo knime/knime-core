@@ -79,6 +79,7 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.RGB;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.ColorDialog;
@@ -344,16 +345,22 @@ public class StyledTextEditor extends CellEditor {
     private void buttonClick(final String src) {
         if (src.equals("style")) {
             font();
+            fireEditorValueChanged(true, true);
         } else if (src.equals("color")) {
             fontColor();
+            fireEditorValueChanged(true, true);
         } else if (src.equals("bold")) {
             bold();
+            fireEditorValueChanged(true, true);
         } else if (src.equals("italic")) {
             italic();
+            fireEditorValueChanged(true, true);
         } else if (src.equals("bg")) {
             bgColor();
+            fireEditorValueChanged(true, true);
         } else if (src.equals("alignment")) {
             alignment();
+            fireEditorValueChanged(true, true);
         } else if (src.equals("ok")) {
             ok();
         } else if (src.equals("cancel")) {
@@ -421,7 +428,6 @@ public class StyledTextEditor extends CellEditor {
         if (keyEvent.character == SWT.CR) { // Return key
             // don't let super close the editor on CR
             if ((keyEvent.stateMask & SWT.CTRL) != 0) {
-
                 // closing the editor with Ctrl-CR.
                 keyEvent.doit = false;
                 fireApplyEditorValue();
@@ -443,7 +449,8 @@ public class StyledTextEditor extends CellEditor {
     @Override
     protected Object doGetValue() {
         assert m_styledText != null : "Control not created!";
-        return AnnotationEditPart.toAnnotation(m_styledText, m_zoomFactor);
+        return AnnotationEditPart.toAnnotation(m_styledText, m_zoomFactor,
+                getControl().getBounds());
     }
 
     /**
@@ -687,4 +694,22 @@ public class StyledTextEditor extends CellEditor {
         deactivate();
         return;
     }
+
+    /**
+     * @return the bounds needed to display the current text
+     */
+    Rectangle getTextBounds() {
+        int charCount = m_styledText.getCharCount();
+        if (charCount < 1) {
+            Rectangle b = m_styledText.getBounds();
+            return new Rectangle(b.x, b.y, 0, 0);
+        } else {
+            Rectangle r = m_styledText.getTextBounds(0, charCount - 1);
+            if (m_styledText.getText(charCount - 1, charCount - 1).charAt(0) == '\n') {
+                r.height += m_styledText.getLineHeight();
+            }
+            return r;
+        }
+    }
+
 }

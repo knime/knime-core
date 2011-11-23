@@ -28,6 +28,8 @@ import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.workbench.editor2.figures.AnnotationFigure3;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
+import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.ui.preferences.PreferenceConstants;
 
 /**
  *
@@ -65,7 +67,17 @@ public class NodeAnnotationEditPart extends AnnotationEditPart {
             if (nodeUI != null && nodeUI.getBounds()[2] > 0) {
                 w = nodeUI.getBounds()[2];
             } else {
-                w = NodeContainerFigure.WIDTH;
+                // or as wide as "<NodePrefix> 9999"
+                String prefix = KNIMEUIPlugin.getDefault().getPreferenceStore()
+                        .getString(PreferenceConstants.P_DEFAULT_NODE_LABEL);
+                if (prefix == null || prefix.isEmpty()) {
+                    prefix = "Node";
+                }
+                w = AnnotationEditPart.defaultLineWidth(prefix + " 9999");
+                // but not less than the node default width
+                if (w < NodeContainerFigure.WIDTH) {
+                    w = NodeContainerFigure.WIDTH;
+                }
             }
             h = NodeAnnotationEditPart.defaultOneLineHeight();
         }

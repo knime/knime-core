@@ -104,6 +104,15 @@ public class StyledTextEditorLocator implements CellEditorLocator {
         figBounds.translate(trim.x, trim.y);
         figBounds.width = (int)((figBounds.width + trim.width) / zooFactor);
         figBounds.height = (int)((figBounds.height + trim.height) / zooFactor);
+
+        // grow the height with the text entered
+        StyledTextEditor stEditor = ((StyledTextEditor)celleditor);
+        org.eclipse.swt.graphics.Rectangle textBounds = stEditor.getTextBounds();
+        int th = textBounds.height;
+        // + stEditor.getLineHeight();
+        if (th > figBounds.height) {
+            figBounds.height = th;
+        }
         edit.setBounds(new org.eclipse.swt.graphics.Rectangle(figBounds.x,
                 figBounds.y, figBounds.width, figBounds.height));
     }
