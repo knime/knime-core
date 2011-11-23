@@ -553,6 +553,25 @@ public class NodeContainerFigure extends RectangleFigure {
      * {@inheritDoc}
      */
     @Override
+    public boolean containsPoint(final int x, final int y) {
+        if (!getBounds().contains(x, y)) {
+            return false;
+        }
+        for (final Object contentFigure : getChildren()) {
+            if (((IFigure)contentFigure).containsPoint(x, y)) {
+                if (contentFigure == m_heading) {
+                    return false;
+                } else {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Dimension getMinimumSize(final int whint, final int hhint) {
         return getPreferredSize(whint, hhint);
     }
@@ -565,11 +584,16 @@ public class NodeContainerFigure extends RectangleFigure {
 
         int prefWidth = Math.max(WIDTH, m_heading.getTextBounds().width);
         int prefHeight = 0;
+        int compCount = 3;
         prefHeight += m_heading.getPreferredSize().height;
         prefHeight += m_symbolFigure.getPreferredSize().height;
-        prefHeight += m_statusFigure.getPreferredSize().height;
+        // meta node don't have a status figure
+        if (isChild(m_statusFigure) || isChild(m_progressFigure)) {
+            prefHeight += m_statusFigure.getPreferredSize().height;
+            compCount++;
+        }
         prefHeight += m_infoWarnErrorPanel.getPreferredSize().height;
-        prefHeight += (4 * NodeContainerLocator.GAP);
+        prefHeight += (compCount * NodeContainerLocator.GAP);
         return new Dimension(prefWidth, prefHeight);
     }
 
