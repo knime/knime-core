@@ -22,23 +22,16 @@
 
 package org.knime.base.node.preproc.pmml.normalize;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.knime.base.data.normalize.AffineTransConfiguration;
 import org.knime.base.data.normalize.AffineTransTable;
-import org.knime.base.data.normalize.Normalizer;
 import org.knime.base.data.normalize.PMMLNormalizeTranslator;
 import org.knime.base.node.preproc.normalize.NormalizerApplyNodeModel;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObject;
-import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 
 /**
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
@@ -58,26 +51,14 @@ public class NormalizerPMMLApplyNodeModel extends NormalizerApplyNodeModel {
    @Override
    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
            throws InvalidSettingsException {
-       PMMLPortObjectSpec modelSpec
-               = (PMMLPortObjectSpec)inSpecs[0];
-       DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
-       List<String> unknownCols = new ArrayList<String>();
-       List<String> knownCols = new ArrayList<String>();
-       for (String column : modelSpec.getPreprocessingFields()) {
-           DataColumnSpec inDataCol = dataSpec.getColumnSpec(column);
-           if (inDataCol == null) {
-               unknownCols.add(column);
-           } else {
-               knownCols.add(column);
-           }
-       }
-       if (!unknownCols.isEmpty()) {
-           setWarningMessage("Some column(s) as specified by the model is not "
-                   + "present in the data: " + unknownCols);
-       }
-       String[] ar = knownCols.toArray(new String[knownCols.size()]);
-       DataTableSpec s = Normalizer.generateNewSpec(dataSpec, ar);
-       return new PortObjectSpec[]{modelSpec, s};
+      /* So far we can only get all preprocessing fields from the PMML port
+       * object spec. There is no way to determine from the spec which
+       * of those fields contain normalize operations. Hence we cannot
+       * determine the data table output spec at this point.
+       * Bug 2985
+       * 
+       */
+      return new PortObjectSpec[]{inSpecs[0], null};
    }
 
    /**
@@ -108,10 +89,11 @@ public class NormalizerPMMLApplyNodeModel extends NormalizerApplyNodeModel {
 
    /**
     * Return the configuration with possible additional transformations made.
-    * 
+    *
     * @param affineTransConfig the original affine transformation configuration.
     * @return the (possible modified) configuration.
     */
+    @Override
     protected AffineTransConfiguration getAffineTrans(
                     final AffineTransConfiguration affineTransConfig) {
               return affineTransConfig;
