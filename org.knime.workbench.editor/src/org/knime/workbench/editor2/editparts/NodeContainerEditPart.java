@@ -410,10 +410,12 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                         @Override
                         public void run() {
                             m_messageUpdateInProgress.set(false);
-                            // must ignore event content - as this runnable
-                            // may be processing another (following) event
-                            updateNodeMessage();
-                            refreshVisuals();
+                            if (isActive()) {
+                                // must ignore event content - as this runnable
+                                // may be processing another (following) event
+                                updateNodeMessage();
+                                refreshVisuals();
+                            }
                         }
                     });
                 }
@@ -435,12 +437,14 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         Display.getDefault().asyncExec(new Runnable() {
             @Override
             public void run() {
-                NodeUIInformation uiInfo =
+                if (isActive()) {
+
+                    NodeUIInformation uiInfo =
                         getNodeContainer()
                         .getUIInformation();
-                updateFigureFromUIinfo(uiInfo);
+                    updateFigureFromUIinfo(uiInfo);
+                }
             }
-
         });
     }
 
@@ -742,22 +746,25 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             /** {@inheritDoc} */
             @Override
             public void run() {
-                switch (e.getProperty()) {
-                case JobManager:
-                    URL iconURL = getNodeContainer().findJobManager().getIcon();
-                    setJobManagerIcon(iconURL);
-                    break;
-                case Name:
-                    updateHeaderField();
-                    break;
-                case TemplateConnection:
-                    checkMetaNodeTemplateIcon();
-                    break;
-                case LockStatus:
-                    checkMetaNodeLockIcon();
-                    break;
-                default:
-                    // unknown, ignore
+                if (isActive()) {
+                    switch (e.getProperty()) {
+                    case JobManager:
+                        URL iconURL =
+                                getNodeContainer().findJobManager().getIcon();
+                        setJobManagerIcon(iconURL);
+                        break;
+                    case Name:
+                        updateHeaderField();
+                        break;
+                    case TemplateConnection:
+                        checkMetaNodeTemplateIcon();
+                        break;
+                    case LockStatus:
+                        checkMetaNodeLockIcon();
+                        break;
+                    default:
+                        // unknown, ignore
+                    }
                 }
             }
         });
