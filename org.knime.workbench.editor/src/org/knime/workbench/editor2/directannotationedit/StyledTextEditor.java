@@ -174,6 +174,8 @@ public class StyledTextEditor extends CellEditor {
         m_styledText.setFont(parent.getFont());
         m_styledText.setAlignment(SWT.LEFT);
         m_styledText.setText("");
+        // somehow that matches the tab indent of the figure...
+        m_styledText.setTabs(16);
         m_styledText.addVerifyKeyListener(new VerifyKeyListener() {
             @Override
             public void verifyKey(final VerifyEvent event) {
