@@ -142,6 +142,14 @@ public class MLPPredictorNodeModel extends NodeModel {
             throws InvalidSettingsException {
         PMMLPortObjectSpec modelspec = (PMMLPortObjectSpec)inSpecs[0];
         DataTableSpec testSpec = (DataTableSpec)inSpecs[1];
+
+        List<DataColumnSpec> targetCols = modelspec.getTargetCols();
+        if (targetCols.isEmpty()) {
+            throw new InvalidSettingsException("The PMML model"
+                    + " does not specify a target column for the prediction.");
+        }
+        DataColumnSpec targetCol = targetCols.iterator().next();
+
         /*
          * Check consistency between model and inputs, find columns to work on.
          */
@@ -153,7 +161,6 @@ public class MLPPredictorNodeModel extends NodeModel {
         }
         m_columns = getLearningColumnIndices(testSpec, modelspec);
         MLPClassificationFactory mymlp;
-        DataColumnSpec targetCol = modelspec.getTargetCols().iterator().next();
         // Regression
         if (targetCol.getType().isCompatible(DoubleValue.class)) {
             mymlp = new MLPClassificationFactory(true, m_columns, targetCol);
