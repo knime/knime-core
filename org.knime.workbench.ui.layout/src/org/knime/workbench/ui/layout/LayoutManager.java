@@ -66,7 +66,6 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.UIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.workbench.editor2.figures.NodeContainerFigure;
 import org.knime.workbench.ui.layout.Graph.Edge;
 import org.knime.workbench.ui.layout.Graph.Node;
 import org.knime.workbench.ui.layout.layeredlayout.SimpleLayeredLayouter;
@@ -132,14 +131,14 @@ public class LayoutManager {
      */
     public void doLayout(final Collection<NodeContainer> nodes) {
 
-        final double X_STRETCH = NodeContainerFigure.WIDTH * 1.5;
+        final double X_STRETCH = 100;
         final int X_OFFSET = 0;
-        final double Y_STRETCH = NodeContainerFigure.HEIGHT * 2.3;
+        final double Y_STRETCH = 120;
         final int Y_OFFSET = -0;
 
         // add all nodes that should be laid out to the graph
         Collection<NodeContainer> allNodes = nodes;
-        if (allNodes == null) {
+        if (allNodes == null || allNodes.size() <= 1) {
             allNodes = m_wfm.getNodeContainers();
         }
         // keep the left upper corner of the node cluster.
@@ -218,7 +217,7 @@ public class LayoutManager {
                     destGraphNode =
                             m_g.createNode("Outgoing " + portIdx, 250, portIdx
                                     * Y_STRETCH);
-                    m_workbenchWFMOutports.put(portIdx, srcGraphNode);
+                    m_workbenchWFMOutports.put(portIdx, destGraphNode);
                 }
             } else {
                 NodeContainer d = m_wfm.getNodeContainer(conn.getDest());
@@ -239,27 +238,26 @@ public class LayoutManager {
         }
 
         // AFTER creating all nodes, mark the incoming/outgoing nodes as fixed
-        boolean incomingExist = false;
-        boolean outgoingExist = false;
+        boolean anchorsExist = false;
         Map<Node, Boolean> anchorNodes = m_g.createBoolNodeMap();
         for (Node n : m_workbenchIncomingNodes.values()) {
-            incomingExist = true;
+            anchorsExist = true;
             anchorNodes.put(n, Boolean.TRUE);
         }
         for (Node n : m_workbenchOutgoingNodes.values()) {
-            outgoingExist = true;
+            anchorsExist = true;
             anchorNodes.put(n, Boolean.TRUE);
         }
         for (Node n : m_workbenchWFMInports.values()) {
-            incomingExist = true;
+            anchorsExist = true;
             anchorNodes.put(n, Boolean.TRUE);
         }
         for (Node n : m_workbenchWFMOutports.values()) {
-            outgoingExist = true;
+            anchorsExist = true;
             anchorNodes.put(n, Boolean.TRUE);
         }
 
-        if (incomingExist || outgoingExist) {
+        if (anchorsExist) {
             new SimpleLayeredLayouter(m_initPlacementSeed).doLayout(m_g, anchorNodes);
         } else {
             new SimpleLayeredLayouter(m_initPlacementSeed).doLayout(m_g, null);
@@ -271,9 +269,15 @@ public class LayoutManager {
 
         // transfer new coordinates back to nodes
 
-        // if we have incoming anchors the first level (xCoord == 0) is not
-        // part of the cluster.
-        int coordOffset = incomingExist ? 1 : 0;
+        // with fixed nodes (lots of) the new coordinates of the nodes may not
+        // start at 0.
+        double coordOffsetX = Integer.MAX_VALUE;
+        double coordOffsetY = Integer.MAX_VALUE;
+        for (NodeContainer nc : allNodes) {
+            Node gNode = m_workbenchToGraphNodes.get(nc);
+            coordOffsetX = Math.min(coordOffsetX, m_g.getX(gNode));
+            coordOffsetY = Math.min(coordOffsetY, m_g.getY(gNode));
+        }
         for (NodeContainer nc : allNodes) {
 
             UIInformation uiInfo = nc.getUIInformation();
@@ -281,9 +285,9 @@ public class LayoutManager {
                 Node gNode = m_workbenchToGraphNodes.get(nc);
                 NodeUIInformation nui = (NodeUIInformation)uiInfo;
                 int[] b = nui.getBounds();
-                int x = (int)Math.round((m_g.getX(gNode) - coordOffset)
+                int x = (int)Math.round((m_g.getX(gNode) - coordOffsetX)
                         * X_STRETCH) + X_OFFSET + minX;
-                int y = (int)Math.round((m_g.getY(gNode) - coordOffset)
+                int y = (int)Math.round((m_g.getY(gNode) - coordOffsetY)
                         * Y_STRETCH) + Y_OFFSET + minY;
                 NodeUIInformation newCoord =
                         new NodeUIInformation(x, y, b[2], b[3],
@@ -317,10 +321,13 @@ public class LayoutManager {
                 int extraY = 24;
                 for (int i = 0; i < newBends.size(); i++) {
                     Point2D b = newBends.get(i);
-                    newUI.addBendpoint((int)Math.round(b.getX() * X_STRETCH)
-                            + X_OFFSET + extraX + minX,
-                            (int)Math.round(b.getY() * Y_STRETCH) + Y_OFFSET
-                                    + extraY + minY, i);
+                    newUI.addBendpoint(
+                            (int)Math.round((b.getX() - coordOffsetX)
+                                    * X_STRETCH)
+                                    + X_OFFSET + extraX + minX,
+                            (int)Math.round((b.getY() - coordOffsetY)
+                                    * Y_STRETCH)
+                                    + Y_OFFSET + extraY + minY, i);
                 }
             }
             conn.setUIInfo(newUI);
