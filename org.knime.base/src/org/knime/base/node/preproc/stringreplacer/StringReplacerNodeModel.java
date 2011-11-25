@@ -101,11 +101,11 @@ public class StringReplacerNodeModel extends NodeModel {
             final Pattern p) throws InvalidSettingsException {
         DataColumnSpec colSpec;
         if (m_settings.createNewColumn()) {
-            colSpec =
-                    new DataColumnSpecCreator(m_settings.newColumnName(),
+            colSpec = new DataColumnSpecCreator(m_settings.newColumnName(),
                             StringCell.TYPE).createSpec();
         } else {
-            colSpec = spec.getColumnSpec(m_settings.columnName());
+            colSpec = new DataColumnSpecCreator(m_settings.columnName(),
+                    StringCell.TYPE).createSpec();
         }
 
         final int index = spec.findColumnIndex(m_settings.columnName());
@@ -117,14 +117,15 @@ public class StringReplacerNodeModel extends NodeModel {
                     return cell;
                 }
 
-                Matcher m = p.matcher(((StringValue)cell).getStringValue());
+                final String stringValue = ((StringValue)cell).getStringValue();
+                Matcher m = p.matcher(stringValue);
                 if (m_settings.replaceAllOccurrences()) {
                     return new StringCell(m
                             .replaceAll(m_settings.replacement()));
                 } else if (m.matches()) {
                     return new StringCell(m_settings.replacement());
                 } else {
-                    return row.getCell(index);
+                    return new StringCell(stringValue);
                 }
             }
         };
@@ -132,7 +133,7 @@ public class StringReplacerNodeModel extends NodeModel {
         ColumnRearranger crea = new ColumnRearranger(spec);
         if (m_settings.createNewColumn()) {
             if (spec.containsName(m_settings.newColumnName())) {
-                throw new InvalidSettingsException("Duplicate column name: " 
+                throw new InvalidSettingsException("Duplicate column name: "
                         + m_settings.newColumnName());
             }
             crea.append(cf);
