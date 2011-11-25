@@ -1,4 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <introContent>
-    <page id="org.knime.product.presentation" content="intro.xhtml" />
+    <page 
+        style="css/knime.css" 
+        id="org.knime.product.presentation" style-id="page">
+        
+        <!-- <title>KNIME: Konstanz Information Miner</title> -->
+        <group id="links-background">
+        <group id="page-links">
+        
+            <link label="Open KNIME workbench" url="http://org.eclipse.ui.intro/createProjectFromIntro" 
+                id="launch">                
+                <text>Closes this intro page, starts the KNIME workbench and creates an empty KNIME workflow.</text>
+            </link>
+            
+                 
+            <link label="Get additional nodes" url="http://org.eclipse.ui.intro/launchInstallWizard" 
+                id="install">
+                <text>Launches the install wizard to get additional KNIME features (Weka, R, Chemistry...). </text>
+            </link>
+            
+            
+        <anchor id="knimeIntroAnchor"/>
+        </group>
+        </group>
+    </page>
 </introContent> 

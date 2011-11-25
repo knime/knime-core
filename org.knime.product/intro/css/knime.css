@@ -1,50 +1,55 @@
 body {
-	background: #fff;
-	color: #333;
-	font-family: Arial,Helvetica,sans-serif;
-	font-size: 12px;
-	min-width: 900px;
+    background: #fff url(img/KNIME_logo_white.png);
+    background-repeat: no-repeat;
+    background-position: top left;
+    color: #333;
+    font-family: Arial, sans-serif;
+    font-size: 12px;
 }
 
-h2 {
-	font-weight: bold;
-	margin-top: -0.0em;
-}
+#page-links {
+    padding-top: 200px;
+    padding-left: 5px;
+    }
 
-/* Styles for the links section */
+h1 {
+    font-style: normal;
+    }
+    
+a {
+    color: #666;
+    display: block;
+    margin-bottom: 50px;
+    text-decoration: none;
+    width: 650px;
+    padding: 5px;
+    }
 
-.links a {
-	color: #666;
-	display: block;
-	text-decoration: none;
-	padding: 5px;
-	margin-bottom: 40px;
-}
 
 a .link-label {
-	   padding-left: 75px;
-	   font-size: 16px;
-	   font-weight: bold;
-	}
-	
+       padding-left: 75px;
+       font-size: 16px;
+       font-weight: bold;
+    }
+    
 a .text {
-	padding-left: 75px;
-	display: block;
-	}
-	
+    padding-left: 75px;
+    }
+    
 #install {
-	background: url(img/install.png) no-repeat 5px center;
-    height: 64px;    
-	}
+    background: url(img/install.png) no-repeat 5px center;
+    height: 64px;
+
+    }
 #install:hover {
     background: #eee url(img/install_hover.png) no-repeat 5px center;
     height: 64px; 
     }
 
 #launch {
-	background: url(img/launch.png) no-repeat 5px center;
+    background: url(img/launch.png) no-repeat 5px center;
     height: 64px;
-	}
+    }
 #launch:hover {
     background: #eee url(img/launch_hover.png) no-repeat 5px center;
     height: 64px;
