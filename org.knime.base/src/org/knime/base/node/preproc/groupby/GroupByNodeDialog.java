@@ -214,8 +214,11 @@ public class GroupByNodeDialog extends NodeDialogPane {
 
     /** Call this method if the process in memory flag has changed. */
     protected void inMemoryChanged() {
-        m_retainOrder.setEnabled(!m_inMemory.getBooleanValue());
-        m_sortInMemory.setEnabled(!m_inMemory.getBooleanValue());
+        final boolean inMem = m_inMemory.getBooleanValue();
+        m_sortInMemory.setBooleanValue(inMem);
+        m_sortInMemory.setEnabled(!inMem);
+        m_retainOrder.setBooleanValue(inMem);
+        m_retainOrder.setEnabled(!inMem);
     }
 
     private JComponent createAdvancedOptionsBox() {

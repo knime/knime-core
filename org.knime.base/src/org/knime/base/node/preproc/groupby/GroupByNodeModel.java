@@ -50,6 +50,24 @@
  */
 package org.knime.base.node.preproc.groupby;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import org.knime.base.data.aggregation.AggregationMethod;
+import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -71,25 +89,6 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
-
-import org.knime.base.data.aggregation.AggregationMethod;
-import org.knime.base.data.aggregation.AggregationMethods;
-import org.knime.base.data.aggregation.ColumnAggregator;
-import org.knime.base.data.aggregation.GlobalSettings;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 /**
  * The {@link NodeModel} implementation of the group by node which uses the
@@ -223,8 +222,11 @@ public class GroupByNodeModel extends NodeModel {
      * Call this method if the process in memory flag has changed.
      */
     protected void inMemoryChanged() {
-        m_retainOrder.setEnabled(!m_inMemory.getBooleanValue());
-        m_sortInMemory.setEnabled(!m_inMemory.getBooleanValue());
+        final boolean inMem = m_inMemory.getBooleanValue();
+        m_sortInMemory.setBooleanValue(inMem);
+        m_sortInMemory.setEnabled(!inMem);
+        m_retainOrder.setBooleanValue(inMem);
+        m_retainOrder.setEnabled(!inMem);
     }
 
     /**
@@ -363,7 +365,7 @@ public class GroupByNodeModel extends NodeModel {
             throw new InvalidSettingsException(e.getMessage());
         }
     }
-
+    
     /**
      * {@inheritDoc}
      */
@@ -614,10 +616,33 @@ public class GroupByNodeModel extends NodeModel {
     protected final GroupByTable createGroupByTable(final ExecutionContext exec,
             final BufferedDataTable table, final List<String> groupByCols)
             throws CanceledExecutionException {
-        final int maxUniqueVals = m_maxUniqueValues.getIntValue();
+        final boolean inMemory = m_inMemory.getBooleanValue();
         final boolean sortInMemory = m_sortInMemory.getBooleanValue();
-        final boolean enableHilite = m_enableHilite.getBooleanValue();
         final boolean retainOrder = m_retainOrder.getBooleanValue();
+        return createGroupByTable(exec, table, groupByCols, inMemory, 
+                sortInMemory, retainOrder, m_columnAggregators2Use);
+    }
+    
+    /**
+     * Create group-by table.
+     * @param exec execution context
+     * @param table input table to group
+     * @param groupByCols column selected for group-by operation
+     * @param inMemory keep data in memory
+     * @param sortInMemory does sorting in memory
+     * @param retainOrder reconstructs original data order
+     * @param aggregators column aggregation to use
+     * @return table with group and aggregation columns
+     * @throws CanceledExecutionException if the group-by table generation was
+     *         canceled externally
+     */
+    protected final GroupByTable createGroupByTable(final ExecutionContext exec,
+            final BufferedDataTable table, final List<String> groupByCols,
+            final boolean inMemory, final boolean sortInMemory, 
+            final boolean retainOrder, final List<ColumnAggregator> aggregators)
+            throws CanceledExecutionException {
+        final int maxUniqueVals = m_maxUniqueValues.getIntValue();
+        final boolean enableHilite = m_enableHilite.getBooleanValue();
         final ColumnNamePolicy colNamePolicy = ColumnNamePolicy
         .getPolicy4Label(m_columnNamePolicy.getStringValue());
         final GlobalSettings globalSettings = new GlobalSettings(maxUniqueVals,
@@ -625,18 +650,18 @@ public class GroupByNodeModel extends NodeModel {
                 table.getRowCount());
 
         //reset all aggregators in order to use enforce operator creation
-        for (final ColumnAggregator colAggr : m_columnAggregators2Use) {
+        for (final ColumnAggregator colAggr : aggregators) {
             colAggr.reset();
         }
         final GroupByTable resultTable;
-        if (m_inMemory.getBooleanValue() || groupByCols.isEmpty()) {
+        if (inMemory || groupByCols.isEmpty()) {
             resultTable = new MemoryGroupByTable(exec, table, groupByCols,
-                    m_columnAggregators2Use.toArray(new ColumnAggregator[0]),
+                    aggregators.toArray(new ColumnAggregator[0]),
                     globalSettings, sortInMemory, enableHilite, colNamePolicy,
                     retainOrder);
         } else {
             resultTable = new BigGroupByTable(exec, table, groupByCols,
-                    m_columnAggregators2Use.toArray(new ColumnAggregator[0]),
+                    aggregators.toArray(new ColumnAggregator[0]),
                     globalSettings, sortInMemory, enableHilite, colNamePolicy,
                     retainOrder);
         }
@@ -650,6 +675,43 @@ public class GroupByNodeModel extends NodeModel {
             setWarningMessage(warningMsg);
         }
         return resultTable;
+    }
+
+    /**
+     * @return <code>true</code> if the row order should be retained
+     */
+    public boolean isRetainOrder() {
+        return m_retainOrder.getBooleanValue();
+    }
+
+    /**
+     * @return <code>true</code> if all operations should be processed in
+     * memory
+     */
+    public boolean isProcessInMemory() {
+        return m_inMemory.getBooleanValue();
+    }
+
+    /**
+     * @return <code>true</code> if any sorting should be performed in memory
+     */
+    public boolean isSortInMemory() {
+        return m_sortInMemory.getBooleanValue();
+    }
+    
+    /**
+     * @return list of column aggregator methods
+     */
+    public List<ColumnAggregator> getColumnAggregators() {
+        return m_columnAggregators2Use;
+    }
+    
+    /**
+     * @return column name policy used to create resulting pivot columns
+     */
+    public ColumnNamePolicy getColumnNamePolicy() {
+        return ColumnNamePolicy.getPolicy4Label(
+                m_columnNamePolicy.getStringValue());
     }
 
 //**************************************************************************
