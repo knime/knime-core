@@ -485,11 +485,10 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
             }
         }
         if (model instanceof Annotation) {
+            // newly created annotations are only selected if done explicitly
             getViewer().deselect(this);
-            if (m_annotationSelection.isEmpty()) {
-                getViewer().deselectAll();
-                getViewer().select(part);
-            } else if (m_annotationSelection.contains(model)) {
+            if (m_annotationSelection.contains(model)) {
+                // is only used for workflow annotations
                 getViewer().appendSelection(part);
                 m_annotationSelection.remove(model);
             }
