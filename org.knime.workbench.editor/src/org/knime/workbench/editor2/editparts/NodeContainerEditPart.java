@@ -307,6 +307,15 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         if (request.getType() == RequestConstants.REQ_OPEN) {
             // caused by a double click on this edit part
              openDialog();
+        } else if (request.getType() == RequestConstants.REQ_DIRECT_EDIT) {
+            NodeAnnotation nodeAnnotation =
+                getNodeContainer().getNodeAnnotation();
+            NodeAnnotationEditPart nodeAnnotationEditPart =
+                (NodeAnnotationEditPart)getViewer().getEditPartRegistry().get(
+                        nodeAnnotation);
+            if (nodeAnnotationEditPart != null) {
+                nodeAnnotationEditPart.performEdit();
+            }
         }
     }
 

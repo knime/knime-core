@@ -107,7 +107,7 @@ public final class VMFileLocker {
 
         cnt.inc();
         // maps must be in sync
-        assert LOCKS.get(dir) != null;
+        assert LOCKS.containsKey(dir);
         return true;
     }
 

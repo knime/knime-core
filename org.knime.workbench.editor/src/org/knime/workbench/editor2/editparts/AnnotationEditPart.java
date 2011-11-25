@@ -57,6 +57,7 @@ import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.TextUtilities;
 import org.eclipse.draw2d.geometry.Rectangle;
+import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.RequestConstants;
@@ -458,6 +459,13 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
      * Opens the editor to directoy edit the annotation in place.
      */
     public void performEdit() {
+        final EditPart parent = getParent();
+        if (parent instanceof WorkflowRootEditPart) {
+            WorkflowRootEditPart wkfRootEdit = (WorkflowRootEditPart)parent;
+            if (wkfRootEdit.getWorkflowManager().isWriteProtected()) {
+                return;
+            }
+        }
         if (m_directEditManager == null) {
             m_directEditManager =
                     new AnnotationEditManager(this,

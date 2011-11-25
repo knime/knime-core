@@ -234,6 +234,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * projects and meta nodes, which are not used as linked templates. */
     private MetaNodeTemplateInformation m_templateInformation;
 
+    /** True if the underlying folder is RO (WFM will be write protected). This
+     * flag is set during load. */
+    private boolean m_isWorkflowDirectoryReadonly;
+
     /** Listeners interested in status changes. */
     private final CopyOnWriteArrayList<WorkflowListener> m_wfmListeners;
 
@@ -4752,6 +4756,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         synchronized (m_workflowMutex) {
             return getParent().isWriteProtected()
+                || m_isWorkflowDirectoryReadonly
                 || Role.Link.equals(getTemplateInformation().getRole());
         }
     }
@@ -5637,7 +5642,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         final String dirName = directory.getName();
         exec.setMessage("Loading workflow structure from \""
                 + refDirectory + "\"");
-
         LoadVersion version = persistor.getLoadVersion();
         LOGGER.debug("Loading workflow from \"" + refDirectory
                 + "\" (version \"" + version + "\" with loader class \""
@@ -5691,6 +5695,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         exec.setProgress(1.0);
         result.setWorkflowManager(manager);
+        if (!directory.canWrite()) {
+            result.addWarning("Workflow directory \"" + dirName
+                    + "\" is read-only; saving a modified workflow "
+                    + "will not be possible");
+            manager.m_isWorkflowDirectoryReadonly = true;
+        }
         result.setGUIMustReportDataLoadErrors(persistor
                 .mustWarnOnDataLoadError());
         StringBuilder message = new StringBuilder("Loaded workflow from \"");
@@ -6114,6 +6124,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         throws IOException, CanceledExecutionException, LockFailedException {
         if (this == ROOT) {
             throw new IOException("Can't save root workflow");
+        }
+        if (m_isWorkflowDirectoryReadonly) {
+            throw new IOException("Workflow is read-only, can't save");
         }
         // TODO GUI must only provide directory
         synchronized (m_workflowMutex) {

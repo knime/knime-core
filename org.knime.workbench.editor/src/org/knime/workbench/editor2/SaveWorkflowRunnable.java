@@ -57,7 +57,6 @@ import java.io.IOException;
 import javax.swing.UIManager;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
@@ -134,12 +133,7 @@ class SaveWorkflowRunnable extends PersistWorkflowRunnable {
                         + m_workflowFile.getName(), ioe);
                 m_exceptionMessage.append("File access problems: "
                         + ioe.getMessage());
-                Display.getDefault().asyncExec(new Runnable() {
-                    @Override
-                    public void run() {
-                        m_monitor.setCanceled(true);
-                    }
-                });
+                m_monitor.setCanceled(true);
             }
         } catch (CanceledExecutionException cee) {
             LOGGER.info("Canceled saving worflow: " + m_workflowFile.getName());
