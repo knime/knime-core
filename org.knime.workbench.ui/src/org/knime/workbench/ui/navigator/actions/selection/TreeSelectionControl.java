@@ -30,6 +30,7 @@ import org.eclipse.jface.viewers.ITreeContentProvider;
 import org.eclipse.jface.viewers.LabelProvider;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
@@ -65,6 +66,8 @@ public class TreeSelectionControl {
 
     private Label m_msg;
 
+    private ViewerComparator m_comparator;
+
     /**
      * Sets the message displayed above the selection tree. Has no effect, after
      * the component is created.
@@ -91,6 +94,9 @@ public class TreeSelectionControl {
         m_initialSelection = initialSelection;
     }
 
+    public void setComparator(final ViewerComparator comp) {
+        m_comparator = comp;
+    }
     /**
      * Notified when a new object in the tree is selected. Notified after the
      * validator.
@@ -133,6 +139,9 @@ public class TreeSelectionControl {
         }
         if (m_labelProvider != null) {
             m_treeViewer.setLabelProvider(m_labelProvider);
+        }
+        if (m_comparator != null) {
+            m_treeViewer.setComparator(m_comparator);
         }
         m_treeViewer.setInput(m_root);
         if (m_initialSelection != null) {
