@@ -2858,31 +2858,38 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             HashMap<ConnectionContainer, VerticalPortIndex> inportConnections =
                          new HashMap<ConnectionContainer, VerticalPortIndex>();
             for (NodeID id : orgIDs) {
-                if (m_workflow.getConnectionsByDest(id) != null)
-                for (ConnectionContainer cc : m_workflow.getConnectionsByDest(id)) {
-                    if (!orgIDsHash.contains(cc.getSource())) {
-                        Pair<NodeID, Integer> npi
-                                = new Pair<NodeID, Integer>(cc.getSource(),
-                                                            cc.getSourcePort());
-                        if (!exposedIncomingPorts.containsKey(npi)) {
-                            NodeContainer nc = getNodeContainer(npi.getFirst());
-                            NodeUIInformation uii = nc.getUIInformation();
-                            // also include source port index into the ypos
-                            // to make sure ports of the same node are sorted
-                            // correctly!
-                            int yPos = npi.getSecond();
-                            if (uii != null) {
-                                int x[] = uii.getBounds();
-                                if ((x != null) && (x.length >= 2)) {
-                                    // add node y position to port index
-                                    yPos += x[1];
+                if (m_workflow.getConnectionsByDest(id) != null) {
+                    for (ConnectionContainer cc : m_workflow.getConnectionsByDest(id)) {
+                        if (!orgIDsHash.contains(cc.getSource())) {
+                            Pair<NodeID, Integer> npi
+                                    = new Pair<NodeID, Integer>(cc.getSource(),
+                                                                cc.getSourcePort());
+                            if (!exposedIncomingPorts.containsKey(npi)) {
+                                int yPos = npi.getSecond();
+                                if (npi.getFirst().equals(this.getID())) {
+                                    // connection from metanode inport
+                                    // TODO: determine ypos of the port!
+                                } else {
+                                    // connected to other node in this workflow
+                                    NodeContainer nc = getNodeContainer(npi.getFirst());
+                                    NodeUIInformation uii = nc.getUIInformation();
+                                    // also include source port index into the ypos
+                                    // to make sure ports of the same node are sorted
+                                    // correctly!
+                                    if (uii != null) {
+                                        int x[] = uii.getBounds();
+                                        if ((x != null) && (x.length >= 2)) {
+                                            // add node y position to port index
+                                            yPos += x[1];
+                                        }
+                                    }
                                 }
+                                VerticalPortIndex vpi = new VerticalPortIndex(yPos);
+                                exposedIncomingPorts.put(npi, vpi);
                             }
-                            VerticalPortIndex vpi = new VerticalPortIndex(yPos);
-                            exposedIncomingPorts.put(npi, vpi);
+                            VerticalPortIndex inportIndex = exposedIncomingPorts.get(npi);
+                            inportConnections.put(cc, inportIndex);
                         }
-                        VerticalPortIndex inportIndex = exposedIncomingPorts.get(npi);
-                        inportConnections.put(cc, inportIndex);
                     }
                 }
             }
@@ -2916,7 +2923,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             // correctly!
                             int yPos = npi.getSecond();
                             if (uii != null) {
-                                int x[] = uii.getBounds();
+                                int[] x = uii.getBounds();
                                 if ((x != null) && (x.length >= 2)) {
                                     // add node y position to port index
                                     yPos += x[1];
@@ -2943,19 +2950,30 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // (note that we reach directly into the Node to get the port type
             //  so we need to correct the index for the - then missing - var
             //  port.)
-            PortType[] exposedIncomingPortTypes = new PortType[exposedIncomingPorts.size()];
+            PortType[] exposedIncomingPortTypes
+                                    = new PortType[exposedIncomingPorts.size()];
             for (Pair<NodeID, Integer> npi : exposedIncomingPorts.keySet()) {
                 int index = exposedIncomingPorts.get(npi).getIndex();
-                NodeContainer nc = getNodeContainer(npi.getFirst());
+                NodeID nID = npi.getFirst();
                 int portIndex = npi.getSecond();
-                exposedIncomingPortTypes[index] = nc.getOutPort(portIndex).getPortType();
+                if (nID.equals(this.getID())) {
+                    // if this connection comes directly from a Metanode Inport:
+                    exposedIncomingPortTypes[index]
+                                      = this.getInPort(portIndex).getPortType();
+                } else {
+                    // otherwise reach into Nodecontainer to find out port type:
+                    NodeContainer nc = getNodeContainer(nID);
+                    exposedIncomingPortTypes[index]
+                                       = nc.getOutPort(portIndex).getPortType();
+                }
             }
-            PortType[] exposedOutportTypes = new PortType[exposedOutports.size()];
+            PortType[] exposedOutportTypes
+                                         = new PortType[exposedOutports.size()];
             for (Pair<NodeID, Integer> npi : exposedOutports.keySet()) {
                 int index = exposedOutports.get(npi).getIndex();
-                NodeContainer nc = getNodeContainer(npi.getFirst());
                 int portIndex = npi.getSecond();
-              exposedOutportTypes[index]
+                NodeContainer nc = getNodeContainer(npi.getFirst());
+                exposedOutportTypes[index]
                                   = nc.getOutPort(portIndex).getPortType();
             }
             // create the new Metanode
