@@ -55,6 +55,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.knime.core.node.NodeLogger;
@@ -99,6 +101,11 @@ public class LayoutManager {
     // Meta node outgoing port indices connected to nodes being laid out
     private HashMap<Integer, Node> m_workbenchWFMOutports;
 
+    /* the graph stores only one edge between two nodes. The connections
+     * represented are in the list.
+     */
+    private HashMap<Edge, List<ConnectionContainer>> m_parallelConns;
+
     private Graph m_g;
 
     private HashMap<NodeID, NodeUIInformation> m_oldCoordinates;
@@ -121,6 +128,7 @@ public class LayoutManager {
         m_workbenchOutgoingNodes = new HashMap<NodeContainer, Graph.Node>();
         m_workbenchWFMInports = new HashMap<Integer, Graph.Node>();
         m_workbenchWFMOutports = new HashMap<Integer, Graph.Node>();
+        m_parallelConns = new HashMap<Edge, List<ConnectionContainer>>();
         m_g = new Graph();
     }
 
@@ -233,8 +241,17 @@ public class LayoutManager {
             }
 
             gEdge = m_g.createEdge(srcGraphNode, destGraphNode);
-
-            m_workbenchToGraphEdges.put(conn, gEdge);
+            if (gEdge != null) {
+                m_workbenchToGraphEdges.put(conn, gEdge);
+                m_parallelConns.put(gEdge, new LinkedList<ConnectionContainer>(
+                        Collections.singletonList(conn)));
+            } else {
+                // a connection between these node already exists in the graph
+                Edge graphEdge = srcGraphNode.getEdge(destGraphNode);
+                assert graphEdge != null;
+                // add the connection to list of parallel connections.
+                m_parallelConns.get(graphEdge).add(conn);
+            }
         }
 
         // AFTER creating all nodes, mark the incoming/outgoing nodes as fixed
@@ -315,6 +332,15 @@ public class LayoutManager {
 
             ConnectionUIInformation newUI = new ConnectionUIInformation();
             Edge e = m_workbenchToGraphEdges.get(conn);
+            if (e == null) {
+                // a parallel connection not represented by the edge
+                continue;
+            }
+
+            List<ConnectionContainer> conns = m_parallelConns.get(e);
+            assert conns.size() > 0;
+            assert conns.get(0) == conn; // that is how we created it!
+
             ArrayList<Point2D> newBends = m_g.bends(e);
             if (newBends != null && !newBends.isEmpty()) {
                 int extraX = 16; // half the node icon size...
@@ -331,6 +357,16 @@ public class LayoutManager {
                 }
             }
             conn.setUIInfo(newUI);
+
+            // compute bendpoints for parallel connections (slightly offset)
+            for (int i = 1; i < conns.size(); i++) { // idx 0 == conn!
+                ConnectionContainer parConn = conns.get(i);
+                // destination port determines offset
+                int yOffset = (parConn.getDestPort() - conn.getDestPort()) * 10;
+                ConnectionUIInformation parUI =
+                    newUI.createNewWithOffsetPosition(new int[] {0, yOffset});
+                parConn.setUIInfo(parUI);
+            }
         }
 
     }
