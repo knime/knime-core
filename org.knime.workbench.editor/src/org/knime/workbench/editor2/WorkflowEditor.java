@@ -1580,7 +1580,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         int xOffset = 100;
         int yOffset = 120;
         // first try: right of reference node
-        Point loc = new Point(ui.getBounds()[0] + (ui.getBounds()[2] / 2) + xOffset,
+        Point loc = new Point(ui.getBounds()[0] + xOffset,
                 ui.getBounds()[1]);
 
         // make sure we have a free spot
