@@ -119,7 +119,6 @@ public class RuleEngineNodeModel extends NodeModel {
         String newColName =
                 DataTableSpec.getUniqueColumnName(inSpec,
                         m_settings.getNewColName());
-        m_settings.setNewcolName(newColName);
 
         final int defaultLabelColumnIndex;
         if (m_settings.getDefaultLabelIsColumn()) {
