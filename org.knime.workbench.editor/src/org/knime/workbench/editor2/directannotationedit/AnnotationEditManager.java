@@ -50,6 +50,7 @@
  */
 package org.knime.workbench.editor2.directannotationedit;
 
+import org.eclipse.gef.EditPartViewer;
 import org.eclipse.gef.GraphicalEditPart;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.tools.CellEditorLocator;
@@ -62,6 +63,7 @@ import org.knime.workbench.editor2.editparts.AnnotationEditPart;
  * @author ohl, KNIME.com, Zurich, Switzerland
  */
 public class AnnotationEditManager extends DirectEditManager {
+
     public AnnotationEditManager(final GraphicalEditPart editPart,
             final CellEditorLocator locator) {
         super(editPart, StyledTextEditor.class, locator);
@@ -77,6 +79,8 @@ public class AnnotationEditManager extends DirectEditManager {
      */
     @Override
     protected void initCellEditor() {
+        // de-select the underlying annotation to remove the selection handles
+        getEditPart().getRoot().getViewer().deselect(getEditPart());
         StyledTextEditor stw = (StyledTextEditor)getCellEditor();
         stw.setZoomFactor(getZoomfactor());
         Annotation anno = ((AnnotationEditPart)getEditPart()).getModel();
@@ -88,5 +92,16 @@ public class AnnotationEditManager extends DirectEditManager {
                 (ZoomManager)(getEditPart().getRoot().getViewer()
                         .getProperty(ZoomManager.class.toString()));
         return zoomManager.getZoom();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void bringDown() {
+        super.bringDown();
+        EditPartViewer v = getEditPart().getRoot().getViewer();
+        v.deselectAll();
+        v.appendSelection(getEditPart());
     }
 }
