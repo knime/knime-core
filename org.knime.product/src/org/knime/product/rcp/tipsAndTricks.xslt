@@ -7,6 +7,7 @@
     <xsl:template match="/">
         <html>
             <head>
+                <base href="{$linkBase}" />
                 <meta http-equiv="content-type" content="text/html; charset=UTF-8"></meta>
                 <style type="text/css">
                     @import url("<xsl:value-of select="$cssUrl" />");
@@ -29,10 +30,6 @@
         <div id="news-entry">
             <xsl:apply-templates />
         </div>
-    </xsl:template>
-
-    <xsl:template match="a[not(starts-with(@href, 'http'))]">
-        <a href="{$linkBase}{@href}"><xsl:apply-templates /></a>
     </xsl:template>
 
     <xsl:template match="style" />    

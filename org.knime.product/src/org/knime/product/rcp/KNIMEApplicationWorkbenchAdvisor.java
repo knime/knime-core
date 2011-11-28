@@ -161,7 +161,7 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
         boolean showTipsAndTricks = true;
         try {
             HttpURLConnection conn =
-                    (HttpURLConnection)TipsAndTrickProvider.TIPS_AND_TRICKS_URL
+                    (HttpURLConnection)TipsAndTricksDialog.TIPS_AND_TRICKS_URL
                             .openConnection();
             conn.setConnectTimeout(500);
             conn.connect();

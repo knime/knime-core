@@ -113,7 +113,7 @@ public class TipsAndTricksDialog extends Dialog {
         .imageDescriptorFromPlugin(ProductPlugin.PLUGIN_ID,
             "icons/knime_light_bulb_icon.png");
 
-    private static final URL TIPS_AND_TRICKS_URL;
+    static final URL TIPS_AND_TRICKS_URL;
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(TipsAndTricksDialog.class);
@@ -205,7 +205,7 @@ public class TipsAndTricksDialog extends Dialog {
         return composite;
     }
 
-    protected void createHeader(final Composite parent) {
+    private void createHeader(final Composite parent) {
         Composite header = new Composite(parent, SWT.FILL);
         Color white = Display.getDefault().getSystemColor(SWT.COLOR_WHITE);
         header.setBackground(white);
@@ -223,7 +223,7 @@ public class TipsAndTricksDialog extends Dialog {
         FontData[] fd = parent.getFont().getFontData();
         for (FontData f : fd) {
             f.setStyle(SWT.BOLD);
-            f.setHeight(f.getHeight() + 5);
+            f.setHeight(f.getHeight() + 2);
         }
         exec.setFont(new Font(parent.getDisplay(), fd));
         exec.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, true));
