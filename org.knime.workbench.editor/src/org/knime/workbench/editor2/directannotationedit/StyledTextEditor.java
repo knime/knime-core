@@ -56,12 +56,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.eclipse.jface.action.Action;
-import org.eclipse.jface.action.GroupMarker;
-import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.action.MenuManager;
-import org.eclipse.jface.action.Separator;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ExtendedModifyEvent;
@@ -74,12 +68,14 @@ import org.eclipse.swt.events.KeyAdapter;
 import org.eclipse.swt.events.KeyEvent;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
+import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
@@ -89,6 +85,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FontDialog;
 import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.AnnotationData;
@@ -107,7 +104,7 @@ public class StyledTextEditor extends CellEditor {
 
     private StyledText m_styledText;
 
-    private List<IAction> m_styleActions;
+    private List<MenuItem> m_styleMenuItems;
 
     private Composite m_panel;
 
@@ -116,6 +113,12 @@ public class StyledTextEditor extends CellEditor {
     private double m_zoomFactor = 1.0;
 
     private final AtomicBoolean m_allowFocusLost = new AtomicBoolean(true);
+
+    private MenuItem m_rightAlignMenuItem;
+
+    private MenuItem m_centerAlignMenuItem;
+
+    private MenuItem m_leftAlignMenuItem;
 
     /**
      *
@@ -289,103 +292,99 @@ public class StyledTextEditor extends CellEditor {
     }
 
     private void enableStyleButtons(final boolean enableThem) {
-        if (m_styleActions != null) {
-            for (IAction action : m_styleActions) {
+        if (m_styleMenuItems != null) {
+            for (MenuItem action : m_styleMenuItems) {
                 action.setEnabled(enableThem);
             }
         }
     }
 
     private void addMenu(final Composite parent) {
-        MenuManager menuMgr = new MenuManager();
-        menuMgr.add(new GroupMarker("default"));
-        ImageDescriptor img;
+        Menu menu = new Menu(parent);
+        Image img;
 
         // background color
-        img = ImageRepository.getImageDescriptor(
-                "icons/annotations/bgcolor_10.png");
-        createAction(menuMgr, "bg", "Background", img,
-                "Change the background color", "default");
+        img = ImageRepository.getImage("icons/annotations/bgcolor_10.png");
+        addMenuItem(menu, "bg", SWT.PUSH, "Background", img);
 
         // alignment
-        img = ImageRepository.getImageDescriptor(
-                "icons/annotations/center_10.png");
-        createAction(menuMgr, "alignment", "Change Alignment", img,
-                "Alignment - change text alignment", "default");
+        img = ImageRepository.getImage("icons/annotations/alignment_10.png");
 
-        menuMgr.add(new Separator("style"));
+        MenuItem alignmentMenuItem = addMenuItem(menu, "alignment",
+                SWT.CASCADE, "Alignment", img);
 
+        final Menu alignMenu = new Menu(alignmentMenuItem);
+        alignmentMenuItem.setMenu(alignMenu);
+
+        m_leftAlignMenuItem = addMenuItem(alignMenu, "alignment_left",
+                SWT.RADIO, "Left", img);
+
+        m_centerAlignMenuItem = addMenuItem(alignMenu, "alignment_center",
+                SWT.RADIO, "Center", img);
+
+        m_rightAlignMenuItem = addMenuItem(alignMenu, "alignment_right",
+                SWT.RADIO, "Right", img);
+
+        new MenuItem(menu, SWT.SEPARATOR);
         // contains buttons being en/disabled with selection
-        m_styleActions = new ArrayList<IAction>();
-        IAction action;
+        m_styleMenuItems = new ArrayList<MenuItem>();
+        MenuItem action;
 
         // font/style button
-        img = ImageRepository.getImageDescriptor(
-                "icons/annotations/font_10.png");
-        action = createAction(menuMgr, "style", "Font", img,
-                "Change selection font", "style");
-        m_styleActions.add(action);
+        img = ImageRepository.getImage("icons/annotations/font_10.png");
+        action = addMenuItem(menu, "style", SWT.PUSH, "Font", img);
+        m_styleMenuItems.add(action);
 
         // foreground color button
-        img = ImageRepository.getImageDescriptor(
-                "icons/annotations/color_10.png");
-        action = createAction(menuMgr, "color", "Color", img,
-                "Change selection font color", "style");
-        m_styleActions.add(action);
+        img = ImageRepository.getImage("icons/annotations/color_10.png");
+        action = addMenuItem(menu, "color", SWT.PUSH, "Color", img);
+        m_styleMenuItems.add(action);
 
         // bold button
-        img = ImageRepository.getImageDescriptor(
-                "icons/annotations/bold_10.png");
-        action = createAction(menuMgr, "bold", "Bold", img,
-                "Change selection font style", "style");
-        m_styleActions.add(action);
+        img = ImageRepository.getImage("icons/annotations/bold_10.png");
+        action = addMenuItem(menu, "bold", SWT.PUSH, "Bold", img);
+        m_styleMenuItems.add(action);
 
         // italic button
-        img = ImageRepository.getImageDescriptor(
-                "icons/annotations/italic_10.png");
-        action = createAction(menuMgr, "italic", "Italic", img,
-                "Change selection font style", "style");
-        m_styleActions.add(action);
+        img = ImageRepository.getImage("icons/annotations/italic_10.png");
+        action = addMenuItem(menu, "italic", SWT.PUSH, "Italic", img);
+        m_styleMenuItems.add(action);
 
-
-        menuMgr.add(new Separator("control"));
+        new MenuItem(menu, SWT.SEPARATOR);
 
         // ok button
-        img = ImageRepository.getImageDescriptor(
-                "icons/annotations/ok_10.png");
-        createAction(menuMgr, "ok", "OK (commit)", img,
-                "OK - commit changes", "control");
+        img = ImageRepository.getImage("icons/annotations/ok_10.png");
+        addMenuItem(menu, "ok", SWT.PUSH, "OK (commit)", img);
 
         // cancel button
-        img = ImageRepository.getImageDescriptor(
-        "icons/annotations/cancel_10.png");
-        createAction(menuMgr, "cancel", "Cancel (discard)", img,
-                "Cancel - discard changes", "control");
+        img = ImageRepository.getImage("icons/annotations/cancel_10.png");
+        addMenuItem(menu, "cancel", SWT.PUSH, "Cancel (discard)", img);
 
-
-        Menu menu = menuMgr.createContextMenu(parent);
         parent.setMenu(menu);
     }
 
-    private IAction createAction(final MenuManager menuMgr, final String id,
-            final String text, final ImageDescriptor imgDesc,
-            final String tooltip, final String menuGroup) {
-        IAction action = new Action(text, imgDesc) {
-            /** {@inheritDoc} */
+    private MenuItem addMenuItem(final Menu menuMgr, final String id,
+            final int style, final String text, final Image img) {
+        MenuItem menuItem = new MenuItem(menuMgr, style);
+        SelectionAdapter selListener = new SelectionAdapter() {
             @Override
-            public void run() {
+            public void widgetSelected(final SelectionEvent e) {
                 m_allowFocusLost.set(false);
                 try {
                     buttonClick(id);
                 } finally {
                     m_allowFocusLost.set(true);
                 }
-
+            }
+            @Override
+            public void widgetDefaultSelected(final SelectionEvent e) {
+                super.widgetSelected(e);
             }
         };
-        menuMgr.appendToGroup(menuGroup, action);
-        action.setToolTipText(tooltip);
-        return action;
+        menuItem.addSelectionListener(selListener);
+        menuItem.setText(text);
+        menuItem.setImage(img);
+        return menuItem;
     }
 
     private void buttonClick(final String src) {
@@ -404,8 +403,14 @@ public class StyledTextEditor extends CellEditor {
         } else if (src.equals("bg")) {
             bgColor();
             fireEditorValueChanged(true, true);
-        } else if (src.equals("alignment")) {
-            alignment();
+        } else if (src.equals("alignment_left")) {
+            alignment(SWT.LEFT);
+            fireEditorValueChanged(true, true);
+        } else if (src.equals("alignment_center")) {
+            alignment(SWT.CENTER);
+            fireEditorValueChanged(true, true);
+        } else if (src.equals("alignment_right")) {
+            alignment(SWT.RIGHT);
             fireEditorValueChanged(true, true);
         } else if (src.equals("ok")) {
             ok();
@@ -532,6 +537,7 @@ public class StyledTextEditor extends CellEditor {
         default:
             alignment = SWT.LEFT;
         }
+        checkSelectionOfAlignmentMenuItems(alignment);
         String text;
         if (AnnotationEditPart.isDefaultNodeAnnotation(wa)) {
             text = AnnotationEditPart.getAnnotationText(wa);
@@ -548,6 +554,32 @@ public class StyledTextEditor extends CellEditor {
 
     private void bold() {
         setSWTStyle(SWT.BOLD);
+    }
+
+    /** Update selection state of alignment buttons in menu.
+     * @param swtAlignment SWT.LEFT, CENTER, or RIGHT
+     */
+    private void checkSelectionOfAlignmentMenuItems(final int swtAlignment) {
+        MenuItem[] alignmentMenuItems = new MenuItem[] {
+                m_leftAlignMenuItem, m_centerAlignMenuItem, m_rightAlignMenuItem};
+        MenuItem activeMenuItem;
+        switch (swtAlignment) {
+        case SWT.LEFT:
+            activeMenuItem = m_leftAlignMenuItem;
+            break;
+        case SWT.CENTER:
+            activeMenuItem = m_centerAlignMenuItem;
+            break;
+        case SWT.RIGHT:
+            activeMenuItem = m_rightAlignMenuItem;
+            break;
+        default:
+            LOGGER.coding("Invalid alignment (ignored): " + swtAlignment);
+            return;
+        }
+        for (MenuItem m : alignmentMenuItems) {
+            m.setSelection(m == activeMenuItem);
+        }
     }
 
     private void setSWTStyle(final int SWTstyle) {
@@ -648,19 +680,22 @@ public class StyledTextEditor extends CellEditor {
         applyBackgroundColor();
     }
 
-    private void alignment() {
-        int currentAlignment = m_styledText.getAlignment();
+    /** Change alignment.
+     * @param alignment SWT.LEFT|CENTER|RIGHT.
+     */
+    private void alignment(final int alignment) {
         int newAlignment;
-        switch (currentAlignment) {
-        case SWT.LEFT:
-            newAlignment = SWT.CENTER;
-            break;
+        switch (alignment) {
         case SWT.CENTER:
-            newAlignment = SWT.RIGHT;
+            newAlignment = alignment;
+            break;
+        case SWT.RIGHT:
+            newAlignment = alignment;
             break;
         default:
             newAlignment = SWT.LEFT;
         }
+        checkSelectionOfAlignmentMenuItems(newAlignment);
         m_styledText.setAlignment(newAlignment);
     }
 
