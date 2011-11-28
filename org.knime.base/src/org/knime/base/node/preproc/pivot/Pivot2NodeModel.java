@@ -326,8 +326,8 @@ public class Pivot2NodeModel extends GroupByNodeModel {
         // perform pivoting: result in single line
         GroupByTable rowGroup = createGroupByTable(
                 exec.createSubExecutionContext(0.2), table,
-                m_pivotCols.getIncludeList(), true, true, false,
-                getColumnAggregators());
+                m_pivotCols.getIncludeList(), isProcessInMemory(), 
+                isSortInMemory(), isRetainOrder(), getColumnAggregators());
         BufferedDataTable rowGroupTable = rowGroup.getBufferedTable();
         // fill group columns with missing cells
         ColumnRearranger colre = new ColumnRearranger(
@@ -347,13 +347,20 @@ public class Pivot2NodeModel extends GroupByNodeModel {
                 rowGroupTable, colre, exec);
         BufferedDataTable pivotRowsTable = fillPivotTable(groupedRowTable,
                 outSpec, pivotStarts, exec, mapper, null);
+        if (orderPivotColumnName != null) {
+            ColumnRearranger colre2 = new ColumnRearranger(
+                    pivotRowsTable.getSpec());
+            colre2.remove(orderPivotColumnName);
+            pivotRowsTable = exec.createColumnRearrangeTable(pivotRowsTable, 
+                    colre2, exec.createSilentSubProgress(0.01));
+        }
 
         // total aggregation without grouping
         if (m_totalAggregation.getBooleanValue()) {
             @SuppressWarnings("unchecked")
             GroupByTable totalGroup = createGroupByTable(exec, table,
-                    Collections.EMPTY_LIST, true, true, false,
-                    getColumnAggregators());
+                    Collections.EMPTY_LIST, isProcessInMemory(), 
+                    isSortInMemory(), isRetainOrder(), getColumnAggregators());
             BufferedDataTable totalGroupTable = totalGroup.getBufferedTable();
 
             DataTableSpec pivotsRowsSpec = pivotRowsTable.getSpec();
@@ -490,23 +497,21 @@ public class Pivot2NodeModel extends GroupByNodeModel {
                     final int idx = pivotStarts.get(pivotColumn);
                     final int pivotIndex = i - pivotCount - groupCount;
                     final int pivotCellIndex = idx + pivotIndex;
-                    if (orderPivotColumnName == null) {
+                    if (orderPivotColumnName == null 
+                            || !groupSpec.getColumnSpec(i).getName().equals(
+                            orderPivotColumnName)) {
                         outcells[pivotCellIndex] = cell;
                     } else {
-                        if (pivotSpec.getColumnSpec(i).getName().equals(
-                                orderPivotColumnName)) {
-                            if (outcells[i] == null) {
-                                outcells[i] = cell;
-                            } else {
-                                DataValueComparator comp = pivotSpec.
-                                        getColumnSpec(pivotCellIndex).
-                                        getType().getComparator();
-                                if (comp.compare(outcells[i], cell) > 0) {
-                                    outcells[i] = cell;
-                                }
-                            }
-                        } else {
+                        if (outcells[pivotCellIndex] == null) {
                             outcells[pivotCellIndex] = cell;
+                        } else {
+                            DataValueComparator comp = pivotSpec.
+                                    getColumnSpec(pivotCellIndex).
+                                    getType().getComparator();
+                            if (comp.compare(outcells[pivotCellIndex], 
+                                    cell) > 0) {
+                                outcells[pivotCellIndex] = cell;
+                            }
                         }
                     }
                 }

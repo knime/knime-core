@@ -56,6 +56,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -680,7 +681,7 @@ public class GroupByNodeModel extends NodeModel {
     /**
      * @return <code>true</code> if the row order should be retained
      */
-    public boolean isRetainOrder() {
+    protected boolean isRetainOrder() {
         return m_retainOrder.getBooleanValue();
     }
 
@@ -688,28 +689,28 @@ public class GroupByNodeModel extends NodeModel {
      * @return <code>true</code> if all operations should be processed in
      * memory
      */
-    public boolean isProcessInMemory() {
+    protected boolean isProcessInMemory() {
         return m_inMemory.getBooleanValue();
     }
 
     /**
      * @return <code>true</code> if any sorting should be performed in memory
      */
-    public boolean isSortInMemory() {
+    protected boolean isSortInMemory() {
         return m_sortInMemory.getBooleanValue();
     }
     
     /**
      * @return list of column aggregator methods
      */
-    public List<ColumnAggregator> getColumnAggregators() {
-        return m_columnAggregators2Use;
+    protected List<ColumnAggregator> getColumnAggregators() {
+        return Collections.unmodifiableList(m_columnAggregators2Use);
     }
     
     /**
      * @return column name policy used to create resulting pivot columns
      */
-    public ColumnNamePolicy getColumnNamePolicy() {
+    protected ColumnNamePolicy getColumnNamePolicy() {
         return ColumnNamePolicy.getPolicy4Label(
                 m_columnNamePolicy.getStringValue());
     }
