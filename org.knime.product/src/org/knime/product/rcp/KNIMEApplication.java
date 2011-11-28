@@ -541,7 +541,7 @@ public class KNIMEApplication implements IApplication {
                             SWT.APPLICATION_MODAL | SWT.OK);
             mBox.setText("Broken JRE version");
             mBox.setMessage("Your operating system uses a JRE version ("
-                    + "1.6.0_29) that break dialogs in KNIME and may lead to "
+                    + "1.6.0_29) that breaks dialogs in KNIME and may lead to "
                     + "crashes. Please see http://tech.knime.org/faq for "
                     + "how to fix this issue.");
             mBox.open();
