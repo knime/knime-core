@@ -1629,7 +1629,7 @@ class Buffer implements KNIMEStreamConstants {
     }
 
     /** Clears the temp file. Any subsequent iteration will fail! */
-    void clear() {
+    synchronized void clear() {
         m_list = null;
         if (m_binFile != null) {
             synchronized (m_openIteratorSet) {
