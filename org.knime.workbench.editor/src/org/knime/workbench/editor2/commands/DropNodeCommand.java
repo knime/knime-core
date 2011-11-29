@@ -88,7 +88,7 @@ public class DropNodeCommand extends AbstractKNIMECommand {
             m_container = hostWFM.getNodeContainer(id);
             // create extra info and set it
             NodeUIInformation info =
-                new NodeUIInformation(m_location.x, m_location.y, -1, -1, false);
+                new NodeUIInformation(m_location.x, m_location.y, -1, -1, true);
             m_container.setUIInformation(info);
 
             // Open the dialog. Some times.
@@ -104,6 +104,7 @@ public class DropNodeCommand extends AbstractKNIMECommand {
                 // This is embedded in a special JFace wrapper dialog
                 //
                 Display.getDefault().asyncExec(new Runnable() {
+                    @Override
                     public void run() {
                         try {
                             WrappedNodeDialog dlg =
