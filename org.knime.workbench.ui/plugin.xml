@@ -91,7 +91,7 @@
                relationship="stack"
                relative="org.knime.workbench.ui.navigator.KnimeResourceNavigator"
                standalone="false"
-               visible="true">
+               visible="false">
          </view>         
       </perspectiveExtension>
       <perspectiveExtension
