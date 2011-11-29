@@ -81,7 +81,7 @@ public class AnnotationEditManager extends DirectEditManager {
     protected void initCellEditor() {
         // de-select the underlying annotation to remove the selection handles
         final GraphicalEditPart editPart = getEditPart();
-        editPart.getRoot().getViewer().deselect(editPart);
+        editPart.getRoot().getViewer().deselectAll();
         editPart.getFigure().setVisible(false);
         StyledTextEditor stw = (StyledTextEditor)getCellEditor();
         Annotation anno = ((AnnotationEditPart)editPart).getModel();
