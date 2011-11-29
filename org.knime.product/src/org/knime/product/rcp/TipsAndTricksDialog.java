@@ -78,7 +78,6 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.LocationEvent;
 import org.eclipse.swt.browser.LocationListener;
-import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.Point;
@@ -87,7 +86,6 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PartInitException;
@@ -159,7 +157,8 @@ public class TipsAndTricksDialog extends Dialog {
         applyDialogFont(composite);
 
         createHeader(composite);
-        Browser browser = new Browser(composite, SWT.EMBEDDED | SWT.FILL);
+        Browser browser = new Browser(composite, SWT.EMBEDDED | SWT.FILL
+                | SWT.BORDER);
         browser.setLayoutData(gd);
         try {
             browser.setText(getHtml(parent));
@@ -207,18 +206,14 @@ public class TipsAndTricksDialog extends Dialog {
 
     private void createHeader(final Composite parent) {
         Composite header = new Composite(parent, SWT.FILL);
-        Color white = Display.getDefault().getSystemColor(SWT.COLOR_WHITE);
-        header.setBackground(white);
         GridData gridData = new GridData(GridData.FILL_HORIZONTAL);
         header.setLayoutData(gridData);
         header.setLayout(new GridLayout(2, false));
         Label execIcon = new Label(header, SWT.NONE);
-        execIcon.setBackground(white);
         execIcon.setImage(IMG_BULB.createImage());
         execIcon
                 .setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, true));
         Label exec = new Label(header, SWT.NONE);
-        exec.setBackground(white);
         exec.setText("Did you know...?");
         FontData[] fd = parent.getFont().getFontData();
         for (FontData f : fd) {
@@ -227,11 +222,6 @@ public class TipsAndTricksDialog extends Dialog {
         }
         exec.setFont(new Font(parent.getDisplay(), fd));
         exec.setLayoutData(new GridData(SWT.BEGINNING, SWT.CENTER, true, true));
-//        Label txt = new Label(header, SWT.NONE);
-//        txt.setBackground(white);
-//        txt.setText("Did you know...?");
-//        txt.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
-
     }
 
     /**
@@ -258,7 +248,7 @@ public class TipsAndTricksDialog extends Dialog {
                         .getBundle(getClass()), new Path(
                         "/intro/css/tipstricks.css"), null));
 
-        RGB bgColor = parent.getBackground().getRGB();
+        RGB bgColor = new RGB(255,255,255);
 
         String content = null;
         try {
