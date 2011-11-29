@@ -50,9 +50,11 @@
  */
 package org.knime.workbench.editor2.directannotationedit;
 
+import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editpolicies.DirectEditPolicy;
 import org.eclipse.gef.requests.DirectEditRequest;
+import org.eclipse.swt.widgets.Composite;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.AnnotationData;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
@@ -71,6 +73,21 @@ public class AnnotationEditPolicy extends DirectEditPolicy {
         AnnotationData newAnnoData = (AnnotationData)ste.getValue();
         AnnotationEditPart annoPart = (AnnotationEditPart)getHost();
         Annotation oldAnno = annoPart.getModel();
+
+        Rectangle oldFigBounds = annoPart.getFigure().getBounds().getCopy();
+        newAnnoData.setX(oldFigBounds.x);
+        newAnnoData.setY(oldFigBounds.y);
+        newAnnoData.setWidth(oldFigBounds.width);
+
+        // the height is the only dimension that can grow
+
+        // trim was never really verified (was always 0 on my platform),
+        // see also StyledTextEditorLocator#relocate
+        Composite compositeEditor = (Composite)ste.getControl();
+        org.eclipse.swt.graphics.Rectangle trim =
+            compositeEditor.computeTrim(0, 0, 0, 0);
+        newAnnoData.setHeight(compositeEditor.getBounds().height - trim.height);
+
         if (hasAnnotationDataChanged(oldAnno, newAnnoData)) {
             return new AnnotationEditCommand(annoPart, oldAnno, newAnnoData);
         }

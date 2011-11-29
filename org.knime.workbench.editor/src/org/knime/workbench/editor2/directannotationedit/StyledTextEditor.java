@@ -110,8 +110,6 @@ public class StyledTextEditor extends CellEditor {
 
     private Color m_backgroundColor = null;
 
-    private double m_zoomFactor = 1.0;
-
     private final AtomicBoolean m_allowFocusLost = new AtomicBoolean(true);
 
     private MenuItem m_rightAlignMenuItem;
@@ -453,17 +451,6 @@ public class StyledTextEditor extends CellEditor {
         m_backgroundColor = bg;
         applyBackgroundColor();
     }
-
-    /**
-     * Font size is multiplied by the zoom factor. MUST be set before setValue!
-     * Does not apply to already set contents!
-     *
-     * @param factor defaults to 1.0 (=100%)
-     */
-    public void setZoomFactor(final double factor) {
-        m_zoomFactor = factor;
-    }
-
     /**
      * {@inheritDoc}
      */
@@ -500,8 +487,7 @@ public class StyledTextEditor extends CellEditor {
     @Override
     protected Object doGetValue() {
         assert m_styledText != null : "Control not created!";
-        return AnnotationEditPart.toAnnotation(m_styledText, m_zoomFactor,
-                getControl().getBounds());
+        return AnnotationEditPart.toAnnotationData(m_styledText);
     }
 
     /**
@@ -547,7 +533,7 @@ public class StyledTextEditor extends CellEditor {
         m_styledText.setAlignment(alignment);
         m_styledText.setText(text);
         m_styledText.setStyleRanges(AnnotationEditPart.toSWTStyleRanges(
-                wa.getData(), m_zoomFactor));
+                wa.getData()));
         setBackgroundColor(AnnotationEditPart.RGBintToColor(wa
                 .getBgColor()));
     }

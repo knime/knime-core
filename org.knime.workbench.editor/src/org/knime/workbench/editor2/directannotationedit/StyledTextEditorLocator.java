@@ -52,7 +52,6 @@ package org.knime.workbench.editor2.directannotationedit;
 
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.GraphicalEditPart;
-import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.tools.CellEditorLocator;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.swt.widgets.Composite;
@@ -86,24 +85,17 @@ public class StyledTextEditorLocator implements CellEditorLocator {
     @Override
     public void relocate(final CellEditor celleditor) {
         Composite edit = (Composite)celleditor.getControl();
-        Rectangle figBounds = m_figure.getBounds().getCopy();
-        ZoomManager zoomManager = null;
-        if (m_editPart != null) {
-            zoomManager = (ZoomManager)(m_editPart.getRoot().getViewer()
-                    .getProperty(ZoomManager.class.toString()));
-        }
-        double zooFactor = 1;
-        if (zoomManager != null) {
-            if (zoomManager.getZoom() < 1.0) {
-                zooFactor = zoomManager.getZoom();
-            }
-        }
+        final Rectangle figBounds = m_figure.getBounds().getCopy();
+        Rectangle absoluteWithZoomBounds = figBounds.getCopy();
+
         // adapt to zoom level and viewport
-        m_figure.translateToAbsolute(figBounds);
+        // (shifts x,y to view port window and grows w,h with zoom level)
+        m_figure.translateToAbsolute(absoluteWithZoomBounds);
+        // add OS editor borders or insets -- never verified (result always 0)
         org.eclipse.swt.graphics.Rectangle trim = edit.computeTrim(0, 0, 0, 0);
-        figBounds.translate(trim.x, trim.y);
-        figBounds.width = (int)((figBounds.width + trim.width) / zooFactor);
-        figBounds.height = (int)((figBounds.height + trim.height) / zooFactor);
+        absoluteWithZoomBounds.translate(trim.x, trim.y);
+        figBounds.width += trim.width;
+        figBounds.height += trim.height;
 
         // grow the height with the text entered
         StyledTextEditor stEditor = ((StyledTextEditor)celleditor);
@@ -113,8 +105,15 @@ public class StyledTextEditorLocator implements CellEditorLocator {
         if (th > figBounds.height) {
             figBounds.height = th;
         }
-        edit.setBounds(new org.eclipse.swt.graphics.Rectangle(figBounds.x,
-                figBounds.y, figBounds.width, figBounds.height));
+        // center editor in case zoom != 1 (important for node annotations)
+        int x = absoluteWithZoomBounds.x
+            + (absoluteWithZoomBounds.width - figBounds.width) / 2;
+
+        // use x,y from viewport coordinates,
+        // w,h are original figure coordinates as editor doesn't grow with zoom
+        edit.setBounds(new org.eclipse.swt.graphics.Rectangle(
+                x, absoluteWithZoomBounds.y,
+                figBounds.width, figBounds.height));
     }
 
 }

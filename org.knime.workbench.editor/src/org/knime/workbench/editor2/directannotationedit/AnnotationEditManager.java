@@ -52,9 +52,9 @@ package org.knime.workbench.editor2.directannotationedit;
 
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.gef.GraphicalEditPart;
-import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.tools.CellEditorLocator;
 import org.eclipse.gef.tools.DirectEditManager;
+import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 
@@ -80,18 +80,12 @@ public class AnnotationEditManager extends DirectEditManager {
     @Override
     protected void initCellEditor() {
         // de-select the underlying annotation to remove the selection handles
-        getEditPart().getRoot().getViewer().deselect(getEditPart());
+        final GraphicalEditPart editPart = getEditPart();
+        editPart.getRoot().getViewer().deselect(editPart);
+        editPart.getFigure().setVisible(false);
         StyledTextEditor stw = (StyledTextEditor)getCellEditor();
-        stw.setZoomFactor(getZoomfactor());
-        Annotation anno = ((AnnotationEditPart)getEditPart()).getModel();
+        Annotation anno = ((AnnotationEditPart)editPart).getModel();
         stw.setValue(anno);
-    }
-
-    private double getZoomfactor() {
-        ZoomManager zoomManager =
-                (ZoomManager)(getEditPart().getRoot().getViewer()
-                        .getProperty(ZoomManager.class.toString()));
-        return zoomManager.getZoom();
     }
 
     /**
@@ -100,8 +94,21 @@ public class AnnotationEditManager extends DirectEditManager {
     @Override
     protected void bringDown() {
         super.bringDown();
-        EditPartViewer v = getEditPart().getRoot().getViewer();
-        v.deselectAll();
-        v.appendSelection(getEditPart());
+        final GraphicalEditPart editPart = getEditPart();
+        final EditPartViewer v = editPart.getRoot().getViewer();
+        // select later as the "commit" mouse-click maybe in the region of the
+        // figure (which would trigger another edit). This problem would only
+        // occur if zoom > 1 (as the edit area is smaller than the figure)
+        Display.getCurrent().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                if (Display.getCurrent().isDisposed()) {
+                    return;
+                }
+                editPart.getFigure().setVisible(true);
+                v.deselectAll();
+                v.appendSelection(editPart);
+            };
+        });
     }
 }

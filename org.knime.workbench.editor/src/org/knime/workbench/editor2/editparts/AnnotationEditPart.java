@@ -303,11 +303,10 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
      *
      * @param t
      * @param parent
-     * @param zoomFactor a factor the font size is multiplied by.
      * @return
      */
     public static StyledText toStyledText(final Annotation t,
-            final Composite parent, final double zoomFactor) {
+            final Composite parent) {
         StyledText stext = new StyledText(parent, SWT.NONE);
         String text;
         StyleRange[] styles;
@@ -317,7 +316,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
             styles = new StyleRange[0];
         } else {
             text = t.getText();
-            styles = toSWTStyleRanges(t.getData(), zoomFactor);
+            styles = toSWTStyleRanges(t.getData());
         }
         stext.setText(text);
         stext.setStyleRanges(styles);
@@ -353,8 +352,7 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
         && (((NodeAnnotation)t).getData()).isDefault();
     }
 
-    public static StyleRange[] toSWTStyleRanges(final AnnotationData t,
-            final double zoomFactor) {
+    public static StyleRange[] toSWTStyleRanges(final AnnotationData t) {
         AnnotationData.StyleRange[] waStyleRange = t.getStyleRanges();
         ArrayList<StyleRange> swtStyleRange =
                 new ArrayList<StyleRange>(waStyleRange.length);
@@ -382,13 +380,9 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
     /**
      *
      * @param s the component with the styled text to convert.
-     * @param zoomFactor factor the font size is divided by. If unsure, use 1.0.
-     * @param bounds contains the bounds of the annotation. Could be null.
      * @return
      */
-    public static AnnotationData toAnnotation(final StyledText s,
-            final double zoomFactor,
-            final org.eclipse.swt.graphics.Rectangle bounds) {
+    public static AnnotationData toAnnotationData(final StyledText s) {
         AnnotationData result = new AnnotationData();
         result.setText(s.getText());
         result.setBgColor(colorToRGBint(s.getBackground()));
@@ -432,13 +426,6 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
         }
         result.setStyleRanges(wfStyleRanges
                 .toArray(new AnnotationData.StyleRange[wfStyleRanges.size()]));
-        if (bounds != null) {
-            result.setDimension(
-                    (int)Math.round(bounds.x / zoomFactor),
-                    (int)Math.round(bounds.y / zoomFactor),
-                    (int)Math.round(bounds.width / zoomFactor),
-                    (int)Math.round(bounds.height / zoomFactor));
-        }
         return result;
     }
 
