@@ -233,7 +233,7 @@ public class DoubleToIntNodeModel extends NodeModel {
         String errorMessage = converterFac.getErrorMessage();
 
         if (errorMessage.length() > 0) {
-            warnings.append("Problems occured, see NodeLogger messages.\n");
+            warnings.append("Problems occurred, see NodeLogger messages.\n");
         }
         if (warnings.length() > 0) {
             LOGGER.warn(errorMessage);

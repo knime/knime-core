@@ -87,7 +87,7 @@ public class FileReaderException extends RuntimeException {
      * 
      * @param msg the message what went wrong
      * @param faultyRow the row as far as it got read
-     * @param lineNumber the lineNumber the error occured
+     * @param lineNumber the lineNumber the error occurred
      */
     FileReaderException(final String msg, final DataRow faultyRow,
             final int lineNumber) {

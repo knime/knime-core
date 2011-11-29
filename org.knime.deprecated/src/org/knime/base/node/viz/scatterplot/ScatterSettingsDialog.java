@@ -294,7 +294,7 @@ class ScatterSettingsDialog extends JDialog {
     
 
     /**
-     * @return the selected number or null if no user change occured
+     * @return the selected number or null if no user change occurred
      */
     Double getXmin() {
         if (!m_xMinChanged) {
@@ -304,7 +304,7 @@ class ScatterSettingsDialog extends JDialog {
     }
 
     /**
-     * @return the selected number or null if no user change occured
+     * @return the selected number or null if no user change occurred
      */
     Double getYmin() {
         if (!m_yMinChanged) {
@@ -314,7 +314,7 @@ class ScatterSettingsDialog extends JDialog {
     }
 
     /**
-     * @return the selected number or null if no user change occured
+     * @return the selected number or null if no user change occurred
      */
     Double getXmax() {
         if (!m_xMaxChanged) {
@@ -324,7 +324,7 @@ class ScatterSettingsDialog extends JDialog {
     }
 
     /**
-     * @return the selected number or null if no user change occured
+     * @return the selected number or null if no user change occurred
      */
     Double getYmax() {
         if (!m_yMaxChanged) {

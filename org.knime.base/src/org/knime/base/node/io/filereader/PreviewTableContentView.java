@@ -88,7 +88,7 @@ public class PreviewTableContentView extends TableContentView {
     @Override
     protected void onMouseClickInHeader(final MouseEvent e) {
         JTableHeader header = getTableHeader();
-        // get column in which event occured
+        // get column in which event occurred
         int column = header.columnAtPoint(e.getPoint());
         if (column < 0) {
             return;

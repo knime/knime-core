@@ -299,7 +299,7 @@ public final class PMMLPortObject implements PortObject {
             m_pmmlDoc = PMMLDocument.Factory.parse(doc);
             // no validation needed here as the input is already validated
         } catch (XmlException e) {
-            throw new IllegalArgumentException("An error occured while "
+            throw new IllegalArgumentException("An error occurred while "
                     + "parsing the PMML document.", e);
         }
     }

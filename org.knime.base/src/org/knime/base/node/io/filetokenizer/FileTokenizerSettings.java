@@ -902,7 +902,7 @@ public class FileTokenizerSettings {
      *            if it should be discarded, or included in the token (see the
      *            following parameter).
      * @param includeInToken Set <code>true</code> if a comment should be
-     *            returned within the token (at the place where it occured in
+     *            returned within the token (at the place where it occurred in
      *            the stream), of false, if it should be discarded or returned
      *            as separate token (depending on the parameter above).
      */
@@ -931,7 +931,7 @@ public class FileTokenizerSettings {
      *            if it should be discarded, or included in the token (see the
      *            following parameter).
      * @param includeInToken Set <code>true</code> if a comment should be
-     *            returned within the token (at the place where it occured in
+     *            returned within the token (at the place where it occurred in
      *            the stream), of false, if it should be discarded or returned
      *            as separate token (depending on the parameter above).
      */

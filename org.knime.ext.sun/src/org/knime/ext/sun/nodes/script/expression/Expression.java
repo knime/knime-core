@@ -239,7 +239,7 @@ public final class Expression {
             return new ExpressionInstance(
                     m_abstractExpression.newInstance(), m_fieldMap);
         } catch (IllegalAccessException iae) {
-            LOGGER.error("Unexpected IllegalAccessException occured", iae);
+            LOGGER.error("Unexpected IllegalAccessException occurred", iae);
             throw new InternalError();
         }
     }

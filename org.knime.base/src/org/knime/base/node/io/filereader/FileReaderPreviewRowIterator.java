@@ -69,7 +69,7 @@ class FileReaderPreviewRowIterator extends RowIterator {
 
     private FileReaderPreviewTable m_table;
 
-    // we end it after an error occured, this flag indicates that.
+    // we end it after an error occurred, this flag indicates that.
     private boolean m_done;
 
     /**

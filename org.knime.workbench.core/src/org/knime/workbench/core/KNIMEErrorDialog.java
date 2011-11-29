@@ -124,6 +124,6 @@ public class KNIMEErrorDialog extends ErrorDialog {
     public static int openError(final String message, final IStatus status) {
         return KNIMEErrorDialog.openError(
                 Display.getCurrent().getActiveShell(),
-                "KNIME Workbench: Error occured", message, status);
+                "KNIME Workbench: Error occurred", message, status);
     }
 }

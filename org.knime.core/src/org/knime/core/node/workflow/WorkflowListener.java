@@ -60,7 +60,7 @@ public interface WorkflowListener {
     /**
      * Called from the manager if something changed.
      * 
-     * @param event the event that occured
+     * @param event the event that occurred
      */
     public void workflowChanged(final WorkflowEvent event);
 

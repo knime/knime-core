@@ -997,7 +997,7 @@ public class NodeContainerFigure extends RectangleFigure {
             if (message != null && !message.trim().equals("")) {
                 m_warningFigure.setToolTip(message, WarnErrorToolTip.WARNING);
             } else {
-                m_warningFigure.setToolTip("Warning occured: no details.",
+                m_warningFigure.setToolTip("Warning occurred: no details.",
                         WarnErrorToolTip.WARNING);
             }
 
@@ -1017,7 +1017,7 @@ public class NodeContainerFigure extends RectangleFigure {
             if (message != null && !message.trim().equals("")) {
                 m_errorFigure.setToolTip(message, WarnErrorToolTip.ERROR);
             } else {
-                m_errorFigure.setToolTip("Error occured: no details.",
+                m_errorFigure.setToolTip("Error occurred: no details.",
                         WarnErrorToolTip.ERROR);
             }
 

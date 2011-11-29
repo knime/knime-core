@@ -92,7 +92,7 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
      */
     @Override
     protected Command getCreateCommand(final CreateRequest request) {
-        // point where the command occured
+        // point where the command occurred
         // The node/description should be initially located here
         Point location = request.getLocation();
 
@@ -105,7 +105,7 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
 
         // adjust the location according to the viewport position
         // seems to be a workaround for a bug in the framework
-        // (should imediately deliver the correct view position and not
+        // (should immediately deliver the correct view position and not
         // the position of the viewport)
         WorkflowEditor.adaptZoom(zoomManager, location, true);
 
