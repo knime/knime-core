@@ -315,13 +315,13 @@ public class StyledTextEditor extends CellEditor {
         alignmentMenuItem.setMenu(alignMenu);
 
         m_leftAlignMenuItem = addMenuItem(alignMenu, "alignment_left",
-                SWT.RADIO, "Left", img);
+                SWT.RADIO, "Left", null);
 
         m_centerAlignMenuItem = addMenuItem(alignMenu, "alignment_center",
-                SWT.RADIO, "Center", img);
+                SWT.RADIO, "Center", null);
 
         m_rightAlignMenuItem = addMenuItem(alignMenu, "alignment_right",
-                SWT.RADIO, "Right", img);
+                SWT.RADIO, "Right", null);
 
         new MenuItem(menu, SWT.SEPARATOR);
         // contains buttons being en/disabled with selection
