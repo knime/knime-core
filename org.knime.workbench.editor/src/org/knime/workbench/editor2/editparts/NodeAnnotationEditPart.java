@@ -65,20 +65,24 @@ public class NodeAnnotationEditPart extends AnnotationEditPart {
             update = true;
             // if the annotation has no width, make it as wide as the node
             if (nodeUI != null && nodeUI.getBounds()[2] > 0) {
+                // pre2.5 flows used the node width as label width
                 w = nodeUI.getBounds()[2];
-            } else {
-                // or as wide as "<NodePrefix> 9999"
-                String prefix = KNIMEUIPlugin.getDefault().getPreferenceStore()
-                        .getString(PreferenceConstants.P_DEFAULT_NODE_LABEL);
-                if (prefix == null || prefix.isEmpty()) {
-                    prefix = "Node";
-                }
-                w = AnnotationEditPart.defaultLineWidth(prefix + " 9999");
-                // but not less than the node default width
-                if (w < NodeContainerFigure.WIDTH) {
-                    w = NodeContainerFigure.WIDTH;
-                }
             }
+            // make it at least wide enough to hold "Node 9999xxxxxxxxx"
+            String prefix =
+                    KNIMEUIPlugin
+                            .getDefault()
+                            .getPreferenceStore()
+                            .getString(PreferenceConstants.P_DEFAULT_NODE_LABEL);
+            if (prefix == null || prefix.isEmpty()) {
+                prefix = "Node";
+            }
+            int minTextW =
+                    AnnotationEditPart.defaultLineWidth(prefix
+                            + " 9999xxxxxxxxx");
+            w = Math.max(w, minTextW);
+            // but not less than the node default width
+            w = Math.max(w, NodeContainerFigure.WIDTH);
             h = NodeAnnotationEditPart.defaultOneLineHeight();
         }
         if (nodeUI != null) {
