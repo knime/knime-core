@@ -52,7 +52,6 @@ package org.knime.base.node.preproc.stringmanipulation;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,6 +71,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.util.FileUtil;
 import org.knime.ext.sun.nodes.script.calculator.ColumnCalculator;
 import org.knime.ext.sun.nodes.script.expression.Expression;
 import org.knime.ext.sun.nodes.script.settings.JavaScriptingSettings;
@@ -394,17 +394,15 @@ public class StringManipulationSettings {
         try {
             URL commonsLangURL = FileLocator.find(bundle,
                     new Path("/lib/commons-lang3-3.0.1.jar"), null);
+            commonsLangURL = FileLocator.toFileURL(commonsLangURL);
             StringManipulatorProvider provider =
                 StringManipulatorProvider.getDefault();
-            URL manipulatorsURL = provider.getJarFile().toURI().toURL();
+            File manipulatorsJar = provider.getJarFile();
             s.setJarFiles(new String[] {
-                    FileLocator.toFileURL(commonsLangURL).toURI().getPath(),
-                    FileLocator.toFileURL(manipulatorsURL).toURI().getPath()
+                    FileUtil.getFileFromURL(commonsLangURL).getAbsolutePath(),
+                    manipulatorsJar.getAbsolutePath()
                     });
         } catch (IOException e) {
-            throw new IllegalStateException(
-                    "Cannot locate necessary libraries.", e);
-        } catch (URISyntaxException e) {
             throw new IllegalStateException(
                     "Cannot locate necessary libraries.", e);
         }
