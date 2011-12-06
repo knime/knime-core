@@ -2,13 +2,11 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME PMML support
 Bundle-SymbolicName: org.knime.core.pmml;singleton:=true
-Bundle-Version: 2.5.0.qualifier
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
-Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Bundle-ActivationPolicy: lazy
+Bundle-Version: 2.6.0.qualifier
 Bundle-ClassPath: .,
  lib/pmmlbeans-1.0-jar-with-dependencies.jar,
  lib/xmlbeans-xpath-2.4.0.jar
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: org.apache.xmlbeans,
  org.apache.xmlbeans.impl.common,
  org.apache.xmlbeans.impl.config,
@@ -68,3 +66,5 @@ Export-Package: org.apache.xmlbeans,
  schemaorg_apache_xmlbeans.system.sXMLLANG,
  schemaorg_apache_xmlbeans.system.sXMLSCHEMA,
  schemaorg_apache_xmlbeans.system.sXMLTOOLS
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ActivationPolicy: lazy
