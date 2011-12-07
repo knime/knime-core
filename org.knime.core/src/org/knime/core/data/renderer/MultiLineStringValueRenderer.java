@@ -43,7 +43,7 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- *
  */
 package org.knime.core.data.renderer;
 
@@ -55,26 +55,26 @@ import javax.swing.SwingConstants;
 
 /**
  * This class renders strings that consist of more than one line.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
-public final class MultiLineStringValueRenderer extends
+public class MultiLineStringValueRenderer extends
         DefaultDataValueRenderer {
     private Font m_currentFont;
 
     private final String m_description;
 
     private static final int MAX_DEFAULT_HEIGHT = 90;
-    
+
     /**
      * Instantiates new renderer.
-     * 
+     *
      * @param description description for the renderer shown in the popup menu
      */
     public MultiLineStringValueRenderer(final String description) {
         m_description = description == null ? "Multi Line String" : description;
         setVerticalAlignment(SwingConstants.TOP);
-        m_currentFont = 
+        m_currentFont =
             new Font("Monospaced", getFont().getStyle(), getFont().getSize());
         super.setFont(m_currentFont);
         setBackground(Color.WHITE);
@@ -83,11 +83,11 @@ public final class MultiLineStringValueRenderer extends
 
     /**
      * Sets the string object for the cell being rendered.
-     * 
+     *
      * @param value the string value for this cell; if value is
      *            <code>null</code> it sets the text value to an empty string
      * @see javax.swing.JLabel#setText
-     * 
+     *
      */
     @Override
     protected void setValue(final Object value) {
@@ -112,7 +112,7 @@ public final class MultiLineStringValueRenderer extends
     @Override
     public Dimension getPreferredSize() {
         Dimension dim = super.getPreferredSize();
-        
+
         if (dim.height > MAX_DEFAULT_HEIGHT) {
             dim.height = MAX_DEFAULT_HEIGHT;
         }
@@ -145,7 +145,7 @@ public final class MultiLineStringValueRenderer extends
     public int hashCode() {
         return getClass().hashCode() ^ m_description.hashCode();
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -158,7 +158,7 @@ public final class MultiLineStringValueRenderer extends
             return false;
         }
         MultiLineStringValueRenderer other = (MultiLineStringValueRenderer)obj;
-        return other.getClass().equals(getClass()) 
+        return other.getClass().equals(getClass())
             && m_description.equals(other.m_description);
     }
 }

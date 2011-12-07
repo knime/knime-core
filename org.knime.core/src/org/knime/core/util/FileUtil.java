@@ -58,7 +58,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -836,4 +839,29 @@ public final class FileUtil {
         return b;
     }
 
+
+    /**
+     * Returns the file path from a 'file' URL.
+     *
+     * @param fileUrl an URL with the 'file' protocol
+     * @return the path
+     * @throws IllegalArgumentException if the URL is not a file URL
+     */
+    public static File getFileFromURL(final URL fileUrl) {
+        if (fileUrl.getProtocol().equalsIgnoreCase("file")) {
+            File dataFile = new File(fileUrl.getPath());
+            if (!dataFile.exists()) {
+                try {
+                    dataFile = new File(URLDecoder.decode(
+                            fileUrl.getPath(), "UTF-8"));
+                } catch (UnsupportedEncodingException ex) {
+                    // ignore it
+                }
+            }
+            return dataFile;
+        } else {
+            throw new IllegalArgumentException("Not a file URL: '" + fileUrl
+                    + "'");
+        }
+    }
 }

@@ -57,11 +57,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.nio.charset.Charset;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import org.knime.core.util.FileUtil;
 
 /**
  * A reader that counts the number of bytes read.
@@ -581,17 +582,9 @@ public final class BufferedFileReader extends BufferedReader {
             // it
             long fileSize = 0;
             try {
-                if (dataLocation.getProtocol().equalsIgnoreCase("file")) {
-                    File dataFile = new File(dataLocation.getPath());
-                    if (dataFile.exists()) {
-                        fileSize = dataFile.length();
-                    } else {
-                        dataFile = new File(URLDecoder.decode(
-                                dataLocation.getPath(), "UTF-8"));
-                        if (dataFile.exists()) {
-                            fileSize = dataFile.length();
-                        }
-                    }
+                File f = FileUtil.getFileFromURL(dataLocation);
+                if (f.exists()) {
+                    fileSize = f.length();
                 }
             } catch (Exception e) {
                 // then don't give them a filesize.
