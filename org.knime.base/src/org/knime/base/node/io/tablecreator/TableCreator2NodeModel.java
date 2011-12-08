@@ -169,8 +169,9 @@ public class TableCreator2NodeModel extends NodeModel {
             DataCell[] cells = new DataCell[outSpec.getNumColumns()];
             for (int k = 0; k < numColProps; k++) {
                 // fix for bug #2969
-                while (m_settings.getRowIndices()[c] < 0
-                        || m_settings.getColumnIndices()[c] < 0) {
+                while (c < m_settings.getRowIndices().length
+                        && (m_settings.getRowIndices()[c] < 0
+                        || m_settings.getColumnIndices()[c] < 0)) {
                     toRemove.add(c);
                     c++;
                 }
