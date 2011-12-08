@@ -69,21 +69,8 @@ public class NodeAnnotationEditPart extends AnnotationEditPart {
                 w = nodeUI.getBounds()[2];
             }
             // make it at least wide enough to hold "Node 9999xxxxxxxxx"
-            String prefix =
-                    KNIMEUIPlugin
-                            .getDefault()
-                            .getPreferenceStore()
-                            .getString(PreferenceConstants.P_DEFAULT_NODE_LABEL);
-            if (prefix == null || prefix.isEmpty()) {
-                prefix = "Node";
-            }
-            int minTextW =
-                    AnnotationEditPart.defaultLineWidth(prefix
-                            + " 9999xxxxxxxxx");
-            w = Math.max(w, minTextW);
-            // but not less than the node default width
-            w = Math.max(w, NodeContainerFigure.WIDTH);
-            h = NodeAnnotationEditPart.defaultOneLineHeight();
+            w = Math.max(w, getNodeAnnotationMinWidth());
+            h = getNodeAnnotationMinHeight();
         }
         if (nodeUI != null) {
             NodeContainerEditPart nodePart =
@@ -114,4 +101,27 @@ public class NodeAnnotationEditPart extends AnnotationEditPart {
         refreshVisuals();
     }
 
+    /**
+     * @return the minimum width of a node annotation.
+     */
+    public static int getNodeAnnotationMinWidth() {
+        // make it at least wide enough to hold "Node 9999xxxxxxxxx"
+        String prefix =
+                KNIMEUIPlugin
+                        .getDefault()
+                        .getPreferenceStore()
+                        .getString(PreferenceConstants.P_DEFAULT_NODE_LABEL);
+        if (prefix == null || prefix.isEmpty()) {
+            prefix = "Node";
+        }
+        int minTextW =
+                AnnotationEditPart.defaultLineWidth(prefix
+                        + " 9999xxxxxxxxx");
+        // but not less than the node default width
+        return Math.max(minTextW, NodeContainerFigure.WIDTH);
+    }
+
+    public static int getNodeAnnotationMinHeight() {
+        return NodeAnnotationEditPart.defaultOneLineHeight();
+    }
 }

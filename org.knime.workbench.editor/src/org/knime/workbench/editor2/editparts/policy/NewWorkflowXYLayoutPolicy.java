@@ -50,16 +50,20 @@
  */
 package org.knime.workbench.editor2.editparts.policy;
 
-import org.eclipse.draw2d.PositionConstants;
+import java.util.Collections;
+import java.util.List;
+
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPolicy;
+import org.eclipse.gef.GraphicalEditPart;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editpolicies.NonResizableEditPolicy;
-import org.eclipse.gef.editpolicies.ResizableEditPolicy;
 import org.eclipse.gef.editpolicies.XYLayoutEditPolicy;
+import org.eclipse.gef.handles.MoveHandle;
 import org.eclipse.gef.requests.CreateRequest;
+import org.eclipse.swt.graphics.Cursor;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.commands.ChangeAnnotationBoundsCommand;
@@ -151,20 +155,75 @@ public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
         return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     protected EditPolicy createChildEditPolicy(final EditPart child) {
         if (child instanceof NodeContainerEditPart) {
-            NonResizableEditPolicy pol = new NonResizableEditPolicy();
-            return pol;
+            return new NonResizeNoHandlesEditPolicy((GraphicalEditPart)child);
         }
         if (child instanceof NodeAnnotationEditPart) {
-            ResizableEditPolicy pol = new ResizableEditPolicy();
-            pol.setResizeDirections(PositionConstants.EAST_WEST
-                    + PositionConstants.SOUTH);
+            NonResizableEditPolicy pol =
+                    new NonResizeNoHandlesEditPolicy((GraphicalEditPart)child);
             pol.setDragAllowed(false);
             return pol;
         }
         return super.createChildEditPolicy(child);
     }
 
+    /**
+     * Policy that doesn't show any handles (black squares) when the editpart
+     * is selected.
+     *
+     * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
+     */
+    class NonResizeNoHandlesEditPolicy extends NonResizableEditPolicy {
+
+        private final GraphicalEditPart m_child;
+
+        /**
+         * @param child
+         *
+         */
+        public NonResizeNoHandlesEditPolicy(final GraphicalEditPart child) {
+            m_child = child;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        @SuppressWarnings("rawtypes")
+        protected List createSelectionHandles() {
+            if (isDragAllowed()) {
+                return Collections.singletonList(new MoveHandle(m_child));
+            } else {
+                return Collections.singletonList(new Handle(m_child));
+            }
+
+        }
+
+        /**
+         * Handle that doesn't change the cursor.
+         *
+         * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
+         */
+        class Handle extends MoveHandle {
+
+            /**
+             * @param owner the editpart this handle is shown on
+             */
+            Handle(final GraphicalEditPart owner) {
+                super(owner);
+            }
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public Cursor getCursor() {
+                return getParent().getCursor();
+            }
+        }
+    }
 }

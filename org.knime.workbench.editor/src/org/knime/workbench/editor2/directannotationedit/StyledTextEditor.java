@@ -60,6 +60,7 @@ import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ExtendedModifyEvent;
 import org.eclipse.swt.custom.ExtendedModifyListener;
+import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.custom.VerifyKeyListener;
@@ -79,7 +80,6 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.ColorDialog;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -103,6 +103,13 @@ public class StyledTextEditor extends CellEditor {
             .getLogger(StyledTextEditor.class);
 
     private StyledText m_styledText;
+
+    /**
+     * instance used to get layout info in a non-word-wrapping editor (the
+     * foreground text editor must be auto-wrapped otherwise the alignment is
+     * ignored!)
+     */
+    private StyledText m_shadowStyledText;
 
     private List<MenuItem> m_styleMenuItems;
 
@@ -146,27 +153,30 @@ public class StyledTextEditor extends CellEditor {
     @Override
     protected Control createControl(final Composite parent) {
         m_panel = new Composite(parent, SWT.NONE);
-        m_panel.setLayout(createPanelGridLayout(1, true));
-
-        createStyledText(m_panel);
-
+//        m_panel.setLayout(createPanelGridLayout(1, true));
+        StackLayout layout = new StackLayout();
+        m_panel.setLayout(layout);
+        layout.topControl = createStyledText(m_panel);
+        createShadowText(m_panel);
         applyBackgroundColor();
         return m_panel;
     }
 
-    private GridLayout createPanelGridLayout(final int columns,
-            final boolean equalWith) {
-        GridLayout layout = new GridLayout(columns, equalWith);
-        layout.horizontalSpacing = 0;
-        layout.verticalSpacing = 0;
-        layout.marginBottom = 0;
-        layout.marginHeight = 0;
-        layout.marginLeft = 0;
-        layout.marginRight = 0;
-        layout.marginTop = 0;
-        layout.marginWidth = 0;
-        layout.marginBottom = 0;
-        return layout;
+    private Control createShadowText(final Composite parent) {
+        m_shadowStyledText = new StyledText(parent, SWT.MULTI | SWT.FULL_SELECTION);
+        m_shadowStyledText.setLayoutData(
+                new GridData(SWT.FILL, SWT.FILL, true, true));
+        syncShadowWithEditor();
+        return m_shadowStyledText;
+    }
+
+    private void syncShadowWithEditor() {
+        m_shadowStyledText.setVisible(false);
+        m_shadowStyledText.setBounds(m_styledText.getBounds());
+        m_shadowStyledText.setText(m_styledText.getText());
+        m_shadowStyledText.setStyleRanges(m_styledText.getStyleRanges());
+        m_shadowStyledText.setAlignment(m_styledText.getAlignment());
+        m_shadowStyledText.setBackground(m_styledText.getBackground());
     }
 
     private Control createStyledText(final Composite parent) {
@@ -241,6 +251,16 @@ public class StyledTextEditor extends CellEditor {
         // toolbar gets created first - enable its style buttons!
         selectionChanged();
         return m_styledText;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void fireEditorValueChanged(final boolean oldValidState,
+            final boolean newValidState) {
+        syncShadowWithEditor();
+        super.fireEditorValueChanged(oldValidState, newValidState);
     }
 
     /**
@@ -447,12 +467,16 @@ public class StyledTextEditor extends CellEditor {
         }
     }
 
+    /**
+     * @param bg
+     */
     public void setBackgroundColor(final Color bg) {
         m_backgroundColor = bg;
         applyBackgroundColor();
     }
+
     /**
-     * {@inheritDoc}
+     *
      */
     protected void lostFocus() {
         super.focusLost();
@@ -536,6 +560,7 @@ public class StyledTextEditor extends CellEditor {
                 wa.getData()));
         setBackgroundColor(AnnotationEditPart.RGBintToColor(wa
                 .getBgColor()));
+        syncShadowWithEditor();
     }
 
     private void bold() {
@@ -766,14 +791,15 @@ public class StyledTextEditor extends CellEditor {
      * @return the bounds needed to display the current text
      */
     Rectangle getTextBounds() {
-        int charCount = m_styledText.getCharCount();
+        // use the shadow instance to get the size of the not auto-wrapped text
+        int charCount = m_shadowStyledText.getCharCount();
         if (charCount < 1) {
-            Rectangle b = m_styledText.getBounds();
+            Rectangle b = m_shadowStyledText.getBounds();
             return new Rectangle(b.x, b.y, 0, 0);
         } else {
-            Rectangle r = m_styledText.getTextBounds(0, charCount - 1);
-            if (m_styledText.getText(charCount - 1, charCount - 1).charAt(0) == '\n') {
-                r.height += m_styledText.getLineHeight();
+            Rectangle r = m_shadowStyledText.getTextBounds(0, charCount - 1);
+            if (m_shadowStyledText.getText(charCount - 1, charCount - 1).charAt(0) == '\n') {
+                r.height += m_shadowStyledText.getLineHeight();
             }
             return r;
         }
