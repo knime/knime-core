@@ -569,6 +569,10 @@
             factory-class="org.knime.base.node.mine.decisiontree2.predictor.DecTreePredictorNodeFactory"
             id="org.knime.base.node.mine.decisiontreenew.predictor.DecTreePredictorNodeFactory"/>
       <node
+            category-path="/mining/dtree"
+            factory-class="org.knime.base.node.mine.decisiontree2.image.DecTreeToImageNodeFactory"
+            id="org.knime.base.node.mine.decisiontree2.image.DecTreeToImageNodeFactory"/>
+      <node
             category-path="/mining/clustering"
             factory-class="org.knime.base.node.mine.sota.SotaLearnerNodeFactory"
             id="org.knime.base.node.mine.sota.SotaLearnerNodeFactory"/>
