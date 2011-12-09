@@ -53,7 +53,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.EventObject;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -194,6 +193,7 @@ import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
 import org.knime.workbench.editor2.commands.CreateNewConnectedMetaNodeCommand;
 import org.knime.workbench.editor2.commands.CreateNewConnectedNodeCommand;
 import org.knime.workbench.editor2.commands.CreateNodeCommand;
+import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
@@ -604,42 +604,47 @@ public class WorkflowEditor extends GraphicalEditor implements
             @Override
             public boolean keyPressed(final org.eclipse.swt.events.KeyEvent e) {
                 if (e.keyCode == SWT.F2) {
-                    List<NodeAnnotationEditPart> parts = getSelectedNodeAnnotations();
-                    if (parts.size() == 1) {
-                        parts.get(0).performEdit();
-                    }
+                    onF2Pressed();
                 }
                 return super.keyPressed(e);
             }
         };
     }
 
-    /**
-     * Returns a list of selected NodeAnnotationEditPart objects.
-     *
-     * @return list of selected node annotations
-     */
-    private List<NodeAnnotationEditPart> getSelectedNodeAnnotations() {
+    /** Opens editor for (node) annotation (given that a single node or
+     * annotation is selected). */
+    private void onF2Pressed() {
         ISelectionProvider provider = getEditorSite().getSelectionProvider();
         if (provider == null) {
-            return Collections.emptyList();
+            return;
         }
         ISelection sel = provider.getSelection();
         if (!(sel instanceof IStructuredSelection)) {
-            return Collections.emptyList();
+            return;
         }
 
-        ArrayList<NodeAnnotationEditPart> parts =
-                new ArrayList<NodeAnnotationEditPart>();
+        Set<AnnotationEditPart> selectedAnnoParts =
+            new HashSet<AnnotationEditPart>();
         @SuppressWarnings("rawtypes")
         Iterator selIter = ((IStructuredSelection)sel).iterator();
         while (selIter.hasNext()) {
             Object next = selIter.next();
-            if (next instanceof NodeAnnotationEditPart) {
-                parts.add((NodeAnnotationEditPart)next);
+            if (next instanceof AnnotationEditPart) {
+                selectedAnnoParts.add((AnnotationEditPart)next);
+            } else if (next instanceof NodeContainerEditPart) {
+                NodeAnnotationEditPart nodeAnnoPart =
+                    ((NodeContainerEditPart)next).getNodeAnnotationEditPart();
+                if (nodeAnnoPart != null) {
+                    selectedAnnoParts.add(nodeAnnoPart);
+                }
+            } else {
+                return; // unknown type selected
             }
         }
-        return parts;
+        if (selectedAnnoParts.size() == 1) {
+            AnnotationEditPart next = selectedAnnoParts.iterator().next();
+            next.performEdit();
+        }
     }
 
     /**
