@@ -86,6 +86,8 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FontDialog;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
+import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.AnnotationData;
@@ -111,7 +113,7 @@ public class StyledTextEditor extends CellEditor {
      */
     private StyledText m_shadowStyledText;
 
-    private List<MenuItem> m_styleMenuItems;
+    private List<MenuItem> m_enableOnSelectedTextMenuItems;
 
     private Composite m_panel;
 
@@ -310,8 +312,8 @@ public class StyledTextEditor extends CellEditor {
     }
 
     private void enableStyleButtons(final boolean enableThem) {
-        if (m_styleMenuItems != null) {
-            for (MenuItem action : m_styleMenuItems) {
+        if (m_enableOnSelectedTextMenuItems != null) {
+            for (MenuItem action : m_enableOnSelectedTextMenuItems) {
                 action.setEnabled(enableThem);
             }
         }
@@ -345,28 +347,40 @@ public class StyledTextEditor extends CellEditor {
 
         new MenuItem(menu, SWT.SEPARATOR);
         // contains buttons being en/disabled with selection
-        m_styleMenuItems = new ArrayList<MenuItem>();
+        m_enableOnSelectedTextMenuItems = new ArrayList<MenuItem>();
         MenuItem action;
 
         // font/style button
         img = ImageRepository.getImage("icons/annotations/font_10.png");
         action = addMenuItem(menu, "style", SWT.PUSH, "Font", img);
-        m_styleMenuItems.add(action);
+        m_enableOnSelectedTextMenuItems.add(action);
 
         // foreground color button
         img = ImageRepository.getImage("icons/annotations/color_10.png");
         action = addMenuItem(menu, "color", SWT.PUSH, "Color", img);
-        m_styleMenuItems.add(action);
+        m_enableOnSelectedTextMenuItems.add(action);
 
         // bold button
         img = ImageRepository.getImage("icons/annotations/bold_10.png");
         action = addMenuItem(menu, "bold", SWT.PUSH, "Bold", img);
-        m_styleMenuItems.add(action);
+        m_enableOnSelectedTextMenuItems.add(action);
 
         // italic button
         img = ImageRepository.getImage("icons/annotations/italic_10.png");
         action = addMenuItem(menu, "italic", SWT.PUSH, "Italic", img);
-        m_styleMenuItems.add(action);
+        m_enableOnSelectedTextMenuItems.add(action);
+
+        new MenuItem(menu, SWT.SEPARATOR);
+        //copy button
+        ISharedImages sharedImages =
+            PlatformUI.getWorkbench().getSharedImages();
+        img = sharedImages.getImage(ISharedImages.IMG_TOOL_COPY);
+        action = addMenuItem(menu, "copy", SWT.PUSH, "Copy", img);
+        m_enableOnSelectedTextMenuItems.add(action);
+
+        //paste button
+        img = sharedImages.getImage(ISharedImages.IMG_TOOL_PASTE);
+        action = addMenuItem(menu, "paste", SWT.PUSH, "Paste", img);
 
         new MenuItem(menu, SWT.SEPARATOR);
 
@@ -421,6 +435,10 @@ public class StyledTextEditor extends CellEditor {
         } else if (src.equals("bg")) {
             bgColor();
             fireEditorValueChanged(true, true);
+        } else if (src.equals("copy")) {
+            copy();
+        } else if (src.equals("paste")) {
+            paste();
         } else if (src.equals("alignment_left")) {
             alignment(SWT.LEFT);
             fireEditorValueChanged(true, true);
@@ -773,6 +791,18 @@ public class StyledTextEditor extends CellEditor {
             }
             m_styledText.setStyleRange(style);
         }
+    }
+
+    /**
+     *  */
+    private void copy() {
+        m_styledText.copy();
+    }
+
+    /**
+     *  */
+    private void paste() {
+        m_styledText.paste(); // will also send event
     }
 
     private void ok() {
