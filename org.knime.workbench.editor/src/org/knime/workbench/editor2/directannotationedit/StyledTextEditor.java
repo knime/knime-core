@@ -86,8 +86,6 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FontDialog;
 import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
-import org.eclipse.ui.ISharedImages;
-import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.AnnotationData;
@@ -313,6 +311,8 @@ public class StyledTextEditor extends CellEditor {
             int length = sel[1];
             enabled = (length > 0);
         }
+        fireEnablementChanged(COPY);
+        fireEnablementChanged(CUT);
         enableStyleButtons(enabled);
     }
 
@@ -376,18 +376,6 @@ public class StyledTextEditor extends CellEditor {
         m_enableOnSelectedTextMenuItems.add(action);
 
         new MenuItem(menu, SWT.SEPARATOR);
-        //copy button
-        ISharedImages sharedImages =
-            PlatformUI.getWorkbench().getSharedImages();
-        img = sharedImages.getImage(ISharedImages.IMG_TOOL_COPY);
-        action = addMenuItem(menu, "copy", SWT.PUSH, "Copy", img);
-        m_enableOnSelectedTextMenuItems.add(action);
-
-        //paste button
-        img = sharedImages.getImage(ISharedImages.IMG_TOOL_PASTE);
-        action = addMenuItem(menu, "paste", SWT.PUSH, "Paste", img);
-
-        new MenuItem(menu, SWT.SEPARATOR);
 
         // ok button
         img = ImageRepository.getImage("icons/annotations/ok_10.png");
@@ -440,10 +428,6 @@ public class StyledTextEditor extends CellEditor {
         } else if (src.equals("bg")) {
             bgColor();
             fireEditorValueChanged(true, true);
-        } else if (src.equals("copy")) {
-            copy();
-        } else if (src.equals("paste")) {
-            paste();
         } else if (src.equals("alignment_left")) {
             alignment(SWT.LEFT);
             fireEditorValueChanged(true, true);
@@ -545,8 +529,7 @@ public class StyledTextEditor extends CellEditor {
         assert m_styledText != null : "Control not created!";
         String text = m_styledText.getText();
         if (m_selectAllUponFocusGain) {
-            m_styledText.setSelection(0, text.length());
-            selectionChanged();
+            performSelectAll();
         }
         m_styledText.setFocus();
         m_styledText.setCaretOffset(text.length());
@@ -592,6 +575,57 @@ public class StyledTextEditor extends CellEditor {
         setBackgroundColor(AnnotationEditPart.RGBintToColor(wa
                 .getBgColor()));
         syncShadowWithEditor();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean isCopyEnabled() {
+        return !m_styledText.isDisposed()
+            && m_styledText.getSelectionCount() > 0;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void performCopy() {
+        m_styledText.copy();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean isPasteEnabled() {
+        return !m_styledText.isDisposed();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void performPaste() {
+        m_styledText.paste();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean isCutEnabled() {
+        return !m_styledText.isDisposed()
+            && m_styledText.getSelectionCount() > 0;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void performCut() {
+        m_styledText.cut();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean isSelectAllEnabled() {
+        return !m_styledText.isDisposed();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void performSelectAll() {
+        m_styledText.selectAll();
+        selectionChanged();
     }
 
     private void bold() {
@@ -804,18 +838,6 @@ public class StyledTextEditor extends CellEditor {
             }
             m_styledText.setStyleRange(style);
         }
-    }
-
-    /**
-     *  */
-    private void copy() {
-        m_styledText.copy();
-    }
-
-    /**
-     *  */
-    private void paste() {
-        m_styledText.paste(); // will also send event
     }
 
     private void ok() {

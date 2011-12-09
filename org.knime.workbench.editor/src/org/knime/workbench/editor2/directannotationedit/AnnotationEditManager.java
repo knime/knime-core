@@ -54,7 +54,12 @@ import org.eclipse.gef.EditPartViewer;
 import org.eclipse.gef.GraphicalEditPart;
 import org.eclipse.gef.tools.CellEditorLocator;
 import org.eclipse.gef.tools.DirectEditManager;
+import org.eclipse.jface.action.IAction;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.IActionBars;
+import org.eclipse.ui.PlatformUI;
+import org.eclipse.ui.actions.ActionFactory;
+import org.eclipse.ui.part.CellEditorActionHandler;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 
@@ -63,6 +68,13 @@ import org.knime.workbench.editor2.editparts.AnnotationEditPart;
  * @author ohl, KNIME.com, Zurich, Switzerland
  */
 public class AnnotationEditManager extends DirectEditManager {
+
+    private IActionBars m_actionBars;
+
+    private CellEditorActionHandler m_actionHandler;
+
+    private IAction m_copy, m_cut, m_paste, m_undo, m_redo, m_find,
+            m_selectAll, m_delete;
 
     public AnnotationEditManager(final GraphicalEditPart editPart,
             final CellEditorLocator locator) {
@@ -86,6 +98,17 @@ public class AnnotationEditManager extends DirectEditManager {
         StyledTextEditor stw = (StyledTextEditor)getCellEditor();
         Annotation anno = ((AnnotationEditPart)editPart).getModel();
         stw.setValue(anno);
+
+        // Hook the cell editor's copy/paste actions to the actionBars so that
+        // they can
+        // be invoked via keyboard shortcuts.
+        m_actionBars = PlatformUI.getWorkbench().getActiveWorkbenchWindow()
+                .getActivePage().getActiveEditor().getEditorSite()
+                .getActionBars();
+        saveCurrentActions(m_actionBars);
+        m_actionHandler = new CellEditorActionHandler(m_actionBars);
+        m_actionHandler.addCellEditor(getCellEditor());
+        m_actionBars.updateActionBars();
     }
 
     /**
@@ -94,6 +117,18 @@ public class AnnotationEditManager extends DirectEditManager {
     @Override
     protected void bringDown() {
         super.bringDown();
+
+        if (m_actionHandler != null) {
+            m_actionHandler.dispose();
+            m_actionHandler = null;
+        }
+
+        if (m_actionBars != null) {
+            restoreSavedActions(m_actionBars);
+            m_actionBars.updateActionBars();
+            m_actionBars = null;
+        }
+
         final GraphicalEditPart editPart = getEditPart();
         final EditPartViewer v = editPart.getRoot().getViewer();
         // select later as the "commit" mouse-click maybe in the region of the
@@ -110,5 +145,32 @@ public class AnnotationEditManager extends DirectEditManager {
                 v.appendSelection(editPart);
             };
         });
+    }
+
+    private void restoreSavedActions(final IActionBars actionBars) {
+        actionBars.setGlobalActionHandler(ActionFactory.COPY.getId(), m_copy);
+        actionBars.setGlobalActionHandler(ActionFactory.PASTE.getId(), m_paste);
+        actionBars.setGlobalActionHandler(ActionFactory.DELETE.getId(),
+                m_delete);
+        actionBars.setGlobalActionHandler(ActionFactory.SELECT_ALL.getId(),
+                m_selectAll);
+        actionBars.setGlobalActionHandler(ActionFactory.CUT.getId(), m_cut);
+        actionBars.setGlobalActionHandler(ActionFactory.FIND.getId(), m_find);
+        actionBars.setGlobalActionHandler(ActionFactory.UNDO.getId(), m_undo);
+        actionBars.setGlobalActionHandler(ActionFactory.REDO.getId(), m_redo);
+    }
+
+    private void saveCurrentActions(final IActionBars actionBars) {
+        m_copy = actionBars.getGlobalActionHandler(ActionFactory.COPY.getId());
+        m_paste = actionBars
+                .getGlobalActionHandler(ActionFactory.PASTE.getId());
+        m_delete = actionBars.getGlobalActionHandler(ActionFactory.DELETE
+                .getId());
+        m_selectAll = actionBars
+                .getGlobalActionHandler(ActionFactory.SELECT_ALL.getId());
+        m_cut = actionBars.getGlobalActionHandler(ActionFactory.CUT.getId());
+        m_find = actionBars.getGlobalActionHandler(ActionFactory.FIND.getId());
+        m_undo = actionBars.getGlobalActionHandler(ActionFactory.UNDO.getId());
+        m_redo = actionBars.getGlobalActionHandler(ActionFactory.REDO.getId());
     }
 }
