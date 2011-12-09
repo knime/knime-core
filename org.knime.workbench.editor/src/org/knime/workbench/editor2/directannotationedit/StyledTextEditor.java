@@ -200,11 +200,8 @@ public class StyledTextEditor extends CellEditor {
         m_styledText.addVerifyKeyListener(new VerifyKeyListener() {
             @Override
             public void verifyKey(final VerifyEvent event) {
-                // pressing DEL at the end of the text closes the editor!
-                if (event.keyCode == SWT.DEL
-                        && m_styledText.getCaretOffset() == m_styledText
-                                .getText().length()) {
-                    // ignore the DEL at the end of the text
+                if (event.character == SWT.CR
+                    && (event.stateMask & SWT.CTRL) != 0) {
                     event.doit = false;
                 }
             }
