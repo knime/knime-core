@@ -91,6 +91,7 @@ import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.AnnotationData;
+import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.commands.AddAnnotationCommand;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
@@ -109,11 +110,18 @@ public class StyledTextEditor extends CellEditor {
     /**
      * instance used to get layout info in a non-word-wrapping editor (the
      * foreground text editor must be auto-wrapped otherwise the alignment is
-     * ignored!)
+     * ignored!).
      */
     private StyledText m_shadowStyledText;
 
+    /** List of menu items that are disabled/enabled with text selection, e.g.
+     * copy or font selection. */
     private List<MenuItem> m_enableOnSelectedTextMenuItems;
+
+    /** Whether the text shall be selected when the editor is activated. It's
+     * true if the annotation contains the default text ("Double-Click to edit"
+     * or "Node x"). */
+    private boolean m_selectAllUponFocusGain;
 
     private Composite m_panel;
 
@@ -539,7 +547,7 @@ public class StyledTextEditor extends CellEditor {
     protected void doSetFocus() {
         assert m_styledText != null : "Control not created!";
         String text = m_styledText.getText();
-        if (text.equals(AddAnnotationCommand.INITIAL_FLOWANNO_TEXT)) {
+        if (m_selectAllUponFocusGain) {
             m_styledText.setSelection(0, text.length());
             selectionChanged();
         }
@@ -566,11 +574,19 @@ public class StyledTextEditor extends CellEditor {
             alignment = SWT.LEFT;
         }
         checkSelectionOfAlignmentMenuItems(alignment);
+        m_selectAllUponFocusGain = false;
         String text;
-        if (AnnotationEditPart.isDefaultNodeAnnotation(wa)) {
-            text = AnnotationEditPart.getAnnotationText(wa);
+        if (wa instanceof NodeAnnotation) {
+            if (AnnotationEditPart.isDefaultNodeAnnotation(wa)) {
+                text = AnnotationEditPart.getAnnotationText(wa);
+                m_selectAllUponFocusGain = true;
+            } else {
+                text = wa.getText();
+            }
         } else {
             text = wa.getText();
+            m_selectAllUponFocusGain =
+                AddAnnotationCommand.INITIAL_FLOWANNO_TEXT.equals(text);
         }
         m_styledText.setAlignment(alignment);
         m_styledText.setText(text);
