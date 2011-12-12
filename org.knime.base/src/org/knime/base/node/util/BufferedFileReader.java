@@ -676,7 +676,7 @@ public final class BufferedFileReader extends BufferedReader {
      *
      * @author ohl, University of Konstanz
      */
-    static class ByteCountingStream extends InputStream {
+    public static final class ByteCountingStream extends InputStream {
 
         private final InputStream m_in;
 
