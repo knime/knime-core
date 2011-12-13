@@ -228,8 +228,10 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
     protected IFigure createFigure() {
         Annotation anno = getModel();
         AnnotationFigure3 f = new AnnotationFigure3(anno);
-        // f.setBounds(new Rectangle(anno.getX(), anno.getY(), anno.getWidth(),
-        // anno.getHeight()));
+        if (anno instanceof WorkflowAnnotation) {
+            f.setBounds(new Rectangle(anno.getX(), anno.getY(), anno.getWidth(),
+                    anno.getHeight()));
+        }
         return f;
     }
 

@@ -83,6 +83,7 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
+import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -129,8 +130,8 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     private final Set<NodeID> m_futureSelection = new LinkedHashSet<NodeID>();
 
     /* same deal for added annotations */
-    private final Set<Annotation> m_annotationSelection =
-            new LinkedHashSet<Annotation>();
+    private final Set<WorkflowAnnotation> m_annotationSelection =
+            new LinkedHashSet<WorkflowAnnotation>();
 
     /**
      * @return The <code>WorkflowManager</code> that is used as model for this
@@ -155,7 +156,15 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         }
     }
 
-    public void setFutureAnnotationSelection(final Collection<Annotation> annos) {
+    /**
+     * Sets the annotations that are added to the editor and that should be
+     * selected as soon as they appear.
+     *
+     * @param annos the workflow annotations to be selected after they have been
+     *            created
+     */
+    public void setFutureAnnotationSelection(
+            final Collection<WorkflowAnnotation> annos) {
         m_annotationSelection.clear();
         m_annotationSelection.addAll(annos);
     }
@@ -488,9 +497,15 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
             // newly created annotations are only selected if done explicitly
             getViewer().deselect(this);
             if (m_annotationSelection.contains(model)) {
-                // is only used for workflow annotations
                 getViewer().appendSelection(part);
                 m_annotationSelection.remove(model);
+                // reveal the editpart after it has been created completely
+                Display.getCurrent().asyncExec(new Runnable() {
+                    @Override
+                    public void run() {
+                        getViewer().reveal(part);
+                    }
+                });
             }
         }
         // connections are selected in workflowChanged
