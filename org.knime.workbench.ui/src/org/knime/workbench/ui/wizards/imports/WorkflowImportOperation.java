@@ -301,23 +301,32 @@ public class WorkflowImportOperation extends WorkspaceModifyOperation {
      * @throws InvocationTargetException if something goes wrong
      */
     protected ImportOperation createWorkflowFromFile(
-            final WorkflowImportElementFromFile workflow,
-            final IPath target, final IProgressMonitor monitor)
-    throws InterruptedException, InvocationTargetException {
-      monitor.beginTask(workflow.getName(), 1);
-      List<File> filesToImport = new ArrayList<File>();
-      getFilesForWorkflow(filesToImport, workflow.getFile());
-      ImportOperation operation = new ImportOperation(
-              target,
-              workflow.getFile(), FileSystemStructureProvider.INSTANCE,
-              new IOverwriteQuery() {
-                @Override
-                public String queryOverwrite(final String pathString) {
-                    return IOverwriteQuery.YES;
-                }
-      });
-      monitor.done();
-      return operation;
+            final WorkflowImportElementFromFile workflow, final IPath target,
+            final IProgressMonitor monitor) throws InterruptedException,
+            InvocationTargetException {
+        monitor.beginTask(workflow.getName(), 1);
+        ImportOperation operation = null;
+        if (workflow.isWorkflow()) {
+            List<File> filesToImport = new ArrayList<File>();
+            getFilesForWorkflow(filesToImport, workflow.getFile());
+            operation =
+                    new ImportOperation(target, workflow.getFile(),
+                            FileSystemStructureProvider.INSTANCE,
+                            new IOverwriteQuery() {
+                                @Override
+                                public String queryOverwrite(
+                                        final String pathString) {
+                                    return IOverwriteQuery.YES;
+                                }
+                            });
+        } else {
+            // store path to create a meta info file
+            m_missingMetaInfoLocations.add(target);
+            // no workflow -> no import
+
+        }
+        monitor.done();
+        return operation;
     }
 
     /**
