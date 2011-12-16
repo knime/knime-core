@@ -97,6 +97,7 @@ public class AnnotationFigure3 extends Figure {
     }
 
     public void newContent(final Annotation annotation) {
+        boolean isNodeAnnotation = (annotation instanceof NodeAnnotation);
         String text;
         AnnotationData.StyleRange[] sr;
         if (AnnotationEditPart.isDefaultNodeAnnotation(annotation)) {
@@ -131,8 +132,7 @@ public class AnnotationFigure3 extends Figure {
         Color bg = AnnotationEditPart.RGBintToColor(annotation.getBgColor());
         setBackgroundColor(bg);
         m_page.setBackgroundColor(bg);
-        if (annotation instanceof NodeAnnotation
-                && AnnotationEditPart.DEFAULT_BG_NODE.equals(bg)) {
+        if (isNodeAnnotation && AnnotationEditPart.DEFAULT_BG_NODE.equals(bg)) {
             // node annotation are white if
             setOpaque(false);
         } else {
@@ -140,20 +140,31 @@ public class AnnotationFigure3 extends Figure {
         }
         int i = 0;
         List<TextFlow> segments = new ArrayList<TextFlow>(sr.length);
+        final Font defaultFont = isNodeAnnotation
+                ? AnnotationEditPart.getNodeAnnotationDefaultFont()
+                : AnnotationEditPart.getWorkflowAnnotationDefaultFont();
         for (AnnotationData.StyleRange r : sr) {
             // create text from last range to beginning of this range
             if (i < r.getStart()) {
                 String noStyle = text.substring(i, r.getStart());
-                segments.add(getDefaultStyled(noStyle, bg));
+                if (isNodeAnnotation) {
+                    segments.add(getNodeAnnotationDefaultStyled(noStyle, bg));
+                } else {
+                    segments.add(getWorkflowAnnotationDefaultStyled(noStyle, bg));
+                }
                 i = r.getStart();
             }
             String styled = text.substring(i, r.getStart() + r.getLength());
-            segments.add(getStyled(styled, r, bg));
+            segments.add(getStyled(styled, r, bg, defaultFont));
             i = r.getStart() + r.getLength();
         }
         if (i < text.length()) {
             String noStyle = text.substring(i, text.length());
-            segments.add(getDefaultStyled(noStyle, bg));
+            if (isNodeAnnotation) {
+                segments.add(getNodeAnnotationDefaultStyled(noStyle, bg));
+            } else {
+                segments.add(getWorkflowAnnotationDefaultStyled(noStyle, bg));
+            }
         }
         BlockFlow bf = new BlockFlow();
         // bf.setBorder(new MarginBorder(4, 2, 4, 0));
@@ -194,8 +205,19 @@ public class AnnotationFigure3 extends Figure {
         m_page.invalidate();
     }
 
-    private TextFlow getDefaultStyled(final String text, final Color bg) {
-        Font normalFont = AnnotationEditPart.FONT_STORE.getDefaultFont();
+    private TextFlow getNodeAnnotationDefaultStyled(final String text, final Color bg) {
+        Font normalFont = AnnotationEditPart.getNodeAnnotationDefaultFont();
+        TextFlow unstyledText = new TextFlow();
+        unstyledText.setForegroundColor(AnnotationEditPart
+                .getAnnotationDefaultForegroundColor());
+        unstyledText.setBackgroundColor(bg);
+        unstyledText.setFont(normalFont);
+        unstyledText.setText(text);
+        return unstyledText;
+    }
+
+    private TextFlow getWorkflowAnnotationDefaultStyled(final String text, final Color bg) {
+        Font normalFont = AnnotationEditPart.getWorkflowAnnotationDefaultFont();
         TextFlow unstyledText = new TextFlow();
         unstyledText.setForegroundColor(AnnotationEditPart
                 .getAnnotationDefaultForegroundColor());
@@ -206,11 +228,10 @@ public class AnnotationFigure3 extends Figure {
     }
 
     private TextFlow getStyled(final String text,
-            final AnnotationData.StyleRange style, final Color bg) {
-
-        Font styledFont =
-                AnnotationEditPart.FONT_STORE.getFont(style.getFontName(),
-                        style.getFontSize(), style.getFontStyle());
+            final AnnotationData.StyleRange style, final Color bg,
+            final Font defaultFont) {
+        Font styledFont = AnnotationEditPart.FONT_STORE.getAnnotationFont(
+                style, defaultFont);
         TextFlow styledText = new TextFlow(text);
         styledText.setFont(styledFont);
         styledText.setForegroundColor(new Color(null, AnnotationEditPart

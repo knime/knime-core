@@ -134,7 +134,8 @@ public class StyledTextEditor extends CellEditor {
     private MenuItem m_leftAlignMenuItem;
 
     /**
-     *
+     * Creates a workflow annotation editor (with the font set to workflow
+     * annotations default font - see #setDefaultFont(Font)).
      */
     public StyledTextEditor() {
         super();
@@ -179,6 +180,7 @@ public class StyledTextEditor extends CellEditor {
     }
 
     private void syncShadowWithEditor() {
+        m_shadowStyledText.setFont(m_styledText.getFont());
         m_shadowStyledText.setVisible(false);
         m_shadowStyledText.setBounds(m_styledText.getBounds());
         m_shadowStyledText.setText(m_styledText.getText());
@@ -190,7 +192,10 @@ public class StyledTextEditor extends CellEditor {
     private Control createStyledText(final Composite parent) {
         m_styledText = new StyledText(parent, SWT.MULTI | SWT.WRAP
                 | SWT.FULL_SELECTION);
-        m_styledText.setFont(parent.getFont());
+        // by default we are a workflow annotation editor
+        // can be changed by changing the default font (setDefaultFont(Font))
+        m_styledText.setFont(
+                AnnotationEditPart.getWorkflowAnnotationDefaultFont());
         m_styledText.setAlignment(SWT.LEFT);
         m_styledText.setText("");
         // somehow that matches the tab indent of the figure...
@@ -259,6 +264,17 @@ public class StyledTextEditor extends CellEditor {
     }
 
     /**
+     * Changes the font of unformatted text ranges.
+     * @param newDefaultFont The font to use, not null
+     */
+    public void setDefaultFont(final Font newDefaultFont) {
+        if (newDefaultFont != null && !newDefaultFont.equals(
+                m_styledText.getFont())) {
+            m_styledText.setFont(newDefaultFont);
+        }
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -291,7 +307,8 @@ public class StyledTextEditor extends CellEditor {
         } else {
             extStyles = m_styledText.getStyleRanges(startIdx - 1, 1);
         }
-        if (extStyles == null || extStyles.length != 1 || extStyles[0] == null) {
+        if (extStyles == null || extStyles.length != 1
+                || extStyles[0] == null) {
             // no style to extend over inserted text
             return;
         }
@@ -571,7 +588,7 @@ public class StyledTextEditor extends CellEditor {
         m_styledText.setAlignment(alignment);
         m_styledText.setText(text);
         m_styledText.setStyleRanges(AnnotationEditPart.toSWTStyleRanges(
-                wa.getData()));
+                wa.getData(), m_styledText.getFont()));
         setBackgroundColor(AnnotationEditPart.RGBintToColor(wa
                 .getBgColor()));
         syncShadowWithEditor();
@@ -704,6 +721,7 @@ public class StyledTextEditor extends CellEditor {
         if (styles == null || styles.length == 0) {
             // no existing styles in selection
             StyleRange newStyle = new StyleRange();
+            newStyle.font = m_styledText.getFont();
             newStyle.start = start;
             newStyle.length = length;
             return Collections.singletonList(newStyle);
@@ -718,6 +736,7 @@ public class StyledTextEditor extends CellEditor {
                 if (lastEnd < s.start) {
                     // create style for range not covered by next exiting style
                     StyleRange newRange = new StyleRange();
+                    newRange.font = m_styledText.getFont();
                     newRange.start = lastEnd;
                     newRange.length = s.start - lastEnd;
                     lastEnd = s.start;
@@ -729,6 +748,7 @@ public class StyledTextEditor extends CellEditor {
             if (lastEnd < start + length) {
                 // create new style for the part at the end, not covered
                 StyleRange newRange = new StyleRange();
+                newRange.font = m_styledText.getFont();
                 newRange.start = lastEnd;
                 newRange.length = start + length - lastEnd;
                 result.add(newRange);
@@ -802,7 +822,7 @@ public class StyledTextEditor extends CellEditor {
 
     private void font() {
         List<StyleRange> sel = getStylesInSelection();
-        Font f = AnnotationEditPart.getAnnotationDefaultFont();
+        Font f = m_styledText.getFont();
         // set the first font in the selection
         for (StyleRange style : sel) {
             if (style.font != null) {

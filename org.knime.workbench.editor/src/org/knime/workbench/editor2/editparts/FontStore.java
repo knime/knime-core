@@ -55,6 +55,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.graphics.FontData;
+import org.knime.core.node.util.ConvenienceMethods;
+import org.knime.core.node.workflow.AnnotationData;
 
 /**
  * Used by the annotations, annotation editor and figure to create or reuse a
@@ -107,6 +109,56 @@ public class FontStore {
         }
         return value.getFont();
 
+    }
+
+    /** Get font according to KNIME style range. If font name and/or font
+     * size are unspecified it will use the font data from the 2nd argument.
+     * (Default font for node annotations grows and shrinks with global
+     * preference setting).
+     * @param knimeSR style range
+     * @param defaultFont the default font (different for workflow and node
+     * annotations).
+     * @return A font object. */
+    public Font getAnnotationFont(final AnnotationData.StyleRange knimeSR,
+            final Font defaultFont) {
+        String knFontName = knimeSR.getFontName();
+        int knFontSize = knimeSR.getFontSize();
+        final int knFontStyle = knimeSR.getFontStyle();
+        if (knFontName == null || knFontSize <= 0) {
+            knFontName = defaultFont.getFontData()[0].getName();
+            knFontSize = defaultFont.getFontData()[0].getHeight();
+        }
+        return getFont(knFontName, knFontSize, knFontStyle);
+    }
+
+    /** Persists the font data in the argument style range. It only saves
+     * font name and size if it's different from the default (pref page) font
+     * as otherwise the font should change with changing the pref page values.
+     * @param toSaveTo The style range to save to.
+     * @param f The used font
+     * @param defaultFont The default font associated with the (node or
+     * workflow) annotation.
+     */
+    public static void saveAnnotationFontToStyleRange(
+            final AnnotationData.StyleRange toSaveTo,
+            final Font f, final Font defaultFont) {
+        FontData defaultFontData = defaultFont.getFontData()[0];
+        if (f != null) {
+            final FontData fontData = f.getFontData()[0];
+            String fontName = fontData.getName();
+            int fontSize = fontData.getHeight();
+            boolean isDefaultFontName = ConvenienceMethods.areEqual(
+                    fontName, defaultFontData.getName());
+            boolean isDefaultFontSize =
+                fontSize == defaultFontData.getHeight();
+            if (isDefaultFontName && isDefaultFontSize) {
+                fontName = null;
+                fontSize = -1;
+            }
+            toSaveTo.setFontName(fontName);
+            toSaveTo.setFontSize(fontSize);
+            toSaveTo.setFontStyle(fontData.getStyle());
+        }
     }
 
     /**

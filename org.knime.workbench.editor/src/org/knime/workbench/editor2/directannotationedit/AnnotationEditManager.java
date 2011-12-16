@@ -62,6 +62,7 @@ import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.part.CellEditorActionHandler;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
+import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
 
 /**
  *
@@ -97,6 +98,11 @@ public class AnnotationEditManager extends DirectEditManager {
         editPart.getFigure().setVisible(false);
         StyledTextEditor stw = (StyledTextEditor)getCellEditor();
         Annotation anno = ((AnnotationEditPart)editPart).getModel();
+        if (editPart instanceof NodeAnnotationEditPart) {
+            stw.setDefaultFont(AnnotationEditPart.getNodeAnnotationDefaultFont());
+        } else {
+            stw.setDefaultFont(AnnotationEditPart.getWorkflowAnnotationDefaultFont());
+        }
         stw.setValue(anno);
 
         // Hook the cell editor's copy/paste actions to the actionBars so that

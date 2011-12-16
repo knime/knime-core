@@ -69,8 +69,8 @@ import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.RGB;
-import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.AnnotationData;
@@ -102,13 +102,11 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
     /** White. */
     public static final Color DEFAULT_BG_NODE = new Color(null, 255, 255, 255);
 
-    private static final Font DEFAULT_FONT = Display.getCurrent()
-            .getSystemFont();
-
     /**
      * Fonts used in the figure or the style editor must go through this.
      */
-    public static final FontStore FONT_STORE = new FontStore(DEFAULT_FONT);
+    public static final FontStore FONT_STORE = new FontStore(Display
+            .getCurrent().getSystemFont());
 
     /**
      * If no foreground color is set, this one should be used.
@@ -121,21 +119,44 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
-     * @return the height of one line in default font
+     * @return the height of one line in default font (doesn't honor label size
+     *         setting in preference page)
      */
-    public static int defaultOneLineHeight() {
+    public static int workflowAnnotationDefaultOneLineHeight() {
         TextUtilities iNSTANCE = TextUtilities.INSTANCE;
-        Font font = getAnnotationDefaultFont();
+        Font font = getWorkflowAnnotationDefaultFont();
+        return iNSTANCE.getStringExtents("Agq|_ÊZ", font).height;
+    }
+
+    /**
+     * @return the height of one line in default font for node annotations -
+     *         uses the preference page setting to determine the font size
+     */
+    public static int nodeAnnotationDefaultOneLineHeight() {
+        TextUtilities iNSTANCE = TextUtilities.INSTANCE;
+        Font font = getNodeAnnotationDefaultFont();
         return iNSTANCE.getStringExtents("Agq|_ÊZ", font).height;
     }
 
     /**
      * @param text to test
-     * @return the width of the specified text with the annotation default font
+     * @return the width of the specified text with the workflow annotation
+     *         default font
      */
-    public static int defaultLineWidth(final String text) {
+    public static int workflowAnnotationDefaultLineWidth(final String text) {
         TextUtilities INSTANCE = TextUtilities.INSTANCE;
-        Font font = getAnnotationDefaultFont();
+        Font font = getWorkflowAnnotationDefaultFont();
+        return INSTANCE.getStringExtents(text, font).width;
+    }
+
+    /**
+     * @param text to test
+     * @return the width of the specified text with the workflow annotation
+     *         default font
+     */
+    public static int nodeAnnotationDefaultLineWidth(final String text) {
+        TextUtilities INSTANCE = TextUtilities.INSTANCE;
+        Font font = getNodeAnnotationDefaultFont();
         return INSTANCE.getStringExtents(text, font).width;
     }
 
@@ -204,15 +225,42 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
+     * If no font is set, this one should be used for workflow annotations.
+     * It is the system default font.
      *
-     * If no font is set, this one should be used.
-     *
-     * @return the default font for annotation figures
+     * @return the default font for workflow annotation
      */
-    public static Font getAnnotationDefaultFont() {
-        // TODO: read it from a pref page...
-        return DEFAULT_FONT;
+    public static Font getWorkflowAnnotationDefaultFont() {
+        // its the system default font.
+        return FONT_STORE.getDefaultFont();
     }
+
+    /**
+    * If no font is set, this one should be used for node annotations.
+    * It is the system default font with the size specified in the preference
+    * page for node labels.
+    *
+    * @return the default font for node annotation
+    */
+   public static Font getNodeAnnotationDefaultFont() {
+       int fontSize =
+           KNIMEUIPlugin
+                   .getDefault()
+                   .getPreferenceStore().getInt(
+                           PreferenceConstants.P_NODE_LABEL_FONT_SIZE);
+       Font defFont = FONT_STORE.getDefaultFont();
+       FontData[] fontData = defFont.getFontData();
+       if (fontData != null && fontData.length > 0) {
+           FontData fd = fontData[0];
+           if (fd.getHeight() != fontSize) {
+               fd.setHeight(fontSize);
+                defFont =
+                        FONT_STORE.getFont(fd.getName(), fd.getHeight(),
+                                fd.getStyle());
+           }
+       }
+       return defFont;
+   }
 
     private AnnotationEditManager m_directEditManager;
 
@@ -301,30 +349,6 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
         }
     }
 
-    /**
-     *
-     * @param t
-     * @param parent
-     * @return
-     */
-    public static StyledText toStyledText(final Annotation t,
-            final Composite parent) {
-        StyledText stext = new StyledText(parent, SWT.NONE);
-        String text;
-        StyleRange[] styles;
-        boolean isDefaultNodeAnnotation = isDefaultNodeAnnotation(t);
-        if (isDefaultNodeAnnotation) {
-            text = getAnnotationText(t);
-            styles = new StyleRange[0];
-        } else {
-            text = t.getText();
-            styles = toSWTStyleRanges(t.getData());
-        }
-        stext.setText(text);
-        stext.setStyleRanges(styles);
-        return stext;
-    }
-
     /** Returns the text contained in the annotation or the default text if
      * the argument annotation is a default node annotation ("Node 1", "Node 2",
      * ...).
@@ -354,26 +378,24 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
         && (((NodeAnnotation)t).getData()).isDefault();
     }
 
-    public static StyleRange[] toSWTStyleRanges(final AnnotationData t) {
-        AnnotationData.StyleRange[] waStyleRange = t.getStyleRanges();
+    public static StyleRange[] toSWTStyleRanges(final AnnotationData t,
+            final Font defaultFont) {
+        AnnotationData.StyleRange[] knimeStyleRanges = t.getStyleRanges();
         ArrayList<StyleRange> swtStyleRange =
-                new ArrayList<StyleRange>(waStyleRange.length);
-        for (AnnotationData.StyleRange waSr : waStyleRange) {
+                new ArrayList<StyleRange>(knimeStyleRanges.length);
+        for (AnnotationData.StyleRange knimeSR : knimeStyleRanges) {
             StyleRange swtStyle = new StyleRange();
-            Font f =
-                    FONT_STORE.getFont(waSr.getFontName(), waSr.getFontSize(),
-                            waSr.getFontStyle());
+            Font f = FONT_STORE.getAnnotationFont(knimeSR, defaultFont);
             if (!FONT_STORE.isDefaultFont(f)) {
-
                 swtStyle.font = f;
             }
-            if (waSr.getFgColor() >= 0) {
-                int rgb = waSr.getFgColor();
+            if (knimeSR.getFgColor() >= 0) {
+                int rgb = knimeSR.getFgColor();
                 RGB rgbObj = RGBintToRGBObj(rgb);
                 swtStyle.foreground = new Color(null, rgbObj);
             }
-            swtStyle.start = waSr.getStart();
-            swtStyle.length = waSr.getLength();
+            swtStyle.start = knimeSR.getStart();
+            swtStyle.length = knimeSR.getLength();
             swtStyleRange.add(swtStyle);
         }
         return swtStyleRange.toArray(new StyleRange[swtStyleRange.size()]);
@@ -405,23 +427,18 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
         ArrayList<AnnotationData.StyleRange> wfStyleRanges =
                 new ArrayList<AnnotationData.StyleRange>(
                         swtStyleRange.length);
+        final Font defaultFont = s.getFont();
         for (StyleRange sr : swtStyleRange) {
             if (sr.isUnstyled()) {
                 continue;
             }
-            AnnotationData.StyleRange waSr =
-                    new AnnotationData.StyleRange();
+            AnnotationData.StyleRange waSr = new AnnotationData.StyleRange();
             Color fg = sr.foreground;
             if (fg != null) {
                 int rgb = colorToRGBint(fg);
                 waSr.setFgColor(rgb);
             }
-            Font f = sr.font;
-            if (f != null) {
-                waSr.setFontName(f.getFontData()[0].getName());
-                waSr.setFontSize((f.getFontData()[0].getHeight()));
-                waSr.setFontStyle(f.getFontData()[0].getStyle());
-            }
+            FontStore.saveAnnotationFontToStyleRange(waSr, sr.font, defaultFont);
             waSr.setStart(sr.start);
             waSr.setLength(sr.length);
             wfStyleRanges.add(waSr);

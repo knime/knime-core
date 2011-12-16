@@ -286,7 +286,6 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         // add as listener on the command stack
         getViewer().getEditDomain().getCommandStack()
                 .addCommandStackListener(this);
-
     }
 
     /**
