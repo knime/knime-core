@@ -1168,7 +1168,11 @@ public class WorkflowEditor extends GraphicalEditor implements
                     + exceptionMessage.toString());
         }
 
-        Display.getDefault().asyncExec(new Runnable() {
+        /** Bug fix #3028 - running this async may lead to deadlock; fixing
+         * this by sync invocation -- to be done better (refresh in
+         * save runnable) on trunk
+         */
+        Display.getDefault().syncExec(new Runnable() {
             @Override
             public void run() {
                 try {
@@ -1197,7 +1201,9 @@ public class WorkflowEditor extends GraphicalEditor implements
             Display.getDefault().asyncExec(new Runnable() {
                 @Override
                 public void run() {
-                    editor.firePropertyChange(IEditorPart.PROP_DIRTY);
+                    if (!Display.getDefault().isDisposed()) {
+                        editor.firePropertyChange(IEditorPart.PROP_DIRTY);
+                    }
                 }
             });
         }
