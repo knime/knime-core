@@ -60,6 +60,7 @@ import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.ExtendedModifyEvent;
 import org.eclipse.swt.custom.ExtendedModifyListener;
+import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
 import org.eclipse.swt.custom.VerifyKeyListener;
@@ -79,7 +80,6 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.ColorDialog;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -89,6 +89,7 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.AnnotationData;
+import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.commands.AddAnnotationCommand;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
@@ -104,7 +105,21 @@ public class StyledTextEditor extends CellEditor {
 
     private StyledText m_styledText;
 
-    private List<MenuItem> m_styleMenuItems;
+    /**
+     * instance used to get layout info in a non-word-wrapping editor (the
+     * foreground text editor must be auto-wrapped otherwise the alignment is
+     * ignored!).
+     */
+    private StyledText m_shadowStyledText;
+
+    /** List of menu items that are disabled/enabled with text selection, e.g.
+     * copy or font selection. */
+    private List<MenuItem> m_enableOnSelectedTextMenuItems;
+
+    /** Whether the text shall be selected when the editor is activated. It's
+     * true if the annotation contains the default text ("Double-Click to edit"
+     * or "Node x"). */
+    private boolean m_selectAllUponFocusGain;
 
     private Composite m_panel;
 
@@ -119,7 +134,8 @@ public class StyledTextEditor extends CellEditor {
     private MenuItem m_leftAlignMenuItem;
 
     /**
-     *
+     * Creates a workflow annotation editor (with the font set to workflow
+     * annotations default font - see #setDefaultFont(Font)).
      */
     public StyledTextEditor() {
         super();
@@ -146,33 +162,40 @@ public class StyledTextEditor extends CellEditor {
     @Override
     protected Control createControl(final Composite parent) {
         m_panel = new Composite(parent, SWT.NONE);
-        m_panel.setLayout(createPanelGridLayout(1, true));
-
-        createStyledText(m_panel);
-
+//        m_panel.setLayout(createPanelGridLayout(1, true));
+        StackLayout layout = new StackLayout();
+        m_panel.setLayout(layout);
+        layout.topControl = createStyledText(m_panel);
+        createShadowText(m_panel);
         applyBackgroundColor();
         return m_panel;
     }
 
-    private GridLayout createPanelGridLayout(final int columns,
-            final boolean equalWith) {
-        GridLayout layout = new GridLayout(columns, equalWith);
-        layout.horizontalSpacing = 0;
-        layout.verticalSpacing = 0;
-        layout.marginBottom = 0;
-        layout.marginHeight = 0;
-        layout.marginLeft = 0;
-        layout.marginRight = 0;
-        layout.marginTop = 0;
-        layout.marginWidth = 0;
-        layout.marginBottom = 0;
-        return layout;
+    private Control createShadowText(final Composite parent) {
+        m_shadowStyledText = new StyledText(parent, SWT.MULTI | SWT.FULL_SELECTION);
+        m_shadowStyledText.setLayoutData(
+                new GridData(SWT.FILL, SWT.FILL, true, true));
+        syncShadowWithEditor();
+        return m_shadowStyledText;
+    }
+
+    private void syncShadowWithEditor() {
+        m_shadowStyledText.setFont(m_styledText.getFont());
+        m_shadowStyledText.setVisible(false);
+        m_shadowStyledText.setBounds(m_styledText.getBounds());
+        m_shadowStyledText.setText(m_styledText.getText());
+        m_shadowStyledText.setStyleRanges(m_styledText.getStyleRanges());
+        m_shadowStyledText.setAlignment(m_styledText.getAlignment());
+        m_shadowStyledText.setBackground(m_styledText.getBackground());
     }
 
     private Control createStyledText(final Composite parent) {
         m_styledText = new StyledText(parent, SWT.MULTI | SWT.WRAP
                 | SWT.FULL_SELECTION);
-        m_styledText.setFont(parent.getFont());
+        // by default we are a workflow annotation editor
+        // can be changed by changing the default font (setDefaultFont(Font))
+        m_styledText.setFont(
+                AnnotationEditPart.getWorkflowAnnotationDefaultFont());
         m_styledText.setAlignment(SWT.LEFT);
         m_styledText.setText("");
         // somehow that matches the tab indent of the figure...
@@ -180,11 +203,8 @@ public class StyledTextEditor extends CellEditor {
         m_styledText.addVerifyKeyListener(new VerifyKeyListener() {
             @Override
             public void verifyKey(final VerifyEvent event) {
-                // pressing DEL at the end of the text closes the editor!
-                if (event.keyCode == SWT.DEL
-                        && m_styledText.getCaretOffset() == m_styledText
-                                .getText().length()) {
-                    // ignore the DEL at the end of the text
+                if (event.character == SWT.CR
+                    && (event.stateMask & SWT.CTRL) != 0) {
                     event.doit = false;
                 }
             }
@@ -244,6 +264,27 @@ public class StyledTextEditor extends CellEditor {
     }
 
     /**
+     * Changes the font of unformatted text ranges.
+     * @param newDefaultFont The font to use, not null
+     */
+    public void setDefaultFont(final Font newDefaultFont) {
+        if (newDefaultFont != null && !newDefaultFont.equals(
+                m_styledText.getFont())) {
+            m_styledText.setFont(newDefaultFont);
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void fireEditorValueChanged(final boolean oldValidState,
+            final boolean newValidState) {
+        syncShadowWithEditor();
+        super.fireEditorValueChanged(oldValidState, newValidState);
+    }
+
+    /**
      * Sets the style range for the new text. Copies it from the left neighbor
      * (or from the right neighbor, if there is no left neighbor).
      *
@@ -266,7 +307,8 @@ public class StyledTextEditor extends CellEditor {
         } else {
             extStyles = m_styledText.getStyleRanges(startIdx - 1, 1);
         }
-        if (extStyles == null || extStyles.length != 1 || extStyles[0] == null) {
+        if (extStyles == null || extStyles.length != 1
+                || extStyles[0] == null) {
             // no style to extend over inserted text
             return;
         }
@@ -286,12 +328,14 @@ public class StyledTextEditor extends CellEditor {
             int length = sel[1];
             enabled = (length > 0);
         }
+        fireEnablementChanged(COPY);
+        fireEnablementChanged(CUT);
         enableStyleButtons(enabled);
     }
 
     private void enableStyleButtons(final boolean enableThem) {
-        if (m_styleMenuItems != null) {
-            for (MenuItem action : m_styleMenuItems) {
+        if (m_enableOnSelectedTextMenuItems != null) {
+            for (MenuItem action : m_enableOnSelectedTextMenuItems) {
                 action.setEnabled(enableThem);
             }
         }
@@ -325,28 +369,28 @@ public class StyledTextEditor extends CellEditor {
 
         new MenuItem(menu, SWT.SEPARATOR);
         // contains buttons being en/disabled with selection
-        m_styleMenuItems = new ArrayList<MenuItem>();
+        m_enableOnSelectedTextMenuItems = new ArrayList<MenuItem>();
         MenuItem action;
 
         // font/style button
         img = ImageRepository.getImage("icons/annotations/font_10.png");
         action = addMenuItem(menu, "style", SWT.PUSH, "Font", img);
-        m_styleMenuItems.add(action);
+        m_enableOnSelectedTextMenuItems.add(action);
 
         // foreground color button
         img = ImageRepository.getImage("icons/annotations/color_10.png");
         action = addMenuItem(menu, "color", SWT.PUSH, "Color", img);
-        m_styleMenuItems.add(action);
+        m_enableOnSelectedTextMenuItems.add(action);
 
         // bold button
         img = ImageRepository.getImage("icons/annotations/bold_10.png");
         action = addMenuItem(menu, "bold", SWT.PUSH, "Bold", img);
-        m_styleMenuItems.add(action);
+        m_enableOnSelectedTextMenuItems.add(action);
 
         // italic button
         img = ImageRepository.getImage("icons/annotations/italic_10.png");
         action = addMenuItem(menu, "italic", SWT.PUSH, "Italic", img);
-        m_styleMenuItems.add(action);
+        m_enableOnSelectedTextMenuItems.add(action);
 
         new MenuItem(menu, SWT.SEPARATOR);
 
@@ -447,12 +491,16 @@ public class StyledTextEditor extends CellEditor {
         }
     }
 
+    /**
+     * @param bg
+     */
     public void setBackgroundColor(final Color bg) {
         m_backgroundColor = bg;
         applyBackgroundColor();
     }
+
     /**
-     * {@inheritDoc}
+     *
      */
     protected void lostFocus() {
         super.focusLost();
@@ -497,9 +545,8 @@ public class StyledTextEditor extends CellEditor {
     protected void doSetFocus() {
         assert m_styledText != null : "Control not created!";
         String text = m_styledText.getText();
-        if (text.equals(AddAnnotationCommand.INITIAL_FLOWANNO_TEXT)) {
-            m_styledText.setSelection(0, text.length());
-            selectionChanged();
+        if (m_selectAllUponFocusGain) {
+            performSelectAll();
         }
         m_styledText.setFocus();
         m_styledText.setCaretOffset(text.length());
@@ -524,18 +571,78 @@ public class StyledTextEditor extends CellEditor {
             alignment = SWT.LEFT;
         }
         checkSelectionOfAlignmentMenuItems(alignment);
+        m_selectAllUponFocusGain = false;
         String text;
-        if (AnnotationEditPart.isDefaultNodeAnnotation(wa)) {
-            text = AnnotationEditPart.getAnnotationText(wa);
+        if (wa instanceof NodeAnnotation) {
+            if (AnnotationEditPart.isDefaultNodeAnnotation(wa)) {
+                text = AnnotationEditPart.getAnnotationText(wa);
+                m_selectAllUponFocusGain = true;
+            } else {
+                text = wa.getText();
+            }
         } else {
             text = wa.getText();
+            m_selectAllUponFocusGain =
+                AddAnnotationCommand.INITIAL_FLOWANNO_TEXT.equals(text);
         }
         m_styledText.setAlignment(alignment);
         m_styledText.setText(text);
         m_styledText.setStyleRanges(AnnotationEditPart.toSWTStyleRanges(
-                wa.getData()));
+                wa.getData(), m_styledText.getFont()));
         setBackgroundColor(AnnotationEditPart.RGBintToColor(wa
                 .getBgColor()));
+        syncShadowWithEditor();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean isCopyEnabled() {
+        return !m_styledText.isDisposed()
+            && m_styledText.getSelectionCount() > 0;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void performCopy() {
+        m_styledText.copy();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean isPasteEnabled() {
+        return !m_styledText.isDisposed();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void performPaste() {
+        m_styledText.paste();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean isCutEnabled() {
+        return !m_styledText.isDisposed()
+            && m_styledText.getSelectionCount() > 0;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void performCut() {
+        m_styledText.cut();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean isSelectAllEnabled() {
+        return !m_styledText.isDisposed();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void performSelectAll() {
+        m_styledText.selectAll();
+        selectionChanged();
     }
 
     private void bold() {
@@ -614,6 +721,7 @@ public class StyledTextEditor extends CellEditor {
         if (styles == null || styles.length == 0) {
             // no existing styles in selection
             StyleRange newStyle = new StyleRange();
+            newStyle.font = m_styledText.getFont();
             newStyle.start = start;
             newStyle.length = length;
             return Collections.singletonList(newStyle);
@@ -628,6 +736,7 @@ public class StyledTextEditor extends CellEditor {
                 if (lastEnd < s.start) {
                     // create style for range not covered by next exiting style
                     StyleRange newRange = new StyleRange();
+                    newRange.font = m_styledText.getFont();
                     newRange.start = lastEnd;
                     newRange.length = s.start - lastEnd;
                     lastEnd = s.start;
@@ -639,6 +748,7 @@ public class StyledTextEditor extends CellEditor {
             if (lastEnd < start + length) {
                 // create new style for the part at the end, not covered
                 StyleRange newRange = new StyleRange();
+                newRange.font = m_styledText.getFont();
                 newRange.start = lastEnd;
                 newRange.length = start + length - lastEnd;
                 result.add(newRange);
@@ -712,7 +822,7 @@ public class StyledTextEditor extends CellEditor {
 
     private void font() {
         List<StyleRange> sel = getStylesInSelection();
-        Font f = AnnotationEditPart.getAnnotationDefaultFont();
+        Font f = m_styledText.getFont();
         // set the first font in the selection
         for (StyleRange style : sel) {
             if (style.font != null) {
@@ -766,14 +876,15 @@ public class StyledTextEditor extends CellEditor {
      * @return the bounds needed to display the current text
      */
     Rectangle getTextBounds() {
-        int charCount = m_styledText.getCharCount();
+        // use the shadow instance to get the size of the not auto-wrapped text
+        int charCount = m_shadowStyledText.getCharCount();
         if (charCount < 1) {
-            Rectangle b = m_styledText.getBounds();
+            Rectangle b = m_shadowStyledText.getBounds();
             return new Rectangle(b.x, b.y, 0, 0);
         } else {
-            Rectangle r = m_styledText.getTextBounds(0, charCount - 1);
-            if (m_styledText.getText(charCount - 1, charCount - 1).charAt(0) == '\n') {
-                r.height += m_styledText.getLineHeight();
+            Rectangle r = m_shadowStyledText.getTextBounds(0, charCount - 1);
+            if (m_shadowStyledText.getText(charCount - 1, charCount - 1).charAt(0) == '\n') {
+                r.height += m_shadowStyledText.getLineHeight();
             }
             return r;
         }

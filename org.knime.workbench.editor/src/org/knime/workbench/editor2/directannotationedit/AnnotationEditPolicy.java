@@ -58,6 +58,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.AnnotationData;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
+import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
 
 /**
  *
@@ -75,18 +76,26 @@ public class AnnotationEditPolicy extends DirectEditPolicy {
         Annotation oldAnno = annoPart.getModel();
 
         Rectangle oldFigBounds = annoPart.getFigure().getBounds().getCopy();
-        newAnnoData.setX(oldFigBounds.x);
+        // y-coordinate is the only dimension that doesn't change
         newAnnoData.setY(oldFigBounds.y);
-        newAnnoData.setWidth(oldFigBounds.width);
-
-        // the height is the only dimension that can grow
 
         // trim was never really verified (was always 0 on my platform),
         // see also StyledTextEditorLocator#relocate
         Composite compositeEditor = (Composite)ste.getControl();
         org.eclipse.swt.graphics.Rectangle trim =
             compositeEditor.computeTrim(0, 0, 0, 0);
-        newAnnoData.setHeight(compositeEditor.getBounds().height - trim.height);
+
+        if (annoPart instanceof NodeAnnotationEditPart) {
+            // the width and height grow with the text entered
+            newAnnoData.setX(compositeEditor.getBounds().x);
+            newAnnoData.setHeight(compositeEditor.getBounds().height - trim.height);
+            newAnnoData.setWidth(compositeEditor.getBounds().width - trim.width + 5);
+        } else {
+            // with workflow annotations only the height grows with the text
+            newAnnoData.setX(oldFigBounds.x);
+            newAnnoData.setHeight(compositeEditor.getBounds().height - trim.height);
+            newAnnoData.setWidth(oldFigBounds.width - trim.width + 5);
+        }
 
         if (hasAnnotationDataChanged(oldAnno, newAnnoData)) {
             return new AnnotationEditCommand(annoPart, oldAnno, newAnnoData);

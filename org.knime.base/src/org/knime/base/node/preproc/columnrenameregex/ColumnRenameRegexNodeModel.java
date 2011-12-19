@@ -117,6 +117,12 @@ final class ColumnRenameRegexNodeModel extends NodeModel {
             }
             m.appendTail(sb);
             final String newName = sb.toString();
+
+            if (newName.length() == 0) {
+                throw new InvalidSettingsException("Replacement in column '"
+                        + oldName + "' leads to an empty column name.");
+            }
+
             if (!newName.equals(oldName)) {
                 hasChanged = true;
             }

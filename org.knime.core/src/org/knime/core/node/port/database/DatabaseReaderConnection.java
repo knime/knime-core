@@ -235,9 +235,11 @@ public final class DatabaseReaderConnection {
                 final int selectIndex = oQueries.length - 1;
                 final int hashAlias = System.identityHashCode(this);
                 // replace SELECT (last) query with wrapped statement
-                oQueries[selectIndex] = "SELECT * FROM (" 
+                if (m_conn.getDriver().startsWith("jdbc.sqlite")) {
+                    oQueries[selectIndex] = "SELECT * FROM (" 
                         + oQueries[selectIndex] + ") "  
                         + "table_" + hashAlias + " WHERE 1 = 0";
+                }
                 ResultSet result = null;
                 try {
                     // if only one SQL statement is being executed
@@ -474,8 +476,7 @@ public final class DatabaseReaderConnection {
             }
             if (spec == null) {
                 spec = new DataTableSpec("database",
-                        new DataColumnSpecCreator(
-                        name, newType).createSpec());
+                        new DataColumnSpecCreator(name, newType).createSpec());
             } else {
                 name = DataTableSpec.getUniqueColumnName(spec, name);
                 spec = new DataTableSpec("database", spec,

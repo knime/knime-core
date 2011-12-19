@@ -51,6 +51,7 @@
 package org.knime.workbench.editor2.commands;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -176,8 +177,12 @@ public final class PasteFromWorkflowPersistorCommand
         if (partViewer.getRootEditPart().getContents() != null
                 && partViewer.getRootEditPart().getContents()
                 instanceof WorkflowRootEditPart) {
-            ((WorkflowRootEditPart)partViewer.getRootEditPart().getContents())
-                .setFutureSelection(pastedNodes);
+            WorkflowRootEditPart rootEditPart =
+                    (WorkflowRootEditPart)partViewer.getRootEditPart()
+                            .getContents();
+            rootEditPart.setFutureSelection(pastedNodes);
+            rootEditPart.setFutureAnnotationSelection(
+                    Arrays.asList(pastedAnnos));
         }
     }
 

@@ -60,7 +60,6 @@ import java.util.List;
 
 import org.eclipse.core.resources.IContainer;
 import org.eclipse.core.resources.IFile;
-import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
@@ -384,24 +383,41 @@ public class WorkflowExportWizard extends ExportWizard
             final IResource resource, final boolean excludeData) {
         if (resource instanceof IWorkspaceRoot) {
             // ignore the workspace root in order to avoid adding all workflows
-            // method should be called for every workflow that should be
-            // exported
+            // method should be called for every workflow and every group that
+            // should be exported
             return;
         }
 
-        // if this resource must be excluded do not add to resource list and
-        // return
-        if (excludeData && excludeResource(resource)) {
+        if (KnimeResourceUtil.isWorkflow(resource)) {
+            // collect the content of the workflow
+            addWorkflowResources(resourceList, resource, excludeData);
+            return;
+        } else if (KnimeResourceUtil.isWorkflowGroup(resource)) {
+            // add group files - but not recursively the contained groups/flows
+            addWorkflowGroupResources(resourceList, resource);
             return;
         }
-        /*
-         * We do not want to export any non-KNIME project.
-         * Since we are going top-down, excluding the projects is enough,
-         * #addResourcesFor will not go down another level of recursion
-         */
-        if (resource instanceof IProject) {
-            if (!KnimeResourceUtil.isWorkflow(resource)
-                    && !KnimeResourceUtil.isWorkflowGroup(resource)) {
+
+    }
+
+    /**
+     * Used to collect all files contained in a workflow dir.
+     * Collects recursively the file resources of the specified resource. If the
+     * exclude data flag is true, files/dirs containing workflow node data are
+     * not included.
+     *
+     * @param resourceList list things are added to (must not be null)
+     * @param resource file or dir
+     * @param excludeData if true, files/dirs containing node data are not added
+     *            to the list.
+     */
+    private static void addWorkflowResources(final List<IResource> resourceList,
+            final IResource resource, final boolean excludeData) {
+        if (!KnimeResourceUtil.isWorkflow(resource) &&
+                !KnimeResourceUtil.isMetaNode(resource)) {
+            // workflows and metanodes named like excluded resourced
+            // (e.g. "drop" or "internal") should still be included
+            if (excludeData && excludeResource(resource)) {
                 return;
             }
         }
@@ -419,11 +435,39 @@ public class WorkflowExportWizard extends ExportWizard
         }
         // else visit all child resources
         for (IResource currentResource : resources) {
-            addResourcesFor(resourceList, currentResource,
+            addWorkflowResources(resourceList, currentResource,
                     excludeData);
         }
+
     }
 
+    /**
+     * Adds resources that belong to a workflow group. Files that are contained
+     * in a group are added (mostly this will only be the meta info file).
+     * Doesn't work recursively, i.e. no sub-flows/groups contained in the
+     * group are added.
+     *
+     * @param resourceList to add resources to
+     * @param groupRes the workflow group
+     */
+    private static void addWorkflowGroupResources(
+            final List<IResource> resourceList, final IResource groupRes) {
+        if (KnimeResourceUtil.isWorkflowGroup(groupRes)) {
+            // add all files contained (don't descend into sub dirs)
+            IResource[] resources;
+            try {
+                resources = ((IContainer)groupRes).members();
+            } catch (Exception e) {
+                throw new IllegalStateException("Members of folder "
+                        + groupRes.getName() + " could not be retrieved.");
+            }
+            for (IResource currentResource : resources) {
+                if (currentResource instanceof IFile) {
+                    resourceList.add(currentResource);
+                }
+            }
+        }
+    }
 
     /**
      * We will initialize file contents with a sample text.

@@ -20,8 +20,10 @@
  */
 package org.knime.workbench.editor2.editparts;
 
+import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
+import org.eclipse.swt.graphics.Font;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeUIInformation;
@@ -36,6 +38,11 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
  * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
  */
 public class NodeAnnotationEditPart extends AnnotationEditPart {
+
+    /**
+     * font actually used to compute the bounds of the annotation figure.
+     */
+    private Font m_lastDefaultFont = null;
 
     /**
      *
@@ -62,6 +69,14 @@ public class NodeAnnotationEditPart extends AnnotationEditPart {
         int h = anno.getHeight();
         boolean update = false; // update only if anno has no ui info
         if (w <= 0 || h <= 0) {
+            /* this code can be removed (but not for a bug fix release) as this
+             * method is called at least twice during activation and the 2nd
+             * invocation has valid bounds. To reproduce: create flow w/ v2.4,
+             * load in v2.5+ and set a break point
+             *
+             * TODO: remove if block + don't save bounds in node annotation
+             * (always computed automatically)
+             */
             update = true;
             // if the annotation has no width, make it as wide as the node
             if (nodeUI != null && nodeUI.getBounds()[2] > 0) {
@@ -69,21 +84,18 @@ public class NodeAnnotationEditPart extends AnnotationEditPart {
                 w = nodeUI.getBounds()[2];
             }
             // make it at least wide enough to hold "Node 9999xxxxxxxxx"
-            String prefix =
-                    KNIMEUIPlugin
-                            .getDefault()
-                            .getPreferenceStore()
-                            .getString(PreferenceConstants.P_DEFAULT_NODE_LABEL);
-            if (prefix == null || prefix.isEmpty()) {
-                prefix = "Node";
+            w = Math.max(w, getNodeAnnotationMinWidth());
+            h = getNodeAnnotationMinHeight();
+        } else {
+            // recalculate the dimension according to the default font (which
+            // could change through the pref page or on different OS)
+            Font currDefFont = AnnotationEditPart.getNodeAnnotationDefaultFont();
+            if (!currDefFont.equals(m_lastDefaultFont)) {
+                m_lastDefaultFont = currDefFont;
+                Dimension textBounds = annoFig.getPreferredSize();
+                h = Math.max(textBounds.height, getNodeAnnotationMinHeight());
+                w = Math.max(textBounds.width, getNodeAnnotationMinWidth());
             }
-            int minTextW =
-                    AnnotationEditPart.defaultLineWidth(prefix
-                            + " 9999xxxxxxxxx");
-            w = Math.max(w, minTextW);
-            // but not less than the node default width
-            w = Math.max(w, NodeContainerFigure.WIDTH);
-            h = NodeAnnotationEditPart.defaultOneLineHeight();
         }
         if (nodeUI != null) {
             NodeContainerEditPart nodePart =
@@ -114,4 +126,28 @@ public class NodeAnnotationEditPart extends AnnotationEditPart {
         refreshVisuals();
     }
 
+
+    /**
+     * @return the minimum width of a node annotation.
+     */
+    public static int getNodeAnnotationMinWidth() {
+        // make it at least wide enough to hold "Node 9999xxxxxxxxx"
+        String prefix =
+                KNIMEUIPlugin
+                        .getDefault()
+                        .getPreferenceStore()
+                        .getString(PreferenceConstants.P_DEFAULT_NODE_LABEL);
+        if (prefix == null || prefix.isEmpty()) {
+            prefix = "Node";
+        }
+        int minTextW =
+                AnnotationEditPart.nodeAnnotationDefaultLineWidth(prefix
+                        + " 9999xxxxxxxxx");
+        // but not less than the node default width
+        return Math.max(minTextW, NodeContainerFigure.WIDTH);
+    }
+
+    public static int getNodeAnnotationMinHeight() {
+        return NodeAnnotationEditPart.nodeAnnotationDefaultOneLineHeight();
+    }
 }

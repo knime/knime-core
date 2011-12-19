@@ -229,8 +229,8 @@ public class RepositoryView extends ViewPart implements
                         m_viewer.refresh(root);
                     }
                     m_viewer.getControl().setToolTipText(null);
+                    parent.setCursor(null);
                 }
-                parent.setCursor(null);
             }
         });
     }

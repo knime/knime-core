@@ -56,6 +56,7 @@ import org.eclipse.gef.tools.CellEditorLocator;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.swt.widgets.Composite;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
+import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
 import org.knime.workbench.editor2.figures.AnnotationFigure3;
 
 /**
@@ -97,17 +98,26 @@ public class StyledTextEditorLocator implements CellEditorLocator {
         figBounds.width += trim.width;
         figBounds.height += trim.height;
 
-        // grow the height with the text entered
         StyledTextEditor stEditor = ((StyledTextEditor)celleditor);
-        org.eclipse.swt.graphics.Rectangle textBounds = stEditor.getTextBounds();
-        int th = textBounds.height;
-        // + stEditor.getLineHeight();
-        if (th > figBounds.height) {
-            figBounds.height = th;
+        org.eclipse.swt.graphics.Rectangle textBounds =
+            stEditor.getTextBounds();
+        if (m_editPart instanceof NodeAnnotationEditPart) {
+            // grow the width and the height with the text entered
+            figBounds.height =
+                Math.max(textBounds.height,
+                        NodeAnnotationEditPart.getNodeAnnotationMinHeight());
+            // add 5 pixel width to avoid flickering in auto-wrapping editors
+            int tw = textBounds.width + 5;
+            figBounds.width =
+                Math.max(tw, NodeAnnotationEditPart.getNodeAnnotationMinWidth());
+        } else {
+            // grow only the height with the text entered
+            figBounds.height = Math.max(figBounds.height, textBounds.height + 5);
         }
+
         // center editor in case zoom != 1 (important for node annotations)
         int x = absoluteWithZoomBounds.x
-            + (absoluteWithZoomBounds.width - figBounds.width) / 2;
+        + (absoluteWithZoomBounds.width - figBounds.width) / 2;
 
         // use x,y from viewport coordinates,
         // w,h are original figure coordinates as editor doesn't grow with zoom

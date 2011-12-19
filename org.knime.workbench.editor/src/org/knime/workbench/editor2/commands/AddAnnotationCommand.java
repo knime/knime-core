@@ -56,7 +56,6 @@ import org.eclipse.draw2d.geometry.PrecisionPoint;
 import org.eclipse.gef.GraphicalViewer;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.swt.graphics.Point;
-import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.AnnotationData;
 import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -85,7 +84,7 @@ public class AddAnnotationCommand extends AbstractKNIMECommand {
     public static final String INITIAL_FLOWANNO_TEXT = "Double-click to edit.";
 
     // remember the new annotation for undo
-    private Annotation m_anno;
+    private WorkflowAnnotation m_anno;
 
     /**
      * Adds a workflow annotation.
@@ -134,7 +133,7 @@ public class AddAnnotationCommand extends AbstractKNIMECommand {
         data.setStyleRanges(new AnnotationData.StyleRange[0]);
         m_anno.copyFrom(data, true);
         WorkflowManager hostWFM = getHostWFM();
-        hostWFM.addWorkflowAnnotation((WorkflowAnnotation)m_anno);
+        hostWFM.addWorkflowAnnotation(m_anno);
         m_viewer.deselectAll();
         // select the new ones....
         if (m_viewer.getRootEditPart().getContents() != null
@@ -158,7 +157,7 @@ public class AddAnnotationCommand extends AbstractKNIMECommand {
      */
     @Override
     public void undo() {
-        getHostWFM().removeAnnotation((WorkflowAnnotation)m_anno);
+        getHostWFM().removeAnnotation(m_anno);
         m_anno = null;
     }
 }

@@ -308,15 +308,21 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             // caused by a double click on this edit part
              openDialog();
         } else if (request.getType() == RequestConstants.REQ_DIRECT_EDIT) {
-            NodeAnnotation nodeAnnotation =
-                getNodeContainer().getNodeAnnotation();
             NodeAnnotationEditPart nodeAnnotationEditPart =
-                (NodeAnnotationEditPart)getViewer().getEditPartRegistry().get(
-                        nodeAnnotation);
+                    getNodeAnnotationEditPart();
             if (nodeAnnotationEditPart != null) {
                 nodeAnnotationEditPart.performEdit();
             }
         }
+    }
+
+    /** @return The associated node annotation edit part (maybe null). */
+    public final NodeAnnotationEditPart getNodeAnnotationEditPart() {
+        NodeAnnotation nodeAnnotation = getNodeContainer().getNodeAnnotation();
+        NodeAnnotationEditPart nodeAnnotationEditPart =
+            (NodeAnnotationEditPart)getViewer().getEditPartRegistry().get(
+                    nodeAnnotation);
+        return nodeAnnotationEditPart;
     }
 
     /**
