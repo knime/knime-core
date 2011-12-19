@@ -2,16 +2,16 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Java Snippet Nodes (draft)
 Bundle-SymbolicName: org.knime.jsnippets;singleton:=true
-Bundle-Version: 2.5.0.qualifier
-Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Require-Bundle: org.knime.base;bundle-version="2.5.0",
- org.knime.ext.sun;bundle-version="2.5.0"
-Bundle-RequiredExecutionEnvironment: JavaSE-1.6
-Bundle-ActivationPolicy: lazy
-Export-Package: org.apache.commons.lang3,
- org.knime.base.node.preproc.stringmanipulation,
- org.knime.base.node.preproc.stringmanipulation.manipulator
+Bundle-Version: 2.5.1.qualifier
 Bundle-ClassPath: knime-jsnippets.jar,
  lib/commons-lang3-3.0.1.jar,
  lib/autocomplete_1.5.2/autocomplete.jar,
  lib/autocomplete_1.5.2/rsyntaxtextarea.jar
+Bundle-Vendor: KNIME GmbH, Konstanz, Germany
+Export-Package: org.apache.commons.lang3,
+ org.knime.base.node.preproc.stringmanipulation,
+ org.knime.base.node.preproc.stringmanipulation.manipulator
+Require-Bundle: org.knime.base;bundle-version="2.5.0",
+ org.knime.ext.sun;bundle-version="2.5.0"
+Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ActivationPolicy: lazy

@@ -2,7 +2,7 @@
 <feature
       id="org.knime.product.desktop"
       label="KNIME Desktop"
-      version="2.5.0.qualifier"
+      version="2.5.1.qualifier"
       provider-name="KNIME GmbH, Konstanz, Germany">
 
    <description>
