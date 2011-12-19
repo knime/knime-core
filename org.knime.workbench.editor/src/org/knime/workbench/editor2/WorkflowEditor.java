@@ -62,7 +62,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.IResourceDelta;
@@ -1168,45 +1167,19 @@ public class WorkflowEditor extends GraphicalEditor implements
                     + exceptionMessage.toString());
         }
 
-        /** Bug fix #3028 - running this async may lead to deadlock; fixing
-         * this by sync invocation -- to be done better (refresh in
-         * save runnable) on trunk
-         */
-        Display.getDefault().syncExec(new Runnable() {
+        Display.getDefault().asyncExec(new Runnable() {
             @Override
             public void run() {
-                try {
-                    IResource r =
-                            KnimeResourceUtil.getResourceForURI(fileResource);
-                    if (r != null) {
-                        String pName = r.getProject().getName();
-                        monitor.setTaskName("Refreshing " + pName + "...");
-                        r.getProject().refreshLocal(IResource.DEPTH_INFINITE,
-                                monitor);
-                    }
-                } catch (CoreException ce) {
-                    OperationCanceledException oce =
-                            new OperationCanceledException(
-                                    "Workflow was not saved: " + ce.toString());
-                    oce.initCause(ce);
-                    throw oce;
-                }
-            }
-        });
-
-        // mark all sub editors as saved
-        for (IEditorPart subEditor : getSubEditors()) {
-            final WorkflowEditor editor = (WorkflowEditor)subEditor;
-            ((WorkflowEditor)subEditor).setIsDirty(false);
-            Display.getDefault().asyncExec(new Runnable() {
-                @Override
-                public void run() {
-                    if (!Display.getDefault().isDisposed()) {
+                if (!Display.getDefault().isDisposed()) {
+                    // mark all sub editors as saved
+                    for (IEditorPart subEditor : getSubEditors()) {
+                        final WorkflowEditor editor = (WorkflowEditor)subEditor;
+                        ((WorkflowEditor)subEditor).setIsDirty(false);
                         editor.firePropertyChange(IEditorPart.PROP_DIRTY);
                     }
                 }
-            });
-        }
+            }
+        });
 
         monitor.done();
 
