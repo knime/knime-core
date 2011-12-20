@@ -69,7 +69,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
 
     private final WorkflowLoadHelper m_loadHelper;
 
-    private String m_customName;
+    private String m_customDescription;
 
     private NodeAnnotationData m_nodeAnnotationData;
 
@@ -124,6 +124,12 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
     /** @return the loadVersion */
     protected LoadVersion getLoadVersion() {
         return m_loadVersion;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String getCustomDescription() {
+        return m_customDescription;
     }
 
     /** {@inheritDoc} */
@@ -225,6 +231,17 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
             m_nodeAnnotationData = null;
         }
         try {
+            m_customDescription =
+                loadCustomDescription(settings, parentSettings);
+        } catch (InvalidSettingsException e) {
+            String error =
+                "Invalid custom description in settings: " + e.getMessage();
+            loadResult.addError(error);
+            getLogger().debug(error, e);
+            setDirtyAfterLoad();
+            m_customDescription = null;
+        }
+        try {
             m_jobManager = loadNodeExecutionJobManager(settings);
         } catch (InvalidSettingsException e) {
             String error = "Can't restore node execution job manager: "
@@ -311,11 +328,22 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
         throws InvalidSettingsException {
         String customName = parentSettings.getString(KEY_CUSTOM_NAME, null);
 
-        String customDescr =
-            parentSettings.getString(KEY_CUSTOM_DESCRIPTION, null);
+        return NodeAnnotationData.createFromObsoleteCustomName(customName);
+    }
 
-        return NodeAnnotationData.createFromObsoleteCustomDescription(
-                customName, customDescr);
+    /** Read the custom description.
+     * @param settings The settings associated with the node (used in 2.0+)
+     * @param parentSettings The parent settings (workflow.knime, used in 1.3x)
+     * @return The custom name or null
+     * @throws InvalidSettingsException In case of errors reading the argument
+     */
+    protected String loadCustomDescription(final NodeSettingsRO settings,
+            final NodeSettingsRO parentSettings)
+        throws InvalidSettingsException {
+        if (!parentSettings.containsKey(KEY_CUSTOM_DESCRIPTION)) {
+            return null;
+        }
+        return parentSettings.getString(KEY_CUSTOM_DESCRIPTION);
     }
 
     /** Load the execution manager responsible for this node. This methods

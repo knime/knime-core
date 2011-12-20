@@ -91,6 +91,7 @@ import org.knime.workbench.editor2.actions.PasteActionContextMenu;
 import org.knime.workbench.editor2.actions.PauseLoopExecutionAction;
 import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.ResumeLoopAction;
+import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import org.knime.workbench.editor2.actions.SaveAsMetaNodeTemplateAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
 import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
@@ -228,6 +229,10 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         }
         // reset
         action = m_actionRegistry.getAction(ResetAction.ID);
+        manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+        ((AbstractNodeAction)action).update();
+        // set name and description
+        action = m_actionRegistry.getAction(SetNameAndDescriptionAction.ID);
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
         ((AbstractNodeAction)action).update();
         // add workflow annotation

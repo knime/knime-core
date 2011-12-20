@@ -187,6 +187,7 @@ import org.knime.workbench.editor2.actions.PasteActionContextMenu;
 import org.knime.workbench.editor2.actions.PauseLoopExecutionAction;
 import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.ResumeLoopAction;
+import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
 import org.knime.workbench.editor2.actions.SaveAsMetaNodeTemplateAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
 import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
@@ -506,6 +507,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         AbstractNodeAction resume = new ResumeLoopAction(this);
         AbstractNodeAction executeAndView = new ExecuteAndOpenViewAction(this);
         AbstractNodeAction reset = new ResetAction(this);
+        AbstractNodeAction setNameAndDescription =
+                new SetNameAndDescriptionAction(this);
         AbstractNodeAction toggleFlowVarPorts =
             new ToggleFlowVarPortsAction(this);
         AbstractNodeAction defaultOpenView = new DefaultOpenViewAction(this);
@@ -549,6 +552,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(executeAndView);
         m_actionRegistry.registerAction(reset);
         m_actionRegistry.registerAction(toggleFlowVarPorts);
+        m_actionRegistry.registerAction(setNameAndDescription);
         m_actionRegistry.registerAction(defaultOpenView);
 
         m_actionRegistry.registerAction(copy);
@@ -579,6 +583,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(cancelAll.getId());
         m_editorActions.add(executeAndView.getId());
         m_editorActions.add(reset.getId());
+        m_editorActions.add(setNameAndDescription.getId());
         m_editorActions.add(toggleFlowVarPorts.getId());
         m_editorActions.add(defaultOpenView.getId());
         m_editorActions.add(hideNodeName.getId());

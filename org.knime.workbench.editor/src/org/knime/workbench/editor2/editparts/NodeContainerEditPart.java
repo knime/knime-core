@@ -465,8 +465,11 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
     private void updateFigureFromUIinfo(final NodeUIInformation uiInfo) {
 
+        NodeContainerFigure fig = (NodeContainerFigure)getFigure();
         setBoundsFromUIinfo(uiInfo);
 
+        // update tooltip
+        fig.setCustomDescription(getNodeContainer().getCustomDescription());
         // check status of node
         updateNodeMessage();
 
@@ -480,6 +483,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
         // always refresh visuals
         refreshVisuals();
+
     }
 
     private void setBoundsFromUIinfo(final NodeUIInformation uiInfo) {
@@ -561,6 +565,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         NodeContainerFigure f = (NodeContainerFigure)getFigure();
         NodeType type = getNodeContainer().getType();
         String name = getNodeContainer().getName();
+        String description = getNodeContainer().getCustomDescription();
 
         // get the icon
         Image icon =
@@ -577,6 +582,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         }
         f.setType(type);
         f.setLabelText(name);
+        f.setCustomDescription(description);
     }
 
     /**

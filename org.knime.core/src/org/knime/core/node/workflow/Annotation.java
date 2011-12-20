@@ -234,7 +234,7 @@ public abstract class Annotation implements UIInformation {
     protected void fireChangeEvent() {
         for (NodeUIInformationListener l : m_uiListeners) {
             l.nodeUIInformationChanged(new NodeUIInformationEvent(
-                    new NodeID(0), null));
+                    new NodeID(0), null, null));
         }
     }
 
