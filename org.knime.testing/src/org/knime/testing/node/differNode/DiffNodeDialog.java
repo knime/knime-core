@@ -18,11 +18,18 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   Jun 23, 2006 (ritmeier): created
  */
 package org.knime.testing.node.differNode;
+
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
@@ -37,16 +44,9 @@ import javax.swing.JSpinner;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.NotConfigurableException;
-
 
 /**
- * 
+ *
  * @author ritmeier, University of Konstanz
  */
 public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
@@ -74,8 +74,8 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
     private JLabel m_upperToleranceLable;
 
     /**
-     * enumeration of differnd evaluators for the test results
-     * 
+     * enumeration of different evaluators for the test results
+     *
      * @author ritmeier, University of Konstanz
      */
     public enum Evaluators {
@@ -87,6 +87,15 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
             @Override
             public TestEvaluator getInstance() {
                 return new DataTableDiffer();
+            }
+        },
+        /**
+         * get a DataTableDiffer.
+         */
+        EmptyTableTest() {
+            @Override
+            public TestEvaluator getInstance() {
+                return new EmptyTableChecker();
             }
         },
         /**
@@ -111,7 +120,7 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
 
         /**
          * Get an instance.
-         * 
+         *
          * @return Returns an instance of TestEvaluator.
          */
         public abstract TestEvaluator getInstance();
@@ -130,14 +139,14 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
 
     /**
      * creates the panels
-     * 
+     *
      * @return Component with content
      */
     private Component buildContentPanel() {
         m_content = new JPanel();
         m_content.setLayout(new BorderLayout());
         m_tolerancePanel = buildTolerancePanel();
-        JComboBox combo = getEvalCombo();
+        final JComboBox combo = getEvalCombo();
         m_content.add(combo, BorderLayout.NORTH);
         m_content.add(m_tolerancePanel, BorderLayout.SOUTH);
 
@@ -145,7 +154,7 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
     }
 
     private JPanel buildTolerancePanel() {
-        JPanel panel = new JPanel();
+        final JPanel panel = new JPanel();
         panel.setLayout(new GridLayout(2, 2));
 
         m_lowerToleranceLable = new JLabel("lower tolerance (error%)");
@@ -177,8 +186,8 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
         return panel;
     }
 
-    private void showSpinners(boolean b) {
-        
+    private void showSpinners(final boolean b) {
+
         m_lowerToleranceLable.setVisible(b);
         m_upperToleranceLable.setVisible(b);
         m_lowerToleranceSpinner.setVisible(b);
@@ -195,18 +204,20 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
 
     private int getLowerTollerance() {
         if (m_lowerToleranceSpinner != null) {
-            Object valueObject = m_lowerToleranceSpinner.getValue();
-            if (valueObject instanceof Integer)
+            final Object valueObject = m_lowerToleranceSpinner.getValue();
+            if (valueObject instanceof Integer) {
                 return ((Integer)valueObject).intValue();
+            }
         }
         return m_defaultLowerTolerance;
     }
 
     private int getUpperTollerance() {
         if (m_upperToleranceSpinner != null) {
-            Object valueObject = m_upperToleranceSpinner.getValue();
-            if (valueObject instanceof Integer)
+            final Object valueObject = m_upperToleranceSpinner.getValue();
+            if (valueObject instanceof Integer) {
                 return ((Integer)valueObject).intValue();
+            }
         }
         return m_defaultUpperTolerance;
     }
@@ -215,9 +226,9 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
      * {@inheritDoc}
      */
     @Override
-    protected void loadSettingsFrom(NodeSettingsRO settings, DataTableSpec[] specs)
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
             throws NotConfigurableException {
-        String evalString = settings.getString(
+        final String evalString = settings.getString(
                 DiffNodeModel.CFGKEY_EVALUATORKEY, Evaluators.TableDiffer
                         .toString());
         Evaluators eval = null;
@@ -233,9 +244,9 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
             }
             m_lowerToleranceSpinner.setValue(new Integer(m_loadedLowerTolerance));
             m_upperToleranceSpinner.setValue(new Integer(m_loadedUpperTolerance));
-        } catch (IllegalArgumentException e) {
+        } catch (final IllegalArgumentException e) {
             eval = Evaluators.TableDiffer;
-        } catch (InvalidSettingsException e) {
+        } catch (final InvalidSettingsException e) {
 
         }
 
@@ -245,7 +256,7 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
      * {@inheritDoc}
      */
     @Override
-    protected void saveSettingsTo(NodeSettingsWO settings)
+    protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         settings.addString(DiffNodeModel.CFGKEY_EVALUATORKEY,
                 ((DiffNodeDialog.Evaluators)getEvalCombo().getSelectedItem())
@@ -262,7 +273,8 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
     /**
      * {@inheritDoc}
      */
-    public void actionPerformed(ActionEvent e) {
+    @Override
+    public void actionPerformed(final ActionEvent e) {
         showSpinners(getEvalCombo().getSelectedItem().equals(
                 Evaluators.LearnerScoreComperator));
 

@@ -25,6 +25,9 @@
 		        cell of the other table using the 
 		        <tt>DataCell.equalsDataCell()</tt> method.
 		</option>		
+		<option name="EmptyTableTest">
+		  Fails if an input table is not empty.
+        </option>
 		<option name="NegativeDiffer">A useless and not working option. To be 
 				removed soon!
 		</option>		
