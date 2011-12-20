@@ -85,22 +85,13 @@ public final class NodeAnnotationData extends AnnotationData {
         return (NodeAnnotationData)super.clone();
     }
 
-    public static NodeAnnotationData createFromObsoleteCustomDescription(
-            final String customName, final String customDescription) {
-        if (customName == null && customDescription == null) {
+    public static NodeAnnotationData createFromObsoleteCustomName(
+            final String customName) {
+        if (customName == null) {
             return new NodeAnnotationData(true);
         }
         NodeAnnotationData result = new NodeAnnotationData(false);
-        StringBuilder text = new StringBuilder();
-        if (customName != null) {
-            text.append(customName);
-            text.append("\n");
-        }
-        if (customDescription != null) {
-            text.append("\n");
-            text.append(customDescription);
-        }
-        result.setText(text.toString());
+        result.setText(customName);
         return result;
     }
 

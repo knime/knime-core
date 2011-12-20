@@ -157,11 +157,7 @@ class NodeContainerMetaPersistorVersion200 extends
         throws InvalidSettingsException {
         if (getLoadVersion().ordinal() < LoadVersion.V250.ordinal()) {
             String customName = settings.getString(KEY_CUSTOM_NAME, null);
-            String customDescr =
-                settings.getString(KEY_CUSTOM_DESCRIPTION, null);
-
-            return NodeAnnotationData.createFromObsoleteCustomDescription(
-                    customName, customDescr);
+            return NodeAnnotationData.createFromObsoleteCustomName(customName);
         } else {
             if (settings.containsKey("nodeAnnotation")) {
                 NodeSettingsRO anno =
@@ -172,6 +168,19 @@ class NodeContainerMetaPersistorVersion200 extends
             }
             return new NodeAnnotationData(true);
         }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected String loadCustomDescription(final NodeSettingsRO settings,
+            final NodeSettingsRO parentSettings)
+    throws InvalidSettingsException {
+        // custom description was not saved in v2.5.0 (but again in v2.5.1)
+        // see bug 3034
+        if (!settings.containsKey(KEY_CUSTOM_DESCRIPTION)) {
+            return null;
+        }
+        return settings.getString(KEY_CUSTOM_DESCRIPTION);
     }
 
     /** {@inheritDoc} */
@@ -202,6 +211,7 @@ class NodeContainerMetaPersistorVersion200 extends
             final NodeContainer nc, final ReferencedFile targetDir) {
         synchronized (nc.m_nodeMutex) {
             saveNodeAnnotation(settings, nc);
+            saveCustomDescription(settings, nc);
             saveNodeExecutionJobManager(settings, nc);
             boolean mustAlsoSaveExecutorSettings = saveState(settings, nc);
             if (mustAlsoSaveExecutorSettings) {
@@ -297,6 +307,11 @@ class NodeContainerMetaPersistorVersion200 extends
             NodeSettingsWO anno = settings.addNodeSettings("nodeAnnotation");
             annotation.save(anno);
         }
+    }
+
+    protected static void saveCustomDescription(final NodeSettingsWO settings,
+            final NodeContainer nc) {
+        settings.addString(KEY_CUSTOM_DESCRIPTION, nc.getCustomDescription());
     }
 
     protected static void saveIsDeletable(final NodeSettingsWO settings,

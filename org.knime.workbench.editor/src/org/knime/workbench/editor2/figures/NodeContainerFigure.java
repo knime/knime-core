@@ -174,9 +174,6 @@ public class NodeContainerFigure extends RectangleFigure {
         return name;
     }
 
-    /** Tooltip for displaying the full heading. */
-    private final NewToolTipFigure m_headingTooltip;
-
     /** content pane, contains the port visuals and the icon. */
     private final SymbolFigure m_symbolFigure;
 
@@ -197,6 +194,12 @@ public class NodeContainerFigure extends RectangleFigure {
 
     /** The node name, e.g File Reader. */
     private final Label m_heading;
+
+    /**
+     * Tooltip for displaying the custom description. This tooltip is displayed
+     * with the custom name.
+     */
+    private final NewToolTipFigure m_symbolTooltip;
 
     private Image m_jobExec;
 
@@ -233,13 +236,12 @@ public class NodeContainerFigure extends RectangleFigure {
 
         // Heading (Label)
         m_heading = new Label();
-        m_headingTooltip = new NewToolTipFigure("");
-        m_heading.setToolTip(m_headingTooltip);
         m_heading.setFont(boldFont);
         super.setFont(normalFont);
 
         // icon
         m_symbolFigure = new SymbolFigure();
+        m_symbolTooltip = new NewToolTipFigure("");
 
         // Status: traffic light
         m_statusFigure = new StatusFigure();
@@ -362,7 +364,6 @@ public class NodeContainerFigure extends RectangleFigure {
      */
     public void setLabelText(final String text) {
         m_heading.setText(wrapText(text));
-        m_headingTooltip.setText(text);
         repaint();
     }
 
@@ -397,12 +398,28 @@ public class NodeContainerFigure extends RectangleFigure {
         return text;
     }
 
+    /**
+     * Sets the description for this node as the symbol's tooltip.
+     *
+     * @param description the description to set as tooltip
+     */
+    public void setCustomDescription(final String description) {
+        if (description == null || description.trim().equals("")) {
+            m_symbolTooltip.setText("");
+            m_symbolFigure.setToolTip(null);
+        } else {
+            m_symbolTooltip.setText(description);
+            m_symbolFigure.setToolTip(m_symbolTooltip);
+        }
+    }
+
     private boolean isChild(final Figure figure) {
         for (final Object contentFigure : getChildren()) {
             if (contentFigure == figure) {
                 return true;
             }
         }
+
         return false;
     }
 
@@ -583,6 +600,7 @@ public class NodeContainerFigure extends RectangleFigure {
     public Dimension getPreferredSize(final int wHint, final int hHint) {
 
         int prefWidth = Math.max(WIDTH, m_heading.getTextBounds().width);
+
         int prefHeight = 0;
         int compCount = 3;
         prefHeight += m_heading.getPreferredSize().height;

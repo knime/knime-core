@@ -90,8 +90,10 @@ import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
+import org.knime.core.data.LongValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.FlowVariableModelButton;
@@ -820,9 +822,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
         if (m_tSpec != null) {
             DataColumnSpec cSpec = m_tSpec.getColumnSpec(colName);
             DataType cType = cSpec.getType();
-
             if (cType.isCompatible(IntValue.class)) {
-
                 // first try making of an IntCell
                 try {
                     int lb = Integer.parseInt(editField.getText());
@@ -830,8 +830,18 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
                 } catch (NumberFormatException nfe) {
                     throw new InvalidSettingsException(
                             "Number format error in " + name
-                                    + " bound number: Enter valid integer.");
+                                    + " bound number: Enter a valid integer.");
                 }
+            } else if (cType.isCompatible(LongValue.class)) {
+                try {
+                    long lb = Long.parseLong(editField.getText());
+                    return new LongCell(lb);
+                } catch (NumberFormatException nfe) {
+                    throw new InvalidSettingsException(
+                            "Number format error in " + name
+                                    + " bound number: Enter a valid number.");
+                }
+
             } else if (cType.isCompatible(DoubleValue.class)) {
                 try {
                     double lb = Double.parseDouble(editField.getText());

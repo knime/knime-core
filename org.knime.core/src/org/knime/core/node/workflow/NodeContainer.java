@@ -78,6 +78,7 @@ import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
 import org.knime.core.node.workflow.NodePropertyChangedEvent.NodeProperty;
@@ -151,6 +152,8 @@ public abstract class NodeContainer implements NodeProgressListener {
     private final ArrayList<FlowLoopContext> m_listOfWaitingLoops
                                         = new ArrayList<FlowLoopContext>();
 
+    private String m_customDescription;
+
     private ReferencedFile m_nodeContainerDirectory;
 
     private boolean m_isDirty;
@@ -215,6 +218,7 @@ public abstract class NodeContainer implements NodeProgressListener {
         + "\" in \"" + persistor.getClass().getSimpleName() + "\" is null";
         m_state = persistor.getState();
         m_jobManager = persistor.getExecutionJobManager();
+        m_customDescription = persistor.getCustomDescription();
         NodeAnnotationData annoData = persistor.getNodeAnnotationData();
         if (annoData != null && !annoData.isDefault()) {
             m_annotation.getData().copyFrom(annoData, true);
@@ -758,7 +762,8 @@ public abstract class NodeContainer implements NodeProgressListener {
        // to be a field member of this class)
        // there is no reason on settings the dirty flag when changed.
        m_uiInformation = uiInformation;
-       notifyUIListeners(new NodeUIInformationEvent(m_id, m_uiInformation));
+       notifyUIListeners(new NodeUIInformationEvent(m_id,
+               m_uiInformation, m_customDescription));
    }
 
 
@@ -1160,6 +1165,26 @@ public abstract class NodeContainer implements NodeProgressListener {
      */
     public NodeAnnotation getNodeAnnotation() {
         return m_annotation;
+    }
+
+    public String getCustomDescription() {
+        return m_customDescription;
+    }
+
+    public void setCustomDescription(final String customDescription) {
+        boolean notify = false;
+        synchronized (m_nodeMutex) {
+            if (!ConvenienceMethods.areEqual(
+                    customDescription, m_customDescription)) {
+                m_customDescription = customDescription;
+                setDirty();
+                notify = true;
+            }
+        }
+        if (notify) {
+            notifyUIListeners(new NodeUIInformationEvent(m_id, m_uiInformation,
+                    m_customDescription));
+        }
     }
 
     /** Is this node a to be locally executed workflow. In contrast to remotely
