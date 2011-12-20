@@ -68,7 +68,7 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
  *
  * @author Christoph Sieb, University of Konstanz
  */
-public class NameDescriptionDialog extends Dialog {
+public class NodeDescriptionDialog extends Dialog {
 
     private final String m_initDescription;
 
@@ -90,7 +90,7 @@ public class NameDescriptionDialog extends Dialog {
      * @param descriptionInit the initial description
      * @param nodeID the initial name for the node
      */
-    public NameDescriptionDialog(final Shell parent, final String dialogTitle,
+    public NodeDescriptionDialog(final Shell parent, final String dialogTitle,
             final String descriptionInit,
             final NodeID nodeID) {
         super(parent);

@@ -187,7 +187,7 @@ import org.knime.workbench.editor2.actions.PasteActionContextMenu;
 import org.knime.workbench.editor2.actions.PauseLoopExecutionAction;
 import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.ResumeLoopAction;
-import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
+import org.knime.workbench.editor2.actions.SetNodeDescriptionAction;
 import org.knime.workbench.editor2.actions.SaveAsMetaNodeTemplateAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
 import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
@@ -508,7 +508,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         AbstractNodeAction executeAndView = new ExecuteAndOpenViewAction(this);
         AbstractNodeAction reset = new ResetAction(this);
         AbstractNodeAction setNameAndDescription =
-                new SetNameAndDescriptionAction(this);
+                new SetNodeDescriptionAction(this);
         AbstractNodeAction toggleFlowVarPorts =
             new ToggleFlowVarPortsAction(this);
         AbstractNodeAction defaultOpenView = new DefaultOpenViewAction(this);

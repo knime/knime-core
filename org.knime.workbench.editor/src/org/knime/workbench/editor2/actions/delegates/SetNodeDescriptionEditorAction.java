@@ -52,14 +52,14 @@ package org.knime.workbench.editor2.actions.delegates;
 
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
-import org.knime.workbench.editor2.actions.SetNameAndDescriptionAction;
+import org.knime.workbench.editor2.actions.SetNodeDescriptionAction;
 
 /**
  * Editor action for "set description".
  * 
  * @author Christoph Sieb, University of Konstanz
  */
-public class SetNameAndDescriptionEditorAction extends AbstractEditorAction {
+public class SetNodeDescriptionEditorAction extends AbstractEditorAction {
     /**
      * @see 
      * org.knime.workbench.editor2.actions.delegates.AbstractEditorAction
@@ -67,6 +67,6 @@ public class SetNameAndDescriptionEditorAction extends AbstractEditorAction {
      */
     @Override
     protected AbstractNodeAction createAction(final WorkflowEditor editor) {
-        return new SetNameAndDescriptionAction(editor);
+        return new SetNodeDescriptionAction(editor);
     }
 }

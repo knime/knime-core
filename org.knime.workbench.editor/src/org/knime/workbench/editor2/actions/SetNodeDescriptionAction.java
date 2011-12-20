@@ -67,9 +67,9 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  *
  * @author Christoph Sieb, University of Konstanz
  */
-public class SetNameAndDescriptionAction extends AbstractNodeAction {
+public class SetNodeDescriptionAction extends AbstractNodeAction {
     private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(SetNameAndDescriptionAction.class);
+        NodeLogger.getLogger(SetNodeDescriptionAction.class);
 
     /**
      * unique ID for this action.
@@ -79,7 +79,7 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
     /**
      * @param editor The workflow editor
      */
-    public SetNameAndDescriptionAction(final WorkflowEditor editor) {
+    public SetNodeDescriptionAction(final WorkflowEditor editor) {
         super(editor);
     }
 
@@ -168,8 +168,8 @@ public class SetNameAndDescriptionAction extends AbstractNodeAction {
             }
             String dialogTitle = container.getDisplayLabel();
 
-            NameDescriptionDialog dialog =
-                new NameDescriptionDialog(parent, dialogTitle, initialDescr,
+            NodeDescriptionDialog dialog =
+                new NodeDescriptionDialog(parent, dialogTitle, initialDescr,
                         // (bugfix 1402)
                         container.getID());
 
