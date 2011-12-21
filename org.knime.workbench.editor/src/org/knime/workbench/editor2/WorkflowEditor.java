@@ -109,6 +109,8 @@ import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -218,7 +220,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         CommandStackListener, ISelectionListener, WorkflowListener,
         IResourceChangeListener, NodeStateChangeListener,
         NodePropertyChangedListener, ISaveablePart2, NodeUIInformationListener,
-        EventListener {
+        EventListener, IPropertyChangeListener {
 
     /** Id as defined in plugin.xml. */
     public static final String ID = "org.knime.workbench.editor.WorkflowEditor";
@@ -356,6 +358,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         // add this editor as a listener to WorkflowEvents
         m_manager.addListener(this);
         m_manager.addNodePropertyChangedListener(this);
+        IPreferenceStore prefStore =
+            KNIMEUIPlugin.getDefault().getPreferenceStore();
+        prefStore.addPropertyChangeListener(this);
 
         queueAfterOpen();
     }
@@ -467,6 +472,10 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
 
         getCommandStack().removeCommandStackListener(this);
+        IPreferenceStore prefStore =
+            KNIMEUIPlugin.getDefault().getPreferenceStore();
+
+        prefStore.removePropertyChangeListener(this);
         super.dispose();
     }
 
@@ -1636,6 +1645,29 @@ public class WorkflowEditor extends GraphicalEditor implements
         return false;
     }
 
+    private void updateGrid() {
+        IPreferenceStore prefStore =
+            KNIMEUIPlugin.getDefault().getPreferenceStore();
+        boolean snapToGrid =
+            prefStore.getBoolean(PreferenceConstants.P_GRID_SNAP_TO);
+        boolean showGrid =
+            prefStore.getBoolean(PreferenceConstants.P_GRID_SHOW);
+        int gridSize =
+            prefStore.getInt(PreferenceConstants.P_GRID_SIZE);
+        if (gridSize == 0) {
+            gridSize = prefStore.getDefaultInt(PreferenceConstants.P_GRID_SIZE);
+        }
+        GraphicalViewer graphicalViewer = getGraphicalViewer();
+        graphicalViewer.setProperty(SnapToGeometry.PROPERTY_SNAP_ENABLED,
+                Boolean.valueOf(snapToGrid));
+        graphicalViewer.setProperty(SnapToGrid.PROPERTY_GRID_ENABLED,
+                Boolean.valueOf(snapToGrid));
+        graphicalViewer.setProperty(SnapToGrid.PROPERTY_GRID_SPACING,
+                new Dimension(gridSize, gridSize));
+        graphicalViewer.setProperty(SnapToGrid.PROPERTY_GRID_VISIBLE,
+                showGrid);
+    }
+
     /*
      * ---------- end of auto-placing and auto-connecting --------------
      */
@@ -1914,5 +1946,17 @@ public class WorkflowEditor extends GraphicalEditor implements
     public void nodeUIInformationChanged(final NodeUIInformationEvent evt) {
         updatePartName();
     }
+
+    /** {@inheritDoc} */
+    @Override
+    public void propertyChange(final PropertyChangeEvent event) {
+        String prop = event.getProperty();
+        if (PreferenceConstants.P_GRID_SNAP_TO.equals(prop)
+                || PreferenceConstants.P_GRID_SHOW.equals(prop)
+                || PreferenceConstants.P_GRID_SIZE.equals(prop)) {
+            updateGrid();
+        }
+    }
+
 
 }
