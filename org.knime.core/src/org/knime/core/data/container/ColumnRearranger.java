@@ -313,6 +313,18 @@ public final class ColumnRearranger {
         return -1;
     }
 
+    /** Get the number of columns in the rearranger. This number is equal to
+     * the number of columns in the table spec that would be produced by calling
+     * {@link #createSpec()}. Note, this number may change when this rearranger
+     * is further customized through one of the {@link #remove(int...)} or
+     * {@link #append(CellFactory)} methods.
+     * @return the number of currently included columns
+     * @since v2.6
+     */
+    public int getColumnCount() {
+        return m_includes.size();
+    }
+
     /**
      * Moves the column at index <code>from</code> to the index <code>to</code>.
      * This method can be used to re-sort the set of columns.
