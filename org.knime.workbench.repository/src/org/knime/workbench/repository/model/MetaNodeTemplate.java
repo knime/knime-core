@@ -18,8 +18,6 @@
  */
 package org.knime.workbench.repository.model;
 
-import org.knime.core.node.workflow.NodeAnnotation;
-import org.knime.core.node.workflow.NodeAnnotationData;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
@@ -62,7 +60,9 @@ public class MetaNodeTemplate extends AbstractNodeTemplate {
         if (m_description != null) {
             return m_description;
         }
-        return m_manager.getDisplayLabel();
+        return m_manager.getName() + ": "
+            + m_manager.getCustomDescription() != null
+            ? m_manager.getCustomDescription() : "";
     }
 
     /**
@@ -77,17 +77,13 @@ public class MetaNodeTemplate extends AbstractNodeTemplate {
          * in the extension.
          */
         m_description = description;
-
-        if (m_manager == null) {
-            return;
+        if (m_manager != null && m_manager.getCustomDescription() == null) {
+            m_manager.setCustomDescription(m_description);
+        } else if (m_manager != null
+                && m_manager.getCustomDescription() != null) {
+            m_manager.setCustomDescription(m_manager.getCustomDescription()
+                    + " " + m_description);
         }
-        if (description == null || description.isEmpty()) {
-            return;
-        }
-        NodeAnnotation anno = m_manager.getNodeAnnotation();
-        NodeAnnotationData data = anno.getData();
-        data.setText(data.getText() + description);
-        anno.copyFrom(data, false);
     }
 
 
