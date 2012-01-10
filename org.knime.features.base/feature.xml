@@ -741,6 +741,7 @@ propagated with or for interoperation with KNIME.
       <import feature="org.eclipse.rcp" version="3.4.200.R342_v20090122-989JESTEbig-SVaL8UJHcYBr4A63" match="compatible"/>
       <import plugin="org.eclipse.jdt.core"/>
       <import plugin="org.apache.log4j"/>
+      <import feature="org.knime.features.explorer" version="2.5.1.qualifier"/>
    </requires>
 
    <plugin
@@ -799,13 +800,6 @@ propagated with or for interoperation with KNIME.
 
    <plugin
          id="org.knime.workbench.help"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         unpack="false"/>
-
-   <plugin
-         id="org.knime.workbench.explorer.view"
          download-size="0"
          install-size="0"
          version="0.0.0"
