@@ -195,7 +195,7 @@ public class TestingConfig extends AppenderSkeleton {
         boolean first = true;
         for (String o : m_owners) {
             if (!first) {
-                result.append(";");
+                result.append(",");
             }
             first = false;
             result.append(o);
