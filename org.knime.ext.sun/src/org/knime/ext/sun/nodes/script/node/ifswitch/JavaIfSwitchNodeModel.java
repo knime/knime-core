@@ -68,7 +68,6 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.port.inactive.InactiveBranchConsumer;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.ext.sun.nodes.script.calculator.ColumnCalculator;
@@ -82,7 +81,7 @@ import org.knime.ext.sun.nodes.script.settings.JavaSnippetType.JavaSnippetIntTyp
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 final class JavaIfSwitchNodeModel extends NodeModel
-    implements FlowVariableProvider, InactiveBranchConsumer {
+    implements FlowVariableProvider {
 
     /** A no column spec. */
     public static final DataTableSpec EMPTY_SPEC = new DataTableSpec("empty");

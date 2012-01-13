@@ -64,7 +64,6 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.port.inactive.InactiveBranchConsumer;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 
@@ -74,8 +73,7 @@ import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
  *
  * @author M. Berthold, University of Konstanz
  */
-public class StartcaseNodeModel extends NodeModel
-implements InactiveBranchConsumer {
+public class StartcaseNodeModel extends NodeModel {
 
     private SettingsModelString m_selectedPort =
                                      StartcaseNodeDialog.createChoiceModel();
