@@ -53,6 +53,7 @@ package org.knime.core.node.workflow;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.ConvenienceMethods;
 
 /**
  * FlowVariable holding local variables of basic types which can
@@ -345,7 +346,29 @@ public final class FlowVariable extends FlowObject {
             return false;
         }
         FlowVariable v = (FlowVariable)obj;
-        return v.getType().equals(getType()) && v.getName().equals(getName());
+        if (!v.getType().equals(getType())) {
+            return false;
+        }
+        if (!v.getName().equals(getName())) {
+            return false;
+        }
+        boolean valueEqual;
+        switch (getType()) {
+        case DOUBLE:
+            valueEqual = v.getDoubleValue() == getDoubleValue();
+            break;
+        case INTEGER:
+            valueEqual = v.getIntValue() == getIntValue();
+            break;
+        case STRING:
+            valueEqual = ConvenienceMethods.areEqual(
+                    v.getStringValue(), getStringValue());
+            break;
+        default:
+            throw new IllegalStateException("Unsupported variable type "
+                    + getType() + " (not implemented)");
+        }
+        return valueEqual;
     }
 
     /** {@inheritDoc} */
