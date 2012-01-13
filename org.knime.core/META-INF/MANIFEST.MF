@@ -62,7 +62,8 @@ Require-Bundle: org.eclipse.core.runtime;visibility:=reexport,
  org.eclipse.ecf.filetransfer,
  org.apache.xerces;bundle-version="2.9.0",
  org.apache.xalan;bundle-version="2.7.1",
- org.knime.core.pmml;bundle-version="2.5.0";visibility:=reexport
+ org.knime.core.pmml;bundle-version="2.5.0";visibility:=reexport,
+ org.apache.commons.httpclient;bundle-version="3.1.0"
 Eclipse-RegisterBuddy: org.apache.log4j
 Eclipse-BuddyPolicy: dependent
 Bundle-ActivationPolicy: lazy

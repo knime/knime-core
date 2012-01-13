@@ -70,6 +70,9 @@ import javax.swing.JScrollPane;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.apache.commons.httpclient.URIException;
+import org.apache.commons.httpclient.util.URIUtil;
+
 /**
  * This component provides multiple file selection based on the
  * {@link FilesHistoryPanel}. It lets the user selected an arbitrary number of
@@ -185,7 +188,13 @@ public class MultipleURLList extends JScrollPane {
 
         public void setSelectedFile(final URL u) {
             if (u != null) {
-                m_filesPanel.setSelectedFile(u.toString());
+                String decUrl = u.toString();
+                try {
+                    decUrl = URIUtil.decode(decUrl, "UTF-8");
+                } catch (URIException ex) {
+                    // ignore it
+                }
+                m_filesPanel.setSelectedFile(decUrl);
             } else {
                 m_filesPanel.setSelectedFile(null);
             }
@@ -331,18 +340,23 @@ public class MultipleURLList extends JScrollPane {
         for (MyFilePanel fp : m_filePanels) {
             if (fp.getSelectedFile().length() > 0) {
                 URL u = null;
+                String encUrl = fp.getSelectedFile();
                 try {
-                    u = new URL(fp.getSelectedFile());
+                    encUrl = URIUtil.encodePath(encUrl, "UTF-8");
+                    u = new URL(encUrl);
                 } catch (MalformedURLException ex) {
                     try {
-                        u = new URL("file:" + fp.getSelectedFile());
+                        u = new URL("file:" + encUrl);
+                        encUrl = "file:" + encUrl;
                         fp.setSelectedFile(u);
                     } catch (MalformedURLException ex1) {
                         // ignore it
                     }
+                } catch (URIException ex) {
+                    // ignore it
                 }
                 if (u != null) {
-                    urls.add(fp.getSelectedFile());
+                    urls.add(encUrl);
                 }
             }
         }
