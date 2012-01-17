@@ -362,25 +362,36 @@ public abstract class BasicPlotter extends AbstractPlotter {
         List<Point>newPoints = new ArrayList<Point>();
         List<DataCellPoint>domainValues = line.getDomainValues();
         for (int i = 0; i < domainValues.size() - 1; i++) {
-            double x1 = ((DoubleValue)domainValues.get(i).getX())
-                .getDoubleValue();
-            double y1 = ((DoubleValue)domainValues.get(i).getY())
-                .getDoubleValue();
-            double x2 = ((DoubleValue)domainValues.get(i + 1).getX())
-                .getDoubleValue();
-            double y2 = ((DoubleValue)domainValues.get(i + 1).getY())
-                .getDoubleValue();
+            DoubleValue x1 = (DoubleValue)domainValues.get(i).getX();
+            DoubleValue y1 = (DoubleValue)domainValues.get(i).getY();
+            DoubleValue x2 = (DoubleValue)domainValues.get(i + 1).getX();
+            DoubleValue y2 = (DoubleValue)domainValues.get(i + 1).getY();
 
-//            newPoints.add(line.getPoints().get(i));
+            // computed unmapped deltas and distance for calculating the
+            // interpolation points below
+            double unmappedDeltaX = x2.getDoubleValue() - x1.getDoubleValue();
+            double unmappedDeltaY = y2.getDoubleValue() - y1.getDoubleValue();
+            double unmappedDistance = Math.sqrt(
+                    (unmappedDeltaX * unmappedDeltaX)
+                    + (unmappedDeltaY * unmappedDeltaY));
 
-            double deltaX = x2 - x1;
-            double deltaY = y2 - y1;
-            double distance = Math.sqrt(
-                    (deltaX * deltaX)
-                    + (deltaY * deltaY));
-            for (int j = 0; j <= distance; j += 1) {
-              double newX = x1 + (deltaX / distance) * j;
-              double newY = y1 + (deltaY / distance) * j;
+            // computed mapped distance for determining the number of
+            // interpolation points
+            double mappedDeltaX = getMappedXValue((DataCell)x2)
+                    - getMappedXValue((DataCell)x1);
+            double mappedDeltaY = getMappedYValue((DataCell)y2)
+                    - getMappedYValue((DataCell)y1);
+            double mappedDistance = Math.sqrt((mappedDeltaX * mappedDeltaX)
+                    + (mappedDeltaY * mappedDeltaY));
+            // compute at least 10 interpolation points, just to be on the safe
+            // side
+            mappedDistance = Math.max(10, mappedDistance);
+
+            for (int j = 0; j <= mappedDistance; j += 1) {
+              double newX = x1.getDoubleValue()
+                      + (unmappedDeltaX / unmappedDistance) * j;
+              double newY = y1.getDoubleValue()
+                      + (unmappedDeltaY / unmappedDistance) * j;
               // either x or Y
               if (x && newX < 1.0) {
                   continue;
