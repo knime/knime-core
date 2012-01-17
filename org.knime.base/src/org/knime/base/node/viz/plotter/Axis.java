@@ -64,6 +64,7 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -101,9 +102,11 @@ import org.knime.core.data.DoubleValue;
  * @author Stephan Sellien, University of Konstanz
  */
 public class Axis extends JComponent {
+    private static final long serialVersionUID = 7974028405608643754L;
 
     // private static final NodeLogger LOGGER =
     // NodeLogger.getLogger(Axis.class);
+
 
     /**
      * Constant for the horizontal enumeration value.
@@ -162,10 +165,9 @@ public class Axis extends JComponent {
 
     private CoordinateMapping[] m_coordMap;
 
-    private static final DecimalFormat SCIENTIFIC = new DecimalFormat("0.##E0");
+    private final DecimalFormat SCIENTIFIC = new DecimalFormat("0.##E0");
 
-    private static final DecimalFormat NORMAL =
-            new DecimalFormat("#######0.###");
+    private final DecimalFormat NORMAL = new DecimalFormat("#######0.###");
 
     private DecimalFormat m_currFormat = NORMAL;
 
@@ -179,7 +181,7 @@ public class Axis extends JComponent {
     private JMenu m_mappingMethodMenu;
 
     private JMenu m_notationsMenu;
-    
+
     private final boolean m_inverse;
 
     /**
@@ -211,8 +213,16 @@ public class Axis extends JComponent {
     public Axis(final int orientation, final int length) {
         this(orientation, length, false);
     }
-    
-    public Axis(final int orientation, final int length, 
+
+    /**
+     * Creates a new ruler in either horizontal or vertical orientation.
+     *
+     * @param orientation specifies the orientation of this instance. Use
+     *            Header.HORIZONTAL, or Header.VERTICAL
+     * @param length the initial entire length of the ruler in pixels.
+     * @param inverse true if the the values on the axes should be reversed
+     */
+    public Axis(final int orientation, final int length,
             final boolean inverse) {
         if ((orientation != HORIZONTAL) && (orientation != VERTICAL)) {
             throw new IllegalArgumentException("Argument 'orientation' must"
@@ -317,7 +327,7 @@ public class Axis extends JComponent {
             // no use in drawing in such a small area
             return;
         }
-        
+
         // draw the axis
         if (m_horizontal) {
             g.drawLine(x, y + 2, x + width, y + 2);
@@ -405,7 +415,7 @@ public class Axis extends JComponent {
 
             drawnLabels.add(label);
             long pos = (long)mapping.getMappingValue() + m_startTickOffset;
-            drawTick(g, 
+            drawTick(g,
                     pos,
                     label, useOffset);
             useOffset = !useOffset;
@@ -448,17 +458,22 @@ public class Axis extends JComponent {
                     tooLong = true;
                 }
             }
-            if (l.contains(".") && l.contains("E")) {
-                int temp = l.indexOf('E') - l.indexOf('.') - 1;
+
+            DecimalFormatSymbols symbols = m_currFormat.getDecimalFormatSymbols();
+            int decimalIndex = l.indexOf(symbols.getDecimalSeparator());
+            int exponentIndex = l.indexOf(symbols.getExponentSeparator());
+
+            if ((decimalIndex > -1) && (exponentIndex > -1)) {
+                int temp = exponentIndex - decimalIndex - 1;
                 if (temp > decimals) {
                     decimals = temp;
                 }
-                temp = l.length() - l.indexOf('E') - 1;
+                temp = l.length() - exponentIndex - 1;
                 if (temp > exponent) {
                     exponent = temp;
                 }
-            } else if (l.contains(".")) {
-                int temp = l.length() - l.indexOf('.') - 1;
+            } else if (decimalIndex > -1) {
+                int temp = l.length() - decimalIndex - 1;
                 if (temp > decimals) {
                     decimals = temp;
                 }
@@ -518,7 +533,7 @@ public class Axis extends JComponent {
             int y = 2;
             if (m_inverse) {
                 y -= m_tickLength;
-            } else {              
+            } else {
                 y += m_tickLength;
             }
             g.drawLine(x, 2, x, y);
@@ -545,14 +560,14 @@ public class Axis extends JComponent {
             if (x < 0) {
                 x = 0;
             }
-            
+
 
             int labelY = SIZE - m_tickLength - 3;
             if (useOffset) {
                 labelY -= HORIZ_OFFSET;
             }
             if (m_inverse) {
-                labelY -= SIZE; 
+                labelY -= SIZE;
             }
             if (m_coordinate.isNominal()) {
                 Rectangle rect =
@@ -591,13 +606,13 @@ public class Axis extends JComponent {
 //            int xLabelEnd = -1;
             int xTickStart = -1;
             int xTickEnd = -1;
-            
+
             if (m_inverse) {
                 xTickStart = getX() + SIZE;
                 xTickEnd = xTickStart + m_tickLength;
                 if (m_coordinate.isNominal()) {
                     xLabelStart = SIZE + (int)(1.4 * m_tickLength);
-                } else {                    
+                } else {
                     xLabelStart = xTickStart + (int)(1.4 * m_tickLength);
 //                    xLabelEnd = xLabelStart + g.getFontMetrics().stringWidth(
 //                            label);
@@ -610,7 +625,7 @@ public class Axis extends JComponent {
 //                    xLabelEnd = xLabelStart + g.getFontMetrics().stringWidth(
 //                            label);
                 } else {
-                    xLabelStart = SIZE - (int)(1.4 * m_tickLength) 
+                    xLabelStart = SIZE - (int)(1.4 * m_tickLength)
                         - g.getFontMetrics().stringWidth(label);
 //                    xLabelEnd = SIZE - (int)(1.4 * m_tickLength);
                 }
@@ -634,12 +649,12 @@ public class Axis extends JComponent {
                 g.drawString(label, xLabelStart, y);
             } else {
                 Rectangle rect =
-                        new Rectangle(xLabelStart, y - m_tickDist, 
+                        new Rectangle(xLabelStart, y - m_tickDist,
                                 SIZE - (int)(1.4 * m_tickLength), m_tickDist);
                 if (m_inverse) {
                     LabelPaintUtil.drawLabel(label, (Graphics2D)g, rect,
                             LabelPaintUtil.Position.RIGHT, m_rotateYLabels);
-                } else {                    
+                } else {
                     LabelPaintUtil.drawLabel(label, (Graphics2D)g, rect,
                             LabelPaintUtil.Position.LEFT, m_rotateYLabels);
                 }
@@ -697,6 +712,7 @@ public class Axis extends JComponent {
                     /**
                      * {@inheritDoc}
                      */
+                    @Override
                     public int compare(final PolicyStrategy o1,
                             final PolicyStrategy o2) {
                         return o1.getDisplayName().compareTo(
@@ -722,6 +738,7 @@ public class Axis extends JComponent {
                         /**
                          * {@inheritDoc}
                          */
+                        @Override
                         public void itemStateChanged(final ItemEvent e) {
                             if (e.getStateChange() == ItemEvent.SELECTED) {
                                 m_coordinate.setPolicy(tempStrategy);
@@ -785,6 +802,7 @@ public class Axis extends JComponent {
                         /**
                          * {@inheritDoc}
                          */
+                        @Override
                         public void itemStateChanged(final ItemEvent e) {
                             if (e.getStateChange() == ItemEvent.SELECTED) {
                                 m_coordinate.setActiveMappingMethod(tempMethod);
@@ -795,7 +813,7 @@ public class Axis extends JComponent {
                     m_mappingMethodMenu.add(checkbox);
                 }
 
-                for (Map.Entry<MappingMethod, JRadioButtonMenuItem> entry 
+                for (Map.Entry<MappingMethod, JRadioButtonMenuItem> entry
                         : checkboxes.entrySet()) {
                     if (entry.getKey().isCompatibleWithDomain(
                             getCoordinate().getDomain())) {
