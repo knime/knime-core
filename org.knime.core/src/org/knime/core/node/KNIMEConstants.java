@@ -52,6 +52,7 @@ package org.knime.core.node;
 
 import java.io.File;
 import java.net.InetAddress;
+import java.util.Locale;
 
 import javax.swing.ImageIcon;
 
