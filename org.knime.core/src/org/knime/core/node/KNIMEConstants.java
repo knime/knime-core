@@ -80,7 +80,7 @@ public final class KNIMEConstants {
     public static final String VERSION;
 
     /** The build date, is set automatically by the build scripts. */
-    public static final String BUILD_DATE = "Nightly-Build Dezember 12, 2011";
+    public static final String BUILD_DATE = "November 29, 2011";
 
     /** Java property name that is used to identify whether KNIME is started
      * in expert mode or not. Note, with KNIME v2.4 this field became obsolete
@@ -302,6 +302,13 @@ public final class KNIMEConstants {
         } else {
             KNIME16X16 = null;
         }
+        // we prefer to have all gui-related locals being set to us-standard
+        try {
+            Locale.setDefault(Locale.US);
+        } catch (Exception e) {
+            // do nothing.
+        }
+
         int maxThreads = Runtime.getRuntime().availableProcessors() + 2;
         String maxThreadsString =
             System.getProperty(PROPERTY_MAX_THREAD_COUNT);
