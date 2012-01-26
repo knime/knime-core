@@ -60,11 +60,9 @@ import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -88,6 +86,8 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.Document;
 import javax.swing.text.JTextComponent;
 
+import org.apache.commons.httpclient.URIException;
+import org.apache.commons.httpclient.util.URIUtil;
 import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.FlowVariableModelButton;
 import org.knime.core.util.SimpleFileFilter;
@@ -455,7 +455,6 @@ public final class FilesHistoryPanel extends JPanel {
         } catch (MalformedURLException ex) {
         }
 
-
         File f = new File(path);
         if (!f.isAbsolute()) {
             f = new File(new File(System.getProperty("user.home")), path);
@@ -513,37 +512,36 @@ public final class FilesHistoryPanel extends JPanel {
                 public void stateChanged(final ChangeEvent e) {
                     // we can only check local files, ignore everything else
                     Component editorComponent =
-                        m_textBox.getEditor().getEditorComponent();
-                    if (new File(getSelectedFile()).exists()) {
+                            m_textBox.getEditor().getEditorComponent();
+                    String selFile = getSelectedFile();
+                    if (new File(selFile).exists()) {
                         editorComponent.setBackground(Color.WHITE);
                         return;
                     }
 
-                    try {
-                        URL url = new URL(getSelectedFile());
-                        if ("file".equalsIgnoreCase(url.getProtocol())) {
-                            File file = new File(url.getPath());
-                            if (file.exists()) {
-                                editorComponent.setBackground(Color.WHITE);
-                                return;
-                            } else {
-                                // maybe the URL is encoded (e.g. %20 for spaces)
-                                // so try to decode it
-                                file = new File(URLDecoder.decode(
-                                        url.getPath(), "UTF-8"));
+                    if (selFile.startsWith("file:")) {
+                        selFile = selFile.substring(5);
+                        File file = new File(selFile);
+                        if (file.exists()) {
+                            editorComponent.setBackground(Color.WHITE);
+                            return;
+                        } else {
+                            // maybe the URL is encoded (e.g. %20 for
+                            // spaces)
+                            // so try to decode it
+                            try {
+                                file = new File(URIUtil.decode(selFile, "UTF-8"));
                                 if (file.exists()) {
                                     editorComponent.setBackground(Color.WHITE);
                                     return;
                                 }
+                            } catch (URIException ex) {
+                                // ignore it
                             }
-                        } else {
-                            editorComponent.setBackground(Color.WHITE);
-                            return;
                         }
-                    } catch (MalformedURLException ex) {
-                        // ignore
-                    } catch (UnsupportedEncodingException ex) {
-                        // ignore
+                    } else {
+                        editorComponent.setBackground(Color.WHITE);
+                        return;
                     }
 
                     editorComponent.setBackground(Color.ORANGE);
