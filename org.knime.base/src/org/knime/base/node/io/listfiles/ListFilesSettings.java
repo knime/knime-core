@@ -53,6 +53,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import org.apache.commons.httpclient.URIException;
+import org.apache.commons.httpclient.util.URIUtil;
 import org.knime.base.node.io.listfiles.ListFiles.Filter;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -77,7 +79,6 @@ public class ListFilesSettings {
 
     /** Key to store the RECURSIVE_SETTINGS. */
     public static final String RECURSIVE_SETTINGS = "RECURSIVE_SETTINGS";
-
 
     /** Key to store the Filter Settings. */
     public static final String FILTER_SETTINGS = "FILTER_SETTINGS";
@@ -148,8 +149,10 @@ public class ListFilesSettings {
         return m_filter;
     }
 
-    /** @param filter the filter to set
-     * @throws NullPointerException If argument is null. */
+    /**
+     * @param filter the filter to set
+     * @throws NullPointerException If argument is null.
+     */
     public void setFilter(final Filter filter) {
         if (filter == null) {
             throw new NullPointerException("Argument must not be null.");
@@ -157,13 +160,15 @@ public class ListFilesSettings {
         m_filter = filter;
     }
 
-    /** Split location string by ";" and return individual directories.
+    /**
+     * Split location string by ";" and return individual directories.
+     *
      * @return A list of files representing directories.
      * @throws InvalidSettingsException If the argument is invalid or does not
-     * represent a list of existing directories.
+     *             represent a list of existing directories.
      */
     public Collection<File> getDirectoriesFromLocationString()
-        throws InvalidSettingsException {
+            throws InvalidSettingsException {
         if (m_locationString == null || m_locationString.equals("")) {
             throw new InvalidSettingsException("Please select a folder!");
         }
@@ -172,15 +177,28 @@ public class ListFilesSettings {
         for (String s : subs) {
             File f = new File(s);
             if (!f.isDirectory()) {
-                throw new InvalidSettingsException("\"" + s
-                        + "\" does not exist or is not a directory");
+                try {
+                    if (s.startsWith("file:")) {
+                        s = s.substring(5);
+                    }
+                    f = new File(URIUtil.decode(s));
+                } catch (URIException ex) {
+                    throw new InvalidSettingsException("\"" + s
+                            + "\" does not exist or is not a directory");
+                }
+                if (!f.isDirectory()) {
+                    throw new InvalidSettingsException("\"" + s
+                            + "\" does not exist or is not a directory");
+                }
             }
             result.add(f);
         }
         return result;
     }
 
-    /** Load settings, fail if incomplete.
+    /**
+     * Load settings, fail if incomplete.
+     *
      * @param settings To load from.
      * @throws InvalidSettingsException If that fails.
      */
@@ -204,7 +222,9 @@ public class ListFilesSettings {
         m_caseSensitive = settings.getBoolean(CASE_SENSITIVE_STRING);
     }
 
-    /** Load settings in dialog (no fail).
+    /**
+     * Load settings in dialog (no fail).
+     *
      * @param settings To load from.
      */
     protected void loadSettingsInDialog(final NodeSettingsRO settings) {
@@ -224,7 +244,9 @@ public class ListFilesSettings {
         m_caseSensitive = settings.getBoolean(CASE_SENSITIVE_STRING, false);
     }
 
-    /** Save settings in model & dialog.
+    /**
+     * Save settings in model & dialog.
+     *
      * @param settings To save to.
      */
     protected void saveSettingsTo(final NodeSettingsWO settings) {
@@ -247,7 +269,7 @@ public class ListFilesSettings {
         }
     }
 
-    /**@return the previously analyzed folders. */
+    /** @return the previously analyzed folders. */
     static String[] getLocationHistory() {
         StringHistory h = StringHistory.getInstance(LIST_FILES_HISTORY_ID);
         return h.getHistory();

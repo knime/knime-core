@@ -70,6 +70,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 
+import org.apache.commons.httpclient.URIException;
+import org.apache.commons.httpclient.util.URIUtil;
 import org.knime.base.node.io.listfiles.ListFiles.Filter;
 import org.knime.base.util.WildcardMatcher;
 import org.knime.core.data.DataTableSpec;
@@ -92,14 +94,13 @@ import org.knime.core.node.util.ConvenientComboBoxRenderer;
  *
  * @author Peter
  */
-public class ListFilesNodeDialog extends NodeDialogPane
-implements ItemListener {
+public class ListFilesNodeDialog extends NodeDialogPane implements ItemListener {
 
     private static final int HORIZ_SPACE = 10;
 
     private static final int PANEL_WIDTH = 585;
 
-    private JPanel m_outerpanel;
+    private final JPanel m_outerpanel;
 
     private JComboBox m_locations;
 
@@ -351,27 +352,38 @@ implements ItemListener {
         String location = m_locations.getEditor().getItem().toString();
         if (location.trim().isEmpty()) {
             throw new InvalidSettingsException("Please select a file!");
-        } else {
-            String[] files = location.split(";");
-            for (int i = 0; i < files.length; i++) {
-                File currentFile = new File(files[i]);
-                if (!currentFile.exists()) {
-                    throw new InvalidSettingsException(
-                            "Location doesn't exist");
+        }
+
+        String[] files = location.split(";");
+        for (int i = 0; i < files.length; i++) {
+            File currentFile = new File(files[i]);
+            if (!currentFile.isDirectory()) {
+                // check if it was an URL;
+                String s = files[i];
+                try {
+
+                    if (s.startsWith("file:")) {
+                        s = s.substring(5);
+                    }
+                    currentFile = new File(URIUtil.decode(s));
+                } catch (URIException ex) {
+                    throw new InvalidSettingsException("\"" + s
+                            + "\" does not exist or is not a directory");
                 }
                 if (!currentFile.isDirectory()) {
-                    throw new InvalidSettingsException(
-                            "Location is not a Directory");
+                    throw new InvalidSettingsException("\"" + s
+                            + "\" does not exist or is not a directory");
                 }
             }
+
         }
+
         ListFilesSettings set = new ListFilesSettings();
         set.setLocationString(location);
         set.setRecursive(m_recursive.isSelected());
         set.setCaseSensitive(m_caseSensitive.isSelected());
         String extensions = m_extensionField.getEditor().getItem().toString();
-        set.setExtensionsString(
-                extensions.toString());
+        set.setExtensionsString(extensions.toString());
 
         // save the selected radio-Button
         Filter filter;
@@ -461,17 +473,17 @@ implements ItemListener {
         String ext = set.getExtensionsString();
         m_extensionField.getEditor().setItem(ext == null ? "" : ext);
         switch (set.getFilter()) {
-        case Extensions:
-            m_filterExtensionsRadio.doClick(); // trigger event
-            break;
-        case RegExp:
-            m_filterRegExpRadio.doClick();
-            break;
-        case Wildcards:
-            m_filterWildCardsRadio.doClick();
-            break;
-        default:
-            m_filterALLRadio.doClick();
+            case Extensions:
+                m_filterExtensionsRadio.doClick(); // trigger event
+                break;
+            case RegExp:
+                m_filterRegExpRadio.doClick();
+                break;
+            case Wildcards:
+                m_filterWildCardsRadio.doClick();
+                break;
+            default:
+                m_filterALLRadio.doClick();
         }
 
     }
