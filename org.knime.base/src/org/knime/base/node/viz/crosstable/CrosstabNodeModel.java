@@ -603,6 +603,8 @@ public class CrosstabNodeModel extends NodeModel
     @Override
     protected void reset() {
         m_hilite.setMapper(null);
+        m_outTable = null;
+        m_statOutTable = null;
     }
 
     /**

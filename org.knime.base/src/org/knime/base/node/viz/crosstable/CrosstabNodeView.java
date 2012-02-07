@@ -345,9 +345,11 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
     @Override
     protected void modelChanged() {
         reCreateCrosstabulation();
-        updatePropsPanel();
-        updateHeader();
-        updateStatistics();
+        if (null != m_crosstab) {
+            updatePropsPanel();
+            updateHeader();
+            updateStatistics();
+        }
     }
 
     /** Convenient method to create HTML Header. */
@@ -377,13 +379,26 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
         StringBuilder buffer = createHtmlHeader();
         buffer.append("<body>\n");
         buffer.append("<h2>Cross Tabulation of ");
-        buffer.append(m_crosstab.getExplanatoryVariable());
+        buffer.append(escapeHtml(m_crosstab.getExplanatoryVariable()));
         buffer.append(" by ");
-        buffer.append(m_crosstab.getResponseVariable());
+        buffer.append(escapeHtml(m_crosstab.getResponseVariable()));
         buffer.append("</h2>");
         buffer.append("</body>\n");
         buffer.append("</html>\n");
         return buffer.toString();
+    }
+
+    /** Escape special html characters. */
+    private String escapeHtml(final String str) {
+        // escape the quote character
+        String s = str.replace("&", "&amp;");
+        // escape lower than
+        s = s.replace("<", "&lt;");
+        // escape greater than
+        s = s.replace(">", "&gt;");
+        // escape quote character
+        s = s.replace("\"", "&quot;");
+        return s;
     }
 
 
@@ -407,7 +422,7 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
             buffer.append("</th>");
             for (DataCell colCell : m_crosstab.getColVars()) {
                 buffer.append("<th>");
-                buffer.append(colCell.toString());
+                buffer.append(escapeHtml(colCell.toString()));
                 buffer.append("</th>");
             }
             if (m_crosstab.getNumSkippedCols() > 0) {
@@ -470,7 +485,7 @@ public class CrosstabNodeView extends NodeView<CrosstabNodeModel> {
                 first = false;
                 buffer.append("<tr class=\"" + cssClass + "\">\n");
                 buffer.append("<td>");
-                buffer.append(row.getLabel());
+                buffer.append(escapeHtml(row.getLabel()));
             } else {
                 buffer.append("<tr class=\"" + cssClass + "\">\n");
                 buffer.append("<td>");
