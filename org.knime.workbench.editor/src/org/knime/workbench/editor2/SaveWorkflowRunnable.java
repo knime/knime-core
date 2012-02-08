@@ -56,10 +56,12 @@ import java.io.IOException;
 
 import javax.swing.UIManager;
 
+import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
+import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 
 /**
  * A runnable which is used by the {@link WorkflowEditor} to save a workflow
@@ -117,8 +119,18 @@ class SaveWorkflowRunnable extends PersistWorkflowRunnable {
 
             progressMonitor.addProgressListener(progressHandler);
 
-            m_editor.getWorkflowManager().save(m_workflowFile.getParentFile(),
+            final File workflowPath = m_workflowFile.getParentFile();
+            m_editor.getWorkflowManager().save(workflowPath,
                     new ExecutionMonitor(progressMonitor), true);
+            // the refresh used to take place in WorkflowEditor#saveTo but
+            // was moved to this runnable as part of bug fix 3028
+            IResource r =
+                KnimeResourceUtil.getResourceForURI(workflowPath.toURI());
+            if (r != null) {
+                String pName = r.getProject().getName();
+                pm.setTaskName("Refreshing " + pName + "...");
+                r.getProject().refreshLocal(IResource.DEPTH_INFINITE, pm);
+            }
         } catch (FileNotFoundException fnfe) {
             LOGGER.fatal("File not found", fnfe);
             m_exceptionMessage.append("File access problems: "

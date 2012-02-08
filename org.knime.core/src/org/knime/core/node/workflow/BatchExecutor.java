@@ -246,16 +246,7 @@ public final class BatchExecutor {
         + "                  if omitted the workflow is only saved in place\n"
         + " -workflow.variable=name,value,type => define or overwrite workflow variable\n"
         + "                  'name' with value 'value' (possibly enclosed by quotes). The\n"
-        + "                  'type' must be one of \"String\", \"int\" or \"double\".\n"
-        + " -option=nodeID,name,value,type => set the option with name 'name' of the node\n"
-        + "                  with ID 'nodeID' to the given 'value', which has type 'type'.\n"
-        + "                  'type' can be any of the primitive Java types, \"String\"\n"
-        + "                  or any of \"StringCell\", \"DoubleCell\" or \"IntCell\".\n"
-        + "                  If 'name' addresses a nested element (for instance \n"
-        + "                  \"rowFilter\" -> \"ColValRowFilterUpperBound\"), the entire\n"
-        + "                  path must be given, separated by \"/\".\n"
-        + "                  If the node is part of a meta node, provide also the node\n"
-        + "                  ids of the parent node(s), e.g. 90/56.\n";
+        + "                  'type' must be one of \"String\", \"int\" or \"double\".\n";
     }
 
     /**

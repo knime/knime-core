@@ -49,6 +49,7 @@
 package org.knime.workbench.ui.preferences;
 
 import org.eclipse.core.runtime.preferences.AbstractPreferenceInitializer;
+import org.eclipse.gef.SnapToGrid;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.swt.graphics.Font;
@@ -103,6 +104,11 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 
         store.setDefault(PreferenceConstants.P_META_NODE_LINK_UPDATE_ON_LOAD,
                 MessageDialogWithToggle.PROMPT);
+
+        store.setDefault(PreferenceConstants.P_GRID_SHOW, Boolean.FALSE);
+        store.setDefault(PreferenceConstants.P_GRID_SNAP_TO, Boolean.FALSE);
+        store.setDefault(PreferenceConstants.P_GRID_SIZE,
+                SnapToGrid.DEFAULT_GRID_SIZE);
 
     }
 }
