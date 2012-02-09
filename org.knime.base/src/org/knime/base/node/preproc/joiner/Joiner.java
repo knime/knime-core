@@ -120,14 +120,16 @@ public final class Joiner {
     private int m_numBits;
     private int m_bitMask;
 
-    /** added for testing purpose. */
+    /** The memory service used to detect the low memory condition. */
     private MemoryService m_memService;
-    /** added for testing purpose. */
-    private int m_numBitsInitial;
-    /** added for testing purpose. */
-    private int m_numBitsMaximal;
 
-
+    /** The initial number of partitions the rows are read in. If not all
+     * partitions fit in main memory, they are joined subsequently using as
+     * much memory as possible.
+     */
+    private int m_numBitsInitial = 6;
+    /** The maximal number of partitions (changed in testing routines). */
+    private int m_numBitsMaximal = Integer.SIZE;
 
 
     /**
