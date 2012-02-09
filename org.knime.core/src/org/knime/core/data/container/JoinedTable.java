@@ -63,7 +63,6 @@ import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.Node;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
@@ -143,8 +142,7 @@ public final class JoinedTable implements KnowsRowCountTable {
      * {@inheritDoc} */
     @Override
     public void ensureOpen() {
-        Node.invokeEnsureOpen(m_leftTable);
-        Node.invokeEnsureOpen(m_rightTable);
+        // no own data, only referencing other tables
     }
 
     /**

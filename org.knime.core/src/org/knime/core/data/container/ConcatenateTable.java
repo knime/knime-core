@@ -64,7 +64,6 @@ import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.Node;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
@@ -100,11 +99,7 @@ public final class ConcatenateTable implements KnowsRowCountTable {
      * {@inheritDoc} */
     @Override
     public void ensureOpen() {
-        for (BufferedDataTable t : m_tables) {
-            // use public method in class Node to do it
-            // (ensureOpen() has only package scope in class BDT)
-            Node.invokeEnsureOpen(t);
-        }
+        // no own data, only referencing other tables
     }
 
     /**
