@@ -217,13 +217,27 @@ public class DatabasePortObjectSpec implements PortObjectSpec {
             }
             buf.append("<br/><br/>");
             buf.append("<strong>SQL Statement:</strong><br/>");
-            final String query = sett.getString("statement",
-                    "").replaceAll("\n", "<br/>");
+            final String query = escapeHtml(sett.getString("statement", ""));
             buf.append("<tt>" + query + "</tt>");
             buf.append("</body></html>");
             final JScrollPane jsp = new JScrollPane(new JLabel(buf.toString()));
             super.add(jsp, BorderLayout.CENTER);
         }
+    }
+    
+    /** Escape special html characters. */
+    private static String escapeHtml(final String str) {
+        // escape the quote character
+        String s = str.replace("&", "&amp;");
+        // escape lower than
+        s = s.replace("<", "&lt;");
+        // escape greater than
+        s = s.replace(">", "&gt;");
+        // escape quote character
+        s = s.replace("\"", "&quot;");
+        // escape line break character
+        s = s.replace("\n", "<br/>");
+        return s;
     }
     
     /** {@inheritDoc} */
