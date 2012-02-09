@@ -497,20 +497,19 @@ public class Pivot2NodeModel extends GroupByNodeModel {
                     final int idx = pivotStarts.get(pivotColumn);
                     final int pivotIndex = i - pivotCount - groupCount;
                     final int pivotCellIndex = idx + pivotIndex;
-                    if (orderPivotColumnName == null 
+                    if (orderPivotColumnName == null // if retain order is off
                             || !groupSpec.getColumnSpec(i).getName().equals(
-                            orderPivotColumnName)) {
+                                    orderPivotColumnName)) {
                         outcells[pivotCellIndex] = cell;
-                    } else {
-                        if (outcells[pivotCellIndex] == null) {
-                            outcells[pivotCellIndex] = cell;
+                    } else { // temp retain column (type:IntCell)
+                        final int retainIndex = outcells.length - 1;
+                        if (outcells[retainIndex] == null) {
+                            outcells[retainIndex] = cell;
                         } else {
-                            DataValueComparator comp = pivotSpec.
-                                    getColumnSpec(pivotCellIndex).
-                                    getType().getComparator();
-                            if (comp.compare(outcells[pivotCellIndex], 
-                                    cell) > 0) {
-                                outcells[pivotCellIndex] = cell;
+                            DataValueComparator comp = pivotSpec.getColumnSpec(
+                                    retainIndex).getType().getComparator();
+                            if (comp.compare(outcells[retainIndex], cell) > 0) {
+                                outcells[retainIndex] = cell;
                             }
                         }
                     }
