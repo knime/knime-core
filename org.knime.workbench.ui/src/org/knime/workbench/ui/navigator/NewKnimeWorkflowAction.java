@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   20.10.2006 (sieb): created
  */
@@ -64,7 +64,7 @@ import org.knime.workbench.ui.wizards.project.NewProjectWizard;
 
 /**
  * Action to invoke the knime new workflow wizard.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class NewKnimeWorkflowAction extends Action {
@@ -72,10 +72,10 @@ public class NewKnimeWorkflowAction extends Action {
     private static final int SIZING_WIZARD_WIDTH = 470;
 
     private static final int SIZING_WIZARD_HEIGHT = 550;
-    
-    private static final ImageDescriptor ICON = 
+
+    private static final ImageDescriptor ICON =
         KNIMEUIPlugin.imageDescriptorFromPlugin(
-            KNIMEUIPlugin.PLUGIN_ID, 
+            KNIMEUIPlugin.PLUGIN_ID,
             "icons/new_knime16.png");;
 
     /**
@@ -91,11 +91,11 @@ public class NewKnimeWorkflowAction extends Action {
 
     /**
      * Create a new instance of this class.
-     * 
+     *
      * @param window the window
      */
     public NewKnimeWorkflowAction(final IWorkbenchWindow window) {
-        super("New KNIME workflow...");
+        super("New Workflow...");
         if (window == null) {
             throw new IllegalArgumentException();
         }
@@ -110,11 +110,12 @@ public class NewKnimeWorkflowAction extends Action {
 
     /**
      * Create a new instance of this class.
-     * 
+     *
      * @param workbench the workbench
      * @deprecated use the constructor
      *             <code>ImportResourcesAction(IWorkbenchWindow)</code>
      */
+    @Deprecated
     public NewKnimeWorkflowAction(final IWorkbench workbench) {
         this(workbench.getActiveWorkbenchWindow());
     }
@@ -130,6 +131,7 @@ public class NewKnimeWorkflowAction extends Action {
     /**
      * Invoke the Import wizards selection Wizard.
      */
+    @Override
     public void run() {
         if (m_workbenchWindow == null) {
             // action has been disposed
@@ -165,7 +167,7 @@ public class NewKnimeWorkflowAction extends Action {
 
     /*
      * (non-Javadoc) Method declared on ActionFactory.IWorkbenchAction.
-     * 
+     *
      * @since 3.0
      */
     public void dispose() {

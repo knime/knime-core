@@ -33,25 +33,25 @@ import org.knime.workbench.ui.wizards.project.NewProjectWizardPage;
 
 /**
  * Wizard to create a new workflow group.
- * 
+ *
  * @author Fabian Dill, KNIME.com AG
  */
-public class NewWorkflowGroupProjectWizard extends Wizard 
+public class NewWorkflowGroupProjectWizard extends Wizard
     implements INewWizard {
 
     /** ID as defined in plugin-xml. */
     public static final String ID = "org.knime.workbench.ui.newworkflowgroup";
-    
+
     private NewProjectWizardPage m_page;
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public boolean performFinish() {
         final IPath projectPath = m_page.getWorkflowPath();
-        final WorkflowGroupCreationOperation op 
+        final WorkflowGroupCreationOperation op
             = new WorkflowGroupCreationOperation(projectPath);
         try {
             getContainer().run(true, false, op);
@@ -69,20 +69,18 @@ public class NewWorkflowGroupProjectWizard extends Wizard
         }
         return true;
     }
-    
+
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
-    public void init(final IWorkbench workbench, 
+    public void init(final IWorkbench workbench,
             final IStructuredSelection selection) {
-        setWindowTitle("Create new workflow group");
-//        m_page.setDescription("Creates a new )
+        setWindowTitle("New KNIME Workflow Group Wizard");
         m_page = new NewProjectWizardPage(selection, false);
-        m_page.setTitle("New Knime workflow group");
-        m_page.setDescription("Creates a new workflow group, " 
+        m_page.setDescription("Creates a new KNIME workflow group, "
                 + "which allows for the grouping of several KNIME workflows.");
         addPage(m_page);
     }

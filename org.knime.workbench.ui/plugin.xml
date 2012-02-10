@@ -119,27 +119,23 @@
                id="org.eclipse.pde.ui.PDEPerspective">
          </perspectiveShortcut>
          <newWizardShortcut
-               id="org.knime.workbench.ui.wizards.project.NewProjectWizard">
+               id="org.knime.workbench.ui.wizards.NewWorkflow">
+         </newWizardShortcut>
+         <newWizardShortcut
+               id="org.knime.workbench.ui.wizards.NewWorkflowGroup">
          </newWizardShortcut>
          <perspectiveShortcut id="org.knime.workbench.ui.ModellerPerspective"/>
-         <!--newWizardShortcut
-               id="org.knime.workbench.ui.wizards.file.NewWorkflowWizard">
-         </newWizardShortcut-->
       </perspectiveExtension>
    </extension>
    <extension
          point="org.eclipse.ui.newWizards">
-      <primaryWizard
-            id="org.knime.workbench.ui.wizards.project.NewProjectWizard">
-      </primaryWizard>
-      <!--primaryWizard id="org.knime.workbench.ui.wizards.file.NewWorkflowWizard"/-->
       <category
             name="KNIME"
             id="org.knime.workbench.ui.wizards.category">
       </category>
       <wizard
-            name="New KNIME Project"
             id="org.knime.workbench.ui.wizards.project.NewProjectWizard"
+            name="New KNIME Workflow"
             category="org.knime.workbench.ui.wizards.category"
             class="org.knime.workbench.ui.wizards.project.NewProjectWizard"
             descriptionImage="icons/new_knime48.png"
@@ -152,21 +148,18 @@
          </description>
       </wizard>
       <wizard
+            id="org.knime.workbench.ui.newworkflowgroup"
+            name="New KNIME Workflow Group"
             category="org.knime.workbench.ui.wizards.category"
             class="org.knime.workbench.ui.wizards.workflowgroup.NewWorkflowGroupProjectWizard"
             descriptionImage="icons/new_knime48.png"
             finalPerspective="org.knime.workbench.ui.ModellerPerspective"
             icon="icons/new_knime16.png"
-            id="org.knime.workbench.ui.newworkflowgroup"
-            name="New Workflow Group"
             preferredPerspectives="org.knime.workbench.ui.ModellerPerspective">
          <description>
-            Creates a new workflow group helping to organize your workflows
+            This wizard creates a new workflow group helping to organize your workflows.
          </description>
       </wizard>
-      <primaryWizard
-            id="org.knime.workbench.ui.newworkflowgroup">
-      </primaryWizard>
    </extension>
    <extension
          point="org.eclipse.ui.preferencePages">

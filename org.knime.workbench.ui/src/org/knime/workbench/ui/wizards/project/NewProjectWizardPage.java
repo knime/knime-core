@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   07.02.2005 (georg): created
  */
@@ -79,44 +79,44 @@ import org.knime.workbench.ui.wizards.workflowgroup.NewWorkflowGroupProjectWizar
 import org.knime.workbench.ui.wizards.workflowgroup.WorkflowGroupSelectionDialog;
 
 /**
- * Page that is used to create either a workflow or a workflow group. 
- * 
+ * Page that is used to create either a workflow or a workflow group.
+ *
  * @see NewProjectWizard
  * @see NewWorkflowGroupProjectWizard
- * 
+ *
  * @author Florian Georg, University of Konstanz
  * @author Christoph Sieb, University of Konstanz
  * @author Fabian Dill, KNIME.com AG, Zurich, Switzerland
  */
 public class NewProjectWizardPage extends WizardPage {
     private static final String INITIAL_PROJECT_NAME = "KNIME_project";
-    
+
     private static final String DEFAULT_WORKFLOW_GROUP_NAME = "workflow_group";
-    
-    private static final String WORKFLOW_GROUP = "Workflow group";
+
+    private static final String WORKFLOW_GROUP = "Workflow Group";
     private static final String WORKFLOW = "Workflow";
-    
+
     private static final ImageDescriptor ICON = KNIMEUIPlugin
         .imageDescriptorFromPlugin(
-            KNIMEUIPlugin.PLUGIN_ID, "icons/new_knime55.png"); 
-    
+            KNIMEUIPlugin.PLUGIN_ID, "icons/new_knime55.png");
+
     private IResource m_initiallySelectedResource;
-    
+
     private Text m_projectName;
-    
+
     private Text m_destinationUI;
-    
+
     private final boolean m_isWorkflow;
-    
+
     private final String m_elementName;
-    
+
     /**
      * Create and init the page.
-     * 
+     *
      * @param initialSelection the initial selection
-     * @param isWorkflow true if used to create a workflow, false if used to 
+     * @param isWorkflow true if used to create a workflow, false if used to
      *  create a workflow group
-     * 
+     *
      */
     public NewProjectWizardPage(final IStructuredSelection initialSelection,
             final boolean isWorkflow) {
@@ -127,13 +127,13 @@ public class NewProjectWizardPage extends WizardPage {
         } else {
             m_elementName = WORKFLOW_GROUP;
         }
-        setTitle("New KNIME Workflow Wizard");
-        setDescription("Create a new KNIME " 
+        setTitle("New KNIME " + m_elementName + " Wizard");
+        setDescription("Creates a new KNIME " 
                 + m_elementName.toLowerCase() + ".");
         setImageDescriptor(ICON);
         extractInitiallySelectedResource(initialSelection);
     }
-    
+
     private void extractInitiallySelectedResource(
             final IStructuredSelection selection) {
         // check if the selected resource is a workflow
@@ -157,19 +157,21 @@ public class NewProjectWizardPage extends WizardPage {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void createControl(final Composite parent) {
         Composite overall = new Composite(parent, SWT.NULL);
         overall.setLayout(new GridLayout(1, false));
-        
+
         Group nameGroup = new Group(overall, SWT.NONE);
         nameGroup.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
         nameGroup.setLayout(new GridLayout(2, false));
         // first row: workflow name
         final Label label = new Label(nameGroup, SWT.NONE);
-        label.setText("Name of the " + m_elementName.toLowerCase() 
+        label.setText("Name of the " + m_elementName.toLowerCase()
                 + " to create:");
         m_projectName = new Text(nameGroup, SWT.BORDER);
         m_projectName.addModifyListener(new ModifyListener() {
+            @Override
             public void modifyText(final ModifyEvent e) {
                 dialogChanged();
             }
@@ -195,11 +197,11 @@ public class NewProjectWizardPage extends WizardPage {
 
         if (KnimeResourceUtil.existsWorkflowGroupInWorkspace()) {
             createDestinationSelectionComposite(overall);
-        } 
+        }
         setControl(overall);
     }
-    
-    
+
+
     private void createDestinationSelectionComposite(
             final Composite parent) {
         Group destGroup = new Group(parent, SWT.SHADOW_ETCHED_IN);
@@ -210,7 +212,7 @@ public class NewProjectWizardPage extends WizardPage {
         destinationLabel.setText("Workspace destination:");
         m_destinationUI = new Text(destGroup, SWT.BORDER | SWT.READ_ONLY);
         m_destinationUI.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        if (m_initiallySelectedResource != null 
+        if (m_initiallySelectedResource != null
                 && !(m_initiallySelectedResource instanceof IWorkspaceRoot)) {
             m_destinationUI.setText(m_initiallySelectedResource.getFullPath()
                     .toString());
@@ -230,9 +232,9 @@ public class NewProjectWizardPage extends WizardPage {
             }
         });
     }
-    
-    
-    
+
+
+
     private void handleBrowseButton() {
         WorkflowGroupSelectionDialog dialog = new WorkflowGroupSelectionDialog(
                 getShell());
@@ -254,7 +256,7 @@ public class NewProjectWizardPage extends WizardPage {
      */
     private void dialogChanged() {
         // check if a name was entered
-        String projectName = m_projectName.getText().trim(); 
+        String projectName = m_projectName.getText().trim();
         if (projectName.length() == 0) {
             updateStatus(m_elementName + " name must be specified");
             return;
@@ -276,15 +278,15 @@ public class NewProjectWizardPage extends WizardPage {
         updateStatus(null);
     }
 
-    
+
     /**
-     * 
-     * @return the workspace relative path with the selected name already 
+     *
+     * @return the workspace relative path with the selected name already
      *  appended
      */
     public IPath getWorkflowPath() {
         IPath path = new Path(m_projectName.getText());
-        if (m_destinationUI != null 
+        if (m_destinationUI != null
                 && !m_destinationUI.getText().trim().isEmpty()) {
             path = new Path(m_destinationUI.getText());
             path = path.append(m_projectName.getText());
