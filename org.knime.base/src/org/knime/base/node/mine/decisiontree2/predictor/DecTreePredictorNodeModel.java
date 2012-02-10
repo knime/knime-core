@@ -115,7 +115,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
             NodeLogger.getLogger(DecTreePredictorNodeModel.class);
 
     /** XML tag name in configuration file for max num pattern for hiliting. */
-    public static final String MAX_NUM_PATTERN = "UseGainRatio";
+    public static final String MAXCOVERED = "UseGainRatio";
 
     private final SettingsModelIntegerBounded m_maxNumCoveredPattern =
             createMaxNumPatternSettings();
@@ -124,7 +124,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
      *          for hiliting within the dec tree view.
      */
     static SettingsModelIntegerBounded createMaxNumPatternSettings() {
-        return new SettingsModelIntegerBounded(MAX_NUM_PATTERN,
+        return new SettingsModelIntegerBounded(MAXCOVERED,
                     /* default */10000,
                     /* min: */0,
                     /* max: */Integer.MAX_VALUE);
