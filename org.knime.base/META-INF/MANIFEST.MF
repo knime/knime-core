@@ -264,6 +264,7 @@ Export-Package: Jama,
  org.knime.base.util.pmml.samples
 Require-Bundle: org.knime.core;visibility:=reexport,
  org.apache.commons.math;bundle-version="2.1.0",
- org.apache.commons.httpclient;bundle-version="3.1.0"
+ org.apache.commons.httpclient;bundle-version="3.1.0",
+ org.apache.commons.lang;bundle-version="2.4.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Eclipse-BuddyPolicy: dependent
