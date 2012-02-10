@@ -127,7 +127,7 @@ public class MeanOperator extends AggregationOperator {
     @Override
     protected boolean computeInternal(final DataCell cell) {
         final double d = ((DoubleValue)cell).getDoubleValue();
-        m_mean = m_mean * ((double)m_count / (m_count  + 1))
+        m_mean = m_mean * ((double)m_count / (m_count + 1))
                     + d * (1.0 / (m_count + 1));
         m_count++;
         return false;

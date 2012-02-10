@@ -58,7 +58,6 @@ import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
 
-import java.util.LinkedHashSet;
 import java.util.Set;
 
 /**
@@ -66,11 +65,9 @@ import java.util.Set;
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class UniqueConcatenateOperator extends AggregationOperator {
+public class UniqueConcatenateOperator extends SetCellOperator {
 
     private final DataType m_type = StringCell.TYPE;
-
-    private final Set<String> m_vals;
 
     /**Constructor for class Concatenate.
      * @param globalSettings the global settings
@@ -78,26 +75,9 @@ public class UniqueConcatenateOperator extends AggregationOperator {
      */
     public UniqueConcatenateOperator(final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        this(new OperatorData("uniqueConcatenate_V2.4", "Unique concatenate",
+        super(new OperatorData("uniqueConcatenate_V2.4", "Unique concatenate",
                 "Unique concatenate", true, false,
                 DataValue.class, true), globalSettings, opColSettings);
-    }
-
-    /**Constructor for class UniqueConcatenateOperator.
-     * @param operatorData the operator data
-     * @param globalSettings the global settings
-     * @param opColSettings the operator column specific settings
-     */
-    protected UniqueConcatenateOperator(final OperatorData operatorData,
-            final GlobalSettings globalSettings,
-            final OperatorColumnSettings opColSettings) {
-        super(operatorData, globalSettings, opColSettings);
-        try {
-            m_vals = new LinkedHashSet<String>(getMaxUniqueValues());
-        } catch (final OutOfMemoryError e) {
-            throw new IllegalArgumentException(
-                    "Maximum unique values number to big");
-        }
     }
 
     /**
@@ -123,47 +103,22 @@ public class UniqueConcatenateOperator extends AggregationOperator {
      * {@inheritDoc}
      */
     @Override
-    protected boolean computeInternal(final DataCell cell) {
-        final String val = cell.toString();
-        if (m_vals.contains(val)) {
-            return false;
-        }
-        //check if the set contains more values than allowed
-        //before adding a new value
-        if (m_vals.size() >= getMaxUniqueValues()) {
-            return true;
-        }
-        m_vals.add(val);
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     protected DataCell getResultInternal() {
-        if (m_vals.isEmpty()) {
+        final Set<DataCell> groupMembers = getGroupMembers();
+        if (groupMembers.isEmpty()) {
             return DataType.getMissingCell();
         }
         final StringBuilder buf = new StringBuilder();
         boolean first = true;
-        for (final String val : m_vals) {
+        for (final DataCell val : groupMembers) {
             if (first) {
                 first = false;
             } else {
                 buf.append(getValueDelimiter());
             }
-            buf.append(val);
+            buf.append(val.toString());
         }
         return new StringCell(buf.toString());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void resetInternal() {
-        m_vals.clear();
     }
 
     /**

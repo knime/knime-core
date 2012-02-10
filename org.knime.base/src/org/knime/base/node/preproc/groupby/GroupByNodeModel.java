@@ -50,25 +50,6 @@
  */
 package org.knime.base.node.preproc.groupby;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
-import org.knime.base.data.aggregation.AggregationMethod;
-import org.knime.base.data.aggregation.AggregationMethods;
-import org.knime.base.data.aggregation.ColumnAggregator;
-import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -76,6 +57,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -91,6 +73,26 @@ import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
 
+import org.knime.base.data.aggregation.AggregationMethod;
+import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.GlobalSettings;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 /**
  * The {@link NodeModel} implementation of the group by node which uses the
  * {@link GroupByTable} class implementations to create the resulting table.
@@ -98,6 +100,9 @@ import org.knime.core.node.property.hilite.HiLiteTranslator;
  * @author Tobias Koetter, University of Konstanz
  */
 public class GroupByNodeModel extends NodeModel {
+
+    private static final NodeLogger LOGGER =
+            NodeLogger.getLogger(GroupByNodeModel.class);
 
     /**
      * Old configuration key of the selected aggregation method for numerical
@@ -366,7 +371,7 @@ public class GroupByNodeModel extends NodeModel {
             throw new InvalidSettingsException(e.getMessage());
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -620,10 +625,10 @@ public class GroupByNodeModel extends NodeModel {
         final boolean inMemory = m_inMemory.getBooleanValue();
         final boolean sortInMemory = m_sortInMemory.getBooleanValue();
         final boolean retainOrder = m_retainOrder.getBooleanValue();
-        return createGroupByTable(exec, table, groupByCols, inMemory, 
+        return createGroupByTable(exec, table, groupByCols, inMemory,
                 sortInMemory, retainOrder, m_columnAggregators2Use);
     }
-    
+
     /**
      * Create group-by table.
      * @param exec execution context
@@ -639,7 +644,7 @@ public class GroupByNodeModel extends NodeModel {
      */
     protected final GroupByTable createGroupByTable(final ExecutionContext exec,
             final BufferedDataTable table, final List<String> groupByCols,
-            final boolean inMemory, final boolean sortInMemory, 
+            final boolean inMemory, final boolean sortInMemory,
             final boolean retainOrder, final List<ColumnAggregator> aggregators)
             throws CanceledExecutionException {
         final int maxUniqueVals = m_maxUniqueValues.getIntValue();
@@ -674,6 +679,8 @@ public class GroupByNodeModel extends NodeModel {
         final String warningMsg = resultTable.getSkippedGroupsMessage(3, 3);
         if (warningMsg != null) {
             setWarningMessage(warningMsg);
+            LOGGER.info(resultTable.getSkippedGroupsMessage(
+                        Integer.MAX_VALUE, Integer.MAX_VALUE));
         }
         return resultTable;
     }
@@ -699,14 +706,14 @@ public class GroupByNodeModel extends NodeModel {
     protected boolean isSortInMemory() {
         return m_sortInMemory.getBooleanValue();
     }
-    
+
     /**
      * @return list of column aggregator methods
      */
     protected List<ColumnAggregator> getColumnAggregators() {
         return Collections.unmodifiableList(m_columnAggregators2Use);
     }
-    
+
     /**
      * @return column name policy used to create resulting pivot columns
      */

@@ -46,56 +46,48 @@
  * -------------------------------------------------------------------
  */
 
-package org.knime.base.data.aggregation.general;
+package org.knime.base.data.aggregation.deprecated;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.collection.CollectionCellFactory;
-import org.knime.core.data.collection.SetCell;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.def.DoubleCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
-
 /**
- * Returns all values as a {@link SetCell} per group.
+ * Returns the sum per group as DoubleCell.
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class SetCellOperator extends AggregationOperator {
+public class SumOperator extends AggregationOperator {
 
-    private final Set<DataCell> m_cells;
+    private final DataType m_type = DoubleCell.TYPE;
+    private boolean m_valid = false;
+    private double m_sum = 0;
 
-    /**Constructor for class SetCellOperator.
-     * @param globalSettings the global settings
-     * @param opColSettings the operator column specific settings
-     */
-    public SetCellOperator(final GlobalSettings globalSettings,
-            final OperatorColumnSettings opColSettings) {
-        this(new OperatorData("Set", true, false,
-                DataValue.class, true), globalSettings, opColSettings);
-    }
-
-    /**Constructor for class SetCellOperator.
+    /**Constructor for class SumOperator.
      * @param operatorData the operator data
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings
      */
-    protected SetCellOperator(final OperatorData operatorData,
+    protected SumOperator(final OperatorData operatorData,
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
         super(operatorData, globalSettings, opColSettings);
-        try {
-            m_cells = new LinkedHashSet<DataCell>(getMaxUniqueValues());
-        } catch (final OutOfMemoryError e) {
-            throw new IllegalArgumentException(
-                    "Maximum unique values number to big");
-        }
+    }
+
+    /**Constructor for class SumOperator.
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
+     */
+    public SumOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Sum", false, false, DoubleValue.class, false),
+                globalSettings, opColSettings);
     }
 
     /**
@@ -103,7 +95,7 @@ public class SetCellOperator extends AggregationOperator {
      */
     @Override
     protected DataType getDataType(final DataType origType) {
-        return SetCell.getCollectionType(origType);
+        return m_type;
     }
 
     /**
@@ -113,7 +105,7 @@ public class SetCellOperator extends AggregationOperator {
     public AggregationOperator createInstance(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        return new SetCellOperator(globalSettings, opColSettings);
+        return new SumOperator(globalSettings, opColSettings);
     }
 
     /**
@@ -121,16 +113,9 @@ public class SetCellOperator extends AggregationOperator {
      */
     @Override
     protected boolean computeInternal(final DataCell cell) {
-        if (m_cells.contains(cell)) {
-            return false;
-        }
-        //check if the set contains more values than allowed
-        //before adding the new value
-        if (m_cells.size() >= getMaxUniqueValues()) {
-            setSkipMessage("Group contains to many unique values");
-            return true;
-        }
-        m_cells.add(cell);
+        m_valid = true;
+        final double d = ((DoubleValue)cell).getDoubleValue();
+        m_sum += d;
         return false;
     }
 
@@ -139,17 +124,10 @@ public class SetCellOperator extends AggregationOperator {
      */
     @Override
     protected DataCell getResultInternal() {
-        if (m_cells.isEmpty()) {
+        if (!m_valid) {
             return DataType.getMissingCell();
         }
-        return CollectionCellFactory.createSetCell(m_cells);
-    }
-
-    /**
-     * @return the members of the group or an empty {@link Set}
-     */
-    protected Set<DataCell> getGroupMembers() {
-        return m_cells;
+        return new DoubleCell(m_sum);
     }
 
     /**
@@ -157,7 +135,8 @@ public class SetCellOperator extends AggregationOperator {
      */
     @Override
     protected void resetInternal() {
-        m_cells.clear();
+        m_valid = false;
+        m_sum = 0;
     }
 
     /**
@@ -165,7 +144,6 @@ public class SetCellOperator extends AggregationOperator {
      */
     @Override
     public String getDescription() {
-        return "Creates a SetCell that contains each element "
-                + "only once per group (including missing values).";
+        return "Calculates the sum per group. Always returns a double value.";
     }
 }

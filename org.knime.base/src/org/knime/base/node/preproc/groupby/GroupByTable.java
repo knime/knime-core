@@ -48,21 +48,6 @@
 
 package org.knime.base.node.preproc.groupby;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.knime.base.data.aggregation.AggregationMethod;
-import org.knime.base.data.aggregation.AggregationMethods;
-import org.knime.base.data.aggregation.ColumnAggregator;
-import org.knime.base.data.aggregation.GlobalSettings;
-import org.knime.base.data.sort.SortedTable;
-import org.knime.base.node.preproc.sorter.SorterNodeDialogPanel2;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -77,6 +62,23 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.util.MutableInteger;
+import org.knime.core.util.Pair;
+
+import org.knime.base.data.aggregation.AggregationMethod;
+import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.sort.SortedTable;
+import org.knime.base.node.preproc.sorter.SorterNodeDialogPanel2;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  *
@@ -92,8 +94,9 @@ public abstract class GroupByTable {
     private final boolean m_enableHilite;
     private final ColumnNamePolicy m_colNamePolicy;
     private final Map<RowKey, Set<RowKey>> m_hiliteMapping;
-    private final Map<String, Collection<String>> m_skippedGroupsByColName =
-        new HashMap<String, Collection<String>>();
+    private final Map<String, Collection<Pair<String, String>>>
+        m_skippedGroupsByColName =
+        new HashMap<String, Collection<Pair<String, String>>>();
     private final boolean m_retainOrder;
     private final ColumnAggregator[] m_colAggregators;
     private final BufferedDataTable m_resultTable;
@@ -387,18 +390,19 @@ public abstract class GroupByTable {
 
     /**
      * @param colName the name of the column
+     * @param skipMsg the skip message to display
      * @param groupVals the skipped group values
      */
     protected void addSkippedGroup(final String colName,
-            final DataCell[] groupVals) {
+            final String skipMsg, final DataCell[] groupVals) {
         final String groupName = createSkippedGroupName(groupVals);
-        Collection<String> groupNames =
+        Collection<Pair<String, String>> groupNames =
             m_skippedGroupsByColName.get(colName);
         if (groupNames == null) {
-            groupNames = new ArrayList<String>();
+            groupNames = new ArrayList<Pair<String, String>>();
             m_skippedGroupsByColName.put(colName, groupNames);
         }
-        groupNames.add(groupName);
+        groupNames.add(new Pair<String, String>(groupName, skipMsg));
     }
 
     /**
@@ -489,10 +493,12 @@ public abstract class GroupByTable {
     /**
      * Returns a <code>Map</code> with all skipped groups. The key of the
      * <code>Map</code> is the name of the column and the value is a
-     * <code>Collection</code> with all skipped groups.
+     * <code>Collection</code> with {@link Pair} objects with the
+     * group name as first and the corresponding skip message as second object.
      * @return a <code>Map</code> with all skipped groups
      */
-    public Map<String, Collection<String>> getSkippedGroupsByColName() {
+    public Map<String, Collection<Pair<String, String>>>
+        getSkippedGroupsByColName() {
         return m_skippedGroupsByColName;
     }
 
@@ -507,7 +513,7 @@ public abstract class GroupByTable {
         if (m_skippedGroupsByColName != null
                 && m_skippedGroupsByColName.size() > 0) {
             final StringBuilder buf = new StringBuilder();
-            buf.append("Skipped group(s) per column by group value(s): ");
+            buf.append("Skipped group(s): ");
             final Set<String> columnNames = m_skippedGroupsByColName.keySet();
             int columnCounter = 0;
             int groupCounter = 0;
@@ -520,22 +526,55 @@ public abstract class GroupByTable {
                     break;
                 }
                 buf.append(colName);
-                buf.append("=");
-                final Collection<String> groupNames =
+                final Collection<Pair<String, String>> groupNameMsgs =
                     m_skippedGroupsByColName.get(colName);
-                groupCounter = 0;
-                buf.append("\"");
-                for (final String groupName : groupNames) {
-                    if (groupCounter != 0) {
-                        buf.append(", ");
+                final LinkedHashSet<String> causes =
+                    new LinkedHashSet<String>();
+                if (groupNameMsgs != null && !groupNameMsgs.isEmpty()) {
+                    groupCounter = 0;
+                    for (final Pair<String, String> groupNameMsg
+                            : groupNameMsgs) {
+                        final String name = groupNameMsg.getFirst();
+                        final String cause = groupNameMsg.getSecond();
+                        if (cause != null && !cause.isEmpty()) {
+                            causes.add(cause);
+                        }
+                        if (name == null || name.isEmpty()) {
+                            //skip empty group names
+                            continue;
+                        }
+                        if (groupCounter == 0) {
+                            buf.append(" groups: ");
+                            buf.append("\"");
+                        } else {
+                            buf.append(", ");
+                        }
+                        if (groupCounter++ >= maxGroups) {
+                            buf.append("...");
+                            break;
+                        }
+                        buf.append(name);
                     }
-                    if (groupCounter++ >= maxGroups) {
-                        buf.append("...");
-                        break;
+                    if (groupCounter > 0) {
+                        buf.append("\"");
                     }
-                    buf.append(groupName);
                 }
-                buf.append("\"");
+                if (!causes.isEmpty()) {
+                    buf.append(" cause: ");
+                    groupCounter = 0;
+                    buf.append("\"");
+                    for (final String cause : causes) {
+                        if (groupCounter != 0) {
+                            buf.append(", ");
+                        }
+                        if (groupCounter++ >= maxGroups) {
+                            buf.append("...");
+                            break;
+                        }
+                        buf.append(cause);
+                    }
+                    buf.append("\"");
+                }
             }
             return buf.toString();
         }

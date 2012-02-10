@@ -130,6 +130,7 @@ public class ModeOperator extends AggregationOperator {
             //check if the maps contains more values than allowed
             //before adding a new value
             if (m_valCounter.size() >= getMaxUniqueValues()) {
+                setSkipMessage("Group contains to many unique values");
                 return true;
             }
             counter = new MutableInteger(0);

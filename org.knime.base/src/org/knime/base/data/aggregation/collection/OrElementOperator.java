@@ -136,6 +136,7 @@ public class OrElementOperator extends AggregationOperator {
                 //check if the set contains more values than allowed
                 //before adding a new value
                 if (m_vals.size() >= getMaxUniqueValues()) {
+                    setSkipMessage("Group contains to many unique values");
                     return true;
                 }
                 m_vals.add(valCell);

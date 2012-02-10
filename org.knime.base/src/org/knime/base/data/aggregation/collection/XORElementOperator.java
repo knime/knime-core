@@ -132,6 +132,7 @@ public class XORElementOperator extends AggregationOperator {
             //check if the set contains more values than allowed
             //before adding a new value
             if (m_vals.size() + elements2add.size() >= getMaxUniqueValues()) {
+                setSkipMessage("Group contains to many unique values");
                 return true;
             }
             m_vals.addAll(elements2add);

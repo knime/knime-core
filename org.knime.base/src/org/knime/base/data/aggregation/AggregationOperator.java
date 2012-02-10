@@ -94,6 +94,7 @@ import org.knime.core.data.DataValue;
 public abstract class AggregationOperator implements AggregationMethod {
     /**If the aggregator should be skipped.*/
     private boolean m_skipped;
+    private String m_skipMsg = "";
 
     private final GlobalSettings m_globalSettings;
     private final OperatorColumnSettings m_opColSettings;
@@ -210,9 +211,37 @@ public abstract class AggregationOperator implements AggregationMethod {
 
     /**
      * @return <code>true</code> if this operator was skipped
+     * @see #getSkipMessage()
      */
     public boolean isSkipped() {
         return m_skipped;
+    }
+
+    /**
+     * This method can be used to mark this group explicitly as skipped.
+     *
+     * @param skipped <code>true</code> if the group should be marked as
+     * skipped
+     * @see #setSkipMessage(String)
+     */
+    protected void setSkipped(final boolean skipped) {
+        m_skipped = skipped;
+    }
+
+    /**
+     * @param msg the cause why the group was skipped
+     * @see #setSkipped(boolean)
+     */
+    protected void setSkipMessage(final String msg) {
+        m_skipMsg = msg;
+    }
+
+    /**
+     * @return the cause why the group was skipped or an empty string
+     * @see #isSkipped()
+     */
+    public String getSkipMessage() {
+        return m_skipMsg;
     }
 
     /**
@@ -302,6 +331,7 @@ public abstract class AggregationOperator implements AggregationMethod {
      */
     public final void reset() {
         m_skipped = false;
+        m_skipMsg = "";
         resetInternal();
     }
 

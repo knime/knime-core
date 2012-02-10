@@ -228,6 +228,7 @@ public class MemoryGroupByTable extends GroupByTable {
                     //add skipped groups and the column that causes the skipping
                     //into the skipped groups map
                     addSkippedGroup(colAggr.getOriginalColName(),
+                            operator.getSkipMessage(),
                             groupVals.getGroupVals());
                 }
                 //reset the operator for the next group

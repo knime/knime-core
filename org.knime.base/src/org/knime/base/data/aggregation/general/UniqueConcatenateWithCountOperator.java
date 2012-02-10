@@ -75,7 +75,7 @@ public class UniqueConcatenateWithCountOperator
 
     private final DataType m_type = StringCell.TYPE;
 
-    private final Map<String, MutableInteger> m_vals;
+    private final Map<DataCell, MutableInteger> m_vals;
 
     /**Constructor for class UniqueConcatenateWithCountOperator.
      * @param globalSettings the global settings
@@ -101,7 +101,7 @@ public class UniqueConcatenateWithCountOperator
             final OperatorColumnSettings opColSettings) {
         super(operatorData, globalSettings, opColSettings);
         try {
-            m_vals = new LinkedHashMap<String, MutableInteger>(
+            m_vals = new LinkedHashMap<DataCell, MutableInteger>(
                     getMaxUniqueValues());
         } catch (final OutOfMemoryError e) {
             throw new IllegalArgumentException(
@@ -133,8 +133,7 @@ public class UniqueConcatenateWithCountOperator
      */
     @Override
     protected boolean computeInternal(final DataCell cell) {
-        final String val = cell.toString();
-        final MutableInteger counter = m_vals.get(val);
+        final MutableInteger counter = m_vals.get(cell);
         if (counter != null) {
             counter.inc();
             return false;
@@ -142,9 +141,10 @@ public class UniqueConcatenateWithCountOperator
         //check if the map contains more values than allowed
         //before adding a new value
         if (m_vals.size() >= getMaxUniqueValues()) {
+            setSkipMessage("Group contains to many unique values");
             return true;
         }
-        m_vals.put(val, new MutableInteger(1));
+        m_vals.put(cell, new MutableInteger(1));
         return false;
     }
 
@@ -157,16 +157,16 @@ public class UniqueConcatenateWithCountOperator
             return DataType.getMissingCell();
         }
         final StringBuilder buf = new StringBuilder();
-        final Set<Entry<String, MutableInteger>> entrySet =
+        final Set<Entry<DataCell, MutableInteger>> entrySet =
             m_vals.entrySet();
         boolean first = true;
-        for (final Entry<String, MutableInteger> entry : entrySet) {
+        for (final Entry<DataCell, MutableInteger> entry : entrySet) {
             if (first) {
                 first = false;
             } else {
                 buf.append(getValueDelimiter());
             }
-            buf.append(entry.getKey());
+            buf.append(entry.getKey().toString());
             buf.append('(');
             buf.append(Integer.toString(entry.getValue().intValue()));
             buf.append(')');

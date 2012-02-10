@@ -57,10 +57,8 @@ import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
+import org.knime.base.data.aggregation.general.SortedListCellOperator;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 
@@ -68,12 +66,10 @@ import java.util.List;
  * Computes the median of a list of numbers.
  * @author Tobias Koetter, University of Konstanz
  */
-public class MedianOperator extends AggregationOperator {
+public class MedianOperator extends SortedListCellOperator {
 
     private static final DataType TYPE = DoubleCell.TYPE;
 
-    private final List<DataCell> m_cells;
-    private final Comparator<DataCell> m_comparator = TYPE.getComparator();
 
     /**Constructor for class MedianOperator.
      * @param operatorData the operator data
@@ -84,12 +80,6 @@ public class MedianOperator extends AggregationOperator {
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
         super(operatorData, globalSettings, opColSettings);
-        try {
-            m_cells = new ArrayList<DataCell>(getMaxUniqueValues());
-        } catch (final OutOfMemoryError e) {
-            throw new IllegalArgumentException(
-            "Maximum unique values number too big");
-        }
     }
 
     /**Constructor for class MedianOperator.
@@ -127,21 +117,6 @@ public class MedianOperator extends AggregationOperator {
      * {@inheritDoc}
      */
     @Override
-    protected boolean computeInternal(final DataCell cell) {
-        if (cell.isMissing()) {
-            return false;
-        }
-        if (m_cells.size() >= getMaxUniqueValues()) {
-            return true;
-        }
-        m_cells.add(cell);
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public AggregationOperator createInstance(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
@@ -153,22 +128,23 @@ public class MedianOperator extends AggregationOperator {
      */
     @Override
     protected DataCell getResultInternal() {
-        if (m_cells.size() == 0) {
+        final List<DataCell> cells = super.getCells();
+        if (cells.size() == 0) {
             return DataType.getMissingCell();
         }
-        if (m_cells.size() == 1) {
-            return convertToDoubleCellIfNecessary(m_cells.get(0));
+        if (cells.size() == 1) {
+            return convertToDoubleCellIfNecessary(cells.get(0));
         }
-        Collections.sort(m_cells, m_comparator);
-        final double middle = m_cells.size() / 2.0;
+        sortCells(cells);
+        final double middle = cells.size() / 2.0;
         if (middle > (int)middle) {
-            return convertToDoubleCellIfNecessary(m_cells.get((int)middle));
+            return convertToDoubleCellIfNecessary(cells.get((int)middle));
         }
         //the list is even return the middle two
         final double val1 =
-            ((DoubleValue)m_cells.get((int) middle - 1)).getDoubleValue();
+            ((DoubleValue)cells.get((int) middle - 1)).getDoubleValue();
         final double val2 =
-            ((DoubleValue)m_cells.get((int) middle)).getDoubleValue();
+            ((DoubleValue)cells.get((int) middle)).getDoubleValue();
         return new DoubleCell((val1 + val2) / 2);
     }
 
@@ -185,14 +161,6 @@ public class MedianOperator extends AggregationOperator {
             return cell;
         }
         return new DoubleCell(((DoubleValue)cell).getDoubleValue());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void resetInternal() {
-        m_cells.clear();
     }
 
     /**

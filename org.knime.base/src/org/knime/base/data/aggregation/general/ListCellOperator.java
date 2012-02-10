@@ -59,7 +59,7 @@ import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
 
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -69,7 +69,7 @@ import java.util.List;
  */
 public class ListCellOperator extends AggregationOperator {
 
-    private final List<DataCell> m_cells = new LinkedList<DataCell>();
+    private final List<DataCell> m_cells;
 
     /**Constructor for class ListCellOperator.
      * @param globalSettings the global settings
@@ -77,7 +77,7 @@ public class ListCellOperator extends AggregationOperator {
      */
     public ListCellOperator(final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        this(new OperatorData("List", false, false,
+        this(new OperatorData("List", true, false,
                 DataValue.class, true), globalSettings, opColSettings);
     }
 
@@ -90,6 +90,12 @@ public class ListCellOperator extends AggregationOperator {
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
         super(operatorData, globalSettings, opColSettings);
+        try {
+            m_cells = new ArrayList<DataCell>(getMaxUniqueValues());
+        } catch (final OutOfMemoryError e) {
+            throw new IllegalArgumentException(
+            "Maximum unique values number too big");
+        }
     }
 
     /**
@@ -123,6 +129,7 @@ public class ListCellOperator extends AggregationOperator {
     @Override
     protected boolean computeInternal(final DataCell cell) {
         if (m_cells.size() >= getMaxUniqueValues()) {
+            setSkipMessage("Group contains to many values");
             return true;
         }
         m_cells.add(cell);
