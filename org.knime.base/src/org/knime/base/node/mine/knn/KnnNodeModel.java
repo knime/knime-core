@@ -264,10 +264,11 @@ public class KnnNodeModel extends NodeModel {
                 treeBuilder.buildTree(exec.createSubProgress(0.3));
 
         if (tree.size() < m_settings.k()) {
-            throw new InvalidSettingsException("There are only " + tree.size()
+            setWarningMessage("There are only " + tree.size()
                     + " patterns in the input table, but " + m_settings.k()
-                    + " nearest neighbours were requested for classification. "
-                    + "Please select at most " + tree.size() + " neighbours.");
+                    + " nearest neighbours were requested for classification."
+                    + " The prediction will be the majority class for all"
+                    + " input patterns.");
         }
 
         exec.setMessage("Classifying");
@@ -382,7 +383,8 @@ public class KnnNodeModel extends NodeModel {
         HashMap<DataCell, MutableDouble> classWeights =
                 new HashMap<DataCell, MutableDouble>();
         List<NearestNeighbour<DataCell>> nearestN =
-                tree.getKNearestNeighbours(features, m_settings.k());
+                tree.getKNearestNeighbours(features, Math.min(m_settings.k(),
+                        tree.size()));
 
         for (NearestNeighbour<DataCell> n : nearestN) {
             MutableDouble count = classWeights.get(n.getData());
