@@ -57,7 +57,6 @@ import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 
 /**
  *
@@ -111,11 +110,7 @@ public class DecTreePredictorNodeFactory
         return new DefaultNodeSettingsPane() {
             {
                 addDialogComponent(new DialogComponentNumber(
-                        new SettingsModelIntegerBounded(
-              /* config-name: */DecTreePredictorNodeModel.MAXCOVERED,
-              /* default */50000,
-                      /* min: */0,
-                      /* max: */100000),
+                   DecTreePredictorNodeModel.createMaxNumPatternSettings(),
                    /* label: */"Maximum number of stored patterns "
                                 + "for HiLite-ing: ", 100));
                 addDialogComponent(new DialogComponentBoolean(
