@@ -413,11 +413,11 @@ public class PMMLDecisionTreeTranslator implements PMMLTranslator {
 
         m_tree = parseDecTreeFromModel(treeModel);
     }
-    
+
     /**
      * Builds a decision tree object out of the TreeModel.
      * @param treeModel treeModel parsed from the PMML.
-     * 
+     *
      * @return DecisionTreeModel for further processing.
      */
     public DecisionTree parseDecTreeFromModel(final TreeModel treeModel) {
@@ -512,7 +512,7 @@ public class PMMLDecisionTreeTranslator implements PMMLTranslator {
                         new DecisionTreeNodeSplitPMML(id,
                                 getMajorityClass(pmmlNode),
                                 getClassCount(pmmlNode),
-                                getChildrenSplitAttribute(pmmlNode), 
+                                getChildrenSplitAttribute(pmmlNode),
                                 pmmlPredicates,
                                 children, knimeDefaultChildIndex);
             } else {
@@ -706,7 +706,10 @@ public class PMMLDecisionTreeTranslator implements PMMLTranslator {
             for (int i = 0; i < stringValues.length; i++) {
                 stringValues[i] = stringValues[i].replace(DOUBLE_QUOT, "");
                 stringValues[i] = stringValues[i].replace(TAB, DOUBLE_QUOT);
-                stringValues[i] = stringValues[i].trim();
+                if (PMMLArrayType.STRING != arrayType) {
+                    // do not trim string values
+                    stringValues[i] = stringValues[i].trim();
+                }
             }
         } else {
             stringValues = content.split("\\s+");
