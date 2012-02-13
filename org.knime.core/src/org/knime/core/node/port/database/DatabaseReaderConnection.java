@@ -102,8 +102,8 @@ import org.knime.core.util.FileUtil;
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class DatabaseReaderConnection {
-    
-    /** Separator used to decided which SQL statements should be execute 
+
+    /** Separator used to decided which SQL statements should be execute
      * line-by-line; the semicolon is not part of the executed query. */
     public static final String SQL_QUERY_SEPARATOR = ";\n";
 
@@ -150,7 +150,7 @@ public final class DatabaseReaderConnection {
     public DatabaseQueryConnectionSettings getQueryConnection() {
         return m_conn;
     }
-    
+
     /**
      * Returns the database meta data on the connection.
      * @param cp CredentialsProvider to receive user/password from
@@ -235,9 +235,12 @@ public final class DatabaseReaderConnection {
                 final int selectIndex = oQueries.length - 1;
                 final int hashAlias = System.identityHashCode(this);
                 // replace SELECT (last) query with wrapped statement
-                if (m_conn.getDriver().startsWith("jdbc.sqlite")) {
-                    oQueries[selectIndex] = "SELECT * FROM (" 
-                        + oQueries[selectIndex] + ") "  
+                /* Fixed Bug 2874. For sqlite the data must always be
+                 * fetched as the column type string is returned
+                 * for all columns when fetching only meta data. */
+                if (!m_conn.getDriver().startsWith("org.sqlite")) {
+                    oQueries[selectIndex] = "SELECT * FROM ("
+                        + oQueries[selectIndex] + ") "
                         + "table_" + hashAlias + " WHERE 1 = 0";
                 }
                 ResultSet result = null;
@@ -245,7 +248,7 @@ public final class DatabaseReaderConnection {
                     // if only one SQL statement is being executed
                     if (oQueries.length == 1) {
                         // try to see if prepared statements are supported
-                        LOGGER.debug("Executing SQL statement \"" 
+                        LOGGER.debug("Executing SQL statement \""
                                 + oQueries[selectIndex] + "\"");
                         m_stmt = conn.prepareStatement(oQueries[selectIndex]);
                         ((PreparedStatement) m_stmt).execute();
@@ -254,7 +257,7 @@ public final class DatabaseReaderConnection {
                     } else {
                         // otherwise use standard statement
                         m_stmt = conn.createStatement();
-                        LOGGER.debug("Executing SQL statement(s) \"" 
+                        LOGGER.debug("Executing SQL statement(s) \""
                                 + Arrays.toString(oQueries) + "\"");
                         for (int i = 0; i < oQueries.length - 1; i++) {
                             m_stmt.execute(oQueries[i]);
@@ -269,13 +272,13 @@ public final class DatabaseReaderConnection {
                     m_stmt = conn.createStatement();
                     // if more than one SQL statement is being executed
                     if (oQueries.length > 1) {
-                        LOGGER.debug("Executing SQL statement(s) \"" 
+                        LOGGER.debug("Executing SQL statement(s) \""
                                 + Arrays.toString(oQueries) + "\"");
                         for (int i = 0; i < oQueries.length - 1; i++) {
                             m_stmt.execute(oQueries[i]);
                         }
                     } else {
-                        LOGGER.debug("Executing SQL statement \"" 
+                        LOGGER.debug("Executing SQL statement \""
                                 + oQueries[selectIndex] + "\"");
                     }
                     result = m_stmt.executeQuery(oQueries[selectIndex]);
@@ -311,7 +314,7 @@ public final class DatabaseReaderConnection {
         synchronized (sync) {
             try {
                 if (DatabaseConnectionSettings.FETCH_SIZE != null) {
-                    // fix 2741: postgresql databases ignore fetchsize when 
+                    // fix 2741: postgresql databases ignore fetchsize when
                     // AUTOCOMMIT on; setting it to false
                     if (m_stmt.getClass().getCanonicalName().startsWith(
                             "org.postgresql")) {
@@ -332,7 +335,7 @@ public final class DatabaseReaderConnection {
                 }
                 final String[] oQueries = m_conn.getQuery().split(
                         SQL_QUERY_SEPARATOR);
-                LOGGER.debug("Executing SQL statement(s) \"" 
+                LOGGER.debug("Executing SQL statement(s) \""
                         + Arrays.toString(oQueries) + "\"");
                 for (int i = 0; i < oQueries.length - 1; i++) {
                     m_stmt.execute(oQueries[i]);
@@ -377,7 +380,7 @@ public final class DatabaseReaderConnection {
                         SQL_QUERY_SEPARATOR);
                 if (cachedNoRows < 0) {
                     if (DatabaseConnectionSettings.FETCH_SIZE != null) {
-                        // fix 2741: postgresql databases ignore fetchsize when 
+                        // fix 2741: postgresql databases ignore fetchsize when
                         // AUTOCOMMIT on; setting it to false
                         if (m_stmt.getClass().getCanonicalName().startsWith(
                                 "org.postgresql")) {
@@ -401,8 +404,8 @@ public final class DatabaseReaderConnection {
                     final int hashAlias = System.identityHashCode(this);
                     final int selectIdx = oQueries.length - 1;
                     // replace last element in statement(s) with wrapped SQL
-                    oQueries[selectIdx] = "SELECT * FROM " 
-                            + "(" + oQueries[selectIdx] + ") " 
+                    oQueries[selectIdx] = "SELECT * FROM "
+                            + "(" + oQueries[selectIdx] + ") "
                             + "table_" + hashAlias;
                     try {
                         // bugfix 2925: may fail, e.g. on sqlite
@@ -412,7 +415,7 @@ public final class DatabaseReaderConnection {
                                 + sqle.getMessage());
                     }
                 }
-                LOGGER.debug("Executing SQL statement(s) \"" 
+                LOGGER.debug("Executing SQL statement(s) \""
                         + Arrays.toString(oQueries) + "\"");
                 // note: execute last, SELECT statement using Statement#execute
                 for (int i = 0; i < oQueries.length; i++) {
