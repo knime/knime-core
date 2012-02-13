@@ -62,6 +62,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
+
 import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
@@ -187,8 +190,8 @@ import org.knime.workbench.editor2.actions.PasteActionContextMenu;
 import org.knime.workbench.editor2.actions.PauseLoopExecutionAction;
 import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.ResumeLoopAction;
-import org.knime.workbench.editor2.actions.SetNodeDescriptionAction;
 import org.knime.workbench.editor2.actions.SaveAsMetaNodeTemplateAction;
+import org.knime.workbench.editor2.actions.SetNodeDescriptionAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
 import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
 import org.knime.workbench.editor2.commands.CreateNewConnectedMetaNodeCommand;
@@ -446,7 +449,9 @@ public class WorkflowEditor extends GraphicalEditor implements
             child.getEditorSite().getPage().closeEditor(child, false);
         }
         NodeProvider.INSTANCE.removeListener(this);
-        m_manager.removeNodePropertyChangedListener(this);
+        if (m_manager != null) {
+            m_manager.removeNodePropertyChangedListener(this);
+        }
         getSite().getWorkbenchWindow().getSelectionService()
                 .removeSelectionListener(this);
         // remove resource listener..
@@ -819,32 +824,37 @@ public class WorkflowEditor extends GraphicalEditor implements
                             new LoadWorkflowRunnable(this, wfFile);
                     ps.busyCursorWhile(loadWorflowRunnable);
                     // check if the editor should be disposed
-                    if (m_manager == null) {
-                        if (loadWorflowRunnable.hasLoadingBeenCanceled()) {
-                            final String cancelError =
-                                loadWorflowRunnable.getLoadingCanceledMessage();
-                            Display.getDefault().asyncExec(new Runnable() {
-                                @Override
-                                public void run() {
-                                    getEditorSite().getPage().closeEditor(
-                                            WorkflowEditor.this, false);
-                                    MessageBox mb =
-                                        new MessageBox(Display
-                                                .getDefault()
-                                                .getActiveShell(),
-                                                SWT.ICON_INFORMATION
-                                                | SWT.OK);
-                                    mb.setText("Editor could not be opened");
-                                    mb.setMessage(cancelError);
-                                    mb.open();
-                                }
+                    if (loadWorflowRunnable.hasLoadingBeenCanceled()) {
+                        final String cancelError =
+                            loadWorflowRunnable.getLoadingCanceledMessage();
+                        SwingUtilities.invokeLater(new Runnable() {
+                            /** {@inheritDoc} */
+                            @Override
+                            public void run() {
+                                JOptionPane.showMessageDialog(null,
+                                        cancelError,
+                                        "Editor could not be opened",
+                                        JOptionPane.ERROR_MESSAGE);
+//                                    ErrorDialog.openError(Display
+//                                            .getDefault()
+//                                            .getActiveShell(),
+//                                            "Editor could not be opened",
+//                                            cancelError, null);
 
-                            });
-                            throw new OperationCanceledException(cancelError);
-                        } else if (loadWorflowRunnable.getThrowable() != null) {
-                            throw new RuntimeException(
-                                    loadWorflowRunnable.getThrowable());
-                        }
+                            }
+                        });
+                        Display.getDefault().asyncExec(new Runnable() {
+                            /** {@inheritDoc} */
+                            @Override
+                            public void run() {
+                                getEditorSite().getPage().closeEditor(
+                                        WorkflowEditor.this, false);
+                            }
+                        });
+                        throw new OperationCanceledException(cancelError);
+                    } else if (loadWorflowRunnable.getThrowable() != null) {
+                        throw new RuntimeException(
+                                loadWorflowRunnable.getThrowable());
                     }
                     ProjectWorkflowMap.putWorkflow(m_fileResource, m_manager);
                 }
