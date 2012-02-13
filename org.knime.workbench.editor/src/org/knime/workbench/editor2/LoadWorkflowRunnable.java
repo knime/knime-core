@@ -251,10 +251,15 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
             LOGGER.info(m_loadingCanceledMessage, cee);
             m_editor.setWorkflowManager(null);
         } catch (LockFailedException lfe) {
-            m_loadingCanceledMessage =
-                "Unable to load workflow: \""
-                + m_workflowFile.getParentFile().getName()
-                + "\"\nIt is in use by another user/instance.";
+            StringBuilder error = new StringBuilder();
+            error.append("Unable to load workflow \"");
+            error.append(m_workflowFile.getParentFile().getName());
+            if (m_workflowFile.getParentFile().exists()) {
+                error.append("\"\nIt is in use by another user/instance.");
+            } else {
+                error.append("\"\nLocation does not exist.");
+            }
+            m_loadingCanceledMessage = error.toString();
             LOGGER.info(m_loadingCanceledMessage, lfe);
             m_editor.setWorkflowManager(null);
         } catch (Throwable e) {

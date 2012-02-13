@@ -5617,9 +5617,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         if (!isTemplate) {
             // don't lock read-only templates (as we don't have r/o locks yet)
             if (!rootFile.fileLockRootForVM()) {
-                throw new LockFailedException("Unable to lock workflow from \""
-                        + rootFile
-                        + "\". It is in use by another user/instance.");
+                StringBuilder error = new StringBuilder();
+                error.append("Unable to lock workflow from \"");
+                error.append(rootFile).append("\". ");
+                if (rootFile.getFile().exists()) {
+                    error.append("It is in use by another user/instance.");
+                } else {
+                    error.append("Location does not exist.");
+                }
+                throw new LockFailedException(error.toString());
             }
         }
         try {
