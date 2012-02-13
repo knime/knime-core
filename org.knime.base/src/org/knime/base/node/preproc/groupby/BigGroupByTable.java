@@ -220,7 +220,8 @@ GroupByTable {
             if (operator.isSkipped()) {
                 //add skipped groups and the column that causes the skipping
                 //into the skipped groups map
-                addSkippedGroup(colAggr.getOriginalColName(), groupVals);
+                addSkippedGroup(colAggr.getOriginalColName(),
+                        operator.getSkipMessage(), groupVals);
             }
             //reset the operator for the next group
             operator.reset();

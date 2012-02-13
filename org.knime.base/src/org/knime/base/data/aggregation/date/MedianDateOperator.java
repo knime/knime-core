@@ -133,6 +133,7 @@ public class MedianDateOperator extends AggregationOperator {
     @Override
     protected boolean computeInternal(final DataCell cell) {
         if (m_cells.size() >= getMaxUniqueValues()) {
+            setSkipMessage("Group contains to many values");
             return true;
         }
         m_cells.add(cell);

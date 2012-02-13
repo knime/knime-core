@@ -65,6 +65,7 @@ import org.knime.base.data.aggregation.OperatorData;
  */
 public class ProductOperator extends AggregationOperator {
 
+    // TK_TODO: Add long support???
     private final DataType m_type = DoubleCell.TYPE;
     private boolean m_valid = false;
     private double m_product = 1;

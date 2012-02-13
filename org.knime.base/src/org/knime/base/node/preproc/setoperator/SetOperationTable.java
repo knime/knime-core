@@ -309,8 +309,6 @@ public class SetOperationTable {
             } else if (e.getCause() instanceof RuntimeException) {
                 throw (RuntimeException) e.getCause();
             }
-            LOGGER.debug("Exception while sorting tables: "
-                    + e.getCause().getMessage());
             throw new RuntimeException(e.getCause());
         }
         exec.setMessage("Performing set operation");

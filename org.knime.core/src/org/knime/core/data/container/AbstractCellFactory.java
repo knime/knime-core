@@ -131,6 +131,19 @@ public abstract class AbstractCellFactory implements CellFactory {
         setParallelProcessing(value, maxParallelWorkers, maxQueueSize);
     }
 
+    /** Returns true if parallel processing is enabled, either via the
+     * constructor argument or by calling the
+     * {@link #setParallelProcessing(boolean)} method.
+     * @return true if input is processed concurrently. If true, the values
+     * for {@link #getMaxParallelWorkers()} and {@link #getMaxQueueSize()} will
+     * be at least 1 (whereby 1 is a corner case where the input is processed
+     * synchronously with one dedicated worker thread).
+     * @since 2.5.2
+     */
+    public final boolean isParallelProcessing() {
+        return getMaxParallelWorkers() > 0 && getMaxQueueSize() > 0;
+    }
+
     /** Enables or disables parallel processing of the rows. The two relevant
      * parameters for the number of parallel workers and maximum work queue
      * need to be specified.
@@ -156,7 +169,7 @@ public abstract class AbstractCellFactory implements CellFactory {
                         + "larger than 0: " + maxParallelWorkers);
             }
             if (maxQueueSize < maxParallelWorkers) {
-                throw new IllegalArgumentException("Queue size must be larger"
+                throw new IllegalArgumentException("Queue size must be larger "
                         + "than worker count: "
                         + maxQueueSize + "<" + maxParallelWorkers);
             }
@@ -168,13 +181,25 @@ public abstract class AbstractCellFactory implements CellFactory {
         }
     }
 
-    /** @return the maxParallelWorkers */
-    int getMaxParallelWorkers() {
+    /** The number of parallel workers or -1 if the input is processed
+     * sequentially. See {@link #setParallelProcessing(boolean, int, int)}
+     * for a detailed description. If parallel processing is enabled but
+     * no detailed parameters are provided, the number of workers and the
+     * {@link #getMaxQueueSize() queue size} are determined heuristically based
+     * on the {@link Runtime#availableProcessors() available processors}.
+     * @return The number of parallel workers or -1.
+     * @since 2.5.2 */
+    public final int getMaxParallelWorkers() {
         return m_maxParallelWorkers;
     }
 
-    /** @return the maxQueueSize */
-    int getMaxQueueSize() {
+    /** The size of the processing queue if parallel processing is enabled or
+     * -1 if the input is processed sequentially. See
+     * {@link #setParallelProcessing(boolean, int, int)} and
+     * {@link #getMaxParallelWorkers()} for details.
+     * @return the maxQueueSize or -1.
+     * @since 2.5.2 */
+    public final int getMaxQueueSize() {
         return m_maxQueueSize;
     }
 

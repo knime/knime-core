@@ -80,8 +80,19 @@ public class SortedListCellOperator extends ListCellOperator {
      */
     public SortedListCellOperator(final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        super(new OperatorData("List (sorted)", "Sorted list", false, false,
+        this(new OperatorData("List (sorted)", "Sorted list", true, false,
                 DataValue.class, true), globalSettings, opColSettings);
+    }
+
+    /**Constructor for class SortedListCellOperator.
+     * @param operatorData the operator data
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
+     */
+    protected SortedListCellOperator(final OperatorData operatorData,
+            final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        super(operatorData, globalSettings, opColSettings);
         if (opColSettings.getOriginalColSpec() == null) {
             //use the default comparator
             m_comparator = GeneralDataValueComparator.getInstance();
@@ -110,8 +121,16 @@ public class SortedListCellOperator extends ListCellOperator {
         if (cells.isEmpty()) {
             return DataType.getMissingCell();
         }
-        Collections.sort(cells, m_comparator);
+        sortCells(cells);
         return CollectionCellFactory.createListCell(cells);
+    }
+
+    /**
+     * @param cells the cells sorted using the {@link DataValueComparator} for
+     * the original {@link DataType} of the column to group
+     */
+    protected void sortCells(final List<DataCell> cells) {
+        Collections.sort(cells, m_comparator);
     }
 
     /**

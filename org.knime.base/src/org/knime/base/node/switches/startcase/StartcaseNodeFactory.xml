@@ -19,6 +19,5 @@
         <outPort index="0" name="First Output">The first output (case 0).</outPort>
         <outPort index="1" name="Second Output">The second output (case 1).</outPort>
         <outPort index="2" name="Third Output">The third output (case 2).</outPort>
-        <outPort index="3" name="Fourth Output">The fourth output (case 3).</outPort>
     </ports>
 </knimeNode>

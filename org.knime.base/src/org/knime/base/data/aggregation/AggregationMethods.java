@@ -373,6 +373,11 @@ public final class AggregationMethods {
         addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated
                 .UniqueConcatenateWithCountOperator(GlobalSettings.DEFAULT,
                         OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+
+        //methods changed in KNIME version 2.5.2
+        addDeprecatedOperator(new org.knime.base.data.aggregation.deprecated
+                .SumOperator(GlobalSettings.DEFAULT,
+                        OperatorColumnSettings.DEFAULT_EXCL_MISSING));
     }
 
     /**

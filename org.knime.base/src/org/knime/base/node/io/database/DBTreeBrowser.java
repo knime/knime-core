@@ -115,8 +115,11 @@ public class DBTreeBrowser extends JPanel implements TreeSelectionListener {
                 if (me.getClickCount() == 2) {
                     if (node.getLevel() == 3) { // column name
                         TreeNode tableNode = node.getParent();
-                        editor.replaceSelection(tableNode.toString() 
-                                + "." +  nodeInfo);
+                        String insert = tableNode.toString() + "." +  nodeInfo;
+                        if (nodeInfo.contains(" ")) {
+                            insert = "\"" + insert + "\"";
+                        }
+                        editor.replaceSelection(insert);
                     } else { // table name
                         editor.replaceSelection(nodeInfo);
                     }

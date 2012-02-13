@@ -114,14 +114,21 @@ public class DecTreePredictorNodeModel extends NodeModel {
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(DecTreePredictorNodeModel.class);
 
-    /** XML tag name in configuration file for max num of covered pattern. */
+    /** XML tag name in configuration file for max num pattern for hiliting. */
     public static final String MAXCOVERED = "UseGainRatio";
 
     private final SettingsModelIntegerBounded m_maxNumCoveredPattern =
-            new SettingsModelIntegerBounded(MAXCOVERED,
+            createMaxNumPatternSettings();
+    
+    /** @return a new settings models for the maximum number of pattern stored
+     *          for hiliting within the dec tree view.
+     */
+    static SettingsModelIntegerBounded createMaxNumPatternSettings() {
+        return new SettingsModelIntegerBounded(MAXCOVERED,
                     /* default */10000,
                     /* min: */0,
-                    /* max: */100000);
+                    /* max: */Integer.MAX_VALUE);
+    }
 
     /** XML tag name in configuration file for show distribution flag. */
     public static final String SHOW_DISTRIBUTION = "ShowDistribution";

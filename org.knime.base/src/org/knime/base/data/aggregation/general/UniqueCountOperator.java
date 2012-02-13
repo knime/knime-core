@@ -58,19 +58,14 @@ import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
 
-import java.util.HashSet;
-import java.util.Set;
-
 /**
  * Returns the count of the unique values per group.
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class UniqueCountOperator extends AggregationOperator {
+public class UniqueCountOperator extends SetCellOperator {
 
     private final DataType m_type = IntCell.TYPE;
-
-    private final Set<String> m_vals;
 
     /**Constructor for class Concatenate.
      * @param globalSettings the global settings
@@ -91,12 +86,6 @@ public class UniqueCountOperator extends AggregationOperator {
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
         super(operatorData, globalSettings, opColSettings);
-        try {
-            m_vals = new HashSet<String>(getMaxUniqueValues());
-        } catch (final OutOfMemoryError e) {
-            throw new IllegalArgumentException(
-                    "Maximum unique values number to big");
-        }
     }
 
     /**
@@ -121,37 +110,8 @@ public class UniqueCountOperator extends AggregationOperator {
      * {@inheritDoc}
      */
     @Override
-    protected boolean computeInternal(final DataCell cell) {
-        if (cell.isMissing()) {
-            return false;
-        }
-        final String val = cell.toString();
-        if (m_vals.contains(val)) {
-            return false;
-        }
-        //check if the set contains more values than allowed
-        //before adding a new value
-        if (m_vals.size() >= getMaxUniqueValues()) {
-            return true;
-        }
-        m_vals.add(val);
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     protected DataCell getResultInternal() {
-        return new IntCell(m_vals.size());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void resetInternal() {
-        m_vals.clear();
+        return new IntCell(getGroupMembers().size());
     }
 
     /**

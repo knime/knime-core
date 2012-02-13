@@ -108,6 +108,10 @@ public class OperatorColumnSettings {
 
     /**
      * @return the original {@link DataColumnSpec} of the column to aggregate
+     * <b>Notice:</b>The original column spec is <code>null</code> when
+     * registering the operator during plugin initialization phase.
+     * When the operator is used the method always returns the original column
+     * specification.
      */
     public DataColumnSpec getOriginalColSpec() {
         return m_origColSpec;

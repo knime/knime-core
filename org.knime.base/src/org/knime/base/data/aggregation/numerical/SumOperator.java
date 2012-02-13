@@ -49,9 +49,14 @@
 package org.knime.base.data.aggregation.numerical;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.data.IntValue;
+import org.knime.core.data.LongValue;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
 
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
@@ -65,9 +70,19 @@ import org.knime.base.data.aggregation.OperatorData;
  */
 public class SumOperator extends AggregationOperator {
 
-    private final DataType m_type = DoubleCell.TYPE;
+    private final DataType m_type;
     private boolean m_valid = false;
     private double m_sum = 0;
+
+    /**Constructor for class SumOperator.
+     * @param globalSettings the global settings
+     * @param opColSettings the operator column specific settings
+     */
+    public SumOperator(final GlobalSettings globalSettings,
+            final OperatorColumnSettings opColSettings) {
+        this(new OperatorData("Sum_V2.5.2", "Sum", "Sum", false, false,
+                DoubleValue.class, false), globalSettings, opColSettings);
+    }
 
     /**Constructor for class SumOperator.
      * @param operatorData the operator data
@@ -78,16 +93,13 @@ public class SumOperator extends AggregationOperator {
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
         super(operatorData, globalSettings, opColSettings);
-    }
-
-    /**Constructor for class SumOperator.
-     * @param globalSettings the global settings
-     * @param opColSettings the operator column specific settings
-     */
-    public SumOperator(final GlobalSettings globalSettings,
-            final OperatorColumnSettings opColSettings) {
-        this(new OperatorData("Sum", false, false, DoubleValue.class, false),
-                globalSettings, opColSettings);
+        final DataColumnSpec origSpec = opColSettings.getOriginalColSpec();
+        if (origSpec != null) {
+            //the spec is null during registration of the operator
+            m_type = getResultType(origSpec.getType());
+        } else {
+            m_type = DoubleCell.TYPE;
+        }
     }
 
     /**
@@ -95,7 +107,17 @@ public class SumOperator extends AggregationOperator {
      */
     @Override
     protected DataType getDataType(final DataType origType) {
-        return m_type;
+        return getResultType(origType);
+    }
+
+    private DataType getResultType(final DataType origType) {
+        if (origType.isCompatible(IntValue.class)) {
+            return IntCell.TYPE;
+        } else if (origType.isCompatible(LongValue.class)) {
+            return LongCell.TYPE;
+        } else {
+            return DoubleCell.TYPE;
+        }
     }
 
     /**
@@ -127,6 +149,25 @@ public class SumOperator extends AggregationOperator {
         if (!m_valid) {
             return DataType.getMissingCell();
         }
+        if (IntCell.TYPE.equals(m_type)) {
+            //check if the double value is to big for an integer
+            if (m_sum > Integer.MAX_VALUE) {
+                setSkipped(true);
+                setSkipMessage("Sum > maximum int value. "
+                        + "Convert column to long.");
+                return DataType.getMissingCell();
+            }
+            return new IntCell((int)m_sum);
+        } else if (LongCell.TYPE.equals(m_type)) {
+            //check if the double value is to big for a long
+            if (m_sum > Long.MAX_VALUE) {
+                setSkipped(true);
+                setSkipMessage("Sum > maximum long value. "
+                        + "Convert column to double.");
+                return DataType.getMissingCell();
+            }
+            return new LongCell((long)m_sum);
+        }
         return new DoubleCell(m_sum);
     }
 
@@ -144,6 +185,9 @@ public class SumOperator extends AggregationOperator {
      */
     @Override
     public String getDescription() {
-        return "Calculates the sum per group.";
+        return "Calculates the sum per group. For int and long cells, the "
+            + "operator might return a missing cell and mark the column as "
+            + "skipped if the sum exceeds the limit of int (2<sup>31</sup>-1)"
+            + " resp. long (2<sup>62</sup>-1).";
     }
 }
