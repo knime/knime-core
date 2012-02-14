@@ -225,6 +225,10 @@ public class AutoBinner {
                         + "quantile calculation (error in row \""
                         + rowQ1.getKey() + "\")");
             }
+            // for quantile calculation see also
+            // http://en.wikipedia.org/wiki/
+            //                Quantile#Estimating_the_quantiles_of_a_population.
+            // this implements R-7
             double xq = ((DoubleValue)xqCell).getDoubleValue();
             double xq1 = ((DoubleValue)xq1Cell).getDoubleValue();
             double quantile = xq + (h - q) * (xq1 - xq);
