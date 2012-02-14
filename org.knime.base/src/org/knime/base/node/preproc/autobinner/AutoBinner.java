@@ -54,7 +54,9 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -69,6 +71,7 @@ import org.knime.base.node.preproc.autobinner.pmml.PMMLDiscretizePreprocPortObje
 import org.knime.base.node.preproc.autobinner.pmml.PMMLInterval;
 import org.knime.base.node.preproc.autobinner.pmml.PMMLInterval.Closure;
 import org.knime.base.node.preproc.autobinner.pmml.PMMLPreprocDiscretize;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -76,6 +79,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -118,9 +122,10 @@ public class AutoBinner {
             final BufferedDataTable data, final ExecutionContext exec)
     throws Exception {
         // Auto configuration when target is not set
-        if (null == m_settings.getTargetColumn() ||
-                m_settings.getIncludeAll()) {
-            addAllNumericCols(data.getDataTableSpec());
+        final DataTableSpec spec = data.getDataTableSpec();
+        if (null == m_settings.getTargetColumn()
+                || m_settings.getIncludeAll()) {
+            addAllNumericCols(spec);
         }
         // determine intervals
         if (m_settings.getMethod().equals(Method.fixedNumber)) {
@@ -150,37 +155,45 @@ public class AutoBinner {
             }
             return createDisretizeOp(edgesMap);
 
-        } else if(m_settings.getMethod().equals(Method.sampleQuantiles)) {
-            init(data.getDataTableSpec());
-            boolean[] sortAsc =
-                new boolean[m_settings.getTargetColumn().length];
-            Arrays.fill(sortAsc, true);
-            SortedTable sorted = new SortedTable(data,
-                    Arrays.asList(m_settings.getTargetColumn()),
-                    sortAsc,
-                    exec.createSubExecutionContext(0.5));
-            Map<String, double[]> edgesMap = createEdgesFromQuantiles(sorted,
-                    exec.createSubExecutionContext(0.5));
+        } else if (m_settings.getMethod().equals(Method.sampleQuantiles)) {
+            init(spec);
+            Map<String, double[]> edgesMap =
+                new LinkedHashMap<String, double[]>();
+            final int colCount = m_settings.getTargetColumn().length;
+            // contains all numeric columns if include all is set!
+            for (String target : m_settings.getTargetColumn()) {
+                exec.setMessage("Calculating quantiles (column \""
+                        + target + "\")");
+                ExecutionContext colSortContext =
+                    exec.createSubExecutionContext(0.7 / colCount);
+                ExecutionContext colCalcContext =
+                    exec.createSubExecutionContext(0.3 / colCount);
+                ColumnRearranger singleRearranger = new ColumnRearranger(spec);
+                singleRearranger.keepOnly(target);
+                BufferedDataTable singleColSorted =
+                    colSortContext.createColumnRearrangeTable(
+                            data, singleRearranger, colSortContext);
+                SortedTable sorted = new SortedTable(singleColSorted,
+                        Collections.singletonList(target),
+                        new boolean[] {true}, colSortContext);
+                colSortContext.setProgress(1.0);
+                double[] edges = createEdgesFromQuantiles(
+                        sorted.getBufferedDataTable(),
+                        colCalcContext, m_settings.getSampleQuantiles());
+                colCalcContext.setProgress(1.0);
+                exec.clearTable(singleColSorted);
+                edgesMap.put(target, edges);
+            }
             return createDisretizeOp(edgesMap);
-        }
-        else {
+        } else {
             throw new IllegalStateException("Unknown binning method.");
         }
     }
 
-    private Map<String, double[]> createEdgesFromQuantiles(
-            final SortedTable data, final ExecutionContext exec)
-            throws CanceledExecutionException {
-        Map<String, double[]> edgesMap = new HashMap<String, double[]>();
-        for (String target : m_settings.getTargetColumn()) {
-            double[] edges =
-                new double[m_settings.getSampleQuantiles().length];
-            edgesMap.put(target, edges);
-        }
-        Map<String, Integer> idx = new HashMap<String, Integer>();
-        for (String target : m_settings.getTargetColumn()) {
-            idx.put(target, data.getDataTableSpec().findColumnIndex(target));
-        }
+    private static double[] createEdgesFromQuantiles(
+            final BufferedDataTable data, final ExecutionContext exec,
+            final double[] sampleQuantiles) throws CanceledExecutionException {
+        double[] edges = new double[sampleQuantiles.length];
         int n = data.getRowCount();
         int c = 0;
         int cc = 0;
@@ -192,7 +205,7 @@ public class AutoBinner {
             rowQ = rowQ1;
         }
 
-        for (double p : m_settings.getSampleQuantiles()) {
+        for (double p : sampleQuantiles) {
             double h = (n - 1) * p + 1;
             int q = (int)Math.floor(h);
             while ((1.0 == p || c < q) && iter.hasNext()) {
@@ -203,18 +216,22 @@ public class AutoBinner {
                 exec.checkCanceled();
             }
             rowQ = 1.0 != p ? rowQ : rowQ1;
-            for (String target : m_settings.getTargetColumn()) {
-                double xq = ((DoubleValue)
-                        rowQ.getCell(idx.get(target))).getDoubleValue();
-                double xq1 = ((DoubleValue)
-                        rowQ1.getCell(idx.get(target))).getDoubleValue();
-                double quantile = xq + (h - q) * (xq1 - xq);
-                double[] edges = edgesMap.get(target);
-                edges[cc] = quantile;
+            final DataCell xqCell = rowQ.getCell(0);
+            final DataCell xq1Cell = rowQ1.getCell(0);
+            // TODO should be able to handle missing values (need to filter
+            // data first?)
+            if (xqCell.isMissing() || xq1Cell.isMissing()) {
+                throw new RuntimeException("Missing values not support for "
+                        + "quantile calculation (error in row \""
+                        + rowQ1.getKey() + "\")");
             }
+            double xq = ((DoubleValue)xqCell).getDoubleValue();
+            double xq1 = ((DoubleValue)xq1Cell).getDoubleValue();
+            double quantile = xq + (h - q) * (xq1 - xq);
+            edges[cc] = quantile;
             cc++;
         }
-        return edgesMap;
+        return edges;
     }
 
     private void addAllNumericCols(final DataTableSpec inSpec)
