@@ -51,6 +51,7 @@
 package org.knime.base.node.preproc.autobinner;
 
 import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,6 +59,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.knime.base.data.sort.SortedTable;
@@ -461,10 +463,10 @@ public class AutoBinner {
 
         /** for numbers less than 0.0001. */
         private static final DecimalFormat SMALL_FORMAT = new DecimalFormat(
-                "0.00E0");
+                "0.00E0", new DecimalFormatSymbols(Locale.US));
         /** in all other cases, use the default Java formatter. */
         private static final NumberFormat DEFAULT_FORMAT =
-            NumberFormat.getNumberInstance();
+            NumberFormat.getNumberInstance(Locale.US);
 
         /**
          * Formats the double to a string. It will use the following either
