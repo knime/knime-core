@@ -50,6 +50,9 @@
  */
 package org.knime.base.node.preproc.autobinner.pmml;
 
+import javax.swing.JComponent;
+import javax.swing.JLabel;
+
 import org.knime.core.node.port.pmml.preproc.PMMLPreprocPortObject;
 import org.knime.core.node.port.pmml.preproc.PMMLPreprocPortObjectSpec;
 
@@ -77,4 +80,15 @@ public class PMMLDiscretizePreprocPortObject extends PMMLPreprocPortObject {
             (PMMLPreprocDiscretize) getOperations().get(0);
         return new PMMLDiscretizePreprocPortObjectSpec(op);
     }
+
+    @Override
+    public JComponent[] getViews() {
+        PMMLPreprocDiscretize op =
+            (PMMLPreprocDiscretize) getOperations().get(0);
+        String text = "Discretization on column(s): " + op.getColumnNames();
+        final JLabel jLabel = new JLabel(text);
+        jLabel.setToolTipText(text);
+        return new JComponent[] {jLabel};
+    }
 }
+
