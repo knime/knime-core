@@ -824,37 +824,40 @@ public class WorkflowEditor extends GraphicalEditor implements
                             new LoadWorkflowRunnable(this, wfFile);
                     ps.busyCursorWhile(loadWorflowRunnable);
                     // check if the editor should be disposed
-                    if (loadWorflowRunnable.hasLoadingBeenCanceled()) {
-                        final String cancelError =
-                            loadWorflowRunnable.getLoadingCanceledMessage();
-                        SwingUtilities.invokeLater(new Runnable() {
-                            /** {@inheritDoc} */
-                            @Override
-                            public void run() {
-                                JOptionPane.showMessageDialog(null,
-                                        cancelError,
-                                        "Editor could not be opened",
-                                        JOptionPane.ERROR_MESSAGE);
+                    // non-null if set by workflow runnable above
+                    if (m_manager == null) {
+                        if (loadWorflowRunnable.hasLoadingBeenCanceled()) {
+                            final String cancelError =
+                                loadWorflowRunnable.getLoadingCanceledMessage();
+                            SwingUtilities.invokeLater(new Runnable() {
+                                /** {@inheritDoc} */
+                                @Override
+                                public void run() {
+                                    JOptionPane.showMessageDialog(null,
+                                            cancelError,
+                                            "Editor could not be opened",
+                                            JOptionPane.ERROR_MESSAGE);
 //                                    ErrorDialog.openError(Display
 //                                            .getDefault()
 //                                            .getActiveShell(),
 //                                            "Editor could not be opened",
 //                                            cancelError, null);
 
-                            }
-                        });
-                        Display.getDefault().asyncExec(new Runnable() {
-                            /** {@inheritDoc} */
-                            @Override
-                            public void run() {
-                                getEditorSite().getPage().closeEditor(
-                                        WorkflowEditor.this, false);
-                            }
-                        });
-                        throw new OperationCanceledException(cancelError);
-                    } else if (loadWorflowRunnable.getThrowable() != null) {
-                        throw new RuntimeException(
-                                loadWorflowRunnable.getThrowable());
+                                }
+                            });
+                            Display.getDefault().asyncExec(new Runnable() {
+                                /** {@inheritDoc} */
+                                @Override
+                                public void run() {
+                                    getEditorSite().getPage().closeEditor(
+                                            WorkflowEditor.this, false);
+                                }
+                            });
+                            throw new OperationCanceledException(cancelError);
+                        } else if (loadWorflowRunnable.getThrowable() != null) {
+                            throw new RuntimeException(
+                                    loadWorflowRunnable.getThrowable());
+                        }
                     }
                     ProjectWorkflowMap.putWorkflow(m_fileResource, m_manager);
                 }
