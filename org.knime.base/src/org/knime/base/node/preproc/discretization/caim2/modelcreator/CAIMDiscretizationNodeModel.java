@@ -334,7 +334,7 @@ public class CAIMDiscretizationNodeModel extends NodeModel {
             ExecutionContext subExecBounds =
                     subExecPerColumn.createSubExecutionContext(0.9);
             while (currentCAIM > globalCAIM
-                    || numInsertedBounds < m_classValues.length) {
+                    || numInsertedBounds < m_classValues.length - 1) {
                 subExecPerColumn.checkCanceled();
 
                 // create subExec for counting
