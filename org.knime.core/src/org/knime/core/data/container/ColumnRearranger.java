@@ -313,6 +313,18 @@ public final class ColumnRearranger {
         return -1;
     }
 
+    /** Get the number of columns in the rearranger. This number is equal to
+     * the number of columns in the table spec that would be produced by calling
+     * {@link #createSpec()}. Note, this number may change when this rearranger
+     * is further customized through one of the {@link #remove(int...)} or
+     * {@link #append(CellFactory)} methods.
+     * @return the number of currently included columns
+     * @since v2.6
+     */
+    public int getColumnCount() {
+        return m_includes.size();
+    }
+
     /**
      * Moves the column at index <code>from</code> to the index <code>to</code>.
      * This method can be used to re-sort the set of columns.
@@ -334,6 +346,9 @@ public final class ColumnRearranger {
      * will have an index one less than they had before.</li>
      * </ul>
      *
+     * <p> If <code>to</code> is equal to the number of columns the column
+     * will be moved to the end.
+     *
      * <p> This method is inherently expensive as it shifts elements
      * back and forth. If you change the order of all columns (and hence would
      * need to call this method often), use the permute method instead.
@@ -341,7 +356,9 @@ public final class ColumnRearranger {
      * @param from The from index.
      * @param to The destination index.
      * @throws IndexOutOfBoundsException If any of the values is out of range,
-     * i.e. less than 0 or greater or equal to the current set of columns.
+     * i.e. less than 0 or greater than the the current number of columns,
+     * whereby the <code>from</code> argument must be strictly smaller than
+     * the number of columns.
      * @see #move(String, int)
      * @see #permute(String[])
      */
@@ -369,7 +386,7 @@ public final class ColumnRearranger {
      * @param colName The name of the column in question.
      * @param to The destination index.
      * @throws IndexOutOfBoundsException If <code>to</code> is out of range,
-     *             i.e. less than 0 or greater or equal to the current set of
+     *             i.e. less than 0 or greater than the current number of
      *             columns.
      * @throws NullPointerException If <code>colName</code> is null.
      * @throws IllegalArgumentException

@@ -105,6 +105,9 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
             new JCheckBox("Create empty string cells "
                     + "instead of missing string cells");
 
+    private final JCheckBox m_useEscapeCharacter =
+            new JCheckBox("Use \\ as escape character");
+
     /**
      * Creates a new panel for the dialog and inits all components.
      */
@@ -134,6 +137,8 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
         delimBox.add(new JLabel("Enter a delimiter:"));
         delimBox.add(Box.createHorizontalStrut(3));
         delimBox.add(m_delimiter);
+        delimBox.add(Box.createHorizontalStrut(20));
+        delimBox.add(m_useEscapeCharacter);
         m_delimiter.setMaximumSize(new Dimension(300, 25));
         m_delimiter.setMinimumSize(new Dimension(17, 25));
         m_delimiter.setPreferredSize(new Dimension(150, 25));
@@ -162,6 +167,7 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
         m_fixedSize.setSelected(true);
         m_columnNumber.setEnabled(true);
         m_fixedSize.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 m_columnNumber.setEnabled(m_fixedSize.isSelected());
             }
@@ -234,6 +240,7 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
             csSettings.setQuotePattern("\"");
             csSettings.setRemoveQuotes(true);
             csSettings.setUseEmptyString(false);
+            csSettings.setUseEscapeCharacter(false);
             // set the first string column as default column
             for (DataColumnSpec cSpec : specs[0]) {
                 if (cSpec.getType().isCompatible(StringValue.class)) {
@@ -268,7 +275,7 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
             m_fixedSize.setSelected(true);
         }
         m_useEmptyString.setSelected(csSettings.isUseEmptyString());
-
+        m_useEscapeCharacter.setSelected(csSettings.isUseEscapeCharacter());
     }
 
     /**
@@ -307,6 +314,7 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
 
         csSettings.setGuessNumOfCols(m_guessSize.isSelected());
         csSettings.setUseEmptyString(m_useEmptyString.isSelected());
+        csSettings.setUseEscapeCharacter(m_useEscapeCharacter.isSelected());
 
         csSettings.saveSettingsTo(settings);
 
