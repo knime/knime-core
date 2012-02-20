@@ -85,6 +85,17 @@
 			best nominal value for the second partition, then the second best value, 
 			and so on; until no improvement can be achieved.
 		</option>	
+		<option name="Filter invalid attribute values in child nodes">
+		    Binary splits on nominal values may lead to tests for attribute 
+		    values, which have been filtered out by a parent tree node.
+		    This is due to the fact that the learning algorithm is consistently
+		    using the table's domain information instead of the data in a tree
+		    node to define the split sets. These duplicate checks do not harm
+		    (the tree is the same and and will classify unknown data the exact
+		    same way), though they are confusing when the tree is inspected
+		    in the tree viewer. Enabling this option will post-process the tree
+		    and filter invalid checks.    
+		</option>	
 	</fullDescription>
 	<ports>
 		<inPort index="0" name="Input data">

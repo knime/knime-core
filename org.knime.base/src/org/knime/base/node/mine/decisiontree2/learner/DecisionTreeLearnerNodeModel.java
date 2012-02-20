@@ -54,6 +54,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -166,7 +167,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             "binaryNominalSplit";
 
     /**
-     * Key to store whether nominal columns without domain values should be 
+     * Key to store whether nominal columns without domain values should be
      * skipped for learning.
      */
     public static final String KEY_SKIP_COLUMNS = "skipColumnsWithoutDomain";
@@ -182,6 +183,14 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      */
     public static final String KEY_BINARY_MAX_NUM_NOMINAL_VALUES =
             "maxNumNominalValues";
+
+
+    /** post process tree and remove test attribute values from
+     * children, which have been removed further up in the tree already.
+     * (see bug 3124).
+     */
+    public static final String KEY_FILTER_NOMINAL_VALUES_FROM_PARENT =
+        "FilterNominalValuesFromParent";
 
     /** Index of input data port. */
     public static final int DATA_INPORT = 0;
@@ -339,6 +348,12 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             DecisionTreeLearnerNodeDialog
             .createSettingsSkipNominalColumnsWithoutDomain();
 
+    private final SettingsModelBoolean m_filterNominalValuesFromParent =
+            DecisionTreeLearnerNodeDialog.
+            createSettingsFilterNominalValuesFromParent(
+                    m_binaryNominalSplitMode);
+
+
     /**
      * The maximum number of nominal values for which all subsets are calculated
      * (results in the optimal binary split); this parameter is only use if
@@ -465,6 +480,14 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         DecisionTreeNode root = null;
         root = buildTree(initialTable, exec, 0, splitQualityMeasure,
                 parallelProcessing);
+        boolean isBinaryNominal = m_binaryNominalSplitMode.getBooleanValue();
+        boolean isFilterInvalidAttributeValues =
+            m_filterNominalValuesFromParent.getBooleanValue();
+        if (isBinaryNominal && isFilterInvalidAttributeValues) {
+            // traverse tree nodes and remove from the children the attribute
+            // values that were filtered out further up in the tree. "Bug" 3124
+            root.filterIllegalAttributes(Collections.EMPTY_MAP);
+        }
 
         // the decision tree model saved as PMML at the second out-port
         m_decisionTree = new DecisionTree(root,
@@ -524,7 +547,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
             if (!col.equals(targetCol)
                     && (columnSpec.getType().isCompatible(DoubleValue.class)
                     || columnSpec.getType().isCompatible(NominalValue.class)
-                        && (!m_skipColumns.getBooleanValue() 
+                        && (!m_skipColumns.getBooleanValue()
                                 || columnSpec.getDomain().hasValues()))) {
                 learnCols.add(spec.getColumnSpec(i).getName());
             }
@@ -863,6 +886,12 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         m_parallelProcessing.loadSettingsFrom(settings);
         m_maxNumNominalsForCompleteComputation.loadSettingsFrom(settings);
         m_binaryNominalSplitMode.loadSettingsFrom(settings);
+        // added with v2.5.3, see bug 3124
+        if (settings.containsKey(KEY_FILTER_NOMINAL_VALUES_FROM_PARENT)) {
+            m_filterNominalValuesFromParent.loadSettingsFrom(settings);
+        } else {
+            m_filterNominalValuesFromParent.setBooleanValue(false);
+        }
 
         /* Added with 2.5 to avoid running out of heap space with columns
          * that have too many nominal values. */
@@ -890,6 +919,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         m_parallelProcessing.saveSettingsTo(settings);
         m_maxNumNominalsForCompleteComputation.saveSettingsTo(settings);
         m_binaryNominalSplitMode.saveSettingsTo(settings);
+        m_filterNominalValuesFromParent.saveSettingsTo(settings);
         m_skipColumns.saveSettingsTo(settings);
     }
 
@@ -923,11 +953,15 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
         m_splitQualityMeasureType.validateSettings(settings);
         m_maxNumNominalsForCompleteComputation.validateSettings(settings);
         m_parallelProcessing.validateSettings(settings);
+        // added in v2.5.3, bug 3124
+        if (settings.containsKey(KEY_FILTER_NOMINAL_VALUES_FROM_PARENT)) {
+            m_filterNominalValuesFromParent.validateSettings(settings);
+        }
 
         /* Added with 2.5 to avoid running out of heap space with columns
          * that have too many nominal values. */
         if (settings.containsKey(KEY_SKIP_COLUMNS)) {
-            m_skipColumns.loadSettingsFrom(settings);
+            m_skipColumns.validateSettings(settings);
         }
     }
 

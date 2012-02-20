@@ -131,8 +131,10 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
 
         createNewGroup("Binary nominal splits");
         // binary nominal split mode
+        SettingsModelBoolean binarySplitMdl =
+            createSettingsBinaryNominalSplit();
         DialogComponentBoolean binarySplit = new DialogComponentBoolean(
-                createSettingsBinaryNominalSplit(), "Binary nominal splits");
+                binarySplitMdl, "Binary nominal splits");
         this.addDialogComponent(binarySplit);
 
         // max number nominal values for complete subset calculation for binary
@@ -142,6 +144,12 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
                 createSettingsBinaryMaxNominalValues(), "Max #nominal",
                 1, 5);
         this.addDialogComponent(maxNominalBinary);
+
+        final DialogComponentBoolean filterNominalValuesFromParent =
+            new DialogComponentBoolean(
+                    createSettingsFilterNominalValuesFromParent(binarySplitMdl),
+                    "Filter invalid attribute values in child nodes");
+        addDialogComponent(filterNominalValuesFromParent);
 
         /* Enable the max nominal binary settings if binary split is
          * enabled. */
@@ -256,6 +264,28 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
                 1, Integer.MAX_VALUE);
         model.setEnabled(DecisionTreeLearnerNodeModel
                 .DEFAULT_BINARY_NOMINAL_SPLIT_MODE);
+        return model;
+    }
+
+    /**
+     * @param skipNominalColumnsWithoutDomainModel model to listen to for
+     * enablement (only enable if binary nominal splits)
+     * @return model representing {@link
+     * DecisionTreeLearnerNodeModel#KEY_FILTER_NOMINAL_VALUES_FROM_PARENT}
+     */
+    static SettingsModelBoolean createSettingsFilterNominalValuesFromParent(
+            final SettingsModelBoolean skipNominalColumnsWithoutDomainModel) {
+        final SettingsModelBoolean model = new SettingsModelBoolean(
+            DecisionTreeLearnerNodeModel.KEY_FILTER_NOMINAL_VALUES_FROM_PARENT,
+            false);
+        skipNominalColumnsWithoutDomainModel.addChangeListener(
+                new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                model.setEnabled(
+                        skipNominalColumnsWithoutDomainModel.getBooleanValue());
+            }
+        });
         return model;
     }
 

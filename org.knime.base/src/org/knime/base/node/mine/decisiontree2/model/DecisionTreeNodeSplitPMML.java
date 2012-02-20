@@ -67,6 +67,7 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.config.Config;
+import org.knime.core.util.Pair;
 
 
 /**
@@ -360,13 +361,37 @@ public class DecisionTreeNodeSplitPMML extends DecisionTreeNodeSplit {
         return result;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    protected Pair<String, Set<String>> getChildUsedNominalSplitAttributeValues(
+            final int childIndex) {
+        PMMLPredicate pmmlPredicate = m_splitPred[childIndex];
+        Set<String> values = pmmlPredicate.getUsedNominalSplitAttributeValues();
+        if (values != null) {
+            String splitAttribute = pmmlPredicate.getSplitAttribute();
+            return new Pair<String, Set<String>>(splitAttribute, values);
+        }
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected void retainOnlyAttributeValuesInChild(final int childIndex,
+            final Set<String> toBeRetained) {
+        PMMLPredicate pmmlPredicate = m_splitPred[childIndex];
+        pmmlPredicate.retainOnlyAttributeValues(toBeRetained);
+        // the "prefix" is used in the decision tree view as
+        // label for the condition
+        getChildAt(childIndex).setPrefix(pmmlPredicate.toString());
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public void loadNodeSplitInternalsFromPredParams(final ModelContentRO pConf)
             throws InvalidSettingsException {
-    	m_splitPred = new PMMLPredicate[pConf.getInt("nrChildren")];
+        m_splitPred = new PMMLPredicate[pConf.getInt("nrChildren")];
         for (int i = 0; i < m_splitPred.length; i++) {
             Config predConfig = pConf.getConfig("pred" + i);
             m_splitPred[i] = PMMLPredicate.getPredicateForConfig(predConfig);
