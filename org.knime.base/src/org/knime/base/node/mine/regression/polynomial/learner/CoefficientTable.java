@@ -133,7 +133,7 @@ public class CoefficientTable extends JPanel {
      * Updates the table.
      */
     public void update() {
-        m_tableModel.fireTableDataChanged();
+        m_tableModel.fireTableStructureChanged();
         m_squaredError.setText("  Squared error (per row):  "
                 + m_model.getSquaredError());
 
