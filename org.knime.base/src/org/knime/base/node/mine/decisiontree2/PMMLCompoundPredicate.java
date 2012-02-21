@@ -51,6 +51,7 @@
 package org.knime.base.node.mine.decisiontree2;
 
 import java.util.LinkedList;
+import java.util.Set;
 
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -235,6 +236,24 @@ public class PMMLCompoundPredicate extends PMMLPredicate {
     @Override
     public String getName() {
         return NAME;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Set<String> getUsedNominalSplitAttributeValues() {
+        // KNIME decision tree learner does not learn compound predicates
+        // (this class is only used to represent trees learned by other
+        // implementations)
+        throw new IllegalStateException("Attribute filtering not implemented "
+                + "for " + getClass().getSimpleName());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void retainOnlyAttributeValues(final Set<String> toBeRetained) {
+        // see getUsedNominalSplitAttributeValues()
+        throw new IllegalStateException("Attribute filtering not implemented "
+                + "for " + getClass().getSimpleName());
     }
 
     /**

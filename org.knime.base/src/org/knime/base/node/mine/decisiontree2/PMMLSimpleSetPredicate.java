@@ -51,6 +51,7 @@
 package org.knime.base.node.mine.decisiontree2;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -227,6 +228,28 @@ public class PMMLSimpleSetPredicate extends PMMLPredicate {
             Double a = ((DoubleValue)cell).getDoubleValue();
             return m_op.evaluate(a, m_doubleValues);
         }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Set<String> getUsedNominalSplitAttributeValues() {
+        switch (getSetOperator()) {
+        case IS_IN:
+            return Collections.unmodifiableSet(getValues());
+        default:
+            // all other are for continuous attributes or not learned
+            // by the KNIME dec tree learner
+            return null;
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void retainOnlyAttributeValues(final Set<String> toBeRetained) {
+        Set<String> values = getValues();
+        LinkedHashSet<String> filtered = new LinkedHashSet<String>(values);
+        filtered.retainAll(toBeRetained);
+        setValues(filtered);
     }
 
     /**

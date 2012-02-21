@@ -50,6 +50,9 @@
  */
 package org.knime.base.node.mine.decisiontree2;
 
+import java.util.Collections;
+import java.util.Set;
+
 import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
@@ -61,7 +64,7 @@ import org.knime.core.node.config.Config;
 /**
  * Implements a SimplePredicate as specified in PMML
  * (<a>http://www.dmg.org/v4-0/TreeModel.html</a>).
- * 
+ *
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  */
 public class PMMLSimplePredicate extends PMMLPredicate {
@@ -83,7 +86,7 @@ public class PMMLSimplePredicate extends PMMLPredicate {
 
     /**
      * Build a new simple predicate.
-     * 
+     *
      * @param attribute the field the predicate is applied on
      * @param operator the string representation of the operator
      * @param value the value to be compared with (the threshold)
@@ -97,7 +100,7 @@ public class PMMLSimplePredicate extends PMMLPredicate {
 
     /**
      * Build a new simple predicate.
-     * 
+     *
      * @param attribute the field the predicate is applied on
      * @param operator the PMML operator to be set
      * @param value the value to be compared with (the threshold)
@@ -148,6 +151,25 @@ public class PMMLSimplePredicate extends PMMLPredicate {
         }
         return getSplitAttribute() + " " + getOperator().getSymbol() + " "
                 + value;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public Set<String> getUsedNominalSplitAttributeValues() {
+        switch (getOperator()) {
+        case EQUAL:
+            return Collections.singleton(getThreshold());
+        default:
+            // all other are for continuous attributes or not learned
+            // by the KNIME dec tree learner
+            return null;
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void retainOnlyAttributeValues(final Set<String> toBeRetained) {
+        assert toBeRetained.contains(getThreshold());
     }
 
     /**

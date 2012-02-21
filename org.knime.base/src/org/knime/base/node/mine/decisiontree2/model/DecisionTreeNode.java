@@ -57,8 +57,10 @@ import java.text.NumberFormat;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.Set;
+import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import javax.swing.tree.TreeNode;
 
@@ -405,6 +407,80 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
         return m_coveredColors;
     }
 
+    /** Post-processes the tree and cleans attribute checks on invalid attribute
+     * values. The method is called recursively on all children, whereby
+     * the argument map contains for each attribute/column the checked
+     * attributes (or null). Only the checked attributes are valid filter
+     * criterion further down in the tree.
+     *
+     * <p> Workaround for bug 3124.
+     * @param reservedAttributes READ ONLY map of the used attributes. A
+     * modified copy is passed further down during the recursion. */
+    public final void filterIllegalAttributes(
+            final Map<String, Set<String>> reservedAttributes) {
+        for (int i = 0; i < getChildCount(); i++) {
+            final DecisionTreeNode child = getChildAt(i);
+            Pair<String, Set<String>> childUsedAttrPair =
+                    getChildUsedNominalSplitAttributeValues(i);
+            final Map<String, Set<String>> childReservedAttributes;
+            if (childUsedAttrPair != null) {
+                // child condition attribute name
+                final String childAttribute = childUsedAttrPair.getFirst();
+                // child condition attribute values
+                final Set<String> childValues = childUsedAttrPair.getSecond();
+
+                // clone argument map (needed for recursion!)
+                childReservedAttributes =
+                    new LinkedHashMap<String, Set<String>>(reservedAttributes);
+
+                // temporarily remove valid attribute values for child attribute
+                Set<String> oldReservedValues =
+                    childReservedAttributes.remove(childAttribute);
+
+                Set<String> newFilterSet =
+                    new LinkedHashSet<String>(childValues);
+
+                if (oldReservedValues != null) {
+                    newFilterSet.retainAll(oldReservedValues);
+                    retainOnlyAttributeValuesInChild(i, newFilterSet);
+                }
+
+                childReservedAttributes.put(childAttribute, newFilterSet);
+            } else {
+                childReservedAttributes = reservedAttributes;
+            }
+            child.filterIllegalAttributes(childReservedAttributes);
+        }
+    }
+
+    /** Get from a child the attribute name the child is testing for and also
+     * the list of attribute values the child is testing for. Used to refine
+     * filter in {@link #filterIllegalAttributes(Map)}.
+     *
+     * <p>This implementation throws an exception as most tree node
+     * implementations don't support it (it's a workaround for bug 3124 and
+     * only used in conjunction with the standard dec tree learner).
+     *
+     * @param childIndex ...
+     * @return The pair representation that information or null if the child
+     * is not checking for a nominal(!) attribute set. */
+    protected Pair<String, Set<String>> getChildUsedNominalSplitAttributeValues(
+            final int childIndex) {
+        throw new IllegalStateException("Child attribute filtering not "
+                + "implemented for " + getClass().getSimpleName());
+    }
+
+    /** Removes attribute values from the set of nominal attributes this child
+     * is testing for.
+     * See {@link #getChildUsedNominalSplitAttributeValues(int)}.
+     * @param childIndex ...
+     * @param toBeRetained valid attributes. */
+    protected void retainOnlyAttributeValuesInChild(
+            final int childIndex, final Set<String> toBeRetained) {
+        throw new IllegalStateException("Child attribute filtering not "
+                + "implemented for " + getClass().getSimpleName());
+    }
+
     /**
      * Clean all color information in this node and all children.
      */
@@ -658,6 +734,7 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     /**
      * @return count of children
      */
+    @Override
     public abstract int getChildCount();
 
     /**
@@ -667,17 +744,20 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      * @param node that supposedly is a child of this one
      * @return index of node (or -1 if not found)
      */
+    @Override
     public abstract int getIndex(TreeNode node);
 
     /**
      * @param pos position of child
      * @return child node at index
      */
+    @Override
     public abstract DecisionTreeNode getChildAt(int pos);
 
     /**
      * @return parent of node
      */
+    @Override
     public final DecisionTreeNode getParent() {
         return m_parent;
     }
@@ -692,16 +772,19 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
     /**
      * @return <code>true</code> if node is a leaf
      */
+    @Override
     public abstract boolean isLeaf();
 
     /**
      * @return enumeration of all children
      */
+    @Override
     public abstract Enumeration<DecisionTreeNode> children();
 
     /**
      * @return <code>true</code> if the receiver allows children
      */
+    @Override
     public abstract boolean getAllowsChildren();
 
     /**

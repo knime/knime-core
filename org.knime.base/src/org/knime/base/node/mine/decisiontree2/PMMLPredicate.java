@@ -54,7 +54,9 @@ import java.text.NumberFormat;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
+import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
@@ -73,7 +75,7 @@ public abstract class PMMLPredicate {
         = NodeLogger.getLogger(PMMLPredicate.class);
 
     /** For formatting the predicates toString output. */
-    protected static final NumberFormat NUMBERFORMAT 
+    protected static final NumberFormat NUMBERFORMAT
             = NumberFormat.getInstance();
 
     /** The key to store the predicate type in configurations. */
@@ -131,7 +133,7 @@ public abstract class PMMLPredicate {
      * @return the name of the field the predicate operates on, "" if working on
      *         multiple attributes or null if not applicable
      */
-    protected String getSplitAttribute() {
+    public String getSplitAttribute() {
         return m_splitAttribute;
     }
 
@@ -168,6 +170,25 @@ public abstract class PMMLPredicate {
      */
     protected void setPreviousIndex(final int previousIndex) {
         m_previousIndex = previousIndex;
+    }
+
+    /** Implementation of
+     * {@link DecisionTreeNode#filterIllegalAttributes(Map)}. See there
+     * for details.
+     * @return null (default for most predicates).
+     */
+    public Set<String> getUsedNominalSplitAttributeValues() {
+        // overwritten in subclasses.
+        return null;
+    }
+
+    /** Implementation of
+     * {@link DecisionTreeNode#filterIllegalAttributes(Map)}. See there
+     * for details.
+     * @param toBeRetained Valid attribute values
+     */
+    public void retainOnlyAttributeValues(final Set<String> toBeRetained) {
+        // overwritten in subclasses.
     }
 
     /**
