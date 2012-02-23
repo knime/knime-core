@@ -81,9 +81,38 @@ public class FlowLoopContext extends FlowObject {
         return clone;
     }
 
+    String getClassSummary() {
+        return "Loop Context";
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        StringBuilder b = new StringBuilder("<");
+        b.append(getClassSummary());
+        b.append(" (Head ").append(getHeadNode());
+        NodeID tailNode = getTailNode();
+        b.append(", Tail ");
+        if (tailNode == null) {
+            b.append("unassigned");
+        } else {
+            b.append(tailNode);
+        }
+        b.append(")>");
+        return b.toString();
+    }
+
     /** Executed start nodes will use this object during workflow load to
      * indicate that a loop was potentially saved in a half-executed state. */
     public static class RestoredFlowLoopContext extends FlowLoopContext {
+
         // marker class
+
+        /** {@inheritDoc} */
+        @Override
+        String getClassSummary() {
+            return "Restored Loop Context";
+        }
+
     }
 }
