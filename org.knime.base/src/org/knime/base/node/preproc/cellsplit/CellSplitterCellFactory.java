@@ -55,6 +55,7 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.Arrays;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -129,7 +130,11 @@ class CellSplitterCellFactory implements CellFactory {
 
         TokenizerSettings result = new TokenizerSettings();
 
-        result.addDelimiterPattern(userSettings.getDelimiter(),
+        String delim = userSettings.getDelimiter();
+        if (userSettings.isUseEscapeCharacter()) {
+            delim = StringEscapeUtils.unescapeJava(delim);
+        }
+        result.addDelimiterPattern(delim,
         /* combineConsecutive */false,
         /* returnAsSeperateToken */false,
         /* includeInToken */false);
@@ -146,6 +151,7 @@ class CellSplitterCellFactory implements CellFactory {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataCell[] getCells(final DataRow row) {
         String msg = m_settings.getStatus(m_inSpec);
         if (msg != null) {
@@ -316,6 +322,7 @@ class CellSplitterCellFactory implements CellFactory {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataColumnSpec[] getColumnSpecs() {
 
         // make sure number of column is set or guessed
@@ -406,6 +413,7 @@ class CellSplitterCellFactory implements CellFactory {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setProgress(final int curRowNr, final int rowCount,
             final RowKey lastKey, final ExecutionMonitor exec) {
         exec.setProgress((double)curRowNr / (double)rowCount,

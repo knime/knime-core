@@ -82,6 +82,8 @@ public class CellSplitterUserSettings {
 
     private static final String CFG_USEEMPTYSTRING = "useEmptyString";
 
+    private static final String CFG_USEESCAPECHAR = "useEscapeCharacter";
+
     private String m_columnName = null;
 
     private String m_delimiter = null;
@@ -95,6 +97,8 @@ public class CellSplitterUserSettings {
     private boolean m_guessNumOfCols = true;
 
     private boolean m_useEmptyStrings = false;
+
+    private boolean m_useEscapeCharacter = false;
 
     /**
      * Creates a new settings object with no (or default) settings.
@@ -126,6 +130,9 @@ public class CellSplitterUserSettings {
         // the default value is true here for backward compatibility.
         // the node used to create empty cells instead of missing cells.
         m_useEmptyStrings = settings.getBoolean(CFG_USEEMPTYSTRING, true);
+
+        /** @since 2.6 */
+        m_useEscapeCharacter = settings.getBoolean(CFG_USEESCAPECHAR, false);
     }
 
     /**
@@ -141,6 +148,7 @@ public class CellSplitterUserSettings {
         settings.addString(CFG_QUOTES, m_quotePattern);
         settings.addBoolean(CFG_REMOVEQUOTES, m_removeQuotes);
         settings.addBoolean(CFG_USEEMPTYSTRING, m_useEmptyStrings);
+        settings.addBoolean(CFG_USEESCAPECHAR, m_useEscapeCharacter);
     }
 
     /**
@@ -290,4 +298,17 @@ public class CellSplitterUserSettings {
         m_useEmptyStrings = useEmptyString;
     }
 
+    /**
+     * @return if "\" should be used as escape character
+     */
+    boolean isUseEscapeCharacter() {
+        return m_useEscapeCharacter;
+    }
+
+    /**
+     * @param b <code>true</code> if "\" should be used as escape character
+     */
+    void setUseEscapeCharacter(final boolean b) {
+        m_useEscapeCharacter = b;
+    }
 }
