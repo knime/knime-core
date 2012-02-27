@@ -50,6 +50,7 @@
  */
 package org.knime.base.node.preproc.joiner;
 
+import java.io.ObjectOutputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -95,6 +96,12 @@ class InputDataRow implements Comparable<InputDataRow> {
     }
 
     /**
+     * Create the join tuples for this input row. Note, more than one
+     * join tuple is returned in the match any case only. In this case a
+     * pairwise comparison will always be false, so that an insertion in a
+     * HashSet will always lead to as many new entries as there are columns
+     * in the tuple.
+     *
      * @return the JoinTuples of this row.
      */
     JoinTuple[] getJoinTuples() {
@@ -122,7 +129,7 @@ class InputDataRow implements Comparable<InputDataRow> {
                 int index = indices.get(i);
                 DataCell[] cells = new DataCell[numJoinAttributes];
                 for (int k = 0; k < numJoinAttributes; k++) {
-                    cells[k] = new WildCardCell();
+                    cells[k] = WildCardCell.getDefault();
                 }
                 if (index >= 0) {
                     cells[i] = m_row.getCell(index);
@@ -137,10 +144,10 @@ class InputDataRow implements Comparable<InputDataRow> {
         }
     }
 
-
     /**
      * {@inheritDoc}
      */
+    @Override
     public int compareTo(final InputDataRow that) {
         return this.m_index - that.m_index;
     }
@@ -173,24 +180,20 @@ class InputDataRow implements Comparable<InputDataRow> {
             Right;
         }
 
-
         private Map<InDataPort, List<Integer>> m_joiningIndices;
 
         private boolean m_multipleMatchCanOccur;
-
 
         /**
          * @param joiningIndices The joining indices of the input tables
          * @param multipleMatchCanOccur Whether rows can match more often than
          *            one
          */
-        Settings(
-                final Map<InDataPort, List<Integer>> joiningIndices,
+        Settings(final Map<InDataPort, List<Integer>> joiningIndices,
                 final boolean multipleMatchCanOccur) {
             m_joiningIndices = joiningIndices;
             m_multipleMatchCanOccur = multipleMatchCanOccur;
         }
-
 
         /**
          * @param port {@link InDataPort} either left or right.
@@ -208,26 +211,44 @@ class InputDataRow implements Comparable<InputDataRow> {
         }
     }
 
-   /**
-    * Used in the match any case.
-    * @author Heiko Hofer
-    */
-   static class WildCardCell extends DataCell {
-       /**
-        * {@inheritDoc}
-        */
-       @Override
-       public int hashCode() {
-           return 0;
-       }
+    /**
+     * Used in the match any case.
+     *
+     * @author Heiko Hofer
+     */
+    @SuppressWarnings("serial")
+    static final class WildCardCell extends DataCell {
+        private static final WildCardCell INSTANCE = new WildCardCell();
+
+        /**
+         * prevent the creation of instances.
+         */
+        private WildCardCell() {
+            // do nothing;
+        }
+
+        /**
+         * Get the singleton value.
+         * @return the singleton value.
+         */
+        public static WildCardCell getDefault() {
+            return INSTANCE;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return 0;
+        }
 
         /**
          * {@inheritDoc}
          */
         @Override
         public String toString() {
-            throw new UnsupportedOperationException(
-                    "This method should never be called.");
+            return "<wildcard>";
         }
 
         /**
@@ -235,8 +256,16 @@ class InputDataRow implements Comparable<InputDataRow> {
          */
         @Override
         protected boolean equalsDataCell(final DataCell dc) {
-            throw new UnsupportedOperationException(
-                    "This method should never be called.");
+            // singleton
+            return this == dc;
         }
-   }
+
+        /** Serialization method, throws exception as it's not to be used.
+         * @param out ignored */
+        private void writeObject(final ObjectOutputStream out) {
+            throw new IllegalStateException("WildcardCell not "
+                    + "supposed to be serialized");
+        }
+
+    }
 }

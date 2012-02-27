@@ -52,7 +52,6 @@ package org.knime.base.node.preproc.joiner;
 
 import java.util.Arrays;
 
-import org.knime.base.node.preproc.joiner.InputDataRow.WildCardCell;
 import org.knime.core.data.DataCell;
 
 /**
@@ -86,22 +85,16 @@ class JoinTuple {
      */
     @Override
     public boolean equals(final Object obj) {
-        if (obj instanceof JoinTuple) {
-            JoinTuple that = (JoinTuple)obj;
-            for (int i = 0; i < this.m_cells.length; i++) {
-                if (this.m_cells[i].isMissing()
-                        || that.m_cells[i].isMissing()) {
-                    // Missing cells no not match
-                    return false;
-                } else if (!(this.m_cells[i] instanceof WildCardCell
-                        || that.m_cells[i] instanceof WildCardCell)) {
-                    if (!this.m_cells[i].equals(that.m_cells[i])) {
-                        return false;
-                    }
-                }
-            }
+        // check for self-comparison
+        if (this == obj) {
+            return true;
         }
-        return true;
+        // check obj type
+        if (!(obj instanceof JoinTuple)) {
+            return false;
+        }
+        JoinTuple that = (JoinTuple)obj;
+        return Arrays.deepEquals(this.m_cells, that.m_cells);
     }
 }
 

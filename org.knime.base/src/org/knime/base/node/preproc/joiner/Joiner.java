@@ -474,7 +474,7 @@ public final class Joiner {
         .equals(CompositionMode.MatchAny)
         && m_settings.getLeftJoinColumns().length > 1;
 
-        if (m_multipleMatchCanOccur) {
+        if (m_retainLeft && m_multipleMatchCanOccur) {
             m_multiLeftRetainAll =
                 new HashSet<Integer>();
             for (int i = 0; i < leftTable.getRowCount(); i++) {
@@ -530,7 +530,7 @@ public final class Joiner {
         }
 
 
-        if (m_multipleMatchCanOccur) {
+        if (m_retainLeft && m_multipleMatchCanOccur) {
             // Add left outer joins
             int c = 0;
             for (Integer index : m_multiLeftRetainAll) {
