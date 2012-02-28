@@ -94,7 +94,20 @@ class JoinTuple {
             return false;
         }
         JoinTuple that = (JoinTuple)obj;
-        return Arrays.deepEquals(this.m_cells, that.m_cells);
+        for (int i = 0; i < this.m_cells.length; i++) {
+            DataCell thisCell = this.m_cells[i];
+            DataCell thatCell = that.m_cells[i];
+            // Missing cells do not match here (see Bug 2625). Note, that
+            // missing cells are viewed to be equal in DataCell::equals().
+            if (thisCell.isMissing() || thatCell.isMissing()) {
+                return false;
+            }
+            // compare the data cells
+            if (!thisCell.equals(thatCell)) {
+                return false;
+            }
+        }
+        return true;
     }
 }
 
