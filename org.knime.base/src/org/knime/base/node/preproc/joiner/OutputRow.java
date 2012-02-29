@@ -72,9 +72,9 @@ import org.knime.core.data.def.StringCell;
  *
  * @author Heiko Hofer
  */
-final class OutputDataRow {
+final class OutputRow {
 
-    private OutputDataRow() {
+    private OutputRow() {
         // private constructor to prevent instantiation.
     }
 
@@ -93,7 +93,7 @@ final class OutputDataRow {
     static DataRow createDataRow(final int index,
             final int leftIndex, final int rightIndex,
             final DataRow rightDataRow,
-            final OutputDataRow.Settings settings) {
+            final OutputRow.Settings settings) {
 
         int[] survivors = settings.getSurvivors();
 
@@ -125,7 +125,7 @@ final class OutputDataRow {
      */
     static DataRow createDataRow(final int index,
             final int leftIndex, final int rightIndex,
-            final OutputDataRow.Settings settings) {
+            final OutputRow.Settings settings) {
 
         int[] survivors = settings.getSurvivors();
 
@@ -187,21 +187,22 @@ final class OutputDataRow {
      */
     static Comparator<DataRow> createRowComparator() {
         return new Comparator<DataRow>() {
+            @Override
             public int compare(final DataRow o1, final DataRow o2) {
-                int diff = OutputDataRow.getLeftIndex(o1)
-                            - OutputDataRow.getLeftIndex(o2);
+                int diff = OutputRow.getLeftIndex(o1)
+                    - OutputRow.getLeftIndex(o2);
                 if (diff != 0) {
                     return diff;
                 } else {
-                    return OutputDataRow.getRightIndex(o1)
-                            - OutputDataRow.getRightIndex(o2);
+                    return OutputRow.getRightIndex(o1)
+                            - OutputRow.getRightIndex(o2);
                 }
             }
         };
     }
 
     /**
-     * A class that stores the common settings for all {@link OutputDataRow}s.
+     * A class that stores the common settings for all {@link OutputRow}s.
      *
      * @author Heiko Hofer
      */
@@ -247,7 +248,7 @@ final class OutputDataRow {
         }
 
         /**
-         * The spec of an {@link OutputDataRow}.
+         * The spec of an {@link OutputRow}.
          *
          * @return the spec
          */

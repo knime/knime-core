@@ -76,10 +76,10 @@ final class JoinContainer {
 
     /**
      * Create a new instance.
-     * @param settings The settings object of the OutputDataRow.
+     * @param settings The settings object of the OutputRow.
      */
     JoinContainer(
-            final OutputDataRow.Settings settings) {
+            final OutputRow.Settings settings) {
         m_spec = settings.getSpec();
         m_rowCount = 0;
     }

@@ -60,11 +60,11 @@ import org.knime.core.data.def.StringCell;
 
 /**
  * This class is a container for a DataRow and an index. The index will be used
- * to define an order on the InputDataRow.
+ * to define an order on the InputRow.
  *
  * @author Heiko Hofer
  */
-class InputDataRow implements Comparable<InputDataRow> {
+class InputRow implements Comparable<InputRow> {
 
     private DataRow m_row;
 
@@ -78,9 +78,9 @@ class InputDataRow implements Comparable<InputDataRow> {
      * @param row A DataRow
      * @param index The index of row
      * @param port The DataPort of the row, either Left or Right
-     * @param settings The settings common for all InputDataRow Objects.
+     * @param settings The settings common for all InputRow Objects.
      */
-    InputDataRow(final DataRow row, final int index,
+    InputRow(final DataRow row, final int index,
             final Settings.InDataPort port, final Settings settings) {
         m_row = row;
         m_port = port;
@@ -107,7 +107,7 @@ class InputDataRow implements Comparable<InputDataRow> {
     JoinTuple[] getJoinTuples() {
         List<Integer> indices = null;
         indices = m_settings.getJoiningIndices(m_port);
-        if (!m_settings.getMultipleMatchCanOccur()) {
+        if (!m_settings.getMatchAny()) {
             int numJoinAttributes = indices.size();
             DataCell[] cells = new DataCell[numJoinAttributes];
             for (int i = 0; i < numJoinAttributes; i++) {
@@ -148,7 +148,7 @@ class InputDataRow implements Comparable<InputDataRow> {
      * {@inheritDoc}
      */
     @Override
-    public int compareTo(final InputDataRow that) {
+    public int compareTo(final InputRow that) {
         return this.m_index - that.m_index;
     }
 
@@ -168,7 +168,7 @@ class InputDataRow implements Comparable<InputDataRow> {
      */
     static class Settings {
         /**
-         * A InputDataRow belongs either to the left input table or to the right
+         * A InputRow belongs either to the left input table or to the right
          * input table.
          *
          * @author Heiko Hofer
@@ -182,17 +182,16 @@ class InputDataRow implements Comparable<InputDataRow> {
 
         private Map<InDataPort, List<Integer>> m_joiningIndices;
 
-        private boolean m_multipleMatchCanOccur;
+        private boolean m_matchAny;
 
         /**
          * @param joiningIndices The joining indices of the input tables
-         * @param multipleMatchCanOccur Whether rows can match more often than
-         *            one
+         * @param matchAny Whether rows can match more often than one time
          */
         Settings(final Map<InDataPort, List<Integer>> joiningIndices,
-                final boolean multipleMatchCanOccur) {
+                final boolean matchAny) {
             m_joiningIndices = joiningIndices;
-            m_multipleMatchCanOccur = multipleMatchCanOccur;
+            m_matchAny = matchAny;
         }
 
         /**
@@ -204,10 +203,10 @@ class InputDataRow implements Comparable<InputDataRow> {
         }
 
         /**
-         * @return the multipleMatchCanOccur
+         * @return the matchAny property
          */
-        boolean getMultipleMatchCanOccur() {
-            return m_multipleMatchCanOccur;
+        boolean getMatchAny() {
+            return m_matchAny;
         }
     }
 

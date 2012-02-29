@@ -99,14 +99,27 @@ public final class Joiner {
 
     private final Joiner2Settings m_settings;
 
-    private boolean m_multipleMatchCanOccur;
-    private Set<Integer> m_multiLeftRetainAll;
-
-    private InputDataRow.Settings m_inputDataRowSettings;
-    private OutputDataRow.Settings m_outputDataRowSettings;
-
-    private boolean m_retainRight;
+    /** True for Left Outer Join and Full Outer Join. */
     private boolean m_retainLeft;
+    /** True for Right Outer Join and Full Outer Join. */
+    private boolean m_retainRight;
+
+    /**
+     * True when in the dialog to option 'Match any of the following' is
+     * selected and when there are more than two joining columns.
+     */
+    private boolean m_matchAny;
+
+    /**
+     * This field is only used when (m_retainLeft && m_matchAny) is true. It
+     * holds the row indices of the left table that did not match to a row
+     * of the right table.
+     */
+    private Set<Integer> m_globalLeftOuterJoins;
+
+    private InputRow.Settings m_inputDataRowSettings;
+    private OutputRow.Settings m_outputDataRowSettings;
+
 
     private HashMap<RowKey, Set<RowKey>> m_leftRowKeyMap;
     private HashMap<RowKey, Set<RowKey>> m_rightRowKeyMap;
@@ -463,30 +476,29 @@ public final class Joiner {
 
 
         m_retainRight = JoinMode.RightOuterJoin.equals(m_settings.getJoinMode())
-        || JoinMode.FullOuterJoin.equals(m_settings.getJoinMode());
+            || JoinMode.FullOuterJoin.equals(m_settings.getJoinMode());
         m_retainLeft = JoinMode.LeftOuterJoin.equals(m_settings.getJoinMode())
-        || JoinMode.FullOuterJoin.equals(m_settings.getJoinMode());
+            || JoinMode.FullOuterJoin.equals(m_settings.getJoinMode());
 
         // if multipleMatchCanOccur is true, to rows can be match more than
         // once. This is in general met with the MatchAny Option but only if
         // there are more than one join column.
-        m_multipleMatchCanOccur = m_settings.getCompositionMode()
-        .equals(CompositionMode.MatchAny)
-        && m_settings.getLeftJoinColumns().length > 1;
+        m_matchAny = m_settings.getCompositionMode()
+            .equals(CompositionMode.MatchAny)
+            && m_settings.getLeftJoinColumns().length > 1;
 
-        if (m_retainLeft && m_multipleMatchCanOccur) {
-            m_multiLeftRetainAll =
-                new HashSet<Integer>();
+        if (m_retainLeft && m_matchAny) {
+            m_globalLeftOuterJoins = new HashSet<Integer>();
             for (int i = 0; i < leftTable.getRowCount(); i++) {
-                m_multiLeftRetainAll.add(i);
+                m_globalLeftOuterJoins.add(i);
             }
         }
 
 
         m_inputDataRowSettings = createInputDataRowSettings(leftTable,
                 rightTable);
-        int[] rightSurvivors = getIndecesOf(rightTable, m_rightSurvivors);
-        m_outputDataRowSettings = new OutputDataRow.Settings(
+        int[] rightSurvivors = getIndicesOf(rightTable, m_rightSurvivors);
+        m_outputDataRowSettings = new OutputRow.Settings(
                 rightTable.getDataTableSpec(),
                 rightSurvivors);
 
@@ -530,11 +542,11 @@ public final class Joiner {
         }
 
 
-        if (m_retainLeft && m_multipleMatchCanOccur) {
+        if (m_retainLeft && m_matchAny) {
             // Add left outer joins
             int c = 0;
-            for (Integer index : m_multiLeftRetainAll) {
-                DataRow outRow = OutputDataRow.createDataRow(c, index, -1,
+            for (Integer index : m_globalLeftOuterJoins) {
+                DataRow outRow = OutputRow.createDataRow(c, index, -1,
                         m_outputDataRowSettings);
                 joinCont.addLeftOuter(outRow, exec);
                 c++;
@@ -552,7 +564,7 @@ public final class Joiner {
         ? joinCont.getRightOuter().getRowCount() : 0;
 
         exec.setMessage("Sort Joined Partitions");
-        Comparator<DataRow> joinComp = OutputDataRow.createRowComparator();
+        Comparator<DataRow> joinComp = OutputRow.createRowComparator();
         SortedTable matches = null != joinCont.getMatches()
         ? new SortedTable(joinCont.getMatches(), joinComp, false,
                 exec.createSubExecutionContext(
@@ -571,7 +583,7 @@ public final class Joiner {
 
         exec.setMessage("Merge Joined Partitions");
         // Build sorted table
-        int[] leftSurvivors = getIndecesOf(leftTable, m_leftSurvivors);
+        int[] leftSurvivors = getIndicesOf(leftTable, m_leftSurvivors);
 
         DataHiliteOutputContainer oc =
             new DataHiliteOutputContainer(joinedTableSpec,
@@ -595,18 +607,15 @@ public final class Joiner {
         return oc.getTable();
     }
 
-    /** This method start with reading the partitions of the inner table defined
-     * in currParts. If memory is low partitions will be skipped or the
+    /** This method start with reading the partitions of the left table defined
+     * in currParts. If memory is low, partitions will be skipped or the
      * number of partitions will be raised which leads to smaller partitions.
      * Successfully read partitions will be joined. The return collection
      * defines the successfully processed partitions.
      *
-     * @param innerTable The inner input table.
-     * @param outerTable The outer input table.
-     * @param innerPort The port (left or right) of the inner input table.
-     * @param outerPort The port (left or right) of the outer input table.
+     * @param leftTable The inner input table.
+     * @param rightTable The right input table.
      * @param outputContainer The container used for storing matches.
-     * @param currParts The parts that will be read of the inner input table.
      * @param pendingParts The parts that are not processed yet.
      * @param exec The execution context.
      * @param progressDiff The difference in the progress monitor.
@@ -614,44 +623,46 @@ public final class Joiner {
      * @throws CanceledExecutionException when execution is canceled
      */
     private Collection<Integer> performJoin(
-            final BufferedDataTable innerTable,
-            final BufferedDataTable outerTable,
+            final BufferedDataTable leftTable,
+            final BufferedDataTable rightTable,
             final JoinContainer outputContainer,
             final Collection<Integer> pendingParts,
             final ExecutionContext exec,
             final double progressDiff) throws CanceledExecutionException  {
         // Update increment for reporting progress
         double progress = exec.getProgressMonitor().getProgress();
-        double numRows = innerTable.getRowCount()
-        + outerTable.getRowCount();
+        double numRows = leftTable.getRowCount() + rightTable.getRowCount();
         double inc = (progressDiff - progress) / numRows;
 
         Collection<Integer> currParts = new ArrayList<Integer>();
         currParts.addAll(pendingParts);
         setMessage("Read", exec, pendingParts, currParts);
 
-        // Partition inner table
-        Map <Integer, Map<JoinTuple, Set<Integer>>> innerHash =
+        // Partition left table
+        Map <Integer, Map<JoinTuple, Set<Integer>>> leftTableHashed =
             new HashMap<Integer, Map<JoinTuple, Set<Integer>>>();
-        Map <Integer, Set<Integer>> innerIndexMap =
+        // This is only used when m_leftRetain is true and m_matchAny is false.
+        // It holds the row indices of the left table that do not match to
+        // any row of the right table
+        Map <Integer, Set<Integer>> leftOuterJoins =
             new HashMap<Integer, Set<Integer>>();
 
         boolean tryToFreeMemory = true;
         int counter = 0;
-        CloseableRowIterator innerIter = innerTable.iterator();
-        while (innerIter.hasNext()) {
+        CloseableRowIterator leftIter = leftTable.iterator();
+        while (leftIter.hasNext()) {
             exec.checkCanceled();
             if (!m_memService.isMemoryLow()) {
-                DataRow row = innerIter.next();
-                InputDataRow inputDataRow = new InputDataRow(row, counter,
-                        InputDataRow.Settings.InDataPort.Left,
+                DataRow row = leftIter.next();
+                InputRow inputDataRow = new InputRow(row, counter,
+                        InputRow.Settings.InDataPort.Left,
                         m_inputDataRowSettings);
 
                 for (JoinTuple tuple : inputDataRow.getJoinTuples()) {
-                    int index = tuple.hashCode() & m_bitMask;
-                    if (currParts.contains(index)) {
-                        addRow(innerHash, innerIndexMap,
-                                index, tuple, inputDataRow);
+                    int partition = tuple.hashCode() & m_bitMask;
+                    if (currParts.contains(partition)) {
+                        addRow(leftTableHashed, leftOuterJoins,
+                                partition, tuple, inputDataRow);
                     }
                 }
                 counter++;
@@ -672,7 +683,7 @@ public final class Joiner {
                     // Build list of partitions that are not empty
                     List<Integer> nonEmptyPartitions = new ArrayList<Integer>();
                     for (Integer i : currParts) {
-                        if (null != innerHash.get(i)) {
+                        if (null != leftTableHashed.get(i)) {
                             nonEmptyPartitions.add(i);
                         }
                     }
@@ -685,9 +696,9 @@ public final class Joiner {
                         }
                         // remove collected data of the no longer processed
                         for (int i : removeParts) {
-                            innerHash.remove(i);
-                            if (m_retainLeft && !m_multipleMatchCanOccur) {
-                                innerIndexMap.remove(i);
+                            leftTableHashed.remove(i);
+                            if (m_retainLeft && !m_matchAny) {
+                                leftOuterJoins.remove(i);
                             }
                         }
                         currParts.removeAll(removeParts);
@@ -695,8 +706,8 @@ public final class Joiner {
                                 + "reading inner table. Currently Processed: "
                                 + currParts + ". Skip: " + removeParts);
                         // update increment for reporting progress
-                        numRows += innerTable.getRowCount()
-                        + outerTable.getRowCount();
+                        numRows += leftTable.getRowCount()
+                        + rightTable.getRowCount();
                         inc = (progressDiff - progress) / numRows;
 
                         setMessage("Read", exec, pendingParts, currParts);
@@ -722,11 +733,11 @@ public final class Joiner {
                             currParts.clear();
                             currParts.add(currPart);
                             // update chunk size
-                            retainPartitions(innerHash, innerIndexMap,
+                            retainPartitions(leftTableHashed, leftOuterJoins,
                                     currPart);
                             // update increment for reporting progress
-                            numRows += innerTable.getRowCount()
-                            + outerTable.getRowCount();
+                            numRows += leftTable.getRowCount()
+                            + rightTable.getRowCount();
                             inc = (progressDiff - progress) / numRows;
 
                             setMessage("Read", exec, pendingParts, currParts);
@@ -753,23 +764,23 @@ public final class Joiner {
 
         setMessage("Join", exec, pendingParts, currParts);
         // Join with outer table
-        joinInMemory(innerHash, innerIndexMap,
-                currParts, outerTable,
+        joinInMemory(leftTableHashed, leftOuterJoins,
+                currParts, rightTable,
                 outputContainer,
                 exec, inc);
 
 
         // Log which parts were successfully joined
         for (int part : currParts) {
-            int numTuples = innerHash.get(part) != null
-            ? innerHash.get(part).values().size() : 0;
+            int numTuples = leftTableHashed.get(part) != null
+            ? leftTableHashed.get(part).values().size() : 0;
             LOGGER.debug("Joined " + part + " with "
                     + numTuples + " tuples.");
         }
 
         // Garbage collector has problems without this explicit clearance.
-        innerHash.clear();
-        innerIndexMap.clear();
+        leftTableHashed.clear();
+        leftOuterJoins.clear();
 
         // return successfully joined parts
         return currParts;
@@ -811,7 +822,7 @@ public final class Joiner {
             int index = tuple.hashCode() & m_bitMask;
             if (index != part) {
                 iter.remove();
-            } else if (m_retainLeft && !m_multipleMatchCanOccur) {
+            } else if (m_retainLeft && !m_matchAny) {
                 Set<Integer> thisInnerIndexMap = innerIndexMap.get(index);
                 if (null == thisInnerIndexMap) {
                     thisInnerIndexMap = new HashSet<Integer>();
@@ -826,38 +837,39 @@ public final class Joiner {
 
     /**
      * Add a row to innerHash and innerIndexMap.
-     * @param index The index of the row.
+     * @param partition The index of the partition.
      * @param joinTuple The join tuples of the row.
      * @param row The row to be added.
      */
     private void addRow(
-            final Map <Integer, Map<JoinTuple, Set<Integer>>> innerHash,
-            final Map <Integer, Set<Integer>> innerIndexMap,
-            final int index, final JoinTuple joinTuple,
-            final InputDataRow row) {
-        if (m_retainLeft  && !m_multipleMatchCanOccur) {
-            Set<Integer> thisInnerIndexMap = innerIndexMap.get(index);
-            if (null == thisInnerIndexMap) {
-                thisInnerIndexMap = new HashSet<Integer>();
-                innerIndexMap.put(index, thisInnerIndexMap);
+            final Map <Integer, Map<JoinTuple, Set<Integer>>> leftTableHashed,
+            final Map <Integer, Set<Integer>> leftOuterJoins,
+            final int partition, final JoinTuple joinTuple,
+            final InputRow row) {
+        if (m_retainLeft  && !m_matchAny) {
+            Set<Integer> indices = leftOuterJoins.get(partition);
+            if (null == indices) {
+                indices = new HashSet<Integer>();
+                leftOuterJoins.put(partition, indices);
             }
-            thisInnerIndexMap.add(row.getIndex());
+            indices.add(row.getIndex());
         }
 
-        Map<JoinTuple, Set<Integer>> thisInnerHash = innerHash.get(index);
-        if (null == thisInnerHash) {
-            thisInnerHash = new HashMap<JoinTuple, Set<Integer>>();
-            innerHash.put(index, thisInnerHash);
+        Map<JoinTuple, Set<Integer>> partTuples =
+            leftTableHashed.get(partition);
+        if (null == partTuples) {
+            partTuples = new HashMap<JoinTuple, Set<Integer>>();
+            leftTableHashed.put(partition, partTuples);
         }
 
 
-        Set<Integer> c = thisInnerHash.get(joinTuple);
+        Set<Integer> c = partTuples.get(joinTuple);
         if (null != c) {
             c.add(row.getIndex());
         } else {
             Set<Integer> list = new HashSet<Integer>();
             list.add(row.getIndex());
-            thisInnerHash.put(joinTuple, list);
+            partTuples.put(joinTuple, list);
         }
 
 
@@ -866,96 +878,96 @@ public final class Joiner {
 
     /**
      * Join given rows in memory and append joined row to the outputCont.
-     * @param innerHash Stores the rows of the input table in parts.
-     * @param innerIndexMap The same number as found in innerHash used for
-     * retainOuter option.
      *
+     * @param leftTableHashed Stores the rows of the left input table in parts.
+     * @param leftOuterJoins The same number as found in leftTableHashed used
+     * for left outer joins.
      * @param currParts The parts of the outer table that will be joined.
-     * @param outerTable The outer table.
-     * @param outerPort The port (left or right) of the outer table.
+     * @param rightTable The outer table.
      * @param outputCont The joined rows will be added to this container.
      * @param exec The {@link ExecutionContext}
      * @param incProgress The progress increment.
-     * @throws CanceledExecutionException When execution is cancelled
+     * @throws CanceledExecutionException When execution is canceled
      */
     private void joinInMemory(
-            final Map <Integer, Map<JoinTuple, Set<Integer>>> innerHash,
-            final Map <Integer, Set<Integer>> innerIndexMap,
+            final Map <Integer, Map<JoinTuple, Set<Integer>>> leftTableHashed,
+            final Map <Integer, Set<Integer>> leftOuterJoins,
             final Collection<Integer> currParts,
-            final BufferedDataTable outerTable,
+            final BufferedDataTable rightTable,
             final JoinContainer outputCont,
             final ExecutionContext exec,
             final double incProgress) throws CanceledExecutionException {
         double progress = exec.getProgressMonitor().getProgress();
         int counter = 0;
-        for (DataRow row : outerTable) {
+        for (DataRow dataRow : rightTable) {
             progress += incProgress;
             exec.getProgressMonitor().setProgress(progress);
             exec.checkCanceled();
 
-            InputDataRow outerRow = new InputDataRow(row, counter,
-                    InputDataRow.Settings.InDataPort.Right,
+            InputRow rightRow = new InputRow(dataRow, counter,
+                    InputRow.Settings.InDataPort.Right,
                     m_inputDataRowSettings);
 
-            boolean matchFoundForOuterRow = false;
+            boolean matchFoundForRightRow = false;
 
-            for (JoinTuple outerTuple : outerRow.getJoinTuples()) {
-                int index = outerTuple.hashCode() & m_bitMask;
-                if (!currParts.contains(index)) {
+            for (JoinTuple joinTuple : rightRow.getJoinTuples()) {
+                int partition = joinTuple.hashCode() & m_bitMask;
+                if (!currParts.contains(partition)) {
+                    // skip when partition is not in the current partitions
                     continue;
                 }
-                Map<JoinTuple, Set<Integer>> thisInnerHash =
-                    innerHash.get(index);
-                if (null == thisInnerHash) {
+                Map<JoinTuple, Set<Integer>> leftTuples =
+                    leftTableHashed.get(partition);
+                if (null == leftTuples) {
+                    // skip when the left table does not have rows that fall
+                    // in this partition
                     continue;
                 }
-                Set<Integer> thisInnerIndexMap = null;
-                if (m_retainLeft  && !m_multipleMatchCanOccur) {
-                    thisInnerIndexMap = innerIndexMap.get(index);
+                Set<Integer> localLeftOuterJoins = null;
+                if (m_retainLeft  && !m_matchAny) {
+                    localLeftOuterJoins = leftOuterJoins.get(partition);
                 }
 
-                Set<Integer> innerRow = thisInnerHash.get(outerTuple);
-                if (null != innerRow) {
-                    matchFoundForOuterRow = true;
-                    for (Integer singleInnerRow : innerRow) {
-                        int outRowIndex =
-                            outputCont.getRowCount();
-                        DataRow outRow = OutputDataRow.createDataRow(
-                                outRowIndex,
-                                singleInnerRow, outerRow.getIndex(),
-                                row,
+                Set<Integer> leftRows = leftTuples.get(joinTuple);
+                if (null != leftRows) {
+                    matchFoundForRightRow = true;
+                    for (Integer leftRowIndex : leftRows) {
+                        // add inner join
+                        DataRow outRow = OutputRow.createDataRow(
+                                outputCont.getRowCount(),
+                                leftRowIndex, rightRow.getIndex(),
+                                dataRow,
                                 m_outputDataRowSettings);
                         outputCont.addMatch(outRow, exec);
-                        if (m_retainLeft && !m_multipleMatchCanOccur) {
-                            thisInnerIndexMap.remove(singleInnerRow);
+                        if (m_retainLeft && !m_matchAny) {
+                            localLeftOuterJoins.remove(leftRowIndex);
                         }
-                        if (m_retainLeft && m_multipleMatchCanOccur) {
-                            m_multiLeftRetainAll.remove(singleInnerRow);
+                        if (m_retainLeft && m_matchAny) {
+                            m_globalLeftOuterJoins.remove(leftRowIndex);
                         }
                     }
                 }
             }
 
 
-            if (m_retainRight && !matchFoundForOuterRow) {
-                int outRowIndex =
-                    outputCont.getRowCount();
-                DataRow outRow = OutputDataRow.createDataRow(outRowIndex,
-                        -1, outerRow.getIndex(),
-                        row,
+            if (m_retainRight && !matchFoundForRightRow) {
+                int outRowIndex = outputCont.getRowCount();
+                // add right outer join
+                DataRow outRow = OutputRow.createDataRow(outRowIndex,
+                        -1, rightRow.getIndex(),
+                        dataRow,
                         m_outputDataRowSettings);
                 outputCont.addRightOuter(outRow, exec);
             }
             counter++;
         }
 
-        if (m_retainLeft && !m_multipleMatchCanOccur) {
-            for (int index : innerIndexMap.keySet()) {
-                // add every remaining item in the innerIndex
-                for (Integer row : innerIndexMap.get(index)) {
-                    int outRowIndex =
-                        outputCont.getRowCount();
-                    DataRow outRow = OutputDataRow.createDataRow(outRowIndex,
+        if (m_retainLeft && !m_matchAny) {
+            for (int partition : leftOuterJoins.keySet()) {
+                for (Integer row : leftOuterJoins.get(partition)) {
+                    // add left outer join
+                    DataRow outRow = OutputRow.createDataRow(
+                            outputCont.getRowCount(),
                             row, -1,
                             m_outputDataRowSettings);
                     outputCont.addLeftOuter(outRow, exec);
@@ -1015,7 +1027,7 @@ public final class Joiner {
         }
     }
 
-    private InputDataRow.Settings createInputDataRowSettings(
+    private InputRow.Settings createInputDataRowSettings(
             final BufferedDataTable leftTable,
             final BufferedDataTable rightTable) {
         List<Integer> leftTableJoinIndices = getLeftJoinIndices(leftTable);
@@ -1024,17 +1036,17 @@ public final class Joiner {
 
 
         // Build m_inputDataRowSettings
-        Map<InputDataRow.Settings.InDataPort,
+        Map<InputRow.Settings.InDataPort,
         List<Integer>> joiningIndicesMap =
-            new HashMap<InputDataRow.Settings.InDataPort, List<Integer>>();
-        joiningIndicesMap.put(InputDataRow.Settings.InDataPort.Left,
+            new HashMap<InputRow.Settings.InDataPort, List<Integer>>();
+        joiningIndicesMap.put(InputRow.Settings.InDataPort.Left,
                 leftTableJoinIndices);
-        joiningIndicesMap.put(InputDataRow.Settings.InDataPort.Right,
+        joiningIndicesMap.put(InputRow.Settings.InDataPort.Right,
                 rightTableJoinIndices);
 
 
-        InputDataRow.Settings inputDataRowSettings = new InputDataRow.Settings(
-                joiningIndicesMap, m_multipleMatchCanOccur);
+        InputRow.Settings inputDataRowSettings = new InputRow.Settings(
+                joiningIndicesMap, m_matchAny);
 
         return inputDataRowSettings;
     }
@@ -1094,8 +1106,8 @@ public final class Joiner {
     private void compareDuplicates(final BufferedDataTable leftTable,
             final BufferedDataTable rightTable, final List<String> duplicates) {
 
-        int[] leftIndex = getIndecesOf(leftTable, duplicates);
-        int[] rightIndex = getIndecesOf(rightTable, duplicates);
+        int[] leftIndex = getIndicesOf(leftTable, duplicates);
+        int[] rightIndex = getIndicesOf(rightTable, duplicates);
 
         String[] messages = new String[duplicates.size()];
 
@@ -1152,7 +1164,7 @@ public final class Joiner {
      * @param cols Columns of the table
      * @return the indices of the given columns in the table.
      */
-    private int[] getIndecesOf(final BufferedDataTable table,
+    private int[] getIndicesOf(final BufferedDataTable table,
             final List<String> cols) {
         int[] indices = new int[cols.size()];
         int c = 0;
