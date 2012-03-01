@@ -348,7 +348,7 @@ public class StringManipulationSettings {
         int endIndex = StringUtils.indexOf(expression, '(');
         if (endIndex < 0) {
             throw new InvalidSettingsException("Ambitious return type! "
-            + "Use 'toString()' or 'toInt()' to specify return type.");
+            + "Use 'string()' or 'toInt()' to specify return type.");
         }
         String function = expression.substring(0, endIndex);
 
