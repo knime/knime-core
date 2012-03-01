@@ -52,7 +52,6 @@ package org.knime.base.node.preproc.stringmanipulation;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -63,7 +62,6 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Platform;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -78,6 +76,7 @@ import org.knime.ext.sun.nodes.script.expression.Expression;
 import org.knime.ext.sun.nodes.script.settings.JavaScriptingSettings;
 import org.knime.ext.sun.nodes.script.settings.JavaSnippetType;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 
 /**
  * The settings for the string manipulation node.
@@ -347,7 +346,7 @@ public class StringManipulationSettings {
         }
         int endIndex = StringUtils.indexOf(expression, '(');
         if (endIndex < 0) {
-            throw new InvalidSettingsException("Ambitious return type! "
+            throw new InvalidSettingsException("Ambiguous return type! "
             + "Use 'string()' or 'toInt()' to specify return type.");
         }
         String function = expression.substring(0, endIndex);
@@ -392,13 +391,13 @@ public class StringManipulationSettings {
         s.setExpressionVersion(Expression.VERSION_2X);
         s.setHeader("");
         s.setInsertMissingAsNull(this.isInsertMissingAsNull());
-        Bundle bundle = Platform.getBundle("org.knime.jsnippets");
+        Bundle bundle = FrameworkUtil.getBundle(this.getClass());
         try {
             List<String> includes = new ArrayList<String>();
             URL snippetIncURL = FileLocator.find(bundle,
                     new Path("/lib/snippet_inc"), null);
             File includeDir = new File(
-                    FileLocator.toFileURL(snippetIncURL).toURI());
+                    FileLocator.toFileURL(snippetIncURL).getPath());
             for (File includeJar : includeDir.listFiles()) {
                 if (includeJar.isFile()
                         && includeJar.getName().endsWith(".jar")) {
@@ -409,14 +408,9 @@ public class StringManipulationSettings {
             }
             StringManipulatorProvider provider =
                 StringManipulatorProvider.getDefault();
-            URL manipulatorsURL = provider.getJarFile().toURI().toURL();
-            includes.add(
-                    FileLocator.toFileURL(manipulatorsURL).toURI().getPath());
+            includes.add(provider.getJarFile().getAbsolutePath());
             s.setJarFiles(includes.toArray(new String[includes.size()]));
         } catch (IOException e) {
-            throw new IllegalStateException(
-                    "Cannot locate necessary libraries.", e);
-        } catch (URISyntaxException e) {
             throw new IllegalStateException(
                     "Cannot locate necessary libraries.", e);
         }
