@@ -4,9 +4,9 @@ Bundle-Name: KNIME Java Snippet Nodes (draft)
 Bundle-SymbolicName: org.knime.jsnippets;singleton:=true
 Bundle-Version: 2.6.0.qualifier
 Bundle-ClassPath: knime-jsnippets.jar,
- lib/commons-lang3-3.0.1.jar,
  lib/autocomplete_1.5.2/autocomplete.jar,
- lib/autocomplete_1.5.2/rsyntaxtextarea.jar
+ lib/autocomplete_1.5.2/rsyntaxtextarea.jar,
+ lib/snippet_inc/commons-lang3-3.0.1.jar
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: org.apache.commons.lang3,
  org.knime.base.node.preproc.stringmanipulation,
