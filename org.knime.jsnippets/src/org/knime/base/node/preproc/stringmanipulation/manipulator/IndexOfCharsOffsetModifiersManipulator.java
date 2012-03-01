@@ -229,40 +229,40 @@ public class IndexOfCharsOffsetModifiersManipulator
                 + "<strong>Examples:</strong>"
                 + "<br/>"
                 + "<table>"
-                + "<tr><td>indexOf(\"abcABCabc\", \"ab\", 0, \"\")</td>"
+                + "<tr><td>indexOfChars(\"abcABCabc\", \"ab\", 0, \"\")</td>"
                 + "<td>=&nbsp;0</td></tr>"
 
-                + "<tr><td>indexOf(\"abcABCabc\", \"ab\", 1, \"\")</td>"
+                + "<tr><td>indexOfChars(\"abcABCabc\", \"ab\", 1, \"\")</td>"
                 + "<td>=&nbsp;1</td></tr>"
 
-                + "<tr><td>indexOf(\"abcABCabc\", \"ab\", 2, \"\")</td>"
+                + "<tr><td>indexOfChars(\"abcABCabc\", \"ab\", 2, \"\")</td>"
                 + "<td>=&nbsp;6</td></tr>"
 
-                + "<tr><td>indexOf(\"abcABCabc\", \"ab\", 2, \"i\")</td>"
+                + "<tr><td>indexOfChars(\"abcABCabc\", \"ab\", 2, \"i\")</td>"
                 + "<td>=&nbsp;3</td></tr>"
 
-                + "<tr><td>indexOf(\"abcABCabc\", \"ab\", 0, \"b\")</td>"
+                + "<tr><td>indexOfChars(\"abcABCabc\", \"ab\", 0, \"b\")</td>"
                 + "<td>=&nbsp;0</td></tr>"
 
-                + "<tr><td>indexOf(\"abcABCabc\", \"ab\", 9, \"b\")</td>"
+                + "<tr><td>indexOfChars(\"abcABCabc\", \"ab\", 9, \"b\")</td>"
                 + "<td>=&nbsp;7</td></tr>"
 
                 + "<tr><td>indexOf(\"abcABCabc\", \"ab\", 0, \"v\")</td>"
                 + "<td>=&nbsp;2</td></tr>"
 
-                + "<tr><td>indexOf(\"abcABCabc\", \"ab\", 3, \"v\")</td>"
+                + "<tr><td>indexOfChars(\"abcABCabc\", \"ab\", 3, \"v\")</td>"
                 + "<td>=&nbsp;3</td></tr>"
 
-                + "<tr><td>indexOf(\"abcABCabc\", \"ab\", 3, \"vi\")</td>"
+                + "<tr><td>indexOfChars(\"abcABCabc\", \"ab\", 3, \"vi\")</td>"
                 + "<td>=&nbsp;5</td></tr>"
 
-                + "<tr><td>indexOf(\"\", *, 0, \"\")</td>"
+                + "<tr><td>indexOfChars(\"\", *, 0, \"\")</td>"
                 + "<td>=&nbsp;-1</td></tr>"
 
-                + "<tr><td>indexOf(null, *, **, \"\")</td>"
+                + "<tr><td>indexOfChars(null, *, **, \"\")</td>"
                 + "<td>=&nbsp;-1</td></tr>"
 
-                + "<tr><td>indexOf(*, null, **, \"\")</td>"
+                + "<tr><td>indexOfChars(*, null, **, \"\")</td>"
                 + "<td>=&nbsp;-1</td></tr>"
                 + "</table>"
                 + "* can be any character sequence.<br/>"
