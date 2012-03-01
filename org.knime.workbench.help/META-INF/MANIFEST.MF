@@ -7,18 +7,18 @@ Bundle-Activator: org.knime.workbench.helpview.HelpviewPlugin
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: org.knime.workbench.helpview,
  org.knime.workbench.helpview.wizard
-Require-Bundle: org.eclipse.core.runtime,
- org.eclipse.help,
- org.eclipse.help.base,
- org.eclipse.ui,
- org.eclipse.ui.intro,
- org.knime.workbench.ui,
- org.eclipse.ui.ide,
- org.eclipse.help.ui,
- org.knime.core;bundle-version="2.4.0",
- org.knime.workbench.repository,
- org.mortbay.jetty.server;bundle-version="6.1.0",
- org.mortbay.jetty.util;bundle-version="6.1.0",
- javax.servlet;bundle-version="2.5.0"
+Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.6.0,4.0.0)",
+ org.eclipse.help;bundle-version="[3.5.0,4.0.0)",
+ org.eclipse.help.base;bundle-version="[3.5.2,4.0.0)",
+ org.eclipse.ui;bundle-version="[3.6.1,4.0.0)",
+ org.eclipse.ui.intro;bundle-version="[3.4.0,4.0.0)",
+ org.knime.workbench.ui;bundle-version="[2.5.0,3.0.0)",
+ org.eclipse.ui.ide;bundle-version="[3.6.1,4.0.0)",
+ org.eclipse.help.ui;bundle-version="[3.5.2,4.0.0)",
+ org.knime.core;bundle-version="[2.4.0,3.0.0)",
+ org.knime.workbench.repository;bundle-version="[2.5.0,3.0.0)",
+ org.mortbay.jetty.server;bundle-version="[6.1.0,6.2.0)",
+ org.mortbay.jetty.util;bundle-version="[6.1.0,6.2.0)",
+ javax.servlet;bundle-version="[2.5.0,3.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

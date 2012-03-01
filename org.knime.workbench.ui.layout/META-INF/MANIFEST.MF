@@ -10,8 +10,8 @@ Export-Package: org.knime.workbench.ui.layout,
  org.knime.workbench.ui.layout.align,
  org.knime.workbench.ui.layout.commands,
  org.knime.workbench.ui.layout.layeredlayout
-Require-Bundle: org.knime.workbench.editor,
- org.knime.workbench.core,
- org.eclipse.gef
+Require-Bundle: org.knime.workbench.editor;bundle-version="[2.5.0,3.0.0)",
+ org.knime.workbench.core;bundle-version="[2.5.0,3.0.0)",
+ org.eclipse.gef;bundle-version="[3.6.1,4.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

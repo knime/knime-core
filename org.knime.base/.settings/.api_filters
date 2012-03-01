@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.knime.base" version="2">
+    <resource path="META-INF/MANIFEST.MF" type="Jama.CholeskyDecomposition">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="Jama.CholeskyDecomposition"/>
+                <message_argument value="org.knime.base_2.5.3"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="Jama.EigenvalueDecomposition">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="Jama.EigenvalueDecomposition"/>
+                <message_argument value="org.knime.base_2.5.3"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="Jama.LUDecomposition">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="Jama.LUDecomposition"/>
+                <message_argument value="org.knime.base_2.5.3"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="Jama.Matrix">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="Jama.Matrix"/>
+                <message_argument value="org.knime.base_2.5.3"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="Jama.QRDecomposition">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="Jama.QRDecomposition"/>
+                <message_argument value="org.knime.base_2.5.3"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="Jama.SingularValueDecomposition">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="Jama.SingularValueDecomposition"/>
+                <message_argument value="org.knime.base_2.5.3"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="Jama.examples.MagicSquareExample">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="Jama.examples.MagicSquareExample"/>
+                <message_argument value="org.knime.base_2.5.3"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="Jama.test.TestMatrix">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="Jama.test.TestMatrix"/>
+                <message_argument value="org.knime.base_2.5.3"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="Jama.util.Maths">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="Jama.util.Maths"/>
+                <message_argument value="org.knime.base_2.5.3"/>
+            </message_arguments>
+        </filter>
+    </resource>
+</component>

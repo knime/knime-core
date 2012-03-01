@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.knime.core" version="2">
+    <resource path="src/org/knime/core/node/KNIMEConstants.java" type="org.knime.core.node.KNIMEConstants">
+        <filter id="389242988">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.KNIMEConstants"/>
+                <message_argument value="BUILD_DATE"/>
+                <message_argument value="February 20, 2012"/>
+            </message_arguments>
+        </filter>
+    </resource>
+</component>

@@ -79,8 +79,8 @@ public final class KNIMEConstants {
     /** Workflow file version. */
     public static final String VERSION;
 
-    /** The build date, is set automatically by the build scripts. */
-    public static final String BUILD_DATE = "February 20, 2012";
+    /** The build date, is set automatically by the build scripts.*/
+    public static final String BUILD_DATE;
 
     /** Java property name that is used to identify whether KNIME is started
      * in expert mode or not. Note, with KNIME v2.4 this field became obsolete
@@ -234,6 +234,7 @@ public final class KNIMEConstants {
 
 
     static {
+        BUILD_DATE = "Nightly-Build Februar 24, 2012";
         String versionString;
         if (CorePlugin.getInstance() != null) {
             versionString = CorePlugin.getInstance().getBundle().getHeaders()

@@ -11,7 +11,7 @@ Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: org.apache.commons.lang3,
  org.knime.base.node.preproc.stringmanipulation,
  org.knime.base.node.preproc.stringmanipulation.manipulator
-Require-Bundle: org.knime.base;bundle-version="2.5.0",
- org.knime.ext.sun;bundle-version="2.5.0"
+Require-Bundle: org.knime.base;bundle-version="[2.5.0,3.0.0)",
+ org.knime.ext.sun;bundle-version="[2.5.0,3.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

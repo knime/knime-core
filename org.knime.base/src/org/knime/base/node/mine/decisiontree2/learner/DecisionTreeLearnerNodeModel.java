@@ -188,6 +188,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
     /** post process tree and remove test attribute values from
      * children, which have been removed further up in the tree already.
      * (see bug 3124).
+     * @since 2.5
      */
     public static final String KEY_FILTER_NOMINAL_VALUES_FROM_PARENT =
         "FilterNominalValuesFromParent";

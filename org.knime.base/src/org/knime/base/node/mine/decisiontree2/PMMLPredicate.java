@@ -68,6 +68,7 @@ import org.knime.core.node.config.Config;
  * (<a>http://www.dmg.org/v4-0/TreeModel.html</a>).
  *
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
+ * @noextend
  */
 public abstract class PMMLPredicate {
     /** The node logger for this class. */
@@ -132,6 +133,7 @@ public abstract class PMMLPredicate {
      *
      * @return the name of the field the predicate operates on, "" if working on
      *         multiple attributes or null if not applicable
+     * @since 2.5
      */
     public String getSplitAttribute() {
         return m_splitAttribute;
@@ -176,6 +178,7 @@ public abstract class PMMLPredicate {
      * {@link DecisionTreeNode#filterIllegalAttributes(Map)}. See there
      * for details.
      * @return null (default for most predicates).
+     * @since 2.5
      */
     public Set<String> getUsedNominalSplitAttributeValues() {
         // overwritten in subclasses.
@@ -186,6 +189,7 @@ public abstract class PMMLPredicate {
      * {@link DecisionTreeNode#filterIllegalAttributes(Map)}. See there
      * for details.
      * @param toBeRetained Valid attribute values
+     * @since 2.5
      */
     public void retainOnlyAttributeValues(final Set<String> toBeRetained) {
         // overwritten in subclasses.

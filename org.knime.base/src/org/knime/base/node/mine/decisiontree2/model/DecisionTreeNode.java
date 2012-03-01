@@ -86,6 +86,8 @@ import org.w3c.dom.NodeList;
  *
  * @author Michael Berthold, University of Konstanz
  * @author Christoph Sieb, University of Konstanz
+ * @noextend
+ * @noinstantiate
  */
 public abstract class DecisionTreeNode implements TreeNode, Serializable {
 
@@ -415,7 +417,9 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      *
      * <p> Workaround for bug 3124.
      * @param reservedAttributes READ ONLY map of the used attributes. A
-     * modified copy is passed further down during the recursion. */
+     * modified copy is passed further down during the recursion.
+     * @since 2.5
+     */
     public final void filterIllegalAttributes(
             final Map<String, Set<String>> reservedAttributes) {
         for (int i = 0; i < getChildCount(); i++) {
@@ -463,7 +467,9 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      *
      * @param childIndex ...
      * @return The pair representation that information or null if the child
-     * is not checking for a nominal(!) attribute set. */
+     * is not checking for a nominal(!) attribute set.
+     * @since 2.5
+     */
     protected Pair<String, Set<String>> getChildUsedNominalSplitAttributeValues(
             final int childIndex) {
         throw new IllegalStateException("Child attribute filtering not "
@@ -474,7 +480,9 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
      * is testing for.
      * See {@link #getChildUsedNominalSplitAttributeValues(int)}.
      * @param childIndex ...
-     * @param toBeRetained valid attributes. */
+     * @param toBeRetained valid attributes.
+     * @since 2.5
+     */
     protected void retainOnlyAttributeValuesInChild(
             final int childIndex, final Set<String> toBeRetained) {
         throw new IllegalStateException("Child attribute filtering not "
