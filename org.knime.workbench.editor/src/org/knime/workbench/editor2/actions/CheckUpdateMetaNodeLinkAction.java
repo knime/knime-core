@@ -87,7 +87,7 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(CheckUpdateMetaNodeLinkAction.class);
 
-    private boolean m_showInfoMsgIfNoUpdateAvail;
+    private final boolean m_showInfoMsgIfNoUpdateAvail;
 
     /** Action ID. */
     public static final String ID = "knime.action.meta_node_check_update_link";
@@ -204,11 +204,17 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
         }
         List<NodeID> updateList = runner.getUpdateList();
         Status status = runner.getStatus();
-        if (status.getSeverity() == Status.ERROR) {
+        if (status.getSeverity() == Status.ERROR
+                || status.getSeverity() == Status.WARNING) {
             ErrorDialog.openError(
                     Display.getDefault().getActiveShell(),
                     null, "Errors while checking for "
                     + "updates on meta node links", status);
+            if (candidateList.size() == 1) {
+                /* As only one meta node is selected and its update failed,
+                 * there is nothing else to do. */
+                return;
+            }
         }
 
         // find nodes that will be reset as part of the update
@@ -304,11 +310,11 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
                     }
                     stat = new Status(Status.OK, idName, msg);
                 } catch (Exception ex) {
-                    String error = "Unable to check for update on meta "
+                    String msg = "Unable to check for update on meta "
                         + "node \"" + wm.getNameWithID() + "\": "
                         + ex.getMessage();
-                    LOGGER.error(error, ex);
-                    stat = new Status(Status.ERROR , idName, error, ex);
+                    LOGGER.warn(msg, ex);
+                    stat = new Status(Status.WARNING , idName, msg, ex);
                 }
                 if (monitor.isCanceled()) {
                     throw new InterruptedException("Update check canceled");
