@@ -53,6 +53,8 @@ package org.knime.workbench.ui.wrapper;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -83,6 +85,7 @@ import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
@@ -113,6 +116,11 @@ public class WrappedNodeDialog extends Dialog {
 
     private final NodeLogger m_logger;
 
+    private final AtomicBoolean m_dialogSizeComputed = new AtomicBoolean();
+
+    private final static boolean enableMacOSXWorkaround = Boolean
+            .getBoolean(KNIMEConstants.PROPERTY_MACOSX_DIALOG_WORKAROUND);
+
     /**
      * Creates the (application modal) dialog for a given node.
      *
@@ -123,8 +131,9 @@ public class WrappedNodeDialog extends Dialog {
      * @param parentShell The parent shell
      * @param nodeContainer The node.
      * @throws NotConfigurableException if the dialog cannot be opened because
-     * of real invalid settings or if any pre-conditions are not fulfilled, e.g.
-     * no predecessor node, no nominal column in input table, etc.
+     *             of real invalid settings or if any pre-conditions are not
+     *             fulfilled, e.g. no predecessor node, no nominal column in
+     *             input table, etc.
      */
     public WrappedNodeDialog(final Shell parentShell,
             final NodeContainer nodeContainer) throws NotConfigurableException {
@@ -133,6 +142,26 @@ public class WrappedNodeDialog extends Dialog {
         m_nodeContainer = nodeContainer;
         m_dialogPane = m_nodeContainer.getDialogPaneWithSettings();
         m_logger = NodeLogger.getLogger(m_nodeContainer.getNameWithID());
+
+        if (enableMacOSXWorkaround) {
+            // get underlying panel and do layout it
+            final JPanel panel = m_dialogPane.getPanel();
+            final Display display = Display.getCurrent();
+            SwingUtilities.invokeLater(new Runnable() {
+                @Override
+                public void run() {
+                    panel.doLayout();
+                    m_dialogSizeComputed.set(true);
+                    display.asyncExec(new Runnable() {
+                        @Override
+                        public void run() {
+                            // deliberately empty, this is only to wake up a
+                            // potentially waiting SWT-thread in getInitialSize
+                        }
+                    });
+                }
+            });
+        }
     }
 
     /**
@@ -185,8 +214,8 @@ public class WrappedNodeDialog extends Dialog {
                 String file = openDialog.open();
                 if (file != null) {
                     try {
-                        m_dialogPane.loadSettingsFrom(
-                                new FileInputStream(file));
+                        m_dialogPane
+                                .loadSettingsFrom(new FileInputStream(file));
                     } catch (IOException ioe) {
                         showErrorMessage(ioe.getMessage());
                     } catch (NotConfigurableException ex) {
@@ -229,8 +258,9 @@ public class WrappedNodeDialog extends Dialog {
     @Override
     protected Control createDialogArea(final Composite parent) {
         Composite area = (Composite)super.createDialogArea(parent);
-        Color backgroundColor = Display.getCurrent().getSystemColor(
-                SWT.COLOR_WIDGET_BACKGROUND);
+        Color backgroundColor =
+                Display.getCurrent()
+                        .getSystemColor(SWT.COLOR_WIDGET_BACKGROUND);
         area.setBackground(backgroundColor);
         m_container = new Composite(area, SWT.NONE);
         final GridLayout gridLayout = new GridLayout();
@@ -285,13 +315,14 @@ public class WrappedNodeDialog extends Dialog {
     protected void createButtonsForButtonBar(final Composite parent) {
         // WORKAROUND: can't use IDialogConstants.OK_ID here, as this always
         // closes the dialog, regardless if the settings couldn't be applied.
-        final Button btnOK = createButton(parent,
-              IDialogConstants.NEXT_ID, IDialogConstants.OK_LABEL, false);
-        final Button btnApply = createButton(parent,
-                IDialogConstants.FINISH_ID, "Apply", false);
-        final Button btnCancel = createButton(parent,
-                IDialogConstants.CANCEL_ID,
-                IDialogConstants.CANCEL_LABEL, false);
+        final Button btnOK =
+                createButton(parent, IDialogConstants.NEXT_ID,
+                        IDialogConstants.OK_LABEL, false);
+        final Button btnApply =
+                createButton(parent, IDialogConstants.FINISH_ID, "Apply", false);
+        final Button btnCancel =
+                createButton(parent, IDialogConstants.CANCEL_ID,
+                        IDialogConstants.CANCEL_LABEL, false);
 
         boolean writeProtected = m_dialogPane.isWriteProtected();
         btnOK.setEnabled(!writeProtected);
@@ -305,6 +336,7 @@ public class WrappedNodeDialog extends Dialog {
                     btnOK.setText("OK");
                 }
             }
+
             /** {@inheritDoc} */
             @Override
             public void keyPressed(final KeyEvent ke) {
@@ -407,8 +439,8 @@ public class WrappedNodeDialog extends Dialog {
         m_dialogPane.onClose();
         buttonPressed(IDialogConstants.OK_ID);
         if (execute) {
-            m_nodeContainer.getParent().executeUpToHere(
-                    m_nodeContainer.getID());
+            m_nodeContainer.getParent()
+                    .executeUpToHere(m_nodeContainer.getID());
             if (openView) {
                 SwingUtilities.invokeLater(new Runnable() {
                     /** {inheritDoc} */
@@ -425,8 +457,8 @@ public class WrappedNodeDialog extends Dialog {
                             pIndex = 0;
                         }
                         if (m_nodeContainer.getNrOutPorts() > pIndex) {
-                            NodeOutPort port = m_nodeContainer.getOutPort(
-                                    pIndex);
+                            NodeOutPort port =
+                                    m_nodeContainer.getOutPort(pIndex);
                             port.openPortView(port.getPortName());
                         }
                     }
@@ -445,8 +477,7 @@ public class WrappedNodeDialog extends Dialog {
             // if the settings are equal and the node is executed
             // to the previous settings inform the user but do nothing
             // (no reset)
-            if (m_nodeContainer.getState().equals(
-                    NodeContainer.State.EXECUTED)) {
+            if (m_nodeContainer.getState().equals(NodeContainer.State.EXECUTED)) {
                 if (m_nodeContainer.areDialogAndNodeSettingsEqual()) {
                     // settings not changed
                     informNothingChanged();
@@ -539,17 +570,18 @@ public class WrappedNodeDialog extends Dialog {
         // the following code has mainly been copied from
         // IDEWorkbenchWindowAdvisor#preWindowShellClose
         IPreferenceStore store =
-            KNIMEUIPlugin.getDefault().getPreferenceStore();
+                KNIMEUIPlugin.getDefault().getPreferenceStore();
         if (!store.contains(PreferenceConstants.P_CONFIRM_RESET)
                 || store.getBoolean(PreferenceConstants.P_CONFIRM_RESET)) {
             MessageDialogWithToggle dialog =
-                MessageDialogWithToggle.openOkCancelConfirm(
-                    Display.getDefault().getActiveShell(),
-                    "Confirm reset...",
-                    "Warning, reset node(s)!\n"
-                    + "New settings will be applied after resetting this "
-                    + "and all connected nodes. Continue?",
-                    "Do not ask again", false, null, null);
+                    MessageDialogWithToggle
+                            .openOkCancelConfirm(
+                                    Display.getDefault().getActiveShell(),
+                                    "Confirm reset...",
+                                    "Warning, reset node(s)!\n"
+                                            + "New settings will be applied after resetting this "
+                                            + "and all connected nodes. Continue?",
+                                    "Do not ask again", false, null, null);
             boolean isOK = dialog.getReturnCode() == IDialogConstants.OK_ID;
             if (isOK && dialog.getToggleState()) {
                 store.setValue(PreferenceConstants.P_CONFIRM_RESET, false);
@@ -565,8 +597,9 @@ public class WrappedNodeDialog extends Dialog {
      * therefore the settings are not reset (node stays executed).
      */
     protected void informNothingChanged() {
-        MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(),
-                SWT.ICON_INFORMATION | SWT.OK);
+        MessageBox mb =
+                new MessageBox(Display.getDefault().getActiveShell(),
+                        SWT.ICON_INFORMATION | SWT.OK);
         mb.setText("Settings were not changed.");
         mb.setMessage("The settings were not changed. "
                 + "The node will not be reset.");
@@ -583,7 +616,8 @@ public class WrappedNodeDialog extends Dialog {
 
     // these are extra height and width value since the parent dialog
     // does not return the right sizes for the underlying dialog pane
-    private static final int EXTRA_WIDTH  = 25;
+    private static final int EXTRA_WIDTH = 25;
+
     private static final int EXTRA_HEIGHT = 20;
 
     /**
@@ -595,10 +629,28 @@ public class WrappedNodeDialog extends Dialog {
      */
     @Override
     protected Point getInitialSize() {
-
-        // get underlying panel and do layout it
-        JPanel panel = m_dialogPane.getPanel();
-        panel.doLayout();
+        final JPanel panel = m_dialogPane.getPanel();
+        if (enableMacOSXWorkaround) {
+            // this and the code in the constructor is a workaround
+            // for the nasty deadlock on MacOSX
+            // see http://bimbug.inf.uni-konstanz.de/show_bug.cgi?id=3151
+            while (!m_dialogSizeComputed.get()) {
+                Display.getCurrent().sleep();
+            }
+        } else {
+            try {
+                SwingUtilities.invokeAndWait(new Runnable() {
+                    @Override
+                    public void run() {
+                        panel.doLayout();
+                    }
+                });
+            } catch (InterruptedException ex) {
+                m_logger.info("Thread interrupted", ex);
+            } catch (InvocationTargetException ex) {
+                m_logger.error("Error while determining dialog sizes", ex);
+            }
+        }
 
         // underlying pane sizes
         int width = panel.getWidth();
@@ -614,10 +666,12 @@ public class WrappedNodeDialog extends Dialog {
 
         // we need to make sure that we have at least enough space for
         // the button bar (+ some extra space)
-        width = Math.max(Math.max(widthButtonBar, widthDialog),
-                width + widthDialog - widthButtonBar + EXTRA_WIDTH);
-        height = Math.max(Math.max(heightButtonBar, heightDialog),
-                height + heightDialog - heightButtonBar + EXTRA_HEIGHT);
+        width =
+                Math.max(Math.max(widthButtonBar, widthDialog), width
+                        + widthDialog - widthButtonBar + EXTRA_WIDTH);
+        height =
+                Math.max(Math.max(heightButtonBar, heightDialog), height
+                        + heightDialog - heightButtonBar + EXTRA_HEIGHT);
 
         // set the size of the container composite
         Point size = new Point(width, height);

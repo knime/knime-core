@@ -122,7 +122,6 @@ public class KNIMEApplication implements IApplication {
                 // the workbench globally so that all UI plug-ins can find it
                 // using
                 // PlatformUI.getWorkbench() or AbstractUIPlugin.getWorkbench()
-                checkJRE();
                 returnCode =
                         PlatformUI.createAndRunWorkbench(display,
                                 getWorkbenchAdvisor());
@@ -527,25 +526,6 @@ public class KNIMEApplication implements IApplication {
                 }
             }
         });
-    }
-
-    private void checkJRE() {
-        if (!Platform.getOS().equals(Platform.OS_MACOSX)) {
-            return;
-        }
-
-        String jreVersion = System.getProperty("java.version");
-        if ("1.6.0_29".equals(jreVersion)) {
-            MessageBox mBox =
-                    new MessageBox(new Shell(),
-                            SWT.APPLICATION_MODAL | SWT.OK);
-            mBox.setText("Broken JRE version");
-            mBox.setMessage("Your operating system uses a JRE version ("
-                    + "1.6.0_29) that breaks dialogs in KNIME and may lead to "
-                    + "crashes. Please see http://tech.knime.org/faq#q23 for "
-                    + "how to fix this issue.");
-            mBox.open();
-        }
     }
 
     private boolean checkForUpdates(final Shell shell) {

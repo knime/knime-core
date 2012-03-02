@@ -56,6 +56,7 @@ import java.util.Locale;
 
 import javax.swing.ImageIcon;
 
+import org.eclipse.core.runtime.Platform;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.internal.CorePlugin;
 import org.knime.core.internal.KNIMEPath;
@@ -169,6 +170,13 @@ public final class KNIMEConstants {
      * @since v2.5 */
     public static final String PROPERTY_SHOW_METANODE_LOCK_ACTION =
         "knime.showaction.metanodelock";
+
+    /**
+     * Java property do en-/disable the workaround for the dialog deadlocks
+     * under MacOSX (see http://bimbug.inf.uni-konstanz.de/show_bug.cgi?id=3151).
+     */
+    public static final String PROPERTY_MACOSX_DIALOG_WORKAROUND =
+        "knime.macosx.dialogworkaround";
 
     /**
      * The name of the system property whose value is - if set - used as knime
@@ -349,6 +357,11 @@ public final class KNIMEConstants {
             }
         } else {
             knimeTempDir = new File(System.getProperty("java.io.tmpdir"));
+        }
+
+        if ((System.getProperty(PROPERTY_MACOSX_DIALOG_WORKAROUND) == null)
+                && Platform.getOS().equals(Platform.OS_MACOSX)) {
+            System.setProperty(PROPERTY_MACOSX_DIALOG_WORKAROUND, "true");
         }
     }
 
