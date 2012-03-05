@@ -174,6 +174,8 @@ public final class KNIMEConstants {
     /**
      * Java property do en-/disable the workaround for the dialog deadlocks
      * under MacOSX (see http://bimbug.inf.uni-konstanz.de/show_bug.cgi?id=3151).
+     *
+     * @since 2.6
      */
     public static final String PROPERTY_MACOSX_DIALOG_WORKAROUND =
         "knime.macosx.dialogworkaround";
