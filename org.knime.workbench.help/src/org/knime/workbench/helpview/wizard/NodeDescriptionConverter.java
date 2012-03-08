@@ -210,9 +210,13 @@ public final class NodeDescriptionConverter {
      * @throws Exception if an error occurs
      */
     public void buildDocumentationFor(final Pattern pattern,
-            final File destinationDir) throws Exception {
+            File destinationDir) throws Exception {
         IConfigurationElement[] configs = getConfigurationElements();
         Set<String> processed = new HashSet<String>();
+        if (destinationDir == null) {
+            destinationDir = getPluginDir();
+        }
+
         LOGGER.info("Building documentation for " + pattern.toString()
                 + " into " + destinationDir.getAbsolutePath());
 
