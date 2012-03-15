@@ -207,7 +207,7 @@ public class SaveAsMetaNodeTemplateAction extends AbstractNodeAction {
             return null;
         }
         final AbstractExplorerFileStore oldTemplateFileStore =
-            ExplorerFileSystem.instance.getStore(uri);
+            ExplorerFileSystem.INSTANCE.getStore(uri);
         final AbstractExplorerFileStore parent = oldTemplateFileStore == null
             ? null : oldTemplateFileStore.getParent();
         if (parent != null) {
