@@ -56,6 +56,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
@@ -190,7 +191,7 @@ public class SaveAsMetaNodeTemplateAction extends AbstractNodeAction {
                 return "Only workflow groups can be selected as target.";
             }
         });
-        if (dialog.open() != SpaceResourceSelectionDialog.OK) {
+        if (dialog.open() != Window.OK) {
             return;
         }
         AbstractExplorerFileStore target = dialog.getSelection();
@@ -206,7 +207,7 @@ public class SaveAsMetaNodeTemplateAction extends AbstractNodeAction {
             return null;
         }
         final AbstractExplorerFileStore oldTemplateFileStore =
-            new ExplorerFileSystem().getStore(uri);
+            ExplorerFileSystem.instance.getStore(uri);
         final AbstractExplorerFileStore parent = oldTemplateFileStore == null
             ? null : oldTemplateFileStore.getParent();
         if (parent != null) {
