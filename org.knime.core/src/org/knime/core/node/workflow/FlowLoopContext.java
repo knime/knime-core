@@ -50,6 +50,8 @@
  */
 package org.knime.core.node.workflow;
 
+import org.knime.core.node.util.ConvenienceMethods;
+
 
 
 /**
@@ -85,5 +87,31 @@ public class FlowLoopContext extends FlowObject {
      * indicate that a loop was potentially saved in a half-executed state. */
     public static class RestoredFlowLoopContext extends FlowLoopContext {
         // marker class
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode() {
+        if (m_tailNode == null) {
+            return super.hashCode();
+        }
+        return super.hashCode() + m_tailNode.hashCode();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+        if (!obj.getClass().equals(getClass())) {
+            return false;
+        }
+        FlowLoopContext flc = (FlowLoopContext) obj;
+        return super.equals(obj)
+            && ConvenienceMethods.areEqual(flc.m_tailNode, m_tailNode);
     }
 }

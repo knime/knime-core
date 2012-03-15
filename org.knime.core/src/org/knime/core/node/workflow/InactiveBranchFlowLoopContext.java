@@ -56,5 +56,19 @@ package org.knime.core.node.workflow;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class InactiveBranchFlowLoopContext extends FlowObject {
-    // marker class
+    // marker class. @see FlowLoopContext for proper implementation
+    // of hashCode and equals when members are added.
+
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean equals(final Object obj) {
+        return super.equals(obj);
+    }
+
 }

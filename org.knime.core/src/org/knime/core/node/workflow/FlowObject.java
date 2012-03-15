@@ -44,29 +44,31 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   15.03.2007 (mb): created
  */
 package org.knime.core.node.workflow;
 
+import org.knime.core.node.util.ConvenienceMethods;
+
 /** Object holding base information for a loop context object: the head
  * and tail IDs of the loop's "control" node.
- * 
+ *
  * @author M. Berthold, University of Konstanz
  */
 abstract class FlowObject implements Cloneable {
 
     private NodeID m_owner;
-    
+
     void setOwner(final NodeID owner) {
         m_owner = owner;
     }
-    
+
     NodeID getOwner() {
         return m_owner;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected FlowObject clone() {
@@ -79,10 +81,35 @@ abstract class FlowObject implements Cloneable {
             throw error;
         }
     }
-    
+
     protected FlowObject cloneAndUnsetOwner() {
         FlowObject clone = clone();
         clone.setOwner(null);
         return clone;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode() {
+        if (m_owner == null) {
+            return 0;
+        }
+        return m_owner.hashCode();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == null) {
+            return false;
+        }
+        if (obj == this) {
+            return true;
+        }
+        if (!obj.getClass().equals(getClass())) {
+            return false;
+        }
+        FlowObject fo = (FlowObject) obj;
+        return ConvenienceMethods.areEqual(fo.m_owner, m_owner);
     }
 }

@@ -54,7 +54,7 @@ package org.knime.core.node.workflow;
  * Control object on a {@link FlowObjectStack} to indicate the actual
  * execution of a loop start node. Objects of this class are removed (stack
  * pop operation) from the stack immediately before an execution starts in
- * order to remove any previously added flow variables. There are put onto
+ * order to remove any previously added flow variables. They are put onto
  * immediately following their removal to indicate an iteration start.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
@@ -62,5 +62,19 @@ package org.knime.core.node.workflow;
 public class InnerFlowLoopContext extends FlowObject {
 
     // no functionality, only a marker object
+    // @see FlowLoopContext for proper implementation
+    // of hashCode and equals when members are added.
+
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean equals(final Object obj) {
+        return super.equals(obj);
+    }
 
 }
