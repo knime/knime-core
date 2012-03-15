@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Apr 1, 2007 (wiswedel): created
  */
@@ -103,14 +103,14 @@ import org.knime.core.node.tableview.TableContentView;
 import org.knime.core.node.tableview.TableView;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class PMCCNodeView extends NodeView<PMCCNodeModel> {
 
     private final TableView m_tableView;
     private String m_currentRendererID = ColorRender.DESCRIPTION;
-    
+
     /** Inits GUI.
      * @param model The underlying model.
      */
@@ -131,7 +131,7 @@ public class PMCCNodeView extends NodeView<PMCCNodeModel> {
         setComponent(m_tableView);
         getJMenuBar().add(getJMenu());
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected void modelChanged() {
@@ -139,7 +139,7 @@ public class PMCCNodeView extends NodeView<PMCCNodeModel> {
         TableContentModel cntModel = m_tableView.getContentModel();
         cntModel.setDataTable(table);
         changeRenderer(m_currentRendererID);
-        // must not call this on cntView as that would not affect the 
+        // must not call this on cntView as that would not affect the
         // row header column
         m_tableView.setRowHeight(16);
     }
@@ -155,11 +155,12 @@ public class PMCCNodeView extends NodeView<PMCCNodeModel> {
     protected void onOpen() {
 
     }
-    
+
     private JMenu getJMenu() {
         JMenu menu = new JMenu("View");
         JCheckBoxMenuItem useColorBox = new JCheckBoxMenuItem("Use Colors");
         useColorBox.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 if (((JCheckBoxMenuItem)e.getSource()).isSelected()) {
                     changeRenderer(ColorRender.DESCRIPTION);
@@ -167,36 +168,38 @@ public class PMCCNodeView extends NodeView<PMCCNodeModel> {
                     changeRenderer(DoubleValueRenderer
                             .STANDARD_RENDERER.getDescription());
                 }
-            } 
+            }
         });
         useColorBox.addPropertyChangeListener(
                 "ancestor", new PropertyChangeListener() {
            /** {@inheritDoc} */
+            @Override
             public void propertyChange(final PropertyChangeEvent evt) {
                 ((JCheckBoxMenuItem)evt.getSource()).setSelected(
                         m_currentRendererID.equals(ColorRender.DESCRIPTION));
-            } 
+            }
         });
         JMenuItem colWidthItem = new JMenuItem("Cell Size...");
         colWidthItem.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 int colWidth = m_tableView.getColumnWidth();
                 JSpinner s = new JSpinner(new SpinnerNumberModel(
                         colWidth, 1, Integer.MAX_VALUE, 1));
-                int r = JOptionPane.showConfirmDialog(m_tableView, s, 
-                        "Cell Size", JOptionPane.OK_CANCEL_OPTION, 
+                int r = JOptionPane.showConfirmDialog(m_tableView, s,
+                        "Cell Size", JOptionPane.OK_CANCEL_OPTION,
                         JOptionPane.QUESTION_MESSAGE);
                 if (r == JOptionPane.OK_OPTION) {
                     m_tableView.setColumnWidth((Integer)s.getValue());
                     m_tableView.setRowHeight((Integer)s.getValue());
                 }
-            } 
+            }
         });
         menu.add(useColorBox);
         menu.add(colWidthItem);
         return menu;
     }
-    
+
     private void changeRenderer(final String renderer) {
         TableContentView tcv = m_tableView.getContentTable();
         tcv.changeRenderer(DoubleCell.TYPE, renderer);
@@ -212,7 +215,7 @@ public class PMCCNodeView extends NodeView<PMCCNodeModel> {
         if (cornerRenderer != null) {
             if (renderer.equals(ColorRender.DESCRIPTION)) {
                 cornerRenderer.setPaintLegend(true);
-                m_tableView.setColumnHeaderViewHeight(3 * 16);
+                // no need to set column header height, done by label UI
                 tcv.setColumnWidth(15);
                 TableCellRenderer r = m_tableView.getContentTable()
                     .getTableHeader().getDefaultRenderer();
@@ -232,7 +235,7 @@ public class PMCCNodeView extends NodeView<PMCCNodeModel> {
         }
         m_currentRendererID = renderer;
     }
-    
+
     private static class MyTableContentView extends TableContentView {
         /** {@inheritDoc} */
         @Override
@@ -246,10 +249,10 @@ public class PMCCNodeView extends NodeView<PMCCNodeModel> {
             renderers[1] = DoubleValueRenderer.STANDARD_RENDERER;
             return new DefaultDataValueRendererFamily(renderers);
         }
-        
+
         /** {@inheritDoc} */
         @Override
-        public Component prepareRenderer(final TableCellRenderer renderer, 
+        public Component prepareRenderer(final TableCellRenderer renderer,
                 final int row, final int column) {
             Component result = super.prepareRenderer(renderer, row, column);
             // overwrite the component's tooltip text
@@ -266,7 +269,7 @@ public class PMCCNodeView extends NodeView<PMCCNodeModel> {
                 if (jresult != null) {
                     double corr = ((DoubleValue)val).getDoubleValue();
                     String dS = DoubleFormat.formatDouble(corr);
-                    jresult.setToolTipText(dS + " (" 
+                    jresult.setToolTipText(dS + " ("
                             + rowName + " - " + colName + ")");
                 }
             } else {
@@ -276,7 +279,7 @@ public class PMCCNodeView extends NodeView<PMCCNodeModel> {
             }
             return result;
         }
-        
+
         /** {@inheritDoc} */
         @Override
         protected void onMouseClickInHeader(final MouseEvent e) {
@@ -285,13 +288,13 @@ public class PMCCNodeView extends NodeView<PMCCNodeModel> {
         }
 
     }
-    
+
     private static class ColorRender extends DoubleGrayValueRenderer {
-        
+
         /** Name of the renderer. */
         @SuppressWarnings("hiding")
         public static final String DESCRIPTION = "Correlation Coloring";
-        
+
         /** Passes argument to super constructor.
          * @param spec The spec for the column.
          */
@@ -299,22 +302,22 @@ public class PMCCNodeView extends NodeView<PMCCNodeModel> {
             super(spec);
             setPaintCrossForMissing(true);
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public void setBorder(final Border border) {
             // ignore
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public String getDescription() {
             return DESCRIPTION;
         }
-        
+
         /** {@inheritDoc} */
         @Override
-        protected Color setDoubleValue(final double val, 
+        protected Color setDoubleValue(final double val,
                 final double min, final double max) {
             if (max == min) {
                 return Color.WHITE;
@@ -332,7 +335,7 @@ public class PMCCNodeView extends NodeView<PMCCNodeModel> {
             }
         }
     }
-    
+
     private static class VerticalLabelUI extends BasicLabelUI {
         /** {@inheritDoc} */
         @Override
@@ -340,21 +343,21 @@ public class PMCCNodeView extends NodeView<PMCCNodeModel> {
             Dimension s = super.getMaximumSize(c);
             return new Dimension(s.height, s.width);
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public Dimension getMinimumSize(final JComponent c) {
             Dimension s = super.getMinimumSize(c);
             return new Dimension(s.height, s.width);
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public Dimension getPreferredSize(final JComponent c) {
             Dimension s = super.getPreferredSize(c);
             return new Dimension(s.height, s.width);
         }
-        
+
         /** {@inheritDoc} */
         @Override
         protected String layoutCL(final JLabel label,
@@ -368,7 +371,7 @@ public class PMCCNodeView extends NodeView<PMCCNodeModel> {
             return super.layoutCL(
                     label, fontMetrics, text, icon, viewRC, iconRC, textRC);
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public void paint(final Graphics g, final JComponent c) {
@@ -378,70 +381,70 @@ public class PMCCNodeView extends NodeView<PMCCNodeModel> {
             super.paint(g2D, c);
         }
     }
-    
+
     private static class LegendCorner extends ColorRender {
         private static final DataColumnSpec SPEC;
         private static final DataCell MIN = new DoubleCell(-1.0);
         private static final DataCell MAX = new DoubleCell(1.0);
         static {
-            DataColumnSpecCreator c = 
+            DataColumnSpecCreator c =
                 new DataColumnSpecCreator("ignored", DoubleCell.TYPE);
             c.setDomain(new DataColumnDomainCreator(MIN, MAX).createDomain());
             SPEC = c.createSpec();
         }
-        
+
         /** Just some initialization is done here. */
         public LegendCorner() {
             super(SPEC);
             setPaintCrossForMissing(true);
             setIconTextGap(6);
         }
-        
+
         /** {@inheritDoc} */
         @Override
         protected int getIconHeight() {
             return getFont().getSize();
         }
-        
+
         /** {@inheritDoc} */
         @Override
         protected int getIconWidth() {
             return getIconHeight();
         }
-        
+
         private void setShowMin() {
             setValue(MIN);
             setTextInternal("corr = -1");
         }
-        
+
         private void setShowMax() {
             setValue(MAX);
             setTextInternal("corr = +1");
         }
-        
+
         private void setShowMissing() {
             setValue(DataType.getMissingCell());
             setTextInternal("corr = n/a");
         }
     }
-    
+
     private static class LegendCornerAll extends DefaultTableCellRenderer {
-        
+
         private final LegendCorner m_delegate = new LegendCorner();
         private boolean m_paintLegend = true;
-        
+
         /** {@inheritDoc} */
         @Override
         public Component getTableCellRendererComponent(
-                final JTable table, final Object value, 
-                final boolean isSelected, final boolean hasFocus, 
+                final JTable table, final Object value,
+                final boolean isSelected, final boolean hasFocus,
                 final int row, final int column) {
             m_delegate.getTableCellRendererComponent(
                     table, value, isSelected, hasFocus, row, column);
             return super.getTableCellRendererComponent(
                     table, value, isSelected, hasFocus, row, column);
         }
-        
+
         /** {@inheritDoc} */
         @Override
         protected void paintComponent(final Graphics g) {
@@ -463,16 +466,16 @@ public class PMCCNodeView extends NodeView<PMCCNodeModel> {
                 super.paintComponent(g);
             }
         }
-        
+
         private void setPaintLegend(final boolean paintIt) {
             m_paintLegend = paintIt;
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public void setBorder(final Border border) {
             super.setBorder(UIManager.getBorder("TableHeader.cellBorder"));
         }
-        
+
     }
 }

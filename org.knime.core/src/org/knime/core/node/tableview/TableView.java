@@ -537,9 +537,10 @@ public class TableView extends JScrollPane {
             v = getContentTable().getTableHeader();
         }
         if (v != null) {
-            Dimension d = v.getSize();
+            v.setSize(getSize().width, newHeight);
+            // must clone object as it could be used some other place, too.
+            Dimension d = new Dimension(v.getPreferredSize());
             d.height = newHeight;
-            v.setSize(d);
             v.setPreferredSize(d);
         }
     }
