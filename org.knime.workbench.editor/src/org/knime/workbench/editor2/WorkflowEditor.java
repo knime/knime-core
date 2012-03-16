@@ -65,7 +65,6 @@ import java.util.regex.Pattern;
 import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 
-import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IResourceChangeEvent;
 import org.eclipse.core.resources.IResourceChangeListener;
 import org.eclipse.core.resources.IResourceDelta;
@@ -113,6 +112,8 @@ import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.preference.IPreferenceStore;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -190,6 +191,7 @@ import org.knime.workbench.editor2.actions.PasteActionContextMenu;
 import org.knime.workbench.editor2.actions.PauseLoopExecutionAction;
 import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.ResumeLoopAction;
+import org.knime.workbench.editor2.actions.RevealMetaNodeTemplateAction;
 import org.knime.workbench.editor2.actions.SaveAsMetaNodeTemplateAction;
 import org.knime.workbench.editor2.actions.SetNodeDescriptionAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
@@ -222,7 +224,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         CommandStackListener, ISelectionListener, WorkflowListener,
         IResourceChangeListener, NodeStateChangeListener,
         NodePropertyChangedListener, ISaveablePart2, NodeUIInformationListener,
-        EventListener {
+        EventListener, IPropertyChangeListener {
 
     /** Id as defined in plugin.xml. */
     public static final String ID = "org.knime.workbench.editor.WorkflowEditor";
@@ -360,6 +362,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         // add this editor as a listener to WorkflowEvents
         m_manager.addListener(this);
         m_manager.addNodePropertyChangedListener(this);
+        IPreferenceStore prefStore =
+            KNIMEUIPlugin.getDefault().getPreferenceStore();
+        prefStore.addPropertyChangeListener(this);
 
         queueAfterOpen();
     }
@@ -473,6 +478,10 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
 
         getCommandStack().removeCommandStackListener(this);
+        IPreferenceStore prefStore =
+            KNIMEUIPlugin.getDefault().getPreferenceStore();
+
+        prefStore.removePropertyChangeListener(this);
         super.dispose();
     }
 
@@ -524,6 +533,8 @@ public class WorkflowEditor extends GraphicalEditor implements
             new SaveAsMetaNodeTemplateAction(this);
         AbstractNodeAction checkUpdateMetaNodeLink =
             new CheckUpdateMetaNodeLinkAction(this);
+        AbstractNodeAction revealMetaNodeTemplate
+            = new RevealMetaNodeTemplateAction(this);
         AbstractNodeAction disconnectMetaNodeLink =
             new DisconnectMetaNodeLinkAction(this);
         AbstractNodeAction lockMetaLink = new LockMetaNodeAction(this);
@@ -571,6 +582,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(metaNodeSetName);
         m_actionRegistry.registerAction(defineMetaNodeTemplate);
         m_actionRegistry.registerAction(checkUpdateMetaNodeLink);
+        m_actionRegistry.registerAction(revealMetaNodeTemplate);
         m_actionRegistry.registerAction(disconnectMetaNodeLink);
         m_actionRegistry.registerAction(lockMetaLink);
         m_actionRegistry.registerAction(annotation);
@@ -826,38 +838,38 @@ public class WorkflowEditor extends GraphicalEditor implements
                     // check if the editor should be disposed
                     // non-null if set by workflow runnable above
                     if (m_manager == null) {
-                        if (loadWorflowRunnable.hasLoadingBeenCanceled()) {
-                            final String cancelError =
-                                loadWorflowRunnable.getLoadingCanceledMessage();
-                            SwingUtilities.invokeLater(new Runnable() {
-                                /** {@inheritDoc} */
-                                @Override
-                                public void run() {
-                                    JOptionPane.showMessageDialog(null,
-                                            cancelError,
-                                            "Editor could not be opened",
-                                            JOptionPane.ERROR_MESSAGE);
+                    if (loadWorflowRunnable.hasLoadingBeenCanceled()) {
+                        final String cancelError =
+                            loadWorflowRunnable.getLoadingCanceledMessage();
+                        SwingUtilities.invokeLater(new Runnable() {
+                            /** {@inheritDoc} */
+                            @Override
+                            public void run() {
+                                JOptionPane.showMessageDialog(null,
+                                        cancelError,
+                                        "Editor could not be opened",
+                                        JOptionPane.ERROR_MESSAGE);
 //                                    ErrorDialog.openError(Display
 //                                            .getDefault()
 //                                            .getActiveShell(),
 //                                            "Editor could not be opened",
 //                                            cancelError, null);
 
-                                }
-                            });
-                            Display.getDefault().asyncExec(new Runnable() {
-                                /** {@inheritDoc} */
-                                @Override
-                                public void run() {
-                                    getEditorSite().getPage().closeEditor(
-                                            WorkflowEditor.this, false);
-                                }
-                            });
-                            throw new OperationCanceledException(cancelError);
-                        } else if (loadWorflowRunnable.getThrowable() != null) {
-                            throw new RuntimeException(
-                                    loadWorflowRunnable.getThrowable());
-                        }
+                            }
+                        });
+                        Display.getDefault().asyncExec(new Runnable() {
+                            /** {@inheritDoc} */
+                            @Override
+                            public void run() {
+                                getEditorSite().getPage().closeEditor(
+                                        WorkflowEditor.this, false);
+                            }
+                        });
+                        throw new OperationCanceledException(cancelError);
+                    } else if (loadWorflowRunnable.getThrowable() != null) {
+                        throw new RuntimeException(
+                                loadWorflowRunnable.getThrowable());
+                    }
                     }
                     ProjectWorkflowMap.putWorkflow(m_fileResource, m_manager);
                 }
@@ -1186,45 +1198,19 @@ public class WorkflowEditor extends GraphicalEditor implements
                     + exceptionMessage.toString());
         }
 
-        /** Bug fix #3028 - running this async may lead to deadlock; fixing
-         * this by sync invocation -- to be done better (refresh in
-         * save runnable) on trunk
-         */
-        Display.getDefault().syncExec(new Runnable() {
+        Display.getDefault().asyncExec(new Runnable() {
             @Override
             public void run() {
-                try {
-                    IResource r =
-                            KnimeResourceUtil.getResourceForURI(fileResource);
-                    if (r != null) {
-                        String pName = r.getProject().getName();
-                        monitor.setTaskName("Refreshing " + pName + "...");
-                        r.getProject().refreshLocal(IResource.DEPTH_INFINITE,
-                                monitor);
-                    }
-                } catch (CoreException ce) {
-                    OperationCanceledException oce =
-                            new OperationCanceledException(
-                                    "Workflow was not saved: " + ce.toString());
-                    oce.initCause(ce);
-                    throw oce;
-                }
-            }
-        });
-
-        // mark all sub editors as saved
-        for (IEditorPart subEditor : getSubEditors()) {
-            final WorkflowEditor editor = (WorkflowEditor)subEditor;
-            ((WorkflowEditor)subEditor).setIsDirty(false);
-            Display.getDefault().asyncExec(new Runnable() {
-                @Override
-                public void run() {
-                    if (!Display.getDefault().isDisposed()) {
+                if (!Display.getDefault().isDisposed()) {
+                    // mark all sub editors as saved
+                    for (IEditorPart subEditor : getSubEditors()) {
+                        final WorkflowEditor editor = (WorkflowEditor)subEditor;
+                        ((WorkflowEditor)subEditor).setIsDirty(false);
                         editor.firePropertyChange(IEditorPart.PROP_DIRTY);
                     }
                 }
-            });
-        }
+            }
+        });
 
         monitor.done();
 
@@ -1676,6 +1662,29 @@ public class WorkflowEditor extends GraphicalEditor implements
         return false;
     }
 
+    private void updateGrid() {
+        IPreferenceStore prefStore =
+            KNIMEUIPlugin.getDefault().getPreferenceStore();
+        boolean snapToGrid =
+            prefStore.getBoolean(PreferenceConstants.P_GRID_SNAP_TO);
+        boolean showGrid =
+            prefStore.getBoolean(PreferenceConstants.P_GRID_SHOW);
+        int gridSize =
+            prefStore.getInt(PreferenceConstants.P_GRID_SIZE);
+        if (gridSize == 0) {
+            gridSize = prefStore.getDefaultInt(PreferenceConstants.P_GRID_SIZE);
+        }
+        GraphicalViewer graphicalViewer = getGraphicalViewer();
+        graphicalViewer.setProperty(SnapToGeometry.PROPERTY_SNAP_ENABLED,
+                Boolean.valueOf(snapToGrid));
+        graphicalViewer.setProperty(SnapToGrid.PROPERTY_GRID_ENABLED,
+                Boolean.valueOf(snapToGrid));
+        graphicalViewer.setProperty(SnapToGrid.PROPERTY_GRID_SPACING,
+                new Dimension(gridSize, gridSize));
+        graphicalViewer.setProperty(SnapToGrid.PROPERTY_GRID_VISIBLE,
+                showGrid);
+    }
+
     /*
      * ---------- end of auto-placing and auto-connecting --------------
      */
@@ -1954,5 +1963,17 @@ public class WorkflowEditor extends GraphicalEditor implements
     public void nodeUIInformationChanged(final NodeUIInformationEvent evt) {
         updatePartName();
     }
+
+    /** {@inheritDoc} */
+    @Override
+    public void propertyChange(final PropertyChangeEvent event) {
+        String prop = event.getProperty();
+        if (PreferenceConstants.P_GRID_SNAP_TO.equals(prop)
+                || PreferenceConstants.P_GRID_SHOW.equals(prop)
+                || PreferenceConstants.P_GRID_SIZE.equals(prop)) {
+            updateGrid();
+        }
+    }
+
 
 }

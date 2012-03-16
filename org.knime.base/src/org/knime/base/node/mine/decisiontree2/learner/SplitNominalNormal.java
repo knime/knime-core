@@ -121,7 +121,7 @@ public class SplitNominalNormal extends SplitNominal {
         // count the given minimum number of data rows
         int numSatisfyingPartitions = 0;
         for (double count : partitionCounter) {
-            if (count > minObjectsCount) {
+            if (count >= minObjectsCount) {
                 numSatisfyingPartitions++;
                 if (numSatisfyingPartitions >= 2) {
                     break;

@@ -160,7 +160,7 @@ class DataHiliteOutputContainer {
     private void addRow(final DataRow row) {
         // get left input row
         DataRow left = null;
-        int leftIndex = OutputDataRow.getLeftIndex(row);
+        int leftIndex = OutputRow.getLeftIndex(row);
         if (leftIndex >= 0) {
             if (m_leftIndex > leftIndex) {
                 m_leftIter.close();
@@ -195,7 +195,7 @@ class DataHiliteOutputContainer {
         }
         RowKey joinedKey =
                 m_rowKeyFactory.createJoinedKey(left.getKey(),
-                        OutputDataRow.getRightKey(row));
+                        OutputRow.getRightKey(row));
         DataRow joinedRow = new DefaultRow(joinedKey, cells);
 
         m_dc.addRowToTable(joinedRow);
@@ -228,7 +228,7 @@ class DataHiliteOutputContainer {
     }
 
     /**
-     * An InputDataRow with solely missing data cells, needed for left and right
+     * An InputRow with solely missing data cells, needed for left and right
      * outer join.
      *
      * @author Heiko Hofer
@@ -277,7 +277,7 @@ class DataHiliteOutputContainer {
 
     /**
      * Adds the rows of the given table to the container. The rows are
-     * supposed to be created with the factory methods in OutputDataRow.
+     * supposed to be created with the factory methods in OutputRow.
      *
      * @param table The table with the rows that should be added.
      * @param exec The execution context
@@ -293,7 +293,7 @@ class DataHiliteOutputContainer {
         double progress = 0;
         double inc = 1.0 / table.getRowCount();
 
-        Comparator<DataRow> joinComp = OutputDataRow.createRowComparator();
+        Comparator<DataRow> joinComp = OutputRow.createRowComparator();
         Iterator<DataRow> iter = table.iterator();
         if (!iter.hasNext()) {
             return;

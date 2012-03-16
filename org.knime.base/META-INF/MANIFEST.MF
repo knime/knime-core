@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Base Nodes
 Bundle-SymbolicName: org.knime.base;singleton:=true
-Bundle-Version: 2.5.3.qualifier
+Bundle-Version: 2.6.0.qualifier
 Bundle-ClassPath: knime-base.jar,lib/Jama-1.0.2.jar
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: Jama,
@@ -264,6 +264,7 @@ Export-Package: Jama,
  org.knime.base.util.pmml.samples
 Require-Bundle: org.knime.core;bundle-version="[2.5.0,3.0.0)";visibility:=reexport,
  org.apache.commons.math;bundle-version="[2.1.0,2.2.0)",
- org.apache.commons.httpclient;bundle-version="[3.1.0,3.2.0)"
+ org.apache.commons.httpclient;bundle-version="[3.1.0,3.2.0)",
+ org.apache.commons.lang;bundle-version="[2.4.0,2.5.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Eclipse-BuddyPolicy: dependent

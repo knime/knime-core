@@ -80,6 +80,18 @@ public class KNIMEHelpFilesBuilder implements IApplication {
 
     private static final String DESTINATION_ARG = "-destination";
 
+    private static void printUsage() {
+        System.err.println("Usage: KNIMEHelpFilesBuilder options");
+        System.err.println("Allowed options are:");
+        System.err.println("\t-pluginPattern pattern : "
+                + "a regular expression for which plug-ins documenation"
+                + "should be built; if missing, a wizard for selecting"
+                + " some plug-ins is opened");
+        System.err.println("\t-destination dir : directory where "
+                + "the result should be written to; if missing, files"
+                + "are directly written into the plug-in");
+    }
+
     /**
      *
      * {@inheritDoc}
@@ -98,6 +110,10 @@ public class KNIMEHelpFilesBuilder implements IApplication {
                     pluginPattern = Pattern.compile(args[i + 1]);
                 } else if (args[i].equals(DESTINATION_ARG)) {
                     destinationDir = new File(args[i + 1]);
+                } else if (args[i].equals("-help")) {
+                    printUsage();
+                    return EXIT_OK;
+
                 }
             }
         }
