@@ -13,6 +13,10 @@
         <public name="knime.source">
             <attribute name="eclipse.build.source" />
         </public>
+        <public name="knime.libs">
+            <attribute name="java.binaries" />
+            <attribute name="bin.includes" />
+        </public>
     </groups>
     <artifacts>
         <private name="knime.constants.java" path="src/org/knime/core/node/KNIMEConstants.java" />
