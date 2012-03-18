@@ -75,6 +75,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.workflow.FlowVariable;
+import org.knime.core.util.FileUtil;
 import org.knime.testing.node.differNode.TestEvaluationException;
 
 /**
@@ -241,7 +242,7 @@ public class DifferFileNodeModel extends NodeModel {
 		}
         try {
             URL url = new URL(loc);
-            return url.openStream();
+            return FileUtil.openStreamWithTimeout(url);
         } catch (Exception e) {
             // see if they specified a file without giving the protocol
             File file = new File(loc);
