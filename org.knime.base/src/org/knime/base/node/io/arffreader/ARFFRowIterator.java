@@ -67,6 +67,7 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.FileUtil;
 import org.knime.core.util.tokenizer.Tokenizer;
 import org.knime.core.util.tokenizer.TokenizerSettings;
 
@@ -128,7 +129,7 @@ public class ARFFRowIterator extends RowIterator {
         m_numMsgWrongFormat = 0;
         m_numMsgMissVal = 0;
 
-        InputStream inStream = m_file.openStream();
+        InputStream inStream = FileUtil.openStreamWithTimeout(m_file);
         BufferedReader fReader =
                 new BufferedReader(new InputStreamReader(inStream));
 

@@ -74,6 +74,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.util.FileUtil;
 
 /** Model for Read PNG node.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
@@ -200,7 +201,7 @@ final class ReadPNGFromURLNodeModel extends NodeModel {
      */
     private DataCell toPNGCell(final String urlValue) throws IOException {
         URL url = new URL(urlValue);
-        InputStream in = url.openStream();
+        InputStream in = FileUtil.openStreamWithTimeout(url);
         try {
             PNGImageContent pngImageContent = new PNGImageContent(in);
             return pngImageContent.toImageCell();
