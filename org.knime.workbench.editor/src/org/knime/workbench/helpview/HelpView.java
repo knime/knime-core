@@ -50,7 +50,6 @@
  */
 package org.knime.workbench.helpview;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashSet;
@@ -77,6 +76,7 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.MetaNodeTemplate;
 import org.knime.workbench.repository.model.NodeTemplate;
+import org.knime.workbench.repository.util.DynamicNodeDescriptionCreator;
 
 /**
  * View displaying the description of the selected nodes. The description is
@@ -186,18 +186,10 @@ public class HelpView extends ViewPart implements ISelectionListener,
                 content.append("<html><head>");
                 content.append("<meta http-equiv=\"content-type\" " +
                         "content=\"text/html; charset=UTF-8\"></meta>");
-                try {
-                    // include stylesheet
-                    content.append("<style>");
-                    String pluginPath = DynamicNodeDescriptionCreator
-                        .instance().getPluginDir().getPath();
-                    pluginPath = pluginPath.replaceAll(" ", "%20");
-                    pluginPath = pluginPath + "/"
-                        + DynamicNodeDescriptionCreator.REL_STYLE_PATH;
-                    content.append(
-                            "@import url(\"file:///" + pluginPath + "\");");
-                    content.append("</style>");
-                } catch (IOException ioe) {}
+                // include stylesheet
+                content.append("<style>");
+                content.append(DynamicNodeDescriptionCreator.instance().getCss());
+                content.append("</style>");
                 content.append("</head><body><dl>");
             }
             // Keep a list of already displayed objects (this works as long as

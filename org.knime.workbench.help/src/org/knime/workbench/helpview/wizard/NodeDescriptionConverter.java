@@ -50,7 +50,7 @@
  */
 package org.knime.workbench.helpview.wizard;
 
-import static org.knime.workbench.helpview.DynamicNodeDescriptionCreator.htmlString;
+import static org.knime.workbench.repository.util.DynamicNodeDescriptionCreator.htmlString;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -88,7 +88,6 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
-import org.knime.workbench.helpview.DynamicNodeDescriptionCreator;
 import org.knime.workbench.helpview.HelpviewPlugin;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.repository.model.Category;
@@ -96,6 +95,7 @@ import org.knime.workbench.repository.model.IRepositoryObject;
 import org.knime.workbench.repository.model.MetaNodeTemplate;
 import org.knime.workbench.repository.model.NodeTemplate;
 import org.knime.workbench.repository.model.Root;
+import org.knime.workbench.repository.util.DynamicNodeDescriptionCreator;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -110,9 +110,6 @@ import org.w3c.dom.NodeList;
 public final class NodeDescriptionConverter {
     private final static NodeLogger LOGGER = NodeLogger
             .getLogger(NodeDescriptionConverter.class);
-
-    /** Relative path from plugin dir to stylesheet. */
-    static final String REL_STYLE_PATH = "/style.css";
 
     private static final String NODES = "$nodes";
 

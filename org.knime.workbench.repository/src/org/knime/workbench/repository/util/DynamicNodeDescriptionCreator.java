@@ -48,17 +48,14 @@
  * History
  *   16.08.2007 (Fabian Dill): created
  */
-package org.knime.workbench.helpview;
+package org.knime.workbench.repository.util;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.Set;
 
-import org.eclipse.core.runtime.FileLocator;
-import org.eclipse.core.runtime.Path;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NodeContainer;
@@ -85,41 +82,26 @@ import org.knime.workbench.repository.model.NodeTemplate;
  * @author Fabian Dill, University of Konstanz
  */
 public final class DynamicNodeDescriptionCreator {
-
     private static final DynamicNodeDescriptionCreator instance =
             new DynamicNodeDescriptionCreator();
-
-    /** Relative path from plugin dir to stylesheet. */
-    public static final String REL_STYLE_PATH = "style.css";
 
     private final String m_css;
 
     private DynamicNodeDescriptionCreator() {
-        URL cssUrl =
-                FileLocator.find(HelpviewPlugin.getDefault().getBundle(),
-                        new Path(REL_STYLE_PATH), null);
-        if (cssUrl == null) {
-            throw new RuntimeException("Could not locate '" + REL_STYLE_PATH
-                    + "' in "
-                    + HelpviewPlugin.getDefault().getBundle().getSymbolicName());
-        }
         try {
-            BufferedReader in =
-                    new BufferedReader(new InputStreamReader(
-                            cssUrl.openStream()));
+            InputStream is = getClass().getResourceAsStream("style.css");
+
+            BufferedReader in = new BufferedReader(new InputStreamReader(is));
             String line;
             StringBuilder buf = new StringBuilder();
             while ((line = in.readLine()) != null) {
                 buf.append(line).append('\n');
             }
             m_css = buf.toString();
+            in.close();
         } catch (IOException ex) {
             throw new RuntimeException(
-                    "Could not open '"
-                            + REL_STYLE_PATH
-                            + "' in "
-                            + HelpviewPlugin.getDefault().getBundle()
-                                    .getSymbolicName(), ex);
+                    "Could not open 'style.css' for reading", ex);
         }
     }
 
@@ -135,7 +117,7 @@ public final class DynamicNodeDescriptionCreator {
      *
      * @return the HTML header with stylesheet import and opened body tag.
      */
-    String getHeader() {
+    public String getHeader() {
         StringBuilder content = new StringBuilder();
         content.append("<html><head>");
         // include stylesheet
@@ -261,8 +243,8 @@ public final class DynamicNodeDescriptionCreator {
      *            otherwise the entire full description is added
      * @param bld the buffer to add the one line strings to.
      */
-    public void addDescription(final NodeContainer nc, final boolean useSingleLine,
-            final StringBuilder bld) {
+    public void addDescription(final NodeContainer nc,
+            final boolean useSingleLine, final StringBuilder bld) {
 
         if (!(nc instanceof SingleNodeContainer)) {
             addSubWorkflowDescription(nc, useSingleLine, bld);
@@ -319,9 +301,10 @@ public final class DynamicNodeDescriptionCreator {
             bld.append("<h1>");
             bld.append(nc.getName());
             bld.append("</h1>");
-            if (nc.getCustomDescription() != null) {
+            if (nc.getNodeAnnotation() != null) {
                 bld.append("<h2>Description:</h2>");
-                bld.append("<p>" + nc.getCustomDescription() + "</p>");
+                bld.append("<p>" + nc.getNodeAnnotation().getText() + "</p>");
+
             }
             bld.append("<h2>Contained nodes: </h2>");
             WorkflowManager wfm = (WorkflowManager)nc;
@@ -342,19 +325,6 @@ public final class DynamicNodeDescriptionCreator {
             bld.append("</dl>");
             bld.append("</dd>");
         }
-    }
-
-    /**
-     *
-     * @return path of this plugin
-     * @throws IOException if something went wrong
-     */
-    public File getPluginDir() throws IOException {
-        URL devWorkSpace =
-                FileLocator.toFileURL(FileLocator.find(HelpviewPlugin
-                        .getDefault().getBundle(), new Path("/"), null));
-        File loc = new File(devWorkSpace.getFile().toString());
-        return loc;
     }
 
     /**
@@ -441,5 +411,14 @@ public final class DynamicNodeDescriptionCreator {
         } else {
             return s;
         }
+    }
+
+    /**
+     * Returns the CSS style used for formatting the node descriptions.
+     *
+     * @return a CSS style
+     */
+    public String getCss() {
+        return m_css;
     }
 }
