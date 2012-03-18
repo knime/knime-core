@@ -234,6 +234,7 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
      * the "important" component, e.g. excluding an overview or controls.
      * @return The component being rendered when the view is exported as image,
      *         never null.
+     * @since 2.6
      */
     protected Container getExportComponent() {
         return m_frame.getContentPane();

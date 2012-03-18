@@ -195,7 +195,7 @@ public final class NodeViewExport {
      * container is retrieved from {@link NodeView#getExportComponent()}.
      * @param view The node view.
      * @return see {@link #createNewMenu(Container)}.
-     * @since v2.6
+     * @since 2.6
      */
     public static JMenuItem createNewMenu(final NodeView<?> view) {
         return createNewMenu(new ViewContainerProvider() {

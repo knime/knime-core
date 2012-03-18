@@ -319,7 +319,7 @@ public final class ColumnRearranger {
      * is further customized through one of the {@link #remove(int...)} or
      * {@link #append(CellFactory)} methods.
      * @return the number of currently included columns
-     * @since v2.6
+     * @since 2.6
      */
     public int getColumnCount() {
         return m_includes.size();
