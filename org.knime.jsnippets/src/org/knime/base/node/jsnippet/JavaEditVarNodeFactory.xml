@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./java_editvar.png" type="Manipulator">
+    <name>Java Edit Variable (Heiko)</name>
+    <shortDescription>Edit a flow variable using java code.</shortDescription>
+    <fullDescription>
+        <intro>
+            <p>
+              Edit a flow variable using java code. The node is analogous to
+              the Java Snippet node: In the central panel, added java code
+              to add or modify variables. The variables available
+              at the input are listed on the left.
+            </p>
+        </intro>
+        <option name="Flow Variable List">
+          The list contains the flow variables that are currently available at
+          the node input. Double clicking any of the entries will insert the
+          respective identifier at the current cursor position (replacing the
+          selection, if any).
+        </option>
+        <option name="Snippet text area">
+          Enter your java code here. You can access input flow
+          variables by defining them in the <b>Snippet fields for input</b>. A
+          second way is to use the method <i>getFlowVariable(name, type)</i> 
+          where <i>name</i> is the name of the flow variable, respectively. 
+          You can use the following values for the <i>type</i> parameter. <br/>          
+          <i>String</i> : String <br/>
+          <i>Int</i>  : Integer <br/>
+          <i>Double</i> : Double <br/>
+          <p>Please define output flow variables by adding columns
+          to <b>Snippet fields for output</b>. Values assigned to those field
+          in the snippet text area will show up at the output.
+          </p>
+          <p>The snippet allows to define custom global variables and
+          custom imports.</p>
+        </option>
+        <option name="Snippet fields for input">
+          Define system input fields for the snippet text area. Every field 
+          represents a flow variable of the input. 
+        </option>
+        <option name="Snippet fields for output">
+          Define flow variables that will be added to stack of flow variables
+          at the output.
+        </option>
+    </fullDescription>
+    <ports>
+        <inPort name="Input variables (optional)" index="0">
+            Input variables (optional).</inPort>
+        <outPort name="Output variables" index="0">
+            Output variables.
+        </outPort>
+    </ports>
+</knimeNode>

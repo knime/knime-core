@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="filter_java.png" type="Manipulator">
+    <name>Java Snippet Row Filter</name>
+    <shortDescription>Java Snippet based Row Filter</shortDescription>
+    <fullDescription>
+        <intro>
+            <p>
+              Java Snippet based Row Filter. Use the java editor to enter a
+              boolean expression that is used to define whether an input row
+              is passed to the output, whereby <tt>true</tt> defines a match, 
+              i.e. the current row is passed to the output. For instance, to 
+              filter for every other row, you could use an expression such as
+            </p>
+            <pre>
+return $$ROWINDEX$$ % 2 == 0;
+            </pre>
+            <p>
+              This node supports missing values. If the corresponding check box 
+              is set missing values are represented as <tt>null</tt> values. 
+              If the check box is not set and the snippet accesses a field whose
+              value is missing, the expression evaluates to <tt>false</tt> 
+              (no match). It also evaluates to <tt>false</tt> in case the 
+              snippet throws an exception (other than <tt>Abort</tt>).
+            </p>
+            <p>
+              You can halt the entire execution by throwing an <tt>Abort</tt>
+              exception such as <tt>throw new Abort(message);</tt>.
+            </p>
+        </intro>
+        <option name="Column List">
+          The list contains the column that are available in the input table.
+          Double click any of the column names to insert the respective field
+          in the expression editor. It will replace your current selection or
+          simply insert at the current caret position.
+        </option>
+        <option name="Flow Variable List">
+          The list contains the flow variables that are currently available at
+          the node input. Double clicking any of the entries will insert the
+          respective identifier at the current cursor position (replacing the
+          selection, if any).
+        </option>
+        <option name="Global Variable Declaration">
+          Define global variables here. These variables are available during 
+          the execution and they are also modifiable. Names starting with '_'
+          (underscore) are discouraged due to potential name conflicts with 
+          internally used variables.
+        </option>
+        <option name="Method Body">
+          Enter your java code here (the entire source will be wrapped in a
+          method). You can add the name of a variables 
+          by double-clicking its name in the left list. Note that numeric 
+          (double-compatible) variables will be handled as <tt>Double</tt>,
+          int-compatible variables as <tt>Integer</tt> and any other varaible
+          type as <tt>String</tt>. 
+        </option>
+        <option name="Insert Missing As Null">
+          If selected, missing values in the input table will be represented
+          by <tt>null</tt> in the expression. It is your responsibility to check
+          for <tt>null</tt> in this case (the fields are all real classes, 
+          so even <tt>int</tt> and <tt>double</tt> are represented as their
+          respective class <tt>Integer</tt> and <tt>Double</tt>). If unselected,
+          a missing value in the relevant input cell will immediately produce
+          a <tt>false</tt> match. 
+        </option>
+        <option name="Compile on close">
+          If unchecked, the syntax test is skipped when the settings are 
+          applied to the model, allowing the dialog to close even if there are
+          syntax errors encountered. This enables the user to temporarily close
+          the dialog, investigate the input table and then return to the
+          almost-complete-and-running snippet code in the dialog. The node will
+          not be executable (it will be red) if the code contains syntax errors.
+          This option is only for convenience, it does not have any effect on
+          the output of this node.
+        </option>
+    </fullDescription>
+    <ports>
+        <inPort name="Input data" index="0">Input data to be split.</inPort>
+        <outPort name="True match" index="0">Input data for which the expression
+        evaluated to <tt>true</tt>.
+        </outPort>
+    </ports>
+</knimeNode>

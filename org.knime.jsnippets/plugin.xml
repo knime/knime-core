@@ -7,7 +7,39 @@
             category-path="/manipulation/column/column-transform"
             factory-class="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeFactory"
             id="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeFactory">
-      </node>          
+      </node>
+      <node
+            category-path="/misc/java-snippet"
+            factory-class="org.knime.base.node.jsnippet.JavaSnippetNodeFactory"
+            id="org.knime.base.node.jsnippet.JavaSnippetNodeFactory">
+      </node>
+      <node
+            category-path="/flowcontrol/variables"
+            factory-class="org.knime.base.node.jsnippet.JavaEditVarNodeFactory"
+            id="org.knime.base.node.jsnippet.JavaEditVarNodeFactory">
+      </node>
+      <node
+            category-path="/misc/java-snippet"
+            factory-class="org.knime.ext.sun.nodes.script.JavaScriptingNodeFactory"
+            id="org.knime.ext.sun.nodes.script.JavaScriptingNodeFactory"/>
+      <node
+            category-path="/flowcontrol/variables"
+            factory-class="org.knime.ext.sun.nodes.script.node.editvar.JavaEditVariableNodeFactory"
+            id="org.knime.ext.sun.nodes.script.node.editvar.JavaEditVariableNodeFactory"/>
+      <node
+            category-path="/flowcontrol/switches"
+            factory-class="org.knime.ext.sun.nodes.script.node.ifswitch.JavaIfSwitchNodeFactory"
+            id="org.knime.ext.sun.nodes.script.node.ifswitch.JavaIfSwitchNodeFactory"/>
+      <node
+            category-path="/misc/java-snippet"
+            factory-class="org.knime.ext.sun.nodes.script.node.rowsplitter.JavaRowSplitterNodeFactory"
+            id="org.knime.ext.sun.nodes.script.node.rowsplitter.JavaRowSplitterNodeFactory">
+      </node>
+      <node
+            category-path="/misc/java-snippet"
+            factory-class="org.knime.ext.sun.nodes.script.node.rowfilter.JavaRowFilterNodeFactory"
+            id="org.knime.ext.sun.nodes.script.node.rowfilter.JavaRowFilterNodeFactory">
+      </node>
    </extension>
 
 </plugin>

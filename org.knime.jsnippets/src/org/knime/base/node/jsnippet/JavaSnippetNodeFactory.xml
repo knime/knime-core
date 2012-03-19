@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./java_snippet.png" type="Manipulator">
+    <name>Java Snippet (Heiko)</name>
+    <shortDescription>Calculates a new columns based on java code snippets.</shortDescription>
+    <fullDescription>
+        <intro>
+            <p>This node allows you to execute arbitrary java code to create
+            a new columns or to replace an existing ones. Enter the java code in 
+            the text area.</p>
+        </intro>
+        <option name="Column List">
+          The list contains the columns that are available in the input table.
+          Double click any of the column names to insert the respective field
+          in the expression editor. It will replace your current selection or
+          simply insert at the current caret position.
+        </option>
+        <option name="Flow Variable List">
+          The list contains the flow variables that are currently available at
+          the node input. Double clicking any of the entries will insert the
+          respective identifier at the current cursor position (replacing the
+          selection, if any).
+        </option>
+        <option name="Snippet text area">
+          Enter your java code here. You can access input columns or flow
+          variables by defining them in the <b>Snippet fields for input</b>. A
+          second way is to use the methods <i>getCell(name, type)</i> or 
+          <i>getFlowVariable(name, type)</i> where <i>name</i> is the name of
+          the input column or the flow variable, respectively. You can use
+          the following values for the <i>type</i> parameter. <br/>          
+          <i>String</i> : String (f)<br/>
+          <i>Int</i>  : Integer (f)<br/>
+          <i>Double</i> : Double (f)<br/>
+          <i>Long</i> : Long<br/>
+          <i>Boolean</i> : Boolean<br/>
+          (f) These Types can be used for flow variables.
+          <p>Please define output columns and flow variables by adding columns
+          to <b>Snippet fields for output</b>. Values assigned to those field
+          in the snippet text area will show up at the output.
+          </p>
+          <p>The snippet allows to define custom global variables and
+          custom imports.</p>
+        </option>
+        <option name="Snippet fields for input">
+          Define system input fields for the snippet text area. Every field will 
+          be populated with the data of the defined input during execution. 
+        </option>
+        <option name="Snippet fields for output">
+          Define output, either columns or flow variables. 
+        </option>
+    </fullDescription>
+    <ports>
+        <inPort name="Any input table" index="0">Input table.</inPort>
+        <outPort name="Appended table" index="0">Input table with an additional 
+        or replaced columns.
+        </outPort>
+    </ports>
+</knimeNode>
