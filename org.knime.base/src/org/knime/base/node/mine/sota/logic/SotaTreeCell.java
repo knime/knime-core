@@ -50,16 +50,16 @@
  */
 package org.knime.base.node.mine.sota.logic;
 
+import java.io.Serializable;
+import java.text.DecimalFormat;
+import java.util.ArrayList;
+
 import org.knime.base.node.mine.sota.view.interaction.Hiliteable;
 import org.knime.base.node.mine.sota.view.interaction.Selectable;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
-
-import java.io.Serializable;
-import java.text.DecimalFormat;
-import java.util.ArrayList;
 
 /**
  *
@@ -91,14 +91,6 @@ public class SotaTreeCell implements Hiliteable, Selectable,
     private static final String CFG_KEY_DATA_ID = "DataId";
 
     private static final String CFG_KEY_ROW_KEY = "RowKey";
-
-    private static final String CFG_KEY_START_X = "StartX";
-
-    private static final String CFG_KEY_END_X = "EndX";
-
-    private static final String CFG_KEY_START_Y = "StartY";
-
-    private static final String CFG_KEY_END_Y = "EndY";
 
     /**
      * Default cell class.
@@ -496,6 +488,7 @@ public class SotaTreeCell implements Hiliteable, Selectable,
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isHilited() {
         return m_hilited;
     }
@@ -503,6 +496,7 @@ public class SotaTreeCell implements Hiliteable, Selectable,
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setHilited(final boolean hilit) {
         setHilitedRec(this, hilit);
     }
@@ -594,6 +588,7 @@ public class SotaTreeCell implements Hiliteable, Selectable,
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isSelected() {
         return m_selected;
     }
@@ -601,6 +596,7 @@ public class SotaTreeCell implements Hiliteable, Selectable,
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setSelected(final boolean select) {
         setSelectedRec(this, select);
     }
