@@ -1081,6 +1081,11 @@
             factory-class="org.knime.base.node.meta.looper.LoopStartIntervalNodeFactory"
             id="org.knime.base.node.meta.looper.LoopStartIntervalNodeFactory">
       </node>
+      <node
+            category-path="/flowcontrol/loopsupport"
+            factory-class="org.knime.base.node.flowcontrol.breakpoint.BreakpointNodeFactory"
+            id="org.knime.base.node.flowcontrol.breakpoint.BreakpointNodeFactory">
+      </node>
 
       <node
             after="org.knime.base.node.preproc.pivot.PivotNodeFactory"
