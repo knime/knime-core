@@ -433,11 +433,11 @@ public final class JavaSnippet {
         GuardedDocument doc = new GuardedDocument(
                 SyntaxConstants.SYNTAX_STYLE_JAVA);
         try {
-            GuardedSection imports = doc.addGuardedSection(
+            doc.addGuardedSection(
                     GUARDED_IMPORTS, doc.getLength());
             doc.insertString(doc.getLength(),
                     " \n", null);
-            GuardedSection fields = doc.addGuardedSection(
+            doc.addGuardedSection(
                     GUARDED_FIELDS, doc.getLength());
             doc.insertString(doc.getLength(),
                     " \n", null);
