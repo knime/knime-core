@@ -44,31 +44,100 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 19, 2012 (hornm): created
  */
 package org.knime.core.node;
 
+import java.util.Properties;
+
 /**
- * 
+ *
  * @author hornm, University of Konstanz
+ * @param <T> the node model of the factory
  */
 public abstract class DynamicNodeFactory<T extends NodeModel> extends
-		NodeFactory<T> {
+        NodeFactory<T> {
+    /**
+     * Key for the property that contains the {@link NodeSetFactory} that
+     * created this DynamicNodeFactory.
+     */
+    private static final String NODE_SET_FACTORY_KEY = "NodeSetFactory";
 
-	public DynamicNodeFactory() {
+    /** Key for the after-id property. */
+    private static final String AFTER_ID_KEY = "AfterId";
 
-	}
+    /** Key for the after-id property. */
+    private static final String NODE_TYPE_KEY = "NodeType";
 
-	public abstract String getCategory();
+    /** Key for the category property. */
+    private static final String CATEGORY_KEY = "Category";
 
-	public String getPreviousCategory() {
-		return "";
-	}
+    /**
+     * Creates a new dynamic node factory. Additional properties should be set
+     * later by invoking {@link #setAdditionalProperties(Properties)}.
+     */
+    public DynamicNodeFactory() {
+        super(false);
+    }
 
-	public String getNodeType() {
-		return "other";
-	}
+    /**
+     * @return the category the node associated with this node factory belongs
+     *         to
+     */
+    public String getCategory() {
+        return m_properties.getProperty(CATEGORY_KEY);
+    }
 
+    /**
+     * @param category the category to set
+     */
+    public void setCategory(final String category) {
+        m_properties.setProperty(CATEGORY_KEY, category);
+    }
+
+    /**
+     * @return the ID after which this factory's node is sorted in
+     */
+    public String getAfterID() {
+        return m_properties.getProperty(AFTER_ID_KEY);
+    }
+
+    /**
+     * @param afterId the afterId to set
+     */
+    public void setAfterID(final String afterId) {
+        m_properties.setProperty(AFTER_ID_KEY, afterId);
+    }
+
+    /**
+     * @return the NodeType of this factory's node
+     */
+    public String getNodeType() {
+        return m_properties.getProperty(NODE_TYPE_KEY);
+    }
+
+    /**
+     * @param type the node type to set
+     */
+    public void setNodeType(final String type) {
+        m_properties.setProperty(NODE_TYPE_KEY, type);
+    }
+
+    /**
+     * @return the fully qualified class name of the {@link NodeSetFactory} that
+     *      created this DynamicNodeFactory.
+     */
+    public String getNodeSetFactory() {
+        return m_properties.getProperty(NODE_SET_FACTORY_KEY);
+    }
+
+    /**
+     * @param nodeSetFactory the fully qualified class name of the
+     *          {@link NodeSetFactory} to set
+     */
+    public void setNodeSetFactory(final String nodeSetFactory) {
+        m_properties.setProperty(NODE_SET_FACTORY_KEY, nodeSetFactory);
+    }
 }

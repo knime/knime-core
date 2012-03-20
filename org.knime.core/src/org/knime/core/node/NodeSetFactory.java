@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 19, 2012 (hornm): created
  */
@@ -53,11 +53,20 @@ package org.knime.core.node;
 import java.util.Collection;
 
 /**
- * 
+ *
  * @author hornm, University of Konstanz
  */
 public interface NodeSetFactory {
 
+	/**
+	 * @return all node factories of this NodeSetFactory
+	 */
 	Collection<DynamicNodeFactory> getNodeFactorySet();
+
+    /**
+     * @param id the id of the node factory
+     * @return the node factory
+     */
+    Class<NodeFactory<? extends NodeModel>> getNodeFactory(String id);
 
 }

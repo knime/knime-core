@@ -51,7 +51,9 @@
 package org.knime.workbench.editor2;
 
 import org.eclipse.gef.requests.CreationFactory;
+import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.NodeFactory;
+import org.knime.workbench.repository.model.DynamicNodeTemplate;
 import org.knime.workbench.repository.model.NodeTemplate;
 
 /**
@@ -68,7 +70,7 @@ import org.knime.workbench.repository.model.NodeTemplate;
  * @author Florian Georg, University of Konstanz
  */
 public class NodeFromNodeTemplateCreationFactory implements CreationFactory {
-    private Class<? extends NodeFactory> m_factory;
+    private final NodeTemplate m_template;
 
     /**
      * New factory for the given template.
@@ -76,8 +78,7 @@ public class NodeFromNodeTemplateCreationFactory implements CreationFactory {
      * @param template The template from the repository.
      */
     public NodeFromNodeTemplateCreationFactory(final NodeTemplate template) {
-        m_factory = template.getFactory();
-
+        m_template = template;
     }
 
     /**
@@ -88,7 +89,13 @@ public class NodeFromNodeTemplateCreationFactory implements CreationFactory {
     @Override
     public NodeFactory<?> getNewObject() {
         try {
-            return m_factory.newInstance();
+            NodeFactory<?> factory = m_template.getFactory().newInstance();
+            if (m_template instanceof DynamicNodeTemplate) {
+                DynamicNodeTemplate dt = (DynamicNodeTemplate)m_template;
+                ((DynamicNodeFactory<?>)factory).setNodeSetFactory(
+                        dt.getNodeSetFactoryClass().getName());
+            }
+            return factory;
         } catch (Exception e) {
             throw new RuntimeException("Can't instantiate NodeFactory "
                     + "from NodeTemplate", e);

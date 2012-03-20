@@ -54,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.List;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -87,6 +88,9 @@ public abstract class NodeFactory<T extends NodeModel> {
 
     private static final List<String> RO_LIST =
             Collections.unmodifiableList(LOADED_NODE_FACTORIES);
+
+    /** List of additional properties for the node factory. */
+    protected Properties m_properties;
 
     /**
      * Enum for all node types.
@@ -122,7 +126,7 @@ public abstract class NodeFactory<T extends NodeModel> {
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(NodeFactory.class);
 
-    private final String m_nodeName;
+    private String m_nodeName;
 
     private static class PortDescription {
         private final String m_description;
@@ -148,11 +152,11 @@ public abstract class NodeFactory<T extends NodeModel> {
 
     private List<Element> m_views;
 
-    private final URL m_icon;
+    private URL m_icon;
 
     private NodeType m_type;
 
-    private final Element m_knimeNode;
+    private Element m_knimeNode;
 
     private static DocumentBuilder parser;
 
@@ -226,6 +230,25 @@ public abstract class NodeFactory<T extends NodeModel> {
      * file named <code>Node.xml</code> in the same package as the factory.
      */
     protected NodeFactory() {
+        this(true);
+    }
+
+    /**
+     * Creates a new <code>NodeFactory</code>.
+     *
+     * @param parseNodeXML if set to true, tries to read a properties file
+     *      named <code>Node.xml</code> in the same package as the factory,
+     *      otherwise the parsing is skipped.
+     */
+    protected NodeFactory(final boolean parseNodeXML) {
+        if (parseNodeXML) {
+            parseNodeXML();
+        }
+        addBundleInformation();
+        addLoadedFactory(this.getClass());
+    }
+
+    private void parseNodeXML() {
         if (parser == null) {
             instantiateParser();
         }
@@ -325,8 +348,6 @@ public abstract class NodeFactory<T extends NodeModel> {
         m_icon = icon;
         m_nodeName = nodeName;
         m_type = type;
-        addBundleInformation();
-        addLoadedFactory(this.getClass());
     }
 
     private static final Pattern ICON_PATH_PATTERN =
@@ -876,4 +897,21 @@ public abstract class NodeFactory<T extends NodeModel> {
         LOADED_NODE_FACTORIES.add(factoryClass.getName());
     }
 
+    /**
+     * Allows to get additional properties that are set for the node factory.
+     *
+     * @return the additional properties set for this node factory or an empty
+     *      property list if not available
+     */
+    public Properties getAdditionalProperties() {
+        return m_properties;
+    }
+
+    /**
+     * Allows to get additional properties that are set for the node factory.
+     * @param properties the additional properties to set
+     */
+    public void setAdditionalProperties(final Properties properties) {
+        m_properties = properties;
+    }
 }
