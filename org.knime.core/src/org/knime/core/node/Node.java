@@ -1929,6 +1929,14 @@ public final class Node implements NodeModelWarningListener {
             m_model.setLoopStartNode((LoopStartNode)head.m_model);
         }
     }
+    
+    public LoopStartNode getLoopStartNode() {
+    	return m_model.getLoopStartNode();
+    }
+
+    public LoopEndNode getLoopEndNode() {
+    	return m_model.getLoopEndNode();
+    }
 
     /**
      * @see NodeModel#resetAndConfigureLoopBody()

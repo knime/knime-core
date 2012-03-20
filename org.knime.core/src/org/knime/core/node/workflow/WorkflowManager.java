@@ -1958,8 +1958,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                                 "Loop start and end node must be in the same "
                                 + "workflow");
                     }
-                    snc.getNode().setLoopStartNode(
-                            ((SingleNodeContainer)headNode).getNode());
+                    assert ((SingleNodeContainer)headNode).getNode().equals(
+                    		snc.getNode().getLoopStartNode());
                 } else if (LoopRole.BEGIN.equals(snc.getLoopRole())) {
                     snc.getNode().getOutgoingFlowObjectStack().push(
                             new InnerFlowLoopContext());
@@ -3444,49 +3444,86 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     *
     * @param id of first node in chain to be reset.
     */
-    public void resetAndConfigureNode(final NodeID id) {
+    public void resetAndConfigureNode(NodeID id) {
         synchronized (m_workflowMutex) {
             NodeContainer nc = getNodeContainer(id);
-            if (!hasSuccessorInProgress(id)) {
-                // if that's not the case: problem!
-                if (nc.isResetable()) {
-                    // only then it makes sense to reset/configure this
-                    // Node and also its successors. Otherwise stop.
-                    //
-                    // Reset all successors first
-                    resetSuccessors(id);
-                    // and then reset node itself
-                    if (nc instanceof SingleNodeContainer) {
-                        invokeResetOnSingleNodeContainer(
-                                (SingleNodeContainer)nc);
-                    } else {
-                        WorkflowManager wfm = (WorkflowManager)nc;
-                        // this is ok, since we will never call this again
-                        // while traversing a flow - this is the main entry
-                        // point from the outside and should reset all children
-                        // (resetSuccessors() follows ports and will be
-                        // called throughout subsequent calls...)
-
-                        // TODO this configures the meta node already, which
-                        // is done 2nd time two lines below
-                        wfm.resetAndReconfigureAllNodesInWFM();
-                    }
-                    nc.resetJobManagerViews();
-                    // and launch configure starting with this node
-                    configureNodeAndSuccessors(id, true);
-                } else if (nc.getState().equals(State.IDLE)) {
-                    // the node is IDLE: we don't need to reset it but we
-                    // should remove its node message! (This for instance
-                    // matters when we disconnect the inport of this node
-                    // and it showed an error due to conflicting stacks!)
-                    nc.setNodeMessage(null);
-                    // But maybe the node is configurable?
-                    configureNodeAndSuccessors(id, true);
-                }
-            } else {
+            if (hasSuccessorInProgress(id)) {
+                // we can not reset nodes with executing successors.
                 throw new IllegalStateException(
-                "Can not reset node (wrong state of node or successors) " + id);
+                    "Can not reset node (wrong state of node or successors) "
+                		+ id);
             }
+            if (!nc.isResetable()) {
+	            if (nc.getState().equals(State.IDLE)) {
+	                // the node is IDLE: we don't need to reset it but we
+	                // should remove its node message! (This for instance
+	                // matters when we disconnect the inport of this node
+	                // and it showed an error due to conflicting stacks!)
+	                nc.setNodeMessage(null);
+	                // But maybe the node is configurable?
+	                configureNodeAndSuccessors(id, true);
+	            }
+	            // any other reasons for "non reset-ability" are ignored until
+	            // now (Mar 2012) - not sure if there could be others?
+            	return;
+            }
+            // Now perform the actual reset!
+            // First find all the nodes in this workflow that are connected
+            // to the node to be reset.
+            // NOTE that the sorting of this list is important - see node
+            // ~15 lines further down (when scope gets broadened.)
+            LinkedHashMap<NodeID, Set<Integer>> allnodes
+                = m_workflow.getBreadthFirstListOfNodeAndSuccessors(id,
+                           /*skipWFM=*/ true);
+            // now find any LoopEnd nodes without loop starts in the set:
+            for (NodeID leid : allnodes.keySet()) {
+                NodeContainer lenc = getNodeContainer(leid);
+                if (nc instanceof SingleNodeContainer) {
+	                if (((SingleNodeContainer)lenc).getNodeModel()
+	                		instanceof LoopEndNode) {
+	                    NodeID lsid;
+	                    try {
+	                    	lsid = m_workflow.getMatchingLoopStart(leid);
+	                    } catch (Exception e) {
+	                    	// this should have been caught earlier...
+	                    	LOGGER.coding("WorkflowManager.reset() LoopEnd " +
+	                    			"encountered invalid state.", e);
+	                    	lsid = null;
+	                    }
+	                    if ((lsid != null) && (!allnodes.containsKey(lsid))) {
+	                    	// found a LoopEndNode without matching LoopStart
+	                    	// to be reset as well: we need to widen the
+	                    	// scope of the reset!
+	                    	// NOTE that this only works for nest loops (where
+	                    	// more than one node is outside the initial scope
+	                    	// because we started from a sorted set of nodes!)
+	                        id = lsid;
+	                    }
+	                }
+                }
+            }
+            nc = getNodeContainer(id);
+            // a) Reset all successors first
+            resetSuccessors(id);
+            // b) and then reset node itself
+            if (nc instanceof SingleNodeContainer) {
+                invokeResetOnSingleNodeContainer(
+                        (SingleNodeContainer)nc);
+            } else {
+                WorkflowManager wfm = (WorkflowManager)nc;
+                // this is ok, since we will never call this again
+                // while traversing a flow - this is the main entry
+                // point from the outside and should reset all children
+                // (resetSuccessors() follows ports and will be
+                // called throughout subsequent calls...)
+
+                // TODO this configures the meta node already, which
+                // is done 2nd time two lines below
+                wfm.resetAndReconfigureAllNodesInWFM();
+            }
+            nc.resetJobManagerViews();
+            // and launch configure starting with this node
+            configureNodeAndSuccessors(id, true);
         }
         // TODO this should go into the synchronized block?
         checkForNodeStateChanges(true);
@@ -4374,6 +4411,34 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
                 snc.setFlowObjectStack(scsc, nodeOutgoingStack);
                 snc.setCredentialsStore(m_credentialsStore);
+                // update backwards reference for loops
+                if (snc.getLoopRole().equals(LoopRole.END)) {
+                    // if this is an END to a loop, make sure it knows its head
+                    FlowLoopContext slc =
+                        scsc.peek(FlowLoopContext.class);
+                    if (slc == null) {
+                        LOGGER.debug("Incoming flow object stack for "
+                                + snc.getNameWithID() + ":\n"
+                                + scsc.toDeepString());
+                        throw new IllegalFlowObjectStackException(
+                                "Encountered loop-end without "
+                                + "corresponding head!");
+                    } else if (slc instanceof RestoredFlowLoopContext) {
+                        throw new IllegalFlowObjectStackException(
+                                "Can't continue loop as the workflow was "
+                                + "restored with the loop being partially "
+                                + "executed. Reset loop start and execute "
+                                + "entire loop again.");
+                    }
+                    NodeContainer headNode = m_workflow.getNode(slc.getOwner());
+                    if (headNode == null) {
+                        throw new IllegalFlowObjectStackException(
+                                "Loop start and end node must be in the same "
+                                + "workflow");
+                    }
+                    snc.getNode().setLoopStartNode(
+                            ((SingleNodeContainer)headNode).getNode());
+                }
                 // update HiLiteHandlers on inports of SNC only
                 // TODO think about it... happens magically
                 for (int i = 0; i < inCount; i++) {
