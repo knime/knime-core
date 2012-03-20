@@ -67,7 +67,6 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.Node.LoopRole;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -109,8 +108,6 @@ import org.knime.workbench.editor2.model.WorkflowPortBar;
  * @author Christoph Sieb, University of Konstanz
  */
 public class WorkflowContextMenuProvider extends ContextMenuProvider {
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(WorkflowContextMenuProvider.class);
 
     private final ActionRegistry m_actionRegistry;
 
