@@ -58,17 +58,22 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.draw2d.ConnectionAnchor;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
+import org.eclipse.gef.ConnectionEditPart;
 import org.eclipse.gef.DragTracker;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPartListener;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.gef.EditPolicy;
+import org.eclipse.gef.NodeEditPart;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.RequestConstants;
+import org.eclipse.gef.commands.Command;
+import org.eclipse.gef.requests.CreateConnectionRequest;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.util.IPropertyChangeListener;
@@ -109,6 +114,7 @@ import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.WorkflowManagerInput;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
+import org.knime.workbench.editor2.commands.CreateConnectionCommand;
 import org.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 import org.knime.workbench.editor2.figures.ProgressFigure;
@@ -129,7 +135,7 @@ import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
  */
 public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         NodeStateChangeListener, NodeProgressListener, NodeMessageListener,
-        NodeUIInformationListener, EditPartListener, ConnectableEditPart,
+        NodeUIInformationListener, EditPartListener, ConnectableEditPart, NodeEditPart,
         NodePropertyChangedListener, IPropertyChangeListener, IAdaptable {
 
     private static final NodeLogger LOGGER = NodeLogger
@@ -954,6 +960,92 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             return new NodeContainerProperties(getNodeContainer());
         }
         return super.getAdapter(adapter);
+    }
+
+    /**
+     * @param sourceNode
+     * @param srcPortIdx
+     * @return the first free port the specified port could be connected to. Or
+     *         -1 if there is none.
+     */
+    public int getFreeInPort(final ConnectableEditPart sourceNode,
+            final int srcPortIdx) {
+        WorkflowManager wm = getWorkflowManager();
+        if (wm == null || sourceNode == null || srcPortIdx < 0) {
+            return -1;
+        }
+        int startPortIdx = 1; // skip variable ports
+        int connPortIdx = -1;
+        NodeContainer nc = getNodeContainer();
+        if (nc instanceof WorkflowManager) {
+            startPortIdx = 0;
+        }
+        for (int i = startPortIdx; i < nc.getNrInPorts(); i++) {
+            if (wm.canAddNewConnection(sourceNode.getNodeContainer().getID(),
+                    srcPortIdx, nc.getID(), i)) {
+                connPortIdx = i;
+                break;
+            }
+        }
+        if (connPortIdx < 0 && startPortIdx == 1) {
+            // if the src is a flow var port, connect it to impl flow var port
+            if (wm.canAddConnection(sourceNode.getNodeContainer().getID(),
+                    srcPortIdx, nc.getID(), 0)) {
+                connPortIdx = 0;
+            }
+        }
+        return connPortIdx;
+    }
+    /**
+     * {@inheritDoc}
+     */
+    public ConnectionAnchor getTargetConnectionAnchor(
+            final ConnectionEditPart connection) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public ConnectionAnchor getSourceConnectionAnchor(
+            final ConnectionEditPart connection) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public ConnectionAnchor getSourceConnectionAnchor(final Request request) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public ConnectionAnchor getTargetConnectionAnchor(final Request request) {
+        if (!(request instanceof CreateConnectionRequest)) {
+            return null;
+        }
+        CreateConnectionRequest req = (CreateConnectionRequest)request;
+        Command cmd = req.getStartCommand();
+        if (!(cmd instanceof CreateConnectionCommand)) {
+            return null;
+        }
+        CreateConnectionCommand connCmd = (CreateConnectionCommand)cmd;
+        // find a free port that could take the connection
+        int portIdx = getFreeInPort(connCmd.getSourceNode(), connCmd.getSourcePortID());
+        if (portIdx < 0) {
+            return null;
+        }
+        for (Object part : getChildren()) {
+            if (part instanceof AbstractPortEditPart) {
+                AbstractPortEditPart port = (AbstractPortEditPart)part;
+                if (port.isInPort() && port.getIndex() == portIdx) {
+                    return port.getTargetConnectionAnchor(request);
+                }
+            }
+        }
+        return null;
     }
 
 }

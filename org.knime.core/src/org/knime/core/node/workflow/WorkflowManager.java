@@ -655,7 +655,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         NodeContainer destNC;
         synchronized (m_workflowMutex) {
             if (!canAddConnection(
-                    source, sourcePort, dest, destPort, currentlyLoadingFlow)) {
+                    source, sourcePort, dest, destPort, true, currentlyLoadingFlow)) {
                 throw new IllegalArgumentException("Can not add connection!");
             }
             // check for existence of a connection to the destNode/Port
@@ -769,7 +769,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     public boolean canAddConnection(final NodeID source,
             final int sourcePort, final NodeID dest,
             final int destPort) {
-        return canAddConnection(source, sourcePort, dest, destPort, false);
+        return canAddConnection(source, sourcePort, dest, destPort, true, false);
+    }
+
+    public boolean canAddNewConnection(final NodeID source,
+            final int sourcePort, final NodeID dest,
+            final int destPort) {
+        return canAddConnection(source, sourcePort, dest, destPort, false, false);
     }
 
     /** see {@link #canAddConnection(NodeID, int, NodeID, int)}. If the flag
@@ -778,7 +784,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     private boolean canAddConnection(final NodeID source,
             final int sourcePort, final NodeID dest,
-            final int destPort, final boolean currentlyLoadingFlow) {
+            final int destPort, final boolean allowConnRemoval, final boolean currentlyLoadingFlow) {
         synchronized (m_workflowMutex) {
             if (source == null || dest == null) {
                 return false;
@@ -838,7 +844,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             for (ConnectionContainer cc : m_workflow.getConnectionsByDest(dest)) {
                 if (cc.getDestPort() == destPort) {
                     // if that connection is not removable: fail
-                    if (!canRemoveConnection(cc)) {
+                    if (!allowConnRemoval || !canRemoveConnection(cc)) {
                         return false;
                     }
                 }
@@ -6194,7 +6200,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 source = translationMap.get(sourceSuffix);
             }
             if (!canAddConnection(source, c.getSourcePort(),
-                    dest, c.getDestPort(), currentlyLoadingFlow)) {
+                    dest, c.getDestPort(), true, currentlyLoadingFlow)) {
                 String warn = "Unable to insert connection \"" + c + "\"";
                 LOGGER.warn(warn);
                 loadResult.addError(warn);
