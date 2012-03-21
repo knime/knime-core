@@ -9,9 +9,12 @@ Require-Bundle: org.knime.base;bundle-version="[2.5.0,3.0.0)",
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Export-Package: org.apache.commons.lang3,
+ org.fife.ui.autocomplete,
  org.knime.base.node.preproc.stringmanipulation,
  org.knime.base.node.preproc.stringmanipulation.manipulator,
- org.knime.ext.sun.nodes.script
+ org.knime.base.node.util,
+ org.knime.ext.sun.nodes.script,
+ org.knime.ext.sun.nodes.script.compile
 Bundle-ClassPath: knime-jsnippets.jar,
  lib/autocomplete_2.0.2/autocomplete.jar,
  lib/autocomplete_2.0.2/rsyntaxtextarea.jar,

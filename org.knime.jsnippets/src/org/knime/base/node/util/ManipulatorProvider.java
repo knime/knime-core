@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2012
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -40,52 +40,44 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME. The owner of a Node
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   10.10.2011 (hofer): created
+ *   21.03.2012 (meinl): created
  */
-package org.knime.base.node.preproc.stringmanipulation;
+package org.knime.base.node.util;
 
-import org.fife.ui.autocomplete.BasicCompletion;
-import org.knime.base.node.util.KnimeCompletionProvider;
-import org.knime.ext.sun.nodes.script.expression.Expression;
+import java.util.Collection;
+
+import org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator;
 
 /**
- * A completion provider that can be used in Java snippet editors.
+ * Interface for a manipulator provider.
  *
- * @author Heiko Hofer
  * @author Thorsten Meinl, University of Konstanz
  */
-public class JavaScriptingCompletionProvider extends KnimeCompletionProvider {
+public interface ManipulatorProvider {
     /**
-     * An instance with default code completions for the JavaSnippet.
+     * Category which contains all manipulators.
      */
-    public JavaScriptingCompletionProvider() {
-        addCompletion(new BasicCompletion(this, "$$" + Expression.ROWID + "$$",
-                "String", "The Row-ID"));
-        addCompletion(new BasicCompletion(this, "$$" + Expression.ROWINDEX
-                + "$$", "int", "The index of the row starting from zero."));
-        addCompletion(new BasicCompletion(this, "$$" + Expression.ROWCOUNT
-                + "$$", "int", "The number of rows in the input table."));
-    }
+    public static final String ALL_CATEGORY = "All";
 
     /**
-     * {@inheritDoc}
+     * Get all categories.
+     *
+     * @return the categories
      */
-    @Override
-    public String escapeColumnName(final String colName) {
-        return "$" + colName + "$";
-    }
+    public Collection<String> getCategories();
 
     /**
-     * {@inheritDoc}
+     * Get the {@link Manipulator}s in the given category.
+     *
+     * @param category a category as given by getCategories()
+     * @return the {@link Manipulator}s in the given category
      */
-    @Override
-    public String escapeFlowVariableName(final String varName) {
-        return "$${" + varName + "}$$";
-    }
+    public Collection<? extends Manipulator> getManipulators(
+            final String category);
 }
