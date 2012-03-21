@@ -52,6 +52,8 @@ package org.knime.workbench.repository;
 
 import java.io.File;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collection;
 
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -62,15 +64,18 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeSetFactory;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.WorkflowPersistorVersion1xx;
 import org.knime.workbench.repository.model.Category;
+import org.knime.workbench.repository.model.DynamicNodeTemplate;
 import org.knime.workbench.repository.model.IContainerObject;
 import org.knime.workbench.repository.model.IRepositoryObject;
 import org.knime.workbench.repository.model.MetaNodeTemplate;
@@ -81,280 +86,399 @@ import org.osgi.framework.Bundle;
 /**
  * Factory for creation of repository objects from
  * <code>IConfigurationElement</code> s from the Plugin registry.
- *
+ * 
  * @author Florian Georg, University of Konstanz
  */
 public final class RepositoryFactory {
-    private RepositoryFactory() {
-        // hidden constructor (utility class)
-    }
+	private RepositoryFactory() {
+		// hidden constructor (utility class)
+	}
 
+	private static final NodeLogger LOGGER = NodeLogger
+			.getLogger(RepositoryFactory.class);
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            RepositoryFactory.class);
+	private static final String META_NODE_ICON = "icons/meta_nodes/metanode_template.png";
 
-    private static final String META_NODE_ICON
-        = "icons/meta_nodes/metanode_template.png";
+	private static ImageDescriptor defaultIcon;
 
-    private static ImageDescriptor defaultIcon;
+	/**
+	 * Workflow manager instance loading and administering the predefined meta
+	 * nodes.
+	 */
+	public static final WorkflowManager META_NODE_ROOT;
 
-    /**
-     * Workflow manager instance loading and administering
-     * the predefined meta nodes.
-     */
-    public static final WorkflowManager META_NODE_ROOT;
+	static {
+		META_NODE_ROOT = WorkflowManager.ROOT
+				.createAndAddProject("KNIME MetaNode Repository");
+	}
 
-    static {
-        META_NODE_ROOT = WorkflowManager.ROOT.createAndAddProject(
-                "KNIME MetaNode Repository");
-    }
+	/**
+	 * Creates a new node repository object. Throws an exception, if this fails
+	 * 
+	 * @param element
+	 *            Configuration element from the contributing plugin
+	 * @return NodeTemplate object to be used within the repository.
+	 * @throws IllegalArgumentException
+	 *             If the element is not compatible (e.g. wrong attributes, or
+	 *             factory class not found)
+	 */
+	@SuppressWarnings("unchecked")
+	public static NodeTemplate createNode(final IConfigurationElement element) {
+		String id = element.getAttribute("id");
 
+		NodeTemplate node = new NodeTemplate(id);
 
-    /**
-     * Creates a new node repository object. Throws an exception, if this fails
-     *
-     * @param element Configuration element from the contributing plugin
-     * @return NodeTemplate object to be used within the repository.
-     * @throws IllegalArgumentException If the element is not compatible (e.g.
-     *             wrong attributes, or factory class not found)
-     */
-    @SuppressWarnings("unchecked")
-    public static NodeTemplate createNode(final IConfigurationElement element) {
-        String id = element.getAttribute("id");
+		node.setAfterID(str(element.getAttribute("after"), ""));
+		boolean b = Boolean.parseBoolean(element.getAttribute("expert-flag"));
+		node.setExpertNode(b);
 
-        NodeTemplate node = new NodeTemplate(id);
+		// Try to load the node factory class...
+		NodeFactory<? extends NodeModel> factory;
+		// this ensures that the class is loaded by the correct eclipse
+		// classloaders
+		GlobalClassCreator.lock.lock();
+		try {
+			factory = (NodeFactory<? extends NodeModel>) element
+					.createExecutableExtension("factory-class");
 
-        node.setAfterID(str(element.getAttribute("after"), ""));
-        boolean b = Boolean.parseBoolean(element.getAttribute("expert-flag"));
-        node.setExpertNode(b);
+		} catch (Throwable e) {
+			throw new IllegalArgumentException(
+					"Can't load factory class for node: "
+							+ element.getAttribute("factory-class"), e);
+		} finally {
+			GlobalClassCreator.lock.unlock();
+		}
+		node.setFactory((Class<NodeFactory<? extends NodeModel>>) factory
+				.getClass());
 
-        // Try to load the node factory class...
-        NodeFactory<? extends NodeModel> factory;
-        // this ensures that the class is loaded by the correct eclipse
-        // classloaders
-        GlobalClassCreator.lock.lock();
-        try {
-            factory =
-                    (NodeFactory<? extends NodeModel>)element
-                            .createExecutableExtension("factory-class");
+		node.setName(factory.getNodeName());
+		node.setType(str(element.getAttribute("type"), NodeTemplate.TYPE_OTHER));
 
-        } catch (Throwable e) {
-            throw new IllegalArgumentException(
-                    "Can't load factory class for node: "
-                            + element.getAttribute("factory-class"), e);
-        } finally {
-            GlobalClassCreator.lock.unlock();
-        }
-        node.setFactory((Class<NodeFactory<? extends NodeModel>>)
-                factory.getClass());
+		String pluginID = element.getDeclaringExtension()
+				.getNamespaceIdentifier();
+		node.setPluginID(pluginID);
 
-        node.setName(factory.getNodeName());
-        node.setType(
-                str(element.getAttribute("type"), NodeTemplate.TYPE_OTHER));
+		if (!Boolean.valueOf(System.getProperty("java.awt.headless", "false"))) {
+			// Load images from declaring plugin
+			Image icon = ImageRepository.getScaledImage(factory.getIcon(), 16,
+					16);
+			// get default image if null
+			if (icon == null) {
+				icon = ImageRepository.getScaledImage(
+						NodeFactory.getDefaultIcon(), 16, 16);
+			}
+			// FIXME dispose this somewhere !!
+			node.setIcon(icon);
+		}
 
-        String pluginID = element.getDeclaringExtension()
-            .getNamespaceIdentifier();
-        node.setPluginID(pluginID);
+		node.setCategoryPath(str(element.getAttribute("category-path"), "/"));
 
-        if (!Boolean.valueOf(
-                System.getProperty("java.awt.headless", "false"))) {
-            // Load images from declaring plugin
-            Image icon = ImageRepository.getScaledImage(
-                    factory.getIcon(), 16, 16);
-            // get default image if null
-            if (icon == null) {
-                icon = ImageRepository.getScaledImage(
-                        NodeFactory.getDefaultIcon(), 16, 16);
-            }
-            // FIXME dispose this somewhere !!
-            node.setIcon(icon);
-        }
+		return node;
+	}
 
-        node.setCategoryPath(str(element.getAttribute("category-path"), "/"));
+	/**
+	 * 
+	 * @param configuration
+	 *            content of the extension
+	 * @return a meta node template
+	 */
+	public static MetaNodeTemplate createMetaNode(
+			final IConfigurationElement configuration) {
+		String id = configuration.getAttribute("id");
+		String name = configuration.getAttribute("name");
+		String workflowDir = configuration.getAttribute("workflowDir");
+		String after = configuration.getAttribute("after");
+		String iconPath = configuration.getAttribute("icon");
+		String categoryPath = configuration.getAttribute("category-path");
+		boolean isExpertNode = Boolean.parseBoolean(configuration
+				.getAttribute("expert-flag"));
+		String pluginId = configuration.getDeclaringExtension()
+				.getNamespaceIdentifier();
+		String description = configuration.getAttribute("description");
 
-        return node;
-    }
+		WorkflowManager manager = loadMetaNode(pluginId, workflowDir);
+		if (manager == null) {
+			LOGGER.error("MetaNode  " + name + " could not be loaded. "
+					+ "Skipped.");
+			return null;
+		}
+		MetaNodeTemplate template = new MetaNodeTemplate(id, name,
+				categoryPath, manager);
+		template.setPluginID(configuration.getContributor().getName());
+		if (after != null && !after.isEmpty()) {
+			template.setAfterID(after);
+		}
+		if (description != null) {
+			template.setDescription(description);
+		}
+		template.setExpertNode(isExpertNode);
+		if (!Boolean.valueOf(System.getProperty("java.awt.headless", "false"))) {
+			// Load images from declaring plugin
+			ImageDescriptor descriptor = null;
+			Image icon = null;
+			if (iconPath != null) {
+				descriptor = AbstractUIPlugin.imageDescriptorFromPlugin(
+						pluginId, iconPath);
+			}
+			if (descriptor != null) {
+				icon = descriptor.createImage();
+			}
+			// get default image if null
+			if (icon == null) {
+				icon = ImageRepository.getImage(META_NODE_ICON);
+			}
+			// FIXME dispose this somewhere !!
+			template.setIcon(icon);
+		}
+		return template;
+	}
 
-    /**
-     *
-     * @param configuration content of the extension
-     * @return a meta node template
-     */
-    public static MetaNodeTemplate createMetaNode(
-            final IConfigurationElement configuration) {
-        String id = configuration.getAttribute("id");
-        String name = configuration.getAttribute("name");
-        String workflowDir = configuration.getAttribute("workflowDir");
-        String after = configuration.getAttribute("after");
-        String iconPath = configuration.getAttribute("icon");
-        String categoryPath = configuration.getAttribute("category-path");
-        boolean isExpertNode = Boolean.parseBoolean(
-                configuration.getAttribute("expert-flag"));
-        String pluginId = configuration.getDeclaringExtension()
-            .getNamespaceIdentifier();
-        String description = configuration.getAttribute("description");
+	private static WorkflowManager loadMetaNode(final String pluginId,
+			final String workflowDir) {
+		LOGGER.debug("found pre-installed template " + workflowDir);
 
-        WorkflowManager manager = loadMetaNode(pluginId, workflowDir);
-        if (manager == null) {
-            LOGGER.error("MetaNode  " + name + " could not be loaded. "
-                    + "Skipped.");
-            return null;
-        }
-        MetaNodeTemplate template = new MetaNodeTemplate(
-                id, name, categoryPath, manager);
-        template.setPluginID(configuration.getContributor().getName());
-        if (after != null && !after.isEmpty()) {
-            template.setAfterID(after);
-        }
-        if (description != null) {
-            template.setDescription(description);
-        }
-        template.setExpertNode(isExpertNode);
-        if (!Boolean.valueOf(
-                System.getProperty("java.awt.headless", "false"))) {
-            // Load images from declaring plugin
-            ImageDescriptor descriptor = null;
-            Image icon = null;
-            if (iconPath != null) {
-                descriptor = AbstractUIPlugin
-                    .imageDescriptorFromPlugin(
-                            pluginId, iconPath);
-            }
-            if (descriptor != null) {
-                icon = descriptor.createImage();
-            }
-            // get default image if null
-            if (icon == null) {
-                icon = ImageRepository.getImage(META_NODE_ICON);
-            }
-            // FIXME dispose this somewhere !!
-            template.setIcon(icon);
-        }
-        return template;
-    }
+		Bundle bundle = Platform.getBundle(pluginId);
+		URL url = FileLocator.find(bundle, new Path(workflowDir), null);
 
+		if (url != null) {
+			try {
+				File f = new File(FileLocator.toFileURL(url).getFile());
+				LOGGER.debug("meta node template name: " + f.getName());
+				WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true) {
+					/** {@inheritDoc} */
+					@Override
+					public String getDotKNIMEFileName() {
+						return WorkflowPersistor.WORKFLOW_FILE;
+					}
+				};
+				// don't lock workflow dir
+				WorkflowPersistorVersion1xx persistor = WorkflowManager
+						.createLoadPersistor(f, loadHelper);
 
-    private static WorkflowManager loadMetaNode(final String pluginId,
-            final String workflowDir) {
-        LOGGER.debug("found pre-installed template " + workflowDir);
+				WorkflowManager metaNode = META_NODE_ROOT.load(persistor,
+						new ExecutionMonitor(), false).getWorkflowManager();
+				return metaNode;
+			} catch (CanceledExecutionException cee) {
+				LOGGER.error("Unexpected canceled execution exception", cee);
+			} catch (Exception e) {
+				LOGGER.error("Failed to load meta workflow repository", e);
+			}
+		}
+		return null;
+	}
 
-        Bundle bundle = Platform.getBundle(pluginId);
-        URL url = FileLocator.find(bundle, new Path(workflowDir), null);
+	/**
+	 * Creates a new category object. Throws an exception, if this fails
+	 * 
+	 * @param root
+	 *            The root to insert the category in
+	 * @param element
+	 *            Configuration element from the contributing plugin
+	 * @return Category object to be used within the repository.
+	 * @throws IllegalArgumentException
+	 *             If the element is not compatible (e.g. wrong attributes)
+	 */
+	public static Category createCategory(final Root root,
+			final IConfigurationElement element) {
+		String id = element.getAttribute("level-id");
 
-        if (url != null) {
-            try {
-                File f = new File(FileLocator.toFileURL(url).getFile());
-                LOGGER.debug("meta node template name: " + f.getName());
-                WorkflowLoadHelper loadHelper = new WorkflowLoadHelper(true) {
-                    /** {@inheritDoc} */
-                    @Override
-                    public String getDotKNIMEFileName() {
-                        return WorkflowPersistor.WORKFLOW_FILE;
-                    }
-                };
-                // don't lock workflow dir
-                WorkflowPersistorVersion1xx persistor =
-                    WorkflowManager.createLoadPersistor(f, loadHelper);
+		// get the id of the contributing plugin
+		String pluginID = element.getDeclaringExtension()
+				.getNamespaceIdentifier();
 
-                WorkflowManager metaNode = META_NODE_ROOT.load(persistor,
-                        new ExecutionMonitor(), false).getWorkflowManager();
-                return metaNode;
-            } catch (CanceledExecutionException cee) {
-                LOGGER.error("Unexpected canceled execution exception",
-                        cee);
-            } catch (Exception e) {
-                LOGGER.error(
-                        "Failed to load meta workflow repository", e);
-            }
-        }
-        return null;
-    }
+		Category cat = new Category(id);
+		cat.setPluginID(pluginID);
+		cat.setDescription(str(element.getAttribute("description"), ""));
+		cat.setName(str(element.getAttribute("name"), "!name is missing!"));
+		cat.setAfterID(str(element.getAttribute("after"), ""));
+		if (!Boolean.valueOf(System.getProperty("java.awt.headless", "false"))) {
+			ImageDescriptor descriptor = getIcon(pluginID,
+					element.getAttribute("icon"));
+			cat.setIcon(descriptor.createImage(true));
+			cat.setIconDescriptor(descriptor);
+		}
+		String path = str(element.getAttribute("path"), "/");
+		cat.setPath(path);
 
+		//
+		// Insert in proper location, create all categories on the path
+		// if not already there
+		//
+		if (path.startsWith("/")) {
+			path = path.substring(1);
+		}
+		// split the path
+		String[] segments = path.split("/");
+		// start at root
+		IContainerObject container = root;
 
+		for (int i = 0; i < segments.length; i++) {
+			IRepositoryObject obj = container.getChildByID(segments[i], false);
+			if (obj == null) {
+				throw new IllegalArgumentException("The segment '"
+						+ segments[i] + "' in path '" + path
+						+ "' does not exist!");
+			}
+			// continue at this level
+			container = (IContainerObject) obj;
+		}
 
-    /**
-     * Creates a new category object. Throws an exception, if this fails
-     *
-     * @param root The root to insert the category in
-     * @param element Configuration element from the contributing plugin
-     * @return Category object to be used within the repository.
-     * @throws IllegalArgumentException If the element is not compatible (e.g.
-     *             wrong attributes)
-     */
-    public static Category createCategory(final Root root,
-            final IConfigurationElement element) {
-        String id = element.getAttribute("level-id");
+		// append the newly created category to the container
+		container.addChild(cat);
 
-        // get the id of the contributing plugin
-        String pluginID = element.getDeclaringExtension()
-            .getNamespaceIdentifier();
+		return cat;
+	}
 
-        Category cat = new Category(id);
-        cat.setPluginID(pluginID);
-        cat.setDescription(str(element.getAttribute("description"), ""));
-        cat.setName(str(element.getAttribute("name"), "!name is missing!"));
-        cat.setAfterID(str(element.getAttribute("after"), ""));
-        if (!Boolean.valueOf(System.getProperty(
-                "java.awt.headless", "false"))) {
-            ImageDescriptor descriptor = getIcon(pluginID,
-                    element.getAttribute("icon"));
-            cat.setIcon(descriptor.createImage(true));
-            cat.setIconDescriptor(descriptor);
-        }
-        String path = str(element.getAttribute("path"), "/");
-        cat.setPath(path);
+	//
+	// little helper, returns a default if s==null
+	private static String str(final String s, final String defaultString) {
+		return s == null ? defaultString : s;
+	}
 
-        //
-        // Insert in proper location, create all categories on the path
-        // if not already there
-        //
-        if (path.startsWith("/")) {
-            path = path.substring(1);
-        }
-        // split the path
-        String[] segments = path.split("/");
-        // start at root
-        IContainerObject container = root;
+	private static ImageDescriptor getIcon(final String pluginID,
+			final String path) {
+		if (path != null && pluginID != null) {
+			ImageDescriptor desc = AbstractUIPlugin.imageDescriptorFromPlugin(
+					pluginID, path);
+			if (desc != null) {
+				return desc;
+			}
+		}
+		// if we have not returned an image yet we have to return the default
+		// icon. lazy initialization
+		if (defaultIcon == null) {
+			defaultIcon = AbstractUIPlugin.imageDescriptorFromPlugin(
+					KNIMERepositoryPlugin.PLUGIN_ID, "icons/knime_default.png");
+		}
+		return defaultIcon;
+	}
 
-        for (int i = 0; i < segments.length; i++) {
-            IRepositoryObject obj = container.getChildByID(segments[i], false);
-            if (obj == null) {
-                throw new IllegalArgumentException("The segment '"
-                        + segments[i] + "' in path '" + path
-                        + "' does not exist!");
-            }
-            // continue at this level
-            container = (IContainerObject)obj;
-        }
+	/**
+	 * Creates the set of dynamic node templates.
+	 * 
+	 * @param root
+	 *            the root to add the missing categories in
+	 * @param element
+	 *            from the extension points
+	 * @return
+	 */
+	public static Collection<DynamicNodeTemplate> createNodeSet(
+			final Root root, final IConfigurationElement element) {
+		String id = element.getAttribute("id");
 
-        // append the newly created category to the container
-        container.addChild(cat);
+		// Try to load the node set factory class...
+		NodeSetFactory nodeSet;
+		// this ensures that the class is loaded by the correct eclipse
+		// classloaders
+		GlobalClassCreator.lock.lock();
+		try {
+			nodeSet = (NodeSetFactory) element
+					.createExecutableExtension("factory-class");
 
-        return cat;
-    }
+		} catch (Throwable e) {
+			throw new IllegalArgumentException(
+					"Can't load factory class for node: "
+							+ element.getAttribute("factory-class"), e);
+		} finally {
+			GlobalClassCreator.lock.unlock();
+		}
 
-    //
-    // little helper, returns a default if s==null
-    private static String str(final String s, final String defaultString) {
-        return s == null ? defaultString : s;
-    }
+		Collection<DynamicNodeTemplate> dynamicNodeTemplates = new ArrayList<DynamicNodeTemplate>();
 
-    private static ImageDescriptor getIcon(final String pluginID,
-            final String path) {
-        if (path != null && pluginID != null) {
-            ImageDescriptor desc = AbstractUIPlugin.imageDescriptorFromPlugin(
-                    pluginID, path);
-            if (desc != null) {
-                return desc;
-            }
-        }
-        // if we have not returned an image yet we have to return the default
-        // icon. lazy initialization
-        if (defaultIcon == null) {
-            defaultIcon = AbstractUIPlugin.imageDescriptorFromPlugin(
-                    KNIMERepositoryPlugin.PLUGIN_ID, "icons/knime_default.png");
-        }
-        return defaultIcon;
-    }
+		// for all nodes in the node set
+		for (NodeFactory<? extends NodeModel> factory : nodeSet
+				.getNodeFactorySet()) {
 
+			DynamicNodeTemplate node = new DynamicNodeTemplate(id
+					+ factory.getNodeName(), nodeSet);
+			node.setFactory((Class<NodeFactory<? extends NodeModel>>) factory
+					.getClass());
+
+			node.setAfterID(((DynamicNodeFactory<? extends NodeModel>) factory)
+					.getAfterID());
+			boolean b = Boolean.parseBoolean(element
+					.getAttribute("expert-flag"));
+			node.setExpertNode(b);
+
+			node.setName(factory.getNodeName());
+
+			String pluginID = element.getDeclaringExtension()
+					.getNamespaceIdentifier();
+			node.setPluginID(pluginID);
+
+			if (!Boolean.valueOf(System.getProperty("java.awt.headless",
+					"false"))) {
+				// Load images from declaring plugin
+				Image icon = ImageRepository.getScaledImage(factory.getIcon(),
+						16, 16);
+				// get default image if null
+				if (icon == null) {
+					icon = ImageRepository.getScaledImage(
+							NodeFactory.getDefaultIcon(), 16, 16);
+				}
+				// FIXME dispose this somewhere !!
+				node.setIcon(icon);
+			}
+
+			node.setCategoryPath(((DynamicNodeFactory<? extends NodeModel>) factory)
+					.getCategory());
+
+			dynamicNodeTemplates.add(node);
+
+			//
+			// Insert in proper location, create all categories on
+			// the path
+			// if not already there
+			//
+			String path = node.getCategoryPath();
+			if (path.startsWith("/")) {
+				path = path.substring(1);
+			}
+			// split the path
+			String[] segments = path.split("/");
+			// start at root
+			IContainerObject container = root;
+			String currentPath = "";
+			for (int i = 0; i < segments.length; i++) {
+				IRepositoryObject obj = container.getChildByID(segments[i],
+						false);
+				currentPath += segments[i];
+				if (obj == null) {
+					Category cat = createCategory(pluginID, segments[i], "",
+							segments[i], "", "", currentPath);
+					// append the newly created category to the container
+					container.addChild(cat);
+					obj = cat;
+				}
+				currentPath += "/";
+				// continue at this level
+				container = (IContainerObject) obj;
+			}
+
+		} // for node sets
+
+		return dynamicNodeTemplates;
+
+	}
+
+	/* Little helper to create a category */
+	private static Category createCategory(String pluginID, String categoryID,
+			String description, String name, String afterID, String icon,
+			String categoryPath) {
+
+		Category cat = new Category(categoryID);
+		cat.setPluginID(pluginID);
+		cat.setDescription(str(description, ""));
+		cat.setName(str(name, "!name is missing!"));
+		cat.setAfterID(str(afterID, ""));
+		if (!Boolean.valueOf(System.getProperty("java.awt.headless", "false"))) {
+			ImageDescriptor descriptor = getIcon(pluginID, icon);
+			cat.setIcon(descriptor.createImage(true));
+			cat.setIconDescriptor(descriptor);
+		}
+		String path = str(categoryPath, "/");
+		cat.setPath(path);
+
+		return cat;
+	}
 }

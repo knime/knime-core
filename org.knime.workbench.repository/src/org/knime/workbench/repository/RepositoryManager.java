@@ -52,6 +52,7 @@ package org.knime.workbench.repository;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -62,14 +63,8 @@ import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.swt.graphics.Image;
-import org.knime.core.eclipseUtil.GlobalClassCreator;
-import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeSetFactory;
 import org.knime.workbench.repository.model.AbstractContainerObject;
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.DynamicNodeTemplate;
@@ -86,21 +81,21 @@ import org.osgi.framework.Bundle;
  * model. The repository is created on-demand as soon as one of the three public
  * methods is called. Thus the first call can take some time to return.
  * Subsequent calls will return immediately with the full repository tree.
- *
+ * 
  * @author Florian Georg, University of Konstanz
  * @author Thorsten Meinl, University of Konstanz
  */
 public final class RepositoryManager {
 	/**
 	 * Listener interface for acting on events while the repository is read.
-	 *
+	 * 
 	 * @author Thorsten Meinl, University of Konstanz
 	 * @since 2.4
 	 */
 	public interface Listener {
 		/**
 		 * Called when a new category has been created.
-		 *
+		 * 
 		 * @param root
 		 *            the repository root
 		 * @param category
@@ -110,7 +105,7 @@ public final class RepositoryManager {
 
 		/**
 		 * Called when a new node has been created.
-		 *
+		 * 
 		 * @param root
 		 *            the repository root
 		 * @param node
@@ -120,7 +115,7 @@ public final class RepositoryManager {
 
 		/**
 		 * Called when a new meta node has been created.
-		 *
+		 * 
 		 * @param root
 		 *            the repository root
 		 * @param metanode
@@ -404,64 +399,11 @@ public final class RepositoryManager {
 					return;
 				}
 
-				String id = elem.getAttribute("id");
-
-				// Try to load the node set factory class...
-				NodeSetFactory nodeSet;
-				// this ensures that the class is loaded by the correct eclipse
-				// classloaders
-				GlobalClassCreator.lock.lock();
 				try {
-					nodeSet = (NodeSetFactory) elem
-							.createExecutableExtension("factory-class");
+					Collection<DynamicNodeTemplate> dynamicNodeTemplates = RepositoryFactory
+							.createNodeSet(m_root, elem);
 
-				} catch (Throwable e) {
-					throw new IllegalArgumentException(
-							"Can't load factory class for node: "
-									+ elem.getAttribute("factory-class"), e);
-				} finally {
-					GlobalClassCreator.lock.unlock();
-				}
-
-				try {
-					// for all nodes in the node set
-					for (NodeFactory<? extends NodeModel> factory : nodeSet
-							.getNodeFactorySet()) {
-
-						DynamicNodeTemplate node = new DynamicNodeTemplate(id
-								+ factory.getNodeName(), nodeSet);
-						node.setFactory(
-						        (Class<NodeFactory<? extends NodeModel>>)
-						        factory.getClass());
-
-						node.setAfterID(((DynamicNodeFactory<? extends NodeModel>) factory)
-								.getAfterID());
-						boolean b = Boolean.parseBoolean(elem
-								.getAttribute("expert-flag"));
-						node.setExpertNode(b);
-
-						node.setName(factory.getNodeName());
-
-						String pluginID = elem.getDeclaringExtension()
-								.getNamespaceIdentifier();
-						node.setPluginID(pluginID);
-
-						if (!Boolean.valueOf(System.getProperty(
-								"java.awt.headless", "false"))) {
-							// Load images from declaring plugin
-							Image icon = ImageRepository.getScaledImage(
-									factory.getIcon(), 16, 16);
-							// get default image if null
-							if (icon == null) {
-								icon = ImageRepository.getScaledImage(
-										NodeFactory.getDefaultIcon(), 16, 16);
-							}
-							// FIXME dispose this somewhere !!
-							node.setIcon(icon);
-						}
-
-						node.setCategoryPath(((DynamicNodeFactory<? extends NodeModel>) factory)
-								.getCategory());
+					for (DynamicNodeTemplate node : dynamicNodeTemplates) {
 
 						l.newNode(m_root, node);
 
@@ -491,7 +433,7 @@ public final class RepositoryManager {
 							parentContainer.addChild(node);
 						}
 
-					} // for node sets
+					}
 
 				} catch (Throwable t) {
 					String message = "Node " + elem.getAttribute("id")
@@ -517,10 +459,10 @@ public final class RepositoryManager {
 
 	/**
 	 * Returns the extensions for a given extension point.
-	 *
+	 * 
 	 * @param pointID
 	 *            The extension point ID
-	 *
+	 * 
 	 * @return The extensions
 	 */
 	private static IExtension[] getExtensions(final String pointID) {
@@ -602,7 +544,7 @@ public final class RepositoryManager {
 	 * Returns the repository root. If the repository has not yet read, it will
 	 * be created during the call. Thus the first call to this method can take
 	 * some time.
-	 *
+	 * 
 	 * @return the root object
 	 */
 	public synchronized Root getRoot() {
@@ -616,8 +558,8 @@ public final class RepositoryManager {
 	 * Returns the repository root. If the repository has not yet read, it will
 	 * be created during the call. If the listener is non-<code>null</code>, it
 	 * will be notified of all read items (categories, nodes, metanodes).
-	 *
-	 *
+	 * 
+	 * 
 	 * @param listener
 	 *            a listener that is notified of newly read items
 	 * @return the root object
@@ -633,7 +575,7 @@ public final class RepositoryManager {
 	/**
 	 * Returns the node template with the given id, or <code>null</code> if no
 	 * such node exists.
-	 *
+	 * 
 	 * @param id
 	 *            the node's id
 	 * @return a node template or <code>null</code>
