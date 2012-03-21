@@ -3357,6 +3357,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             final SingleNodeContainer snc) {
         assert Thread.holdsLock(m_workflowMutex);
         snc.reset();
+        if (LoopRole.BEGIN.equals(snc.getLoopRole())) {
+            snc.getNode().setLoopEndNode(null);
+        }
+        if (LoopRole.END.equals(snc.getLoopRole())) {
+            snc.getNode().setLoopStartNode(null);
+        }
     }
 
     /** Reset those nodes which are connected to a specific workflow
@@ -3494,7 +3500,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 	                    } catch (Exception e) {
 	                        // this should have been caught earlier...
 	                        LOGGER.coding("WorkflowManager.reset() LoopEnd "
-	                            + "encountered invalid state.", e);
+	                            + "encountered invalid state: ", e);
 	                    	lsid = null;
 	                    }
                         if ((lsid != null) && (!allnodes.containsKey(lsid))) {
@@ -4424,27 +4430,20 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     FlowLoopContext slc =
                         scsc.peek(FlowLoopContext.class);
                     if (slc == null) {
-                        LOGGER.debug("Incoming flow object stack for "
-                                + snc.getNameWithID() + ":\n"
-                                + scsc.toDeepString());
-                        throw new IllegalFlowObjectStackException(
-                                "Encountered loop-end without "
-                                + "corresponding head!");
-                    } else if (slc instanceof RestoredFlowLoopContext) {
-                        throw new IllegalFlowObjectStackException(
-                                "Can't continue loop as the workflow was "
-                                + "restored with the loop being partially "
-                                + "executed. Reset loop start and execute "
-                                + "entire loop again.");
+                    	// no head found - ignore during configure!
+                    	snc.getNode().setLoopStartNode(null);
+                    } else {
+                    	// loop seems to be correctly wired - set head
+	                    NodeContainer headNode = m_workflow.getNode(slc.getOwner());
+	                    if (headNode == null) {
+	                    	// odd: head is not in the same workflow,
+	                    	// ignore as well during configure
+	                    	snc.getNode().setLoopStartNode(null);
+	                    }
+	                    // head found, let the end node know about it:
+	                    snc.getNode().setLoopStartNode(
+	                            ((SingleNodeContainer)headNode).getNode());
                     }
-                    NodeContainer headNode = m_workflow.getNode(slc.getOwner());
-                    if (headNode == null) {
-                        throw new IllegalFlowObjectStackException(
-                                "Loop start and end node must be in the same "
-                                + "workflow");
-                    }
-                    snc.getNode().setLoopStartNode(
-                            ((SingleNodeContainer)headNode).getNode());
                 }
                 // update HiLiteHandlers on inports of SNC only
                 // TODO think about it... happens magically
