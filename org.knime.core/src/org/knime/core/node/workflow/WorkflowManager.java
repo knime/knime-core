@@ -1964,8 +1964,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                                 "Loop start and end node must be in the same "
                                 + "workflow");
                     }
-                    assert ((SingleNodeContainer)headNode).getNode().equals(
-                    		snc.getNode().getLoopStartNode());
+                    assert ((SingleNodeContainer)headNode).getNode()
+                              .getNodeModel().equals(
+                                          snc.getNode().getLoopStartNode());
                 } else if (LoopRole.BEGIN.equals(snc.getLoopRole())) {
                     snc.getNode().getOutgoingFlowObjectStack().push(
                             new InnerFlowLoopContext());
@@ -2027,7 +2028,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             latestNodeMessage = new NodeMessage(
                                     NodeMessage.Type.ERROR,
                                     "Parallel Branch Start Failure! ("
-                                    + e.getMessage() +")");
+                                    + e.getMessage() + ")");
                             success = false;
                         }
                     }
@@ -2066,7 +2067,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 //                                    disableNodeForExecution(snc.getID());
                                     // and leave flag for now (will be reset
                                     // when execution is resumed).
-//                                    snc.getNode().setPauseLoopExecution(false);
+//                                   snc.getNode().setPauseLoopExecution(false);
                                 }
                             } catch (IllegalLoopException ile) {
                                 latestNodeMessage = new NodeMessage(
@@ -3491,18 +3492,18 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 	                    try {
 	                    	lsid = m_workflow.getMatchingLoopStart(leid);
 	                    } catch (Exception e) {
-	                    	// this should have been caught earlier...
-	                    	LOGGER.coding("WorkflowManager.reset() LoopEnd " +
-	                    			"encountered invalid state.", e);
+	                        // this should have been caught earlier...
+	                        LOGGER.coding("WorkflowManager.reset() LoopEnd "
+	                            + "encountered invalid state.", e);
 	                    	lsid = null;
 	                    }
-	                    if ((lsid != null) && (!allnodes.containsKey(lsid))) {
-	                    	// found a LoopEndNode without matching LoopStart
+                        if ((lsid != null) && (!allnodes.containsKey(lsid))) {
+                            // found a LoopEndNode without matching LoopStart
 	                    	// to be reset as well: we need to widen the
 	                    	// scope of the reset!
-	                    	// NOTE that this only works for nest loops (where
-	                    	// more than one node is outside the initial scope
-	                    	// because we started from a sorted set of nodes!)
+                            // NOTE that this only works for nest loops (where
+                            // more than one node is outside the initial scope
+                            // because we started from a sorted set of nodes!)
 	                        id = lsid;
 	                    }
 	                }
