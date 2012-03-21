@@ -423,7 +423,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // TODO synchronize to avoid messing with running workflows!
             assert factory != null;
             // insert node
-            newID = createUniqueID();
+            newID = m_workflow.createUniqueID();
             SingleNodeContainer container = new SingleNodeContainer(this,
                new Node((NodeFactory<NodeModel>)factory, context), newID);
             addNodeContainer(container, true);
@@ -528,7 +528,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         NodeID newID;
         WorkflowManager wfm;
         synchronized (m_workflowMutex) {
-            newID = createUniqueID();
+            newID = m_workflow.createUniqueID();
             wfm = new WorkflowManager(this, newID, inPorts, outPorts);
             if (name != null) {
                 wfm.m_name = name;
@@ -558,23 +558,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     ////////////////////////////////////////////
     // Helper methods for Node/Workflow creation
     ////////////////////////////////////////////
-
-    /**
-     * Create a new, unique node ID. Should be run within a synchronized
-     * block to avoid duplicates!
-     *
-     * @return next available unused index.
-     */
-    private NodeID createUniqueID() {
-        int nextIndex = 1;
-        if (m_workflow.getNrNodes() > 0) {
-            NodeID lastID = m_workflow.m_nodes.lastKey();
-            nextIndex = lastID.getIndex() + 1;
-        }
-        NodeID newID = new NodeID(this.getID(), nextIndex);
-        assert !m_workflow.containsNodeKey(newID);
-        return newID;
-    }
 
     /** Adds the NodeContainer to m_nodes and adds empty connection sets to
      * m_connectionsBySource and m_connectionsByDest.
@@ -4713,7 +4696,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             build.append(getNameWithID());
             build.append(": " + getState() + " (start)\n");
             for (Map.Entry<NodeID, NodeContainer> it
-                    : m_workflow.m_nodes.tailMap(prefix).entrySet()) {
+                    : m_workflow.getNodeMap().tailMap(prefix).entrySet()) {
                 NodeID id = it.getKey();
                 if (id.hasPrefix(prefix)) {
                     NodeContainer nc = it.getValue();
@@ -6140,7 +6123,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // 100+ workflows simultaneously in a cluster environment)
             synchronized (m_workflowMutex) {
                 if (m_workflow.containsNodeKey(subId)) {
-                    subId = createUniqueID();
+                    subId = m_workflow.createUniqueID();
                 }
                 NodeContainerPersistor pers = nodeEntry.getValue();
                 translationMap.put(suffix, subId);

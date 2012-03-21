@@ -53,7 +53,6 @@ package org.knime.core.node.workflow;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -74,7 +73,7 @@ import org.knime.core.util.Pair;
 class Workflow {
 
     /** mapping from NodeID to Nodes. */
-    final TreeMap<NodeID, NodeContainer> m_nodes =
+    private final TreeMap<NodeID, NodeContainer> m_nodes =
         new TreeMap<NodeID, NodeContainer>();
 
     // Connections (by node, source and destination). Note that meta
@@ -110,6 +109,24 @@ class Workflow {
     NodeID getID() {
         return m_id;
     }
+
+    /**
+     * Create a new, unique node ID. Should be run within a synchronized
+     * block to avoid duplicates!
+     *
+     * @return next available unused index.
+     */
+    NodeID createUniqueID() {
+        int nextIndex = 1;
+        if (getNrNodes() > 0) {
+            NodeID lastID = m_nodes.lastKey();
+            nextIndex = lastID.getIndex() + 1;
+        }
+        NodeID newID = new NodeID(this.getID(), nextIndex);
+        assert !containsNodeKey(newID);
+        return newID;
+    }
+
 
     /** Return NodeContainer for a given id or null if that node does not exist
      * in this workflow.
@@ -158,6 +175,13 @@ class Workflow {
      */
     Set<NodeID> getNodeIDs() {
         return m_nodes.keySet();
+    }
+    
+    /**
+     * @return tree map of NodeID/NodeContainers.
+     */
+    TreeMap<NodeID, NodeContainer> getNodeMap() {
+        return m_nodes;
     }
 
     /**
@@ -333,7 +357,7 @@ class Workflow {
             final Set<NodeID> inclusionList) {
         // keep adding nodes until we can't find new ones anymore
         for (int i = 0; i < bfsSortedNodes.size(); i++) {
-            // FIXME: not a very nice way to iterate over the keys of a map...
+            // Not a very nice way to iterate over the keys of a map...
             //   (but since we constantly add to it in this loop?!)
             Object[] ani = bfsSortedNodes.keySet().toArray();
             NodeID currNode = (NodeID)(ani[i]);
@@ -410,7 +434,7 @@ class Workflow {
         // now follow those nodes and see if we reach a workflow outport
         int currentNode = 0;
         while (currentNode < nodesToCheck.size()) {
-            // FIXME: Not a very nice way to iterate over this set but
+            // Not a very nice way to iterate over this set but
             //   since we are adding things to it inside the loop?!
             Object[] ani = nodesToCheck.keySet().toArray();
             NodeID thisID = (NodeID)(ani[currentNode]);
@@ -460,40 +484,66 @@ class Workflow {
      *
      * @param inPorts indices of inports
      * @return set of nodes with used inports
-     *
-     * @FIXME: this is an almost complete replication of the function
-     *   findAllNodesConnectedToLoopBody - they should both call a more general
-     *   implementation!
      */
-    ArrayList<NodeAndInports> findAllConnectedNodes(final Set<Integer> inPorts) {
+    ArrayList<NodeAndInports> findAllConnectedNodes(
+            final Set<Integer> inPorts) {
+        return findAllNodesInbetween(this.getID(), inPorts, this.getID());
+    }
+
+    /** Determine all nodes which are connected (directly or indirectly) to
+     * the given inports of the given start node and the given end node in
+     * this workflow. Both start and end node can also be the workflowmanager
+     * itself.
+     * The list is sorted according to "longest path layering" making sure
+     * that nodes are always added behind all of their predecessors.
+     *
+     * @param startID id of first node (or id of WFM)
+     * @param startPorts indices of inports (use all ports if null)
+     * @param endID if of last node (or id of WFM)
+     * @return set of nodes with used inports
+     */
+    private ArrayList<NodeAndInports> findAllNodesInbetween(
+            final NodeID startID, final Set<Integer> startPorts,
+            final NodeID endID) {
+        // prepare the result list
         ArrayList<NodeAndInports> tempOutput = new ArrayList<NodeAndInports>();
-        // find everything that is connected to an input port of this workflow
-        // with an index contained in the set:
-        for (ConnectionContainer cc : m_connectionsBySource.get(getID())) {
-            if (inPorts.contains(cc.getSourcePort())) {
+        // find everything that is connected to an output port of the
+        // "startNode" (which can be the WFM itself or a LoopStartNode or
+        // any other "start" node) with a port index contained in the set
+        for (ConnectionContainer cc : m_connectionsBySource.get(startID)) {
+            if ((startPorts == null)
+                        || (startPorts.contains(cc.getSourcePort()))) {
                 NodeID nextID = cc.getDest();
                 if (nextID.equals(this.getID())) {
-                    assert cc.getType().
+                    // don't record outgoing connections
+                    if (startID.equals(this.getID())) {
+                        assert cc.getType().
                          equals(ConnectionContainer.ConnectionType.WFMTHROUGH);
+                    } else {
+                        assert cc.getType().
+                           equals(ConnectionContainer.ConnectionType.WFMOUT);
+                    }
                 } else {
                     tempOutput.add(new NodeAndInports(cc.getDest(),
                             cc.getDestPort(), /*depth=*/0));
                 }
             }
         }
-        // now follow those nodes and keep adding until we reach the end of the workflow
+        // now follow those nodes and keep adding until we reach the end of
+        // the workflow or the dedicated end node.
         int currIndex = 0;
         while (currIndex < tempOutput.size()) {
             NodeID currID = tempOutput.get(currIndex).getID();
             NodeContainer currNode = m_nodes.get(currID);
+            assert currNode != null;  // WFM will never be added!
             Set<Integer> currInports = tempOutput.get(currIndex).getInports();
             int currDepth = tempOutput.get(currIndex).getDepth();
             Set<Integer> currOutports = new HashSet<Integer>();
-            if (   (currNode instanceof SingleNodeContainer)
+            if ((currNode instanceof SingleNodeContainer)
                 || (currInports == null)) {
                 // simple: all outports are affected
                 // (SNC or WFM without listed inports)
-                for (int i=0; i<currNode.getNrOutPorts(); i++) {
+                for (int i = 0; i < currNode.getNrOutPorts(); i++) {
                     currOutports.add(i);
                 }
             } else {
@@ -501,27 +551,30 @@ class Workflow {
                 // less simple: we need to determine which outports are
                 // connected to the listed inports:
                 for (Integer inPortIx : currInports) {
-                    Workflow currWorkflow = ((WorkflowManager)currNode).getWorkflow();
-                    Set<Integer> connectedOutports = currWorkflow.connectedOutPorts(inPortIx);
+                    Workflow currWorkflow
+                                  = ((WorkflowManager)currNode).getWorkflow();
+                    Set<Integer> connectedOutports 
+                                   = currWorkflow.connectedOutPorts(inPortIx);
                     currOutports.addAll(connectedOutports);
                 }
             }
             for (ConnectionContainer cc : this.getConnectionsBySource(currID)) {
-                assert (cc.getSource().equals(currID));
                 if (currOutports.contains(cc.getSourcePort())) {
                     // only if one of the affected outports is connected:
                     NodeID destID = cc.getDest();
-                    if (!destID.equals(this.getID())) {
-                        // only if we have not yet reached an outport!
+                    if ((!destID.equals(this.getID()))
+                            && (!destID.equals(endID))) {
+                        // only if we have not yet reached an outport or
+                        // the "end" node
                         // try to find node in existing list:
                         int ix = 0;
                         for (ix = 0; ix < tempOutput.size(); ix++) {
-                            if (tempOutput.get(ix).m_id.equals(destID)) {
+                            if (tempOutput.get(ix).m_nodeId.equals(destID)) {
                                 break;
                             }
                         }
                         if (ix >= tempOutput.size()) {
-                            // ...and it's a node not yet in our list: add it
+                            // ...it's a node not yet in our list: add it
                             tempOutput.add(new NodeAndInports(destID,
                                     cc.getDestPort(), currDepth + 1));
                         } else {
@@ -531,6 +584,9 @@ class Workflow {
                             NodeAndInports nai = tempOutput.get(ix);
                             if (!nai.getInports().contains(cc.getDestPort())) {
                                 nai.addInport(cc.getDestPort());
+                            } else {
+                                // no n:1 connections are allowed! 
+                                assert false;
                             }
                             if (nai.getDepth() != currDepth + 1) {
                                 // depth has to be smaller or equal
@@ -554,14 +610,8 @@ class Workflow {
             }
             currIndex++;
         }
-        // make sure nodes are list sorted by their final depth!
-        Collections.sort(tempOutput, new Comparator() {
-            @Override
-            public int compare(final Object nai0, final Object nai1) {
-                return (new Integer(((NodeAndInports)nai0).m_depth).
-                        compareTo(((NodeAndInports)nai1).m_depth));
-            }
-        });
+        // make sure nodes are sorted by their final depth!
+        Collections.sort(tempOutput);
         // done - return set of nodes and ports
         return tempOutput;
     }
@@ -596,8 +646,8 @@ class Workflow {
         // inport
         int currentNode = 0;
         while (currentNode < nodesToCheck.size()) {
-            // FIXME: Not a very nice way to iterate over this set but
-            //   since we are adding things to it inside the loop?!
+            // Not a very nice way to iterate over this set but
+            // since we are adding things to it inside the loop?!
             Object[] ani = nodesToCheck.keySet().toArray();
             NodeID thisID = (NodeID)(ani[currentNode]);
             assert !(thisID.equals(this.getID()));
@@ -648,7 +698,8 @@ class Workflow {
      * @param id of node to start search from
      * @param index of port the outgoing connection connected to
      */
-    private void completeSetBackwards(final HashSet<NodeID> nodes, final NodeID id,
+    private void completeSetBackwards(final HashSet<NodeID> nodes,
+            final NodeID id,
             final int outgoingPortIndex) {
         NodeContainer thisNode = m_nodes.get(id);
         for (ConnectionContainer cc : m_connectionsByDest.get(id)) {
@@ -699,7 +750,7 @@ class Workflow {
      */
     LinkedHashMap<NodeID, Set<Integer>> createBackwardsBreadthFirstSortedList(
             final Set<Integer> outportIndices) {
-        // this will our result
+        // this will be our result
         LinkedHashMap<NodeID, Set<Integer>> sortedNodes
                         = new LinkedHashMap<NodeID, Set<Integer>>();
         // find everything that is connected to an output port of this workflow
@@ -752,7 +803,7 @@ class Workflow {
             final Set<NodeID> inclusionList) {
         // keep adding nodes until we can't find new ones anymore
         for (int i = 0; i < sortedNodes.size(); i++) {
-            // FIXME: not a very nice way to iterate over the keys of a map...
+            // Not a very nice way to iterate over the keys of a map...
             //   (but since we constantly add to it in this loop?!)
             Object[] ani = sortedNodes.keySet().toArray();
             NodeID currNode = (NodeID)(ani[i]);
@@ -800,28 +851,44 @@ class Workflow {
         }
     }
 
-    /** Helper class for lists of nodes with their inports */
-    class NodeAndInports {
-        private NodeID m_id;
+    /** Helper class for lists of nodes with their inports and the depth
+     * in the list. */
+    class NodeAndInports implements Comparable<NodeAndInports> {
+        private NodeID m_nodeId;
         private int m_depth;  // indicates max depth from start node(s)
         private Set<Integer> m_inports;
+        /** Create new wrapper hold node, indices of inports, and depth.
+         * @param id of node
+         * @param portIx index of inport
+         * @param depth initial depth
+         */
         public NodeAndInports(final NodeID id, final Integer portIx,
                 final int depth) {
-            m_id = id;
+            m_nodeId = id;
             m_inports = new HashSet<Integer>();
             if (portIx != null) {
                 m_inports.add(portIx);
             }
             m_depth = depth;
         }
-        public NodeID getID() { return m_id; }
+        /** @return id of node. */
+        public NodeID getID() { return m_nodeId; }
+        /** @return input port indices. */
         public Set<Integer> getInports() { return m_inports; }
+        /** @param ip inport index to be added list. */
         public void addInport(final int ip) { m_inports.add(ip); }
+        /** @param d new depth of node. */
         public void setDepth(final int d) { m_depth = d; }
+        /** @return depth of node. */
         public int getDepth() { return m_depth; }
+        /** {@inheritDoc} */
+        @Override
+        public int compareTo(final NodeAndInports o2) {
+            return (new Integer(this.m_depth).compareTo(o2.m_depth));
+        }
     }
 
-    /** Return matching LoopEnd node for the given LoopStart
+    /** Return matching LoopEnd node for the given LoopStart.
      *
      * @param id The requested start node (instanceof LoopStart)
      * @throws IllegalLoopException if loop setup is wrong
@@ -829,7 +896,7 @@ class Workflow {
      * @return id of end node or null if no such node was found.
      */
     NodeID getMatchingLoopEnd(final NodeID id)
-    throws IllegalLoopException, IllegalArgumentException {
+    throws IllegalLoopException {
         NodeContainer nc = getNode(id);
         if (!(nc instanceof SingleNodeContainer)) {
             throw new IllegalArgumentException("Not a Loop Start Node " + id);
@@ -852,7 +919,7 @@ class Workflow {
                 NodeID destID = cc.getDest();
                 if (this.getID().equals(destID)) {
                     throw new IllegalLoopException("Loops can not leave"
-                    		+ " workflow!");
+                                                             + " workflow!");
                 }
                 NodeContainer destNC = getNode(destID);
                 if (destNC instanceof SingleNodeContainer) {
@@ -864,7 +931,7 @@ class Workflow {
                                 // we can reach it twice but we should never
                                 // reach another end node!
                                 throw new IllegalLoopException("Loops can not"
-                                	+ " connect to more than one End Node!");
+                                      + " connect to more than one End Node!");
                             }
                             foundEnd = destID;
                             continue;
@@ -882,7 +949,7 @@ class Workflow {
         return foundEnd;
     }
 
-    /** Return matching LoopStart node for the given LoopEnd
+    /** Return matching LoopStart node for the given LoopEnd.
      *
      * @param id The requested end node (instanceof LoopEnd)
      * @throws IllegalLoopException if loop setup is wrong
@@ -890,7 +957,7 @@ class Workflow {
      * @return id of start node or null if no such node was found.
      */
     NodeID getMatchingLoopStart(final NodeID id)
-    throws IllegalLoopException, IllegalArgumentException {
+    throws IllegalLoopException {
         NodeContainer nc = getNode(id);
         if (!(nc instanceof SingleNodeContainer)) {
             throw new IllegalArgumentException("Not a Loop End Node " + id);
@@ -959,109 +1026,24 @@ class Workflow {
      *   also contains the used input ports of each node.
      * @throws IllegalLoopException
      *    If there is a ill-posed loop (dangling branches)
-     *
-     * @FIXME: this is an almost complete replication of the function
-     *   findAllConnectedNodes - they should both call a more general
-     *   implementation!
      */
     ArrayList<NodeAndInports> findAllNodesConnectedToLoopBody(
             final NodeID startNode,
             final NodeID endNode) throws IllegalLoopException {
-        ArrayList<NodeAndInports> tempOutput = new ArrayList<NodeAndInports>();
+        ArrayList<NodeAndInports> tempOutput =
+                     findAllNodesInbetween(startNode, null, endNode);
         if (startNode.equals(endNode)) {
             // silly case - start = end node.
             return tempOutput;
         }
-        // for the breath first search (temporarily) add start node:
-        tempOutput.add(new NodeAndInports(startNode, null, 0));
-        // iterate over index since we add new nodes at the end of the list
-        int currIndex = 0;
-        while (currIndex < tempOutput.size()) {
-            NodeAndInports currNAI = tempOutput.get(currIndex);
-            NodeID currID = currNAI.getID();
-            int currDepth = currNAI.getDepth();
-            NodeContainer currNode = m_nodes.get(currID);
-            // determine set of indices of affected outports for current node
-            Set<Integer> currInports = currNAI.getInports();
-            Set<Integer> currOutports = new HashSet<Integer>();
-            if ((currNode instanceof SingleNodeContainer)
-                || (currInports == null)) {
-                // simple: all outports are affected
-                // (SNC or WFM without listed inports)
-                for (int i = 0; i < currNode.getNrOutPorts(); i++) {
-                    currOutports.add(i);
-                }
-            } else {
-                assert currNode instanceof WorkflowManager;
-                // less simple: we need to determine which outports are
-                // connected to the listed inports:
-                for (Integer inPortIx : currInports) {
-                    Workflow currWorkflow =
-                        ((WorkflowManager)currNode).getWorkflow();
-                    Set<Integer> connectedOutports =
-                        currWorkflow.connectedOutPorts(inPortIx);
-                    currOutports.addAll(connectedOutports);
-                }
-            }
-            // and now find immediate successors:
-            for (ConnectionContainer cc : this.getConnectionsBySource(currID)) {
-                assert (cc.getSource().equals(currID));
-                if (currOutports.contains(cc.getSourcePort())) {
-                    // only if one of the affected outports is connected:
-                    NodeID destID = cc.getDest();
-                    if (destID.equals(this.getID())) {
-                        // if any branch leaves this WFM, complain!
-                        throw new IllegalLoopException(
-                            "Loops are not permitted to leave workflows!");
-                    }
-                    if ((!destID.equals(endNode))) {
-                        // we have not yet reached the end...
-                        // try to find node in existing list:
-                        int ix = 0;
-                        for (ix = 0; ix < tempOutput.size(); ix++) {
-                            if (tempOutput.get(ix).m_id.equals(destID)) {
-                                break;
-                            }
-                        }
-                        if (ix >= tempOutput.size()) {
-                            // ...we did not find it: add it to the list
-                            tempOutput.add(new NodeAndInports(destID,
-                                    cc.getDestPort(), currDepth + 1));
-                        } else {
-                            assert ix != currIndex;
-                            // node is already in list, adjust depth to new
-                            // maximum and add port if not already contained:
-                            NodeAndInports nai = tempOutput.get(ix);
-                            if (!nai.getInports().contains(cc.getDestPort())) {
-                                nai.addInport(cc.getDestPort());
-                            }
-                            if (nai.getDepth() != currDepth + 1) {
-                                // depth has to be smaller or equal
-                                assert nai.getDepth() < currDepth + 1;
-                                nai.setDepth(currDepth + 1);
-                                if (ix < currIndex) {
-                                    // move this node to end of list if it was
-                                    // already "touched" so that depth of
-                                    // successors will also be adjusted!
-                                    nai = tempOutput.remove(ix);
-                                    tempOutput.add(nai);
-                                    // critical: we removed an element in our
-                                    // list which resided before our pointer.
-                                    // Make sure we still point to current node.
-                                    currIndex--;
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            currIndex += 1;
+        // check that no connection from within the loop leaves workflow:
+        if (tempOutput.contains(this.getID())) {
+            // if any branch leaves this WFM, complain!
+            throw new IllegalLoopException(
+                "Loops are not permitted to leave workflows!");
         }
-        // remove start node
-        NodeAndInports nai = tempOutput.remove(0);
-        assert (nai.getID().equals(startNode));
         // make sure we have no branches from within the loop body reconnecting
-        // to the flow after the loop end node
+        // to the flow after the loop end node (= skipping over loop end)
         HashMap<NodeID, Set<Integer>> nodesAfterEndNode =
             createBreadthFirstSortedList(Collections.singleton(endNode), true);
         for (NodeAndInports nai2 : tempOutput) {
@@ -1070,16 +1052,7 @@ class Workflow {
                         "Branches are not permitted to leave loops!");
             }
         }
-        // make sure nodes are list sorted by their final depth!
-        Collections.sort(tempOutput, new Comparator<NodeAndInports>() {
-            @Override
-            public int compare(
-                    final NodeAndInports n0, final NodeAndInports n1) {
-                return n0.m_depth - n1.m_depth;
-            }
-        });
         return tempOutput;
     }
-
 
 }
