@@ -5,6 +5,10 @@
 	<classpathentry exported="true" kind="lib" path="lib/saxon-he-9.2.0.5.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
-	<classpathentry exported="true" kind="lib" path="lib/nodefactory.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/nodefactory.jar">
+		<attributes>
+			<attribute name="javadoc_location" value="https://xmlbeans.apache.org/docs/2.4.0/reference/index.html"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

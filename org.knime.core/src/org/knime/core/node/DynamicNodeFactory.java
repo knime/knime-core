@@ -55,6 +55,8 @@ import java.util.Properties;
 
 import noNamespace.KnimeNodeDocument;
 
+import org.apache.xmlbeans.XmlDocumentProperties;
+
 /**
  *
  * @author hornm, University of Konstanz
@@ -155,6 +157,13 @@ public abstract class DynamicNodeFactory<T extends NodeModel> extends
     @Override
     protected InputStream getPropertiesInputStream() {
         KnimeNodeDocument doc = KnimeNodeDocument.Factory.newInstance();
+        XmlDocumentProperties properties = doc.documentProperties();
+        properties.setStandalone(true);
+        properties.setEncoding("UTF-8");
+        properties.setVersion("1.0");
+        properties.setDoctypeName("knimeNode");
+        properties.setDoctypePublicId("-//UNIKN//DTD KNIME Node 2.0//EN");
+        properties.setDoctypeSystemId("http://www.knime.org/Node.dtd");
         addNodeDescription(doc);
         return doc.newInputStream();
     }
