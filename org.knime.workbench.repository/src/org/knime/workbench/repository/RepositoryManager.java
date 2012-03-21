@@ -441,8 +441,6 @@ public final class RepositoryManager {
 						node.setExpertNode(b);
 
 						node.setName(factory.getNodeName());
-						node.setType(((DynamicNodeFactory<? extends NodeModel>) factory)
-								.getNodeType());
 
 						String pluginID = elem.getDeclaringExtension()
 								.getNamespaceIdentifier();

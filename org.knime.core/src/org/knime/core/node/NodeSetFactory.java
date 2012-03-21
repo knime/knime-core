@@ -61,12 +61,11 @@ public interface NodeSetFactory {
 	/**
 	 * @return all node factories of this NodeSetFactory
 	 */
-	Collection<DynamicNodeFactory> getNodeFactorySet();
+	public Collection<DynamicNodeFactory> getNodeFactorySet();
 
     /**
      * @param id the id of the node factory
      * @return the node factory
      */
-    Class<NodeFactory<? extends NodeModel>> getNodeFactory(String id);
-
+    public Class<NodeFactory<? extends NodeModel>> getNodeFactory(String id);
 }

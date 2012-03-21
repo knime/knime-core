@@ -54,7 +54,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Dictionary;
 import java.util.List;
-import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -88,9 +87,6 @@ public abstract class NodeFactory<T extends NodeModel> {
 
     private static final List<String> RO_LIST =
             Collections.unmodifiableList(LOADED_NODE_FACTORIES);
-
-    /** List of additional properties for the node factory. */
-    protected Properties m_properties;
 
     /**
      * Enum for all node types.
@@ -126,7 +122,7 @@ public abstract class NodeFactory<T extends NodeModel> {
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(NodeFactory.class);
 
-    private String m_nodeName;
+    private final String m_nodeName;
 
     private static class PortDescription {
         private final String m_description;
@@ -152,11 +148,11 @@ public abstract class NodeFactory<T extends NodeModel> {
 
     private List<Element> m_views;
 
-    private URL m_icon;
+    private final URL m_icon;
 
     private NodeType m_type;
 
-    private Element m_knimeNode;
+    private final Element m_knimeNode;
 
     private static DocumentBuilder parser;
 
@@ -230,44 +226,11 @@ public abstract class NodeFactory<T extends NodeModel> {
      * file named <code>Node.xml</code> in the same package as the factory.
      */
     protected NodeFactory() {
-        this(true);
-    }
-
-    /**
-     * Creates a new <code>NodeFactory</code>.
-     *
-     * @param parseNodeXML if set to true, tries to read a properties file
-     *      named <code>Node.xml</code> in the same package as the factory,
-     *      otherwise the parsing is skipped.
-     */
-    protected NodeFactory(final boolean parseNodeXML) {
-        if (parseNodeXML) {
-            parseNodeXML();
-        }
-        addBundleInformation();
-        addLoadedFactory(this.getClass());
-    }
-
-    private void parseNodeXML() {
         if (parser == null) {
             instantiateParser();
         }
 
-        ClassLoader loader = getClass().getClassLoader();
-        InputStream propInStream;
-        String path;
-        Class<?> clazz = getClass();
-
-
-        do {
-            path = clazz.getPackage().getName();
-            path =
-                    path.replace('.', '/') + "/" + clazz.getSimpleName()
-                            + ".xml";
-
-            propInStream = loader.getResourceAsStream(path);
-            clazz = clazz.getSuperclass();
-        } while ((propInStream == null) && (clazz != Object.class));
+        InputStream propInStream = getPropertiesInputStream();
 
         // fall back node name if no xml file available or invalid.
         String defaultNodeName = getClass().getSimpleName();
@@ -337,7 +300,7 @@ public abstract class NodeFactory<T extends NodeModel> {
                     nodeName += " (deprecated)";
                 }
             } catch (Exception ex) {
-                m_logger.coding(ex.getMessage() + " (" + path + ")", ex);
+                m_logger.coding(ex.getMessage(), ex);
                 knimeNode = null;
                 icon = null;
                 nodeName = defaultNodeName;
@@ -348,6 +311,34 @@ public abstract class NodeFactory<T extends NodeModel> {
         m_icon = icon;
         m_nodeName = nodeName;
         m_type = type;
+
+        addBundleInformation();
+        addLoadedFactory(this.getClass());
+    }
+
+    /**
+     * Creates an input stream containing the properties for the node. This
+     * can be overridden by subclasses to provide this information dynamically.
+     *
+     * @return the input stream to read the properties from
+     */
+    protected InputStream getPropertiesInputStream() {
+        ClassLoader loader = getClass().getClassLoader();
+        InputStream propInStream;
+        String path;
+        Class<?> clazz = getClass();
+
+        do {
+            path = clazz.getPackage().getName();
+            path =
+                    path.replace('.', '/') + "/" + clazz.getSimpleName()
+                            + ".xml";
+
+            propInStream = loader.getResourceAsStream(path);
+            clazz = clazz.getSuperclass();
+        } while ((propInStream == null) && (clazz != Object.class));
+        LOGGER.debug("Parsing \"" + path + "\" for node properties.");
+        return propInStream;
     }
 
     private static final Pattern ICON_PATH_PATTERN =
@@ -897,21 +888,4 @@ public abstract class NodeFactory<T extends NodeModel> {
         LOADED_NODE_FACTORIES.add(factoryClass.getName());
     }
 
-    /**
-     * Allows to get additional properties that are set for the node factory.
-     *
-     * @return the additional properties set for this node factory or an empty
-     *      property list if not available
-     */
-    public Properties getAdditionalProperties() {
-        return m_properties;
-    }
-
-    /**
-     * Allows to get additional properties that are set for the node factory.
-     * @param properties the additional properties to set
-     */
-    public void setAdditionalProperties(final Properties properties) {
-        m_properties = properties;
-    }
 }

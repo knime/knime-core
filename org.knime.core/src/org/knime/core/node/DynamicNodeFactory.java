@@ -50,7 +50,10 @@
  */
 package org.knime.core.node;
 
+import java.io.InputStream;
 import java.util.Properties;
+
+import noNamespace.KnimeNodeDocument;
 
 /**
  *
@@ -68,18 +71,19 @@ public abstract class DynamicNodeFactory<T extends NodeModel> extends
     /** Key for the after-id property. */
     private static final String AFTER_ID_KEY = "AfterId";
 
-    /** Key for the after-id property. */
-    private static final String NODE_TYPE_KEY = "NodeType";
-
     /** Key for the category property. */
     private static final String CATEGORY_KEY = "Category";
+
+    /* Contains additional properties that are otherwise defined by the
+     * node extension point. */
+    private Properties m_properties;
 
     /**
      * Creates a new dynamic node factory. Additional properties should be set
      * later by invoking {@link #setAdditionalProperties(Properties)}.
      */
     public DynamicNodeFactory() {
-        super(false);
+        // needed for creation by reflection
     }
 
     /**
@@ -112,20 +116,6 @@ public abstract class DynamicNodeFactory<T extends NodeModel> extends
     }
 
     /**
-     * @return the NodeType of this factory's node
-     */
-    public String getNodeType() {
-        return m_properties.getProperty(NODE_TYPE_KEY);
-    }
-
-    /**
-     * @param type the node type to set
-     */
-    public void setNodeType(final String type) {
-        m_properties.setProperty(NODE_TYPE_KEY, type);
-    }
-
-    /**
      * @return the fully qualified class name of the {@link NodeSetFactory} that
      *      created this DynamicNodeFactory.
      */
@@ -140,4 +130,38 @@ public abstract class DynamicNodeFactory<T extends NodeModel> extends
     public void setNodeSetFactory(final String nodeSetFactory) {
         m_properties.setProperty(NODE_SET_FACTORY_KEY, nodeSetFactory);
     }
+
+    /**
+     * Allows to get additional properties that are set for the node factory.
+     *
+     * @return the additional properties set for this node factory or an empty
+     *      property list if not available
+     */
+    public Properties getAdditionalProperties() {
+        return m_properties;
+    }
+
+    /**
+     * Allows to get additional properties that are set for the node factory.
+     * @param properties the additional properties to set
+     */
+    public void setAdditionalProperties(final Properties properties) {
+        m_properties.putAll(properties);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected InputStream getPropertiesInputStream() {
+        KnimeNodeDocument doc = KnimeNodeDocument.Factory.newInstance();
+        addNodeDescription(doc);
+        return doc.newInputStream();
+    }
+
+    /**
+     * Subclasses should add the node description elements.
+     * @param doc the document to add the description to
+     */
+    protected abstract void addNodeDescription(final KnimeNodeDocument doc);
 }
