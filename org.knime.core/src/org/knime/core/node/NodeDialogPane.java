@@ -248,6 +248,13 @@ public abstract class NodeDialogPane {
         m_flowVariableTab = new FlowVariablesTab();
     }
 
+    /** A logger initialized with the concrete runtime class.
+     * @return the logger (not null).
+     * @since 2.6*/
+    protected final NodeLogger getLogger() {
+        return m_logger;
+    }
+
     /**
      * creates and adds the miscellaneous tab that is contained in each dialog
      * of nodes with output ports.
@@ -1230,7 +1237,7 @@ public abstract class NodeDialogPane {
             // to take oversized dimensions
             JPanel panel = new JPanel(new BorderLayout());
             panel.add(m_tree, BorderLayout.CENTER);
-            JScrollPane scrPanel = new JScrollPane(panel); 
+            JScrollPane scrPanel = new JScrollPane(panel);
             scrPanel.setPreferredSize(new Dimension(150, 100));
             add(scrPanel, BorderLayout.CENTER);
             add(m_errorLabel, BorderLayout.NORTH);
