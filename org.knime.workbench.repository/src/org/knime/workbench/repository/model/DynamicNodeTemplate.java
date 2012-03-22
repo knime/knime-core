@@ -59,4 +59,28 @@ public class DynamicNodeTemplate extends NodeTemplate {
     public Class <? extends NodeSetFactory> getNodeSetFactoryClass() {
         return m_nodeSetFactory.getClass();
     }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (obj == this) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (!(obj instanceof DynamicNodeTemplate)) {
+            return false;
+        }
+        return getID().equals(((DynamicNodeTemplate)obj).getID());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return getID().hashCode();
+    }
 }
