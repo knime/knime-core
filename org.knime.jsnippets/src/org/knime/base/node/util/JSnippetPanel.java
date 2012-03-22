@@ -86,6 +86,7 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.text.JTextComponent;
 import javax.swing.text.html.HTMLEditorKit;
+import javax.swing.text.html.StyleSheet;
 
 import org.fife.ui.autocomplete.AutoCompletion;
 import org.fife.ui.autocomplete.BasicCompletion;
@@ -96,7 +97,6 @@ import org.fife.ui.rtextarea.RTextScrollPane;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 import org.knime.core.node.util.FlowVariableListCellRenderer;
 import org.knime.core.node.workflow.FlowVariable;
@@ -147,7 +147,6 @@ public class JSnippetPanel extends JPanel {
         initCompletionProvider();
         initComponents();
         createStringManipulationPanel();
-        setMinimumSize(getPreferredSize());
     }
 
     private void createStringManipulationPanel() {
@@ -173,6 +172,7 @@ public class JSnippetPanel extends JPanel {
 
         add(centerPanel, BorderLayout.CENTER);
         setPreferredSize(new Dimension(820, 420));
+        setMinimumSize(new Dimension(600, 350));
     }
 
     private void initComponents() {
@@ -283,11 +283,15 @@ public class JSnippetPanel extends JPanel {
                 }
             }
         });
-        m_description = new JTextPane();
         HTMLEditorKit kit = new HTMLEditorKit();
+        StyleSheet css = new StyleSheet();
+        css.addRule("* { font-family: sans-serif; }");
+        kit.setStyleSheet(css);
+
+        m_description = new JTextPane();
         m_description.setEditorKit(kit);
         m_description.setEditable(false);
-
+        m_description.setBackground(getBackground());
         updateManipulatorList(ManipulatorProvider.ALL_CATEGORY);
     }
 
@@ -356,15 +360,16 @@ public class JSnippetPanel extends JPanel {
         c.insets = new Insets(6, 6, 4, 6);
         p.add(new JLabel("Function"), c);
         c.gridy++;
+        c.weightx = 0.05;
         c.weighty = 1;
         c.insets = new Insets(2, 6, 4, 6);
         JScrollPane manipScroller = new JScrollPane(m_manipulators);
-        manipScroller
-                .setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_ALWAYS);
-        manipScroller.setMinimumSize(new Dimension(manipScroller
-                .getPreferredSize().width - 45,
-                manipScroller.getMinimumSize().height));
-        manipScroller.setPreferredSize(manipScroller.getMinimumSize());
+        Dimension preferred =
+                m_manipulators.getPreferredScrollableViewportSize();
+
+        manipScroller.setPreferredSize(new Dimension(preferred.width + 5, 40));
+        manipScroller.setMinimumSize(new Dimension(preferred.width - 45, 40));
+        manipScroller.setMaximumSize(new Dimension(preferred.width + 10, 1000));
         p.add(manipScroller, c);
         c.weighty = 0;
 
@@ -373,14 +378,12 @@ public class JSnippetPanel extends JPanel {
         p.add(new JLabel("Expression"), c);
         c.gridy++;
         c.insets = new Insets(2, 6, 4, 6);
-        c.gridwidth = 2;
-        c.weightx = 1;
+        c.gridwidth = GridBagConstraints.REMAINDER;
         c.weighty = 0.6;
 
         JComponent editor = createEditorComponent();
         editor.setPreferredSize(editor.getMinimumSize());
         p.add(editor, c);
-        c.weightx = 0;
         c.weighty = 0;
 
         c.gridy = 0;
@@ -389,7 +392,7 @@ public class JSnippetPanel extends JPanel {
         p.add(new JLabel("Description"), c);
         c.gridy++;
         c.gridheight = 3;
-        c.weightx = 1;
+        c.weightx = 0.5;
         c.weighty = 1;
         c.insets = new Insets(2, 2, 4, 6);
         m_description.setPreferredSize(m_description.getMinimumSize());
@@ -491,11 +494,9 @@ public class JSnippetPanel extends JPanel {
      *            list of available columns
      * @param flowVariables a map with all available flow variables; used to
      *            fill the list of available flow variables
-     * @throws NotConfigurableException
      */
     public void update(final String expression, final DataTableSpec spec,
-            final Map<String, FlowVariable> flowVariables)
-            throws NotConfigurableException {
+            final Map<String, FlowVariable> flowVariables) {
         m_expEdit.setText(expression);
         m_expEdit.requestFocus();
 
