@@ -111,6 +111,12 @@ public final class BufferedDataTable implements DataTable, PortObject {
      */
     public static final PortType TYPE = new PortType(BufferedDataTable.class);
 
+    /** A port type representing an optional input table (as used, for instance
+     * in the Concatenate node).
+     * @since 2.6 */
+    public static final PortType TYPE_OPTIONAL =
+        new PortType(BufferedDataTable.class, true);
+
     /** internal ID for any generated table. */
     private static final AtomicInteger LAST_ID = new AtomicInteger(0);
 
