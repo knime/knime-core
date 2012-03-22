@@ -62,6 +62,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.w3c.dom.Document;
@@ -574,6 +576,43 @@ public abstract class NodeFactory<T extends NodeModel> {
         String portDescription = value.trim().replaceAll("(?:\\s+|\n)", " ");
 
         portList.set(index, new PortDescription(portDescription, portName));
+    }
+
+    /** Loads additional settings to this instance that were saved using
+     * the {@link #saveAdditionalFactorySettings(ConfigWO)}.
+     *
+     * <p>See {@link #saveAdditionalFactorySettings(ConfigWO)} for details on
+     * when to overwrite this method.
+     *
+     * <p>This method is called immediately after instantiation is not intended
+     * to be called by client code.
+     *
+     * @param config The config to read from.
+     * @throws InvalidSettingsException If the settings are invalid (which
+     * will result in an error during workflow load -- the node will not load!)
+     * @since 2.6
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public void loadAdditionalFactorySettings(final ConfigRO config)
+    throws InvalidSettingsException {
+        // overwritten in subclasses
+    }
+
+    /** Saves additional settings of this instance. This method is called by
+     * the framework upon workflow save and may be overwritten by subclasses.
+     *
+     * <p>This method is mainly used in a dynamic context, where node factories
+     * are defined through a different extension that generates a set of
+     * node factories and not just a single one.  Most derived node factories
+     * will therefore not overwrite this method (e.g. none of the
+     * wizard-generated factories).
+     *
+     * @param config To read from.
+     * @since 2.6
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public void saveAdditionalFactorySettings(final ConfigWO config) {
+        // overwritten in subclass
     }
 
     /**

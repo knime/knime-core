@@ -3632,6 +3632,21 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
+    /** Returns true if all required input data is available to the node.
+     * Unconnected optional inputs are OK.
+     *
+     * <p>Used for configuration of data aware configuration dialogs which
+     * need the input data prior opening the dialog.
+     * @param nodeID Node in question.
+     * @return That property.
+     * @since 2.6 */
+    public boolean isAllInputDataAvailableToNode(final NodeID nodeID) {
+        synchronized (m_workflowMutex) {
+            final NodeContainer nc = getNodeContainer(nodeID);
+            return assembleInputData(nodeID, new PortObject[nc.getNrInPorts()]);
+        }
+    }
+
     /** Check if a node can be cancelled individually.
     *
     * @param nodeID id of node

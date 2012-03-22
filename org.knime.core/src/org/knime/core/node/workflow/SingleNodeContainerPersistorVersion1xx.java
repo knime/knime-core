@@ -275,6 +275,15 @@ public class SingleNodeContainerPersistorVersion1xx
             setDirtyAfterLoad();
             throw new InvalidSettingsException(error, e);
         }
+
+        try {
+            loadAdditionalFactorySettings(nodeFactory, settings);
+        } catch (Throwable e) {
+            error =  "Unable to load additional factory settings for \""
+                + nodeFactoryClassName + "\"";
+            setDirtyAfterLoad();
+            throw new InvalidSettingsException(error, e);
+        }
         m_node = new Node(nodeFactory);
         boolean resetRequired = meta.load(settings, parentSettings, result);
         m_nodeSettings = settings;
@@ -408,6 +417,17 @@ public class SingleNodeContainerPersistorVersion1xx
             }
             throw ex;
         }
+    }
+
+    /** Calls {@link NodeFactory#loadAdditionalFactorySettings(
+     * org.knime.core.node.config.ConfigRO)}
+     * @param factory ...
+     * @param settings ...
+     * @throws InvalidSettingsException ..
+     */
+    protected void loadAdditionalFactorySettings(final NodeFactory factory,
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        // overwritten in subclass
     }
 
     /** Load Name of file containing node settings.
