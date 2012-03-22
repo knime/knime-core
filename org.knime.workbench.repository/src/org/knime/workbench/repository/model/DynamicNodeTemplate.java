@@ -22,8 +22,6 @@
 
 package org.knime.workbench.repository.model;
 
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSetFactory;
 
 /**
@@ -45,14 +43,6 @@ public class DynamicNodeTemplate extends NodeTemplate {
             final NodeSetFactory nodeSetFactory) {
         super(nodeID);
         m_nodeSetFactory = nodeSetFactory;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Class<NodeFactory<? extends NodeModel>> getFactory() {
-        return m_nodeSetFactory.getNodeFactory(getID());
     }
 
     /**

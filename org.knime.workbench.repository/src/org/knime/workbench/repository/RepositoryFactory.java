@@ -86,7 +86,7 @@ import org.osgi.framework.Bundle;
 /**
  * Factory for creation of repository objects from
  * <code>IConfigurationElement</code> s from the Plugin registry.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public final class RepositoryFactory {
@@ -114,7 +114,7 @@ public final class RepositoryFactory {
 
 	/**
 	 * Creates a new node repository object. Throws an exception, if this fails
-	 * 
+	 *
 	 * @param element
 	 *            Configuration element from the contributing plugin
 	 * @return NodeTemplate object to be used within the repository.
@@ -177,7 +177,7 @@ public final class RepositoryFactory {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param configuration
 	 *            content of the extension
 	 * @return a meta node template
@@ -269,7 +269,7 @@ public final class RepositoryFactory {
 
 	/**
 	 * Creates a new category object. Throws an exception, if this fails
-	 * 
+	 *
 	 * @param root
 	 *            The root to insert the category in
 	 * @param element
@@ -355,7 +355,7 @@ public final class RepositoryFactory {
 
 	/**
 	 * Creates the set of dynamic node templates.
-	 * 
+	 *
 	 * @param root
 	 *            the root to add the missing categories in
 	 * @param element
@@ -383,19 +383,37 @@ public final class RepositoryFactory {
 			GlobalClassCreator.lock.unlock();
 		}
 
-		Collection<DynamicNodeTemplate> dynamicNodeTemplates = new ArrayList<DynamicNodeTemplate>();
+		Collection<DynamicNodeTemplate> dynamicNodeTemplates
+		        = new ArrayList<DynamicNodeTemplate>();
 
 		// for all nodes in the node set
-		for (NodeFactory<? extends NodeModel> factory : nodeSet
-				.getNodeFactorySet()) {
+		for (String factoryId : nodeSet.getNodeFactoryIds()) {
+			DynamicNodeTemplate node = new DynamicNodeTemplate(id + "_"
+					+ factoryId, nodeSet);
+            Class<? extends NodeFactory<? extends NodeModel>> factoryClass =
+                    nodeSet.getNodeFactory(factoryId);
 
-			DynamicNodeTemplate node = new DynamicNodeTemplate(id
-					+ factory.getNodeName(), nodeSet);
-			node.setFactory((Class<NodeFactory<? extends NodeModel>>) factory
-					.getClass());
+            // Try to load the node factory class...
+            NodeFactory<? extends NodeModel> factory;
+            // this ensures that the class is loaded by the correct eclipse
+            // classloaders
+            GlobalClassCreator.lock.lock();
+            try {
+                factory = factoryClass.newInstance();
+                if (factory instanceof DynamicNodeFactory) {
+                    ((DynamicNodeFactory)factory).setId(factoryId);
+                    factory.init();
+                }
+            } catch (Throwable e) {
+                throw new IllegalArgumentException(
+                        "Can't load factory class for node: "
+                                + factoryClass.getName() + "-" + factoryId, e);
+            } finally {
+                GlobalClassCreator.lock.unlock();
+            }
+            node.setFactory(factoryClass);
 
-			node.setAfterID(((DynamicNodeFactory<? extends NodeModel>) factory)
-					.getAfterID());
+            node.setAfterID(nodeSet.getAfterID(factoryId));
 			boolean b = Boolean.parseBoolean(element
 					.getAttribute("expert-flag"));
 			node.setExpertNode(b);
@@ -420,8 +438,7 @@ public final class RepositoryFactory {
 				node.setIcon(icon);
 			}
 
-			node.setCategoryPath(((DynamicNodeFactory<? extends NodeModel>) factory)
-					.getCategory());
+			node.setCategoryPath(nodeSet.getCategoryPath(factoryId));
 
 			dynamicNodeTemplates.add(node);
 
@@ -462,9 +479,9 @@ public final class RepositoryFactory {
 	}
 
 	/* Little helper to create a category */
-	private static Category createCategory(String pluginID, String categoryID,
-			String description, String name, String afterID, String icon,
-			String categoryPath) {
+	private static Category createCategory(final String pluginID, final String categoryID,
+			final String description, final String name, final String afterID, final String icon,
+			final String categoryPath) {
 
 		Category cat = new Category(categoryID);
 		cat.setPluginID(pluginID);

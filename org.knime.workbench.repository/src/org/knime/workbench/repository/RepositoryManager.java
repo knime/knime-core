@@ -81,21 +81,21 @@ import org.osgi.framework.Bundle;
  * model. The repository is created on-demand as soon as one of the three public
  * methods is called. Thus the first call can take some time to return.
  * Subsequent calls will return immediately with the full repository tree.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  * @author Thorsten Meinl, University of Konstanz
  */
 public final class RepositoryManager {
 	/**
 	 * Listener interface for acting on events while the repository is read.
-	 * 
+	 *
 	 * @author Thorsten Meinl, University of Konstanz
 	 * @since 2.4
 	 */
 	public interface Listener {
 		/**
 		 * Called when a new category has been created.
-		 * 
+		 *
 		 * @param root
 		 *            the repository root
 		 * @param category
@@ -105,7 +105,7 @@ public final class RepositoryManager {
 
 		/**
 		 * Called when a new node has been created.
-		 * 
+		 *
 		 * @param root
 		 *            the repository root
 		 * @param node
@@ -115,7 +115,7 @@ public final class RepositoryManager {
 
 		/**
 		 * Called when a new meta node has been created.
-		 * 
+		 *
 		 * @param root
 		 *            the repository root
 		 * @param metanode
@@ -459,10 +459,10 @@ public final class RepositoryManager {
 
 	/**
 	 * Returns the extensions for a given extension point.
-	 * 
+	 *
 	 * @param pointID
 	 *            The extension point ID
-	 * 
+	 *
 	 * @return The extensions
 	 */
 	private static IExtension[] getExtensions(final String pointID) {
@@ -544,7 +544,7 @@ public final class RepositoryManager {
 	 * Returns the repository root. If the repository has not yet read, it will
 	 * be created during the call. Thus the first call to this method can take
 	 * some time.
-	 * 
+	 *
 	 * @return the root object
 	 */
 	public synchronized Root getRoot() {
@@ -558,8 +558,8 @@ public final class RepositoryManager {
 	 * Returns the repository root. If the repository has not yet read, it will
 	 * be created during the call. If the listener is non-<code>null</code>, it
 	 * will be notified of all read items (categories, nodes, metanodes).
-	 * 
-	 * 
+	 *
+	 *
 	 * @param listener
 	 *            a listener that is notified of newly read items
 	 * @return the root object
@@ -575,7 +575,7 @@ public final class RepositoryManager {
 	/**
 	 * Returns the node template with the given id, or <code>null</code> if no
 	 * such node exists.
-	 * 
+	 *
 	 * @param id
 	 *            the node's id
 	 * @return a node template or <code>null</code>

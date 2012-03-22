@@ -58,14 +58,28 @@ import java.util.Collection;
  */
 public interface NodeSetFactory {
 
-	/**
-	 * @return all node factories of this NodeSetFactory
-	 */
-	public Collection<DynamicNodeFactory> getNodeFactorySet();
+    /**
+     * @return the ids of all node factories of this NodeSetFactory
+     */
+    public Collection<String> getNodeFactoryIds();
 
     /**
      * @param id the id of the node factory
      * @return the node factory
      */
-    public Class<NodeFactory<? extends NodeModel>> getNodeFactory(String id);
+    public Class<? extends NodeFactory<? extends NodeModel>> getNodeFactory(
+            String id);
+
+    /**
+     * @param id the id of the node factory
+     * @return the category the node associated with this node factory belongs
+     *         to
+     */
+    public String getCategoryPath(final String id);
+
+    /**
+     * @param id the id of the node factory
+     * @return the ID after which this factory's node is sorted in
+     */
+    public String getAfterID(final String id);
 }

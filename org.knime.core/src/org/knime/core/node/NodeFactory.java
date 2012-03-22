@@ -124,7 +124,7 @@ public abstract class NodeFactory<T extends NodeModel> {
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(NodeFactory.class);
 
-    private final String m_nodeName;
+    private String m_nodeName;
 
     private static class PortDescription {
         private final String m_description;
@@ -150,17 +150,19 @@ public abstract class NodeFactory<T extends NodeModel> {
 
     private List<Element> m_views;
 
-    private final URL m_icon;
+    private URL m_icon;
 
     private NodeType m_type;
 
-    private final Element m_knimeNode;
+    private Element m_knimeNode;
 
     private static DocumentBuilder parser;
 
     private static URL defaultIcon = null;
 
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
+
+    private boolean m_initialized = false;
 
     static {
         try {
@@ -228,10 +230,34 @@ public abstract class NodeFactory<T extends NodeModel> {
      * file named <code>Node.xml</code> in the same package as the factory.
      */
     protected NodeFactory() {
+       this(false);
+    }
+
+    /**
+     * Creates a new <code>NodeFactory</code> without reading the properties
+     * file.
+     * @param lazyInitialization if set to true the full initialization is
+     *      postponed until the {@link #init()} method is called.
+     */
+    protected NodeFactory(final boolean lazyInitialization) {
+        if (!lazyInitialization) {
+            init();
+        }
+    }
+
+    /**
+     * Initializes the node factory by parsing the properties file. This method
+     * should only be called if the NodeFactory was created with the constructor
+     * {@link #NodeFactory(boolean)}.
+     */
+    public void init() {
+        if (m_initialized) {
+            LOGGER.debug("NodeFactory is already initialized. Nothing to do.");
+            return;
+        }
         if (parser == null) {
             instantiateParser();
         }
-
         InputStream propInStream = getPropertiesInputStream();
 
         // fall back node name if no xml file available or invalid.
@@ -316,6 +342,7 @@ public abstract class NodeFactory<T extends NodeModel> {
 
         addBundleInformation();
         addLoadedFactory(this.getClass());
+        m_initialized = true;
     }
 
     /**
@@ -594,8 +621,9 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @noreference This method is not intended to be referenced by clients.
      */
     public void loadAdditionalFactorySettings(final ConfigRO config)
-    throws InvalidSettingsException {
+            throws InvalidSettingsException {
         // overwritten in subclasses
+        init();
     }
 
     /** Saves additional settings of this instance. This method is called by

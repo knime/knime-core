@@ -92,9 +92,9 @@ public class NodeFromNodeTemplateCreationFactory implements CreationFactory {
             NodeFactory<?> factory = m_template.getFactory().newInstance();
             if (m_template instanceof DynamicNodeTemplate) {
                 DynamicNodeTemplate dt = (DynamicNodeTemplate)m_template;
-                ((DynamicNodeFactory<?>)factory).setNodeSetFactory(
-                        dt.getNodeSetFactoryClass().getName());
+                ((DynamicNodeFactory<?>)factory).setId(dt.getID());
             }
+            factory.init();
             return factory;
         } catch (Exception e) {
             throw new RuntimeException("Can't instantiate NodeFactory "
