@@ -22,6 +22,8 @@
 
 package org.knime.workbench.repository.model;
 
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSetFactory;
 
 /**
@@ -31,17 +33,20 @@ import org.knime.core.node.NodeSetFactory;
  */
 public class DynamicNodeTemplate extends NodeTemplate {
     private NodeSetFactory m_nodeSetFactory;
+    private final String m_factoryId;
 
     /**
      * Constructs a new DynamicNodeTemplate.
      *
-     * @param nodeID The id of the dynamic node.
+     * @param nodeSetId The id of the NodeSetFactory.
+     * @param factoryId The id of the NodeFactory
      * @param nodeSetFactory the NodeSetFactory that created this
      *      DynamicNodeTemplate
      */
-    public DynamicNodeTemplate(final String nodeID,
+    public DynamicNodeTemplate(final String nodeSetId, final String factoryId,
             final NodeSetFactory nodeSetFactory) {
-        super(nodeID);
+        super(nodeSetId + "_" + factoryId);
+        m_factoryId = factoryId;
         m_nodeSetFactory = nodeSetFactory;
     }
 
@@ -59,6 +64,19 @@ public class DynamicNodeTemplate extends NodeTemplate {
     public Class <? extends NodeSetFactory> getNodeSetFactoryClass() {
         return m_nodeSetFactory.getClass();
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeFactory<? extends NodeModel> createFactoryInstance()
+            throws Exception {
+        NodeFactory<? extends NodeModel> instance = super.createFactoryInstance();
+        instance.loadAdditionalFactorySettings(
+                m_nodeSetFactory.getAdditionalSettings(m_factoryId));
+        return instance;
+    }
+
     /**
      * {@inheritDoc}
      */

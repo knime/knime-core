@@ -129,13 +129,21 @@ public class NodeTemplate extends AbstractNodeTemplate {
     }
 
     /**
+     * @return an instance of the factory.
+     * @throws Exception if the creation of the factory instance fails
+     */
+    public NodeFactory<? extends NodeModel> createFactoryInstance()
+            throws Exception {
+        return m_factory.newInstance();
+    }
+
+    /**
      * @param factory The factory to set.
      */
     public void setFactory(final Class<? extends
             NodeFactory<? extends NodeModel>> factory) {
         m_factory = factory;
     }
-
 
     /**
      * {@inheritDoc}

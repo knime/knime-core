@@ -52,6 +52,8 @@ package org.knime.core.node;
 
 import java.util.Collection;
 
+import org.knime.core.node.config.ConfigRO;
+
 /**
  *
  * @author hornm, University of Konstanz
@@ -82,4 +84,10 @@ public interface NodeSetFactory {
      * @return the ID after which this factory's node is sorted in
      */
     public String getAfterID(final String id);
+
+    /**
+     * @param id the id of the node factory
+     * @return additional settings for the node factory
+     */
+    public ConfigRO getAdditionalSettings(final String id);
 }

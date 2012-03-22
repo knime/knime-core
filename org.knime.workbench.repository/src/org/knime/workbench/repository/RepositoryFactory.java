@@ -64,7 +64,6 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
@@ -388,10 +387,11 @@ public final class RepositoryFactory {
 
 		// for all nodes in the node set
 		for (String factoryId : nodeSet.getNodeFactoryIds()) {
-			DynamicNodeTemplate node = new DynamicNodeTemplate(id + "_"
-					+ factoryId, nodeSet);
+			DynamicNodeTemplate node = new DynamicNodeTemplate(id, factoryId,
+			        nodeSet);
             Class<? extends NodeFactory<? extends NodeModel>> factoryClass =
                     nodeSet.getNodeFactory(factoryId);
+            node.setFactory(factoryClass);
 
             // Try to load the node factory class...
             NodeFactory<? extends NodeModel> factory;
@@ -399,11 +399,7 @@ public final class RepositoryFactory {
             // classloaders
             GlobalClassCreator.lock.lock();
             try {
-                factory = factoryClass.newInstance();
-                if (factory instanceof DynamicNodeFactory) {
-                    ((DynamicNodeFactory)factory).setId(factoryId);
-                    factory.init();
-                }
+                factory = node.createFactoryInstance();
             } catch (Throwable e) {
                 throw new IllegalArgumentException(
                         "Can't load factory class for node: "
@@ -411,7 +407,6 @@ public final class RepositoryFactory {
             } finally {
                 GlobalClassCreator.lock.unlock();
             }
-            node.setFactory(factoryClass);
 
             node.setAfterID(nodeSet.getAfterID(factoryId));
 			boolean b = Boolean.parseBoolean(element

@@ -51,9 +51,7 @@
 package org.knime.workbench.editor2;
 
 import org.eclipse.gef.requests.CreationFactory;
-import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.NodeFactory;
-import org.knime.workbench.repository.model.DynamicNodeTemplate;
 import org.knime.workbench.repository.model.NodeTemplate;
 
 /**
@@ -89,13 +87,7 @@ public class NodeFromNodeTemplateCreationFactory implements CreationFactory {
     @Override
     public NodeFactory<?> getNewObject() {
         try {
-            NodeFactory<?> factory = m_template.getFactory().newInstance();
-            if (m_template instanceof DynamicNodeTemplate) {
-                DynamicNodeTemplate dt = (DynamicNodeTemplate)m_template;
-                ((DynamicNodeFactory<?>)factory).setId(dt.getID());
-            }
-            factory.init();
-            return factory;
+            return m_template.createFactoryInstance();
         } catch (Exception e) {
             throw new RuntimeException("Can't instantiate NodeFactory "
                     + "from NodeTemplate", e);

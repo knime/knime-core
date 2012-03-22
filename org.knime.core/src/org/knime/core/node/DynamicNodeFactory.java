@@ -56,8 +56,6 @@ import java.util.Properties;
 import noNamespace.KnimeNodeDocument;
 
 import org.apache.xmlbeans.XmlDocumentProperties;
-import org.knime.core.node.config.ConfigRO;
-import org.knime.core.node.config.ConfigWO;
 
 /**
  *
@@ -66,9 +64,6 @@ import org.knime.core.node.config.ConfigWO;
  */
 public abstract class DynamicNodeFactory<T extends NodeModel> extends
         NodeFactory<T> {
-    /** The config key for the id setting. */
-    public static final String ID_CONFIG_KEY = "id";
-    private String m_id;
 
     /**
      * Creates a new dynamic node factory. Additional properties should be set
@@ -100,37 +95,4 @@ public abstract class DynamicNodeFactory<T extends NodeModel> extends
      * @param doc the document to add the description to
      */
     protected abstract void addNodeDescription(final KnimeNodeDocument doc);
-
-    /**
-     * @return the id of the node factory
-     */
-    public String getId() {
-        return m_id;
-    }
-
-    /**
-     * @param id the id to set for the node factory
-     */
-    public void setId(final String id) {
-        m_id = id;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void loadAdditionalFactorySettings(final ConfigRO config)
-            throws InvalidSettingsException {
-        m_id = config.getString(ID_CONFIG_KEY);
-        super.loadAdditionalFactorySettings(config);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void saveAdditionalFactorySettings(final ConfigWO config) {
-        config.addString(ID_CONFIG_KEY, m_id);
-        super.saveAdditionalFactorySettings(config);
-    }
 }
