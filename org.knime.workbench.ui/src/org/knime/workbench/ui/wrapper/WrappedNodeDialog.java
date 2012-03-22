@@ -174,7 +174,7 @@ public class WrappedNodeDialog extends Dialog {
     protected void handleShellCloseEvent() {
         // send cancel&close action to underlying dialog pane
         m_dialogPane.onCancel();
-        m_dialogPane.onClose();
+        m_dialogPane.callOnClose();
         super.handleShellCloseEvent();
     }
 
@@ -447,7 +447,7 @@ public class WrappedNodeDialog extends Dialog {
     private void doCancel() {
         // delegate cancel&close event to underlying dialog pane
         m_dialogPane.onCancel();
-        m_dialogPane.onClose();
+        m_dialogPane.callOnClose();
         buttonPressed(IDialogConstants.CANCEL_ID);
     }
 
@@ -471,7 +471,7 @@ public class WrappedNodeDialog extends Dialog {
 
     private void runOK(final boolean execute, final boolean openView) {
         // send close action to underlying dialog pane
-        m_dialogPane.onClose();
+        m_dialogPane.callOnClose();
         buttonPressed(IDialogConstants.OK_ID);
         if (execute) {
             m_nodeContainer.getParent()

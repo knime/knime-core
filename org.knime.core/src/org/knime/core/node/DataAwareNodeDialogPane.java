@@ -64,7 +64,15 @@ import org.knime.core.node.port.PortObjectSpec;
  * @since 2.6
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public abstract class InputDataAwareNodeDialogPane extends NodeDialogPane {
+public abstract class DataAwareNodeDialogPane extends NodeDialogPane {
+
+    /** {@inheritDoc} */
+    @Override
+    void callDerivedLoadSettingsFrom(final NodeSettingsRO settings,
+            final PortObjectSpec[] specs, final PortObject[] data)
+            throws NotConfigurableException {
+        loadSettingsFrom(settings, data);
+    }
 
     /**
      * Throws error as this method is not called by framework.
@@ -75,7 +83,7 @@ public abstract class InputDataAwareNodeDialogPane extends NodeDialogPane {
             final DataTableSpec[] specs) throws NotConfigurableException {
         throw new IllegalStateException("Method not to be called on derived "
                 + "classes of "
-                + InputDataAwareNodeDialogPane.class.getSimpleName());
+                + DataAwareNodeDialogPane.class.getSimpleName());
     }
 
     /**
@@ -83,11 +91,11 @@ public abstract class InputDataAwareNodeDialogPane extends NodeDialogPane {
      * {@inheritDoc}
      */
     @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings,
+    protected final void loadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
         throw new IllegalStateException("Method not to be called on "
                 + "derived classes of "
-                + InputDataAwareNodeDialogPane.class.getSimpleName());
+                + DataAwareNodeDialogPane.class.getSimpleName());
     }
 
     /**
@@ -112,7 +120,7 @@ public abstract class InputDataAwareNodeDialogPane extends NodeDialogPane {
      *          described in {@link NodeDialogPane})
      * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
      */
-    protected final void loadSettingsFrom(final NodeSettingsRO settings,
+    protected void loadSettingsFrom(final NodeSettingsRO settings,
             final BufferedDataTable[] input) throws NotConfigurableException {
         final String error =
                 "Implementation of " + getClass().getSimpleName()
@@ -139,7 +147,7 @@ public abstract class InputDataAwareNodeDialogPane extends NodeDialogPane {
      *          described in {@link NodeDialogPane})
      * @see NodeDialogPane#loadSettingsFrom(NodeSettingsRO, DataTableSpec[])
      */
-    protected final void loadSettingsFrom(final NodeSettingsRO settings,
+    protected void loadSettingsFrom(final NodeSettingsRO settings,
             final PortObject[] input) throws NotConfigurableException {
         // type cast all elements from argument array into BDT
         BufferedDataTable[] inData = new BufferedDataTable[input.length];

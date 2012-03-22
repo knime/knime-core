@@ -99,6 +99,7 @@ import org.knime.core.node.config.ConfigEditTreeEventListener;
 import org.knime.core.node.config.ConfigEditTreeModel;
 import org.knime.core.node.config.ConfigEditTreeModel.ConfigEditTreeNode;
 import org.knime.core.node.defaultnodesettings.SettingsModelFlowVariableCompatible;
+import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.ViewUtils;
@@ -204,6 +205,10 @@ public abstract class NodeDialogPane {
      * it when the wrapped node dialog pane calls loadSettings on user request
      * (from the menu). */
     private PortObjectSpec[] m_specs;
+
+    /** Same as m_specs -- we keep the last data in order to allow for loading
+     * settings from the dialog's file menu. */
+    private PortObject[] m_data;
 
     /** The underlying panel which keeps all the tabs. */
     private final JPanel m_panel;
@@ -337,7 +342,8 @@ public abstract class NodeDialogPane {
      * abstract loadSettingsFrom method and finally load internals
      * (i.e. memory policy of outports, if any).
      * @param settings To load from.
-     * @param specs The DTSs from the inports.
+     * @param specs Specs at input ports
+     * @param data Data from input ports
      * @param foStack Flow object stack (contains flow variables)
      * @param credentialsProvider The credentials available in the flow
      * @param isWriteProtected Whether ok/apply should be disabled
@@ -346,16 +352,18 @@ public abstract class NodeDialogPane {
      * If loadSettingsFrom throws this exception.
      * @see #loadSettingsFrom(NodeSettingsRO, PortObjectSpec[])
      */
-    public void internalLoadSettingsFrom(final NodeSettingsRO settings,
-            final PortObjectSpec[] specs, final FlowObjectStack foStack,
+    void internalLoadSettingsFrom(final NodeSettingsRO settings,
+            final PortObjectSpec[] specs, final PortObject[] data,
+            final FlowObjectStack foStack,
             final CredentialsProvider credentialsProvider,
             final boolean isWriteProtected)
-    throws NotConfigurableException {
+        throws NotConfigurableException {
         NodeSettings modelSettings = null;
         NodeSettings flowVariablesSettings = null;
         m_flowObjectStack = foStack;
         m_credentialsProvider = credentialsProvider;
         m_specs = specs;
+        m_data = data;
         m_isWriteProtected = isWriteProtected;
         try {
             SettingsLoaderAndWriter l = SettingsLoaderAndWriter.load(settings);
@@ -369,7 +377,7 @@ public abstract class NodeDialogPane {
             modelSettings = new NodeSettings("empty");
         }
         try {
-            loadSettingsFrom(modelSettings, specs);
+            callDerivedLoadSettingsFrom(modelSettings, specs, data);
         } catch (NotConfigurableException nce) {
             throw nce;
         } catch (Throwable e) {
@@ -407,6 +415,19 @@ public abstract class NodeDialogPane {
             }
         }
         updateFlowVariablesOverwriteWarning();
+    }
+
+    /** Calls abstract method
+     * {@link #loadSettingsFrom(NodeSettingsRO, PortObjectSpec[])}. Overwritten
+     * by {@link DataAwareNodeDialogPane} to forward the input data.
+     * @param settings ...
+     * @param specs ...
+     * @param data ...
+     * @throws NotConfigurableException ... */
+    void callDerivedLoadSettingsFrom(final NodeSettingsRO settings,
+            final PortObjectSpec[] specs, final PortObject[] data)
+    throws NotConfigurableException {
+        loadSettingsFrom(settings, specs);
     }
 
     /**
@@ -533,6 +554,15 @@ public abstract class NodeDialogPane {
         // default implementation does nothing.
     }
 
+    /** Does some cleanup and finally calls the {@link #onClose()} method.
+     * @since 2.6
+     * @noreference This method is not intended to be referenced by clients. */
+    public final void callOnClose() {
+        m_data = null;
+        m_specs = null;
+        onClose();
+    }
+
     /**
      * Override this method in order to react on events if the surrounding
      * dialog is supposed to be closed.
@@ -635,7 +665,7 @@ public abstract class NodeDialogPane {
     public final void loadSettingsFrom(final InputStream in)
     throws NotConfigurableException, IOException {
         NodeSettingsRO settings = NodeSettings.loadFromXML(in);
-        internalLoadSettingsFrom(settings, m_specs, m_flowObjectStack,
+        internalLoadSettingsFrom(settings, m_specs, m_data, m_flowObjectStack,
                 m_credentialsProvider, m_isWriteProtected);
     }
 

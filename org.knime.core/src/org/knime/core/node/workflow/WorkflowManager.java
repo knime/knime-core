@@ -1652,6 +1652,34 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
+    /** Attempts to execute all nodes upstream of the argument node. The method
+     * waits (until either all predecessors are executed or there is no further
+     * chance to execute anything).
+     *
+     * @param id The node whose upstream nodes need to be executed.
+     * @throws InterruptedException If thread is canceled during waiting
+     * (has no affect on the workflow execution). */
+    public void executePredecessorsAndWait(
+            final NodeID id) throws InterruptedException {
+        final NodeContainer[] predNodes;
+        synchronized (m_workflowMutex) {
+            final NodeContainer nc = getNodeContainer(id);
+            Set<ConnectionContainer> inCs = m_workflow.getConnectionsByDest(id);
+            predNodes = new NodeContainer[nc.getNrInPorts()];
+            for (ConnectionContainer c : inCs) {
+                predNodes[c.getDestPort()] = getNodeContainer(c.getSource());
+            }
+            boolean hasChanged = false;
+            for (int i = 0; i < nc.getNrInPorts(); i++) {
+                hasChanged = markAndQueuePredecessors(id, i) || hasChanged;
+            }
+            if (hasChanged) {
+                checkForNodeStateChanges(true);
+            }
+        }
+        waitWhileInExecution(predNodes, 0L, TimeUnit.MILLISECONDS);
+    }
+
     /** Find all nodes which are connected to a specific inport of a node
      * and try to mark/queue them.
      *
@@ -1834,19 +1862,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     + " not possible, node is " + nc.getState();
                 return false;
         }
-        NodeOutPort[] ports = assemblePredecessorOutPorts(nc.getID());
-        PortObject[] inData = new PortObject[ports.length];
-        boolean allDataAvailable = true;
-        for (int i = 0; i < ports.length; i++) {
-            if (ports[i] != null) {
-                inData[i] = ports[i].getPortObject();
-                allDataAvailable &= inData[i] != null;
-            } else if (nc.getInPort(i).getPortType().isOptional()) {
-                // unconnected optional input - ignore
-            } else {
-                allDataAvailable = false;
-            }
-        }
+        PortObject[] inData = new PortObject[nc.getNrInPorts()];
+        boolean allDataAvailable = assembleInputData(nc.getID(), inData);
         if (allDataAvailable) {
             switch (nc.getState()) {
             case MARKEDFOREXEC:
@@ -3345,7 +3362,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         if (LoopRole.END.equals(snc.getLoopRole())) {
             snc.getNode().setLoopStartNode(null);
-        }
+    }
     }
 
     /** Reset those nodes which are connected to a specific workflow
@@ -3474,7 +3491,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // now find any LoopEnd nodes without loop starts in the set:
             for (NodeID leid : allnodes.keySet()) {
                 NodeContainer lenc = getNodeContainer(leid);
-                if (nc instanceof SingleNodeContainer) {
+                if (lenc instanceof SingleNodeContainer) {
 	                if (((SingleNodeContainer)lenc).getNodeModel()
 	                		instanceof LoopEndNode) {
 	                    NodeID lsid;
@@ -3845,6 +3862,22 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws InterruptedException if the current thread is interrupted
      */
     public boolean waitWhileInExecution(final long time, final TimeUnit unit)
+    throws InterruptedException {
+        return waitWhileInExecution(new NodeContainer[] {this}, time, unit);
+    }
+
+    /** Causes the current thread to wait until the the workflow has reached
+     * a non-executing state unless a given timeout elapsed.
+     * @param time the maximum time to wait
+     *       (0 or negative for waiting infinitely)
+     * @param unit the time unit of the {@code time} argument
+     * @return {@code false} if the waiting time detectably elapsed
+     *         before return from the method, else {@code true}. It returns
+     *         {@code true} if the time argument is 0 or negative.
+     * @throws InterruptedException if the current thread is interrupted
+     */
+    private static boolean waitWhileInExecution(final NodeContainer[] ncs,
+            final long time, final TimeUnit unit)
         throws InterruptedException {
         // lock supporting timeout
         final ReentrantLock lock = new ReentrantLock();
@@ -3854,21 +3887,25 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             public void stateChanged(final NodeStateEvent stateEvent) {
                 lock.lock();
                 try {
-                    if (!stateEvent.getState().executionInProgress()) {
+                    if (!containsExecutingNode(ncs)) {
                         condition.signalAll();
                     }
                 } finally {
                     lock.unlock();
                 }
             }
+
         };
         lock.lockInterruptibly();
-        addNodeStateChangeListener(listener);
+        for (NodeContainer nc : ncs) {
+            if (nc != null) {
+                nc.addNodeStateChangeListener(listener);
+            }
+        }
         try {
-        	State state = getState();
-        	if (!state.executionInProgress()) {
-        		return true;
-        	}
+            if (!containsExecutingNode(ncs)) {
+                return true;
+            }
             if (time > 0) {
                 return condition.await(time, unit);
             } else {
@@ -3877,8 +3914,26 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
         } finally {
             lock.unlock();
-            removeNodeStateChangeListener(listener);
+            for (NodeContainer nc : ncs) {
+                if (nc != null) {
+                    nc.removeNodeStateChangeListener(listener);
+                }
+            }
         }
+    }
+
+    /**
+     * @param ncs
+     * @return */
+    private static boolean containsExecutingNode(final NodeContainer[] ncs) {
+        boolean isExecuting = false;
+        for (NodeContainer nc : ncs) {
+            if (nc != null && nc.getState().executionInProgress()) {
+                isExecuting = true;
+                break;
+            }
+        }
+        return isExecuting;
     }
 
     /** Convenience method: (Try to) Execute all nodes in the workflow.
@@ -3972,8 +4027,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** {@inheritDoc} */
     @Override
-    NodeDialogPane getDialogPaneWithSettings(
-            final PortObjectSpec[] inSpecs) throws NotConfigurableException {
+    NodeDialogPane getDialogPaneWithSettings(final PortObjectSpec[] inSpecs,
+            final PortObject[] inData) throws NotConfigurableException {
         NodeDialogPane dialogPane = getDialogPane();
         // find all quickform input nodes and update meta dialog
         Map<NodeID, QuickFormInputNode> nodes =
@@ -3981,10 +4036,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         ((MetaNodeDialogPane) dialogPane).setQuickformNodes(nodes);
         NodeSettings settings = new NodeSettings("wfm_settings");
         saveSettings(settings);
-        dialogPane.internalLoadSettingsFrom(
-                settings, inSpecs, new FlowObjectStack(getID()),
-                        new CredentialsProvider(this, m_credentialsStore),
-                        getParent().isWriteProtected());
+        Node.invokeDialogInternalLoad(dialogPane, settings, inSpecs, inData,
+                new FlowObjectStack(getID()),
+                new CredentialsProvider(this, m_credentialsStore),
+                getParent().isWriteProtected());
         return dialogPane;
     }
 
@@ -4417,16 +4472,16 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     	snc.getNode().setLoopStartNode(null);
                     } else {
                     	// loop seems to be correctly wired - set head
-	                    NodeContainer headNode = m_workflow.getNode(slc.getOwner());
-	                    if (headNode == null) {
+                    NodeContainer headNode = m_workflow.getNode(slc.getOwner());
+                    if (headNode == null) {
 	                    	// odd: head is not in the same workflow,
 	                    	// ignore as well during configure
 	                    	snc.getNode().setLoopStartNode(null);
-	                    }
-	                    // head found, let the end node know about it:
-	                    snc.getNode().setLoopStartNode(
-	                            ((SingleNodeContainer)headNode).getNode());
                     }
+	                    // head found, let the end node know about it:
+                    snc.getNode().setLoopStartNode(
+                            ((SingleNodeContainer)headNode).getNode());
+                }
                 }
                 // update HiLiteHandlers on inports of SNC only
                 // TODO think about it... happens magically
@@ -4679,6 +4734,30 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 inSpecs[i] = null;
             }
         }
+    }
+
+    /** Fill array holding input data for a given node.
+     * @param id the node
+     * @param inData An empty array being filled by this method
+     * @return If all data is available (all non-optional ports are connected
+     * and have data)
+     */
+    boolean assembleInputData(final NodeID id, final PortObject[] inData) {
+        NodeContainer nc = getNodeContainer(id);
+        NodeOutPort[] ports = assemblePredecessorOutPorts(id);
+        assert ports.length == inData.length;
+        boolean allDataAvailable = true;
+        for (int i = 0; i < ports.length; i++) {
+            if (ports[i] != null) {
+                inData[i] = ports[i].getPortObject();
+                allDataAvailable &= inData[i] != null;
+            } else if (nc.getInPort(i).getPortType().isOptional()) {
+                // unconnected optional input - ignore
+            } else {
+                allDataAvailable = false;
+            }
+        }
+        return allDataAvailable;
     }
 
     /** Produce summary of node.

@@ -68,6 +68,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.DataAwareNodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.Node.LoopRole;
@@ -1203,7 +1204,7 @@ public final class SingleNodeContainer extends NodeContainer {
      * the execution will be halted. This can also be called on a paused node
      * to trigger a "single step" execution.
      *
-     * @param if true, pause is enabled. Otherwise disabled.
+     * @param enablePausing if true, pause is enabled. Otherwise disabled.
      */
     void pauseLoopExecution(final boolean enablePausing) {
         if (getState().executionInProgress()) {
@@ -1230,11 +1231,18 @@ public final class SingleNodeContainer extends NodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    NodeDialogPane getDialogPaneWithSettings(final PortObjectSpec[] inSpecs)
-            throws NotConfigurableException {
+    public final boolean hasDataAwareDialogPane() {
+        return m_node.hasDialog()
+        && m_node.getDialogPane() instanceof DataAwareNodeDialogPane;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    NodeDialogPane getDialogPaneWithSettings(final PortObjectSpec[] inSpecs,
+            final PortObject[] inData) throws NotConfigurableException {
         NodeSettings settings = new NodeSettings(getName());
         saveSettings(settings);
-        return m_node.getDialogPaneWithSettings(inSpecs, settings,
+        return m_node.getDialogPaneWithSettings(inSpecs, inData, settings,
                 getParent().isWriteProtected());
     }
 

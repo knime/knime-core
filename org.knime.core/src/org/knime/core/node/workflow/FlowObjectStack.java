@@ -71,7 +71,7 @@ import org.knime.core.util.Pair;
 
 /**
  * Container for the stack that keeps for an individual node the
- * {@link FlowObjectStack} information.
+ * flow variables and flow loop information.
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class FlowObjectStack implements Iterable<FlowObject> {

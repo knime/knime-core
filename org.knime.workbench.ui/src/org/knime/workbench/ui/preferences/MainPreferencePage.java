@@ -124,6 +124,10 @@ public class MainPreferencePage extends FieldEditorPreferencePage
                 PreferenceConstants.P_CONFIRM_EXEC_NODES_NOT_SAVED,
                 "Confirm if executing nodes are not saved", parent));
 
+        addField(new BooleanFieldEditor(
+                PreferenceConstants.P_CONFIRM_EXEC_NODES_DATA_AWARE_DIALOGS,
+                "Confirm execution of upstream nodes when data is "
+                + "needed for configuration", parent));
 
         IntegerFieldEditor freqHistorySizeEditor = new IntegerFieldEditor(
                 PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE,

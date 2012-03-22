@@ -50,6 +50,7 @@
  */
 package org.knime.workbench.editor2.editparts;
 
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,7 +58,10 @@ import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.draw2d.ConnectionAnchor;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Dimension;
@@ -74,6 +78,9 @@ import org.eclipse.gef.Request;
 import org.eclipse.gef.RequestConstants;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.requests.CreateConnectionRequest;
+import org.eclipse.jface.dialogs.ErrorDialog;
+import org.eclipse.jface.dialogs.MessageDialogWithToggle;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.util.IPropertyChangeListener;
@@ -82,6 +89,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.views.properties.IPropertySource;
@@ -110,6 +118,7 @@ import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer.LoopStatus;
 import org.knime.core.node.workflow.WorkflowCipherPrompt;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.WorkflowManagerInput;
@@ -694,45 +703,83 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      */
     public void openDialog() {
         NodeContainer container = (NodeContainer)getModel();
-
         if (container instanceof WorkflowManager) {
             openSubWorkflowEditor();
-            return;
+        } else {
+            openNodeDialog();
         }
+    }
+
+    /** Opens the node's dialog (also meta node dialogs).
+     * @since 2.6
+     */
+    public void openNodeDialog() {
+        final NodeContainer container = (NodeContainer)getModel();
         // if this node does not have a dialog
         if (!container.hasDialog()) {
-
-            LOGGER.debug(container.getName()
-                    + ": Opening node dialog after double "
-                    + "click not possible");
+            LOGGER.debug("No dialog for " + container.getNameWithID());
             return;
         }
 
-        LOGGER.debug(container.getName()
-                + ": Opening node dialog after double click...");
+        final Shell shell = Display.getCurrent().getActiveShell();
+        if (container.hasDataAwareDialogPane()) {
+            IPreferenceStore store =
+                KNIMEUIPlugin.getDefault().getPreferenceStore();
+            final String key =
+                PreferenceConstants.P_CONFIRM_EXEC_NODES_DATA_AWARE_DIALOGS;
+            if (!store.contains(key) || store.getBoolean(key)) {
+                int returnCode = MessageDialogWithToggle.openOkCancelConfirm(
+                        shell,
+                        "Execute upstream nodes", "The " + container.getName()
+                        + " node requires the full input data in order to be "
+                        + "configured.\n\n"
+                        + "Upstream nodes will now be executed.",
+                        "Don't prompt me again", false, store,
+                        key).getReturnCode();
+                if (returnCode == MessageDialogWithToggle.CANCEL) {
+                    return;
+                }
+            }
+            try {
+                PlatformUI.getWorkbench().getProgressService().run(true, false,
+                        new IRunnableWithProgress() {
+                    @Override
+                    public void run(final IProgressMonitor monitor)
+                    throws InvocationTargetException, InterruptedException {
+                        container.getParent().executePredecessorsAndWait(
+                                container.getID());
+                    }
+                });
+            } catch (InvocationTargetException e) {
+                String error = "Exception while waiting for completion "
+                    + "of execution";
+                LOGGER.warn(error, e);
+                ErrorDialog.openError(shell, "Failed opening dialog", error,
+                        new Status(IStatus.ERROR, KNIMEEditorPlugin.PLUGIN_ID,
+                                error, e));
+            } catch (InterruptedException e) {
+                // ignore
+            }
+        }
 
         //
         // This is embedded in a special JFace wrapper dialog
         //
         try {
-            WrappedNodeDialog dlg =
-                    new WrappedNodeDialog(
-                            Display.getCurrent().getActiveShell(), container);
+            WrappedNodeDialog dlg = new WrappedNodeDialog(shell, container);
             dlg.open();
         } catch (NotConfigurableException ex) {
             MessageBox mb =
-                    new MessageBox(Display.getDefault().getActiveShell(),
-                            SWT.ICON_WARNING | SWT.OK);
+                    new MessageBox(shell, SWT.ICON_WARNING | SWT.OK);
             mb.setText("Dialog cannot be opened");
             mb.setMessage("The dialog cannot be opened for the following"
                     + " reason:\n" + ex.getMessage());
             mb.open();
         } catch (Throwable t) {
-            LOGGER.error(
-                    "The dialog pane for node '" + container.getNameWithID()
-                            + "' has thrown a '" + t.getClass().getSimpleName()
-                            + "'. That is most likely an implementation error.",
-                    t);
+            LOGGER.error("The dialog pane for node '"
+                    + container.getNameWithID() + "' has thrown a '"
+                    + t.getClass().getSimpleName()
+                    + "'. That is most likely an implementation error.", t);
         }
 
     }
@@ -999,6 +1046,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConnectionAnchor getTargetConnectionAnchor(
             final ConnectionEditPart connection) {
         return null;
@@ -1007,6 +1055,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConnectionAnchor getSourceConnectionAnchor(
             final ConnectionEditPart connection) {
         return null;
@@ -1015,6 +1064,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConnectionAnchor getSourceConnectionAnchor(final Request request) {
         return null;
     }
@@ -1022,6 +1072,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public ConnectionAnchor getTargetConnectionAnchor(final Request request) {
         if (!(request instanceof CreateConnectionRequest)) {
             return null;
