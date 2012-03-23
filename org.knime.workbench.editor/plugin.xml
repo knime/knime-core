@@ -401,5 +401,11 @@
             icon="icons/node_description.png"
             id="org.knime.workbench.helpview"
             name="Node Description"/>
+      <view
+            category="org.knime.workbench.ui.category"
+            class="org.knime.workbench.nodemonitorview.VariableMonitorView"
+            icon="icons/node_description.png"
+            id="org.knime.workbench.nodemonitorview.variablemonitorview"
+            name="KNIME Variable Monitor"/>
    </extension>
 </plugin>
