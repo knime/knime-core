@@ -56,7 +56,11 @@ import org.knime.core.node.config.ConfigRO;
 
 /**
  *
- * @author hornm, University of Konstanz
+ * Interface to generate a set of node factories and, hence, a set of nodes.
+ * Used with the extension point for node sets.
+ *
+ * @author Dominik Morent, KNIME.com AG
+ * @author Martin Horn, University of Konstanz
  */
 public interface NodeSetFactory {
 
