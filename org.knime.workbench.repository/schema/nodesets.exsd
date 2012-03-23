@@ -75,6 +75,16 @@
                </documentation>
             </annotation>
          </attribute>
+         <attribute name="default-category-icon" type="string">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="resource"/>
+               </appInfo>
+            </annotation>
+         </attribute>
       </complexType>
    </element>
 

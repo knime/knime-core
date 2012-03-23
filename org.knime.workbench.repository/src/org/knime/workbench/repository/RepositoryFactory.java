@@ -85,7 +85,7 @@ import org.osgi.framework.Bundle;
 /**
  * Factory for creation of repository objects from
  * <code>IConfigurationElement</code> s from the Plugin registry.
- *
+ * 
  * @author Florian Georg, University of Konstanz
  */
 public final class RepositoryFactory {
@@ -113,7 +113,7 @@ public final class RepositoryFactory {
 
 	/**
 	 * Creates a new node repository object. Throws an exception, if this fails
-	 *
+	 * 
 	 * @param element
 	 *            Configuration element from the contributing plugin
 	 * @return NodeTemplate object to be used within the repository.
@@ -176,7 +176,7 @@ public final class RepositoryFactory {
 	}
 
 	/**
-	 *
+	 * 
 	 * @param configuration
 	 *            content of the extension
 	 * @return a meta node template
@@ -268,7 +268,7 @@ public final class RepositoryFactory {
 
 	/**
 	 * Creates a new category object. Throws an exception, if this fails
-	 *
+	 * 
 	 * @param root
 	 *            The root to insert the category in
 	 * @param element
@@ -354,7 +354,7 @@ public final class RepositoryFactory {
 
 	/**
 	 * Creates the set of dynamic node templates.
-	 *
+	 * 
 	 * @param root
 	 *            the root to add the missing categories in
 	 * @param element
@@ -364,6 +364,7 @@ public final class RepositoryFactory {
 	public static Collection<DynamicNodeTemplate> createNodeSet(
 			final Root root, final IConfigurationElement element) {
 		String id = element.getAttribute("id");
+		String iconPath = element.getAttribute("default-category-icon");
 
 		// Try to load the node set factory class...
 		NodeSetFactory nodeSet;
@@ -382,33 +383,32 @@ public final class RepositoryFactory {
 			GlobalClassCreator.lock.unlock();
 		}
 
-		Collection<DynamicNodeTemplate> dynamicNodeTemplates
-		        = new ArrayList<DynamicNodeTemplate>();
+		Collection<DynamicNodeTemplate> dynamicNodeTemplates = new ArrayList<DynamicNodeTemplate>();
 
 		// for all nodes in the node set
 		for (String factoryId : nodeSet.getNodeFactoryIds()) {
 			DynamicNodeTemplate node = new DynamicNodeTemplate(id, factoryId,
-			        nodeSet);
-            Class<? extends NodeFactory<? extends NodeModel>> factoryClass =
-                    nodeSet.getNodeFactory(factoryId);
-            node.setFactory(factoryClass);
+					nodeSet);
+			Class<? extends NodeFactory<? extends NodeModel>> factoryClass = nodeSet
+					.getNodeFactory(factoryId);
+			node.setFactory(factoryClass);
 
-            // Try to load the node factory class...
-            NodeFactory<? extends NodeModel> factory;
-            // this ensures that the class is loaded by the correct eclipse
-            // classloaders
-            GlobalClassCreator.lock.lock();
-            try {
-                factory = node.createFactoryInstance();
-            } catch (Throwable e) {
-                throw new IllegalArgumentException(
-                        "Can't load factory class for node: "
-                                + factoryClass.getName() + "-" + factoryId, e);
-            } finally {
-                GlobalClassCreator.lock.unlock();
-            }
+			// Try to load the node factory class...
+			NodeFactory<? extends NodeModel> factory;
+			// this ensures that the class is loaded by the correct eclipse
+			// classloaders
+			GlobalClassCreator.lock.lock();
+			try {
+				factory = node.createFactoryInstance();
+			} catch (Throwable e) {
+				throw new IllegalArgumentException(
+						"Can't load factory class for node: "
+								+ factoryClass.getName() + "-" + factoryId, e);
+			} finally {
+				GlobalClassCreator.lock.unlock();
+			}
 
-            node.setAfterID(nodeSet.getAfterID(factoryId));
+			node.setAfterID(nodeSet.getAfterID(factoryId));
 			boolean b = Boolean.parseBoolean(element
 					.getAttribute("expert-flag"));
 			node.setExpertNode(b);
@@ -457,7 +457,7 @@ public final class RepositoryFactory {
 				currentPath += segments[i];
 				if (obj == null) {
 					Category cat = createCategory(pluginID, segments[i], "",
-							segments[i], "", "", currentPath);
+							segments[i], "", iconPath, currentPath);
 					// append the newly created category to the container
 					container.addChild(cat);
 					obj = cat;
@@ -474,8 +474,9 @@ public final class RepositoryFactory {
 	}
 
 	/* Little helper to create a category */
-	private static Category createCategory(final String pluginID, final String categoryID,
-			final String description, final String name, final String afterID, final String icon,
+	private static Category createCategory(final String pluginID,
+			final String categoryID, final String description,
+			final String name, final String afterID, final String icon,
 			final String categoryPath) {
 
 		Category cat = new Category(categoryID);
