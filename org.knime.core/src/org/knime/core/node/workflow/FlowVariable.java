@@ -263,6 +263,18 @@ public final class FlowVariable extends FlowObject {
         }
         return m_valueI;
     }
+    
+    /**
+     * @return value of the variable as string (independent of type).
+     */
+    public String getValueAsString() {
+        switch (m_type) {
+        case DOUBLE: return Double.toString(m_valueD);
+        case INTEGER: return Integer.toString(m_valueI);
+        case STRING: return m_valueS;
+        }
+        return "invalid type";
+    }
 
     /** Saves this flow variable to a settings object. This method writes
      * directly into the argument object (no creating of intermediate child).
