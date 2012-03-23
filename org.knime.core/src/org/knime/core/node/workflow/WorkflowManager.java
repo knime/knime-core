@@ -4487,8 +4487,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     	snc.getNode().setLoopStartNode(null);
                     } else {
                     	// loop seems to be correctly wired - set head
-                    NodeContainer headNode = m_workflow.getNode(slc.getOwner());
-                    if (headNode == null) {
+	                    NodeContainer headNode
+                                         = m_workflow.getNode(slc.getOwner());
+	                    if (headNode == null) {
 	                    	// odd: head is not in the same workflow,
 	                    	// ignore as well during configure
 	                    	snc.getNode().setLoopStartNode(null);

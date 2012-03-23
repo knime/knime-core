@@ -514,7 +514,9 @@ class Workflow {
             if ((startPorts == null)
                         || (startPorts.contains(cc.getSourcePort()))) {
                 NodeID nextID = cc.getDest();
-                if (nextID.equals(this.getID())) {
+                if (nextID.equals(endID)) {
+                    // don't add the end node!
+                } else if (nextID.equals(this.getID())) {
                     // don't record outgoing connections
                     if (startID.equals(this.getID())) {
                         assert cc.getType().
