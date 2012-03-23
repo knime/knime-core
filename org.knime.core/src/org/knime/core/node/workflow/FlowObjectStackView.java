@@ -51,6 +51,11 @@
 package org.knime.core.node.workflow;
 
 import java.awt.BorderLayout;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -58,6 +63,8 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
 import org.knime.core.node.util.FlowVariableTableCellRenderer;
+import org.knime.core.node.workflow.FlowVariable.Type;
+import org.knime.core.util.Pair;
 
 /**
  * View that displays a given {@link FlowObjectStack} in a table.
@@ -97,17 +104,24 @@ final class FlowObjectStackView extends JPanel {
     /** Updates the view to display the given stack.
      * @param stack Whose values are to be displayed. */
     public void update(final FlowObjectStack stack) {
-        Object[][] values;
+        List<Object[]> values;
         if (stack != null) {
-            values = new Object[stack.size()][];
+            values = new ArrayList<Object[]>();
             int loopCount = 0;
             int counter = 0;
+            Set<Pair<String, Type>> duplicateElementsSet =
+                new HashSet<Pair<String, Type>>();
             for (FlowObject s : stack) {
                 Object[] obj = new Object[4];
                 obj[0] = Integer.valueOf(counter);
                 obj[1] = s.getOwner();
                 if (s instanceof FlowVariable) {
                     FlowVariable v = (FlowVariable)s;
+                    final Pair<String, Type> key =
+                        new Pair<String, Type>(v.getName(), v.getType());
+                    if (!duplicateElementsSet.add(key)) {
+                        continue;
+                    }
                     obj[2] = s;
                     Object o;
                     switch (v.getType()) {
@@ -128,20 +142,22 @@ final class FlowObjectStackView extends JPanel {
                     obj[2] = "Inactive Loop Mark";
                     obj[3] = null;
                 } else if (s instanceof FlowLoopContext) {
+                    duplicateElementsSet.clear();
                     obj[2] = "Loop (" + (loopCount++) + ")";
                     obj[3] = null;
                 } else if (s instanceof InnerFlowLoopContext) {
                     obj[2] = "Loop-Execute";
                     obj[3] = null;
                 }
-                values[counter++] = obj;
+                values.add(obj);
             }
         } else {
-            values = new Object[0][4];
+            values = Collections.emptyList();
         }
         String[] colNames = new String[]{"Index", "Owner ID", "Name", "Value"};
         DefaultTableModel model = (DefaultTableModel)m_table.getModel();
-        model.setDataVector(values, colNames);
+        model.setDataVector(
+                values.toArray(new Object[values.size()][]), colNames);
     }
 
 }
