@@ -1586,6 +1586,7 @@ public final class Node implements NodeModelWarningListener {
      *             input table, etc.
      * @throws IllegalStateException If node has no dialog.
      * @see #hasDialog()
+     * @since 2.6
      */
     public NodeDialogPane getDialogPaneWithSettings(
             final PortObjectSpec[] inSpecs, final PortObject[] inData,
@@ -1862,6 +1863,7 @@ public final class Node implements NodeModelWarningListener {
      * @param credentialsProvider forwarded
      * @param isWriteProtected forwarded
      * @throws NotConfigurableException forwarded
+     * @since 2.6
      */
     public static void invokeDialogInternalLoad(final NodeDialogPane pane,
             final NodeSettingsRO settings, final PortObjectSpec[] specs,
@@ -1954,10 +1956,16 @@ public final class Node implements NodeModelWarningListener {
         }
     }
 
+    /**
+     * @since 2.6
+     */
     public LoopStartNode getLoopStartNode() {
     	return m_model.getLoopStartNode();
     }
 
+    /**
+     * @since 2.6
+     */
     public LoopEndNode getLoopEndNode() {
     	return m_model.getLoopEndNode();
     }

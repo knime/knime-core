@@ -61,6 +61,7 @@ import org.apache.xmlbeans.XmlDocumentProperties;
  *
  * @author hornm, University of Konstanz
  * @param <T> the node model of the factory
+ * @since 2.6
  */
 public abstract class DynamicNodeFactory<T extends NodeModel> extends
         NodeFactory<T> {
