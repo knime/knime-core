@@ -585,8 +585,8 @@ class Workflow {
                             if (!nai.getInports().contains(cc.getDestPort())) {
                                 nai.addInport(cc.getDestPort());
                             } else {
-                            	// entries that we already have
-                            	// (parallel branches can cause this)
+                                // entries that we already have
+                                // (parallel branches can cause this)
                             }
                             if (nai.getDepth() != currDepth + 1) {
                                 // depth has to be smaller or equal
