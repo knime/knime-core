@@ -133,7 +133,7 @@ public class VariableMonitorView extends ViewPart
         final RetargetAction actionFilter
              = new RetargetAction("Vars", "Variables", IAction.AS_CHECK_BOX);
         actionFilter.setImageDescriptor(ImageDescriptor.createFromFile(
-                this.getClass(), "viewVars.png"));
+                this.getClass(), "icons/viewVars.png"));
         actionFilter.setChecked(m_showVariables.booleanValue());
         actionFilter.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
@@ -147,7 +147,7 @@ public class VariableMonitorView extends ViewPart
         final RetargetAction actionFilter2
              = new RetargetAction("Conf", "Settings", IAction.AS_CHECK_BOX);
         actionFilter2.setImageDescriptor(ImageDescriptor.createFromFile(
-                this.getClass(), "viewSettings.png"));
+                this.getClass(), "icons/viewSettings.png"));
         actionFilter2.setChecked(m_showSettings.booleanValue());
         actionFilter2.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
@@ -161,7 +161,7 @@ public class VariableMonitorView extends ViewPart
         final RetargetAction actionFilter3
               = new RetargetAction("Expert", "Show All", IAction.AS_CHECK_BOX);
         actionFilter3.setImageDescriptor(ImageDescriptor.createFromFile(
-                this.getClass(), "viewAll.png"));
+                this.getClass(), "icons/viewAll.png"));
         actionFilter3.setChecked(m_expertMode.booleanValue());
         actionFilter3.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override

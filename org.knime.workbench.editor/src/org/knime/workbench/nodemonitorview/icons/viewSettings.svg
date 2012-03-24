@@ -10,8 +10,8 @@
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="32"
-   height="32"
+   width="16"
+   height="16"
    id="svg2"
    version="1.1"
    inkscape:version="0.48.0 r9654"
@@ -112,18 +112,6 @@
        inkscape:vp_y="0 : 1000 : 0"
        inkscape:vp_x="0 : 0.5 : 1"
        sodipodi:type="inkscape:persp3d" />
-    <filter
-       inkscape:collect="always"
-       id="filter4001"
-       x="-0.10910387"
-       width="1.2182077"
-       y="-0.098205894"
-       height="1.1964118">
-      <feGaussianBlur
-         inkscape:collect="always"
-         stdDeviation="1.941419"
-         id="feGaussianBlur4003" />
-    </filter>
   </defs>
   <sodipodi:namedview
      id="base"
@@ -134,14 +122,14 @@
      inkscape:pageshadow="2"
      inkscape:zoom="11.483414"
      inkscape:cx="7.585718"
-     inkscape:cy="19.347095"
+     inkscape:cy="7.8522556"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1440"
-     inkscape:window-height="840"
-     inkscape:window-x="-8"
-     inkscape:window-y="32"
+     inkscape:window-width="505"
+     inkscape:window-height="403"
+     inkscape:window-x="20"
+     inkscape:window-y="446"
      inkscape:window-maximized="1" />
   <metadata
      id="metadata7">
@@ -151,7 +139,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -159,31 +147,21 @@
      inkscape:label="Ebene 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(0,-1020.3622)">
+     transform="translate(0,-1036.3622)">
     <image
-       width="24.140036"
-       height="24.140036"
+       y="1036.2632"
+       x="5.7604213"
+       id="image3008"
+       xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAdpJREFU OI2Vkz9oU1EUxn/3vVdEHLq2WE0KopsibqKkQ0Q3laKlm4MtxE2huOQNGimIQqEFo9jBiNTSaDXS QbFDS8QiLi5SUFGqFEHUNKHGvObeexzsn6SvDfrBHS6X33fPd869SkRopIHhnOzYvQuAL+8+cP7s cVV77jSCU4NZiUbacIMKXlAhGmkjNZitu9FbD83Pzsjci9sAFIoxvv1YZIVQQKFYZvxyp7S0NhM5 1INaH+FtLikA1/PbaW/fCYAswyv6+OkzfYfnN64A4KvXzM3+nkbpyD8foFUXwz0QW1+R6zocfejh uuF2iZWwgbGWqnFX4fiYw/SjNAC9/ii9/igA2roYa8MRrLEsKQ/HWYNjJxOIGNKXupYvgaDqYU2N Qcd9ZKobpbUluucAR7Jr8LNOQ+bJG/KvZgEY8rsIdBNaWxARYiMinLohsRGRuddjUrv/9VvL94Ug tDL3hmXm7gXxAKa6UR0kZPpOkkjch8kksTNXmDhhKJUN/ekJiqXyasyrF09TqTZhxNS/A3UtECZT EPdZOOdRKutNx/g4N84+XtY3Ufq2KIUvPxMuhcXNYYClqodxJDyF9wcfcCuztSH8Vy6WDQwCs429 +uk/GEDL/mPhv/C/+gNJBOvvb6kDNwAAAABJRU5ErkJggg== "
+       height="10.16172"
+       width="10.16172" />
+    <image
+       width="11.075875"
+       height="11.075875"
        xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAchJREFU OI2lkjFoE2EYhp//UghXr6dpyBCjSJMq1a0giCCSRZwFEXQoiKMgWChx1EktEju0iih0cqxDHTq4 RC1abbFWRIuECCLlYiTt1aYx91/uc1La5iIWX3iHjx8e3u/9fiUi/I86Ng4Ls4+kuPgc0+xCKQOt 17Fje8ievKTaAdTvBI8nhqU70Ut6/1Esy8IwDAAq5SIvn45z9vxIOEREmJuZlBfTU+I4jgRBsMla a1muVmT83qCICFttALxdeE08kSHWHUf7zU0OBKKmRSLZR6HwpKWwDgBzRxKzsxPt+21SBvRkDvNp cT68RN000H4TT4cDEMFvQlMi4YDVtTq1Wg2ryw4HIHxdWiIe393yYgAkkynKlW+4qy6e9rdY4/s+ c/PvyGZPtFzCADh96oyaffMexymzsrJMvV6n4TVoNH6iPY+JySlSsV2h2dTGn3h95IFEoyYHMnuJ RCJ8r7oUS19I2QYDA+d4OHqLC7mrqi0A4Nn0K6m6NX6srbMvleD4sSMK4P6Na/J5pkAs3cdQ/q5q C/ibbg5eFLf0gZ3pg+Tyd9SfDv5VufyYsnsO4ZY+Mjx0WbYNALhye0zZvf00vADY5gph+gWr7vRc 0cb2OwAAAABJRU5ErkJggg== "
        id="image10"
-       x="-23.651939"
-       y="1028.8844"
+       x="-10.501618"
+       y="1041.9478"
        transform="scale(-1,1)" />
-    <image
-       y="1020.5017"
-       x="15.860501"
-       id="image3008"
-       xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiAAAAdpJREFU
-OI2Vkz9oU1EUxn/3vVdEHLq2WE0KopsibqKkQ0Q3laKlm4MtxE2huOQNGimIQqEFo9jBiNTSaDXS
-QbFDS8QiLi5SUFGqFEHUNKHGvObeexzsn6SvDfrBHS6X33fPd869SkRopIHhnOzYvQuAL+8+cP7s
-cVV77jSCU4NZiUbacIMKXlAhGmkjNZitu9FbD83Pzsjci9sAFIoxvv1YZIVQQKFYZvxyp7S0NhM5
-1INaH+FtLikA1/PbaW/fCYAswyv6+OkzfYfnN64A4KvXzM3+nkbpyD8foFUXwz0QW1+R6zocfejh
-uuF2iZWwgbGWqnFX4fiYw/SjNAC9/ii9/igA2roYa8MRrLEsKQ/HWYNjJxOIGNKXupYvgaDqYU2N
-Qcd9ZKobpbUluucAR7Jr8LNOQ+bJG/KvZgEY8rsIdBNaWxARYiMinLohsRGRuddjUrv/9VvL94Ug
-tDL3hmXm7gXxAKa6UR0kZPpOkkjch8kksTNXmDhhKJUN/ekJiqXyasyrF09TqTZhxNS/A3UtECZT
-EPdZOOdRKutNx/g4N84+XtY3Ufq2KIUvPxMuhcXNYYClqodxJDyF9wcfcCuztSH8Vy6WDQwCs429
-+uk/GEDL/mPhv/C/+gNJBOvvb6kDNwAAAABJRU5ErkJggg==
-"
-       height="16"
-       width="16" />
   </g>
 </svg>
