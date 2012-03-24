@@ -78,6 +78,7 @@ import org.eclipse.gef.Request;
 import org.eclipse.gef.RequestConstants;
 import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.requests.CreateConnectionRequest;
+import org.eclipse.gef.requests.SelectionRequest;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.operation.IRunnableWithProgress;
@@ -124,6 +125,8 @@ import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.WorkflowManagerInput;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
 import org.knime.workbench.editor2.commands.CreateConnectionCommand;
+import org.knime.workbench.editor2.commands.ShiftConnectionCommand;
+import org.knime.workbench.editor2.editparts.policy.ConnectionContainerPolicy;
 import org.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 import org.knime.workbench.editor2.figures.ProgressFigure;
@@ -320,7 +323,14 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     @Override
     public void performRequest(final Request request) {
         if (request.getType() == RequestConstants.REQ_OPEN) {
-            // caused by a double click on this edit part
+            // double click on node
+            if (request instanceof SelectionRequest) {
+                if (((SelectionRequest)request).isShiftKeyPressed()) {
+                    shiftConnection();
+                    return;
+                }
+            }
+            // simple dbl-click, no modifier key
              openDialog();
         } else if (request.getType() == RequestConstants.REQ_DIRECT_EDIT) {
             NodeAnnotationEditPart nodeAnnotationEditPart =
@@ -328,6 +338,14 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             if (nodeAnnotationEditPart != null) {
                 nodeAnnotationEditPart.performEdit();
             }
+        }
+    }
+
+    public void shiftConnection() {
+        ShiftConnectionCommand cmd =
+            new ShiftConnectionCommand(getWorkflowManager(), this);
+        if (cmd.canExecute()) {
+            getViewer().getEditDomain().getCommandStack().execute(cmd);
         }
     }
 
@@ -352,6 +370,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         // are associated with ports of this node
         this.installEditPolicy(EditPolicy.GRAPHICAL_NODE_ROLE,
                 new PortGraphicalRoleEditPolicy());
+
+        installEditPolicy(EditPolicy.CONTAINER_ROLE, new ConnectionContainerPolicy());
     }
 
     /**
