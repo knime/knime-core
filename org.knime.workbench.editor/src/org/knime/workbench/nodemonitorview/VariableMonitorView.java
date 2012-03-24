@@ -56,28 +56,27 @@ import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.layout.GridLayoutFactory;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.LocationEvent;
 import org.eclipse.swt.browser.LocationListener;
-import org.eclipse.swt.graphics.Point;
-import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.swt.widgets.ToolBar;
-import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbenchPart;
+import org.eclipse.ui.actions.RetargetAction;
 import org.eclipse.ui.part.ViewPart;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
@@ -89,6 +88,7 @@ import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
+import org.knime.core.util.MutableBoolean;
 import org.knime.core.util.Pair;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
@@ -110,7 +110,11 @@ public class VariableMonitorView extends ViewPart
     
     private IStructuredSelection m_lastSelection;
     private NodeContainer m_lastNode;
-    
+
+    private MutableBoolean m_showVariables = new MutableBoolean(true);
+    private MutableBoolean m_showSettings = new MutableBoolean(false);
+    private MutableBoolean m_expertMode = new MutableBoolean(false);
+
     /**
      * The Constructor.
      */
@@ -122,25 +126,47 @@ public class VariableMonitorView extends ViewPart
     @Override
     public void createPartControl(final Composite parent) {
         getViewSite().getPage().addSelectionListener(this);
-        GridLayoutFactory.swtDefaults().numColumns(2).applyTo(parent);
         // Toolbar
-        final ToolBar toolBar = new ToolBar(parent, SWT.WRAP);
-        GridData toolbarGrid = new GridData(SWT.RIGHT, SWT.CENTER,
-                                                          false, false);
-        toolbarGrid.horizontalSpan = 2;
-        toolBar.setLayoutData(toolbarGrid);
-        ToolItem item = new ToolItem(toolBar, SWT.PUSH);
-        item.setText("Variables");
-        ToolItem item2 = new ToolItem(toolBar, SWT.PUSH);
-        item2.setText("Settings");
-        parent.addListener(SWT.Resize, new Listener() {
+        IToolBarManager toolbarMGR
+                    = getViewSite().getActionBars().getToolBarManager();
+        final RetargetAction actionFilter
+             = new RetargetAction("Vars", "Variables", IAction.AS_CHECK_BOX);
+        actionFilter.setChecked(m_showVariables.booleanValue());
+        actionFilter.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
-            public void handleEvent(final Event e) {
-                Rectangle rect = parent.getClientArea();
-                Point size = toolBar.computeSize(rect.width, SWT.DEFAULT);
-                toolBar.setSize(size);
+            public void propertyChange(final PropertyChangeEvent event) {
+                m_showVariables.setValue(actionFilter.isChecked());
+                updateNodeContainerInfo(m_lastNode);
             }
         });
+        actionFilter.setEnabled(true);
+        toolbarMGR.add(actionFilter);
+        final RetargetAction actionFilter2
+             = new RetargetAction("Conf", "Settings", IAction.AS_CHECK_BOX);
+        actionFilter2.setChecked(m_showSettings.booleanValue());
+        actionFilter2.addPropertyChangeListener(new IPropertyChangeListener() {
+            @Override
+            public void propertyChange(final PropertyChangeEvent event) {
+                m_showSettings.setValue(actionFilter2.isChecked());
+                updateNodeContainerInfo(m_lastNode);
+            }
+        });
+        actionFilter2.setEnabled(true);
+        toolbarMGR.add(actionFilter2);
+        final RetargetAction actionFilter3
+              = new RetargetAction("Expert", "Show All", IAction.AS_CHECK_BOX);
+        actionFilter3.setChecked(m_expertMode.booleanValue());
+        actionFilter3.addPropertyChangeListener(new IPropertyChangeListener() {
+            @Override
+            public void propertyChange(final PropertyChangeEvent event) {
+                m_expertMode.setValue(actionFilter3.isChecked());
+                updateNodeContainerInfo(m_lastNode);
+            }
+        });
+        actionFilter3.setEnabled(true);
+        toolbarMGR.add(actionFilter3);
+        // Content
+        GridLayoutFactory.swtDefaults().numColumns(2).applyTo(parent);
         // Node Title:
         Label titlelabel = new Label(parent, SWT.NONE);
         titlelabel.setLayoutData(
@@ -230,6 +256,9 @@ public class VariableMonitorView extends ViewPart
      * the underlying NC changed.
      */
     private void updateNodeContainerInfo(final NodeContainer nc) {
+        if (nc == null) {
+            return;
+        }
         assert Display.getCurrent().getThread() == Thread.currentThread();
         if ((m_lastNode != null) && (m_lastNode != nc)) {
             m_lastNode.removeNodeStateChangeListener(
@@ -242,8 +271,12 @@ public class VariableMonitorView extends ViewPart
         m_title.setText(nc.getName() + "  (" + nc.getID() + ")");
         m_state.setText(nc.getState().toString());
         m_table.removeAll();
-        updateVariableTable(nc);
-        updateSettingsTable(nc, /*expert=*/false);
+        if (m_showVariables.booleanValue()) {
+            updateVariableTable(nc);
+        }
+        if (m_showSettings.booleanValue()) {
+            updateSettingsTable(nc);
+        }
         for (int i = 0; i < m_table.getColumnCount(); i++) {
             m_table.getColumn(i).pack();
         }
@@ -269,8 +302,7 @@ public class VariableMonitorView extends ViewPart
     /*
      *  Put info about node settings into table.
      */
-    private void updateSettingsTable(final NodeContainer nc,
-                                                     final boolean expert) {
+    private void updateSettingsTable(final NodeContainer nc) {
         assert Display.getCurrent().getThread() == Thread.currentThread();
         // retrieve settings
         NodeSettings settings = new NodeSettings("");
@@ -297,7 +329,8 @@ public class VariableMonitorView extends ViewPart
             if (ace.getType().equals(ConfigEntries.config)) {
                 // it's another Config entry, push on stack!
                 String val = ace.toStringValue();
-                if ((!val.endsWith("_Internals")) || expert) {
+                if ((!val.endsWith("_Internals"))
+                                || m_expertMode.booleanValue()) {
                     Iterator<String> it2 = ((ConfigBase)ace).iterator(); 
                     if (it2.hasNext()) {
                         stack.push(new Pair<Iterator<String>, ConfigBase>(
@@ -308,7 +341,7 @@ public class VariableMonitorView extends ViewPart
                 }
             }
             // in both cases, we report its value
-            if ((!noexpertskip) || expert) {
+            if ((!noexpertskip) || m_expertMode.booleanValue()) {
                 String value = ace.toStringValue();
                 TableItem item = new TableItem(m_table, SWT.NONE);
                 char[] indent = new char[depth - 1];
