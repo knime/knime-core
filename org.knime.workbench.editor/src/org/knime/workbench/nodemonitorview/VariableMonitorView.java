@@ -187,7 +187,7 @@ public class VariableMonitorView extends ViewPart
                = new RetargetAction("Table", "Show Node Output Table (Port 0)",
                                         IAction.AS_RADIO_BUTTON);
         actionFilter4.setImageDescriptor(ImageDescriptor.createFromFile(
-                         this.getClass(), "icons/viewSettings.png"));
+                         this.getClass(), "icons/viewTable.png"));
         actionFilter4.setChecked(DISPLAYOPTIONS.SETTINGS.equals(m_choice));
         actionFilter4.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
