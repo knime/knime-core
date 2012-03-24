@@ -414,21 +414,26 @@ public class VariableMonitorView extends ViewPart
      */
     private void updateDataTable(final NodeContainer nc, final int port) {
         assert Display.getCurrent().getThread() == Thread.currentThread();
-        // retrieve table
+        for (TableColumn tc : m_table.getColumns()) {
+            tc.dispose();
+        }
+        // check if we can display something at all:
         if (nc.getNrOutPorts() < 2) {
             // we don't care about the (hidden) variable outport
+            TableItem item = new TableItem(m_table, SWT.NONE);
+            item.setText(0, "No output ports");
             return;
         }
         NodeOutPort nop = nc.getOutPort(port + 1);
         PortObject po = nop.getPortObject();
         if ((po == null) || !(po instanceof BufferedDataTable)) {
             // no table in port - ignore.
+            TableItem item = new TableItem(m_table, SWT.NONE);
+            item.setText(0, "Unknown or no PortObject");
             return;
         }
+        // retrieve table
         BufferedDataTable bdt = (BufferedDataTable)po;
-        for (TableColumn tc : m_table.getColumns()) {
-            tc.dispose();
-        }
         TableColumn column = new TableColumn(m_table, SWT.NONE);
         column.setText("ID");
         for (int i = 0; i < bdt.getDataTableSpec().getNumColumns(); i++) {
