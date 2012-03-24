@@ -59,6 +59,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.layout.GridLayoutFactory;
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelection;
@@ -131,6 +132,8 @@ public class VariableMonitorView extends ViewPart
                     = getViewSite().getActionBars().getToolBarManager();
         final RetargetAction actionFilter
              = new RetargetAction("Vars", "Variables", IAction.AS_CHECK_BOX);
+        actionFilter.setImageDescriptor(ImageDescriptor.createFromFile(
+                this.getClass(), "viewVars.png"));
         actionFilter.setChecked(m_showVariables.booleanValue());
         actionFilter.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
@@ -143,6 +146,8 @@ public class VariableMonitorView extends ViewPart
         toolbarMGR.add(actionFilter);
         final RetargetAction actionFilter2
              = new RetargetAction("Conf", "Settings", IAction.AS_CHECK_BOX);
+        actionFilter2.setImageDescriptor(ImageDescriptor.createFromFile(
+                this.getClass(), "viewSettings.png"));
         actionFilter2.setChecked(m_showSettings.booleanValue());
         actionFilter2.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
@@ -155,6 +160,8 @@ public class VariableMonitorView extends ViewPart
         toolbarMGR.add(actionFilter2);
         final RetargetAction actionFilter3
               = new RetargetAction("Expert", "Show All", IAction.AS_CHECK_BOX);
+        actionFilter3.setImageDescriptor(ImageDescriptor.createFromFile(
+                this.getClass(), "viewAll.png"));
         actionFilter3.setChecked(m_expertMode.booleanValue());
         actionFilter3.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
