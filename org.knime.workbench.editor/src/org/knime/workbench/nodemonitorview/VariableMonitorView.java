@@ -79,17 +79,20 @@ import org.eclipse.ui.ISelectionListener;
 import org.eclipse.ui.IWorkbenchPart;
 import org.eclipse.ui.actions.RetargetAction;
 import org.eclipse.ui.part.ViewPart;
+import org.knime.core.data.DataRow;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.config.base.AbstractConfigEntry;
 import org.knime.core.node.config.base.ConfigBase;
 import org.knime.core.node.config.base.ConfigEntries;
+import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
-import org.knime.core.util.MutableBoolean;
 import org.knime.core.util.Pair;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
@@ -112,10 +115,9 @@ public class VariableMonitorView extends ViewPart
     private IStructuredSelection m_lastSelection;
     private NodeContainer m_lastNode;
 
-    private MutableBoolean m_showVariables = new MutableBoolean(true);
-    private MutableBoolean m_showSettings = new MutableBoolean(false);
-    private MutableBoolean m_expertMode = new MutableBoolean(false);
-
+    private enum DISPLAYOPTIONS { VARS, SETTINGS, ALLSETTINGS, TABLE };
+    private DISPLAYOPTIONS m_choice = DISPLAYOPTIONS.VARS;
+    
     /**
      * The Constructor.
      */
@@ -131,47 +133,73 @@ public class VariableMonitorView extends ViewPart
         IToolBarManager toolbarMGR
                     = getViewSite().getActionBars().getToolBarManager();
         final RetargetAction actionFilter
-             = new RetargetAction("Vars", "Variables", IAction.AS_CHECK_BOX);
+             = new RetargetAction("Vars", "Show Flow Variables",
+                                      IAction.AS_RADIO_BUTTON);
         actionFilter.setImageDescriptor(ImageDescriptor.createFromFile(
                 this.getClass(), "icons/viewVars.png"));
-        actionFilter.setChecked(m_showVariables.booleanValue());
+        actionFilter.setChecked(DISPLAYOPTIONS.VARS.equals(m_choice));
         actionFilter.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
             public void propertyChange(final PropertyChangeEvent event) {
-                m_showVariables.setValue(actionFilter.isChecked());
-                updateNodeContainerInfo(m_lastNode);
+                if (actionFilter.isChecked()) {
+                    m_choice = DISPLAYOPTIONS.VARS;
+                    updateNodeContainerInfo(m_lastNode);
+                }
             }
         });
         actionFilter.setEnabled(true);
         toolbarMGR.add(actionFilter);
         final RetargetAction actionFilter2
-             = new RetargetAction("Conf", "Settings", IAction.AS_CHECK_BOX);
+             = new RetargetAction("Conf", "Show Node Configuration",
+                                      IAction.AS_RADIO_BUTTON);
         actionFilter2.setImageDescriptor(ImageDescriptor.createFromFile(
                 this.getClass(), "icons/viewSettings.png"));
-        actionFilter2.setChecked(m_showSettings.booleanValue());
+        actionFilter2.setChecked(DISPLAYOPTIONS.SETTINGS.equals(m_choice));
         actionFilter2.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
             public void propertyChange(final PropertyChangeEvent event) {
-                m_showSettings.setValue(actionFilter2.isChecked());
-                updateNodeContainerInfo(m_lastNode);
+                if (actionFilter2.isChecked()) {
+                    m_choice = DISPLAYOPTIONS.SETTINGS;
+                    updateNodeContainerInfo(m_lastNode);
+                }
             }
         });
         actionFilter2.setEnabled(true);
         toolbarMGR.add(actionFilter2);
         final RetargetAction actionFilter3
-              = new RetargetAction("Expert", "Show All", IAction.AS_CHECK_BOX);
+                  = new RetargetAction("Expert", "Show Entire Configuration",
+                                   IAction.AS_RADIO_BUTTON);
         actionFilter3.setImageDescriptor(ImageDescriptor.createFromFile(
-                this.getClass(), "icons/viewAll.png"));
-        actionFilter3.setChecked(m_expertMode.booleanValue());
+                                   this.getClass(), "icons/viewAll.png"));
+        actionFilter3.setChecked(DISPLAYOPTIONS.ALLSETTINGS.equals(m_choice));
         actionFilter3.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
             public void propertyChange(final PropertyChangeEvent event) {
-                m_expertMode.setValue(actionFilter3.isChecked());
-                updateNodeContainerInfo(m_lastNode);
+                if (actionFilter3.isChecked()) {
+                    m_choice = DISPLAYOPTIONS.ALLSETTINGS;
+                    updateNodeContainerInfo(m_lastNode);
+                }
             }
         });
         actionFilter3.setEnabled(true);
         toolbarMGR.add(actionFilter3);
+        final RetargetAction actionFilter4
+               = new RetargetAction("Table", "Show Node Output Table (Port 0)",
+                                        IAction.AS_RADIO_BUTTON);
+        actionFilter4.setImageDescriptor(ImageDescriptor.createFromFile(
+                         this.getClass(), "icons/viewSettings.png"));
+        actionFilter4.setChecked(DISPLAYOPTIONS.SETTINGS.equals(m_choice));
+        actionFilter4.addPropertyChangeListener(new IPropertyChangeListener() {
+            @Override
+            public void propertyChange(final PropertyChangeEvent event) {
+                if (actionFilter4.isChecked()) {
+                    m_choice = DISPLAYOPTIONS.TABLE;
+                    updateNodeContainerInfo(m_lastNode);
+                }
+            }
+        });
+        actionFilter4.setEnabled(true);
+        toolbarMGR.add(actionFilter4);
         // Content
         GridLayoutFactory.swtDefaults().numColumns(2).applyTo(parent);
         // Node Title:
@@ -278,11 +306,17 @@ public class VariableMonitorView extends ViewPart
         m_title.setText(nc.getName() + "  (" + nc.getID() + ")");
         m_state.setText(nc.getState().toString());
         m_table.removeAll();
-        if (m_showVariables.booleanValue()) {
+        switch (m_choice) {
+        case VARS:
             updateVariableTable(nc);
-        }
-        if (m_showSettings.booleanValue()) {
-            updateSettingsTable(nc);
+            break;
+        case SETTINGS:
+        case ALLSETTINGS:
+            updateSettingsTable(nc,
+                            DISPLAYOPTIONS.ALLSETTINGS.equals(m_choice));
+            break;
+        case TABLE:
+            updateDataTable(nc, 0);
         }
         for (int i = 0; i < m_table.getColumnCount(); i++) {
             m_table.getColumn(i).pack();
@@ -299,6 +333,14 @@ public class VariableMonitorView extends ViewPart
         Map<String, FlowVariable> vars
                               = fos.getAvailableFlowVariables();
         // and update table
+        for (TableColumn tc : m_table.getColumns()) {
+            tc.dispose();
+        }
+        String[] titles = {"Variable", "Value"};
+        for (int i = 0; i < titles.length; i++) {
+            TableColumn column = new TableColumn(m_table, SWT.NONE);
+            column.setText(titles[i]);
+        }
         for (FlowVariable fv : vars.values()) {
             TableItem item = new TableItem(m_table, SWT.NONE);
             item.setText(0, fv.getName());
@@ -309,7 +351,8 @@ public class VariableMonitorView extends ViewPart
     /*
      *  Put info about node settings into table.
      */
-    private void updateSettingsTable(final NodeContainer nc) {
+    private void updateSettingsTable(final NodeContainer nc,
+                                     final boolean showAll) {
         assert Display.getCurrent().getThread() == Thread.currentThread();
         // retrieve settings
         NodeSettings settings = new NodeSettings("");
@@ -319,6 +362,14 @@ public class VariableMonitorView extends ViewPart
             // never happens.
         }
         // and put them into the table
+        for (TableColumn tc : m_table.getColumns()) {
+            tc.dispose();
+        }
+        String[] titles = {"Key", "Value"};
+        for (int i = 0; i < titles.length; i++) {
+            TableColumn column = new TableColumn(m_table, SWT.NONE);
+            column.setText(titles[i]);
+        }
         Stack<Pair<Iterator<String>, ConfigBase>> stack
                          = new Stack<Pair<Iterator<String>, ConfigBase>>();
         Iterator<String> it = settings.keySet().iterator();
@@ -336,8 +387,7 @@ public class VariableMonitorView extends ViewPart
             if (ace.getType().equals(ConfigEntries.config)) {
                 // it's another Config entry, push on stack!
                 String val = ace.toStringValue();
-                if ((!val.endsWith("_Internals"))
-                                || m_expertMode.booleanValue()) {
+                if ((!val.endsWith("_Internals")) || showAll) {
                     Iterator<String> it2 = ((ConfigBase)ace).iterator(); 
                     if (it2.hasNext()) {
                         stack.push(new Pair<Iterator<String>, ConfigBase>(
@@ -348,7 +398,7 @@ public class VariableMonitorView extends ViewPart
                 }
             }
             // in both cases, we report its value
-            if ((!noexpertskip) || m_expertMode.booleanValue()) {
+            if ((!noexpertskip) || showAll) {
                 String value = ace.toStringValue();
                 TableItem item = new TableItem(m_table, SWT.NONE);
                 char[] indent = new char[depth - 1];
@@ -356,6 +406,45 @@ public class VariableMonitorView extends ViewPart
                 item.setText(0, new String(indent) + key);
                 item.setText(1, value != null ? value : "null");
             }
+        }
+    }
+
+    /*
+     *  Put (static and simple) content of one output port table into table.
+     */
+    private void updateDataTable(final NodeContainer nc, final int port) {
+        assert Display.getCurrent().getThread() == Thread.currentThread();
+        // retrieve table
+        if (nc.getNrOutPorts() < 2) {
+            // we don't care about the (hidden) variable outport
+            return;
+        }
+        NodeOutPort nop = nc.getOutPort(port + 1);
+        PortObject po = nop.getPortObject();
+        if ((po == null) || !(po instanceof BufferedDataTable)) {
+            // no table in port - ignore.
+            return;
+        }
+        BufferedDataTable bdt = (BufferedDataTable)po;
+        for (TableColumn tc : m_table.getColumns()) {
+            tc.dispose();
+        }
+        TableColumn column = new TableColumn(m_table, SWT.NONE);
+        column.setText("ID");
+        for (int i = 0; i < bdt.getDataTableSpec().getNumColumns(); i++) {
+            column = new TableColumn(m_table, SWT.NONE);
+            column.setText(bdt.getDataTableSpec().getColumnSpec(i).getName());
+        }
+        int rowIndex = 0;
+        Iterator<DataRow> rowIt = bdt.iteratorFailProve();
+        while (rowIndex < 42 && rowIt.hasNext()) {
+            DataRow thisRow = rowIt.next();
+            TableItem item = new TableItem(m_table, SWT.NONE);
+            item.setText(0, thisRow.getKey().getString());
+            for (int i = 0; i < thisRow.getNumCells(); i++) {
+                item.setText(i + 1, thisRow.getCell(i).toString());
+            }
+            rowIndex++;
         }
     }
 
