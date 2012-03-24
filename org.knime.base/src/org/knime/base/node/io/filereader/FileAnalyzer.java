@@ -74,8 +74,8 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.tableview.TableContentModel;
 import org.knime.core.util.tokenizer.Comment;
 import org.knime.core.util.tokenizer.Delimiter;
-import org.knime.core.util.tokenizer.Tokenizer;
 import org.knime.core.util.tokenizer.Quote;
+import org.knime.core.util.tokenizer.Tokenizer;
 
 /**
  * Provides functionality for analyzing an ASCII data file to create default
@@ -164,6 +164,7 @@ public final class FileAnalyzer {
             result.setUniquifyRowIDs(userSettings.uniquifyRowIDs());
             result.setMaximumNumberOfRowsToRead(userSettings
                     .getMaximumNumberOfRowsToRead());
+            result.setSkipFirstLines(userSettings.getSkipFirstLines());
             result.setCharsetName(userSettings.getCharsetName());
             result.setAnalyzeUsedAllRows(true);
             result.setMissValuePatternStrCols(userSettings

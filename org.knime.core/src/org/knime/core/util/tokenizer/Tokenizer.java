@@ -79,7 +79,7 @@ import java.util.Vector;
  * inside a token or quoted string.
  * <p>
  * You can push back one (the last) token.
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class Tokenizer {
@@ -102,8 +102,15 @@ public class Tokenizer {
     /* flag indicating combination of different consecutive delimiters */
     private boolean m_combineMultipleDelimiters;
 
+    /** number of lines that should be ignored from the beginning of the
+     * stream (in disregard of any quote, delimiter, etc.). */
+    private long m_linesToSkip;
+
+    // counts the lines already skipped.
+    private long m_linesSkipped;
+
     /**
-     * The maximum ASCII code for the first character of patterns (like 
+     * The maximum ASCII code for the first character of patterns (like
      * delimiter, comment, and quote patterns.
      */
     public static final int MAX_CHAR = 0xFF;
@@ -160,7 +167,7 @@ public class Tokenizer {
 
     /* the token returned by the last call to next() */
     private String m_lastToken;
-    
+
     /* flag to remember which quotes we've seen with the last token */
     private Quote m_lastQuotes;
 
@@ -172,7 +179,7 @@ public class Tokenizer {
 
     /* the current line number (not accurate if token got pushed back) */
     private int m_lineNo;
-    
+
     /* the number of bytes read so far */
     private long m_readBytes;
 
@@ -190,15 +197,15 @@ public class Tokenizer {
 
     /* the end-of-file flag */
     private static final int EOF = -1;
-    
+
     /* the flag which identifies if the last token is a delimiter or not */
     private boolean m_tokenWasDelimiter = false;
 
     /**
      * Creates a new tokenizer with the default behaviour.
-     * 
+     *
      * @param source A reader the tokens are read from.
-     * 
+     *
      * @see #resetToDefault() for what's the default behaviour.
      */
     public Tokenizer(final Reader source) {
@@ -219,6 +226,8 @@ public class Tokenizer {
         m_whiteSpaces = new Vector<String>();
 
         m_combineMultipleDelimiters = false;
+        m_linesToSkip = 0;
+        m_linesSkipped = 0;
 
         m_newToken = new StringBuffer();
         m_lastToken = null;
@@ -258,20 +267,21 @@ public class Tokenizer {
         m_whiteSpaces.clear();
 
         m_combineMultipleDelimiters = false;
+        m_linesToSkip = 0;
     }
 
     /**
-     * @return Returns true if last token is a delimiter token, 
+     * @return Returns true if last token is a delimiter token,
      * otherwise false.
      */
     public boolean lastTokenWasDelimiter() {
         return m_tokenWasDelimiter;
     }
-    
+
     /**
      * Reads the next token from the stream and returns it as string. Or
      * <code>null</code> if no more token can be read.
-     * 
+     *
      * @return The next token from the stream or null at the EOF.
      * @throws TokenizerException if something goes wrong during tokenizing.
      */
@@ -292,12 +302,22 @@ public class Tokenizer {
             m_tokenWasDelimiter = true;
             return tmp;
         }
-
+        while (m_linesSkipped < m_linesToSkip) {
+            // burn all characters within the first few lines - in disregard of
+            // any delimiters, quotes, etc.
+            int c = getNextChar();
+            if (c == EOF) {
+                break;
+            }
+            if (c == LF) {
+                m_linesSkipped++;
+            }
+        }
         m_lastToken = null;
         m_newToken.setLength(0);
         m_lastQuotes = null;
         m_tokenWasDelimiter = false;
-        
+
         int lastEndQuoteIdx = -1; // the idx of the end quote last seen or added
         int c = getNextChar();
         while (c != EOF) {
@@ -420,7 +440,7 @@ public class Tokenizer {
                 m_source.close();
             } catch (IOException ioe) {
                 // empty.
-            }     
+            }
             // also strip off whitespaces if the last token ended through EOF
             cutOffWhiteSpaces(m_newToken, lastEndQuoteIdx);
         }
@@ -436,7 +456,7 @@ public class Tokenizer {
      * Reads the next character either from the readBuffer or the stream. <p> A
      * CR character immediately followed by a LF character will be ignored and
      * only the LF will be returned (only if read from the stream!).
-     * 
+     *
      * @return The next character. Or -1 if EOF was seen.
      */
     private int getNextChar() {
@@ -448,7 +468,7 @@ public class Tokenizer {
                 if ((m_readBuffer[m_currIdx] = m_source.read()) == -1) {
                     // seen the EOF. Any further read will cause IOException.
                     m_source.close();
-                } 
+                }
                 m_readBytes++;
                 if (m_readBuffer[m_currIdx] == CR) {
                     // read the next char to see if we need to swallow the CR
@@ -507,7 +527,7 @@ public class Tokenizer {
     private void clearReadBuffer() {
         m_currIdx = m_eobIdx;
     }
-    
+
     /*
      * This function reads from the stream (or buffer) as long as it gets spaces
      * or tabs. It returns the number of chars read. @return The number of
@@ -538,16 +558,16 @@ public class Tokenizer {
         return false;
     }
 
-    /**            
-     * strips off whitespaces from the end of the string (not from the 
-     * beginning!). It will not change anything in the string before or at the 
+    /**
+     * strips off whitespaces from the end of the string (not from the
+     * beginning!). It will not change anything in the string before or at the
      * specified index (this is for leaving quoted parts untouched).
-     * 
+     *
      * @param str the stringbuffer to modify
-     * @param index the lowest index we may modify 
+     * @param index the lowest index we may modify
      */
     private void cutOffWhiteSpaces(final StringBuffer str, final int index) {
-        
+
         if (str.length() == 0) {
             return;
         }
@@ -555,7 +575,7 @@ public class Tokenizer {
         if (stopIdx < -1) {
             stopIdx = -1;
         }
-        
+
         int cIdx;
         for (cIdx = str.length() - 1; cIdx > index; cIdx--) {
             if (!isWhiteSpace(str.charAt(cIdx))) {
@@ -568,7 +588,7 @@ public class Tokenizer {
             str.delete(cIdx + 1, str.length());
         }
     }
-    
+
     /*
      * Checks if the next characters in the stream are a "comment begin"
      * pattern, without modifying the stream. It reads character by character
@@ -716,7 +736,7 @@ public class Tokenizer {
         patternLength = comment.getBegin().length();
         for (int i = 0; i < patternLength; i++) {
             nextChar = getNextChar();
-            if ((nextChar == EOF) 
+            if ((nextChar == EOF)
                     || (nextChar != comment.getBegin().charAt(i))) {
                 assert false : "Call only with a comment begin in the stream";
                 return "";
@@ -756,8 +776,8 @@ public class Tokenizer {
         }
 
         /* Now, if the token so far is empty, we have read in only comment.
-         * If the next character in the stream is a LF, we should consider it 
-         * part of the comment, as is was added only for better readability. 
+         * If the next character in the stream is a LF, we should consider it
+         * part of the comment, as is was added only for better readability.
          * (Otherwise this LF causes an unexpected empty line most of the time.)
          */
         if (m_newToken.length() == 0) {
@@ -766,7 +786,7 @@ public class Tokenizer {
                 putBackChar(c);
             }
         }
-        
+
         return result.toString();
     } // readComment(string)
 
@@ -822,7 +842,7 @@ public class Tokenizer {
             assert m_lastDelimiter == null;
 
             if (delim.returnAsToken()) {
-                // store it to return it with the next call to 'nextToken()' 
+                // store it to return it with the next call to 'nextToken()'
                 m_lastDelimiter = delim.getDelimiter();
                 return "";
             } else {
@@ -898,7 +918,7 @@ public class Tokenizer {
      * @return The characters from the stream that were read between the quote
      * begin and quote end pattern.
      */
-    private String readQuotedString(final Quote quote) 
+    private String readQuotedString(final Quote quote)
             throws TokenizerException {
         StringBuilder result = new StringBuilder();
         int patternLength;
@@ -919,7 +939,7 @@ public class Tokenizer {
                 return "";
             }
         }
-        
+
         // end pattern idx always points to result.length()-endPattern.length()
         endPatternIdx = -endPattern.length();
         // the index where we start searching in the result for the endPattern
@@ -932,7 +952,7 @@ public class Tokenizer {
             if (nextChar == EOF) {
                 break;
             }
-            if ((nextChar <= MAX_CHAR) 
+            if ((nextChar <= MAX_CHAR)
                 && ((m_charType[nextChar] & LINECONT) != 0)) {
                 // we support line continuations within quoted strings.
                 int tmp = getNextChar();
@@ -969,7 +989,7 @@ public class Tokenizer {
         }
 
         if (!quote.getDontRemoveFlag() && (nextChar != EOF)) {
-            // remove the end pattern from the token 
+            // remove the end pattern from the token
             assert result.indexOf(endPattern, endPatternIdx) > -1;
             return result.substring(0, result.length()
                     - quote.getRight().length());
@@ -1005,7 +1025,7 @@ public class Tokenizer {
      * the <code>nextToken()</code> function will be returned once again with
      * the next call the the <code>nextToken()</code> function. Pushing back a
      * token does <b>not </b> decrease the line number accordingly.
-     * 
+     *
      * @see #nextToken
      */
     public void pushBack() {
@@ -1020,7 +1040,7 @@ public class Tokenizer {
      * The first, third, and fifth tokens are specified - but empty. The second
      * and fourth are not specified causing an empty token to be returned. With
      * this function you can figure out the difference.
-     * 
+     *
      * @return <code>true</code> if the last token had quotes which were
      *         removed by the tokenizer.
      */
@@ -1035,7 +1055,7 @@ public class Tokenizer {
      * For example, if the tokenized stream contains ...,"foo"poo'loo',... with
      * comma separated tokens and single and double quotes - the last quote
      * begin pattern would be the single quote (').
-     * 
+     *
      * @return the left quote pattern of the quotes in the last token. Or null
      *         if it wasn't quoted.
      */
@@ -1054,7 +1074,7 @@ public class Tokenizer {
      * For example, if the tokenized stream contains ...,"foo"poo'loo',... with
      * comma separated tokens and single and double quotes - the last quote
      * begin pattern would be the single quote (').
-     * 
+     *
      * @return the right quote pattern of the quotes in the last token. Or null
      *         if it wasn't quoted.
      */
@@ -1072,12 +1092,12 @@ public class Tokenizer {
     public int getLineNumber() {
         return m_lineNo;
     }
-    
+
     /**
      * Returns the number of bytes returned so far. Due to the buffering the
      * number of bytes read from the disk and the number of bytes returned by
      * this tokenizer can differ.
-     * 
+     *
      * @return the number of bytes returned so far by this tokenizer
      */
     public long getReadBytes() {
@@ -1088,11 +1108,11 @@ public class Tokenizer {
      * Closes the stream the tokenizer reads from. After the tokenizer read the
      * EOF from the stream it closes it automatically. If it's required to close
      * the stream before the end is read, you can call this method. A call to
-     * <code>nextToken()</code> after a call to this token will return 
+     * <code>nextToken()</code> after a call to this token will return
      * <code>null</code> (indicating the end of the file).
      */
     public void closeSourceStream() {
-        // discard any characters pushed back. 
+        // discard any characters pushed back.
         clearReadBuffer();
         try {
             m_source.close();
@@ -1100,13 +1120,13 @@ public class Tokenizer {
             // okay, then don't close it.
         }
     }
-    
+
     /**
      * Set new user settings in this tokenizer. The only way to configure this
      * tokenizer is to create an instance of the
      * <code>FileTokenizerSettings</code>, add all parameters there and pass
      * the settings object through this method.
-     * 
+     *
      * @param ftSettings the settings object containing new settings.
      */
     public void setSettings(final TokenizerSettings ftSettings) {
@@ -1130,13 +1150,13 @@ public class Tokenizer {
         // Fill our own data structures for comment, quotes, delimiters and
         // line contin. char. Don't forget to set the character type
         // accordingly.
-        for (Comment comment : ftSettings.getAllComments()) { 
+        for (Comment comment : ftSettings.getAllComments()) {
             assert comment != null;
             m_commentPatterns.add(comment);
             char c = comment.getFirstCharOfBegin();
             m_charType[c] |= COMMENT;
         }
-        for (Delimiter delim : ftSettings.getAllDelimiters()) { 
+        for (Delimiter delim : ftSettings.getAllDelimiters()) {
             assert delim != null;
             m_delimPatterns.add(delim);
             char c = delim.getFirstChar();
@@ -1164,6 +1184,8 @@ public class Tokenizer {
 
         // not to forget the flag to combine multiple (different) delimiters
         m_combineMultipleDelimiters = ftSettings.getCombineMultipleDelimiters();
+        // and the flag to skip first lines in the stream
+        m_linesToSkip = ftSettings.getSkipFirstLines();
 
     }
 
@@ -1189,6 +1211,7 @@ public class Tokenizer {
         }
 
         result.setCombineMultipleDelimiters(m_combineMultipleDelimiters);
+        result.setSkipFirstLines(m_linesToSkip);
 
         return result;
     }
