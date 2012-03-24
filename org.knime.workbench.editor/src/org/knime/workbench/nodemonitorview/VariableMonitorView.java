@@ -354,7 +354,7 @@ public class VariableMonitorView extends ViewPart
                 char[] indent = new char[depth - 1];
                 Arrays.fill(indent, '_');
                 item.setText(0, new String(indent) + key);
-                item.setText(1, value);
+                item.setText(1, value != null ? value : "null");
             }
         }
     }
