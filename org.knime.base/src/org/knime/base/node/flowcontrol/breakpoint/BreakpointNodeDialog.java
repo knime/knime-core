@@ -47,8 +47,13 @@
  */
 package org.knime.base.node.flowcontrol.breakpoint;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
@@ -56,25 +61,45 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  */
 public class BreakpointNodeDialog extends DefaultNodeSettingsPane {
 
-    static final String OFF = "disabled";
+    /** break on table with zero rows. */
     static final String EMTPYTABLE = "empty table";
+    /** break on active branch. */
     static final String ACTIVEBRANCH = "active branch";
+    /** break on inactive branch. */
     static final String INACTIVEBRANCH = "inactive branch";
 
     /**
      *
      */
     public BreakpointNodeDialog() {
-        addDialogComponent(new DialogComponentButtonGroup(createChoiceModel(),
-                false, "Breakpoint active for:", OFF, EMTPYTABLE,
-                ACTIVEBRANCH, INACTIVEBRANCH));
+        final SettingsModelBoolean smb = createEnableModel(); 
+        DialogComponentBoolean enable = new DialogComponentBoolean(
+                               smb, "Breakpoint Enabled");
+        addDialogComponent(enable);
+        final DialogComponentButtonGroup choices
+                      = new DialogComponentButtonGroup(createChoiceModel(),
+                               false, "Breakpoint active for:", EMTPYTABLE,
+                               ACTIVEBRANCH, INACTIVEBRANCH);
+        addDialogComponent(choices);
+        smb.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                choices.setEnabled(smb.getBooleanValue());
+            }
+        });
     }
 
     /**
-     * @return settings model for node and dialog.
+     * @return settings model (choice) for node and dialog.
      */
     static SettingsModelString createChoiceModel() {
-        return new SettingsModelString("BreakPoint", OFF);
+        return new SettingsModelString("BreakPoint", EMTPYTABLE);
     }
 
+    /**
+     * @return settings model (enable) for node and dialog.
+     */
+    static SettingsModelBoolean createEnableModel() {
+        return new SettingsModelBoolean("Enabled", false);
+    }
 }

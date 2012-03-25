@@ -61,6 +61,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -82,12 +83,15 @@ implements InactiveBranchConsumer {
 
     private final SettingsModelString m_choice = BreakpointNodeDialog
             .createChoiceModel();
+    private final SettingsModelBoolean m_enabled = BreakpointNodeDialog
+            .createEnableModel();
 
     /**
      * One input, one output.
      */
     protected BreakpointNodeModel() {
         super(1, 1);
+        m_choice.setEnabled(m_enabled.getBooleanValue());
     }
 
     /**
@@ -105,28 +109,33 @@ implements InactiveBranchConsumer {
     @Override
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
+        if (!m_enabled.getBooleanValue()) {
+            return inData;
+        }
         if (m_choice.getStringValue().equals(BreakpointNodeDialog.EMTPYTABLE)) {
             if (inData[0] instanceof BufferedDataTable) {
                 int rowCount = ((BufferedDataTable)inData[0]).getRowCount();
                 if (rowCount == 0) {
-                    throw new Exception("Breakpoint halted " +
-                    		"execution (table is empty)");
+                    throw new Exception("Breakpoint halted "
+                            + "execution (table is empty)");
                 }
             }
         }
-        if (m_choice.getStringValue().equals(BreakpointNodeDialog.ACTIVEBRANCH)) {
+        if (m_choice.getStringValue().equals(
+                              BreakpointNodeDialog.ACTIVEBRANCH)) {
             if (!(inData[0] instanceof InactiveBranchPortObject)) {
-                throw new Exception("Breakpoint halted " +
-                            "execution (branch is active)");
+                throw new Exception("Breakpoint halted "
+                            + "execution (branch is active)");
             }
         }
-        if (m_choice.getStringValue().equals(BreakpointNodeDialog.INACTIVEBRANCH)) {
+        if (m_choice.getStringValue().equals(
+                              BreakpointNodeDialog.INACTIVEBRANCH)) {
             if (inData[0] instanceof InactiveBranchPortObject) {
-                throw new Exception("Breakpoint halted " +
-                            "execution (branch is active)");
+                throw new Exception("Breakpoint halted "
+                            + "execution (branch is active)");
             }
         }
-        assert m_choice.getStringValue().equals(BreakpointNodeDialog.OFF);
+        // unrecognized option: assume disabled.
         return inData;
     }
 
@@ -146,6 +155,7 @@ implements InactiveBranchConsumer {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        m_enabled.validateSettings(settings);
         m_choice.validateSettings(settings);
     }
 
@@ -155,6 +165,7 @@ implements InactiveBranchConsumer {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        m_enabled.loadSettingsFrom(settings);
         m_choice.loadSettingsFrom(settings);
     }
 
@@ -181,6 +192,7 @@ implements InactiveBranchConsumer {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
+        m_enabled.saveSettingsTo(settings);
         m_choice.saveSettingsTo(settings);
     }
 
