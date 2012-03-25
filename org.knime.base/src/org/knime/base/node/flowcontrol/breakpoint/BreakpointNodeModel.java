@@ -67,6 +67,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.inactive.InactiveBranchConsumer;
 import org.knime.core.node.port.inactive.InactiveBranchPortObject;
+import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * A simple breakpoint node which allows to halt execution when a certain
@@ -85,6 +86,10 @@ implements InactiveBranchConsumer {
             .createChoiceModel();
     private final SettingsModelBoolean m_enabled = BreakpointNodeDialog
             .createEnableModel();
+    private final SettingsModelString m_varname = BreakpointNodeDialog
+            .createVarNameModel();
+    private final SettingsModelString m_varvalue = BreakpointNodeDialog
+            .createVarValueModel();
 
     /**
      * One input, one output.
@@ -135,6 +140,18 @@ implements InactiveBranchConsumer {
                             + "execution (branch is active)");
             }
         }
+        if (m_choice.getStringValue().equals(
+                              BreakpointNodeDialog.VARIABLEMATCH)) {
+            FlowVariable fv
+                 = getAvailableFlowVariables().get(m_varname.getStringValue());
+            if (fv != null) {
+                if (fv.getValueAsString().equals(m_varvalue.getStringValue())) {
+                    throw new Exception("Breakpoint halted execution "
+                             + "(" + m_varname.getStringValue()
+                             + "=" + m_varvalue.getStringValue() + ")");
+                }
+            }
+        }
         // unrecognized option: assume disabled.
         return inData;
     }
@@ -157,6 +174,8 @@ implements InactiveBranchConsumer {
             throws InvalidSettingsException {
         m_enabled.validateSettings(settings);
         m_choice.validateSettings(settings);
+        m_varname.validateSettings(settings);
+        m_varvalue.validateSettings(settings);
     }
 
     /**
@@ -167,6 +186,8 @@ implements InactiveBranchConsumer {
             throws InvalidSettingsException {
         m_enabled.loadSettingsFrom(settings);
         m_choice.loadSettingsFrom(settings);
+        m_varname.loadSettingsFrom(settings);
+        m_varvalue.loadSettingsFrom(settings);
     }
 
     /**
@@ -194,6 +215,8 @@ implements InactiveBranchConsumer {
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_enabled.saveSettingsTo(settings);
         m_choice.saveSettingsTo(settings);
+        m_varname.saveSettingsTo(settings);
+        m_varvalue.saveSettingsTo(settings);
     }
 
 }

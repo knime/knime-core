@@ -47,12 +47,17 @@
  */
 package org.knime.base.node.flowcontrol.breakpoint;
 
+import java.util.Arrays;
+import java.util.Set;
+
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
@@ -67,6 +72,10 @@ public class BreakpointNodeDialog extends DefaultNodeSettingsPane {
     static final String ACTIVEBRANCH = "active branch";
     /** break on inactive branch. */
     static final String INACTIVEBRANCH = "inactive branch";
+    /** break on variable having given value. */
+    static final String VARIABLEMATCH = "variable matches value";
+
+    private DialogComponentStringSelection variable;
 
     /**
      *
@@ -76,10 +85,11 @@ public class BreakpointNodeDialog extends DefaultNodeSettingsPane {
         DialogComponentBoolean enable = new DialogComponentBoolean(
                                smb, "Breakpoint Enabled");
         addDialogComponent(enable);
+        final SettingsModelString sms = createChoiceModel();
         final DialogComponentButtonGroup choices
-                      = new DialogComponentButtonGroup(createChoiceModel(),
+                      = new DialogComponentButtonGroup(sms,
                                false, "Breakpoint active for:", EMTPYTABLE,
-                               ACTIVEBRANCH, INACTIVEBRANCH);
+                               ACTIVEBRANCH, INACTIVEBRANCH, VARIABLEMATCH);
         addDialogComponent(choices);
         smb.addChangeListener(new ChangeListener() {
             @Override
@@ -87,8 +97,42 @@ public class BreakpointNodeDialog extends DefaultNodeSettingsPane {
                 choices.setEnabled(smb.getBooleanValue());
             }
         });
+        Set<String> availableVars = this.getAvailableFlowVariables().keySet();
+        variable = new DialogComponentStringSelection(createVarNameModel(),
+                    "Select Variable: ",
+                    new String[]{"no variables available"});
+        variable.setEnabled(false);
+        final DialogComponentString varvalue
+                  = new DialogComponentString(createVarValueModel(),
+                    "Enter Variable Value: ");
+        sms.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                boolean useVar = VARIABLEMATCH.equals(sms.getStringValue());
+                variable.setEnabled(useVar);
+                varvalue.setEnabled(useVar);
+            }
+        });
+        varvalue.setEnabled(false);
+        addDialogComponent(variable);
+        addDialogComponent(varvalue);
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public void onOpen() {
+        Set<String> availableVars = this.getAvailableFlowVariables().keySet();
+        if (availableVars.size() < 1) {
+            variable.replaceListItems(
+                    Arrays.asList(new String[]{"no variables available"}),
+                    null);
+            variable.setEnabled(false);
+        } else {
+            variable.replaceListItems(availableVars, null);
+        }
+        super.onOpen();
+    }
+    
     /**
      * @return settings model (choice) for node and dialog.
      */
@@ -101,5 +145,19 @@ public class BreakpointNodeDialog extends DefaultNodeSettingsPane {
      */
     static SettingsModelBoolean createEnableModel() {
         return new SettingsModelBoolean("Enabled", false);
+    }
+
+    /**
+     * @return settings model (choice) for node and dialog.
+     */
+    static SettingsModelString createVarNameModel() {
+        return new SettingsModelString("Variable Name", "");
+    }
+
+    /**
+     * @return settings model (choice) for node and dialog.
+     */
+    static SettingsModelString createVarValueModel() {
+        return new SettingsModelString("Variable Value", "0");
     }
 }
