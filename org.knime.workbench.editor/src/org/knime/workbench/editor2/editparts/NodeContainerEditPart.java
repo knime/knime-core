@@ -126,7 +126,6 @@ import org.knime.workbench.editor2.WorkflowManagerInput;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
 import org.knime.workbench.editor2.commands.CreateConnectionCommand;
 import org.knime.workbench.editor2.commands.ShiftConnectionCommand;
-import org.knime.workbench.editor2.editparts.policy.ConnectionContainerPolicy;
 import org.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 import org.knime.workbench.editor2.figures.ProgressFigure;
@@ -370,8 +369,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         // are associated with ports of this node
         this.installEditPolicy(EditPolicy.GRAPHICAL_NODE_ROLE,
                 new PortGraphicalRoleEditPolicy());
-
-        installEditPolicy(EditPolicy.CONTAINER_ROLE, new ConnectionContainerPolicy());
     }
 
     /**
