@@ -75,7 +75,7 @@ public class BreakpointNodeDialog extends DefaultNodeSettingsPane {
     /** break on variable having given value. */
     static final String VARIABLEMATCH = "variable matches value";
 
-    private DialogComponentStringSelection variable;
+    private DialogComponentStringSelection m_variableName;
 
     /**
      *
@@ -91,30 +91,42 @@ public class BreakpointNodeDialog extends DefaultNodeSettingsPane {
                                false, "Breakpoint active for:", EMTPYTABLE,
                                ACTIVEBRANCH, INACTIVEBRANCH, VARIABLEMATCH);
         addDialogComponent(choices);
-        smb.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                choices.setEnabled(smb.getBooleanValue());
-            }
-        });
-        Set<String> availableVars = this.getAvailableFlowVariables().keySet();
-        variable = new DialogComponentStringSelection(createVarNameModel(),
+        m_variableName = new DialogComponentStringSelection(
+                    createVarNameModel(),
                     "Select Variable: ",
                     new String[]{"no variables available"});
-        variable.setEnabled(false);
+        m_variableName.getModel().setEnabled(false);
         final DialogComponentString varvalue
                   = new DialogComponentString(createVarValueModel(),
                     "Enter Variable Value: ");
+        // the choice control enable-status of the variable entry fields.
         sms.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
                 boolean useVar = VARIABLEMATCH.equals(sms.getStringValue());
-                variable.setEnabled(useVar);
-                varvalue.setEnabled(useVar);
+                m_variableName.getModel().setEnabled(useVar);
+                varvalue.getModel().setEnabled(useVar);
             }
         });
-        varvalue.setEnabled(false);
-        addDialogComponent(variable);
+        // the enable button controls enable status of everything!
+        // (but needs to keep in mind the variable choice settings)
+        smb.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                if (smb.getBooleanValue()) {
+                    choices.getModel().setEnabled(true);
+                    boolean useVar = VARIABLEMATCH.equals(sms.getStringValue());
+                    m_variableName.getModel().setEnabled(useVar);
+                    varvalue.getModel().setEnabled(useVar);
+                } else {
+                    choices.getModel().setEnabled(false);
+                    m_variableName.getModel().setEnabled(false);
+                    varvalue.getModel().setEnabled(false);
+                }
+            }
+        });
+        varvalue.getModel().setEnabled(false);
+        addDialogComponent(m_variableName);
         addDialogComponent(varvalue);
     }
 
@@ -123,12 +135,12 @@ public class BreakpointNodeDialog extends DefaultNodeSettingsPane {
     public void onOpen() {
         Set<String> availableVars = this.getAvailableFlowVariables().keySet();
         if (availableVars.size() < 1) {
-            variable.replaceListItems(
+            m_variableName.replaceListItems(
                     Arrays.asList(new String[]{"no variables available"}),
                     null);
-            variable.setEnabled(false);
+            m_variableName.getModel().setEnabled(false);
         } else {
-            variable.replaceListItems(availableVars, null);
+            m_variableName.replaceListItems(availableVars, null);
         }
         super.onOpen();
     }

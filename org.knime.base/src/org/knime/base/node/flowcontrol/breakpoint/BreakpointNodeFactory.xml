@@ -10,7 +10,8 @@
     <fullDescription>
         <intro>
             This node halts execution when the incoming data table fulfills
-            a user specified condition (empty, inactive etc).
+            a user specified condition (empty, inactive branch, variable has
+            specified value...).
         </intro>
     </fullDescription>
     
