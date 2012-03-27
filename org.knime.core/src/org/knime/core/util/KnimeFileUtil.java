@@ -53,13 +53,15 @@ package org.knime.core.util;
 
 import java.io.File;
 
+import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200;
 import org.knime.core.node.workflow.WorkflowPersistor;
 
 
 /**
- *
+ * Important: This class is no public api but for internal usage only!
+ * 
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
- *
+ * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public final class KnimeFileUtil {
     private KnimeFileUtil() {
@@ -92,9 +94,31 @@ public final class KnimeFileUtil {
         if (file == null || !file.exists() || !file.isDirectory()) {
             return false;
         }
-        File workflowFile = new File(file, WorkflowPersistor.WORKFLOW_FILE);
-        File metaInfoFile = new File(file, WorkflowPersistor.METAINFO_FILE);
-        return !workflowFile.exists() && metaInfoFile.exists();
+        if (new File(file, WorkflowPersistor.METAINFO_FILE).exists()) {
+            return true;
+        }  else if (
+                // workflow or meta node
+                new File(file, WorkflowPersistor.WORKFLOW_FILE).exists()
+                // workflow template
+                || new File(file, WorkflowPersistor.TEMPLATE_FILE).exists()
+                // node
+                || new File(file, SingleNodeContainerPersistorVersion200.
+                        NODE_FILE).exists()) {
+            return false;
+        }
+        return true;
     }
 
+    /**
+     * @param file  the file to check
+     * @return true if the file represents a meta node template, false
+     *      otherwise
+     */
+    public static boolean isMetaNodeTemplate(final File file) {
+        if (file == null || !file.exists() || !file.isDirectory()) {
+            return false;
+        }
+        File templateFile = new File(file, WorkflowPersistor.TEMPLATE_FILE);
+        return templateFile.exists();
+    }
 }
