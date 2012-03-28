@@ -59,7 +59,7 @@ import org.knime.core.node.workflow.WorkflowPersistor;
 
 /**
  * Important: This class is no public api but for internal usage only!
- * 
+ *
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
@@ -71,6 +71,7 @@ public final class KnimeFileUtil {
     /**
      * @param file the file to check
      * @return true if the file represents a workflow, false otherwise
+     * @noreference This method is not intended to be referenced by clients.
      */
     public static boolean isWorkflow(final File file) {
         if (file == null || !file.exists() || !file.isDirectory()) {
@@ -89,6 +90,7 @@ public final class KnimeFileUtil {
     /**
      * @param file the file to check
      * @return true if the file represents a workflow group, false otherwise
+     * @noreference This method is not intended to be referenced by clients.
      */
     public static boolean isWorkflowGroup(final File file) {
         if (file == null || !file.exists() || !file.isDirectory()) {
@@ -113,6 +115,7 @@ public final class KnimeFileUtil {
      * @param file  the file to check
      * @return true if the file represents a meta node template, false
      *      otherwise
+     * @noreference This method is not intended to be referenced by clients.
      */
     public static boolean isMetaNodeTemplate(final File file) {
         if (file == null || !file.exists() || !file.isDirectory()) {
