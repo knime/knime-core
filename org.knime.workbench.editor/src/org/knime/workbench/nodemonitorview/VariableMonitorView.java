@@ -328,11 +328,7 @@ public class VariableMonitorView extends ViewPart
      */
     private void updateVariableTable(final NodeContainer nc) {
         assert Display.getCurrent().getThread() == Thread.currentThread();
-        // retrieve variables
-        FlowObjectStack fos = nc.getOutPort(0).getFlowObjectStack();
-        Map<String, FlowVariable> vars
-                              = fos.getAvailableFlowVariables();
-        // and update table
+        // initalize table
         for (TableColumn tc : m_table.getColumns()) {
             tc.dispose();
         }
@@ -341,10 +337,17 @@ public class VariableMonitorView extends ViewPart
             TableColumn column = new TableColumn(m_table, SWT.NONE);
             column.setText(titles[i]);
         }
-        for (FlowVariable fv : vars.values()) {
-            TableItem item = new TableItem(m_table, SWT.NONE);
-            item.setText(0, fv.getName());
-            item.setText(1, fv.getValueAsString());
+        // retrieve variables
+        FlowObjectStack fos = nc.getOutPort(0).getFlowObjectStack();
+        if (fos != null) {
+            Map<String, FlowVariable> vars
+                                  = fos.getAvailableFlowVariables();
+            // and update content
+            for (FlowVariable fv : vars.values()) {
+                TableItem item = new TableItem(m_table, SWT.NONE);
+                item.setText(0, fv.getName());
+                item.setText(1, fv.getValueAsString());
+            }
         }
     }
 
