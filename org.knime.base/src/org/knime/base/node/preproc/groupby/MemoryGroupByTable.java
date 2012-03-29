@@ -63,7 +63,6 @@ import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.ColumnAggregator;
 import org.knime.base.data.aggregation.GlobalSettings;
 
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -78,61 +77,6 @@ import java.util.Set;
  * @author Tobias Koetter, University of Konstanz
  */
 public class MemoryGroupByTable extends GroupByTable {
-
-    private class GroupKey {
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public int hashCode() {
-            final int prime = 31;
-            int result = 1;
-            result = prime * result + Arrays.hashCode(m_groupVals);
-            return result;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public boolean equals(final Object obj) {
-            if (this == obj) {
-                return true;
-            }
-            if (obj == null) {
-                return false;
-            }
-            if (getClass() != obj.getClass()) {
-                return false;
-            }
-            final GroupKey other = (GroupKey)obj;
-            if (!Arrays.equals(m_groupVals, other.m_groupVals)) {
-                return false;
-            }
-            return true;
-        }
-
-        private final DataCell[] m_groupVals;
-
-        public GroupKey(final DataCell[] groupVals) {
-            m_groupVals = groupVals;
-        }
-
-        /**
-         * @return the number of group values
-         */
-        public int size() {
-            return m_groupVals.length;
-        }
-
-        /**
-         * @return the group values array
-         */
-        public DataCell[] getGroupVals() {
-            return m_groupVals;
-        }
-
-    }
 
     private Map<GroupKey, Set<RowKey>> m_rowKeys;
     private Map<GroupKey, ColumnAggregator[]> m_vals;
