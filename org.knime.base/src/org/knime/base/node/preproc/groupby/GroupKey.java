@@ -48,14 +48,15 @@
 
 package org.knime.base.node.preproc.groupby;
 
-import org.knime.core.data.DataCell;
-
 import java.util.Arrays;
+
+import org.knime.core.data.DataCell;
 
 /**
  * Groups the data cells that specify a group.
  *
  * @author Tobias Koetter, University of Konstanz
+ * @since 2.5
  */
 public class GroupKey {
     private final DataCell[] m_groupVals;
