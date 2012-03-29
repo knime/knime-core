@@ -56,9 +56,8 @@ import org.knime.core.data.DataCell;
  * Groups the data cells that specify a group.
  *
  * @author Tobias Koetter, University of Konstanz
- * @since 2.5
  */
-public class GroupKey {
+final class GroupKey {
     private final DataCell[] m_groupVals;
 
     /**Constructor for class GroupKey.
