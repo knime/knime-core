@@ -266,7 +266,7 @@ public final class KNIMEConstants {
                 "***  Welcome to KNIME v" + VERSION
                         + " - the Konstanz Information Miner  ***";
         String line2 =
-                "Copyright, 2003 - 2011, Uni Konstanz and "
+                "Copyright, 2003 - 2012, Uni Konstanz and "
                         + "KNIME GmbH, Germany";
         line2 =
                 "***"

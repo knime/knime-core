@@ -341,7 +341,7 @@ public final class NodeLogger {
     /** Write copyright message. */
     private static void copyrightMessage() {
         NodeLogger l = getLogger(NodeLogger.class);
-        l.info("# Copyright, 2003 - 2011                                    #");
+        l.info("# Copyright, 2003 - 2012                                    #");
         l.info("# University of Konstanz, Germany.                          #");
         l.info("# Chair for Bioinformatics and Information Mining           #");
         l.info("# Prof. Dr. Michael R. Berthold                             #");
