@@ -47,6 +47,7 @@
          </property>
       </product>
    </extension>
+
    <extension
          point="org.eclipse.ui.commands">
       <command
@@ -124,4 +125,40 @@
             version="1.0.0">
       </action>
    </extension>
+   
+   
+   
+   <extension point="org.eclipse.ui.activities">
+      <activity id="org.knime.product.disabledextensions" name="Hidden activities"/>
+      <activityPatternBinding activityId="org.knime.product.disabledextensions" pattern="org.eclipse.debug.ui.*"/>
+      <activityPatternBinding activityId="org.knime.product.disabledextensions" pattern="org.eclipse.search.*"/>
+      <activityPatternBinding activityId="org.knime.product.disabledextensions" pattern="org.eclipse.ui.editors.*"/>
+      <activityPatternBinding activityId="org.knime.product.disabledextensions" pattern="org.eclipse.ui.externaltools.*"/>
+      <activityPatternBinding activityId="org.knime.product.disabledextensions" pattern="org.eclipse.team.*"/>
+      <activityPatternBinding activityId="org.knime.product.disabledextensions" pattern="org.eclipse.jdt.*"/>
+       <!-- ======================================================= -->
+       <!-- Proof of concept for the removal of other new wizards not needed for 
+            KNIME. This should go into a separate plugin that is only included
+            in the KNIME Desktop and not in the SDK to make sure that they are
+            only removed for the Desktop. -->
+       <activityPatternBinding
+             activityId="org.knime.product.disabledextensions"
+             pattern="org.eclipse.ui.ide/org.eclipse.ui.wizards.new.*">
+       </activityPatternBinding>   
+       <activityPatternBinding
+             activityId="org.knime.product.disabledextensions"
+             isEqualityPattern="true"
+             pattern="org.eclipse.ui.ide/org.eclipse.ui.Basic">
+       </activityPatternBinding>   
+       <activityPatternBinding
+             activityId="org.knime.product.disabledextensions"
+             isEqualityPattern="true"
+             pattern="org.eclipse.ui.editors/org.eclipse.ui.editors.wizards.UntitledTextFileWizard">
+       </activityPatternBinding>   
+       <activityPatternBinding
+             activityId="org.knime.product.disabledextensions"
+             pattern="org.eclipse.birt.*wizard.*">
+       </activityPatternBinding>   
+       <!-- ======================================================= -->
+    </extension>
 </plugin>
