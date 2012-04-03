@@ -23,6 +23,9 @@
 		</intro>
         <option name="First column">The first column represents the real classes of the data.</option>
         <option name="Second column">The second column represents the predicted classes of the data.</option>
+        <option name="Use name prefix">The scores (i.e. accuracy, error rate, number of correct and wrong classification) are exported
+        as flow variables with a hard coded name. This option allows you to define a prefix for these variable identifiers so that name
+        conflicts are resolved.</option>
 	</fullDescription>
     <ports>
         <inPort index="0" name="Input table">Table containing at least two columns to compare.</inPort>

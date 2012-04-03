@@ -62,6 +62,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 import java.util.zip.GZIPInputStream;
@@ -91,6 +92,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * The hilite scorer node's model. The scoring is performed on two given columns
@@ -111,6 +113,9 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
 
     /** Identifier in model spec to address first second name to compare. */
     static final String SECOND_COMP_ID = "second";
+    
+    /** Identifier in model spec to address the chosen prefix. */
+    public static final String FLOW_VAR_PREFIX = "flowVarPrefix";
 
     /** The input port 0. */
     static final int INPORT = 0;
@@ -120,6 +125,10 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
     
     /** The output port 1: accuracy measures. */
     static final int OUTPORT_1 = 1;
+    
+    
+    /** The prefix added to the flow variable names. **/
+    private String m_flowVarPrefix;
     
     /** 
      * New instance of a HiLiteHandler return on the confusion matrix 
@@ -387,7 +396,41 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
                 DataType.getMissingCell(), DataType.getMissingCell(),
                 DataType.getMissingCell(), new DoubleCell(getAccuracy())}));
         accTable.close();
+        
+        pushFlowVars(false);
+        
+        
         return new BufferedDataTable[] {result, accTable.getTable()};
+    }
+
+    /**
+     * Pushes the results to flow variables.
+     * 
+     * @param isConfigureOnly true enable overwriting check
+     */
+    private void pushFlowVars(final boolean isConfigureOnly) {
+        Map<String, FlowVariable> vars = getAvailableFlowVariables();
+        String prefix = m_flowVarPrefix != null ? m_flowVarPrefix : "";
+        String accuracyName = prefix + "Accuracy";
+        String errorName = prefix + "Error";
+        String correctName = prefix + "#Correct";
+        String falseName = prefix + "#False";
+        if (isConfigureOnly && (vars.containsKey(accuracyName) 
+        		|| vars.containsKey(errorName) 
+        		|| vars.containsKey(correctName)
+        		|| vars.containsKey(falseName))) {
+        	setWarningMessage("A flow variable was replaced!");
+        }
+
+        
+        double accu = isConfigureOnly ? 0.0 : getAccuracy();
+        double error = isConfigureOnly ? 0.0 : getError();
+        int correctCount = isConfigureOnly ? 0 : m_correctCount;
+        int falseCount = isConfigureOnly ? 0 : m_falseCount;
+        pushFlowVariableDouble(accuracyName, accu);
+        pushFlowVariableDouble(errorName, error);
+        pushFlowVariableInt(correctName, correctCount);
+        pushFlowVariableInt(falseName, falseCount);
     }
 
     /**
@@ -441,6 +484,8 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
             throw new InvalidSettingsException("Column "
                     + m_secondCompareColumn + " not found.");
         }
+                
+        pushFlowVars(true);
         return new DataTableSpec[]{null, 
                 new DataTableSpec(QUALITY_MEASURES_SPECS)};
     }
@@ -466,6 +511,8 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
                     "F-measure", DoubleCell.TYPE).createSpec(),
             new DataColumnSpecCreator("Accuracy", DoubleCell.TYPE).createSpec(),
         };
+
+
 
     /**
      * Get the correct classification count, i.e. where both columns agree.
@@ -572,6 +619,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         String col1 = settings.getString(FIRST_COMP_ID);
         String col2 = settings.getString(SECOND_COMP_ID);
         setCompareColumn(col1, col2);
+        m_flowVarPrefix = settings.getString(FLOW_VAR_PREFIX, null);
     }
 
     /**
@@ -579,12 +627,14 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        if (m_firstCompareColumn != null) {
+    	if (m_firstCompareColumn != null) {
             settings.addString(FIRST_COMP_ID, m_firstCompareColumn);
         }
         if (m_secondCompareColumn != null) {
             settings.addString(SECOND_COMP_ID, m_secondCompareColumn);
         }
+        
+        settings.addString(FLOW_VAR_PREFIX, m_flowVarPrefix);
     }
 
     /**
@@ -595,6 +645,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
             throws InvalidSettingsException {
         settings.getString(FIRST_COMP_ID);
         settings.getString(SECOND_COMP_ID);
+        settings.getString(FLOW_VAR_PREFIX);
     }
 
     /**
