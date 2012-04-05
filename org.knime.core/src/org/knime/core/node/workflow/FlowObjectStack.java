@@ -218,8 +218,7 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
                         // nested loops are not possible
                         if (commonFlowO != null && commonFlowO != o) {
                             throw new IllegalFlowObjectStackException(
-                                    "Stack can't be merged: Conflicting "
-                                    + "FlowObjects:" + o + " vs. "
+                                    "Conflicting FlowObjects: " + o + " vs. "
                                     + commonFlowO);
                         }
                         commonFlowO = o;

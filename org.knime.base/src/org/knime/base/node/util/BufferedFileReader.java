@@ -529,8 +529,8 @@ public final class BufferedFileReader extends BufferedReader {
             InputStreamReader readerStream;
             // the stream used to get the byte count from
             ByteCountingStream sourceStream =
-                    new ByteCountingStream(
-                            new BufferedInputStream(dataLocation.openStream()));
+                    new ByteCountingStream(new BufferedInputStream(
+                            FileUtil.openStreamWithTimeout(dataLocation)));
 
             try {
                 // first see if its a GZIPped file
@@ -538,13 +538,11 @@ public final class BufferedFileReader extends BufferedReader {
                         new InputStreamReader(
                                 new GZIPInputStream(sourceStream), cs);
             } catch (Exception e) {
-
                 // if not, it could be a ZIPped file
                 sourceStream.close(); // close and reopen
                 sourceStream =
-                        new ByteCountingStream(
-                                new BufferedInputStream(
-                                        dataLocation.openStream()));
+                        new ByteCountingStream(new BufferedInputStream(
+                            FileUtil.openStreamWithTimeout(dataLocation)));
 
                 try {
                     zipStream = new ZipInputStream(sourceStream);
@@ -571,9 +569,8 @@ public final class BufferedFileReader extends BufferedReader {
             if (readerStream == null) {
                 sourceStream.close(); // close and reopen
                 sourceStream =
-                        new ByteCountingStream(
-                                new BufferedInputStream(
-                                        dataLocation.openStream()));
+                        new ByteCountingStream(new BufferedInputStream(
+                                FileUtil.openStreamWithTimeout(dataLocation)));
                 readerStream = new InputStreamReader(sourceStream, cs);
 
             }

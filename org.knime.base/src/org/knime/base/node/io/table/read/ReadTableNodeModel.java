@@ -76,6 +76,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.util.FileUtil;
 
 
 /**
@@ -268,7 +269,7 @@ public class ReadTableNodeModel extends NodeModel {
             } catch (MalformedURLException ex) {
                 throw new InvalidSettingsException("Invalid URL: " + loc, ex);
             }
-            return url.openStream();
+            return FileUtil.openStreamWithTimeout(url);
         } else {
             File file = new File(loc);
             if (!file.exists()) {

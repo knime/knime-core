@@ -44,18 +44,17 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   21.08.2007 (Fabian Dill): created
  */
-package org.knime.workbench.helpview;
+package org.knime.workbench.repository.util;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.StringWriter;
-import java.net.URL;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -67,8 +66,6 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import org.eclipse.core.runtime.FileLocator;
-import org.eclipse.core.runtime.Path;
 import org.knime.core.node.NodeLogger;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -76,31 +73,33 @@ import org.w3c.dom.Node;
 /**
  * Loads an transformer and transforms the XML description of a node (which is
  * passed as a DOM element into HTML.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public final class NodeFactoryHTMLCreator {
-    
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            NodeFactoryHTMLCreator.class);
-    
+
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(NodeFactoryHTMLCreator.class);
+
     private static final String SHORT_DESCR_TAG = "shortDescription";
+
     private static final String XSLT_FILE = "FullNodeDescription.xslt";
-    private static final String FILE_NAME = "node_description_howto.html";
-    
+
+    private static final String HOWTO_FILE = "node_description_howto.html";
+
     private Transformer m_transformer;
-    
+
     /**
      * Calls {@link #init()}.
      */
     private NodeFactoryHTMLCreator() {
         init();
     }
-    
+
     private static NodeFactoryHTMLCreator instance;
-    
+
     /**
-     * 
+     *
      * @return single instance of the HTML creator
      */
     public static NodeFactoryHTMLCreator getInstance() {
@@ -109,15 +108,15 @@ public final class NodeFactoryHTMLCreator {
         }
         return instance;
     }
-    
+
     /**
-     * 
+     *
      * @param knimeNode DOM tree root of node factory XML description.
      * @return the full description as HTML
      */
     public String readFullDescription(final Element knimeNode) {
         if (knimeNode == null) {
-            return getXMLDescriptionHowTo(); 
+            return getXMLDescriptionHowTo();
         }
         StreamResult result = new StreamResult(new StringWriter());
         DOMSource source = new DOMSource(knimeNode);
@@ -127,18 +126,18 @@ public final class NodeFactoryHTMLCreator {
             LOGGER.coding("Unable to process fullDescription in " + "xml: "
                     + ex.getMessage(), ex);
             return "Unable to process fullDescription in " + "xml: "
-                + ex.getMessage();
+                    + ex.getMessage();
         }
         return result.getWriter().toString();
     }
-    
+
     private String getXMLDescriptionHowTo() {
-        try {            
-            File howTo = new File(getThisPluginDir() + "/" + FILE_NAME); 
-            BufferedReader buffer = new BufferedReader(new FileReader(howTo));
+        try {
+            InputStream is = getClass().getResourceAsStream(HOWTO_FILE);
+            BufferedReader buffer =
+                    new BufferedReader(new InputStreamReader(is));
             StringBuilder result = new StringBuilder();
-            result.append(DynamicNodeDescriptionCreator.instance()
-                    .getHeader());
+            result.append(DynamicNodeDescriptionCreator.instance().getHeader());
             String line;
             while ((line = buffer.readLine()) != null) {
                 result.append(line + "\n");
@@ -150,12 +149,12 @@ public final class NodeFactoryHTMLCreator {
             return "No description available. Please add an XML description";
         }
     }
-    
+
     /**
      * Read the short description of the node from the XML file. If the tag is
-     * not available, returns <code>null</code>. This method is called from
-     * the constructor.
-     * 
+     * not available, returns <code>null</code>. This method is called from the
+     * constructor.
+     *
      * @param knimeNode DOM tree root of node factory XML description
      * @return The short description as defined in the XML or null if that
      *         fails.
@@ -164,8 +163,7 @@ public final class NodeFactoryHTMLCreator {
         if (knimeNode == null) {
             return "No description available! Please add an XML description.";
         }
-        Node w3cNode =
-                knimeNode.getElementsByTagName(SHORT_DESCR_TAG).item(0);
+        Node w3cNode = knimeNode.getElementsByTagName(SHORT_DESCR_TAG).item(0);
         if (w3cNode == null) {
             return null;
         }
@@ -175,35 +173,25 @@ public final class NodeFactoryHTMLCreator {
         }
         return w3cNodeChild.getNodeValue();
     }
-    
+
     /**
      * Initializes the XSLT transformer by loading the stylesheet.
      */
     public void init() {
         try {
-            File xslt =
-                    new File(getThisPluginDir() + "/" + XSLT_FILE);
-            StreamSource stylesheet = new StreamSource(xslt);
+            InputStream is = getClass().getResourceAsStream(XSLT_FILE);
+            StreamSource stylesheet = new StreamSource(is);
             m_transformer =
                     TransformerFactory.newInstance().newTemplates(stylesheet)
                             .newTransformer();
+            m_transformer.setParameter("css", DynamicNodeDescriptionCreator
+                    .instance().getCss());
+            m_transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+            m_transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         } catch (TransformerConfigurationException e) {
             LOGGER.error(e.getMessage(), e);
         } catch (TransformerFactoryConfigurationError e) {
             LOGGER.error(e.getMessage(), e);
-        } catch (IOException e) {
-            LOGGER.error(e.getMessage(), e);
         }
-        m_transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-        m_transformer.setOutputProperty(OutputKeys.INDENT, "yes");
     }
-    
-    private String getThisPluginDir() throws IOException {
-        URL devWorkSpace =
-            FileLocator.toFileURL(FileLocator.find(
-                    HelpviewPlugin.getDefault().getBundle(), 
-                    new Path("/"), null));
-        return devWorkSpace.getFile().toString();
-    }
-
 }

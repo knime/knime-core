@@ -3,6 +3,7 @@
 <!ENTITY css SYSTEM "style.css">
 ]>
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+    <xsl:param name="css" />
     <xsl:template match="knimeNode">
         <html>
             <head>
@@ -10,9 +11,7 @@
                     Node description for
                     <xsl:value-of select="name" />
                 </title>
-                <style type="text/css">
-			&css;
-                </style>
+                <style type="text/css"><xsl:value-of select="$css" /></style>
             </head>
             <body>
                 <h1>

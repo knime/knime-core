@@ -2,7 +2,7 @@
 <feature
       id="org.knime.product.desktop"
       label="KNIME Desktop"
-      version="2.5.4.qualifier"
+      version="2.6.0.qualifier"
       provider-name="KNIME GmbH, Konstanz, Germany">
 
    <description>
@@ -730,7 +730,7 @@ propagated with or for interoperation with KNIME.
    </license>
 
    <url>
-      <update label="KNIME Update Site" url="http://www.knime.org/update/2.5"/>
+      <update label="KNIME Update Site" url="http://www.knime.org/update/2.6"/>
    </url>
 
    <includes

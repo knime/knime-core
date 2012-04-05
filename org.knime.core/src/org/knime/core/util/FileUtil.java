@@ -61,6 +61,7 @@ import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.net.URL;
+import java.net.URLConnection;
 import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -73,6 +74,7 @@ import java.util.zip.ZipOutputStream;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -83,13 +85,16 @@ import org.knime.core.node.NodeLogger;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class FileUtil {
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(FileUtil.class);
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(FileUtil.class);
 
     private static final List<File> TEMP_FILES;
 
-    private static final boolean IS_WINDOWS =
-            System.getProperty("os.name").startsWith("Windows");
+    // timeout when connecting to or reading from URLs
+    private static int urlTimeout = 1000;
+
+    private static final boolean IS_WINDOWS = System.getProperty("os.name")
+            .startsWith("Windows");
 
     static {
         TEMP_FILES = new ArrayList<File>();
@@ -113,6 +118,16 @@ public final class FileUtil {
                 }
             }
         });
+
+        String to = System.getProperty(KNIMEConstants.PROPERTY_URL_TIMEOUT);
+        if (to != null) {
+            try {
+                urlTimeout = Integer.parseInt(to);
+            } catch (NumberFormatException ex) {
+                LOGGER.error("Illegal value for property "
+                        + KNIMEConstants.PROPERTY_URL_TIMEOUT + ": " + to);
+            }
+        }
     }
 
     /** Don't let anybody instantiate this class. */
@@ -283,11 +298,11 @@ public final class FileUtil {
         String name = dir.getName();
         File dirWithCanonicalParent = dir;
         File parentFile = dir.getParentFile();
-        if (parentFile != null)  {
+        if (parentFile != null) {
             try {
                 // get canonical parent (resolve symlinks in parent path)
                 dirWithCanonicalParent =
-                    new File(parentFile.getCanonicalFile(), name);
+                        new File(parentFile.getCanonicalFile(), name);
             } catch (IOException e) {
                 // ignore, leave dir as it is
             }
@@ -301,8 +316,9 @@ public final class FileUtil {
 
         // a symbolic link has a different canonical path than its actual path,
         // unless it's a link to itself
-        if (!IS_WINDOWS && !canonicalDir.equals(
-                dirWithCanonicalParent.getAbsoluteFile())) {
+        if (!IS_WINDOWS
+                && !canonicalDir.equals(dirWithCanonicalParent
+                        .getAbsoluteFile())) {
             // this file is a symbolic link, and there's no reason for us to
             // follow it, because then we might be deleting something outside of
             // the directory we were told to delete
@@ -487,8 +503,8 @@ public final class FileUtil {
                 }
 
                 String fName =
-                        f.getAbsolutePath().substring(rootEndIdx).replace('\\',
-                                '/');
+                        f.getAbsolutePath().substring(rootEndIdx)
+                                .replace('\\', '/');
                 String entryName = rootName + "/" + fName;
 
                 if (f.isFile()) {
@@ -527,8 +543,9 @@ public final class FileUtil {
         } catch (IOException ioe) {
             throw ioe;
         } catch (Throwable t) {
-            LOGGER.debug("Error while adding file to zip archive ("
-                    + f.getAbsolutePath() + ")", t);
+            LOGGER.debug(
+                    "Error while adding file to zip archive ("
+                            + f.getAbsolutePath() + ")", t);
             return false;
         } finally {
             zout.closeEntry();
@@ -539,8 +556,7 @@ public final class FileUtil {
 
     /**
      * Passed to the
-     * {@link FileUtil#zipDir(File, Collection, int, ZipFileFilter,
-     * ExecutionMonitor)}
+     * {@link FileUtil#zipDir(File, Collection, int, ZipFileFilter, ExecutionMonitor)}
      * method to exclude certain files from being archived and added to the zip
      * file.<br />
      * A default implementation accepting all files is
@@ -839,7 +855,6 @@ public final class FileUtil {
         return b;
     }
 
-
     /**
      * Returns the file path from a 'file' URL.
      *
@@ -852,8 +867,9 @@ public final class FileUtil {
             File dataFile = new File(fileUrl.getPath());
             if (!dataFile.exists()) {
                 try {
-                    dataFile = new File(URLDecoder.decode(
-                            fileUrl.getPath(), "UTF-8"));
+                    dataFile =
+                            new File(URLDecoder.decode(fileUrl.getPath(),
+                                    "UTF-8"));
                 } catch (UnsupportedEncodingException ex) {
                     // ignore it
                 }
@@ -863,5 +879,24 @@ public final class FileUtil {
             throw new IllegalArgumentException("Not a file URL: '" + fileUrl
                     + "'");
         }
+    }
+
+    /**
+     * Open an input stream on the given URL using the default timeout for
+     * connecting and reading. The timeout is taken from the system
+     * property {@link KNIMEConstants#PROPERTY_URL_TIMEOUT} and defaults to
+     * 1000 ms.
+     *
+     * @param url any URL
+     * @return an input stream
+     * @throws IOException if an I/O error occurs
+     * @since 2.6
+     */
+    public static InputStream openStreamWithTimeout(final URL url)
+            throws IOException {
+        URLConnection conn = url.openConnection();
+        conn.setConnectTimeout(urlTimeout);
+        conn.setReadTimeout(urlTimeout);
+        return conn.getInputStream();
     }
 }

@@ -28,6 +28,10 @@
 		<option name="Delimiter">Specify the delimiter in the value, that 
 		splits each part.
 		</option>
+        <option name="Use escape character">If enabled, the backslash ("\")
+        can be used to escape characters, such as "\t" for tabs. You can use
+        the full escape capabilities of Java.
+        </option>
 	    <option name="Quotation character">Specify the quotation character, if 
 	    the different parts in the value are quoted. (The character to escape
 	    quotes is always the backslash.) If no quotation character

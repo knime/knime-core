@@ -137,16 +137,10 @@ public final class NodeViewExport {
         return Collections.unmodifiableMap(exportMap);
     }
 
-    /**
-     * Convenience method that create a menu entry containing all available
-     * export options. If the current export map (according to
-     * {@link #getViewExportMap()}) contains only one entry, the returned
-     * menu is a single menu item. Otherwise it's a {@link JMenu} with the
-     * export options as its children.
-     * @param container The container to export when a item is selected.
-     * @return Such a new(!) menu item.
+    /** Implementation of {@link #createNewMenu(Container)} and
+     * {@link #createNewMenu(NodeView)}.
      */
-    public static JMenuItem createNewMenu(final Container container) {
+    private static JMenuItem createNewMenu(final ViewContainerProvider prov) {
         Map<String, ExportType> viewExportMap = getViewExportMap();
         JMenuItem[] list = new JMenuItem[viewExportMap.size()];
         int i = 0;
@@ -156,8 +150,9 @@ public final class NodeViewExport {
             JMenuItem item = new JMenuItem(name);
             item.addActionListener(new ActionListener() {
                 /** {@inheritDoc} */
+                @Override
                 public void actionPerformed(final ActionEvent action) {
-                    onFileExport(exType, container);
+                    onFileExport(exType, prov.getContainer());
                 }
             });
             list[i] = item;
@@ -175,6 +170,40 @@ public final class NodeViewExport {
             }
             return parent;
         }
+    }
+
+    /**
+     * Convenience method that create a menu entry containing all available
+     * export options. If the current export map (according to
+     * {@link #getViewExportMap()}) contains only one entry, the returned
+     * menu is a single menu item. Otherwise it's a {@link JMenu} with the
+     * export options as its children.
+     * @param container The container to export when a item is selected.
+     * @return Such a new(!) menu item.
+     * @since v1.1
+     */
+    public static JMenuItem createNewMenu(final Container container) {
+        return createNewMenu(new ViewContainerProvider() {
+            @Override
+            public Container getContainer() {
+                return container;
+            }
+        });
+    }
+
+    /** Implementation of {@link #createNewMenu(NodeView)}, whereby the
+     * container is retrieved from {@link NodeView#getExportComponent()}.
+     * @param view The node view.
+     * @return see {@link #createNewMenu(Container)}.
+     * @since 2.6
+     */
+    public static JMenuItem createNewMenu(final NodeView<?> view) {
+        return createNewMenu(new ViewContainerProvider() {
+            @Override
+            public Container getContainer() {
+                return view.getExportComponent();
+            }
+        });
     }
 
     /** Method called by the actions of the menu items. */
@@ -270,6 +299,7 @@ public final class NodeViewExport {
     private static final class PNGExportType implements ExportType {
 
         /** {@inheritDoc} */
+        @Override
         public void export(final File destination, final Component cont,
                 final int width, final int height)
             throws IOException {
@@ -283,11 +313,13 @@ public final class NodeViewExport {
 
         }
         /** {@inheritDoc} */
+        @Override
         public String getDescription() {
             return "PNG - Portable Network Graphics";
         }
 
         /** {@inheritDoc} */
+        @Override
         public String getFileSuffix() {
             return "png";
         }
@@ -310,6 +342,17 @@ public final class NodeViewExport {
             return getClass().equals(obj.getClass());
         }
 
+    }
+
+    /** Describes access method to get container to be exported by the view.
+     * This usually is just view's content pane but special node views
+     * may override this in {@link NodeView#getExportComponent()} to return
+     * another component (e.g. the decision tree view returns only the tree but
+     * not the outline panel).
+     */
+    private interface ViewContainerProvider {
+        /** @return the container to be exported. */
+        Container getContainer();
     }
 
 }
