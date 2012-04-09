@@ -260,7 +260,7 @@ abstract class TableSorter {
             indices[curIndex++] = index;
         }
         setRowComparator(new RowComparator(
-                indices, sortAscending, spec, sortMissingsToEnd));
+                indices, sortAscending, sortMissingsToEnd, spec));
     }
 
     /** Get the number of maximum open containers. See
@@ -676,7 +676,7 @@ abstract class TableSorter {
          * @param sortMissingsToEnd Missing at bottom.
          * @param spec The spec to the table. */
         RowComparator(final int[] indices, final boolean[] sortAscending,
-                final DataTableSpec spec, final boolean sortMissingsToEnd) {
+                final boolean sortMissingsToEnd, final DataTableSpec spec) {
             m_indices = indices;
             m_colComparators = new DataValueComparator[indices.length];
             for (int i = 0; i < m_indices.length; i++) {
