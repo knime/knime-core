@@ -101,6 +101,27 @@ public class BufferedDataTableSorter extends TableSorter {
         super(inputTable, inputTable.getRowCount(), inclList, sortAscending);
     }
 
+    /** Inits table sorter using the sorting according to
+     * {@link #setSortColumns(Collection, boolean[], boolean)}.
+     *
+     * @param inputTable The table to sort
+     * @param inclList Passed on to
+     * {@link #setSortColumns(Collection, boolean[], boolean)}.
+     * @param sortAscending Passed on to
+     * {@link #setSortColumns(Collection, boolean[], boolean)}.
+     * @param sortMissingsToEnd Passed on to
+     * {@link #setSortColumns(Collection, boolean[], boolean)}.
+     * @throws NullPointerException If any argument is null.
+     * @throws IllegalArgumentException If arguments are inconsistent.
+     * @since 2.6
+     */
+    public BufferedDataTableSorter(final BufferedDataTable inputTable,
+            final Collection<String> inclList, final boolean[] sortAscending,
+            final boolean sortMissingsToEnd) {
+        super(inputTable, inputTable.getRowCount(), inclList,
+                sortAscending, sortMissingsToEnd);
+    }
+
     /** Inits sorter on argument table with given row comparator.
      * @param inputTable Table to sort.
      * @param rowComparator Passed to {@link #setRowComparator(Comparator)}. */

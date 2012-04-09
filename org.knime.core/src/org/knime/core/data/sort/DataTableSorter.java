@@ -92,7 +92,7 @@ public class DataTableSorter extends TableSorter {
     /** Inits table sorter using the sorting according to
      * {@link #setSortColumns(Collection, boolean[])}.
      *
-     * @param inputTable The table to sort\
+     * @param inputTable The table to sort
      * @param rowsCount The number of rows in the table, if known. Specify
      * -1 if you don't know the table row count. This field is only used
      * to report progress upon {@link #sort(ExecutionMonitor)}.
@@ -105,6 +105,28 @@ public class DataTableSorter extends TableSorter {
      */
     public DataTableSorter(final DataTable inputTable, final int rowsCount,
             final Collection<String> inclList, final boolean[] sortAscending) {
+        super(inputTable, rowsCount, inclList, sortAscending);
+    }
+
+    /** Inits table sorter using the sorting according to
+     * {@link #setSortColumns(Collection, boolean[], boolean)}.
+     *
+     * @param inputTable The table to sort
+     * @param rowsCount The number of rows in the table, if known. Specify
+     * -1 if you don't know the table row count. This field is only used
+     * to report progress upon {@link #sort(ExecutionMonitor)}.
+     * @param inclList Passed on to
+     * {@link #setSortColumns(Collection, boolean[], boolean)}.
+     * @param sortAscending Passed on to
+     * {@link #setSortColumns(Collection, boolean[], boolean)}.
+     * @param sortMissingToEnd Passed on to
+     * {@link #setSortColumns(Collection, boolean[], boolean)}
+     * @throws NullPointerException If any argument is null.
+     * @throws IllegalArgumentException If arguments are inconsistent.
+     */
+    public DataTableSorter(final DataTable inputTable, final int rowsCount,
+            final Collection<String> inclList, final boolean[] sortAscending,
+            final boolean sortMissingToEnd) {
         super(inputTable, rowsCount, inclList, sortAscending);
     }
 

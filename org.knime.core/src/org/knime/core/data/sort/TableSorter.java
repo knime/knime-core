@@ -63,6 +63,7 @@ import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Set;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -170,12 +171,48 @@ abstract class TableSorter {
         setSortColumns(inclList, sortAscending);
     }
 
+    /** Inits table sorter using the sorting according to
+     * {@link #setSortColumns(Collection, boolean[], boolean)}.
+     *
+     * @param inputTable The table to sort
+     * @param rowsCount The number of rows in the table
+     * @param inclList Passed on to
+     * {@link #setSortColumns(Collection, boolean[], boolean)}.
+     * @param sortAscending Passed on to
+     * {@link #setSortColumns(Collection, boolean[], boolean)}.
+     * @param sortMissingsToEnd Passed on to
+     * {@link #setSortColumns(Collection, boolean[], boolean)}.
+     * @throws NullPointerException If any argument is null.
+     * @throws IllegalArgumentException If arguments are inconsistent.
+     * @since 2.6
+     */
+    public TableSorter(final DataTable inputTable,
+            final int rowsCount, final Collection<String> inclList,
+            final boolean[] sortAscending, final boolean sortMissingsToEnd) {
+        this(inputTable, rowsCount);
+        setSortColumns(inclList, sortAscending, sortMissingsToEnd);
+    }
+
     /** @param rowComparator the rowComparator to set */
     public void setRowComparator(final Comparator<DataRow> rowComparator) {
         if (rowComparator == null) {
             throw new NullPointerException("Argument must not be null.");
         }
         m_rowComparator = rowComparator;
+    }
+
+    /** Sets sorting columns and order.
+     * @param inclList the list with the columns to sort; the first column name
+     *            represents the first sort criteria, the second the second
+     *            criteria and so on.
+     *
+     * @param sortAscending the sort order; each field corresponds to the column
+     *            in the list of included columns. true: ascending false:
+     *            descending
+     */
+    public void setSortColumns(final Collection<String> inclList,
+            final boolean[] sortAscending) {
+        setSortColumns(inclList, sortAscending, true);
     }
 
     /** Sets sorting columns and order.
@@ -186,9 +223,13 @@ abstract class TableSorter {
     * @param sortAscending the sort order; each field corresponds to the column
     *            in the list of included columns. true: ascending false:
     *            descending
+    * @param sortMissingsToEnd Whether to sort missing values always to the
+    *            end independent to the sort oder (if false missing values
+    *            are always smaller than non-missings).
+    * @since 2.6
     */
     public void setSortColumns(final Collection<String> inclList,
-            final boolean[] sortAscending) {
+            final boolean[] sortAscending, final boolean sortMissingsToEnd) {
         if (sortAscending == null || inclList == null) {
             throw new NullPointerException("Argument must not be null.");
         }
@@ -218,7 +259,8 @@ abstract class TableSorter {
             }
             indices[curIndex++] = index;
         }
-        setRowComparator(new RowComparator(indices, sortAscending, spec));
+        setRowComparator(new RowComparator(
+                indices, sortAscending, spec, sortMissingsToEnd));
     }
 
     /** Get the number of maximum open containers. See
@@ -614,36 +656,44 @@ abstract class TableSorter {
          */
         private final int[] m_indices;
 
+        /** The comparators for the different columns (value in array is null
+         * if sorted according to row key). Fetched at constructor time to
+         * reduce number of DataType accesses during compare() call*/
+        private final DataValueComparator[] m_colComparators;
         /**
          * Array containing information about the sort order for each column.
          * true: ascending false: descending
          */
         private final boolean[] m_sortAscending;
 
-        /** The spec. Set shortly before the comparison starts, used to get
-         * column compartor. */
-        private final DataTableSpec m_spec;
+        /** Missing vals always at end (if not then they just smaller than
+         * any non-missing). */
+        private final boolean m_sortMissingsToEnd;
 
         /**
          * @param indices Array of sort column indices.
          * @param sortAscending Sort order.
+         * @param sortMissingsToEnd Missing at bottom.
          * @param spec The spec to the table. */
         RowComparator(final int[] indices, final boolean[] sortAscending,
-                final DataTableSpec spec) {
+                final DataTableSpec spec, final boolean sortMissingsToEnd) {
             m_indices = indices;
+            m_colComparators = new DataValueComparator[indices.length];
+            for (int i = 0; i < m_indices.length; i++) {
+                // only if the cell is in the includeList
+                // -1 is RowKey!
+                if (m_indices[i] == -1) {
+                    m_colComparators[i] = null;
+                } else {
+                    m_colComparators[i] = spec.getColumnSpec(
+                            m_indices[i]).getType().getComparator();
+                }
+            }
             m_sortAscending = sortAscending;
-            m_spec = spec;
+            m_sortMissingsToEnd = sortMissingsToEnd;
         }
 
-        /**
-         * This method compares two DataRows based on a comparison for each
-         * DataCell and the sorting order (m_sortOrder) for each column.
-         *
-         * @see java.util.Comparator#compare(java.lang.Object, java.lang.Object)
-         * @param dr1 one data row
-         * @param dr2 another datarow to be compared with dr1
-         * @return -1 if dr1 < dr2, 0 if dr1 == dr2 and 1 if dr1 > dr2
-         */
+        /** {@inheritDoc} */
         @Override
         public int compare(final DataRow dr1, final DataRow dr2) {
 
@@ -663,19 +713,28 @@ abstract class TableSorter {
 
                 // only if the cell is in the includeList
                 // -1 is RowKey!
-                int cellComparison = 0;
+                int cellComparison;
                 if (m_indices[i] == -1) {
                     String k1 = dr1.getKey().getString();
                     String k2 = dr2.getKey().getString();
                     cellComparison = k1.compareTo(k2);
                 } else {
-                    final DataValueComparator comp =
-                        m_spec.getColumnSpec(m_indices[i]).getType()
-                        .getComparator();
-                    // same column means that they have the same type
-                    cellComparison =
-                        comp.compare(dr1.getCell(m_indices[i]), dr2
-                                .getCell(m_indices[i]));
+                    final DataCell c1 = dr1.getCell(m_indices[i]);
+                    final DataCell c2 = dr2.getCell(m_indices[i]);
+                    final boolean c1Missing = c1.isMissing();
+                    final boolean c2Missing = c2.isMissing();
+                    if (m_sortMissingsToEnd && (c1Missing || c2Missing)) {
+                        if (c1Missing && c2Missing) {
+                            cellComparison = 0;
+                        } else if (c1Missing) {
+                            cellComparison = m_sortAscending[i] ? +1 : -1;
+                        } else { // c2.isMissing()
+                            cellComparison = m_sortAscending[i] ? -1 : +1;
+                        }
+                    } else {
+                        final DataValueComparator comp = m_colComparators[i];
+                        cellComparison = comp.compare(c1, c2);
+                    }
                 }
                 if (cellComparison != 0) {
                     return (m_sortAscending[i] ? cellComparison

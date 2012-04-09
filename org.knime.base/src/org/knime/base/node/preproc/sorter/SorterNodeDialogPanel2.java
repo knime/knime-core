@@ -66,8 +66,8 @@ import javax.swing.JCheckBox;
 import javax.swing.JFormattedTextField;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
-import javax.swing.SpinnerNumberModel;
 import javax.swing.JSpinner.NumberEditor;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.border.Border;
 
 import org.knime.core.data.DataCell;
@@ -120,6 +120,10 @@ public class SorterNodeDialogPanel2 extends JPanel {
      */
     private JCheckBox m_memorycheckb;
 
+    /** Checkbox to sort missing values to the end independent of the
+     * chosen sort order. */
+    private final JCheckBox m_sortMissingToEndChecker;
+
     /**
      * Constructs a new empty JPanel used for displaying the three first
      * selected columns in the according order and the sorting order for each.
@@ -130,6 +134,11 @@ public class SorterNodeDialogPanel2 extends JPanel {
         super.setLayout(bl);
         m_components = new Vector<SortItem>();
         m_memory = false;
+        m_sortMissingToEndChecker =
+            new JCheckBox("Move Missing Cells to end of sort list");
+        m_sortMissingToEndChecker.setToolTipText("Missing values will be "
+                + "moved to the end independent of the sort order ("
+                + "otherwise they are considered to be the smallest elements)");
     }
 
     /**
@@ -141,10 +150,11 @@ public class SorterNodeDialogPanel2 extends JPanel {
      * @param sortOrder the sorting order
      * @param nrsortitems the inital number of sortitems to be shown
      * @param sortInMemory whether to perform the sorting in memory or not
+     * @param missingToEnd Whether to move missings to the end
      */
-    public void update(final DataTableSpec spec, final List<String> incl,
+    void update(final DataTableSpec spec, final List<String> incl,
             final boolean[] sortOrder, final int nrsortitems,
-            final boolean sortInMemory) {
+            final boolean sortInMemory, final boolean missingToEnd) {
         m_spec = spec;
         m_memory = sortInMemory;
         super.removeAll();
@@ -225,6 +235,7 @@ public class SorterNodeDialogPanel2 extends JPanel {
 
 
             addSortItemButton.addActionListener(new ActionListener() {
+                @Override
                 public void actionPerformed(final ActionEvent ae) {
                     ArrayList<String> newlist = new ArrayList<String>();
                     for (int i = 0; i < m_components.size(); i++) {
@@ -248,8 +259,10 @@ public class SorterNodeDialogPanel2 extends JPanel {
                     for (int i = oldbool.length; i < newbool.length; i++) {
                         newbool[i] = true;
                     }
+                    boolean misToEnd =
+                        m_sortMissingToEndChecker.isSelected();
                     update(m_spec, newlist, newbool, (oldsize + newsize),
-                            m_memory);
+                            m_memory, misToEnd);
                 }
             });
             buttonbox.add(spinner);
@@ -259,6 +272,7 @@ public class SorterNodeDialogPanel2 extends JPanel {
             Box memorybox = Box.createHorizontalBox();
             m_memorycheckb = new JCheckBox("Sort in memory", m_memory);
             m_memorycheckb.addActionListener(new ActionListener() {
+                @Override
                 public void actionPerformed(final ActionEvent ae) {
                     if (m_memorycheckb.isSelected()) {
                         m_memory = true;
@@ -269,6 +283,11 @@ public class SorterNodeDialogPanel2 extends JPanel {
             });
             memorybox.add(m_memorycheckb);
             super.add(memorybox);
+
+            Box missingToEndBox = Box.createHorizontalBox();
+            m_sortMissingToEndChecker.setSelected(missingToEnd);
+            missingToEndBox.add(m_sortMissingToEndChecker);
+            super.add(missingToEndBox);
             revalidate();
         }
     }
@@ -307,6 +326,11 @@ public class SorterNodeDialogPanel2 extends JPanel {
             boolarray[i] = boolvector.get(i);
         }
         return boolarray;
+    }
+
+    /** @return the sortMissingToEnd checkbox property */
+    boolean isSortMissingToEnd() {
+        return m_sortMissingToEndChecker.isSelected();
     }
 
     /**

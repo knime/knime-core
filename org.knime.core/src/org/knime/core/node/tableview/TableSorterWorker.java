@@ -179,7 +179,7 @@ final class TableSorterWorker extends SwingWorker<DataTable, NodeProgress> {
         // it DOES NOT respect blobs -- they will be copied (expensive)
         DataTableSorter sorter =
                 new DataTableSorter(m_inputTable, rowCount, sortColNames,
-                        sortOrders);
+                        sortOrders, true);
         NodeProgressListener progLis = new NodeProgressListener() {
             @Override
             public void progressChanged(final NodeProgressEvent pe) {
