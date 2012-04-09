@@ -123,6 +123,7 @@ public class DataTableSorter extends TableSorter {
      * {@link #setSortColumns(Collection, boolean[], boolean)}
      * @throws NullPointerException If any argument is null.
      * @throws IllegalArgumentException If arguments are inconsistent.
+     * @since 2.6
      */
     public DataTableSorter(final DataTable inputTable, final int rowsCount,
             final Collection<String> inclList, final boolean[] sortAscending,
