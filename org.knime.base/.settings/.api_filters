@@ -72,4 +72,12 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/node/preproc/sorter/SorterNodeDialogPanel2.java" type="org.knime.base.node.preproc.sorter.SorterNodeDialogPanel2">
+        <filter comment="changed scope of method as part of bug fix 3199" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.sorter.SorterNodeDialogPanel2"/>
+                <message_argument value="update(DataTableSpec, List&lt;String&gt;, boolean[], int, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>
