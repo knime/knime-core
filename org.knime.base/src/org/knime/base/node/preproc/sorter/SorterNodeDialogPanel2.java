@@ -135,7 +135,7 @@ public class SorterNodeDialogPanel2 extends JPanel {
         m_components = new Vector<SortItem>();
         m_memory = false;
         m_sortMissingToEndChecker =
-            new JCheckBox("Move Missing Cells to end of sort list");
+            new JCheckBox("Move Missing Cells to end of sorted list");
         m_sortMissingToEndChecker.setToolTipText("Missing values will be "
                 + "moved to the end independent of the sort order ("
                 + "otherwise they are considered to be the smallest elements)");

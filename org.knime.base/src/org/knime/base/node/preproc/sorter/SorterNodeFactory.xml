@@ -12,11 +12,11 @@
 		<option name="Add columns">If you want to extend the sorting criteria
 		to a higher number of columns as displayed, set the number of columns at
 		the bottom and click 'new columns' to add them to the dialog.</option>
-		<option name="Move Missing Cells to end of sort list">If selected missing
+		<option name="Move Missing Cells to end of sorted list">If selected missing
 		values are always placed at the end of the sorted output. This is
 		independent of the sort order, i.e. if sorted ascendingly they are 
-		considered to be larger than a non-missing and if sorted descendingly
-		they are smaller than any non-missing.</option>
+		considered to be larger than a non-missing value and if sorted descendingly
+		they are smaller than any non-missing value.</option>
 		</fullDescription>
 		<ports>
     <inPort index="0" name = "Input Table">Table to be sorted.</inPort>
