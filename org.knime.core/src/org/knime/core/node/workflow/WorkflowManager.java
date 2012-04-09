@@ -3455,9 +3455,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** Reset node and all executed successors of a specific node.
     *
-    * @param id of first node in chain to be reset.
+    * @param orgId of first node in chain to be reset.
     */
-    public void resetAndConfigureNode(NodeID id) {
+    public void resetAndConfigureNode(final NodeID orgId) {
+        // for now we start here but if the node is inside a loop we
+        // will broaden the rest and replace this with the loop start:
+        NodeID id = orgId;
         synchronized (m_workflowMutex) {
             NodeContainer nc = getNodeContainer(id);
             if (hasSuccessorInProgress(id)) {
@@ -3476,14 +3479,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 	                // But maybe the node is configurable?
 	                configureNodeAndSuccessors(id, true);
 	            }
-	            // any other reasons for "non reset-ability" are ignored until
+                // any other reasons for "non reset-ability" are ignored until
 	            // now (Mar 2012) - not sure if there could be others?
             	return;
             }
             // Now perform the actual reset!
             // First find all the nodes in this workflow that are connected
             // to the node to be reset.
-            // NOTE that the sorting of this list is important - see node
+            // NOTE that the sorting of this list is important - see note
             // ~15 lines further down (when scope gets broadened.)
             LinkedHashMap<NodeID, Set<Integer>> allnodes
                 = m_workflow.getBreadthFirstListOfNodeAndSuccessors(id,

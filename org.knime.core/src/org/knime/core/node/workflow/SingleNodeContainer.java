@@ -66,9 +66,9 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.DataAwareNodeDialogPane;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.DataAwareNodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.Node.LoopRole;
@@ -1306,11 +1306,13 @@ public final class SingleNodeContainer extends NodeContainer {
      * @see {@link Node#isInactiveBranchConsumer()}
      */
     public boolean isInactiveBranchConsumer() {
-    	return m_node.isInactiveBranchConsumer();
+        return m_node.isInactiveBranchConsumer();
     }
 
+    /** Possible loop states. */
     public static enum LoopStatus { NONE, RUNNING, PAUSED, FINISHED };
     /**
+     * @return status of loop (determined from NodeState and LoopContext)
      */
     public LoopStatus getLoopStatus() {
         if (getNode().getLoopRole().equals(LoopRole.END)) {
