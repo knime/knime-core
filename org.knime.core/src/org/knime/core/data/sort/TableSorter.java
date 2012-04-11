@@ -212,7 +212,7 @@ abstract class TableSorter {
      */
     public void setSortColumns(final Collection<String> inclList,
             final boolean[] sortAscending) {
-        setSortColumns(inclList, sortAscending, true);
+        setSortColumns(inclList, sortAscending, false);
     }
 
     /** Sets sorting columns and order.
