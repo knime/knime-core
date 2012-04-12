@@ -166,6 +166,7 @@ public class ResetAction extends AbstractNodeAction {
             }
 
         } catch (Exception ex) {
+            LOGGER.warn("Reset not allowed", ex);
             MessageBox mb = new MessageBox(
                     Display.getDefault().getActiveShell(),
                     SWT.ICON_INFORMATION | SWT.OK);

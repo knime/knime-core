@@ -1028,9 +1028,9 @@ public final class DataType {
     }
 
     /**
-     * Returns <code>true</code> if this <code>type</code> is a supertype of the
-     * passed type, that is, the argument is compatible to all {@link DataValue}
-     * classes of this type (and may be more).
+     * Returns <code>true</code> if this data type is a supertype of the
+     * passed type (<code>type</code>), that is, the argument is compatible
+     * to all {@link DataValue} classes of this type (and may be more).
      * In other words, this object is more general than the argument or this
      * object supports less compatible values than the argument.
      *

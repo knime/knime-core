@@ -60,6 +60,7 @@ import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.ConnectableEditPart;
+import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 
@@ -221,9 +222,6 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
      * @return <code>true</code> if the connection can be added (that is, all
      *         fields were set to valid values before and the corresponding edit
      *         parts are not locked
-     *
-     * TODO if only a portIndex is -1, try to find an appropriate index on the
-     * current source/target node
      * @see org.eclipse.gef.commands.Command#canExecute()
      */
     @Override
@@ -235,6 +233,15 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
             return false;
         }
         WorkflowManager wm = getHostWFM();
+        if (m_targetPortID < 0) {
+            ConnectableEditPart target = getTargetNode();
+            if (target instanceof NodeContainerEditPart) {
+                m_targetPortID =
+                        ((NodeContainerEditPart)target).getFreeInPort(
+                                getSourceNode(), getSourcePortID());
+            }
+        }
+
         // check whether an existing connection can be removed
         ConnectionContainer conn = wm.getIncomingConnectionFor(
                 m_targetNode.getNodeContainer().getID(),
@@ -247,6 +254,7 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
                 m_targetNode.getNodeContainer().getID(), m_targetPortID);
         return canRemove && canAdd;
     }
+
 
     /**
      * We can undo, if the connection was created and the edit parts are not

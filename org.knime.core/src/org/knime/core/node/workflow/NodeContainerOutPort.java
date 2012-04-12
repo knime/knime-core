@@ -218,6 +218,8 @@ public class NodeContainerOutPort extends NodePortAdaptor
             @Override
             public void run() {
                 if (m_portView != null) {
+                    m_portView.update(null, null,
+                            new FlowObjectStack(NodeID.ROOTID), null);
                     m_portView.setVisible(false);
                     m_portView.dispose();
                     m_portView = null;

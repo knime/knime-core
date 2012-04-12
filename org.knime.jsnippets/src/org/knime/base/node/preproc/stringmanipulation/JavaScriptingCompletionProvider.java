@@ -50,161 +50,42 @@
  */
 package org.knime.base.node.preproc.stringmanipulation;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.fife.ui.autocomplete.BasicCompletion;
-import org.fife.ui.autocomplete.Completion;
-import org.fife.ui.autocomplete.DefaultCompletionProvider;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.node.workflow.FlowVariable;
+import org.knime.base.node.util.KnimeCompletionProvider;
 import org.knime.ext.sun.nodes.script.expression.Expression;
 
 /**
+ * A completion provider that can be used in Java snippet editors.
  *
  * @author Heiko Hofer
+ * @author Thorsten Meinl, University of Konstanz
  */
-public class JavaScriptingCompletionProvider extends DefaultCompletionProvider {
-
-    private Completion m_rowIdCompletion;
-    private Completion m_rowIndexCompletion;
-    private Completion m_rowCountCompletion;
-    private List<Completion> m_columnCompletions;
-    private List<Completion> m_flowVariableCompletions;
-    private List<Completion> m_completions;
-
+public class JavaScriptingCompletionProvider extends KnimeCompletionProvider {
     /**
      * An instance with default code completions for the JavaSnippet.
      */
     public JavaScriptingCompletionProvider() {
-        m_rowIdCompletion = new BasicCompletion(this,
-                "$$" + Expression.ROWID + "$$",
-                "String", "The Row-ID");
-        m_rowIndexCompletion = new BasicCompletion(this,
-                "$$" + Expression.ROWINDEX + "$$",
-                "int",
-                "The index of the row starting from zero.");
-        m_rowCountCompletion = new BasicCompletion(this,
-                "$$" + Expression.ROWCOUNT + "$$",
-                "int",
-                "The number of rows in the input table.");
-        m_columnCompletions = new ArrayList<Completion>();
-        m_flowVariableCompletions = new ArrayList<Completion>();
-        m_completions = new ArrayList<Completion>();
-        recreateCompletions();
-    }
-
-    private void recreateCompletions() {
-        super.clear();
-        super.addCompletion(m_rowIdCompletion);
-        super.addCompletion(m_rowIndexCompletion);
-        super.addCompletion(m_rowCountCompletion);
-        super.addCompletions(m_columnCompletions);
-        super.addCompletions(m_flowVariableCompletions);
-        super.addCompletions(m_completions);
-    }
-
-    /**
-     * Set columns that should be show in the code completion box.
-     * @param columns the columns
-     */
-    public void setColumns(final Iterable<DataColumnSpec> columns) {
-        m_columnCompletions.clear();
-        for (DataColumnSpec column : columns) {
-            m_columnCompletions.add(new BasicCompletion(this,
-                "$" + column.getName() + "$", column.getType().toString(),
-                "The column " + column.getName() + "."));
-        }
-        recreateCompletions();
-    }
-
-    /**
-     * Set flow variables that should be show in the code completion box.
-     * @param variables flow variables
-     */
-    public void setFlowVariables(final Iterable<FlowVariable> variables) {
-        m_flowVariableCompletions.clear();
-        for (FlowVariable var : variables) {
-            String typeChar;
-            switch (var.getType()) {
-            case DOUBLE:
-                typeChar = "D";
-                break;
-            case INTEGER:
-                typeChar = "I";
-                break;
-            case STRING:
-                typeChar = "S";
-                break;
-            default:
-                return;
-            }
-            m_flowVariableCompletions.add(new BasicCompletion(this,
-                    "$${" + typeChar + var.getName() + "}$$",
-                    var.getType().toString(),
-                    "The flow variable " + var.getName() + "."));
-        }
-        recreateCompletions();
+        addCompletion(new BasicCompletion(this, "$$" + Expression.ROWID + "$$",
+                "String", "The Row-ID"));
+        addCompletion(new BasicCompletion(this, "$$" + Expression.ROWINDEX
+                + "$$", "int", "The index of the row starting from zero."));
+        addCompletion(new BasicCompletion(this, "$$" + Expression.ROWCOUNT
+                + "$$", "int", "The number of rows in the input table."));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void addCompletion(final Completion c) {
-        m_completions.add(c);
-        recreateCompletions();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @SuppressWarnings("unchecked")
-    @Override
-    public void addCompletions(
-            @SuppressWarnings("rawtypes") final List compltns) {
-        m_completions.addAll(compltns);
-        recreateCompletions();
+    public String escapeColumnName(final String colName) {
+        return "$" + colName + "$";
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean removeCompletion(final Completion c) {
-        boolean contains = m_completions.remove(c);
-        if (contains) {
-            recreateCompletions();
-        }
-        return contains;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void clear() {
-        m_completions.clear();
-        recreateCompletions();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean isValidChar(final char ch) {
-        // FIXME: this is not perfect, since columns can contain any unicode
-        // character. The solution would be to add semantics to
-        // CompletionProvider::getParameterizedCompletions(...).
-        // for flow variables
-        if (!m_flowVariableCompletions.isEmpty()
-                && (ch == '{' || ch == '}')) {
-            return true;
-        } else {
-            // $ is needed for KNIME specials (columns, flowvariables)
-            return Character.isLetterOrDigit(ch) || ch == '_' || ch == '$';
-        }
-
-
+    public String escapeFlowVariableName(final String varName) {
+        return "$${" + varName + "}$$";
     }
 }

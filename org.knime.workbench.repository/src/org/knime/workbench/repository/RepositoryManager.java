@@ -52,6 +52,7 @@ package org.knime.workbench.repository;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -66,6 +67,7 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.workbench.repository.model.AbstractContainerObject;
 import org.knime.workbench.repository.model.Category;
+import org.knime.workbench.repository.model.DynamicNodeTemplate;
 import org.knime.workbench.repository.model.IContainerObject;
 import org.knime.workbench.repository.model.IRepositoryObject;
 import org.knime.workbench.repository.model.MetaNodeTemplate;
@@ -84,429 +86,505 @@ import org.osgi.framework.Bundle;
  * @author Thorsten Meinl, University of Konstanz
  */
 public final class RepositoryManager {
-    /**
-     * Listener interface for acting on events while the repository is read.
-     *
-     * @author Thorsten Meinl, University of Konstanz
-     * @since 2.4
-     */
-    public interface Listener {
-        /**
-         * Called when a new category has been created.
-         *
-         * @param root the repository root
-         * @param category the new category
-         */
-        public void newCategory(Root root, Category category);
+	/**
+	 * Listener interface for acting on events while the repository is read.
+	 *
+	 * @author Thorsten Meinl, University of Konstanz
+	 * @since 2.4
+	 */
+	public interface Listener {
+		/**
+		 * Called when a new category has been created.
+		 *
+		 * @param root
+		 *            the repository root
+		 * @param category
+		 *            the new category
+		 */
+		public void newCategory(Root root, Category category);
 
-        /**
-         * Called when a new node has been created.
-         *
-         * @param root the repository root
-         * @param node the new node
-         */
-        public void newNode(Root root, NodeTemplate node);
+		/**
+		 * Called when a new node has been created.
+		 *
+		 * @param root
+		 *            the repository root
+		 * @param node
+		 *            the new node
+		 */
+		public void newNode(Root root, NodeTemplate node);
 
-        /**
-         * Called when a new meta node has been created.
-         *
-         * @param root the repository root
-         * @param metanode the new category
-         */
-        public void newMetanode(Root root, MetaNodeTemplate metanode);
-    }
+		/**
+		 * Called when a new meta node has been created.
+		 *
+		 * @param root
+		 *            the repository root
+		 * @param metanode
+		 *            the new category
+		 */
+		public void newMetanode(Root root, MetaNodeTemplate metanode);
+	}
 
-    private static final Listener NULL_LISTENER = new Listener() {
-        @Override
-        public void newCategory(final Root root, final Category category) {
-        }
+	private static final Listener NULL_LISTENER = new Listener() {
+		@Override
+		public void newCategory(final Root root, final Category category) {
+		}
 
-        @Override
-        public void newNode(final Root root, final NodeTemplate node) {
-        }
+		@Override
+		public void newNode(final Root root, final NodeTemplate node) {
+		}
 
-        @Override
-        public void newMetanode(final Root root, final MetaNodeTemplate meta) {
-        }
-    };
+		@Override
+		public void newMetanode(final Root root, final MetaNodeTemplate meta) {
+		}
+	};
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(RepositoryManager.class);
+	private static final NodeLogger LOGGER = NodeLogger
+			.getLogger(RepositoryManager.class);
 
-    /** The singleton instance. */
-    public static final RepositoryManager INSTANCE = new RepositoryManager();
+	/** The singleton instance. */
+	public static final RepositoryManager INSTANCE = new RepositoryManager();
 
-    // ID of "node" extension point
-    private static final String ID_NODE = "org.knime.workbench.repository"
-            + ".nodes";
+	// ID of "node" extension point
+	private static final String ID_NODE = "org.knime.workbench.repository"
+			+ ".nodes";
 
-    // ID of "category" extension point
-    private static final String ID_CATEGORY = "org.knime.workbench."
-            + "repository.categories";
+	// ID of "category" extension point
+	private static final String ID_CATEGORY = "org.knime.workbench."
+			+ "repository.categories";
 
-    private static final String ID_META_NODE =
-            "org.knime.workbench.repository.metanode";
+	private static final String ID_META_NODE = "org.knime.workbench.repository.metanode";
 
-    private final Root m_root = new Root();
+	private static final String ID_NODE_SET = "org.knime.workbench.repository.nodesets";
 
-    private final Map<String, NodeTemplate> m_nodesById =
-            new HashMap<String, NodeTemplate>();
+	private final Root m_root = new Root();
 
-    /**
-     * Creates the repository model. This instantiates all contributed
-     * category/node extensions found in the global Eclipse PluginRegistry, and
-     * attaches them to the repository tree.
-     */
-    private RepositoryManager() {
-    }
+	private final Map<String, NodeTemplate> m_nodesById = new HashMap<String, NodeTemplate>();
 
-    private void readRepository(final Listener listener) {
-        boolean isInExpertMode =
-                Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE);
+	/**
+	 * Creates the repository model. This instantiates all contributed
+	 * category/node extensions found in the global Eclipse PluginRegistry, and
+	 * attaches them to the repository tree.
+	 */
+	private RepositoryManager() {
+	}
 
-        readCategories(listener);
-        readNodes(listener, isInExpertMode);
-        readMetanodes(listener, isInExpertMode);
-        removeEmptyCategories(m_root);
-    }
+	private void readRepository(final Listener listener) {
+		boolean isInExpertMode = Boolean
+				.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE);
 
-    private void readMetanodes(final Listener l, final boolean isInExpertMode) {
-        // iterate over the meta node config elements
-        // and create meta node templates
-        IExtension[] metanodeExtensions = getExtensions(ID_META_NODE);
-        for (IExtension mnExt : metanodeExtensions) {
-            IConfigurationElement[] mnConfigElems =
-                    mnExt.getConfigurationElements();
-            for (IConfigurationElement mnConfig : mnConfigElems) {
-                if (!Platform.isRunning()) { // shutdown was initiated
-                    return;
-                }
-                
-                try {
-                    MetaNodeTemplate metaNode =
-                            RepositoryFactory.createMetaNode(mnConfig);
-                    boolean skip = !isInExpertMode && metaNode.isExpertNode();
-                    if (skip) {
-                        LOGGER.debug("Skipping meta node definition '"
-                                + metaNode.getID() + "': " + metaNode.getName()
-                                + " (not in expert mode)");
-                        continue;
-                    } else {
-                        LOGGER.debug("Found meta node definition '"
-                            + metaNode.getID() + "': " + metaNode.getName());
-                    }
-                    l.newMetanode(m_root, metaNode);
+		readCategories(listener);
+		readNodes(listener, isInExpertMode);
+		readNodeSets(listener, isInExpertMode);
+		readMetanodes(listener, isInExpertMode);
+		removeEmptyCategories(m_root);
+	}
 
-                    IContainerObject parentContainer =
-                            m_root.findContainer(metaNode.getCategoryPath());
-                    // If parent category is illegal, log an error and
-                    // append the node to the repository root.
-                    if (parentContainer == null) {
-                        LOGGER.warn("Invalid category-path for node "
-                                + "contribution: '"
-                                + metaNode.getCategoryPath()
-                                + "' - adding to root instead");
-                        m_root.addChild(metaNode);
-                    } else {
-                        // everything is fine, add the node to its parent
-                        // category
-                        parentContainer.addChild(metaNode);
-                    }
-                } catch (Throwable t) {
-                    String message =
-                            "MetaNode " + mnConfig.getAttribute("id")
-                                    + "' from plugin '"
-                                    + mnConfig.getNamespaceIdentifier()
-                                    + "' could not be created.";
-                    Bundle bundle =
-                            Platform.getBundle(mnConfig
-                                    .getNamespaceIdentifier());
+	private void readMetanodes(final Listener l, final boolean isInExpertMode) {
+		// iterate over the meta node config elements
+		// and create meta node templates
+		IExtension[] metanodeExtensions = getExtensions(ID_META_NODE);
+		for (IExtension mnExt : metanodeExtensions) {
+			IConfigurationElement[] mnConfigElems = mnExt
+					.getConfigurationElements();
+			for (IConfigurationElement mnConfig : mnConfigElems) {
+				if (!Platform.isRunning()) { // shutdown was initiated
+					return;
+				}
 
-                    if ((bundle == null)
-                            || (bundle.getState() != Bundle.ACTIVE)) {
-                        // if the plugin is null, the plugin could not
-                        // be activated maybe due to a not
-                        // activateable plugin
-                        // (plugin class can not be found)
-                        message =
-                                message + " The corresponding plugin "
-                                        + "bundle could not be activated!";
-                    }
+				try {
+					MetaNodeTemplate metaNode = RepositoryFactory
+							.createMetaNode(mnConfig);
+					boolean skip = !isInExpertMode && metaNode.isExpertNode();
+					if (skip) {
+						LOGGER.debug("Skipping meta node definition '"
+								+ metaNode.getID() + "': " + metaNode.getName()
+								+ " (not in expert mode)");
+						continue;
+					} else {
+						LOGGER.debug("Found meta node definition '"
+								+ metaNode.getID() + "': " + metaNode.getName());
+					}
+					l.newMetanode(m_root, metaNode);
 
-                    LOGGER.error(message, t);
-                }
-            }
-        }
-    }
+					IContainerObject parentContainer = m_root
+							.findContainer(metaNode.getCategoryPath());
+					// If parent category is illegal, log an error and
+					// append the node to the repository root.
+					if (parentContainer == null) {
+						LOGGER.warn("Invalid category-path for node "
+								+ "contribution: '"
+								+ metaNode.getCategoryPath()
+								+ "' - adding to root instead");
+						m_root.addChild(metaNode);
+					} else {
+						// everything is fine, add the node to its parent
+						// category
+						parentContainer.addChild(metaNode);
+					}
+				} catch (Throwable t) {
+					String message = "MetaNode " + mnConfig.getAttribute("id")
+							+ "' from plugin '"
+							+ mnConfig.getNamespaceIdentifier()
+							+ "' could not be created.";
+					Bundle bundle = Platform.getBundle(mnConfig
+							.getNamespaceIdentifier());
 
-    private void readCategories(final Listener l) {
-        //
-        // First, process the contributed categories
-        //
-        IExtension[] categoryExtensions = getExtensions(ID_CATEGORY);
-        ArrayList<IConfigurationElement> allElements =
-                new ArrayList<IConfigurationElement>();
+					if ((bundle == null)
+							|| (bundle.getState() != Bundle.ACTIVE)) {
+						// if the plugin is null, the plugin could not
+						// be activated maybe due to a not
+						// activateable plugin
+						// (plugin class can not be found)
+						message = message + " The corresponding plugin "
+								+ "bundle could not be activated!";
+					}
 
-        for (IExtension ext : categoryExtensions) {
-            // iterate through the config elements and create 'Category' objects
-            IConfigurationElement[] elements = ext.getConfigurationElements();
-            allElements.addAll(Arrays.asList(elements));
-        }
+					LOGGER.error(message, t);
+				}
+			}
+		}
+	}
 
-        // remove duplicated categories
-        removeDuplicatesFromCategories(allElements);
+	private void readCategories(final Listener l) {
+		//
+		// First, process the contributed categories
+		//
+		IExtension[] categoryExtensions = getExtensions(ID_CATEGORY);
+		ArrayList<IConfigurationElement> allElements = new ArrayList<IConfigurationElement>();
 
-        // sort first by path-depth, so that everything is there in the
-        // right order
-        Collections.sort(allElements, new Comparator<IConfigurationElement>() {
-            @Override
-            public int compare(final IConfigurationElement o1,
-                    final IConfigurationElement o2) {
-                String element1 = o1.getAttribute("path");
-                if ((element1 == null) || element1.equals("/")) {
-                    return -1;
-                }
-                String element2 = o2.getAttribute("path");
-                if ((element2 == null) || element2.equals("/")) {
-                    return +1;
-                }
+		for (IExtension ext : categoryExtensions) {
+			// iterate through the config elements and create 'Category' objects
+			IConfigurationElement[] elements = ext.getConfigurationElements();
+			allElements.addAll(Arrays.asList(elements));
+		}
 
-                int countSlashes1 =
-                        element1.length() - element1.replace("/", "").length();
+		// remove duplicated categories
+		removeDuplicatesFromCategories(allElements);
 
-                int countSlashes2 =
-                        element2.length() - element2.replace("/", "").length();
+		// sort first by path-depth, so that everything is there in the
+		// right order
+		Collections.sort(allElements, new Comparator<IConfigurationElement>() {
+			@Override
+			public int compare(final IConfigurationElement o1,
+					final IConfigurationElement o2) {
+				String element1 = o1.getAttribute("path");
+				if ((element1 == null) || element1.equals("/")) {
+					return -1;
+				}
+				String element2 = o2.getAttribute("path");
+				if ((element2 == null) || element2.equals("/")) {
+					return +1;
+				}
 
-                return countSlashes1 - countSlashes2;
-            }
+				int countSlashes1 = element1.length()
+						- element1.replace("/", "").length();
 
-        });
+				int countSlashes2 = element2.length()
+						- element2.replace("/", "").length();
 
-        for (IConfigurationElement e : allElements) {
-            try {
-                Category category = RepositoryFactory.createCategory(m_root, e);
-                LOGGER.debug("Found category extension '" + category.getID()
-                        + "' on path '" + category.getPath() + "'");
-                l.newCategory(m_root, category);
-            } catch (Exception ex) {
-                String message =
-                        "Category '"
-                                + e.getAttribute("level-id")
-                                + "' from plugin '"
-                                + e.getDeclaringExtension()
-                                        .getNamespaceIdentifier()
-                                + "' could not be created in parent path '"
-                                + e.getAttribute("path") + "'.";
-                LOGGER.error(message, ex);
-            }
-        }
-    }
+				return countSlashes1 - countSlashes2;
+			}
 
-    /**
-     * @param isInExpertMode
-     */
-    private void readNodes(final Listener l, final boolean isInExpertMode) {
-        //
-        // Second, process the contributed nodes
-        //
-        IExtension[] nodeExtensions = RepositoryManager.getExtensions(ID_NODE);
-        for (IExtension ext : nodeExtensions) {
-            // iterate through the config elements and create 'NodeTemplate'
-            // objects
-            IConfigurationElement[] elements = ext.getConfigurationElements();
-            for (IConfigurationElement e : elements) {
-                if (!Platform.isRunning()) { // shutdown was initiated
-                    return;
-                }
-                
-                try {
-                    NodeTemplate node = RepositoryFactory.createNode(e);
+		});
 
-                    boolean skip = !isInExpertMode && node.isExpertNode();
-                    if (skip) {
-                        LOGGER.debug("Skipping node extension '" + node.getID()
-                                + "': " + node.getName()
-                                + " (not in expert mode)");
-                        continue;
-                    } else {
-                        LOGGER.debug("Found node extension '" + node.getID()
-                                + "': " + node.getName());
-                    }
-                    l.newNode(m_root, node);
+		for (IConfigurationElement e : allElements) {
+			try {
+				Category category = RepositoryFactory.createCategory(m_root, e);
+				LOGGER.debug("Found category extension '" + category.getID()
+						+ "' on path '" + category.getPath() + "'");
+				l.newCategory(m_root, category);
+			} catch (Exception ex) {
+				String message = "Category '" + e.getAttribute("level-id")
+						+ "' from plugin '"
+						+ e.getDeclaringExtension().getNamespaceIdentifier()
+						+ "' could not be created in parent path '"
+						+ e.getAttribute("path") + "'.";
+				LOGGER.error(message, ex);
+			}
+		}
+	}
 
-                    m_nodesById.put(node.getID(), node);
-                    String nodeName = node.getID();
-                    nodeName =
-                            nodeName.substring(nodeName.lastIndexOf('.') + 1);
+	/**
+	 * @param isInExpertMode
+	 */
+	private void readNodes(final Listener l, final boolean isInExpertMode) {
+		//
+		// Second, process the contributed nodes
+		//
+		IExtension[] nodeExtensions = RepositoryManager.getExtensions(ID_NODE);
+		for (IExtension ext : nodeExtensions) {
+			// iterate through the config elements and create 'NodeTemplate'
+			// objects
+			IConfigurationElement[] elements = ext.getConfigurationElements();
+			for (IConfigurationElement e : elements) {
+				if (!Platform.isRunning()) { // shutdown was initiated
+					return;
+				}
 
-                    // Ask the root to lookup the category-container located at
-                    // the given path
-                    IContainerObject parentContainer =
-                            m_root.findContainer(node.getCategoryPath());
+				try {
+					NodeTemplate node = RepositoryFactory.createNode(e);
 
-                    // If parent category is illegal, log an error and append
-                    // the node to the repository root.
-                    if (parentContainer == null) {
-                        LOGGER.warn("Invalid category-path for node "
-                                + "contribution: '" + node.getCategoryPath()
-                                + "' - adding to root instead");
-                        m_root.addChild(node);
-                    } else {
-                        // everything is fine, add the node to its parent
-                        // category
-                        parentContainer.addChild(node);
-                    }
+					boolean skip = !isInExpertMode && node.isExpertNode();
+					if (skip) {
+						LOGGER.debug("Skipping node extension '" + node.getID()
+								+ "': " + node.getName()
+								+ " (not in expert mode)");
+						continue;
+					} else {
+						LOGGER.debug("Found node extension '" + node.getID()
+								+ "': " + node.getName());
+					}
+					l.newNode(m_root, node);
 
-                } catch (Throwable t) {
-                    String message =
-                            "Node " + e.getAttribute("id") + "' from plugin '"
-                                    + ext.getNamespaceIdentifier()
-                                    + "' could not be created.";
-                    Bundle bundle =
-                            Platform.getBundle(ext.getNamespaceIdentifier());
+					m_nodesById.put(node.getID(), node);
+					String nodeName = node.getID();
+					nodeName = nodeName
+							.substring(nodeName.lastIndexOf('.') + 1);
 
-                    if ((bundle == null)
-                            || (bundle.getState() != Bundle.ACTIVE)) {
-                        // if the plugin is null, the plugin could not
-                        // be activated maybe due to a not
-                        // activateable plugin (plugin class can not be found)
-                        message +=
-                                " The corresponding plugin "
-                                        + "bundle could not be activated!";
-                    }
-                    LOGGER.error(message, t);
-                }
+					// Ask the root to lookup the category-container located at
+					// the given path
+					IContainerObject parentContainer = m_root
+							.findContainer(node.getCategoryPath());
 
-            } // for configuration elements
-        } // for node extensions
-    }
+					// If parent category is illegal, log an error and append
+					// the node to the repository root.
+					if (parentContainer == null) {
+						LOGGER.warn("Invalid category-path for node "
+								+ "contribution: '" + node.getCategoryPath()
+								+ "' - adding to root instead");
+						m_root.addChild(node);
+					} else {
+						// everything is fine, add the node to its parent
+						// category
+						parentContainer.addChild(node);
+					}
 
-    /**
-     * Returns the extensions for a given extension point.
-     *
-     * @param pointID The extension point ID
-     *
-     * @return The extensions
-     */
-    private static IExtension[] getExtensions(final String pointID) {
-        IExtensionRegistry registry = Platform.getExtensionRegistry();
-        IExtensionPoint point = registry.getExtensionPoint(pointID);
-        if (point == null) {
-            throw new IllegalStateException("Invalid extension point : "
-                    + pointID);
+				} catch (Throwable t) {
+					String message = "Node " + e.getAttribute("id")
+							+ "' from plugin '" + ext.getNamespaceIdentifier()
+							+ "' could not be created.";
+					Bundle bundle = Platform.getBundle(ext
+							.getNamespaceIdentifier());
 
-        }
-        return point.getExtensions();
-    }
+					if ((bundle == null)
+							|| (bundle.getState() != Bundle.ACTIVE)) {
+						// if the plugin is null, the plugin could not
+						// be activated maybe due to a not
+						// activateable plugin (plugin class can not be found)
+						message += " The corresponding plugin "
+								+ "bundle could not be activated!";
+					}
+					LOGGER.error(message, t);
+				}
 
-    private static void removeDuplicatesFromCategories(
-            final ArrayList<IConfigurationElement> allElements) {
+			} // for configuration elements
+		} // for node extensions
+	}
 
-        // brute force search
-        for (int i = 0; i < allElements.size(); i++) {
-            for (int j = allElements.size() - 1; j > i; j--) {
+	/**
+	 * @param isInExpertMode
+	 */
+	private void readNodeSets(final Listener l, final boolean isInExpertMode) {
+		//
+		// Process the contributed node sets
+		//
+		IExtension[] nodeExtensions = RepositoryManager
+				.getExtensions(ID_NODE_SET);
+		for (IExtension ext : nodeExtensions) {
+			// iterate through the config elements and create 'NodeTemplate'
+			// objects
+			IConfigurationElement[] elements = ext.getConfigurationElements();
+			for (IConfigurationElement elem : elements) {
+				if (!Platform.isRunning()) { // shutdown was initiated
+					return;
+				}
 
-                String pathOuter = allElements.get(i).getAttribute("path");
-                String levelIdOuter =
-                        allElements.get(i).getAttribute("level-id");
-                String pathInner = allElements.get(j).getAttribute("path");
-                String levelIdInner =
-                        allElements.get(j).getAttribute("level-id");
+				try {
+					Collection<DynamicNodeTemplate> dynamicNodeTemplates = RepositoryFactory
+							.createNodeSet(m_root, elem);
 
-                if (pathOuter.equals(pathInner)
-                        && levelIdOuter.equals(levelIdInner)) {
+					for (DynamicNodeTemplate node : dynamicNodeTemplates) {
 
-                    String nameI = allElements.get(i).getAttribute("name");
-                    String nameJ = allElements.get(j).getAttribute("name");
+						l.newNode(m_root, node);
 
-                    // the removal is only reported in case the names
-                    // are not equal (if they are equal,the user will not
-                    // notice any difference (except possibly the picture))
-                    if (!nameI.equals(nameJ)) {
-                        String pluginI =
-                                allElements.get(i).getDeclaringExtension()
-                                        .getNamespaceIdentifier();
-                        String pluginJ =
-                                allElements.get(j).getDeclaringExtension()
-                                        .getNamespaceIdentifier();
+						m_nodesById.put(node.getID(), node);
+						String nodeName = node.getID();
+						nodeName = nodeName
+								.substring(nodeName.lastIndexOf('.') + 1);
 
-                        String message =
-                                "Category '" + pathOuter + "/" + levelIdOuter
-                                        + "' was found twice. Names are '"
-                                        + nameI + "'(Plugin: " + pluginI
-                                        + ") and '" + nameJ + "'(Plugin: "
-                                        + pluginJ
-                                        + "). The category with name '" + nameJ
-                                        + "' is ignored.";
+						// Ask the root to lookup the category-container located
+						// at
+						// the given path
+						IContainerObject parentContainer = m_root
+								.findContainer(node.getCategoryPath());
 
-                        LOGGER.warn(message);
-                    }
+						// If parent category is illegal, log an error and
+						// append
+						// the node to the repository root.
+						if (parentContainer == null) {
+							LOGGER.warn("Invalid category-path for node "
+									+ "contribution: '"
+									+ node.getCategoryPath()
+									+ "' - adding to root instead");
+							m_root.addChild(node);
+						} else {
+							// everything is fine, add the node to its parent
+							// category
+							parentContainer.addChild(node);
+						}
 
-                    // remove from the end of the list
-                    allElements.remove(j);
+					}
 
-                }
-            }
-        }
-    }
+				} catch (Throwable t) {
+					String message = "Node " + elem.getAttribute("id")
+							+ "' from plugin '" + ext.getNamespaceIdentifier()
+							+ "' could not be created.";
+					Bundle bundle = Platform.getBundle(ext
+							.getNamespaceIdentifier());
 
-    private static void removeEmptyCategories(
-            final AbstractContainerObject treeNode) {
-        for (IRepositoryObject object : treeNode.getChildren()) {
-            if (object instanceof AbstractContainerObject) {
-                AbstractContainerObject cat = (AbstractContainerObject)object;
-                removeEmptyCategories(cat);
-                if (!cat.hasChildren() && (cat.getParent() != null)) {
-                    cat.getParent()
-                            .removeChild((AbstractContainerObject)object);
-                }
-            }
-        }
-    }
+					if ((bundle == null)
+							|| (bundle.getState() != Bundle.ACTIVE)) {
+						// if the plugin is null, the plugin could not
+						// be activated maybe due to a not
+						// activateable plugin (plugin class can not be found)
+						message += " The corresponding plugin "
+								+ "bundle could not be activated!";
+					}
+					LOGGER.error(message, t);
+				}
 
-    /**
-     * Returns the repository root. If the repository has not yet read, it will
-     * be created during the call. Thus the first call to this method can take
-     * some time.
-     *
-     * @return the root object
-     */
-    public synchronized Root getRoot() {
-        if (!m_root.hasChildren()) {
-            readRepository(NULL_LISTENER);
-        }
-        return m_root;
-    }
+			} // for configuration elements
+		} // for node extensions
+	}
 
-    /**
-     * Returns the repository root. If the repository has not yet read, it will
-     * be created during the call. If the listener is non-<code>null</code>, it
-     * will be notified of all read items (categories, nodes, metanodes).
-     *
-     *
-     * @param listener a listener that is notified of newly read items
-     * @return the root object
-     * @since 2.4
-     */
-    public synchronized Root getRoot(final Listener listener) {
-        if (!m_root.hasChildren()) {
-            readRepository(listener);
-        }
-        return m_root;
-    }
+	/**
+	 * Returns the extensions for a given extension point.
+	 *
+	 * @param pointID
+	 *            The extension point ID
+	 *
+	 * @return The extensions
+	 */
+	private static IExtension[] getExtensions(final String pointID) {
+		IExtensionRegistry registry = Platform.getExtensionRegistry();
+		IExtensionPoint point = registry.getExtensionPoint(pointID);
+		if (point == null) {
+			throw new IllegalStateException("Invalid extension point : "
+					+ pointID);
 
-    /**
-     * Returns the node template with the given id, or <code>null</code> if no
-     * such node exists.
-     *
-     * @param id the node's id
-     * @return a node template or <code>null</code>
-     * @since 2.4
-     */
-    public synchronized NodeTemplate getNodeTemplate(final String id) {
-        if (!m_root.hasChildren()) {
-            readRepository(NULL_LISTENER);
-        }
-        return m_nodesById.get(id);
-    }
+		}
+		return point.getExtensions();
+	}
+
+	private static void removeDuplicatesFromCategories(
+			final ArrayList<IConfigurationElement> allElements) {
+
+		// brute force search
+		for (int i = 0; i < allElements.size(); i++) {
+			for (int j = allElements.size() - 1; j > i; j--) {
+
+				String pathOuter = allElements.get(i).getAttribute("path");
+				String levelIdOuter = allElements.get(i).getAttribute(
+						"level-id");
+				String pathInner = allElements.get(j).getAttribute("path");
+				String levelIdInner = allElements.get(j).getAttribute(
+						"level-id");
+
+				if (pathOuter.equals(pathInner)
+						&& levelIdOuter.equals(levelIdInner)) {
+
+					String nameI = allElements.get(i).getAttribute("name");
+					String nameJ = allElements.get(j).getAttribute("name");
+
+					// the removal is only reported in case the names
+					// are not equal (if they are equal,the user will not
+					// notice any difference (except possibly the picture))
+					if (!nameI.equals(nameJ)) {
+						String pluginI = allElements.get(i)
+								.getDeclaringExtension()
+								.getNamespaceIdentifier();
+						String pluginJ = allElements.get(j)
+								.getDeclaringExtension()
+								.getNamespaceIdentifier();
+
+						String message = "Category '" + pathOuter + "/"
+								+ levelIdOuter
+								+ "' was found twice. Names are '" + nameI
+								+ "'(Plugin: " + pluginI + ") and '" + nameJ
+								+ "'(Plugin: " + pluginJ
+								+ "). The category with name '" + nameJ
+								+ "' is ignored.";
+
+						LOGGER.warn(message);
+					}
+
+					// remove from the end of the list
+					allElements.remove(j);
+
+				}
+			}
+		}
+	}
+
+	private static void removeEmptyCategories(
+			final AbstractContainerObject treeNode) {
+		for (IRepositoryObject object : treeNode.getChildren()) {
+			if (object instanceof AbstractContainerObject) {
+				AbstractContainerObject cat = (AbstractContainerObject) object;
+				removeEmptyCategories(cat);
+				if (!cat.hasChildren() && (cat.getParent() != null)) {
+					cat.getParent().removeChild(
+							(AbstractContainerObject) object);
+				}
+			}
+		}
+	}
+
+	/**
+	 * Returns the repository root. If the repository has not yet read, it will
+	 * be created during the call. Thus the first call to this method can take
+	 * some time.
+	 *
+	 * @return the root object
+	 */
+	public synchronized Root getRoot() {
+		if (!m_root.hasChildren()) {
+			readRepository(NULL_LISTENER);
+		}
+		return m_root;
+	}
+
+	/**
+	 * Returns the repository root. If the repository has not yet read, it will
+	 * be created during the call. If the listener is non-<code>null</code>, it
+	 * will be notified of all read items (categories, nodes, metanodes).
+	 *
+	 *
+	 * @param listener
+	 *            a listener that is notified of newly read items
+	 * @return the root object
+	 * @since 2.4
+	 */
+	public synchronized Root getRoot(final Listener listener) {
+		if (!m_root.hasChildren()) {
+			readRepository(listener);
+		}
+		return m_root;
+	}
+
+	/**
+	 * Returns the node template with the given id, or <code>null</code> if no
+	 * such node exists.
+	 *
+	 * @param id
+	 *            the node's id
+	 * @return a node template or <code>null</code>
+	 * @since 2.4
+	 */
+	public synchronized NodeTemplate getNodeTemplate(final String id) {
+		if (!m_root.hasChildren()) {
+			readRepository(NULL_LISTENER);
+		}
+		return m_nodesById.get(id);
+	}
 }

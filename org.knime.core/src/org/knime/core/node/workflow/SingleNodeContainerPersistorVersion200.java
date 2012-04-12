@@ -65,7 +65,9 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
+import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodePersistorVersion1xx;
 import org.knime.core.node.NodePersistorVersion200;
 import org.knime.core.node.NodeSettings;
@@ -115,6 +117,18 @@ public class SingleNodeContainerPersistorVersion200 extends
     protected String loadNodeFactoryClassName(final NodeSettingsRO parentSettings,
             final NodeSettingsRO settings) throws InvalidSettingsException {
         return settings.getString(KEY_FACTORY_NAME);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected void loadAdditionalFactorySettings(final NodeFactory factory,
+            final NodeSettingsRO settings) throws InvalidSettingsException {
+        // added in v2.6 (during hittisau 2012) without changing the version
+        // number (current load version is V250("2.5.0"))
+        if (settings.containsKey("factory_settings")) {
+            NodeSettingsRO s = settings.getNodeSettings("factory_settings");
+            factory.loadAdditionalFactorySettings(s);
+        }
     }
 
     @Override
@@ -257,7 +271,7 @@ public class SingleNodeContainerPersistorVersion200 extends
             }
         }
         NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
-        saveNodeFactoryClassName(settings, snc);
+        saveNodeFactory(settings, snc);
         ReferencedFile nodeXMLFileRef =
             saveNodeFileName(snc, settings, nodeDirRef);
         saveFlowObjectStack(settings, snc);
@@ -283,10 +297,16 @@ public class SingleNodeContainerPersistorVersion200 extends
         return settingsDotXML;
     }
 
-    protected static void saveNodeFactoryClassName(final NodeSettingsWO settings,
+    /**
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    protected static void saveNodeFactory(final NodeSettingsWO settings,
             final SingleNodeContainer nc) {
-        String cl = nc.getNode().getFactory().getClass().getName();
+        final NodeFactory<NodeModel> factory = nc.getNode().getFactory();
+        String cl = factory.getClass().getName();
         settings.addString(KEY_FACTORY_NAME, cl);
+        NodeSettingsWO subSets = settings.addNodeSettings("factory_settings");
+        factory.saveAdditionalFactorySettings(subSets);
     }
 
     protected static ReferencedFile saveNodeFileName(

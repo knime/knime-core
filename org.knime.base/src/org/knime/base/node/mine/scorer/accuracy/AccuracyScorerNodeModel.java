@@ -62,6 +62,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 import java.util.zip.GZIPInputStream;
@@ -91,17 +92,18 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * The hilite scorer node's model. The scoring is performed on two given columns
  * set by the dialog. The row keys are stored for later hiliting purpose.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
- * 
+ *
  * @see AccuracyScorerNodeFactory
  */
 public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
-    
+
     /** The node logger for this class. */
     protected static final NodeLogger LOGGER = NodeLogger
             .getLogger(AccuracyScorerNodeModel.class);
@@ -112,22 +114,29 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
     /** Identifier in model spec to address first second name to compare. */
     static final String SECOND_COMP_ID = "second";
 
+    /** Identifier in model spec to address the chosen prefix. */
+    static final String FLOW_VAR_PREFIX = "flowVarPrefix";
+
     /** The input port 0. */
     static final int INPORT = 0;
 
     /** The output port 0: confusion matrix. */
     static final int OUTPORT_0 = 0;
-    
+
     /** The output port 1: accuracy measures. */
     static final int OUTPORT_1 = 1;
-    
-    /** 
-     * New instance of a HiLiteHandler return on the confusion matrix 
+
+
+    /** The prefix added to the flow variable names. **/
+    private String m_flowVarPrefix;
+
+    /**
+     * New instance of a HiLiteHandler return on the confusion matrix
      * out-port. */
     private final HiLiteHandler m_cmHiLiteHandler = new HiLiteHandler();
-    
-    /** 
-     * New instance of a HiLiteHandler return on the accuracy measures 
+
+    /**
+     * New instance of a HiLiteHandler return on the accuracy measures
      * out-port. */
     private final HiLiteHandler m_amHiLiteHandler = new HiLiteHandler();
 
@@ -172,7 +181,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
 
     /**
      * Starts the scoring in the scorer.
-     * 
+     *
      * @param data
      *            the input data of length one
      * @param exec
@@ -180,7 +189,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
      * @return the confusion matrix
      * @throws CanceledExecutionException
      *             if user canceled execution
-     * 
+     *
      * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      */
     @SuppressWarnings("unchecked")
@@ -202,7 +211,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         // cells in common (e.g. both have Iris-Setosa), they get the same
         // index in the array. thus, the high numbers should appear
         // in the diagonal
-        DataCell[] values = determineColValues(in, index1, index2, 
+        DataCell[] values = determineColValues(in, index1, index2,
                 exec.createSubProgress(0.5));
         List<DataCell> valuesList = Arrays.asList(values);
         Set<DataCell> valuesInCol2 = new HashSet<DataCell>();
@@ -263,21 +272,21 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         m_nrRows = rowNr;
         HashSet<String> valuesAsStringSet = new HashSet<String>();
         HashSet<String> duplicateValuesAsString = new HashSet<String>();
-        for (DataCell c : values) { 
+        for (DataCell c : values) {
             valuesAsStringSet.add(c.toString());
         }
         for (DataCell c : values) {
-            String cAsString = c.toString(); 
+            String cAsString = c.toString();
             if (!valuesAsStringSet.remove(cAsString)) {
                 duplicateValuesAsString.add(cAsString);
             }
         }
-        
-        
+
+
         boolean hasPrintedWarningOnAmbiguousValues = false;
         m_values = new String[values.length];
         for (int i = 0; i < m_values.length; i++) {
-            DataCell c = values[i]; 
+            DataCell c = values[i];
             String s = c.toString();
             if (duplicateValuesAsString.contains(s)) {
                 boolean isInSecondColumn = valuesInCol2.contains(c);
@@ -294,7 +303,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
                 m_values[i] = newName;
                 if (!hasPrintedWarningOnAmbiguousValues) {
                     hasPrintedWarningOnAmbiguousValues = true;
-                    setWarningMessage("Ambiguous value \"" + c.toString() 
+                    setWarningMessage("Ambiguous value \"" + c.toString()
                             + "\" encountered. Preserving individual instances;"
                             + " consider to convert input columns to string");
                 }
@@ -309,7 +318,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         }
         DataType[] colTypes = new DataType[m_values.length];
         Arrays.fill(colTypes, IntCell.TYPE);
-        BufferedDataContainer container = 
+        BufferedDataContainer container =
             exec.createDataContainer(new DataTableSpec(m_values, colTypes));
         for (int i = 0; i < m_values.length; i++) {
             // need to make a datacell for the row key
@@ -328,7 +337,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
                 + incorrect + ", #rows=" + nrRows + ", #missing=" + missing);
         // our view displays the table - we must keep a reference in the model.
         BufferedDataTable result = container.getTable();
-        
+
         // start creating accuracy statistics
         BufferedDataContainer accTable = exec.createDataContainer(
                 new DataTableSpec(QUALITY_MEASURES_SPECS));
@@ -357,8 +366,8 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
             }
             final DataCell fmeasure; // 2 * Prec. * Recall / (Prec. + Recall)
             if (recall != null && prec != null) {
-                fmeasure = new DoubleCell(2.0 * prec.getDoubleValue() 
-                    * recall.getDoubleValue() / (prec.getDoubleValue() 
+                fmeasure = new DoubleCell(2.0 * prec.getDoubleValue()
+                    * recall.getDoubleValue() / (prec.getDoubleValue()
                             + recall.getDoubleValue()));
             } else {
                 fmeasure = DataType.getMissingCell();
@@ -366,10 +375,10 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
             // add complete row for class value to table
             DataRow row = new DefaultRow(new RowKey(m_values[r]),
                     new DataCell[]{new IntCell(tp), new IntCell(fp),
-                        new IntCell(tn), new IntCell(fn), 
+                        new IntCell(tn), new IntCell(fn),
                         recall == null ? DataType.getMissingCell() : recall,
                         prec == null ? DataType.getMissingCell() : prec,
-                        sensitivity, specifity, fmeasure, 
+                        sensitivity, specifity, fmeasure,
                         DataType.getMissingCell()});
             accTable.addRowToTable(row);
         }
@@ -387,7 +396,41 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
                 DataType.getMissingCell(), DataType.getMissingCell(),
                 DataType.getMissingCell(), new DoubleCell(getAccuracy())}));
         accTable.close();
+
+        pushFlowVars(false);
+
+
         return new BufferedDataTable[] {result, accTable.getTable()};
+    }
+
+    /**
+     * Pushes the results to flow variables.
+     *
+     * @param isConfigureOnly true enable overwriting check
+     */
+    private void pushFlowVars(final boolean isConfigureOnly) {
+        Map<String, FlowVariable> vars = getAvailableFlowVariables();
+        String prefix = m_flowVarPrefix != null ? m_flowVarPrefix : "";
+        String accuracyName = prefix + "Accuracy";
+        String errorName = prefix + "Error";
+        String correctName = prefix + "#Correct";
+        String falseName = prefix + "#False";
+        if (isConfigureOnly && (vars.containsKey(accuracyName)
+        		|| vars.containsKey(errorName)
+        		|| vars.containsKey(correctName)
+        		|| vars.containsKey(falseName))) {
+        	setWarningMessage("A flow variable was replaced!");
+        }
+
+
+        double accu = isConfigureOnly ? 0.0 : getAccuracy();
+        double error = isConfigureOnly ? 0.0 : getError();
+        int correctCount = isConfigureOnly ? 0 : m_correctCount;
+        int falseCount = isConfigureOnly ? 0 : m_falseCount;
+        pushFlowVariableDouble(accuracyName, accu);
+        pushFlowVariableDouble(errorName, error);
+        pushFlowVariableInt(correctName, correctCount);
+        pushFlowVariableInt(falseName, falseCount);
     }
 
     /**
@@ -403,7 +446,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
 
     /**
      * Sets the columns that will be compared during execution.
-     * 
+     *
      * @param first
      *            the first column
      * @param second
@@ -441,10 +484,12 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
             throw new InvalidSettingsException("Column "
                     + m_secondCompareColumn + " not found.");
         }
-        return new DataTableSpec[]{null, 
+
+        pushFlowVars(true);
+        return new DataTableSpec[]{null,
                 new DataTableSpec(QUALITY_MEASURES_SPECS)};
     }
-    
+
     private static final DataColumnSpec[] QUALITY_MEASURES_SPECS
         = new DataColumnSpec[]{
             new DataColumnSpecCreator(
@@ -467,9 +512,11 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
             new DataColumnSpecCreator("Accuracy", DoubleCell.TYPE).createSpec(),
         };
 
+
+
     /**
      * Get the correct classification count, i.e. where both columns agree.
-     * 
+     *
      * @return the count of rows where the two columns have an equal value or -1
      *         if the node is not executed
      */
@@ -480,18 +527,18 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
     /**
      * Get the misclassification count, i.e. where both columns have different
      * values.
-     * 
+     *
      * @return the count of rows where the two columns have an unequal value or
      *         -1 if the node is not executed
      */
     public int getFalseCount() {
         return m_falseCount;
     }
-    
+
     private int getTP(final int classIndex) {
         return m_scorerCount[classIndex][classIndex];
     }
-    
+
     private int getFN(final int classIndex) {
         int ret = 0;
         for (int i = 0; i < m_scorerCount[classIndex].length; i++) {
@@ -501,7 +548,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         }
         return ret;
     }
-    
+
     private int getTN(final int classIndex) {
         int ret = 0;
         for (int i = 0; i < m_scorerCount.length; i++) {
@@ -515,7 +562,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         }
         return ret;
     }
-    
+
     private int getFP(final int classIndex) {
         int ret = 0;
         for (int i = 0; i < m_scorerCount.length; i++) {
@@ -525,13 +572,13 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         }
         return ret;
     }
-    
+
     /**
      * Get the number of rows in the input table. This count can be different
      * from {@link #getFalseCount()} + {@link #getCorrectCount()}, though it
      * must be at least the sum of both. The difference is the number of rows
      * containing a missing value in either of the target columns.
-     * 
+     *
      * @return number of rows in input table
      */
     public int getNrRows() {
@@ -539,7 +586,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
     }
 
     /**
-     * @return ratio of wrong classified and all patterns 
+     * @return ratio of wrong classified and all patterns
      */
     public double getError() {
         long totalNumberDataSets = getFalseCount() + getCorrectCount();
@@ -549,7 +596,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
             return 1.0 * getFalseCount() / totalNumberDataSets;
         }
     }
-    
+
     /**
      * @return ratio of correct classified and all patterns
      */
@@ -572,6 +619,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         String col1 = settings.getString(FIRST_COMP_ID);
         String col2 = settings.getString(SECOND_COMP_ID);
         setCompareColumn(col1, col2);
+        m_flowVarPrefix = settings.getString(FLOW_VAR_PREFIX, null);
     }
 
     /**
@@ -579,12 +627,14 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        if (m_firstCompareColumn != null) {
+    	if (m_firstCompareColumn != null) {
             settings.addString(FIRST_COMP_ID, m_firstCompareColumn);
         }
         if (m_secondCompareColumn != null) {
             settings.addString(SECOND_COMP_ID, m_secondCompareColumn);
         }
+
+        settings.addString(FLOW_VAR_PREFIX, m_flowVarPrefix);
     }
 
     /**
@@ -595,16 +645,17 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
             throws InvalidSettingsException {
         settings.getString(FIRST_COMP_ID);
         settings.getString(SECOND_COMP_ID);
+        settings.getString(FLOW_VAR_PREFIX);
     }
 
     /**
      * Determines the row keys (as DataCells) which belong to the given cell of
      * the confusion matrix.
-     * 
+     *
      * @param cells
      *            the cells of the confusion matrix for which the keys should be
      *            returned
-     * 
+     *
      * @return a set of DataCells containing the row keys
      */
     Set<RowKey> getSelectedSet(final Point[] cells) {
@@ -629,8 +680,8 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         return keySet;
     }
 
-    /** Called to determine all possible values in the respective columns. 
-     * 
+    /** Called to determine all possible values in the respective columns.
+     *
      * @param in the input table
      * @param index1 the first column to compare
      * @param index2 the second column to compare
@@ -639,7 +690,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
      * @throws CanceledExecutionException
      *             if user canceled operation
      */
-    protected DataCell[] determineColValues(final BufferedDataTable in, 
+    protected DataCell[] determineColValues(final BufferedDataTable in,
             final int index1, final int index2, final ExecutionMonitor exec)
             throws CanceledExecutionException {
         int rowCnt = in.getRowCount();
@@ -657,7 +708,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
             for (Iterator<DataRow> it = in.iterator(); it.hasNext(); rowNr++) {
                 DataRow row = it.next();
                 exec.checkCanceled(); // throws exception if user canceled.
-                exec.setProgress((1.0 + rowNr) / rowCnt, 
+                exec.setProgress((1.0 + rowNr) / rowCnt,
                         "Reading possible values, row " + rowNr
                         + " (\"" + row.getKey() + "\")");
                 DataCell cell1 = row.getCell(index1);
@@ -700,40 +751,40 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         System.arraycopy(temp, 0, order, order.length - temp.length,
                 temp.length);
         return order;
-    } 
+    }
 
     /**
      * Finds the position where key is located in source. It must be ensured
      * that the key is indeed in the argument array.
-     * 
+     *
      * @param source
      *            the source array
      * @param key
      *            the key to find
      * @return the index in source where key is located
      */
-    protected static int findValue(final DataCell[] source, 
+    protected static int findValue(final DataCell[] source,
             final DataCell key) {
         for (int i = 0; i < source.length; i++) {
             if (source[i].equals(key)) {
                 return i;
             }
         }
-        throw new RuntimeException("Array does not contain desired value \"" 
+        throw new RuntimeException("Array does not contain desired value \""
                 + key + "\".");
     }
 
     /**
      * Checks if the specified confusion matrix cell contains at least one of
      * the given keys.
-     * 
+     *
      * @param x
      *            the x value to specify the matrix cell
      * @param y
      *            the y value to specify the matrix cell
      * @param keys
      *            the keys to check
-     * 
+     *
      * @return true if at least one key is contained in the specified cell
      */
     boolean containsConfusionMatrixKeys(final int x, final int y,
@@ -755,10 +806,10 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
     /**
      * Returns all cells of the confusion matrix (as Points) if the given key
      * set contains all keys of that cell.
-     * 
+     *
      * @param keys
      *            the keys to check for
-     * 
+     *
      * @return the cells that fullfill the above condition
      */
     Point[] getCompleteHilitedCells(final Set<RowKey> keys) {
@@ -877,7 +928,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
      * classified example, an unset bit is a wrong classified example. The
      * number of interesting bits is {@link BitSet#length()} - 1, i.e. the last
      * set bit must be ignored, it is just the end marker.
-     * 
+     *
      * @return a bit set
      */
     BitSet getRocCurve() {
@@ -895,6 +946,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataArray getDataArray(final int index) {
         // only to make the Plotter happy
         return null;
@@ -902,7 +954,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
 
     /**
      * Returns the first column to compare.
-     * 
+     *
      * @return the first column to compare
      */
     public String getFirstCompareColumn() {
@@ -911,13 +963,13 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
 
     /**
      * Returns the second column to compare.
-     * 
+     *
      * @return the second column to compare
      */
     public String getSecondCompareColumn() {
         return m_secondCompareColumn;
     }
-    
+
     /**
      * {@inheritDoc}
      */

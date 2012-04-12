@@ -107,7 +107,7 @@ public class NodeTemplate extends AbstractNodeTemplate {
         TYPES.add(TYPE_OTHER);
     }
 
-    private Class<NodeFactory<? extends NodeModel>> m_factory;
+    private Class<? extends NodeFactory<? extends NodeModel>> m_factory;
 
     private String m_type;
 
@@ -124,21 +124,26 @@ public class NodeTemplate extends AbstractNodeTemplate {
     /**
      * @return Returns the factory.
      */
-    @SuppressWarnings("unchecked")
-    public Class<NodeFactory<? extends NodeModel>> getFactory() {
+    public Class<? extends NodeFactory<? extends NodeModel>> getFactory() {
         return m_factory;
+    }
+
+    /**
+     * @return an instance of the factory.
+     * @throws Exception if the creation of the factory instance fails
+     */
+    public NodeFactory<? extends NodeModel> createFactoryInstance()
+            throws Exception {
+        return m_factory.newInstance();
     }
 
     /**
      * @param factory The factory to set.
      */
-    @SuppressWarnings("unchecked")
-    public void setFactory(
-            final Class<NodeFactory<? extends NodeModel>>
-            factory) {
+    public void setFactory(final Class<? extends
+            NodeFactory<? extends NodeModel>> factory) {
         m_factory = factory;
     }
-
 
     /**
      * {@inheritDoc}

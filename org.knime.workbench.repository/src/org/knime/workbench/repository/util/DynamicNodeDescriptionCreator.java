@@ -194,7 +194,7 @@ public final class DynamicNodeDescriptionCreator {
             final boolean useSingleLine, final StringBuilder bld) {
         NodeFactory<? extends NodeModel> nf = null;
         try {
-            nf = template.getFactory().newInstance();
+            nf = template.createFactoryInstance();
         } catch (Exception e) {
             nf = null;
         }

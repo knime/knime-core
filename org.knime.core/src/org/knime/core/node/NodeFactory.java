@@ -62,6 +62,8 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 import org.w3c.dom.Document;
@@ -122,7 +124,7 @@ public abstract class NodeFactory<T extends NodeModel> {
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(NodeFactory.class);
 
-    private final String m_nodeName;
+    private String m_nodeName;
 
     private static class PortDescription {
         private final String m_description;
@@ -148,17 +150,19 @@ public abstract class NodeFactory<T extends NodeModel> {
 
     private List<Element> m_views;
 
-    private final URL m_icon;
+    private URL m_icon;
 
     private NodeType m_type;
 
-    private final Element m_knimeNode;
+    private Element m_knimeNode;
 
     private static DocumentBuilder parser;
 
     private static URL defaultIcon = null;
 
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
+
+    private boolean m_initialized = false;
 
     static {
         try {
@@ -226,25 +230,37 @@ public abstract class NodeFactory<T extends NodeModel> {
      * file named <code>Node.xml</code> in the same package as the factory.
      */
     protected NodeFactory() {
+       this(false);
+    }
+
+    /**
+     * Creates a new <code>NodeFactory</code> without reading the properties
+     * file.
+     * @param lazyInitialization if set to true the full initialization is
+     *      postponed until the {@link #init()} method is called.
+     * @since 2.6
+     */
+    protected NodeFactory(final boolean lazyInitialization) {
+        if (!lazyInitialization) {
+            init();
+        }
+    }
+
+    /**
+     * Initializes the node factory by parsing the properties file. This method
+     * should only be called if the NodeFactory was created with the constructor
+     * {@link #NodeFactory(boolean)}.
+     * @since 2.6
+     */
+    public void init() {
+        if (m_initialized) {
+            LOGGER.debug("NodeFactory is already initialized. Nothing to do.");
+            return;
+        }
         if (parser == null) {
             instantiateParser();
         }
-
-        ClassLoader loader = getClass().getClassLoader();
-        InputStream propInStream;
-        String path;
-        Class<?> clazz = getClass();
-
-
-        do {
-            path = clazz.getPackage().getName();
-            path =
-                    path.replace('.', '/') + "/" + clazz.getSimpleName()
-                            + ".xml";
-
-            propInStream = loader.getResourceAsStream(path);
-            clazz = clazz.getSuperclass();
-        } while ((propInStream == null) && (clazz != Object.class));
+        InputStream propInStream = getPropertiesInputStream();
 
         // fall back node name if no xml file available or invalid.
         String defaultNodeName = getClass().getSimpleName();
@@ -314,7 +330,7 @@ public abstract class NodeFactory<T extends NodeModel> {
                     nodeName += " (deprecated)";
                 }
             } catch (Exception ex) {
-                m_logger.coding(ex.getMessage() + " (" + path + ")", ex);
+                m_logger.coding(ex.getMessage(), ex);
                 knimeNode = null;
                 icon = null;
                 nodeName = defaultNodeName;
@@ -325,8 +341,36 @@ public abstract class NodeFactory<T extends NodeModel> {
         m_icon = icon;
         m_nodeName = nodeName;
         m_type = type;
+
         addBundleInformation();
         addLoadedFactory(this.getClass());
+        m_initialized = true;
+    }
+
+    /**
+     * Creates an input stream containing the properties for the node. This
+     * can be overridden by subclasses to provide this information dynamically.
+     *
+     * @return the input stream to read the properties from
+     * @since 2.6
+     */
+    protected InputStream getPropertiesInputStream() {
+        ClassLoader loader = getClass().getClassLoader();
+        InputStream propInStream;
+        String path;
+        Class<?> clazz = getClass();
+
+        do {
+            path = clazz.getPackage().getName();
+            path =
+                    path.replace('.', '/') + "/" + clazz.getSimpleName()
+                            + ".xml";
+
+            propInStream = loader.getResourceAsStream(path);
+            clazz = clazz.getSuperclass();
+        } while ((propInStream == null) && (clazz != Object.class));
+        LOGGER.debug("Parsing \"" + path + "\" for node properties.");
+        return propInStream;
     }
 
     private static final Pattern ICON_PATH_PATTERN =
@@ -562,6 +606,44 @@ public abstract class NodeFactory<T extends NodeModel> {
         String portDescription = value.trim().replaceAll("(?:\\s+|\n)", " ");
 
         portList.set(index, new PortDescription(portDescription, portName));
+    }
+
+    /** Loads additional settings to this instance that were saved using
+     * the {@link #saveAdditionalFactorySettings(ConfigWO)}.
+     *
+     * <p>See {@link #saveAdditionalFactorySettings(ConfigWO)} for details on
+     * when to overwrite this method.
+     *
+     * <p>This method is called immediately after instantiation is not intended
+     * to be called by client code.
+     *
+     * @param config The config to read from.
+     * @throws InvalidSettingsException If the settings are invalid (which
+     * will result in an error during workflow load -- the node will not load!)
+     * @since 2.6
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public void loadAdditionalFactorySettings(final ConfigRO config)
+            throws InvalidSettingsException {
+        // overwritten in subclasses
+        init();
+    }
+
+    /** Saves additional settings of this instance. This method is called by
+     * the framework upon workflow save and may be overwritten by subclasses.
+     *
+     * <p>This method is mainly used in a dynamic context, where node factories
+     * are defined through a different extension that generates a set of
+     * node factories and not just a single one.  Most derived node factories
+     * will therefore not overwrite this method (e.g. none of the
+     * wizard-generated factories).
+     *
+     * @param config To read from.
+     * @since 2.6
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public void saveAdditionalFactorySettings(final ConfigWO config) {
+        // overwritten in subclass
     }
 
     /**

@@ -65,6 +65,7 @@ import org.knime.core.node.port.AbstractSimplePortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.database.DatabasePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
+import org.knime.core.node.port.image.ImagePortObject;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 
 /**
@@ -201,6 +202,13 @@ public abstract class AbstractPortFigure extends Shape {
         } else if (getType().equals(DatabasePortObject.TYPE)) {
             // database
             color = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_RED);
+        } else if (getType().equals(ImagePortObject.TYPE)) {
+            // image
+            color = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_GREEN);
+        } else if ("org.knime.network.core.knime.port.GraphPortObject".equals(
+                getType().getPortObjectClass().getName())) {
+            // network / graph
+            color = Display.getCurrent().getSystemColor(SWT.COLOR_DARK_YELLOW);
         } else if (getType().equals(FlowVariablePortObject.TYPE)) {
             // variable ports created by the framework are of different color
             // as long as they are not connected

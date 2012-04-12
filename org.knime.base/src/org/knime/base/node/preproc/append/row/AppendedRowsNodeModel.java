@@ -152,7 +152,7 @@ public class AppendedRowsNodeModel extends NodeModel {
             throw new IllegalArgumentException("invalid input count: " + nrIns);
         }
         PortType[] result = new PortType[nrIns];
-        Arrays.fill(result, new PortType(BufferedDataTable.class, true));
+        Arrays.fill(result, BufferedDataTable.TYPE_OPTIONAL);
         result[0] = BufferedDataTable.TYPE;
         return result;
     }

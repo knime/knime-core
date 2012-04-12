@@ -1586,13 +1586,15 @@ public final class Node implements NodeModelWarningListener {
      *             input table, etc.
      * @throws IllegalStateException If node has no dialog.
      * @see #hasDialog()
+     * @since 2.6
      */
     public NodeDialogPane getDialogPaneWithSettings(
-            final PortObjectSpec[] inSpecs, final NodeSettingsRO settings,
-            final boolean isWriteProtected)
+            final PortObjectSpec[] inSpecs, final PortObject[] inData,
+            final NodeSettingsRO settings, final boolean isWriteProtected)
         throws NotConfigurableException {
         NodeDialogPane dialogPane = getDialogPane();
         PortObjectSpec[] corrInSpecs = new PortObjectSpec[inSpecs.length - 1];
+        PortObject[] corrInData = new PortObject[inData.length - 1];
         for (int i = 1; i < inSpecs.length; i++) {
             if (inSpecs[i] instanceof InactiveBranchPortObjectSpec) {
                 if (!isInactiveBranchConsumer()) {
@@ -1616,9 +1618,10 @@ public final class Node implements NodeModelWarningListener {
                 corrInSpecs[i - 1] = new DataTableSpec();
             } else {
                 corrInSpecs[i - 1] = inSpecs[i];
+                corrInData[i - 1] = inData[i];
             }
         }
-        dialogPane.internalLoadSettingsFrom(settings, corrInSpecs,
+        dialogPane.internalLoadSettingsFrom(settings, corrInSpecs, corrInData,
                 getFlowObjectStack(), getCredentialsProvider(),
                 isWriteProtected);
         return dialogPane;
@@ -1627,7 +1630,8 @@ public final class Node implements NodeModelWarningListener {
     /**
      * Get reference to the node dialog instance. Used to get the user settings
      * from the dialog without overwriting them as in
-     * {@link #getDialogPaneWithSettings(PortObjectSpec[], NodeSettingsRO)}
+     * {@link #getDialogPaneWithSettings(PortObjectSpec[],
+     * PortObject[], NodeSettingsRO, boolean)}.
      *
      * @return Reference to dialog pane.
      * @throws IllegalStateException If node has no dialog.
@@ -1848,6 +1852,28 @@ public final class Node implements NodeModelWarningListener {
         view.openView(title);
     }
 
+    /** Widens scope of internalLoadSettingsFrom method in
+     * {@link NodeDialogPane}. Framework method, not to be called by node
+     * implementations.
+     * @param pane forwarded
+     * @param settings forwarded
+     * @param specs forwarded
+     * @param data forwarded
+     * @param foStack forwarded
+     * @param credentialsProvider forwarded
+     * @param isWriteProtected forwarded
+     * @throws NotConfigurableException forwarded
+     * @since 2.6
+     */
+    public static void invokeDialogInternalLoad(final NodeDialogPane pane,
+            final NodeSettingsRO settings, final PortObjectSpec[] specs,
+            final PortObject[] data, final FlowObjectStack foStack,
+            final CredentialsProvider credentialsProvider,
+            final boolean isWriteProtected) throws NotConfigurableException {
+        pane.internalLoadSettingsFrom(settings, specs, data, foStack,
+                credentialsProvider, isWriteProtected);
+    }
+
     /** Widens scope of {@link AbstractNodeView#closeView()} method so it
      * can be called from UI framework components. This method is not meant for
      * public use and may change in future versions.
@@ -1928,6 +1954,20 @@ public final class Node implements NodeModelWarningListener {
             }
             m_model.setLoopStartNode((LoopStartNode)head.m_model);
         }
+    }
+
+    /**
+     * @since 2.6
+     */
+    public LoopStartNode getLoopStartNode() {
+    	return m_model.getLoopStartNode();
+    }
+
+    /**
+     * @since 2.6
+     */
+    public LoopEndNode getLoopEndNode() {
+    	return m_model.getLoopEndNode();
     }
 
     /**
