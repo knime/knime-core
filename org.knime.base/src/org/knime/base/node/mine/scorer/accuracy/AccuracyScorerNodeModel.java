@@ -416,10 +416,10 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         String correctName = prefix + "#Correct";
         String falseName = prefix + "#False";
         if (isConfigureOnly && (vars.containsKey(accuracyName)
-        		|| vars.containsKey(errorName)
-        		|| vars.containsKey(correctName)
-        		|| vars.containsKey(falseName))) {
-        	setWarningMessage("A flow variable was replaced!");
+                || vars.containsKey(errorName)
+                || vars.containsKey(correctName)
+                || vars.containsKey(falseName))) {
+            setWarningMessage("A flow variable was replaced!");
         }
 
 
@@ -619,6 +619,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         String col1 = settings.getString(FIRST_COMP_ID);
         String col2 = settings.getString(SECOND_COMP_ID);
         setCompareColumn(col1, col2);
+        // added in 2.6
         m_flowVarPrefix = settings.getString(FLOW_VAR_PREFIX, null);
     }
 
@@ -627,7 +628,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-    	if (m_firstCompareColumn != null) {
+        if (m_firstCompareColumn != null) {
             settings.addString(FIRST_COMP_ID, m_firstCompareColumn);
         }
         if (m_secondCompareColumn != null) {
@@ -645,7 +646,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
             throws InvalidSettingsException {
         settings.getString(FIRST_COMP_ID);
         settings.getString(SECOND_COMP_ID);
-        settings.getString(FLOW_VAR_PREFIX);
+        // no flow var prefix in 2.5.x and before
     }
 
     /**
