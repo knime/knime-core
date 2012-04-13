@@ -24,12 +24,14 @@
 package org.knime.testing.core;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.util.Arrays;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.knime.workbench.repository.RepositoryManager;
@@ -38,6 +40,7 @@ import org.knime.workbench.repository.model.IRepositoryObject;
 import org.knime.workbench.repository.model.MetaNodeTemplate;
 import org.knime.workbench.repository.model.NodeTemplate;
 import org.knime.workbench.repository.model.Root;
+import org.knime.workbench.repository.util.DynamicNodeDescriptionCreator;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -48,6 +51,12 @@ import org.w3c.dom.Node;
  * @author wiswedel, University of Konstanz
  */
 public class KNIMEPrintNodesStdOutApplication implements IApplication {
+    private static final String PARAM_FILE_NAME = "-outFile";
+    private static final String PARAM_DIRECTORY = "-outDir";
+    private static final String DEFAULT_FILE_NAME = "overview.html";
+    private static final String DETAIL_DIR_NAME = "details";
+    private boolean m_createDir = false;
+    private File m_detailsDir;
 
     /** {@inheritDoc} */
     @Override
@@ -55,32 +64,76 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
         Object args =
             context.getArguments().get(IApplicationContext.APPLICATION_ARGS);
         Writer writer = new OutputStreamWriter(System.out);
-        String name = "-outFile";
         boolean found = false;
+        String filename = null;
+        File directory = null;
         if (args instanceof String[]) {
             String[] as = (String[])args;
             for (int i = 0; i < as.length; i++) {
-                if (name.equals(as[i])) {
+                if (PARAM_FILE_NAME.equals(as[i])) {
                     if (i + 1 <= as.length - 1) {
-                        writer = new BufferedWriter(new FileWriter(as[i + 1]));
+                        filename = as[i + 1];
                         found = true;
+                    }
+                } else if(PARAM_DIRECTORY.equals(as[i])) {
+                    if (i + 1 <= as.length - 1) {
+                        directory = new File(as[i + 1]);
+                        if (directory.exists() && !directory.isDirectory()) {
+                            throw new IllegalArgumentException(
+                                    directory.getCanonicalPath()
+                                    + " already exists, but is no directory.");
+                        }
+                        directory.mkdirs();
+                        // create sub directory for detailed node descriptions
+                        m_detailsDir = new File(directory, DETAIL_DIR_NAME);
+                        m_detailsDir.mkdir();
+                        m_createDir = true;
                     }
                 }
             }
         }
-        if (!found) {
-            System.err.println("Options: " + name + " file_to_write.html");
+
+        File file = null;
+        if (m_createDir) {
+            String name = null;
+            if (!found) {
+                name = DEFAULT_FILE_NAME; // use default file name
+            } else {
+             // get file name last segment of absolute file path
+                name = new File(filename).getName();
+            }
+            file = new File(directory, name);
+        } else if (found) {
+            file = new File(filename);
+        } else {
+            // at least one option must be specified
+            System.err.println("Please provide at least one of the options: \n"
+                    + PARAM_FILE_NAME + " file_to_write.html\n"
+                    + PARAM_DIRECTORY + " directory to write html files to.\n"
+                    + "If the directory is specified html files with the long"
+                    + " descriptions of the nodes are created in addition.");
+            return IApplication.EXIT_OK;
         }
+        writer = new BufferedWriter(new FileWriter(file));
+
+        // unless the user specified this property, we set it to true here
+        // (true means no icons etc will be loaded, if it is false, the
+        // loading of the repository manager freezes
+        if (System.getProperty("java.awt.headless") == null) {
+            System.setProperty("java.awt.headless", "true");
+        }
+
         Root root = RepositoryManager.INSTANCE.getRoot();
         writer.write("<html><body>\n");
         print(writer, 0, root, false);
         writer.write("</body></html>\n");
         writer.close();
+        System.out.println("Node description generation successfully finished");
         return IApplication.EXIT_OK;
     }
 
     /** Recursive print of nodes, categories, meta nodes to argument writer. */
-    private static void print(final Writer writer, final int indent,
+    private void print(final Writer writer, final int indent,
             final IRepositoryObject object, final boolean topLevel)
         throws IOException {
         indent(indent, writer);
@@ -99,7 +152,7 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
             if (object instanceof Category) {
                 Category c = (Category)object;
                 writer.write(topLevel ? "<strong>" : "");
-                writer.append(c.getName());
+                writer.append(StringEscapeUtils.escapeHtml(c.getName()));
                 writer.write(topLevel ? "</strong>" : "");
                 writer.write("<ul>");
                 for (IRepositoryObject child : c.getChildren()) {
@@ -114,19 +167,39 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
             } else if (object instanceof NodeTemplate) {
                 NodeTemplate t = (NodeTemplate)object;
                 writer.write("<em>");
-                writer.append(t.getName());
+                String nodeName = t.getName();
+                String detailFileName = t.getCategoryPath() + "/" + nodeName;
+                detailFileName = detailFileName.replaceAll("\\W+", "_")
+                        + ".html";
+                if (m_createDir) {
+                    // add link to page containing the long description
+                    writer.append("<a href=\"./" + DETAIL_DIR_NAME + "/"
+                            + detailFileName  + "\" target=\"_blank\">");
+                }
+                writer.append(StringEscapeUtils.escapeHtml(nodeName));
+                if (m_createDir) {
+                    writer.append("</a>");
+                }
                 writer.write("</em> - ");
                 try {
+                    Element nodeXML
+                            = t.getFactory().newInstance().getXMLDescription();
                     writer.append(readShortDescriptionFromXML(
-                            t.getFactory().newInstance().getXMLDescription(),
-                            indent));
+                            nodeXML, indent));
+                    if (m_createDir) {
+                        Writer detailsWriter = new BufferedWriter(
+                                new FileWriter(
+                                    new File(m_detailsDir, detailFileName)));
+                        detailsWriter.append(createHTMLDescription(t));
+                        detailsWriter.close();
+                    }
                 } catch (Exception e) {
                     writer.append("ERROR reading description: " + e);
                 }
             } else if (object instanceof MetaNodeTemplate) {
                 MetaNodeTemplate m = (MetaNodeTemplate)object;
                 writer.write("<em>");
-                writer.append(m.getName());
+                writer.append(StringEscapeUtils.escapeHtml(m.getName()));
                 writer.write("</em>");
                 String description = m.getDescription();
                 if (description != null) {
@@ -156,6 +229,20 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
         char[] indentChars = new char[indent];
         Arrays.fill(indentChars, ' ');
         return shortDescription.replace("\n", "\n" + new String(indentChars));
+    }
+
+
+    /**
+     * Creates the HTML description for the node template.
+     *
+     * @param node the node template to generate the html description for
+     * @return the html node description
+     */
+    private static String createHTMLDescription(final NodeTemplate node) {
+        StringBuilder builder = new StringBuilder();
+        DynamicNodeDescriptionCreator.instance().addDescription(node,
+                false, builder);
+        return builder.toString();
     }
 
     private static final void indent(final int indent, final Writer writer)
