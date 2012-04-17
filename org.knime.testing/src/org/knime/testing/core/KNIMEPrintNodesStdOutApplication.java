@@ -32,6 +32,7 @@ import java.io.Writer;
 import java.util.Arrays;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.knime.workbench.repository.RepositoryManager;
@@ -41,6 +42,7 @@ import org.knime.workbench.repository.model.MetaNodeTemplate;
 import org.knime.workbench.repository.model.NodeTemplate;
 import org.knime.workbench.repository.model.Root;
 import org.knime.workbench.repository.util.DynamicNodeDescriptionCreator;
+import org.osgi.framework.Bundle;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
@@ -239,10 +241,34 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
      * @return the html node description
      */
     private static String createHTMLDescription(final NodeTemplate node) {
+
         StringBuilder builder = new StringBuilder();
         DynamicNodeDescriptionCreator.instance().addDescription(node,
                 false, builder);
+        // insert a header directly after the body tag.
+
+        String bodyHeader =
+            "<div style=\"float:left; margin-right:5px;\">"
+            + "<img src=\"http://knime.com/files/knime_logo_small.png\" /></div>"
+            + "<p>The following node is available in the Open Source KNIME "
+            + "predictive analytics and data mining platform version "
+            + getVersionString()
+            + ". Discover over  1000 other nodes, as well as enterprise "
+            + "functionality at "
+            + "\n<a href=\"http://knime.com\">http://knime.com</a>.</p>"
+            + "<div style=\"clear: both\";></div>";
+        String bodyTag = "<body>";
+        builder.insert(builder.indexOf(bodyTag) + bodyTag.length(), bodyHeader);
         return builder.toString();
+    }
+
+    /**
+     * @return the current KNIME version
+     */
+    private static String getVersionString() {
+        Bundle eclipseCore = Platform.getBundle("org.knime.core");
+        String version = (String)eclipseCore.getHeaders().get("Bundle-Version");
+        return version.substring(0, version.lastIndexOf("."));
     }
 
     private static final void indent(final int indent, final Writer writer)
