@@ -102,6 +102,7 @@ public class TimePresetNodeDialog extends DefaultNodeSettingsPane {
     /**
      * 
      */
+    @SuppressWarnings("unchecked")
     public TimePresetNodeDialog() {
         addDialogComponent(new DialogComponentColumnNameSelection(
                 createColumnSelectionModel(), "Select time column", 

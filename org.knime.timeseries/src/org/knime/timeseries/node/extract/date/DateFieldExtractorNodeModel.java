@@ -471,8 +471,10 @@ public class DateFieldExtractorNodeModel extends NodeModel {
             m_useDayOfYear.validateSettings(settings);
             m_dayOfYearColName.validateSettings(settings);
             atLeastOneChecked |= AbstractFieldExtractorNodeDialog
-                .validateColumnName(settings, m_useDayOfYear, m_dayOfYearColName);
+                .validateColumnName(settings, m_useDayOfYear, 
+                        m_dayOfYearColName);
         } catch (InvalidSettingsException ise) {
+            // nothing to do
         }
         // all unchecked?
         if (!atLeastOneChecked) {
