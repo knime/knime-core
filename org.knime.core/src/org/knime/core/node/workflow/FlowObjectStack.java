@@ -214,13 +214,13 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
                     FlowObject o = nexts[i] != null ? nexts[i] : its[i].next();
                     nexts[i] = null;
                     if (o instanceof FlowLoopContext) {
-                        // we must check for identity here - otherwise
-                        // nested loops are not possible
-                        if (commonFlowO != null && commonFlowO != o) {
+                        // make sure loop contexts belong to same loops
+                        // (can be different objects, though - see bug #3208)
+                        if (commonFlowO != null && !commonFlowO.equals(o)) {
                             throw new IllegalFlowObjectStackException(
-                                    "Stack can't be merged: Conflicting "
-                                    + "FlowObjects:" + o + " vs. "
-                                    + commonFlowO);
+                                    "Conflicting FlowObjects: " + o + " vs. "
+                                    + commonFlowO
+                                    + " (loops not properly nested?)");
                         }
                         commonFlowO = o;
                         nexts[i] = o;
