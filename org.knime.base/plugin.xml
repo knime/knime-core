@@ -1180,8 +1180,8 @@
       <node
             after="org.knime.base.node.switches.endcase.EndmodelcaseNodeFactory"
             category-path="/flowcontrol/switches"
-            factory-class="org.knime.base.node.switches.emtpytablereplacer.EmptyTableReplacerNodeFactory"
-            id="org.knime.base.node.switches.emptytablereplacer.EmptyTableReplacerNodeFactory">
+            factory-class="org.knime.base.node.switches.emptytableswitch.EmptyTableSwitchNodeFactory"
+            id="org.knime.base.node.switches.emptytableswitch.EmptyTableSwitchNodeFactory">
       </node>
             <node
             after="org.knime.base.node.preproc.split.SplitNodeFactory"
