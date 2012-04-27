@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   01.11.2008 (wiswedel): created
  */
@@ -27,24 +27,24 @@ import java.util.concurrent.locks.ReentrantLock;
 
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.workflow.WorkflowTestCase;
 import org.knime.testing.node.blocking.BlockingRepository;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
 public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
-    
+
     private static final String LOCK_ID = "chainofnodesoneblocking";
     private NodeID m_dataGen;
     private NodeID m_blocker;
     private NodeID m_colFilter;
     private NodeID m_tblView;
-    
+
     /** {@inheritDoc} */
     @Override
     protected void setUp() throws Exception {
@@ -57,17 +57,17 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
         m_colFilter = new NodeID(baseID, 3);
         m_tblView = new NodeID(baseID, 4);
     }
-    
+
     public void testExecuteNoBlocking() throws Exception {
         checkState(m_dataGen, State.CONFIGURED);
         checkState(m_blocker, State.CONFIGURED);
         checkState(m_colFilter, State.CONFIGURED);
         checkState(m_tblView, State.CONFIGURED);
-        
+
         executeAndWait(m_tblView);
         checkState(m_tblView, State.EXECUTED);
     }
-    
+
     public void testBlockingStates() throws Exception {
         WorkflowManager m = getManager();
         ReentrantLock execLock = BlockingRepository.get(LOCK_ID);
@@ -76,7 +76,7 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
             m.executeUpToHere(m_tblView);
             // can't tell about the data generator, but the remaining three
             // should be in some executing state
-            checkState(m_blocker, State.MARKEDFOREXEC, 
+            checkState(m_blocker, State.MARKEDFOREXEC,
                     State.QUEUED, State.EXECUTING);
             checkState(m_colFilter, State.MARKEDFOREXEC);
             checkState(m_tblView, State.MARKEDFOREXEC);
@@ -87,7 +87,7 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
         // give the workflow manager time to wrap up
         waitWhileNodeInExecution(m_tblView);
     }
-    
+
     public void testPropertiesOfExecutingNode() throws Exception {
         WorkflowManager m = getManager();
         ReentrantLock execLock = BlockingRepository.get(LOCK_ID);
@@ -100,11 +100,12 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
                 @Override
                 protected boolean shouldHold() {
                     return blockerNC.getState().equals(State.MARKEDFOREXEC)
-                    || blockerNC.getState().equals(State.QUEUED);
+                    || blockerNC.getState().equals(State.QUEUED)
+                    || blockerNC.getState().equals(State.PREEXECUTE);
                 }
             });
             checkState(m_blocker, State.EXECUTING);
-            
+
             // test reset node
             assertFalse(m.canResetNode(m_blocker));
             try {
@@ -113,7 +114,7 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
             } catch (IllegalStateException ise) {
                 // expected
             }
-            
+
             // test delete node
             assertFalse(m.canRemoveNode(m_blocker));
             try {
@@ -121,9 +122,9 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
                 fail();
             } catch (IllegalStateException ise) {
             }
-            
+
             // test outgoing connection delete
-            ConnectionContainer cc = findInConnection(m_colFilter, 0);
+            ConnectionContainer cc = findInConnection(m_colFilter, 1);
             assertNotNull(cc);
             assertFalse(m.canRemoveConnection(cc));
             try {
@@ -131,7 +132,7 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
                 fail();
             } catch (IllegalStateException ise) {
             }
-            
+
             // test cancel node
             m.cancelExecution(blockerNC);
             waitWhile(blockerNC, new Hold() {
@@ -155,10 +156,10 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
         execLock.lock();
         try {
             m.executeUpToHere(m_tblView);
-            
+
             checkState(m_colFilter, State.MARKEDFOREXEC);
             checkState(m_tblView, State.MARKEDFOREXEC);
-            
+
             // test reset node
             assertFalse(m.canResetNode(m_colFilter));
             try {
@@ -167,7 +168,7 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
             } catch (IllegalStateException ise) {
                 // expected
             }
-            
+
             // test delete node
             assertFalse(m.canRemoveNode(m_colFilter));
             try {
@@ -175,10 +176,10 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
                 fail();
             } catch (IllegalStateException ise) {
             }
-            
+
             // test outgoing connection delete
-            ConnectionContainer inConnection = findInConnection(m_blocker, 0);
-            ConnectionContainer outConnection = findInConnection(m_tblView, 0);
+            ConnectionContainer inConnection = findInConnection(m_blocker, 1);
+            ConnectionContainer outConnection = findInConnection(m_tblView, 1);
             assertNotNull(inConnection);
             assertNotNull(outConnection);
             assertFalse(m.canRemoveConnection(inConnection));
@@ -193,12 +194,12 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
                 fail();
             } catch (IllegalStateException ise) {
             }
-            
+
             m.cancelExecution(m.getNodeContainer(m_colFilter));
             checkState(m_colFilter, State.CONFIGURED);
             checkState(m_tblView, State.CONFIGURED);
-            
-            checkState(m_blocker, State.MARKEDFOREXEC, 
+
+            checkState(m_blocker, State.MARKEDFOREXEC,
                     State.QUEUED, State.EXECUTING);
         } finally {
             execLock.unlock();
@@ -206,12 +207,12 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
         // give the workflow manager time to wrap up
         waitWhileNodeInExecution(m_blocker);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected void tearDown() throws Exception {
         BlockingRepository.remove(LOCK_ID);
         super.tearDown();
     }
-    
+
 }
