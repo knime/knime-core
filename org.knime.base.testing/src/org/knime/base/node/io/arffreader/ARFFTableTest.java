@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   14.02.2005 (ohl): created
  */
@@ -31,6 +31,8 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.Set;
 
+import junit.framework.TestCase;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -41,10 +43,8 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.InvalidSettingsException;
 
-import junit.framework.TestCase;
-
 /**
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class ARFFTableTest extends TestCase {
@@ -72,7 +72,7 @@ public class ARFFTableTest extends TestCase {
         + "7.1,3.0,5.9,2.1,Iris-virginica\n"
         + "6.3,2.9,5.6,1.8,Iris-virginica\n"
         + "6.5,3.0,5.8,2.2,Iris-virginica\n";
-    
+
     // same thing but the nominal value list is not separated by a space
     // (Weka reads that!)
     private static final String ARFF_IRISFULL_BAR = "% \n"
@@ -145,10 +145,10 @@ public class ARFFTableTest extends TestCase {
             + "@attribute col2 string\n" + "\n\n" + "@data\n\n" + "foo, poo\n"
             + "foo, ?\n" + "?, foo\n" + "%\n" + "%\n" + "\n";
 
-    
+
     /**
      * tests the creatoion of a table spec from a nice ARFF file.
-     * 
+     *
      * @throws IOException if.
      * @throws InvalidSettingsException when.
      */
@@ -162,7 +162,7 @@ public class ARFFTableTest extends TestCase {
         out.close();
         try {
             DataTableSpec tSpec = ARFFTable.
-                    createDataTableSpecFromARFFfile(tempFile.toURL(), null);
+                    createDataTableSpecFromARFFfile(tempFile.toURI().toURL(), null);
             assertEquals(tSpec.getNumColumns(), 8);
             assertEquals(tSpec.getColumnSpec(0).getName().toString(), "col1");
             assertEquals(tSpec.getColumnSpec(1).getName().toString(), "COL1");
@@ -203,7 +203,7 @@ public class ARFFTableTest extends TestCase {
 
     /**
      * test the creation of a table spec from the IRIS data in an ARFF file.
-     * 
+     *
      * @throws IOException if it wants to.
      * @throws InvalidSettingsException if it feels like.
      */
@@ -217,7 +217,7 @@ public class ARFFTableTest extends TestCase {
         out.close();
         try {
         DataTableSpec tSpec = ARFFTable.
-                createDataTableSpecFromARFFfile(tempFile.toURL(), null);
+                createDataTableSpecFromARFFfile(tempFile.toURI().toURL(), null);
         //  + "% The lovely Iris data set - as we all know it\n"
         //  + "\n"
         //  + "@RELATION iris\n"
@@ -229,15 +229,15 @@ public class ARFFTableTest extends TestCase {
         //  + "@ATTRIBUTE class {Iris-setosa,Iris-versicolor,Iris-virginica}\n"
         //  + "\n"
         assertEquals(tSpec.getNumColumns(), 5);
-        assertEquals(tSpec.getColumnSpec(0).getName().toString(), 
+        assertEquals(tSpec.getColumnSpec(0).getName().toString(),
                 "sepallength");
-        assertEquals(tSpec.getColumnSpec(1).getName().toString(), 
+        assertEquals(tSpec.getColumnSpec(1).getName().toString(),
                 "sepalwidth");
-        assertEquals(tSpec.getColumnSpec(2).getName().toString(), 
+        assertEquals(tSpec.getColumnSpec(2).getName().toString(),
                 "petallength");
-        assertEquals(tSpec.getColumnSpec(3).getName().toString(), 
+        assertEquals(tSpec.getColumnSpec(3).getName().toString(),
                 "petalwidth");
-        assertEquals(tSpec.getColumnSpec(4).getName().toString(), 
+        assertEquals(tSpec.getColumnSpec(4).getName().toString(),
                 "class");
         assertEquals(tSpec.getColumnSpec(0).getType(), DoubleCell.TYPE);
         assertEquals(tSpec.getColumnSpec(1).getType(), DoubleCell.TYPE);
@@ -260,7 +260,7 @@ public class ARFFTableTest extends TestCase {
 
     /**
      * test the creation of a table spec from the IRIS data in an ARFF file.
-     * (With the nominal value list not separated with a space) 
+     * (With the nominal value list not separated with a space)
      * @throws IOException if it wants to.
      * @throws InvalidSettingsException if it feels like.
      */
@@ -274,7 +274,7 @@ public class ARFFTableTest extends TestCase {
         out.close();
         try {
         DataTableSpec tSpec = ARFFTable.
-                createDataTableSpecFromARFFfile(tempFile.toURL(), null);
+                createDataTableSpecFromARFFfile(tempFile.toURI().toURL(), null);
         //  + "% The lovely Iris data set - as we all know it\n"
         //  + "\n"
         //  + "@RELATION iris\n"
@@ -286,15 +286,15 @@ public class ARFFTableTest extends TestCase {
         //  + "@ATTRIBUTE class{Iris-setosa,Iris-versicolor,Iris-virginica}\n"
         //  + "\n"
         assertEquals(tSpec.getNumColumns(), 5);
-        assertEquals(tSpec.getColumnSpec(0).getName().toString(), 
+        assertEquals(tSpec.getColumnSpec(0).getName().toString(),
                 "sepallength");
-        assertEquals(tSpec.getColumnSpec(1).getName().toString(), 
+        assertEquals(tSpec.getColumnSpec(1).getName().toString(),
                 "sepalwidth");
-        assertEquals(tSpec.getColumnSpec(2).getName().toString(), 
+        assertEquals(tSpec.getColumnSpec(2).getName().toString(),
                 "petallength");
-        assertEquals(tSpec.getColumnSpec(3).getName().toString(), 
+        assertEquals(tSpec.getColumnSpec(3).getName().toString(),
                 "petalwidth");
-        assertEquals(tSpec.getColumnSpec(4).getName().toString(), 
+        assertEquals(tSpec.getColumnSpec(4).getName().toString(),
                 "class");
         assertEquals(tSpec.getColumnSpec(0).getType(), DoubleCell.TYPE);
         assertEquals(tSpec.getColumnSpec(1).getType(), DoubleCell.TYPE);
@@ -317,7 +317,7 @@ public class ARFFTableTest extends TestCase {
 
     /**
      * test the creation of a table spec from the IRIS data in an ARFF file.
-     * 
+     *
      * @throws IOException if it wants to.
      * @throws InvalidSettingsException if it feels like.
      */
@@ -331,7 +331,7 @@ public class ARFFTableTest extends TestCase {
         out.close();
         try {
         DataTableSpec tSpec = ARFFTable.
-                createDataTableSpecFromARFFfile(tempFile.toURL(), null);
+                createDataTableSpecFromARFFfile(tempFile.toURI().toURL(), null);
         //  + "% The lovely Iris data set - as we all know it\n"
         //  + "\n"
         //  + "@RELATION iris\n"
@@ -343,15 +343,15 @@ public class ARFFTableTest extends TestCase {
         //  + "@ATTRIBUTE class{Iris-setosa,Iris-versicolor,Iris-virginica}\n"
         //  + "\n"
         assertEquals(tSpec.getNumColumns(), 5);
-        assertEquals(tSpec.getColumnSpec(0).getName().toString(), 
+        assertEquals(tSpec.getColumnSpec(0).getName().toString(),
                 "sepallength");
-        assertEquals(tSpec.getColumnSpec(1).getName().toString(), 
+        assertEquals(tSpec.getColumnSpec(1).getName().toString(),
                 "sepalwidth");
-        assertEquals(tSpec.getColumnSpec(2).getName().toString(), 
+        assertEquals(tSpec.getColumnSpec(2).getName().toString(),
                 "petallength");
-        assertEquals(tSpec.getColumnSpec(3).getName().toString(), 
+        assertEquals(tSpec.getColumnSpec(3).getName().toString(),
                 "petalwidth");
-        assertEquals(tSpec.getColumnSpec(4).getName().toString(), 
+        assertEquals(tSpec.getColumnSpec(4).getName().toString(),
                 "class");
         assertEquals(tSpec.getColumnSpec(0).getType(), DoubleCell.TYPE);
         assertEquals(tSpec.getColumnSpec(1).getType(), DoubleCell.TYPE);
@@ -375,7 +375,7 @@ public class ARFFTableTest extends TestCase {
     /**
      * tests stuff like '?' the ARFF missing value, comment lines and empty
      * lines in the file.
-     * 
+     *
      * @throws IOException some time.
      * @throws InvalidSettingsException sometimes.
      */
@@ -400,8 +400,8 @@ public class ARFFTableTest extends TestCase {
         out.write(ARFF_FIES);
         out.close();
         try {
-        ARFFTable table = new ARFFTable(tempFile.toURL(), ARFFTable.
-                createDataTableSpecFromARFFfile(tempFile.toURL(), null), 
+        ARFFTable table = new ARFFTable(tempFile.toURI().toURL(), ARFFTable.
+                createDataTableSpecFromARFFfile(tempFile.toURI().toURL(), null),
                                                     "Row");
 
         assertEquals(table.getDataTableSpec().getNumColumns(), 2);
@@ -418,19 +418,19 @@ public class ARFFTableTest extends TestCase {
 
         assertTrue(rIter.hasNext());
         row = rIter.next();
-        assertEquals(row.getKey().toString(), "Row1");
+        assertEquals(row.getKey().toString(), "Row0");
         assertEquals(row.getCell(0).toString(), "foo");
         assertEquals(row.getCell(1).toString(), "poo");
 
         assertTrue(rIter.hasNext());
         row = rIter.next();
-        assertEquals(row.getKey().toString(), "Row2");
+        assertEquals(row.getKey().toString(), "Row1");
         assertEquals(row.getCell(0).toString(), "foo");
         assertTrue(row.getCell(1).isMissing());
 
         assertTrue(rIter.hasNext());
         row = rIter.next();
-        assertEquals(row.getKey().toString(), "Row3");
+        assertEquals(row.getKey().toString(), "Row2");
         assertTrue(row.getCell(0).isMissing());
         assertEquals(row.getCell(1).toString(), "foo");
 
@@ -440,17 +440,17 @@ public class ARFFTableTest extends TestCase {
         }
 
     }
-    
+
     /**
-     * Customer file. Weka is able to read it. We failed on the missing space 
+     * Customer file. Weka is able to read it. We failed on the missing space
      * in the last "@attribute" line.
-     * 
+     *
      * @throws IOException some time.
      * @throws InvalidSettingsException sometimes.
      */
     public void testARFFwithMissingSpace() throws IOException,
             InvalidSettingsException {
-        final String missingSpace = 
+        final String missingSpace =
             "@relation kredit_bereinigt\n"
             + "\n"
             + "@attribute REPAYMENT_PROBLEM {0,1}\n" /* Col 0*/
@@ -470,7 +470,7 @@ public class ARFFTableTest extends TestCase {
             + "@attribute OTHER_LOANS {0,1}\n"/* Col 14*/
             + "@attribute EXPENSE real\n"/* Col 15*/
             + "@attribute SAVINGS {0,1}\n"/* Col 16*/
-            /* following line is missing a space */ 
+            /* following line is missing a space */
             + "@attribute STOCK{0,1}\n"/* Col 17*/
             + "\n"
             + "@data\n"
@@ -483,12 +483,12 @@ public class ARFFTableTest extends TestCase {
         out.write(missingSpace);
         out.close();
         try {
-        ARFFTable table = new ARFFTable(tempFile.toURL(), ARFFTable.
-                createDataTableSpecFromARFFfile(tempFile.toURL(), null), 
+        ARFFTable table = new ARFFTable(tempFile.toURI().toURL(), ARFFTable.
+                createDataTableSpecFromARFFfile(tempFile.toURI().toURL(), null),
                                                     "Row");
 
         assertEquals(table.getDataTableSpec().getNumColumns(), 18);
-        
+
         assertEquals(table.getDataTableSpec().getColumnSpec(0).getType(),
                 StringCell.TYPE);
         assertEquals(table.getDataTableSpec().getColumnSpec(1).getType(),
@@ -526,7 +526,7 @@ public class ARFFTableTest extends TestCase {
         assertEquals(table.getDataTableSpec().getColumnSpec(17).getType(),
                 StringCell.TYPE);
 
-        
+
 /*
         + "1,1,1,27,0,1,1,1,2,2900,1335,330,1,0,0,1565,1,0\n"
 */
@@ -535,7 +535,7 @@ public class ARFFTableTest extends TestCase {
 
         assertTrue(rIter.hasNext());
         row = rIter.next();
-        assertEquals(row.getKey().toString(), "Row1");
+        assertEquals(row.getKey().toString(), "Row0");
         assertEquals(row.getCell(0).toString(), "1");
         assertEquals(row.getCell(1).toString(), "1");
         assertEquals(row.getCell(2).toString(), "1");
@@ -560,7 +560,7 @@ public class ARFFTableTest extends TestCase {
  */
         assertTrue(rIter.hasNext());
         row = rIter.next();
-        assertEquals(row.getKey().toString(), "Row2");
+        assertEquals(row.getKey().toString(), "Row1");
         assertEquals(row.getCell(0).toString(), "1");
         assertEquals(row.getCell(1).toString(), "1");
         assertEquals(row.getCell(2).toString(), "0");
@@ -586,7 +586,7 @@ public class ARFFTableTest extends TestCase {
             // no exec monitor, no cancel
         }
 
-   
-        
+
+
     }
 }
