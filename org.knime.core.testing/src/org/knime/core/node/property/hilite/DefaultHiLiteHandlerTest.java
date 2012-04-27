@@ -57,10 +57,13 @@ public final class DefaultHiLiteHandlerTest  {
 
 
     private class MyHiLiteListener implements HiLiteListener {
+        @Override
         public void hiLite(final KeyEvent event) {
         }
+        @Override
         public void unHiLite(final KeyEvent event) {
         }
+        @Override
         public void unHiLiteAll(final KeyEvent event) {
         }
     }
