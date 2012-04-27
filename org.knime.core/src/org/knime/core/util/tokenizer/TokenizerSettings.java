@@ -58,7 +58,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
-
 /**
  * Defines the object holding the configuration for the FileTokenizer. <br>
  * Use an instance of this class to set all parameters and pass it to a
@@ -78,8 +77,8 @@ import org.knime.core.node.NodeSettingsWO;
 public class TokenizerSettings {
 
     /** The node logger for this class. */
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(TokenizerSettings.class);
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(TokenizerSettings.class);
 
     /* the column delimiters we handle */
     private final Vector<Delimiter> m_delimPatterns;
@@ -152,9 +151,9 @@ public class TokenizerSettings {
 
     /**
      * Creates a new <code>FileTokenizerSettings</code> object and sets its
-     * parameters from the <code>config</code> object. If config doesn't
-     * contain all necessary parameters or contains inconsistent settings it
-     * will throw an InvalidArguments exception
+     * parameters from the <code>config</code> object. If config doesn't contain
+     * all necessary parameters or contains inconsistent settings it will throw
+     * an InvalidArguments exception
      *
      * @param settings an object the parameters are read from, if null default
      *            settings will be created.
@@ -208,9 +207,9 @@ public class TokenizerSettings {
     }
 
     /**
-     * Saves all settings into a <code>NodeSettings</code> object. Using the
-     * cfg object to construct a new FileTokenizerSettings object should lead to
-     * an object identical to this.
+     * Saves all settings into a <code>NodeSettings</code> object. Using the cfg
+     * object to construct a new FileTokenizerSettings object should lead to an
+     * object identical to this.
      *
      * @param cfg the config object the settings are stored into.
      */
@@ -253,8 +252,7 @@ public class TokenizerSettings {
      * defined in there, it is going to print an error message and is ignoring
      * it.
      */
-    private void addDelimitersFromConfiguration(
-            final NodeSettingsRO allDelims) {
+    private void addDelimitersFromConfiguration(final NodeSettingsRO allDelims) {
         for (String delimKey : allDelims.keySet()) {
             // they should all start with "Delim"...
             if (delimKey.indexOf(CFGKEY_DELIMCFG) != 0) {
@@ -369,8 +367,7 @@ public class TokenizerSettings {
      * defined in there, it is going to print an error message and is ignoring
      * it.
      */
-    private void addCommentsFromConfiguration(
-            final NodeSettingsRO allComments) {
+    private void addCommentsFromConfiguration(final NodeSettingsRO allComments) {
         for (String commentKey : allComments.keySet()) {
             // they should all start with "Comment"...
             if (commentKey.indexOf(CFGKEY_COMMNTCFG) != 0) {
@@ -458,11 +455,11 @@ public class TokenizerSettings {
     /**
      * Adds support for the specified quote patterns and escape character. The
      * tokenizer will treat any string within the specified
-     * <code>leftQuote</code> and <code>rightQuote</code> as quoted string,
-     * i.e. any token delimiter will not end the token but will be included in
-     * the string and no comment will be recognized inside a quoted string. With
-     * the escape character it is possible to include special characters (like
-     * new line e.g.) or even the right quote pattern in the string. The esc
+     * <code>leftQuote</code> and <code>rightQuote</code> as quoted string, i.e.
+     * any token delimiter will not end the token but will be included in the
+     * string and no comment will be recognized inside a quoted string. With the
+     * escape character it is possible to include special characters (like new
+     * line e.g.) or even the right quote pattern in the string. The esc
      * character and the immediate next char will be translated into one new
      * character: %EscChar%+'t' becomes '\t' (Tab), +'n' translates int '\n'
      * (Newline), EscChar+any other char becomes this other character. The
@@ -504,8 +501,7 @@ public class TokenizerSettings {
      *
      * @see #addQuotePattern(String, String, char)
      */
-    public void addQuotePattern(
-            final String leftQuote, final String rightQuote) {
+    public void addQuotePattern(final String leftQuote, final String rightQuote) {
 
         addQuotePattern(new Quote(leftQuote, rightQuote));
     }
@@ -615,31 +611,27 @@ public class TokenizerSettings {
      * will be either appended to the current token (
      * <code>includeInToken</code> set <code>true</code>), returned in a
      * separate token (<code> returnAsSeparateToken</code> set <code>true
-     * </code>)
-     * or discarded (both set <code>false</code>). If you set both parameters
-     * <code>true</code>, it will throw an <code>
-     * IllegalArgumentException</code>.
-     * Another parameter (<code>
-     * combineConsecutiveDelimis</code>) will
-     * determine whether delimiters of the same kind immediately following will
-     * be ignored (set to <code>true
-     * </code>) or will cause empty tokens to be
-     * returned (set <code>false
-     * </code>). The delimiter specified must not
-     * prefix any existing delimiter, left quote or comment begin pattern.
+     * </code>) or discarded (both set <code>false</code>). If you set both
+     * parameters <code>true</code>, it will throw an <code>
+     * IllegalArgumentException</code>. Another parameter (<code>
+     * combineConsecutiveDelimis</code>) will determine whether delimiters of
+     * the same kind immediately following will be ignored (set to <code>true
+     * </code>) or will cause empty tokens to be returned (set <code>false
+     * </code>). The delimiter specified must not prefix any existing delimiter,
+     * left quote or comment begin pattern.
      *
      * @param delimiter A string containing the delimiter.
      * @param combineConsecutiveDelims Pass in <code>true</code>, if you want
      *            multiple consecutive delimiters to be treated as one, or
-     *            <code>false</code> if empty tokens should be returned
-     *            between them.
+     *            <code>false</code> if empty tokens should be returned between
+     *            them.
      * @param returnAsSeparateToken Set to <code>true</code> to get delimiters
      *            returned as tokens, or <code>false</code> if they should be
      *            discarded (or included in the tokens - see next parameter).
      *            Mutually exclusive with <code>includeInToken</code>.
-     * @param includeInToken Set to <code>true</code> if you want the
-     *            delimiter returned at the end of the token. Otherwise it will
-     *            be discarded (or returned as separate token, see parameter
+     * @param includeInToken Set to <code>true</code> if you want the delimiter
+     *            returned at the end of the token. Otherwise it will be
+     *            discarded (or returned as separate token, see parameter
      *            above). Mutually exclusive with <code>returnAsSeparateToken
      *            </code>.
      */
@@ -708,8 +700,7 @@ public class TokenizerSettings {
         // make sure no other delim/comment/quote begin pattern is a prefix to
         // this delimiter - and vice versa.
         errMsg =
-                checkPrefixing(delimiter.getDelimiter(), "delimiter",
-                        delimiter);
+                checkPrefixing(delimiter.getDelimiter(), "delimiter", delimiter);
         if (!errMsg.equals("")) {
             throw new IllegalArgumentException(errMsg);
         }
@@ -719,17 +710,16 @@ public class TokenizerSettings {
     /**
      * Replaces the delimiter with the same delimiter pattern overriding the
      * values for <code>combineConsecutiveDelims</code>,
-     * <code>returnAsSeparateToken</code>, and <code>includeInToken</code>.
-     * It will return <code>true</code>, if everything works fine -
-     * <code>false</code>, if it couldn't find a matching delimiter to
-     * replace.
+     * <code>returnAsSeparateToken</code>, and <code>includeInToken</code>. It
+     * will return <code>true</code>, if everything works fine -
+     * <code>false</code>, if it couldn't find a matching delimiter to replace.
      *
      * @param delimiter The pattern matching the delimiter to replace.
      * @param combineConsecutiveDelims New value for this parameter.
      * @param returnAsSeparateToken New value for this parameter.
      * @param includeInToken New value for this parameter.
-     * @return <code>true</code> if it replaced the delimiter or false if it
-     *         was added.
+     * @return <code>true</code> if it replaced the delimiter or false if it was
+     *         added.
      */
     public boolean addOrReplaceDelimiterPattern(final String delimiter,
             final boolean combineConsecutiveDelims,
@@ -903,10 +893,10 @@ public class TokenizerSettings {
      * comment begin pattern and the comment end pattern will be ignored, and
      * either returned as separate token (if <code>returnAsSeparateToken</code>
      * is set <code>true</code>), included in the token (if
-     * <code>includeInToken</code> is <code>true</code>), or discarded (if
-     * both parameters are set <code>false</code>). (If you specify both
-     * parameters <code>true</code> it will throw an
-     * <code>IllegalArgumentException</code>.)
+     * <code>includeInToken</code> is <code>true</code>), or discarded (if both
+     * parameters are set <code>false</code>). (If you specify both parameters
+     * <code>true</code> it will throw an <code>IllegalArgumentException</code>
+     * .)
      *
      * @param commentBegin The string containing a pattern that starts a
      *            comment.
@@ -935,10 +925,10 @@ public class TokenizerSettings {
      * the comment begin pattern and the next line feed will be ignored, and
      * either returned as separate token (if <code>returnAsSeparateToken</code>
      * is set <code>true</code>), included in the token (if
-     * <code>includeInToken</code> is <code>true</code>), or discarded (if
-     * both parameters are set <code>false</code>). (If you specify both
-     * parameters <code>true</code> it will throw an
-     * <code>IllegalArgumentException</code>.)
+     * <code>includeInToken</code> is <code>true</code>), or discarded (if both
+     * parameters are set <code>false</code>). (If you specify both parameters
+     * <code>true</code> it will throw an <code>IllegalArgumentException</code>
+     * .)
      *
      * @param commentBegin The string containing a pattern that starts a single
      *            line comment.
@@ -1134,10 +1124,9 @@ public class TokenizerSettings {
     }
 
     /**
-     * @return a new vector, with items of type <code>Comment</code>,
-     *         containing all currently defined comment patterns. Could be
-     *         emtpy, but never null. The vector is your's if you want it to
-     *         change.
+     * @return a new vector, with items of type <code>Comment</code>, containing
+     *         all currently defined comment patterns. Could be emtpy, but never
+     *         null. The vector is your's if you want it to change.
      * @see Comment
      */
     public Vector<Comment> getAllComments() {
@@ -1145,9 +1134,9 @@ public class TokenizerSettings {
     }
 
     /**
-     * @return a new vector, with items of type <code>Quote</code>,
-     *         containing all currently defined quote patterns. Could be emtpy,
-     *         but never null. The vector is your's if you want it to change.
+     * @return a new vector, with items of type <code>Quote</code>, containing
+     *         all currently defined quote patterns. Could be emtpy, but never
+     *         null. The vector is your's if you want it to change.
      * @see Quote
      */
     public Vector<Quote> getAllQuotes() {
@@ -1252,8 +1241,7 @@ public class TokenizerSettings {
         }
         // at last add the quote definitions
         result.append("Quotes:\n");
-        for (Iterator<Quote> qIter = getAllQuotes().iterator();
-                qIter.hasNext();) {
+        for (Iterator<Quote> qIter = getAllQuotes().iterator(); qIter.hasNext();) {
             Quote quote = qIter.next();
             assert quote != null;
             result.append("    " + quote.toString());
@@ -1374,35 +1362,35 @@ public class TokenizerSettings {
         if (str.indexOf('\\') == -1) {
             return str;
         }
-        StringBuffer result = new StringBuffer();
-        String pattern = str;
 
-        int idx;
-        while ((idx = pattern.indexOf('\\')) >= 0) {
-            if (idx > 0) {
-                // copy everything up to the escape character
-                result.append(pattern.substring(0, idx - 1));
-            }
-            if (idx == pattern.length() - 1) {
-                // they had a backslash at the end
-                result.append('\\');
-                pattern = "";
+        StringBuilder result = new StringBuilder(str.length());
+
+        int startIndex = 0;
+        while (true) {
+            int idx = str.indexOf('\\', startIndex);
+            if (idx < 0) {
+                result.append(str.substring(startIndex));
+                break;
             } else {
-                char c = pattern.charAt(idx + 1);
-                if (c == 't') {
-                    result.append('\t');
-                } else if (c == 'n') {
-                    result.append('\n');
+                result.append(str.substring(startIndex, idx));
+                if (idx == str.length() - 1) {
+                    // they had a backslash at the end
+                    result.append('\\');
+                    break;
                 } else {
-                    result.append(c);
+                    char c = str.charAt(idx + 1);
+                    if (c == 't') {
+                        result.append('\t');
+                    } else if (c == 'n') {
+                        result.append('\n');
+                    } else {
+                        result.append(c);
+                    }
                 }
-                if (idx < pattern.length() - 2) {
-                    pattern = pattern.substring(idx + 2);
-                } else {
-                    pattern = "";
-                }
+                startIndex = idx + 2;
             }
         }
+
         return result.toString();
 
     }
