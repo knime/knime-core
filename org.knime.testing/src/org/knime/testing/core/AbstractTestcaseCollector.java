@@ -77,15 +77,31 @@ import org.eclipse.osgi.baseadaptor.loader.ClasspathManager;
 public abstract class AbstractTestcaseCollector {
     private final List<String> m_excludedTestcases = new ArrayList<String>();
 
-    public AbstractTestcaseCollector() {
+    /**
+     * Creates a new collector.
+     */
+    protected AbstractTestcaseCollector() {
     }
 
-    public AbstractTestcaseCollector(final Class... excludedTestcases) {
+    /**
+     * Creates new collector. A list of classes that should be excluded can be
+     * given.
+     *
+     * @param excludedTestcases a list with classes to be excluded
+     */
+    protected AbstractTestcaseCollector(final Class<?>... excludedTestcases) {
         for (Class<?> c : excludedTestcases) {
             m_excludedTestcases.add(c.getName());
         }
     }
 
+    /**
+     * Returns a list with class names that potentially contains JUnit test
+     * methods.
+     *
+     * @return a list with class names
+     * @throws IOException if an I/O error occurs while collecting the classes
+     */
     public List<String> getUnittestsClasses() throws IOException {
         BaseClassLoader cl = (BaseClassLoader)getClass().getClassLoader();
         ClasspathManager cpm = cl.getClasspathManager();
@@ -126,6 +142,8 @@ public abstract class AbstractTestcaseCollector {
                     Class<?> c =
                             Class.forName(className, true, getClass()
                                     .getClassLoader());
+                    // remove abstract and non-public classes, they
+                    // cannot be JUnit testcases
                     if (((c.getModifiers() & Modifier.ABSTRACT) != 0)
                             || ((c.getModifiers() & Modifier.PUBLIC) == 0)) {
                         it.remove();

@@ -53,18 +53,30 @@ package org.knime.testing.node.config;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.NodeID;
 
 /**
+ * This class holds the settings for the testflow configuration node.
  *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class TestConfigSettings {
     private String m_owner;
+
+    private Map<String, String> m_requiredNodeErrors =
+            new HashMap<String, String>();
+
+    private Map<String, String> m_requiredNodeWarnings =
+            new HashMap<String, String>();
 
     private List<String> m_requiredLogErrors = new ArrayList<String>();
 
@@ -72,76 +84,178 @@ public class TestConfigSettings {
 
     private List<String> m_requiredLogInfos = new ArrayList<String>();
 
-    private List<String> m_requiredLogDebugs = new ArrayList<String>();
-
-    private List<String> m_failingNodes = new ArrayList<String>();
-
-    private List<String> m_requiredNodeWarnings = new ArrayList<String>();
+    private Set<String> m_failingNodes = new HashSet<String>();
 
     private static final String[] EMPTY = new String[0];
 
+    /**
+     * Returns the email address of the workflow owner. Multiple addresses are
+     * separated by comma.
+     *
+     * @return an e-mail address
+     */
     public String owner() {
         return m_owner;
     }
 
-    public void owner(final String s) {
-        m_owner = s;
+    /**
+     * Sets the email address of the workflow owner. Multiple addresses can be
+     * separated by comma.
+     *
+     * @param address an e-mail address
+     */
+    public void owner(final String address) {
+        m_owner = address;
     }
 
+    /**
+     * Returns a list of required error messages in the log file.
+     *
+     * @return a list with error messages
+     */
     public List<String> requiredLogErrors() {
         return Collections.unmodifiableList(m_requiredLogErrors);
     }
 
+    /**
+     * Returns a list of required warning messages in the log file.
+     *
+     * @return a list with warning messages
+     */
     public List<String> requiredLogWarnings() {
         return Collections.unmodifiableList(m_requiredLogWarnings);
     }
 
+    /**
+     * Returns a list of required info messages in the log file.
+     *
+     * @return a list with info messages
+     */
     public List<String> requiredLogInfos() {
         return Collections.unmodifiableList(m_requiredLogInfos);
     }
 
-    public List<String> requiredLogDebugs() {
-        return Collections.unmodifiableList(m_requiredLogDebugs);
+    /**
+     * Returns a set with the IDs of the nodes that must fail during the test.
+     *
+     * @return a set with node IDs <b>without</b> the root prefix.
+     *
+     * @see NodeID#getIDWithoutRoot()
+     */
+    public Set<String> failingNodes() {
+        return Collections.unmodifiableSet(m_failingNodes);
     }
 
-    public List<String> failingNodes() {
-        return Collections.unmodifiableList(m_failingNodes);
+    /**
+     * Returns a map with required error messages for individual nodes. The
+     * map's keys are the node's ID (without the root prefix), the values are
+     * the messages.
+     *
+     * @return a map with required error messages
+     */
+    public Map<String, String> requiredNodeErrors() {
+        return Collections.unmodifiableMap(m_requiredNodeErrors);
     }
 
-    public List<String> requiredNodeWarnings() {
-        return Collections.unmodifiableList(m_requiredNodeWarnings);
+    /**
+     * Returns a map with required warning messages for individual nodes. The
+     * map's keys are the node's ID (without the root prefix), the values are
+     * the messages.
+     *
+     * @return a map with required warning messages
+     */
+    public Map<String, String> requiredNodeWarnings() {
+        return Collections.unmodifiableMap(m_requiredNodeWarnings);
     }
 
+    /**
+     * Sets the required error messages in the log file.
+     *
+     * @param col a collection with error messages
+     */
     public void requiredLogErrors(final Collection<String> col) {
         m_requiredLogErrors.clear();
         m_requiredLogErrors.addAll(col);
     }
 
+    /**
+     * Sets the required warning messages in the log file.
+     *
+     * @param col a collection with warning messages
+     */
     public void requiredLogWarnings(final Collection<String> col) {
         m_requiredLogWarnings.clear();
         m_requiredLogWarnings.addAll(col);
     }
 
+    /**
+     * Sets the required info messages in the log file.
+     *
+     * @param col a collection with info messages
+     */
     public void requiredLogInfos(final Collection<String> col) {
         m_requiredLogInfos.clear();
         m_requiredLogInfos.addAll(col);
     }
 
-    public void requiredLogDebugs(final Collection<String> col) {
-        m_requiredLogDebugs.clear();
-        m_requiredLogDebugs.addAll(col);
+    /**
+     * Adds a node that must fail during the test. The node's ID must be given
+     * without the root prefix.
+     *
+     * @param nodeID the node's id without the root prefix
+     *
+     * @see NodeID#getIDWithoutRoot()
+     */
+    public void addFailingNode(final String nodeID) {
+        m_failingNodes.add(nodeID);
     }
 
-    public void failingNodes(final Collection<String> col) {
-        m_failingNodes.clear();
-        m_failingNodes.addAll(col);
+    /**
+     * Removes a node that must fail during the test. The node's ID must be
+     * given without the root prefix.
+     *
+     * @param nodeID the node's id without the root prefix
+     *
+     * @see NodeID#getIDWithoutRoot()
+     */
+    public void removeFailingNode(final String nodeID) {
+        m_failingNodes.remove(nodeID);
     }
 
-    public void requiredNodeWarnings(final Collection<String> col) {
-        m_requiredNodeWarnings.clear();
-        m_requiredNodeWarnings.addAll(col);
+    /**
+     * Sets a required warning message on a node.
+     *
+     * @param nodeID the node's ID without the root prefix
+     * @param message the expected message
+     */
+    public void setRequiredNodeWarning(final String nodeID, final String message) {
+        if (message == null) {
+            m_requiredNodeWarnings.remove(nodeID);
+        } else {
+            m_requiredNodeWarnings.put(nodeID, message);
+        }
     }
 
+    /**
+     * Sets a required error message on a node.
+     *
+     * @param nodeID the node's ID without the root prefix
+     * @param message the expected message
+     */
+    public void setRequiredNodeError(final String nodeID, final String message) {
+        if (message == null) {
+            m_requiredNodeErrors.remove(nodeID);
+        } else {
+            m_requiredNodeErrors.put(nodeID, message);
+        }
+    }
+
+    /**
+     * Loads the settings from the given settings object.
+     *
+     * @param settings a node settings object
+     * @throws InvalidSettingsException if an expected setting is missing
+     */
     public void loadSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_owner = settings.getString("owner");
@@ -164,25 +278,41 @@ public class TestConfigSettings {
             m_requiredLogInfos.add(s);
         }
 
-        temp = settings.getStringArray("requiredLogDebugs");
-        m_requiredLogDebugs.clear();
-        for (String s : temp) {
-            m_requiredLogDebugs.add(s);
-        }
-
         temp = settings.getStringArray("failingNodes");
         m_failingNodes.clear();
         for (String s : temp) {
             m_failingNodes.add(s);
         }
 
-        temp = settings.getStringArray("requiredNodeWarnings");
         m_requiredNodeWarnings.clear();
-        for (String s : temp) {
-            m_requiredNodeWarnings.add(s);
+        NodeSettingsRO subs = settings.getNodeSettings("requiredNodeWarnings");
+        int count = subs.getInt("count", 0);
+        for (int i = 0; i < count; i++) {
+            String nodeID = subs.getString("nodeID_" + i, null);
+            String message = subs.getString("message_" + i, null);
+            if ((nodeID != null) && (message != null)) {
+                m_requiredNodeWarnings.put(nodeID, message);
+            }
+        }
+
+        m_requiredNodeErrors.clear();
+        subs = settings.getNodeSettings("requiredNodeErrors");
+        count = subs.getInt("count", 0);
+        for (int i = 0; i < count; i++) {
+            String nodeID = subs.getString("nodeID_" + i, null);
+            String message = subs.getString("message_" + i, null);
+            if ((nodeID != null) && (message != null)) {
+                m_requiredNodeErrors.put(nodeID, message);
+            }
         }
     }
 
+    /**
+     * Loads the settings from the given settings object using default values
+     * for missing settings.
+     *
+     * @param settings a node settings object
+     */
     public void loadSettingsForDialog(final NodeSettingsRO settings) {
         m_owner = settings.getString("owner", null);
         if (m_owner == null) {
@@ -207,25 +337,48 @@ public class TestConfigSettings {
             m_requiredLogInfos.add(s);
         }
 
-        temp = settings.getStringArray("requiredLogDebugs", EMPTY);
-        m_requiredLogDebugs.clear();
-        for (String s : temp) {
-            m_requiredLogDebugs.add(s);
-        }
-
         temp = settings.getStringArray("failingNodes", EMPTY);
         m_failingNodes.clear();
         for (String s : temp) {
             m_failingNodes.add(s);
         }
 
-        temp = settings.getStringArray("requiredNodeWarnings", EMPTY);
         m_requiredNodeWarnings.clear();
-        for (String s : temp) {
-            m_requiredNodeWarnings.add(s);
+        try {
+            NodeSettingsRO subs =
+                    settings.getNodeSettings("requiredNodeWarnings");
+            int count = subs.getInt("count", 0);
+            for (int i = 0; i < count; i++) {
+                String nodeID = subs.getString("nodeID_" + i, null);
+                String message = subs.getString("message_" + i, null);
+                if ((nodeID != null) && (message != null)) {
+                    m_requiredNodeWarnings.put(nodeID, message);
+                }
+            }
+        } catch (InvalidSettingsException ex) {
+        }
+
+        m_requiredNodeErrors.clear();
+        try {
+            NodeSettingsRO subs =
+                    settings.getNodeSettings("requiredNodeErrors");
+            int count = subs.getInt("count", 0);
+            for (int i = 0; i < count; i++) {
+                String nodeID = subs.getString("nodeID_" + i, null);
+                String message = subs.getString("message_" + i, null);
+                if ((nodeID != null) && (message != null)) {
+                    m_requiredNodeErrors.put(nodeID, message);
+                }
+            }
+        } catch (InvalidSettingsException ex) {
         }
     }
 
+    /**
+     * Saves the settings into the given settings object.
+     *
+     * @param settings a node settings object
+     */
     public void saveSettings(final NodeSettingsWO settings) {
         settings.addString("owner", m_owner);
         settings.addStringArray("requiredLogErrors",
@@ -234,10 +387,24 @@ public class TestConfigSettings {
                 m_requiredLogWarnings.toArray(EMPTY));
         settings.addStringArray("requiredLogInfos",
                 m_requiredLogInfos.toArray(EMPTY));
-        settings.addStringArray("requiredLogDebugs",
-                m_requiredLogDebugs.toArray(EMPTY));
         settings.addStringArray("failingNodes", m_failingNodes.toArray(EMPTY));
-        settings.addStringArray("requiredNodeWarnings",
-                m_requiredNodeWarnings.toArray(EMPTY));
+
+        NodeSettingsWO subs = settings.addNodeSettings("requiredNodeWarnings");
+        int i = 0;
+        for (Map.Entry<String, String> e : m_requiredNodeWarnings.entrySet()) {
+            subs.addString("nodeID_" + i, e.getKey());
+            subs.addString("message_" + i, e.getValue());
+            i++;
+        }
+        subs.addInt("count", i);
+
+        subs = settings.addNodeSettings("requiredNodeErrors");
+        i = 0;
+        for (Map.Entry<String, String> e : m_requiredNodeErrors.entrySet()) {
+            subs.addString("nodeID_" + i, e.getKey());
+            subs.addString("message_" + i, e.getValue());
+            i++;
+        }
+        subs.addInt("count", i);
     }
 }

@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -61,7 +62,9 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
+import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.testing.node.config.TestConfigSettings;
 
 /**
  * Holds the config of a test case. That is, the settings that should be applied
@@ -92,62 +95,122 @@ public class TestingConfig extends AppenderSkeleton {
      */
     public static final String SUCCESS_MSG = "Test succeeded.";
 
-    private List<String> m_owners;
+    private final List<String> m_owners = new ArrayList<String>();
 
-    private Collection<MsgPattern> m_requiredErrors;
+    private final Collection<MsgPattern> m_requiredErrors =
+            new ArrayList<MsgPattern>();
 
-    private Collection<MsgPattern> m_requiredWarnings;
+    private final Collection<MsgPattern> m_requiredWarnings =
+            new ArrayList<MsgPattern>();
 
-    private Collection<MsgPattern> m_requiredInfos;
+    private final Collection<MsgPattern> m_requiredInfos =
+            new ArrayList<MsgPattern>();
 
-    private Collection<MsgPattern> m_requiredDebugs;
+    private final Collection<MsgPattern> m_requiredDebugs =
+            new ArrayList<MsgPattern>();
 
     // node IDs are strings like "0:1:4" - but only the ID without prefix!
-    private Set<String> m_requiredUnexecutedNodes;
+    private final Set<String> m_requiredUnexecutedNodes = new HashSet<String>();
 
     // file readers loaded in as executed nodes are expected to have a warning
-    // (file <blah> not accessible anymore). This store their ID (like "0:1:3")
+    // (file <blah> not accessible anymore). This stores their ID (like "0:1:3")
     // without prefix
-    private Set<String> m_preExecutedNodes;
+    private final Set<String> m_preExecutedNodes = new HashSet<String>();
 
     // maps node IDs (strings like "0:1:4" w/o prefix) to messages
-    private Map<String, MsgPattern> m_warningStatus;
+    private final Map<String, MsgPattern> m_warningStatus =
+            new HashMap<String, MsgPattern>();
 
     // maps node IDs (strings like "0:1:4" w/o prefix) to messages
-    private Map<String, MsgPattern> m_errorStatus;
+    private final Map<String, MsgPattern> m_errorStatus =
+            new HashMap<String, MsgPattern>();
 
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(TestingConfig.class);
+    private static final NodeLogger LOGGER = NodeLogger
+            .getLogger(TestingConfig.class);
 
-    private int m_maxlines;
+    private final int m_maxlines;
 
-    private LinkedList<String> m_unexpectedErrors;
+    private LinkedList<String> m_unexpectedErrors = new LinkedList<String>();
 
-    private LinkedList<String> m_exceptions;
+    private LinkedList<String> m_exceptions = new LinkedList<String>();
+
+    private final boolean m_newConfig;
 
     /**
-     * Constructor. Adds itself as appender to the root logger.
+     * Constructor using files for getting the configuration. Adds itself as
+     * appender to the root logger.
      *
-     * @param test the test case we get messages from.
-     * @param maxLines the last maxLines messages will be stored.
+     * @param maxLines the last maxLines messages will be stored
+     * @param ownerFile the file that contains the owner's email address
+     * @param statusFile the file that contains required node status or log file
+     *            messages
+     *
+     * @throws InvalidSettingsException if the status file contains invalid
+     *             entries
+     * @throws IOException if an I/O error occurs while reading the files
      */
-    public TestingConfig(final int maxLines) {
-
-        m_requiredErrors = new LinkedList<MsgPattern>();
-        m_requiredWarnings = new LinkedList<MsgPattern>();
-        m_requiredInfos = new LinkedList<MsgPattern>();
-        m_requiredDebugs = new LinkedList<MsgPattern>();
-        m_requiredUnexecutedNodes = new HashSet<String>();
-        m_errorStatus = new HashMap<String, MsgPattern>();
-        m_warningStatus = new HashMap<String, MsgPattern>();
-        m_preExecutedNodes = new HashSet<String>();
-
-        m_owners = null;
-
+    public TestingConfig(final int maxLines, final File ownerFile,
+            final File statusFile) throws IOException, InvalidSettingsException {
+        m_newConfig = false;
         m_maxlines = maxLines;
-        m_unexpectedErrors = new LinkedList<String>();
-        m_exceptions = new LinkedList<String>();
+        readOwners(ownerFile);
+        readNodeStatusFile(statusFile);
+        addAppender();
+    }
 
+    /**
+     * Constructor using a testflow configuration node for getting the
+     * configuration. Adds itself as appender to the root logger.
+     *
+     * @param maxLines the last maxLines messages will be stored
+     * @param configNode the node from which the configuration should be read
+     *
+     * @throws InvalidSettingsException if the node's settings cannot be read
+     *             properly
+     */
+    public TestingConfig(final int maxLines,
+            final SingleNodeContainer configNode)
+            throws InvalidSettingsException {
+        m_newConfig = true;
+        m_maxlines = maxLines;
+
+        NodeSettings s = new NodeSettings("");
+        configNode.getNode().saveSettingsTo(s);
+        TestConfigSettings settings = new TestConfigSettings();
+        settings.loadSettings(s.getNodeSettings(Node.CFG_MODEL));
+
+        for (String owner : settings.owner().split(",")) {
+            m_owners.add(owner);
+        }
+
+        for (String error : settings.requiredLogErrors()) {
+            m_requiredErrors.add(new MsgPattern(error));
+        }
+
+        for (String warning : settings.requiredLogWarnings()) {
+            m_requiredWarnings.add(new MsgPattern(warning));
+        }
+
+        for (String info : settings.requiredLogInfos()) {
+            m_requiredInfos.add(new MsgPattern(info));
+        }
+
+        m_requiredUnexecutedNodes.addAll(settings.failingNodes());
+
+        for (Map.Entry<String, String> e : settings.requiredNodeErrors()
+                .entrySet()) {
+            m_errorStatus.put(e.getKey(), new MsgPattern(e.getValue()));
+        }
+
+        for (Map.Entry<String, String> e : settings.requiredNodeWarnings()
+                .entrySet()) {
+            m_warningStatus.put(e.getKey(), new MsgPattern(e.getValue()));
+        }
+
+        addAppender();
+    }
+
+    private void addAppender() {
         Logger root = Logger.getRootLogger();
         LevelRangeFilter filter = new LevelRangeFilter();
         filter.setLevelMin(Level.DEBUG);
@@ -157,35 +220,31 @@ public class TestingConfig extends AppenderSkeleton {
     }
 
     /**
-     * Reads the owners of the test from the specified owner file.
+     * Reads the owners of the test from the specified owner file. A
+     * non-existing file is ignored.
      *
      * @param ownerFile the file containing the owners of the test case. Each
      *            line of the file must contain one email address.
-     * @return the number of owners read (lines in the file)
-     * @throws IOException if an I/O Error occurred.
+     * @throws IOException if an I/O error occurrs
      */
-    public int setOwners(final File ownerFile) throws IOException {
-        int count = 0;
+    private void readOwners(final File ownerFile) throws IOException {
         if (ownerFile.exists()) {
-            m_owners = new LinkedList<String>();
             FileReader fileR = new FileReader(ownerFile);
             BufferedReader r = new BufferedReader(fileR);
             String line = null;
             while ((line = r.readLine()) != null) {
                 if (line.trim().length() > 0) {
-                    count++;
                     m_owners.add(line.trim());
                 }
             }
         }
-        return count;
     }
 
     /**
      * Returns the comma separated list of owners.
      *
-     * @return the comma separated list of owners of this test case, or null if
-     *         no owner is set.
+     * @return the comma separated list of owners of this test case, or
+     *         <code>null</code> if no owner is set
      */
     public String getOwners() {
         if (m_owners == null) {
@@ -221,7 +280,8 @@ public class TestingConfig extends AppenderSkeleton {
 
                 /*
                  * An Exception starts with a line containing "....Exception:
-                 * ..." followed by a line starting with "<TAB>at ...blah...:<linenumber>)"
+                 * ..." followed by a line starting with "<TAB>at
+                 * ...blah...:<linenumber>)"
                  */
                 for (String line : lines) {
                     if (line.indexOf("Exception: ") > 0) {
@@ -289,7 +349,7 @@ public class TestingConfig extends AppenderSkeleton {
                 continue;
             }
             String status = nc.getNodeMessage().getMessageType().name();
-            m_preExecutedNodes.add(shortID(nc, prefix));
+            m_preExecutedNodes.add(getNodeID(nc, prefix));
             LOGGER.debug("Registering node " + nc.getNameWithID()
                     + " as pre-executed with a " + status + " status");
         }
@@ -300,7 +360,6 @@ public class TestingConfig extends AppenderSkeleton {
      */
     public void disconnect() {
         Category.getRoot().removeAppender(this);
-
     }
 
     /**
@@ -323,7 +382,7 @@ public class TestingConfig extends AppenderSkeleton {
     }
 
     /**
-     * reads in each line of the options file, parses it, replaces $$location$$
+     * Reads in each line of the options file, parses it, replaces $$location$$
      * in each value with the location of the options file and applies the
      * changes to the workflow settings. If the options file doesn't exist it
      * does nothing.
@@ -339,7 +398,6 @@ public class TestingConfig extends AppenderSkeleton {
      */
     public void applySettings(final File optionsFile, final WorkflowManager wfm)
             throws FileNotFoundException, InvalidSettingsException, IOException {
-
         if (!optionsFile.exists()) {
             return;
         }
@@ -396,7 +454,6 @@ public class TestingConfig extends AppenderSkeleton {
         }
 
         applySettingsModifications(options, wfm);
-
     }
 
     private void applySettingsModifications(final List<Option> options,
@@ -528,9 +585,8 @@ public class TestingConfig extends AppenderSkeleton {
      * @throws InvalidSettingsException if the settings in the file are
      *             incorrect
      */
-    public void readNodeStatusFile(final File statusFile)
+    private void readNodeStatusFile(final File statusFile)
             throws FileNotFoundException, IOException, InvalidSettingsException {
-
         if (!statusFile.exists()) {
             return;
         }
@@ -560,7 +616,6 @@ public class TestingConfig extends AppenderSkeleton {
         }
 
         statusReader.close();
-
     }
 
     /**
@@ -587,8 +642,8 @@ public class TestingConfig extends AppenderSkeleton {
             msgList = m_requiredDebugs;
             infoMsg = "DEBUG";
         } else {
-            // call this method only in one of these four cases
-            assert false;
+            // ignore this line
+            return;
         }
 
         MsgPattern msg = extractMessagePart(line);
@@ -599,7 +654,6 @@ public class TestingConfig extends AppenderSkeleton {
 
         msgList.add(msg);
         LOGGER.debug("Expecting " + infoMsg + " message during test: " + msg);
-
     }
 
     /**
@@ -697,7 +751,6 @@ public class TestingConfig extends AppenderSkeleton {
             }
 
             if (stats[0].toUpperCase().startsWith("ERR")) {
-
                 /*
                  * if a node is supposed to have an error status then it is
                  * supposed to fail during execution. Add the failure messages
@@ -721,14 +774,11 @@ public class TestingConfig extends AppenderSkeleton {
                  */
                 // add message of the error status to the list of expected msgs
                 m_requiredErrors.add(statMsg);
-
             } else if (stats[0].toUpperCase().startsWith("WARN")) {
-
                 m_warningStatus.put(nodeID, statMsg);
-                if (msg == null) {
-                    msg = "Node #" + nodeID;
-                }
-                msg += " should have a warning status '" + statMsg + "'";
+                msg =
+                        "Node #" + nodeID + " should have a warning status '"
+                                + statMsg + "'";
 
                 /*
                  * a warning status also creates a warn message in the log file
@@ -736,7 +786,6 @@ public class TestingConfig extends AppenderSkeleton {
                  */
                 // add message of the warn status to the list of expected msgs
                 m_requiredWarnings.add(statMsg);
-
             } else {
                 throw new InvalidSettingsException(
                         "Invalid line in status file "
@@ -819,10 +868,11 @@ public class TestingConfig extends AppenderSkeleton {
             if (status != null
                     && status.getMessageType().equals(NodeMessage.Type.ERROR)) {
 
-                MsgPattern expMsg = m_errorStatus.get(shortID(node, idPrefix));
+                MsgPattern expMsg =
+                        m_errorStatus.get(getNodeID(node, idPrefix));
                 if (expMsg == null) {
                     // node was not expected to finish with an error status
-                    if (!m_preExecutedNodes.contains(shortID(node, idPrefix))) {
+                    if (!m_preExecutedNodes.contains(getNodeID(node, idPrefix))) {
                         // complain only if the node was not loaded in executed
                         String msg =
                                 "Node '" + node.getNameWithID() + "' has an "
@@ -863,10 +913,10 @@ public class TestingConfig extends AppenderSkeleton {
                     && status.getMessageType().equals(NodeMessage.Type.WARNING)) {
 
                 MsgPattern expMsg =
-                        m_warningStatus.get(shortID(node, idPrefix));
+                        m_warningStatus.get(getNodeID(node, idPrefix));
                 if (expMsg == null) {
                     // Node was not supposed to finish with a warning status
-                    if (!m_preExecutedNodes.contains(shortID(node, idPrefix))) {
+                    if (!m_preExecutedNodes.contains(getNodeID(node, idPrefix))) {
                         // Complain only if node was not loaded in executed
                         String msg =
                                 "Node '"
@@ -905,7 +955,7 @@ public class TestingConfig extends AppenderSkeleton {
                     // Pre-Executed nodes with warning status don't create
                     // log entries - except for reader nodes. Remove the
                     // message from the list of required messages!
-                    if (m_preExecutedNodes.contains(shortID(node, idPrefix))
+                    if (m_preExecutedNodes.contains(getNodeID(node, idPrefix))
                             && !isReaderNode(node)) {
                         String nodeWarnMsg = status.getMessage();
                         Iterator<MsgPattern> warns =
@@ -913,10 +963,10 @@ public class TestingConfig extends AppenderSkeleton {
                         while (warns.hasNext()) {
                             MsgPattern warn = warns.next();
                             if (warn.matches(nodeWarnMsg)) {
-                                LOGGER.debug(
-                                        "Removing warn message from required "
+                                LOGGER.debug("Removing warn message from required "
                                         + "warn messages (it is a pre-executed "
-                                        + "node (" + node.getNameWithID()
+                                        + "node ("
+                                        + node.getNameWithID()
                                         + ") with declared status) Msg:"
                                         + nodeWarnMsg);
                                 warns.remove();
@@ -930,7 +980,7 @@ public class TestingConfig extends AppenderSkeleton {
                 // no or unknown status
 
                 MsgPattern expMsg =
-                        m_warningStatus.get(shortID(node, idPrefix));
+                        m_warningStatus.get(getNodeID(node, idPrefix));
                 if (expMsg != null) {
                     String msg =
                             "Node '"
@@ -979,12 +1029,16 @@ public class TestingConfig extends AppenderSkeleton {
      * @return the node's ID w/o prefix or the full ID if the ID was not
      *         prefixed with the prefix
      */
-    private String shortID(final NodeContainer nc, final String prefix) {
-        String nodeID = nc.getID().toString();
-        if (nodeID.startsWith(prefix)) {
-            return nodeID.substring(prefix.length());
+    private String getNodeID(final NodeContainer nc, final String prefix) {
+        if (m_newConfig) {
+            return nc.getID().getIDWithoutRoot();
         } else {
-            return nodeID;
+            String nodeID = nc.getID().toString();
+            if (nodeID.startsWith(prefix)) {
+                return nodeID.substring(prefix.length());
+            } else {
+                return nodeID;
+            }
         }
     }
 
@@ -1036,7 +1090,8 @@ public class TestingConfig extends AppenderSkeleton {
             missingMessages = true;
             for (MsgPattern msg : m_requiredWarnings) {
                 LOGGER.info("Missing WARNING msg: \"" + msg + "\"");
-                buf.append("\t * Missing WARNING msg: ").append(msg).append('\n');
+                buf.append("\t * Missing WARNING msg: ").append(msg)
+                        .append('\n');
             }
             LOGGER.error("Missing required WARNING messages in the "
                     + "test output");
@@ -1151,7 +1206,6 @@ public class TestingConfig extends AppenderSkeleton {
          * @return true if the message matches the pattern, false otherwise.
          */
         public boolean matches(final String actualMsg) {
-
             if (m_regExpr == null) {
                 // no regular expression - do a normal string equals
                 return m_msg.equals(actualMsg); // (m_msg can't be null)
@@ -1174,12 +1228,10 @@ public class TestingConfig extends AppenderSkeleton {
                 return false;
             }
             String msgRegExpr =
-                    actualMsg.substring(m_patternPart1.length(), actualMsg
-                            .length()
-                            - m_patternPart3.length());
+                    actualMsg.substring(m_patternPart1.length(),
+                            actualMsg.length() - m_patternPart3.length());
             Matcher matcher = m_regExpr.matcher(msgRegExpr);
             return matcher.matches();
-
         }
 
         /**
@@ -1197,6 +1249,14 @@ public class TestingConfig extends AppenderSkeleton {
         @Override
         public String toString() {
             return m_msg;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            return super.hashCode();
         }
     }
 }

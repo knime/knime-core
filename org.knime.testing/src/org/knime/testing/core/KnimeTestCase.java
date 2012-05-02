@@ -41,11 +41,14 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.KNIMETimer;
+import org.knime.testing.node.config.TestConfigNodeModel;
 
 // TODO: check, that the number of correct results corresponds to the number
 // of out-ports of the node under test
@@ -71,8 +74,8 @@ public class KnimeTestCase extends TestCase {
      */
     public final static String REGRESSIONS_OWNER = "peter.ohl@uni-konstanz.de";
 
-    private static final NodeLogger logger =
-            NodeLogger.getLogger(KnimeTestCase.class);
+    private static final NodeLogger logger = NodeLogger
+            .getLogger(KnimeTestCase.class);
 
     /**
      * The maximum runtime for a single testcase in seconds. After the timeout
@@ -115,68 +118,67 @@ public class KnimeTestCase extends TestCase {
     public void setUp() throws InvalidSettingsException,
             CanceledExecutionException, IOException {
 
-        // registers itself as appender to the logger:
-        m_testConfig = new TestingConfig(100);
-
-        // read in the owners of the test case
-        File ownerFile = new File(m_knimeWorkFlow.getParentFile(), OWNER_FILE);
-        m_testConfig.setOwners(ownerFile);
-
         logger.info("<Start> Test='"
                 + m_knimeWorkFlow.getParentFile().getName()
                 + "' --------------------------------------------------------");
-        // be sure to always add an owner to the log file
-        String owners = m_testConfig.getOwners();
-        if ((owners != null) && (owners.length() > 0)) {
-            logger.info("TestOwners=" + owners);
-        } else {
-            logger.info("TestOwners=" + REGRESSIONS_OWNER);
-            // Fail if no owner is set!
-            logger.error("No owner set in test '"
-                    + m_knimeWorkFlow.getParentFile().getName()
-                    + "'. Please create an owner file in the test directory.");
-            wrapUp();
-            fail();
-
-        }
-
         logger.debug("Workflow location: " + m_knimeWorkFlow.getParent()
                 + " -------------------------");
+        logger.debug("Loading workflow ----------------------------"
+                + "--------------");
 
-        // start here the workflow
         try {
-            // read in the node status file before loading the workflow.
-            // this way autoexecuted nodes are captured, too.
-            File statusFile =
-                new File(m_knimeWorkFlow.getParentFile(), STATUS_FILE);
-            m_testConfig.readNodeStatusFile(statusFile);
-
-            logger.debug("Loading workflow ----------------------------"
-                    + "--------------");
-
-            WorkflowLoadResult loadRes = WorkflowManager.loadProject(
-                    m_knimeWorkFlow.getParentFile(),
-                    new ExecutionMonitor(), WorkflowLoadHelper.INSTANCE);
-
+            WorkflowLoadResult loadRes =
+                    WorkflowManager
+                            .loadProject(m_knimeWorkFlow.getParentFile(),
+                                    new ExecutionMonitor(),
+                                    WorkflowLoadHelper.INSTANCE);
             boolean mustReportErrors;
             switch (loadRes.getType()) {
-            case Ok:
-            case Warning:
-                mustReportErrors = false;
-                break;
-            case DataLoadError:
-                mustReportErrors = loadRes.getGUIMustReportDataLoadErrors();
-                break;
-            default:
-                mustReportErrors = true;
+                case Ok:
+                case Warning:
+                    mustReportErrors = false;
+                    break;
+                case DataLoadError:
+                    mustReportErrors = loadRes.getGUIMustReportDataLoadErrors();
+                    break;
+                default:
+                    mustReportErrors = true;
             }
             if (mustReportErrors) {
-                logger.error(loadRes.getFilteredError(
-                        "", LoadResultEntryType.Warning));
+                logger.error(loadRes.getFilteredError("",
+                        LoadResultEntryType.Warning));
             }
             m_manager = loadRes.getWorkflowManager();
             logger.debug("Workflow loaded ----------------------------"
                     + "--------------");
+
+            SingleNodeContainer configNode = findConfigNode();
+            if (configNode != null) {
+                m_testConfig = new TestingConfig(100, configNode);
+            } else {
+                File ownerFile =
+                        new File(m_knimeWorkFlow.getParentFile(), OWNER_FILE);
+                File statusFile =
+                        new File(m_knimeWorkFlow.getParentFile(), STATUS_FILE);
+
+                m_testConfig = new TestingConfig(100, ownerFile, statusFile);
+            }
+
+            // be sure to always add an owner to the log file
+            String owners = m_testConfig.getOwners();
+            if ((owners != null) && (owners.length() > 0)) {
+                logger.info("TestOwners=" + owners);
+            } else {
+                logger.info("TestOwners=" + REGRESSIONS_OWNER);
+                // Fail if no owner is set!
+                logger.error("No owner set in test '"
+                        + m_knimeWorkFlow.getParentFile().getName()
+                        + "'. Please create an owner file in the test directory"
+                        + " or add a Testflow Configuration node to the "
+                        + "workflow.");
+                wrapUp();
+                fail();
+            }
 
             // remember the executed nodes (before executing) to not
             // complain about their warning status later.
@@ -186,7 +188,6 @@ public class KnimeTestCase extends TestCase {
             File optionsFile =
                     new File(m_knimeWorkFlow.getParentFile(), OPTIONS_FILE);
             m_testConfig.applySettings(optionsFile, m_manager);
-
         } catch (IOException ex) {
             String msg = ex.getMessage();
             logger.error("I/O Error during workflow loading:"
@@ -215,43 +216,44 @@ public class KnimeTestCase extends TestCase {
     @Override
     public void runTest() {
         final Set<AbstractNodeView<? extends NodeModel>> allViews =
-            new HashSet<AbstractNodeView<? extends NodeModel>>();
+                new HashSet<AbstractNodeView<? extends NodeModel>>();
 
-        /* disabling node views to workaround problems with
+        /*
+         * disabling node views to workaround problems with
          * SyntheticImageGenerator:
-         * http://bugs.sun.com/bugdatabase/view_bug.do;jsessionid=d544ef8157d74565d9f7aee881430?bug_id=6967484
+         * http://bugs.sun.com/bugdatabase/view_bug.do;jsessionid
+         * =d544ef8157d74565d9f7aee881430?bug_id=6967484
          * http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6419354
          *
-         * See also KNIME bug 2562:
-         * Enable NodeViews in test cases (disabled due to java bug in
-         * SyntheticImageGenerator)
+         * See also KNIME bug 2562: Enable NodeViews in test cases (disabled due
+         * to java bug in SyntheticImageGenerator)
          */
-//        for (NodeContainer nodeCont : m_manager.getNodeContainers()) {
-//            for (int i = 0; i < nodeCont.getNrViews(); i++) {
-//                logger.debug("opening view nr. " + i + " for node "
-//                        + nodeCont.getName());
-//                final AbstractNodeView<? extends NodeModel> view =
-//                    nodeCont.getView(i);
-//                final int index = i;
-//                // store the view in order to close is after the test finishes
-//                allViews.add(view);
-//                // open it now.
-//                ViewUtils.invokeAndWaitInEDT(new Runnable() {
-//                    /** {@inheritDoc} */
-//                    @Override
-//                    public void run() {
-//                        Node.invokeOpenView(view, "View #" + index);
-//                    }
-//                });
-//            }
-//        }
+        // for (NodeContainer nodeCont : m_manager.getNodeContainers()) {
+        // for (int i = 0; i < nodeCont.getNrViews(); i++) {
+        // logger.debug("opening view nr. " + i + " for node "
+        // + nodeCont.getName());
+        // final AbstractNodeView<? extends NodeModel> view =
+        // nodeCont.getView(i);
+        // final int index = i;
+        // // store the view in order to close is after the test finishes
+        // allViews.add(view);
+        // // open it now.
+        // ViewUtils.invokeAndWaitInEDT(new Runnable() {
+        // /** {@inheritDoc} */
+        // @Override
+        // public void run() {
+        // Node.invokeOpenView(view, "View #" + index);
+        // }
+        // });
+        // }
+        // }
         TimerTask timeout = new TimerTask() {
             @Override
             public void run() {
                 logger.error("Workflow is running longer than " + TIMEOUT
                         + " seconds, dumping status, followed by cancel:");
                 String status =
-                    m_manager.printNodeSummary(m_manager.getID(), 0);
+                        m_manager.printNodeSummary(m_manager.getID(), 0);
                 logger.error("------- Status before Cancel (Start) ----------");
                 dumpToLogError(status);
                 logger.error("------- Status before Cancel (End) ------------");
@@ -272,14 +274,14 @@ public class KnimeTestCase extends TestCase {
         };
         try {
             try {
-            KNIMETimer.getInstance().schedule(timeout, TIMEOUT * 1000);
+                KNIMETimer.getInstance().schedule(timeout, TIMEOUT * 1000);
 
-            // execute all nodes.
-            logger.info("Executing workflow ----------------------");
+                // execute all nodes.
+                logger.info("Executing workflow ----------------------");
 
-            m_manager.executeAllAndWaitUntilDone();
+                m_manager.executeAllAndWaitUntilDone();
 
-            timeout.cancel();
+                timeout.cancel();
 
             } catch (Throwable t) {
                 String msg = t.getMessage();
@@ -289,27 +291,27 @@ public class KnimeTestCase extends TestCase {
                 throw t;
             }
             try {
-            // evaluate the results
-            logger.info("Analyzing executed workflow ----------------------");
-            /*
-             * 1) make sure all nodes are executed (or nodes not supposed to
-             * execute are not executed).
-             */
-            m_testConfig.checkNodeExecution(m_manager);
+                // evaluate the results
+                logger.info("Analyzing executed workflow ----------------------");
+                /*
+                 * 1) make sure all nodes are executed (or nodes not supposed to
+                 * execute are not executed).
+                 */
+                m_testConfig.checkNodeExecution(m_manager);
 
-            /*
-             * 2) check the status (warning and/or error) of the nodes.
-             */
-            m_testConfig.checkNodeStatus(m_manager);
+                /*
+                 * 2) check the status (warning and/or error) of the nodes.
+                 */
+                m_testConfig.checkNodeStatus(m_manager);
 
-            /*
-             * the above checks only write errors into the log file - thus the
-             * next step decides whether the test fails or succeeds:
-             *
-             * 3) make sure all expected/required messages appeared and no
-             * unexpected error message showed up. (We do that always - thus we
-             * let it fall through finally.)
-             */
+                /*
+                 * the above checks only write errors into the log file - thus
+                 * the next step decides whether the test fails or succeeds:
+                 *
+                 * 3) make sure all expected/required messages appeared and no
+                 * unexpected error message showed up. (We do that always - thus
+                 * we let it fall through finally.)
+                 */
             } catch (Throwable t) {
                 String msg = t.getMessage();
                 logger.error("Caught a " + t.getClass().getSimpleName()
@@ -375,8 +377,8 @@ public class KnimeTestCase extends TestCase {
         boolean doSave = true;
         if (!m_saveLoc.exists()) {
             if (!m_saveLoc.mkdirs()) {
-                logger.info("Unable to create dir :"
-                        + m_saveLoc + ". Not saving executed workflow.");
+                logger.info("Unable to create dir :" + m_saveLoc
+                        + ". Not saving executed workflow.");
                 doSave = false;
             }
         } else if (!m_saveLoc.isDirectory()) {
@@ -409,5 +411,16 @@ public class KnimeTestCase extends TestCase {
         m_manager.getParent().removeNode(m_manager.getID());
         // throw the workflow away so that the GC can do its work
         m_manager = null;
+    }
+
+    private SingleNodeContainer findConfigNode() {
+        for (NodeContainer cont : m_manager.getNodeContainers()) {
+            if (cont instanceof SingleNodeContainer) {
+                if (((SingleNodeContainer)cont).getNodeModel() instanceof TestConfigNodeModel) {
+                    return (SingleNodeContainer)cont;
+                }
+            }
+        }
+        return null;
     }
 }

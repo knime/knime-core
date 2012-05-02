@@ -55,11 +55,12 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
+ * This factory creates all necessary object for the testflow configuration
+ * node.
  *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class TestConfigNodeFactory extends NodeFactory<TestConfigNodeModel> {
-
     /**
      * {@inheritDoc}
      */

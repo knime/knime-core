@@ -64,6 +64,9 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
+ * This is the node model for the testflow configuration node. The model
+ * essentially does nothing except for checking if the owner's mail address has
+ * been provided.
  *
  * @author Thorsten Meinl, University of Konstanz
  */
@@ -71,7 +74,7 @@ public class TestConfigNodeModel extends NodeModel {
     private final TestConfigSettings m_settings = new TestConfigSettings();
 
     /**
-     *
+     * Creates a new node model.
      */
     public TestConfigNodeModel() {
         super(0, 0);
@@ -81,16 +84,18 @@ public class TestConfigNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
     }
 
     /**
@@ -126,10 +131,10 @@ public class TestConfigNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        if ((m_settings.owner() == null) || (m_settings.owner().length() < 1)) {
+        if ((m_settings.owner() == null)
+                || (m_settings.owner().trim().length() < 1)) {
             throw new InvalidSettingsException("No workflow owner set");
         }
-        // TODO check format of required log messages and node stati
         return new DataTableSpec[0];
     }
 

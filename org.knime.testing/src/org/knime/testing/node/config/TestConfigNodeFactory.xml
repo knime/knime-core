@@ -1,17 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Other">
-	<name>Testflow Configuration</name>
-	
-	<shortDescription>
-		Configures a workflow test
+<knimeNode type="Other" icon="hammer.png">
+    <name>Testflow Configuration</name>
+
+    <shortDescription>
+        Configures a workflow test.
 	</shortDescription>
-	
-	<fullDescription>
-		<intro>
-			This node holds settings for the workflow test.
-		</intro>
-	</fullDescription>
-	
-	<ports />
+
+    <fullDescription>
+        <intro>
+            This node holds settings for the workflow test. It replaces the
+            config files that have been used previously.
+            <br />
+            The execution of the node does nothing, only the settings entered
+            in the dialog will be read later-on by the
+            testing framework.
+        </intro>
+
+        <tab name="Workflow settings">
+            <option name="Owner's mail address">
+                Enter the e-mail address of the workflow owner here. A mail will be sent
+                to this address
+                if the workflow test fails. You can enter multiple addresses
+                by separating them with commas.
+            </option>
+            <option name="Log Errors, Warnings, Infos">
+                These lists contains error, warning, or info messages that must be present
+                in the log
+                file after the workflows has been fully executed. Usually these
+                are messages written by a NodeLogger.
+            </option>
+        </tab>
+        <tab name="Node settings">
+            <option name="Node must fail">
+                If the node selected in the list above must fail for a successful test,
+                check this
+                option.
+            </option>
+            <option name="Required error message">
+                Enter the error message on the node selected above that must be
+                present after the workflow has been fully executed. If it is not
+                present the test fails.<br />
+                This field is pre-filled with the current error message of the
+                selected node (if there is any), indicated by the gray text color.
+                If you want to really use this message click in the text field,
+                and possibly edit it. Once the text color is black, the message
+                is used.
+            </option>
+            <option name="Required warning message">
+                Enter the error message on the node selected above that must be
+                present after the workflow has been fully executed. If it is not
+                present the test fails.<br />
+                This field is pre-filled with the current error message of the
+                selected node (if there is any), indicated by the gray text color.
+                If you want to really use this message click in the text field,
+                and possibly edit it. Once the text color is black, the message
+                is used.
+            </option>
+        </tab>
+    </fullDescription>
+    <ports />
 </knimeNode>
