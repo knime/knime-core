@@ -392,10 +392,10 @@ public class AnalyzeLogFile {
                 break;
             }
 
-            if (nextLine.endsWith(TestingConfig.FAIL_MSG)) {
+            if (nextLine.endsWith(KnimeTestCase.FAIL_MSG)) {
                 failed = true;
             }
-            if (nextLine.endsWith(TestingConfig.SUCCESS_MSG)) {
+            if (nextLine.endsWith(KnimeTestCase.SUCCESS_MSG)) {
                 succeeded = true;
             }
 
