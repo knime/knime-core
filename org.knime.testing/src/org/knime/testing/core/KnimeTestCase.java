@@ -1450,7 +1450,8 @@ public class KnimeTestCase extends TestCase {
 
             // be sure to always add an owner to the log file
             if ((m_owners != null) && (m_owners.size() > 0)) {
-                logger.info("TestOwners=" + m_owners);
+                String s = m_owners.toString();
+                logger.info("TestOwners=" + s.substring(1, s.length() - 1));
             } else {
                 logger.info("TestOwners=" + REGRESSIONS_OWNER);
                 // Fail if no owner is set!
