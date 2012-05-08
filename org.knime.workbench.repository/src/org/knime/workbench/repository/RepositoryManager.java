@@ -143,12 +143,12 @@ public final class RepositoryManager {
             + ".nodes";
 
     // ID of "category" extension point
-    private static final String ID_CATEGORY 
-    		= "org.knime.workbench.repository.categories";
+    private static final String ID_CATEGORY
+            = "org.knime.workbench.repository.categories";
 
-    private static final String ID_META_NODE 
-    		= "org.knime.workbench.repository.metanode";
-            
+    private static final String ID_META_NODE
+            = "org.knime.workbench.repository.metanode";
+
     private static final String ID_NODE_SET
             = "org.knime.workbench.repository.nodesets";
 
