@@ -20,7 +20,9 @@
    * email: contact@knime.org
   ===============================================================================
 -->
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+        xmlns="http://knime.org/node2012" targetNamespace="http://knime.org/node2012"
+        elementFormDefault="qualified">
   <xs:element name="knimeNode">
     <xs:complexType>
       <xs:sequence>

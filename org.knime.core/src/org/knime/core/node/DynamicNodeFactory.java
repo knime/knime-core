@@ -53,9 +53,8 @@ package org.knime.core.node;
 import java.io.InputStream;
 import java.util.Properties;
 
-import noNamespace.KnimeNodeDocument;
-
 import org.apache.xmlbeans.XmlDocumentProperties;
+import org.knime.node2012.KnimeNodeDocument;
 
 /**
  * A node factory to create nodes dynamically. It essentially creates the node

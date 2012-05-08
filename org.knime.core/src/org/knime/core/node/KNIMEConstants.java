@@ -250,7 +250,7 @@ public final class KNIMEConstants {
 
 
     static {
-        BUILD_DATE = "Nightly-Build Februar 24, 2012";
+        BUILD_DATE = "Nightly-Build May 04, 2012";
         String versionString;
         if (CorePlugin.getInstance() != null) {
             versionString = CorePlugin.getInstance().getBundle().getHeaders()

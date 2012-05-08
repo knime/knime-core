@@ -93,7 +93,7 @@
          <meta.section type="since"/>
       </appInfo>
       <documentation>
-         [Enter the first release in which this extension point appears.]
+         2.6.0
       </documentation>
    </annotation>
 
@@ -102,7 +102,14 @@
          <meta.section type="examples"/>
       </appInfo>
       <documentation>
-         [Enter extension point usage example here.]
+         &lt;extension point=&quot;org.knime.workbench.repository.nodesets&quot;&gt;
+      &lt;nodeset
+            default-category-icon=&quot;icons/weka.ico&quot;
+            expert-flag=&quot;false&quot;
+            factory-class=&quot;org.knime.ext.weka366.knimenodes.WekaNodeSetFactory&quot;
+            id=&quot;org.knime.ext.weka.knimenodes.WekaNodeSetFactory_3.6&quot;&gt;
+      &lt;/nodeset&gt;
+&lt;/extension&gt;
       </documentation>
    </annotation>
 
