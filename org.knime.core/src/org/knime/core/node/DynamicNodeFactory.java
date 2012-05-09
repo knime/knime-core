@@ -50,10 +50,13 @@
  */
 package org.knime.core.node;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Properties;
 
 import org.apache.xmlbeans.XmlDocumentProperties;
+import org.apache.xmlbeans.XmlOptions;
 import org.knime.node2012.KnimeNodeDocument;
 
 /**
@@ -90,7 +93,23 @@ public abstract class DynamicNodeFactory<T extends NodeModel> extends
         properties.setDoctypePublicId("-//UNIKN//DTD KNIME Node 2.0//EN");
         properties.setDoctypeSystemId("http://www.knime.org/Node.dtd");
         addNodeDescription(doc);
-        return doc.newInputStream();
+        
+        /* Remove the namespace as the XML parser cannot handle it validating
+         * the Node.dtd.
+         * FIXME The conversion from DOM document to text and subsequent
+         *      parsing as document should be avoided.  
+         */
+        
+        XmlOptions xmlOptions = new XmlOptions();
+        xmlOptions.setUseDefaultNamespace();
+        HashMap<String, String> defNS = new HashMap<String, String>();
+        defNS.put("", "http://knime.org/node2012");
+        xmlOptions.setSaveImplicitNamespaces(defNS);
+        xmlOptions.setSaveNamespacesFirst();
+        String xmlText = doc.xmlText(xmlOptions);
+
+        return new ByteArrayInputStream(
+                xmlText.replaceAll("xmlns=\"\"", "").getBytes());
     }
 
     /**
