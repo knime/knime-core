@@ -77,7 +77,7 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
             // can't tell about the data generator, but the remaining three
             // should be in some executing state
             checkState(m_blocker, State.MARKEDFOREXEC,
-                    State.QUEUED, State.EXECUTING);
+                    State.QUEUED, State.PREEXECUTE, State.EXECUTING);
             checkState(m_colFilter, State.MARKEDFOREXEC);
             checkState(m_tblView, State.MARKEDFOREXEC);
             assertTrue(m.getState().executionInProgress());
@@ -144,6 +144,7 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
             checkState(m_blocker, State.CONFIGURED);
             checkState(m_colFilter, State.CONFIGURED);
             checkState(m_tblView, State.CONFIGURED);
+            assertTrue(m.canRemoveConnection(cc));
         } finally {
             execLock.unlock();
         }
@@ -200,7 +201,7 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
             checkState(m_tblView, State.CONFIGURED);
 
             checkState(m_blocker, State.MARKEDFOREXEC,
-                    State.QUEUED, State.EXECUTING);
+                    State.QUEUED, State.PREEXECUTE, State.EXECUTING);
         } finally {
             execLock.unlock();
         }

@@ -177,7 +177,7 @@ public class MetaFlowWithSingleNodeTest extends WorkflowTestCase {
 
         assertTrue(meta.canRemoveConnection(c));
         meta.removeConnection(c);
-        assertNull(findInConnection(m_colFilterInMeta, 0));
+        assertNull(findInConnection(m_colFilterInMeta, 1));
 
         checkState(m_colFilterInMeta, State.IDLE);
         checkMetaOutState(m_meta, 0, State.IDLE);
