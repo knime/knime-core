@@ -246,7 +246,7 @@ public class RepositoryView extends ViewPart implements
                     NodeTemplate tmplt = (NodeTemplate)o;
                     NodeFactory<? extends NodeModel> nodeFact;
                     try {
-                        nodeFact = tmplt.getFactory().newInstance();
+                        nodeFact = tmplt.createFactoryInstance();
                     } catch (Exception e) {
                         LOGGER.error("Unable to instantiate the selected node "
                                 + tmplt.getFactory().getName(), e);

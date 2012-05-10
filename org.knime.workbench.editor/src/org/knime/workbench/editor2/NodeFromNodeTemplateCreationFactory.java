@@ -68,7 +68,7 @@ import org.knime.workbench.repository.model.NodeTemplate;
  * @author Florian Georg, University of Konstanz
  */
 public class NodeFromNodeTemplateCreationFactory implements CreationFactory {
-    private Class<? extends NodeFactory> m_factory;
+    private final NodeTemplate m_template;
 
     /**
      * New factory for the given template.
@@ -76,8 +76,7 @@ public class NodeFromNodeTemplateCreationFactory implements CreationFactory {
      * @param template The template from the repository.
      */
     public NodeFromNodeTemplateCreationFactory(final NodeTemplate template) {
-        m_factory = template.getFactory();
-
+        m_template = template;
     }
 
     /**
@@ -88,7 +87,7 @@ public class NodeFromNodeTemplateCreationFactory implements CreationFactory {
     @Override
     public NodeFactory<?> getNewObject() {
         try {
-            return m_factory.newInstance();
+            return m_template.createFactoryInstance();
         } catch (Exception e) {
             throw new RuntimeException("Can't instantiate NodeFactory "
                     + "from NodeTemplate", e);

@@ -91,7 +91,7 @@ public enum MA_METHODS {
      CenterG("Center Gaussian"),
      /** no weight function. Forward*/
      ForwardG("Forward Gaussian"),
-     /** the harmonic mean, fixed in the center of window*/
+     /** the harmonic mean, fixed in the center of window.*/
      HarmonicC("Harmonic Mean Center"),
      /** cumulative Moving average, (overall). */
      Cumulative("Cumulative simple"),
@@ -149,7 +149,7 @@ public enum MA_METHODS {
              return OldExponential;
          }
          throw new IllegalArgumentException(
-         		"Unknown movering average method \"" + label + "\"");
+                 "Unknown movering average method \"" + label + "\"");
      }
 
      /**This methods returns all methods which can be used with the

@@ -50,17 +50,11 @@
  */
 package org.knime.core.node.util;
 
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -70,136 +64,48 @@ import java.util.List;
 import java.util.StringTokenizer;
 
 import javax.swing.AbstractAction;
-import javax.swing.JButton;
-import javax.swing.JPanel;
 import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.KeyStroke;
-import javax.swing.ListSelectionModel;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import javax.swing.table.AbstractTableModel;
 
 /**
- * A visual component to define key - value pairs.
+ * A visual component to define key - value pairs. Both key and value are
+ * of type string.
  *
  * @author Heiko Hofer
  */
 @SuppressWarnings("serial")
-public class KeyValuePanel extends JPanel {
-    private final KeyValueTableModel m_model;
-    private final JTable m_table;
-    private JButton m_addButton;
-    private JButton m_removeButton;
+public class KeyValuePanel extends ConfigTablePanel {
+    private KeyValueTableModel m_model;
 
     /**
      * Create a new instance.
      */
     public KeyValuePanel() {
-        super(new GridBagLayout());
-        m_model = new KeyValueTableModel();
+        super(new KeyValueTableModel());
+        JTable table = getTable();
+        table.getColumnModel().getColumn(0).setPreferredWidth(50);
+        table.getColumnModel().getColumn(1).setPreferredWidth(200);
+        m_model = (KeyValueTableModel)getModel();
 
-        GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.BOTH;
-        c.anchor = GridBagConstraints.NORTHWEST;
-        c.insets = new Insets(0, 0, 0, 5);
-        c.gridx = 0;
-        c.gridy = 0;
-        c.gridwidth = 1;
-        c.weightx = 1;
-        c.weighty = 1;
-
-        m_table = new JTable(m_model);
-        m_table.setSelectionMode(
-                ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        // Increase row height
-        m_table.setRowHeight(m_table.getRowHeight() + 3);
-        m_table.getTableHeader().setPreferredSize(new Dimension(
-                m_table.getTableHeader().getPreferredSize().width,
-                m_table.getRowHeight()));
-
-        Color gridColor = m_table.getGridColor();
-        // brighten the grid color
-        m_table.setGridColor(new Color((gridColor.getRed() + 255) / 2
-            , (gridColor.getGreen() + 255) / 2
-            , (gridColor.getBlue() + 255) / 2));
-
-        m_table.getColumnModel().getColumn(0).setPreferredWidth(50);
-        m_table.getColumnModel().getColumn(1).setPreferredWidth(200);
-        JScrollPane scroll = new JScrollPane(m_table);
-        add(scroll, c);
 
         KeyStroke ctrlV = KeyStroke.getKeyStroke(KeyEvent.VK_V,
                 KeyEvent.CTRL_MASK);
-        m_table.getInputMap().put(ctrlV, "TablePaste");
-        m_table.getActionMap().put("TablePaste",
+        table.getInputMap().put(ctrlV, "TablePaste");
+        table.getActionMap().put("TablePaste",
                 new PasteAction(this));
 
         KeyStroke ctrlC = KeyStroke.getKeyStroke(KeyEvent.VK_V,
                 KeyEvent.CTRL_MASK);
-        m_table.getInputMap().put(ctrlC, "TableCopy");
-        m_table.getActionMap().put("TableCopy",
+        table.getInputMap().put(ctrlC, "TableCopy");
+        table.getActionMap().put("TableCopy",
                 new CopyAction(this));
 
-        m_table.addMouseListener(new TableMouseAdapter(this));
-
-        c.gridx++;
-        c.weightx = 0;
-        c.insets = new Insets(0, 0, 0, 0);
-        add(createButtonPanel(), c);
+        table.addMouseListener(new TableMouseAdapter(this));
     }
-
-    /** The button panel at the right. */
-    private JPanel createButtonPanel() {
-        JPanel p = new JPanel(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-        c.fill = GridBagConstraints.BOTH;
-        c.anchor = GridBagConstraints.NORTHWEST;
-        c.insets = new Insets(0, 0, 5, 0);
-        c.gridx = 0;
-        c.gridy = 0;
-        c.gridwidth = 1;
-        c.weightx = 1;
-        c.weighty = 0;
-
-        m_addButton = new JButton("Add");
-        m_addButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent arg0) {
-                m_model.addRow();
-            }
-        });
-        p.add(m_addButton, c);
-
-        c.gridy++;
-        c.insets = new Insets(0, 0, 0, 0);
-        m_removeButton = new JButton("Remove");
-        m_removeButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(final ActionEvent arg0) {
-                int[] rows = m_table.getSelectedRows();
-                if (rows.length > 0) {
-                	commitOpenEditor();
-                    m_model.removeRows(rows);
-                }
-            }
-        });
-        p.add(m_removeButton, c);
-
-        c.gridy++;
-        c.weighty = 1;
-        p.add(new JPanel(), c);
-        return p;
-    }
-
-    /**
-     * Access to underlying table.
-     */
-    public JTable getTable() {
-    	return m_table;
-    }
-
 
     /**
      * Update the data.
@@ -232,11 +138,7 @@ public class KeyValuePanel extends JPanel {
         return m_model.getValues();
     }
 
-    private void commitOpenEditor() {
-        if (null != m_table.getCellEditor()) {
-            m_table.getCellEditor().stopCellEditing();
-        }
-    }
+
 
     /**
      * Set the label of the first column.
@@ -256,18 +158,8 @@ public class KeyValuePanel extends JPanel {
         m_model.setValueColumnLabel(label);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void setEnabled(final boolean enabled) {
-        super.setEnabled(enabled);
-        m_table.setEnabled(enabled);
-        m_addButton.setEnabled(enabled);
-        m_removeButton.setEnabled(enabled);
-    }
-
-    private static class KeyValueTableModel extends AbstractTableModel {
+    private static class KeyValueTableModel extends AbstractTableModel
+            implements ConfigTableModel {
         private final List<String> m_keys;
         private final List<String> m_values;
         private String m_keyColumnLabel;
@@ -283,6 +175,7 @@ public class KeyValuePanel extends JPanel {
         /**
          * Append a row to the table.
          */
+        @Override
         public void addRow() {
             int row = m_values.size();
             m_keys.add("");
@@ -296,6 +189,7 @@ public class KeyValuePanel extends JPanel {
          *
          * @param rows the rows to be removed
          */
+        @Override
         public void removeRows(final int[] rows) {
             Arrays.sort(rows);
             for (int i = rows.length - 1; i >= 0; i--) {
@@ -410,7 +304,8 @@ public class KeyValuePanel extends JPanel {
          * {@inheritDoc}
          */
         @Override
-        public boolean isCellEditable(final int rowIndex, final int columnIndex) {
+        public boolean isCellEditable(final int rowIndex,
+                final int columnIndex) {
             return true;
         }
 
@@ -418,7 +313,8 @@ public class KeyValuePanel extends JPanel {
          * {@inheritDoc}
          */
         @Override
-        public void setValueAt(final Object aValue, final int row, final int col) {
+        public void setValueAt(final Object aValue,
+                final int row, final int col) {
             switch (col) {
             case 0:
                 m_keys.set(row, aValue.toString());
@@ -433,7 +329,48 @@ public class KeyValuePanel extends JPanel {
             }
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public ConfigTableModel cloneModel() {
+            KeyValueTableModel tempModel = new KeyValueTableModel();
+            tempModel.setTableData(getKeys(), getValues());
+            return tempModel;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void setTableData(final ConfigTableModel tempModel) {
+            KeyValueTableModel model = (KeyValueTableModel)tempModel;
+            setTableData(model.getKeys(), model.getValues());
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void clear() {
+            setTableData(new String[0], new String[0]);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void setColumnName(final int index, final String value) {
+            if (index == 0) {
+                setKeyColumnLabel(value);
+            } else {
+                setValueColumnLabel(value);
+            }
+
+        }
+
     }
+
 
     /**
      * The swing action for copying the selected cells to the system clipboard.
@@ -441,22 +378,23 @@ public class KeyValuePanel extends JPanel {
      * @author Heiko Hofer
      */
     static class CopyAction extends AbstractAction {
-    	private final KeyValuePanel m_panel;
+        private final ConfigTablePanel m_panel;
 
         /**
          * Creates a new instance.
          *
          * @param panel the 'model' for this action
          */
-        CopyAction(final KeyValuePanel panel) {
+        CopyAction(final ConfigTablePanel panel) {
             super("Copy");
             m_panel = panel;
-            panel.m_table.getSelectionModel().addListSelectionListener(
+            final JTable table = m_panel.getTable();
+            table.getSelectionModel().addListSelectionListener(
                     new ListSelectionListener() {
                 @Override
-				public void valueChanged(final ListSelectionEvent e) {
-                    setEnabled(!panel.m_table.getSelectionModel()
-                    		.isSelectionEmpty());
+                public void valueChanged(final ListSelectionEvent e) {
+                    setEnabled(!table.getSelectionModel()
+                            .isSelectionEmpty());
                 }
             });
         }
@@ -465,25 +403,27 @@ public class KeyValuePanel extends JPanel {
          * {@inheritDoc}
          */
         @Override
-		public void actionPerformed(final ActionEvent e) {
-            int[] rows = m_panel.m_table.getSelectedRows();
-            int[] cols = new int[]{0, 1};
+        public void actionPerformed(final ActionEvent e) {
+            JTable table = m_panel.getTable();
+            int[] rows = table.getSelectedRows();
+            int numCols = table.getColumnCount();
 
             StringBuilder builder = new StringBuilder();
             for (int i = 0; i < rows.length; i++) {
-                for (int k = 0; k < cols.length; k++) {
-                    Object value = m_panel.m_table.getValueAt(rows[i], cols[k]);
+                for (int k = 0; k < numCols; k++) {
+                    Object value = table.getValueAt(rows[i], k);
                     builder.append(value.toString());
 
-                    if (k < cols.length - 1) {
+                    if (k < numCols - 1) {
                         builder.append("\t");
                     }
                 }
                 builder.append("\n");
             }
             StringSelection str  = new StringSelection(builder.toString());
-            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-            clipboard.setContents(str,str);
+            Clipboard clipboard = Toolkit.getDefaultToolkit().
+                getSystemClipboard();
+            clipboard.setContents(str, str);
         }
 
     }
@@ -494,25 +434,26 @@ public class KeyValuePanel extends JPanel {
      * @author Heiko Hofer
      */
     static class PasteAction extends AbstractAction {
-        private final KeyValuePanel m_panel;
+        private final ConfigTablePanel m_panel;
         private int m_endRow;
         private int m_endCol;
-        private KeyValueTableModel m_tempModel;
+        private ConfigTableModel m_tempModel;
 
         /**
          * Creates a new instance.
          *
          * @param panel the 'model' for this action
          */
-        PasteAction(final KeyValuePanel panel) {
+        PasteAction(final ConfigTablePanel panel) {
             super("Paste");
             m_panel = panel;
-            panel.m_table.getSelectionModel().addListSelectionListener(
+            final JTable table = m_panel.getTable();
+            table.getSelectionModel().addListSelectionListener(
                     new ListSelectionListener() {
                 @Override
-				public void valueChanged(final ListSelectionEvent e) {
-                    setEnabled(!panel.m_table.getSelectionModel().
-                    		isSelectionEmpty());
+                public void valueChanged(final ListSelectionEvent e) {
+                    setEnabled(!table.getSelectionModel().
+                            isSelectionEmpty());
                 }
             });
         }
@@ -521,20 +462,22 @@ public class KeyValuePanel extends JPanel {
          * {@inheritDoc}
          */
         @Override
-		public void actionPerformed(final ActionEvent e) {
-            JTable table = m_panel.m_table;
-            Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        public void actionPerformed(final ActionEvent e) {
+            JTable table = m_panel.getTable();
+            Clipboard clipboard = Toolkit.getDefaultToolkit().
+                getSystemClipboard();
             int startRow = table.getSelectionModel().getAnchorSelectionIndex();
             int startCol = 0;
             m_endRow = startRow;
             m_endCol = startCol;
-            m_tempModel = new KeyValueTableModel();
-            m_tempModel.setTableData(m_panel.getKeys(), m_panel.getValues());
+            m_tempModel = m_panel.getModel().cloneModel();
+
             try {
                 String trstring =
                         (String)(clipboard.getContents(this)
                                 .getTransferData(DataFlavor.stringFlavor));
-                StringTokenizer rows = new StringTokenizer(trstring, "\n", true);
+                StringTokenizer rows = new StringTokenizer(trstring, "\n",
+                        true);
                 for (int i = 0; rows.hasMoreTokens(); i++) {
                     String row = rows.nextToken();
                     if (!row.equals("\n")) {
@@ -570,10 +513,10 @@ public class KeyValuePanel extends JPanel {
                         }
                     }
                 }
-                m_panel.setTableData(m_tempModel.getKeys(),
-                        m_tempModel.getValues());
 
-                m_tempModel.setTableData(new String[0], new String[0]);
+                m_panel.getModel().setTableData(m_tempModel);
+
+                m_tempModel.clear();
                 m_tempModel = null;
                 table.getSelectionModel().setSelectionInterval(startRow,
                         m_endRow);
@@ -607,8 +550,8 @@ public class KeyValuePanel extends JPanel {
         /**
          * @param panel
          */
-        TableMouseAdapter(final KeyValuePanel panel) {
-            m_table = panel.m_table;
+        TableMouseAdapter(final ConfigTablePanel panel) {
+            m_table = panel.getTable();
             m_popup = new JPopupMenu();
             m_popup.add(new CopyAction(panel));
             m_popup.add(new PasteAction(panel));
@@ -670,5 +613,4 @@ public class KeyValuePanel extends JPanel {
         }
 
     }
-
 }

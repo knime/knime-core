@@ -47,13 +47,18 @@
  */
 package org.knime.base.node.mine.scorer.accuracy;
 
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JPanel;
+import javax.swing.JTextField;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -87,6 +92,13 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
      * represents the predicted classes of the data
      */
     private final JComboBox m_secondColumns;
+    
+    /* The check box specifying if a prefix should be added or not. */
+    private JCheckBox m_flowvariableBox;
+
+    /* The text field specifying the prefix for the flow variables. */
+    private JTextField m_flowVariablePrefixTextField;
+    
 
     /**
      * Creates a new {@link NodeDialogPane} for scoring in order to set the two
@@ -116,11 +128,42 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
         flowLayout = new JPanel(new FlowLayout());
         flowLayout.add(m_secondColumns);
         secondColumnPanel.add(flowLayout);
+        
+        
+        m_flowvariableBox = new JCheckBox("Use name prefix");
+        m_flowVariablePrefixTextField = new JTextField(10);
+        m_flowVariablePrefixTextField.setSize(new Dimension(10, 3));
+        
+        m_flowvariableBox.addActionListener(new ActionListener() {
+            
+            @Override
+            public void actionPerformed(final ActionEvent arg0) {
+                if (m_flowvariableBox.isSelected()) {
+                    m_flowVariablePrefixTextField.setEnabled(true);
+                } else {
+                    m_flowVariablePrefixTextField.setEnabled(false);
+                }
+                
+            }
+        });
+        m_flowvariableBox.doClick(); // sync states
+        
+        
+        JPanel thirdColumnPanel = new JPanel(new GridLayout(1, 1));
+        thirdColumnPanel.setBorder(BorderFactory
+                .createTitledBorder("Provide scores as flow variables"));
+        flowLayout = new JPanel(new FlowLayout());
+        flowLayout.add(m_flowvariableBox);
+        flowLayout.add(m_flowVariablePrefixTextField);
+        thirdColumnPanel.add(flowLayout);
+        
 
         m_p.add(firstColumnPanel);
 
         m_p.add(secondColumnPanel);
 
+        m_p.add(thirdColumnPanel);
+        
         super.addTab("Scorer", m_p);
     } // ScorerNodeDialog(NodeModel)
 
@@ -138,7 +181,7 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
 
         m_firstColumns.removeAllItems();
         m_secondColumns.removeAllItems();
-
+        
         DataTableSpec spec = specs[AccuracyScorerNodeModel.INPORT];
 
         if ((spec == null) || (spec.getNumColumns() < 2)) {
@@ -163,6 +206,19 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
                     AccuracyScorerNodeModel.SECOND_COMP_ID, col2.getName()));
         m_firstColumns.setSelectedItem(col1);
         m_secondColumns.setSelectedItem(col2);
+        
+        String varPrefix = settings.getString(
+        		AccuracyScorerNodeModel.FLOW_VAR_PREFIX, null);
+
+        boolean useFlowVar = varPrefix != null;
+        
+        if (m_flowvariableBox.isSelected() != useFlowVar) {
+        	m_flowvariableBox.doClick();
+        }
+        if (varPrefix != null) {
+        	m_flowVariablePrefixTextField.setText(varPrefix);
+        }
+        
     }
 
     /**
@@ -193,5 +249,14 @@ public final class AccuracyScorerNodeDialog extends NodeDialogPane {
         settings.addString(AccuracyScorerNodeModel.FIRST_COMP_ID, firstColumn);
         settings.addString(
             AccuracyScorerNodeModel.SECOND_COMP_ID, secondColumn);
+        
+        
+        boolean useFlowVar = m_flowvariableBox.isSelected();
+       
+        String flowVariableName = m_flowVariablePrefixTextField.getText();
+        
+        settings.addString(AccuracyScorerNodeModel.FLOW_VAR_PREFIX,
+        		useFlowVar ? flowVariableName : null);
+        
     }
 }

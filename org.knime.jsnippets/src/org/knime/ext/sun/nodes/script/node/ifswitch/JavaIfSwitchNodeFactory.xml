@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./switches_java.png" type="Manipulator">
+    <name>Java IF (Table)</name>
+    <shortDescription>Java IF Switch on tables</shortDescription>
+    <fullDescription>
+        <intro>
+	        <p>
+	          Java IF Switch on tables. Use the java editor to enter an 
+	          expression that returns <b>0</b> or <b>1</b> (int) to indicate
+	          which of the two output branches the input should be directed to.
+	        </p>
+	        <p>
+	          Note that any other result value (neither 0 nor 1) will result 
+	          in an error.
+	        </p>
+		</intro>
+		<option name="Flow Variable List">
+		  The list contains the flow variables that are currently available at
+		  the node input. Double clicking any of the entries will insert the
+		  respective identifier at the current cursor position (replacing the
+		  selection, if any).
+		</option>
+		<option name="Method Body">
+          Enter your java code here (the entire source will be wrapped in a
+          method). You can add the name of a variables 
+		  by double-clicking its name in the left list. Note that numeric 
+		  (double-compatible) variables will be handled as <tt>Double</tt>,
+		  int-compatible variables as <tt>Integer</tt> and any other varaible
+		  type as <tt>String</tt>. 
+		</option>
+	</fullDescription>
+    <ports>
+        <inPort name="Input data" index="0">Input variables (optional).</inPort>
+        <outPort name="0 output" index="0">Output port that contains
+        the input data if the result of the expression is <b>0</b> 
+        (otherwise) this branch is inactive. 
+        </outPort>
+        <outPort name="1 output" index="1">Output port that contains
+        the input data if the result of the expression is <b>1</b> 
+        (otherwise) this branch is inactive. 
+        </outPort>
+	</ports>
+</knimeNode>

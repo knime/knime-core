@@ -1,19 +1,26 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
-    <resource path="META-INF/MANIFEST.MF">
-        <filter id="924844039">
+    <resource path="src/org/knime/core/node/Node.java" type="org.knime.core.node.Node">
+        <filter id="338792546">
             <message_arguments>
-                <message_argument value="2.5.4.qualifier"/>
-                <message_argument value="2.5.3.0032336"/>
+                <message_argument value="org.knime.core.node.Node"/>
+                <message_argument value="getDialogPaneWithSettings(PortObjectSpec[], NodeSettingsRO, boolean)"/>
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/org/knime/core/node/KNIMEConstants.java" type="org.knime.core.node.KNIMEConstants">
-        <filter id="389242988">
+    <resource path="src/org/knime/core/node/NodeDialogPane.java" type="org.knime.core.node.NodeDialogPane">
+        <filter comment="NodeDialogPane#internalLoadSettingsFrom was never meant to be API" id="338792546">
             <message_arguments>
-                <message_argument value="org.knime.core.node.KNIMEConstants"/>
-                <message_argument value="BUILD_DATE"/>
-                <message_argument value="February 20, 2012"/>
+                <message_argument value="org.knime.core.node.NodeDialogPane"/>
+                <message_argument value="internalLoadSettingsFrom(NodeSettingsRO, PortObjectSpec[], FlowObjectStack, CredentialsProvider, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/core/node/workflow/SingleNodeContainerPersistorVersion200.java" type="org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200"/>
+                <message_argument value="saveNodeFactoryClassName(NodeSettingsWO, SingleNodeContainer)"/>
             </message_arguments>
         </filter>
     </resource>

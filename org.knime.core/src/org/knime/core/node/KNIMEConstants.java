@@ -230,6 +230,12 @@ public final class KNIMEConstants {
    public static final String PROPERTY_LICENSE_DIRECTORY =
        "com.knime.licensedir";
 
+   /** Java property used to set the timeout in millisecond trying to connect
+    * or read data from an URL (e.g. http, ftp, ...)
+    *
+    * @since 2.6
+    */
+   public static final String PROPERTY_URL_TIMEOUT = "knime.url.timeout";
 
     /** KNIME home directory. */
     private static File knimeHomeDir;
@@ -244,7 +250,7 @@ public final class KNIMEConstants {
 
 
     static {
-        BUILD_DATE = "Nightly-Build Februar 24, 2012";
+        BUILD_DATE = "Nightly-Build May 04, 2012";
         String versionString;
         if (CorePlugin.getInstance() != null) {
             versionString = CorePlugin.getInstance().getBundle().getHeaders()

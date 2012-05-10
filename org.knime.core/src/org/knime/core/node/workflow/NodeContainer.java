@@ -64,6 +64,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.DataAwareNodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialog;
 import org.knime.core.node.NodeDialogPane;
@@ -873,6 +874,15 @@ public abstract class NodeContainer implements NodeProgressListener {
 
     /* ------------ dialog -------------- */
 
+    /** Whether the dialog is a {@link DataAwareNodeDialogPane}. If so,
+     * the predecessor nodes need to be executed before the dialog is opened.
+     * @return that property
+     * @since 2.6
+     */
+    public boolean hasDataAwareDialogPane() {
+        return false;
+    }
+
     /** Return a NodeDialogPane for a node which can be embedded into
      * a JFrame oder another GUI element.
      *
@@ -885,9 +895,13 @@ public abstract class NodeContainer implements NodeProgressListener {
             throw new IllegalStateException(
                     "Node \"" + getName() + "\" has no dialog");
         }
-        PortObjectSpec[] inputSpecs = new PortObjectSpec[getNrInPorts()];
-        m_parent.assembleInputSpecs(getID(), inputSpecs);
-        return getDialogPaneWithSettings(inputSpecs);
+        final int nrInPorts = getNrInPorts();
+        final NodeID id = getID();
+        PortObjectSpec[] inputSpecs = new PortObjectSpec[nrInPorts];
+        PortObject[] inputData = new PortObject[nrInPorts];
+        m_parent.assembleInputSpecs(id, inputSpecs);
+        m_parent.assembleInputData(id, inputData);
+        return getDialogPaneWithSettings(inputSpecs, inputData);
     }
 
     /** Launch a node dialog in its own JFrame (a JDialog).
@@ -934,7 +948,9 @@ public abstract class NodeContainer implements NodeProgressListener {
 
     public abstract boolean hasDialog();
 
-    abstract NodeDialogPane getDialogPaneWithSettings(final PortObjectSpec[] inSpecs)
+
+    abstract NodeDialogPane getDialogPaneWithSettings(
+            final PortObjectSpec[] inSpecs, final PortObject[] inData)
             throws NotConfigurableException;
 
     abstract NodeDialogPane getDialogPane();
@@ -1212,6 +1228,10 @@ public abstract class NodeContainer implements NodeProgressListener {
             m_annotation.unregisterFromNodeContainer();
         }
         closeAllJobManagerViews();
+        for (int i = 0; i < getNrOutPorts(); i++) {
+            NodeOutPort outPort = getOutPort(i);
+            outPort.disposePortView();
+        }
     }
 
     /**

@@ -124,6 +124,10 @@ public class MainPreferencePage extends FieldEditorPreferencePage
                 PreferenceConstants.P_CONFIRM_EXEC_NODES_NOT_SAVED,
                 "Confirm if executing nodes are not saved", parent));
 
+        addField(new BooleanFieldEditor(
+                PreferenceConstants.P_CONFIRM_EXEC_NODES_DATA_AWARE_DIALOGS,
+                "Confirm execution of upstream nodes when data is "
+                + "needed for configuration", parent));
 
         IntegerFieldEditor freqHistorySizeEditor = new IntegerFieldEditor(
                 PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE,
@@ -163,6 +167,19 @@ public class MainPreferencePage extends FieldEditorPreferencePage
                 PreferenceConstants.P_NODE_LABEL_FONT_SIZE,
                 "Change node name and label font size", parent);
         addField(fontSizeEditor);
+
+        addField(new BooleanFieldEditor(PreferenceConstants.P_GRID_SHOW,
+                "Show grid", parent));
+
+        addField(new BooleanFieldEditor(PreferenceConstants.P_GRID_SNAP_TO,
+                "Snap to grid", parent));
+
+        IntegerFieldEditor gridSizeEditor = new IntegerFieldEditor(
+                PreferenceConstants.P_GRID_SIZE, "Grid size (in px)", parent);
+        gridSizeEditor.setValidRange(3, 100);
+        gridSizeEditor.setTextLimit(3);
+        gridSizeEditor.load();
+        addField(gridSizeEditor);
 
         ComboFieldEditor updateMetaNodeLinkOnLoadEditor = new ComboFieldEditor(
                 PreferenceConstants.P_META_NODE_LINK_UPDATE_ON_LOAD,

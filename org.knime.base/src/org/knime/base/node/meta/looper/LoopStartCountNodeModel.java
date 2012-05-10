@@ -115,12 +115,7 @@ implements LoopStartNodeTerminator {
             assert m_iteration == 0;
         } else {
             assert m_iteration > 0;
-            // otherwise we do this again, and we increment our counter
-            // and we can do a quick sanity check
-            // FIXME: this test is to specific, do we need it after all?
-//            if (!(getLoopEndNode() instanceof LoopEndNodeModel)) {
-//                throw new IllegalArgumentException("Loop tail has wrong type!");
-//            }
+            // otherwise we do this again.
         }
         // let's also put the counts on the stack for someone else:
         pushFlowVariableInt("currentIteration", m_iteration);

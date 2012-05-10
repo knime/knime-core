@@ -55,8 +55,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.knime.base.data.sort.SortedTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.sort.BufferedDataTableSorter;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -106,21 +106,33 @@ public class SorterNodeModel extends NodeModel {
      */
     static final String SORTINMEMORY_KEY = "sortinmemory";
 
+    /**
+     * Settings key: Sort missings always to end.
+     * @since 2.6
+     */
+    static final String MISSING_TO_END_KEY = "missingToEnd";
+
     /*
      * List contains the data cells to include.
      */
     private List<String> m_inclList = null;
 
-    /*
+    /**
      * Array containing information about the sort order for each column. true:
-     * ascending false: descending
+     * ascending; false: descending
      */
     private boolean[] m_sortOrder = null;
 
-    /*
+    /**
      * Flag indicating whether to perform the sorting in memory or not.
      */
     private boolean m_sortInMemory = false;
+
+    /** Move missing values always to end (overwrites natural ordering according
+     * to which they are the smallest item).
+     * @since 2.6
+     */
+    private boolean m_missingToEnd = false;
 
     /**
      * Inits a new <code>SorterNodeModel</code> with one in- and one output.
@@ -160,12 +172,12 @@ public class SorterNodeModel extends NodeModel {
             return new BufferedDataTable[]{inData[INPORT]};
         }
 
-        // create a sorted table
-        SortedTable sortedTable =
-                new SortedTable(inData[INPORT], m_inclList, m_sortOrder,
-                        m_sortInMemory, exec);
+        BufferedDataTableSorter sorter = new BufferedDataTableSorter(
+                inData[INPORT], m_inclList, m_sortOrder, m_missingToEnd);
+        sorter.setSortInMemory(m_sortInMemory);
+        BufferedDataTable sortedTable = sorter.sort(exec);
 
-        return new BufferedDataTable[]{sortedTable.getBufferedDataTable()};
+        return new BufferedDataTable[]{sortedTable};
     }
 
     /**
@@ -221,6 +233,8 @@ public class SorterNodeModel extends NodeModel {
             settings.addBooleanArray(SORTORDER_KEY, m_sortOrder);
         }
         settings.addBoolean(SORTINMEMORY_KEY, m_sortInMemory);
+        // added in 2.6
+        settings.addBoolean(MISSING_TO_END_KEY, m_missingToEnd);
     }
 
     /**
@@ -253,6 +267,7 @@ public class SorterNodeModel extends NodeModel {
         if (sortorder == null) {
             throw new InvalidSettingsException("No sort order specified.");
         }
+        // no "missingToBottom" prior 2.6
     }
 
     /**
@@ -273,6 +288,8 @@ public class SorterNodeModel extends NodeModel {
         if (settings.containsKey(SORTINMEMORY_KEY)) {
             m_sortInMemory = settings.getBoolean(SORTINMEMORY_KEY);
         }
+        // added in 2.6, catch missing setting
+        m_missingToEnd = settings.getBoolean(MISSING_TO_END_KEY, false);
     }
 
     /**

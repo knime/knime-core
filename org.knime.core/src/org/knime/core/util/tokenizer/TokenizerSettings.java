@@ -96,6 +96,8 @@ public class TokenizerSettings {
 
     private boolean m_combineMultiple;
 
+    private long m_skipFirstLines;
+
     /* keys used to store parameters in a config object */
     private static final String CFGKEY_DELIMS = "Delimiters";
 
@@ -117,6 +119,7 @@ public class TokenizerSettings {
 
     private static final String CFGKEY_COMBMULTI = "CombineMultDelims";
 
+    private static final String CFGKEY_SKIPLINES = "SkipFirstLines";
     /**
      * Creates a new Settings for FileTokenizer object with default settings.
      *
@@ -131,6 +134,7 @@ public class TokenizerSettings {
 
         m_lineContChar = null;
         m_combineMultiple = false;
+        m_skipFirstLines = 0;
     }
 
     /**
@@ -146,6 +150,7 @@ public class TokenizerSettings {
 
         m_lineContChar = clonee.m_lineContChar;
         m_combineMultiple = clonee.m_combineMultiple;
+        m_skipFirstLines = clonee.m_skipFirstLines;
 
     }
 
@@ -202,6 +207,8 @@ public class TokenizerSettings {
 
             setCombineMultipleDelimiters(settings.getBoolean(CFGKEY_COMBMULTI,
                     false));
+            // since v2.6. - be backward compatible
+            setSkipFirstLines(settings.getLong(CFGKEY_SKIPLINES, 0));
 
         } // if (settings != null)
     }
@@ -244,6 +251,8 @@ public class TokenizerSettings {
 
         // add the flag for combining multiple delimiters
         cfg.addBoolean(CFGKEY_COMBMULTI, getCombineMultipleDelimiters());
+
+        cfg.addLong(CFGKEY_SKIPLINES, m_skipFirstLines);
     }
 
     /*
@@ -1124,6 +1133,28 @@ public class TokenizerSettings {
     }
 
     /**
+     * If a number larger than zero is set, the first lines in the stream are
+     * ignored. Lines are terminated by a LF (or CR+LF). Delimiters, quotes etc.
+     * set are ignored while reading these first lines.
+     *
+     * @param numberOfLinesToSkip number of lines to ignore from the beginning
+     *            of the file (only numbers larger than 0 have an effect)
+     * @since 2.6
+     */
+    public void setSkipFirstLines(final long numberOfLinesToSkip) {
+        m_skipFirstLines = numberOfLinesToSkip;
+    }
+
+    /**
+     * @return the number of lines from the beginning of the stream the
+     *         tokenizer will ignore.
+     * @since 2.6
+     */
+    public long getSkipFirstLines() {
+        return m_skipFirstLines;
+    }
+
+    /**
      * @return a new vector, with items of type <code>Comment</code>, containing
      *         all currently defined comment patterns. Could be emtpy, but never
      *         null. The vector is your's if you want it to change.
@@ -1273,6 +1304,10 @@ public class TokenizerSettings {
             result.append("will NOT ");
         }
         result.append("be combined.");
+        if (m_skipFirstLines > 0) {
+            result.append("\nThe first " + m_skipFirstLines
+                    + " lines will be skipped.");
+        }
         return result.toString();
     }
 

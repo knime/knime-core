@@ -188,7 +188,7 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
         });
         menu.add(item);
 
-        item = NodeViewExport.createNewMenu(m_frame.getContentPane());
+        item = NodeViewExport.createNewMenu(this);
         menu.add(item);
 
         // create close entry
@@ -226,6 +226,19 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
     /** Icon in the status bar that shows the node's warning message. */
     static final Icon WARNING_ICON = ViewUtils.loadIcon(
             NodeView.class, "/icon/warning.png");
+
+    /** Method that is called by the framework when the view is saved as image
+     * or vector graphics (action available through the file menu). The default
+     * implementation simply returns the component that was added by calling
+     * {@link #setComponent(Component)}; subclasses can overwrite it and return
+     * the "important" component, e.g. excluding an overview or controls.
+     * @return The component being rendered when the view is exported as image,
+     *         never null.
+     * @since 2.6
+     */
+    protected Container getExportComponent() {
+        return m_frame.getContentPane();
+    }
 
     /**
      * Sets the property if the "no data" label is shown when the underlying
@@ -286,18 +299,18 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
         getNodeModel().addWarningListener(this);
         callModelChanged();
         warningChanged(getNodeModel().getWarningMessage());
-        m_frame.setName(title);
-        setTitle(title);
-        if (m_comp != null) {
-            m_comp.invalidate();
-            m_comp.repaint();
-        }
-        m_frame.pack();
         // show frame, make sure to do this in EDT (GUI related task)
         Runnable runner = new Runnable() {
             /** {@inheritDoc} */
             @Override
             public void run() {
+                m_frame.setName(title);
+                setTitle(title);
+                if (m_comp != null) {
+                    m_comp.invalidate();
+                    m_comp.repaint();
+                }
+                m_frame.pack();
                 m_frame.setLocationRelativeTo(null); // puts in screen center
                 m_frame.setVisible(true);
                 m_frame.toFront();

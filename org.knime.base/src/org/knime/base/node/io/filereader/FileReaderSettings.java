@@ -66,8 +66,8 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.util.tokenizer.Delimiter;
-import org.knime.core.util.tokenizer.TokenizerSettings;
 import org.knime.core.util.tokenizer.SettingsStatus;
+import org.knime.core.util.tokenizer.TokenizerSettings;
 
 /**
  * Contains all settings needed to read in a ASCII data file. This includes the
@@ -434,11 +434,12 @@ public class FileReaderSettings extends TokenizerSettings {
                     + "reader settings' to null config!");
         }
 
-        super.saveToConfiguration(cfg);
-
         if (m_dataFileLocation != null) {
             cfg.addString(CFGKEY_DATAURL, m_dataFileLocation.toString());
         }
+
+        super.saveToConfiguration(cfg);
+
         cfg.addString(CFGKEY_TABLENAME, m_tableName);
         cfg.addBoolean(CFGKEY_HASCOL, m_fileHasColumnHeaders);
         cfg.addBoolean(CFGKEY_HASROW, m_fileHasRowHeaders);

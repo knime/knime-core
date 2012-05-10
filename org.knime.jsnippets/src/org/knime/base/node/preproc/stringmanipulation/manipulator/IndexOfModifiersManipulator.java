@@ -80,7 +80,7 @@ public class IndexOfModifiersManipulator implements Manipulator {
                 opt.toLowerCase(Locale.ENGLISH), 'b');
         int start = backward ? str.length() : 0;
         return IndexOfOffsetModifiersManipulator.indexOf(str, needle,
-                start, options);
+                start, opt);
     }
 
     /**

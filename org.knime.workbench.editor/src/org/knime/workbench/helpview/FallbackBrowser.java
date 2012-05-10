@@ -44,14 +44,13 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   27.08.2007 (Fabian Dill): created
  */
 package org.knime.workbench.helpview;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 
@@ -64,8 +63,6 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import org.eclipse.core.runtime.FileLocator;
-import org.eclipse.core.runtime.Path;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.StyleRange;
 import org.eclipse.swt.custom.StyledText;
@@ -73,29 +70,28 @@ import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
-import org.knime.workbench.helpview.HelpviewPlugin;
 
 /**
  * Converts HTML text into normal text by using its own XSLT transformation.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class FallbackBrowser {
 
     private Transformer m_transformer;
-    
+
     private final StyledText m_text;
-    
+
     private final StyleRange m_styleRange;
-    
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             FallbackBrowser.class);
     private static final String XSLT = "HTML2Text.xslt";
-    
-    private static final String WARNING = "The operating systems web browser" 
-        + " could not be found!\n" 
-        + "Using fall back (text-only) browser"; 
-    
+
+    private static final String WARNING = "The operating systems web browser"
+        + " could not be found!\n"
+        + "Using fall back (text-only) browser";
+
     /**
      * @param parent parent
      * @param style SWT constants
@@ -107,13 +103,10 @@ public class FallbackBrowser {
         m_styleRange.length = WARNING.length();
         m_styleRange.fontStyle = SWT.BOLD;
         Color red = new Color(m_text.getDisplay(), 255, 0, 0);
-        m_styleRange.foreground = red; 
+        m_styleRange.foreground = red;
         try {
-            File xslt = new File(
-                    FileLocator.toFileURL(FileLocator.find(
-                    HelpviewPlugin.getDefault().getBundle(), 
-                    new Path("/" + XSLT), null)).getFile());
-            StreamSource stylesheet = new StreamSource(xslt);
+            InputStream is = getClass().getResourceAsStream(XSLT);
+            StreamSource stylesheet = new StreamSource(is);
             m_transformer =
                     TransformerFactory.newInstance().newTemplates(stylesheet)
                             .newTransformer();
@@ -122,8 +115,6 @@ public class FallbackBrowser {
         } catch (TransformerConfigurationException e) {
             LOGGER.error(e.getMessage(), e);
         } catch (TransformerFactoryConfigurationError e) {
-            LOGGER.error(e.getMessage(), e);
-        } catch (IOException e) {
             LOGGER.error(e.getMessage(), e);
         }
     }
@@ -143,15 +134,15 @@ public class FallbackBrowser {
         m_text.setText(result.toString());
         m_text.setStyleRange(m_styleRange);
     }
-    
+
     /**
      * Delegate to the wrapped Text component.
      */
     public void setFocus() {
         m_text.setFocus();
     }
-    
-    
+
+
     /**
      * Delegate to the wrapped Text component.
      * @return the display of the Text
@@ -159,15 +150,15 @@ public class FallbackBrowser {
     public Display getDisplay() {
         return m_text.getDisplay();
     }
-    
+
     /**
-     * 
+     *
      * @param html HTML description.
      * @return the HTML as plain text
      */
     public String convertHTML(final String html) {
         if (html == null) {
-            return "No description available. Please add an XML description"; 
+            return "No description available. Please add an XML description";
         }
         StreamResult result = new StreamResult(new StringWriter());
         StreamSource source = new StreamSource(new StringReader(html));

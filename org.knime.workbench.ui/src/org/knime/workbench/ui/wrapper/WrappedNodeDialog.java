@@ -73,6 +73,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
+import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -84,6 +85,8 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.swt.widgets.MenuItem;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeDialogPane;
@@ -138,7 +141,7 @@ public class WrappedNodeDialog extends Dialog {
     public WrappedNodeDialog(final Shell parentShell,
             final NodeContainer nodeContainer) throws NotConfigurableException {
         super(parentShell);
-        this.setShellStyle(SWT.APPLICATION_MODAL | SWT.SHELL_TRIM);
+        this.setShellStyle(SWT.PRIMARY_MODAL | SWT.SHELL_TRIM);
         m_nodeContainer = nodeContainer;
         m_dialogPane = m_nodeContainer.getDialogPaneWithSettings();
         m_logger = NodeLogger.getLogger(m_nodeContainer.getNameWithID());
@@ -171,7 +174,7 @@ public class WrappedNodeDialog extends Dialog {
     protected void handleShellCloseEvent() {
         // send cancel&close action to underlying dialog pane
         m_dialogPane.onCancel();
-        m_dialogPane.onClose();
+        m_dialogPane.callOnClose();
         super.handleShellCloseEvent();
     }
 
@@ -324,6 +327,14 @@ public class WrappedNodeDialog extends Dialog {
                 createButton(parent, IDialogConstants.CANCEL_ID,
                         IDialogConstants.CANCEL_LABEL, false);
 
+        ((GridLayout)parent.getLayout()).numColumns++;
+        final Button btnHelp = new Button(parent, SWT.PUSH | SWT.FLAT);
+        Image img =
+                PlatformUI.getWorkbench().getSharedImages()
+                        .getImage(ISharedImages.IMG_LCL_LINKTO_HELP);
+        btnHelp.setImage(img);
+
+
         boolean writeProtected = m_dialogPane.isWriteProtected();
         btnOK.setEnabled(!writeProtected);
         btnApply.setEnabled(!writeProtected);
@@ -407,12 +418,36 @@ public class WrappedNodeDialog extends Dialog {
                 doCancel();
             }
         });
+
+        btnHelp.addSelectionListener(new SelectionAdapter() {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public void widgetSelected(final SelectionEvent e) {
+                doOpenNodeDescription();
+            }
+        });
+
+    }
+
+    private void doOpenNodeDescription() {
+        HelpWindow.instance.open();
+
+        Rectangle bounds = getShell().getBounds();
+        int x = bounds.x + bounds.width + 10;
+        int y =
+                bounds.y
+                        - (HelpWindow.instance.getShell().getBounds().height - bounds.height)
+                        / 2;
+        HelpWindow.instance.getShell().setLocation(x, y);
+        HelpWindow.instance.showDescriptionForNode(m_nodeContainer);
     }
 
     private void doCancel() {
         // delegate cancel&close event to underlying dialog pane
         m_dialogPane.onCancel();
-        m_dialogPane.onClose();
+        m_dialogPane.callOnClose();
         buttonPressed(IDialogConstants.CANCEL_ID);
     }
 
@@ -436,7 +471,7 @@ public class WrappedNodeDialog extends Dialog {
 
     private void runOK(final boolean execute, final boolean openView) {
         // send close action to underlying dialog pane
-        m_dialogPane.onClose();
+        m_dialogPane.callOnClose();
         buttonPressed(IDialogConstants.OK_ID);
         if (execute) {
             m_nodeContainer.getParent()

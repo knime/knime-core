@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.knime.jsnippets" version="2">
+    <resource path="META-INF/MANIFEST.MF">
+        <filter id="923795461">
+            <message_arguments>
+                <message_argument value="2.6.0.qualifier"/>
+                <message_argument value="2.5.4.0032739"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/StringManipulationNodeModel.java" type="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeModel">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="FlowVariableProvider"/>
+                <message_argument value="StringManipulationNodeModel"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/StringManipulatorProvider.java" type="org.knime.base.node.preproc.stringmanipulation.StringManipulatorProvider">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.StringManipulatorProvider"/>
+                <message_argument value="getCategories()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="getCategories()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/ext/sun/nodes/script/JavaScriptingNodeDialog.java" type="org.knime.ext.sun.nodes.script.JavaScriptingNodeDialog">
+        <filter id="643850349">
+            <message_arguments>
+                <message_argument value="JavaScriptingCustomizer"/>
+                <message_argument value="JavaScriptingNodeDialog"/>
+                <message_argument value="JavaScriptingNodeDialog(JavaScriptingCustomizer)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/ext/sun/nodes/script/JavaScriptingNodeModel.java" type="org.knime.ext.sun.nodes.script.JavaScriptingNodeModel">
+        <filter id="576725006">
+            <message_arguments>
+                <message_argument value="FlowVariableProvider"/>
+                <message_argument value="JavaScriptingNodeModel"/>
+            </message_arguments>
+        </filter>
+        <filter id="643850349">
+            <message_arguments>
+                <message_argument value="JavaScriptingCustomizer"/>
+                <message_argument value="JavaScriptingNodeModel"/>
+                <message_argument value="JavaScriptingNodeModel(JavaScriptingCustomizer)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/ext/sun/nodes/script/compile/JavaCodeCompiler.java" type="org.knime.ext.sun.nodes.script.compile.JavaCodeCompiler">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.ext.sun.nodes.script.compile.JavaCodeCompiler"/>
+            </message_arguments>
+        </filter>
+    </resource>
+</component>

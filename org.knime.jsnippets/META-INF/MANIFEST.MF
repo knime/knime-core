@@ -2,16 +2,20 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Java Snippet Nodes (draft)
 Bundle-SymbolicName: org.knime.jsnippets;singleton:=true
-Bundle-Version: 2.5.4.qualifier
-Bundle-ClassPath: knime-jsnippets.jar,
- lib/commons-lang3-3.0.1.jar,
- lib/autocomplete_1.5.2/autocomplete.jar,
- lib/autocomplete_1.5.2/rsyntaxtextarea.jar
+Bundle-Version: 2.6.0.qualifier
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Export-Package: org.apache.commons.lang3,
- org.knime.base.node.preproc.stringmanipulation,
- org.knime.base.node.preproc.stringmanipulation.manipulator
 Require-Bundle: org.knime.base;bundle-version="[2.5.0,3.0.0)",
- org.knime.ext.sun;bundle-version="[2.5.0,3.0.0)"
+ org.eclipse.jdt.core;bundle-version="3.6.1"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
+Export-Package: org.apache.commons.lang3,
+ org.fife.ui.autocomplete,
+ org.knime.base.node.preproc.stringmanipulation,
+ org.knime.base.node.preproc.stringmanipulation.manipulator,
+ org.knime.base.node.util,
+ org.knime.ext.sun.nodes.script,
+ org.knime.ext.sun.nodes.script.compile
+Bundle-ClassPath: knime-jsnippets.jar,
+ lib/autocomplete_2.0.2/autocomplete.jar,
+ lib/autocomplete_2.0.2/rsyntaxtextarea.jar,
+ lib/snippet_inc/commons-lang3-3.0.1.jar

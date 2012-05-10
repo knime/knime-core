@@ -102,6 +102,13 @@ public class Tokenizer {
     /* flag indicating combination of different consecutive delimiters */
     private boolean m_combineMultipleDelimiters;
 
+    /** number of lines that should be ignored from the beginning of the
+     * stream (in disregard of any quote, delimiter, etc.). */
+    private long m_linesToSkip;
+
+    // counts the lines already skipped.
+    private long m_linesSkipped;
+
     /**
      * The maximum ASCII code for the first character of patterns (like
      * delimiter, comment, and quote patterns.
@@ -219,6 +226,8 @@ public class Tokenizer {
         m_whiteSpaces = new Vector<String>();
 
         m_combineMultipleDelimiters = false;
+        m_linesToSkip = 0;
+        m_linesSkipped = 0;
 
         m_newToken = new StringBuffer();
         m_lastToken = null;
@@ -258,6 +267,7 @@ public class Tokenizer {
         m_whiteSpaces.clear();
 
         m_combineMultipleDelimiters = false;
+        m_linesToSkip = 0;
     }
 
     /**
@@ -292,7 +302,17 @@ public class Tokenizer {
             m_tokenWasDelimiter = true;
             return tmp;
         }
-
+        while (m_linesSkipped < m_linesToSkip) {
+            // burn all characters within the first few lines - in disregard of
+            // any delimiters, quotes, etc.
+            int c = getNextChar();
+            if (c == EOF) {
+                break;
+            }
+            if (c == LF) {
+                m_linesSkipped++;
+            }
+        }
         m_lastToken = null;
         m_newToken.setLength(0);
         m_lastQuotes = null;
@@ -1164,6 +1184,8 @@ public class Tokenizer {
 
         // not to forget the flag to combine multiple (different) delimiters
         m_combineMultipleDelimiters = ftSettings.getCombineMultipleDelimiters();
+        // and the flag to skip first lines in the stream
+        m_linesToSkip = ftSettings.getSkipFirstLines();
 
     }
 
@@ -1189,6 +1211,7 @@ public class Tokenizer {
         }
 
         result.setCombineMultipleDelimiters(m_combineMultipleDelimiters);
+        result.setSkipFirstLines(m_linesToSkip);
 
         return result;
     }

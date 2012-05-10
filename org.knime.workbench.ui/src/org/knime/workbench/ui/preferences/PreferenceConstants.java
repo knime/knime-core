@@ -72,6 +72,10 @@ public interface PreferenceConstants {
     public static final String P_CONFIRM_EXEC_NODES_NOT_SAVED =
         "knime.confirm.exec_nodes_not_saved";
 
+    /** Preference constant to confirm executing nodes not saved on close. */
+    public static final String P_CONFIRM_EXEC_NODES_DATA_AWARE_DIALOGS =
+        "knime.confirm.exec_nodes_for_data_aware_dialogs";
+
     /** Preference constant for the size of the favorite nodes frequency
      * history size.
      */
@@ -108,5 +112,14 @@ public interface PreferenceConstants {
      * defined template. */
     public static final String P_EXPLORER_LINK_ON_NEW_TEMPLATE =
         "knime.explorer.link_on_new_template";
+
+    /** Pref constant whether to show grid in workflow editor (boolean). */
+    public static final String P_GRID_SHOW = "knime.showgrid";
+
+    /** Pref constant whether to snap to grid. */
+    public static final String P_GRID_SNAP_TO = "knime.snaptogrid";
+
+    /** Pref constant for grid size (number of pixels). */
+    public static final String P_GRID_SIZE = "knime.gridsize";
 
 }

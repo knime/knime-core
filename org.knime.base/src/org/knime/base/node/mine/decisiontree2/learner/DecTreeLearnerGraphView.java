@@ -51,6 +51,7 @@
 package org.knime.base.node.mine.decisiontree2.learner;
 
 import java.awt.Color;
+import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -94,6 +95,8 @@ import org.knime.core.node.property.hilite.HiLiteListener;
 import org.knime.core.node.property.hilite.KeyEvent;
 
 /**
+ *
+ * The graph view displayed the view of the Decision Tree to Image node.
  *
  * @author Heiko HOfer
  */
@@ -203,6 +206,14 @@ final class DecTreeLearnerGraphView extends
                 }
             }
         });
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected Container getExportComponent() {
+        return m_graph.getView();
     }
 
     /* Create the Panel with the outline view and the controls */

@@ -166,9 +166,11 @@ public class SorterNodeDialog extends NodeDialogPane {
                 LOGGER.error(ise.getMessage());
             }
         }
+        boolean sortMissingToEnd = settings.getBoolean(
+                SorterNodeModel.MISSING_TO_END_KEY, false);
         // set the values on the panel
         m_panel.update(specs[SorterNodeModel.INPORT], list, sortOrder,
-                NRSORTITEMS, sortinMemory);
+                NRSORTITEMS, sortinMemory, sortMissingToEnd);
     }
 
     /**
@@ -190,5 +192,7 @@ public class SorterNodeDialog extends NodeDialogPane {
                 .getSortOrder());
         settings.addBoolean(SorterNodeModel.SORTINMEMORY_KEY, m_panel
                 .sortInMemory());
+        settings.addBoolean(SorterNodeModel.MISSING_TO_END_KEY,
+                m_panel.isSortMissingToEnd());
     }
 }

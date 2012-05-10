@@ -172,16 +172,6 @@ public class JoinerJoinAnyTest {
         BufferedDataTable output = joiner.computeJoinTable(bdtLeft, bdtRight,
                 m_exec);
         Integer[][] outputArray = toIntegerArray(output);
-        //
-        System.out.println("--------------------------");
-        System.out.println("");
-        for (int i = 0 ; i < outputArray.length; i++) {
-            for (int k = 0; k < outputArray[0].length; k++) {
-                System.out.printf("%2d", outputArray[i][k]);
-                System.out.print("  ");
-            }
-            System.out.println("");
-        }
 
         // Test for equality of the arrays
         Assert.assertEquals(reference.length, outputArray.length);

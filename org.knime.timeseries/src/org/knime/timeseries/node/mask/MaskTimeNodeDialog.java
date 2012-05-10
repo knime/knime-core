@@ -66,6 +66,7 @@ public class MaskTimeNodeDialog extends DefaultNodeSettingsPane {
     /**
      * 
      */
+    @SuppressWarnings("unchecked")
     public MaskTimeNodeDialog() {
         addDialogComponent(new DialogComponentColumnNameSelection(
                 MaskTimeNodeModel.createColumnSelectionModel(), 

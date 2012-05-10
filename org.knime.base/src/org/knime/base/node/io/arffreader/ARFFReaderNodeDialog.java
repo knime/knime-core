@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   11.02.2005 (ohl): created
  */
@@ -86,11 +86,12 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ConvenientComboBoxRenderer;
+import org.knime.core.util.FileUtil;
 
 
 /**
  * Contains the dialog for the ARFF file reader.
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class ARFFReaderNodeDialog extends NodeDialogPane implements
@@ -265,10 +266,8 @@ public class ARFFReaderNodeDialog extends NodeDialogPane implements
             urli = ARFFReaderNodeModel.stringToURL(urlInput);
             if (urli != null) {
                 try {
-                    InputStream is = urli.openStream();
-                    if (is != null) {
-                        text = null;
-                    } else {
+                    InputStream is = FileUtil.openStreamWithTimeout(urli);
+                    if (is == null) {
                         text = "Can't open: " + urli.toString();
                     }
                 } catch (IOException ioe) {
@@ -333,7 +332,7 @@ public class ARFFReaderNodeDialog extends NodeDialogPane implements
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
-        
+
         // set the file history for the combo box.
         // disconnect the ItemChangelistener first
         m_url.removeItemListener(this);

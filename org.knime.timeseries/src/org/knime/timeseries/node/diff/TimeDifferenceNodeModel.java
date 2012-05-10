@@ -318,7 +318,7 @@ public class TimeDifferenceNodeModel extends NodeModel {
         }
         m_col1Idx = inSpecs[0].findColumnIndex(m_col1.getStringValue());
         if (nrDateCols > 1) {
-        	m_col2Idx = inSpecs[0].findColumnIndex(m_col2.getStringValue());
+            m_col2Idx = inSpecs[0].findColumnIndex(m_col2.getStringValue());
         }
         // check for first date column in input spec
         if (m_col1Idx < 0) {

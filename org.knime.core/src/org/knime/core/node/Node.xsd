@@ -1,0 +1,282 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ===============================================================================
+   * This source code, its documentation and all appendant files
+   * are protected by copyright law. All rights reserved.
+   *
+   * Copyright, 2003 - 2011
+   * University of Konstanz, Germany
+   * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
+   * and KNIME GmbH, Konstanz, Germany
+   *
+   * You may not modify, publish, transmit, transfer or sell, reproduce,
+   * create derivative works from, distribute, perform, display, or in
+   * any way exploit any of the content, in whole or in part, except as
+   * otherwise expressly permitted in writing by the copyright owner or
+   * as specified in the license file distributed with this product.
+   *
+   * If you have any questions please contact the copyright holder:
+   * website: www.knime.org
+   * email: contact@knime.org
+  ===============================================================================
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+        xmlns="http://knime.org/node2012" targetNamespace="http://knime.org/node2012"
+        elementFormDefault="qualified">
+  <xs:element name="knimeNode">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="name"/>
+        <xs:element ref="shortDescription"/>
+        <xs:element ref="fullDescription"/>
+        <xs:element ref="ports"/>
+        <xs:element minOccurs="0" ref="views"/>
+      </xs:sequence>
+      <xs:attribute name="icon" type="xs:string"/>
+      <xs:attribute name="type" default="Unknown">
+        <xs:simpleType>
+          <xs:restriction base="xs:token">
+            <xs:enumeration value="Source"/>
+            <xs:enumeration value="Sink"/>
+            <xs:enumeration value="Learner"/>
+            <xs:enumeration value="Predictor"/>
+            <xs:enumeration value="Manipulator"/>
+            <xs:enumeration value="Visualizer"/>
+            <xs:enumeration value="Meta"/>
+            <xs:enumeration value="LoopStart"/>
+            <xs:enumeration value="LoopEnd"/>
+            <xs:enumeration value="QuickForm"/>
+            <xs:enumeration value="Other"/>
+            <xs:enumeration value="Unknown"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+      <xs:attribute name="deprecated" default="false">
+        <xs:simpleType>
+          <xs:restriction base="xs:token">
+            <xs:enumeration value="true"/>
+            <xs:enumeration value="false"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="name" type="xs:string"/>
+  <xs:element name="shortDescription" type="xs:string"/>
+  <xs:element name="fullDescription">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element ref="intro"/>
+        <xs:choice>
+          <xs:element minOccurs="0" maxOccurs="unbounded" ref="option"/>
+          <xs:element minOccurs="0" maxOccurs="unbounded" ref="tab"/>
+        </xs:choice>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="intro">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">       
+        <xs:element ref="p"/>
+        <xs:element ref="h"/>
+        <xs:element ref="br"/>
+        <xs:element ref="b"/>
+        <xs:element ref="i"/>
+        <xs:element ref="u"/>
+        <xs:element ref="tt"/>
+        <xs:element ref="a"/>
+        <xs:element ref="ul"/>
+        <xs:element ref="ol"/>
+        <xs:element ref="h3"/>
+        <xs:element ref="h4"/>
+        <xs:element ref="pre"/>
+        <xs:element ref="sub"/>
+        <xs:element ref="sup"/>
+        <xs:element ref="table"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="option">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">	
+        <xs:element ref="p"/>
+        <xs:element ref="h"/>
+        <xs:element ref="br"/>
+        <xs:element ref="b"/>
+        <xs:element ref="i"/>
+        <xs:element ref="u"/>
+        <xs:element ref="tt"/>
+        <xs:element ref="a"/>
+        <xs:element ref="ul"/>
+        <xs:element ref="ol"/>
+        <xs:element ref="pre"/>
+        <xs:element ref="sub"/>
+        <xs:element ref="sup"/>
+       </xs:choice>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+      <xs:attribute name="optional" default="false">
+        <xs:simpleType>
+          <xs:restriction base="xs:token">
+            <xs:enumeration value="true"/>
+            <xs:enumeration value="false"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="tab">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="option"/>
+      </xs:sequence>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="p">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+	    <xs:element ref="br"/>
+        <xs:element ref="b"/>
+        <xs:element ref="i"/>
+        <xs:element ref="u"/>
+        <xs:element ref="a"/>
+        <xs:element ref="tt"/>
+        <xs:element ref="ul"/>
+        <xs:element ref="ol"/>
+        <xs:element ref="sup"/>
+        <xs:element ref="sub"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ul">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="li"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ol">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="li"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="li" type="xs:string"/>
+  <xs:element name="h3" type="xs:string"/>
+  <xs:element name="h4" type="xs:string"/>
+  <xs:element name="h" type="xs:string"/>
+  <xs:element name="b" type="xs:string"/>
+  <xs:element name="i" type="xs:string"/>
+  <xs:element name="u" type="xs:string"/>
+  <xs:element name="a">
+    <xs:complexType mixed="true">
+      <xs:attribute name="href" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="tt" type="xs:string"/>
+  <xs:element name="pre" type="xs:string"/>
+  <xs:element name="sup" type="xs:string"/>
+  <xs:element name="sub" type="xs:string"/>
+  <xs:element name="br">
+    <xs:complexType/>
+  </xs:element>
+  <xs:element name="table">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="tr"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="tr">
+    <xs:complexType>
+      <xs:choice maxOccurs="unbounded">
+        <xs:element ref="th"/>
+        <xs:element ref="td"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="td">
+    <xs:complexType mixed="true">
+      <xs:attribute name="align"/>
+      <xs:attribute name="colspan"/>
+      <xs:attribute name="rowspan"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="th">
+    <xs:complexType mixed="true">
+      <xs:attribute name="align"/>
+      <xs:attribute name="colspan"/>
+      <xs:attribute name="rowspan"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="ports">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="inPort"/>
+        <xs:element minOccurs="0" maxOccurs="unbounded" ref="outPort"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="inPort">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="br"/>
+        <xs:element ref="b"/>
+        <xs:element ref="i"/>
+        <xs:element ref="u"/>
+        <xs:element ref="tt"/>
+        <xs:element ref="ul"/>
+        <xs:element ref="ol"/>
+      </xs:choice>
+      <xs:attribute name="index" type="xs:int" use="required"/>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+      <xs:attribute name="optional" default="false">
+        <xs:simpleType>
+          <xs:restriction base="xs:token">
+            <xs:enumeration value="true"/>
+            <xs:enumeration value="false"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:attribute>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="outPort">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="br"/>
+        <xs:element ref="b"/>
+        <xs:element ref="i"/>
+        <xs:element ref="u"/>
+        <xs:element ref="tt"/>
+        <xs:element ref="ul"/>
+        <xs:element ref="ol"/>
+      </xs:choice>
+      <xs:attribute name="index" type="xs:int" use="required"/>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="views">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element maxOccurs="unbounded" ref="view"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:element name="view">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="br"/>
+        <xs:element ref="b"/>
+        <xs:element ref="i"/>
+        <xs:element ref="u"/>
+        <xs:element ref="a"/>
+        <xs:element ref="tt"/>
+        <xs:element ref="ul"/>
+        <xs:element ref="ol"/>
+      </xs:choice>
+      <xs:attribute name="index" type="xs:int"  use="required"/>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

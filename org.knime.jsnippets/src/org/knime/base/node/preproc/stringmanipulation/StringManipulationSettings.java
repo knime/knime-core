@@ -62,21 +62,21 @@ import java.util.List;
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.Path;
-import org.eclipse.core.runtime.Platform;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.util.FileUtil;
 import org.knime.ext.sun.nodes.script.calculator.ColumnCalculator;
 import org.knime.ext.sun.nodes.script.expression.Expression;
 import org.knime.ext.sun.nodes.script.settings.JavaScriptingSettings;
 import org.knime.ext.sun.nodes.script.settings.JavaSnippetType;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 
 /**
  * The settings for the string manipulation node.
@@ -84,6 +84,8 @@ import org.osgi.framework.Bundle;
  * @author Heiko Hofer
  */
 public class StringManipulationSettings {
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(StringManipulationSettings.class);
     /** NodeSettings key for the expression. */
     private static final String CFG_EXPRESSION = "expression";
 
@@ -117,7 +119,6 @@ public class StringManipulationSettings {
     /** if true any missing value in the (relevant) input will result
      * in a "missing" result. */
     private boolean m_insertMissingAsNull = false;
-
 
 
     /** Saves current parameters to settings object.
@@ -345,8 +346,8 @@ public class StringManipulationSettings {
         }
         int endIndex = StringUtils.indexOf(expression, '(');
         if (endIndex < 0) {
-            throw new InvalidSettingsException(
-            "Constant expressions are not supported.");
+            throw new InvalidSettingsException("Ambiguous return type! "
+            + "Use 'string()' or 'toInt()' to specify return type.");
         }
         String function = expression.substring(0, endIndex);
 
@@ -390,18 +391,25 @@ public class StringManipulationSettings {
         s.setExpressionVersion(Expression.VERSION_2X);
         s.setHeader("");
         s.setInsertMissingAsNull(this.isInsertMissingAsNull());
-        Bundle bundle = Platform.getBundle("org.knime.jsnippets");
+        Bundle bundle = FrameworkUtil.getBundle(this.getClass());
         try {
-            URL commonsLangURL = FileLocator.find(bundle,
-                    new Path("/lib/commons-lang3-3.0.1.jar"), null);
-            commonsLangURL = FileLocator.toFileURL(commonsLangURL);
+            List<String> includes = new ArrayList<String>();
+            URL snippetIncURL = FileLocator.find(bundle,
+                    new Path("/lib/snippet_inc"), null);
+            File includeDir = new File(
+                    FileLocator.toFileURL(snippetIncURL).getPath());
+            for (File includeJar : includeDir.listFiles()) {
+                if (includeJar.isFile()
+                        && includeJar.getName().endsWith(".jar")) {
+                    includes.add(includeJar.getPath());
+                    LOGGER.debug("Include jar file: "
+                            + includeJar.getPath());
+                }
+            }
             StringManipulatorProvider provider =
                 StringManipulatorProvider.getDefault();
-            File manipulatorsJar = provider.getJarFile();
-            s.setJarFiles(new String[] {
-                    FileUtil.getFileFromURL(commonsLangURL).getAbsolutePath(),
-                    manipulatorsJar.getAbsolutePath()
-                    });
+            includes.add(provider.getJarFile().getAbsolutePath());
+            s.setJarFiles(includes.toArray(new String[includes.size()]));
         } catch (IOException e) {
             throw new IllegalStateException(
                     "Cannot locate necessary libraries.", e);

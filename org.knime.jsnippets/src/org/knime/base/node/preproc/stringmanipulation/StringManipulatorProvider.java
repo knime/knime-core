@@ -103,31 +103,28 @@ import org.knime.base.node.preproc.stringmanipulation.manipulator.SubstringOffse
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ToEmptyManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ToNullManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.UpperCaseManipulator;
+import org.knime.base.node.util.ManipulatorProvider;
 import org.knime.core.util.FileUtil;
 
 /**
+ * Provider for all string manipulation functions.
  *
  * @author Heiko Hofer
  */
-public final class StringManipulatorProvider {
-    /**
-     * The display name of the category with all string manipulators.
-     */
-    static final String ALL_CATEGORY = "All";
+public final class StringManipulatorProvider implements ManipulatorProvider {
     private Map<String, Collection<Manipulator>> m_manipulators;
+
     private File m_jarFile;
 
-
-    private static StringManipulatorProvider provider;
+    private static final StringManipulatorProvider provider =
+            new StringManipulatorProvider();
 
     /**
      * Get default shared instance.
+     *
      * @return default StringManipulatorProvider
      */
     public static StringManipulatorProvider getDefault() {
-        if (null == provider) {
-            provider = new StringManipulatorProvider();
-        }
         return provider;
     }
 
@@ -135,18 +132,18 @@ public final class StringManipulatorProvider {
      * prevent instantiation.
      */
     private StringManipulatorProvider() {
-        m_manipulators = new LinkedHashMap<String,
-                                    Collection<Manipulator>>();
+        m_manipulators = new LinkedHashMap<String, Collection<Manipulator>>();
 
         Collection<Manipulator> manipulators =
-            new TreeSet<Manipulator>(new Comparator<Manipulator>() {
+                new TreeSet<Manipulator>(new Comparator<Manipulator>() {
 
-                @Override
-                public int compare(final Manipulator o1,
-                        final Manipulator o2) {
-                    return o1.getDisplayName().compareTo(o2.getDisplayName());
-                }
-            });
+                    @Override
+                    public int compare(final Manipulator o1,
+                            final Manipulator o2) {
+                        return o1.getDisplayName().compareTo(
+                                o2.getDisplayName());
+                    }
+                });
 
         manipulators.add(new CapitalizeDelimManipulator());
         manipulators.add(new CapitalizeManipulator());
@@ -199,8 +196,7 @@ public final class StringManipulatorProvider {
             m_manipulators.put(category, new ArrayList<Manipulator>());
         }
         for (Manipulator m : manipulators) {
-            Collection<Manipulator> list =
-                m_manipulators.get(m.getCategory());
+            Collection<Manipulator> list = m_manipulators.get(m.getCategory());
             list.add(m);
         }
 
@@ -211,18 +207,19 @@ public final class StringManipulatorProvider {
      *
      * @return the categories
      */
-    public Object[] getCategories() {
-        return m_manipulators.keySet().toArray();
+    @Override
+    public Collection<String> getCategories() {
+        return m_manipulators.keySet();
     }
-
 
     /**
      * Get the {@link Manipulator}s in the given category.
+     *
      * @param category a category as given by getCategories()
      * @return the {@link Manipulator}s in the given category
      */
-    public Collection<Manipulator> getManipulators(
-            final String category) {
+    @Override
+    public Collection<Manipulator> getManipulators(final String category) {
         return m_manipulators.get(category);
     }
 
@@ -235,11 +232,12 @@ public final class StringManipulatorProvider {
      */
     public File getJarFile() throws IOException {
         if (m_jarFile == null) {
-            File tempClassPathDir = FileUtil
-                    .createTempDir("knime_stringmanipulation");
+            File tempClassPathDir =
+                    FileUtil.createTempDir("knime_stringmanipulation");
             tempClassPathDir.deleteOnExit();
-            m_jarFile = new File(tempClassPathDir.getPath()
-                    + File.separator + "manipulators.jar");
+            m_jarFile =
+                    new File(tempClassPathDir.getPath() + File.separator
+                            + "manipulators.jar");
             m_jarFile.deleteOnExit();
             FileOutputStream out = new FileOutputStream(m_jarFile);
             JarOutputStream jar = new JarOutputStream(out);
@@ -285,12 +283,11 @@ public final class StringManipulatorProvider {
         return root;
     }
 
-
     private DefaultMutableTreeNode getChild(final DefaultMutableTreeNode curr,
             final String p) {
         for (int i = 0; i < curr.getChildCount(); i++) {
             DefaultMutableTreeNode child =
-                (DefaultMutableTreeNode)curr.getChildAt(i);
+                    (DefaultMutableTreeNode)curr.getChildAt(i);
             if (child.getUserObject().toString().equals(p)) {
                 return child;
             }
@@ -298,10 +295,8 @@ public final class StringManipulatorProvider {
         return null;
     }
 
-
     private void createJar(final DefaultMutableTreeNode node,
-            final JarOutputStream jar,
-            final String path) throws IOException {
+            final JarOutputStream jar, final String path) throws IOException {
         Object o = node.getUserObject();
         if (o instanceof String) {
             // folders must end with a "/"
@@ -314,7 +309,7 @@ public final class StringManipulatorProvider {
             }
             for (int i = 0; i < node.getChildCount(); i++) {
                 DefaultMutableTreeNode child =
-                    (DefaultMutableTreeNode) node.getChildAt(i);
+                        (DefaultMutableTreeNode)node.getChildAt(i);
                 createJar(child, jar, subPath);
             }
         } else {
@@ -325,8 +320,9 @@ public final class StringManipulatorProvider {
             jar.putNextEntry(entry);
 
             ClassLoader loader = cl.getClassLoader();
-            InputStream inStream = loader.getResourceAsStream(
-                    cl.getName().replace('.', '/') + ".class");
+            InputStream inStream =
+                    loader.getResourceAsStream(cl.getName().replace('.', '/')
+                            + ".class");
 
             FileUtil.copy(inStream, jar);
             inStream.close();

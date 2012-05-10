@@ -50,6 +50,7 @@
  */
 package org.knime.workbench.editor2.editparts;
 
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,18 +58,30 @@ import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.draw2d.ConnectionAnchor;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
+import org.eclipse.gef.ConnectionEditPart;
 import org.eclipse.gef.DragTracker;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPartListener;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.gef.EditPolicy;
+import org.eclipse.gef.NodeEditPart;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.RequestConstants;
+import org.eclipse.gef.commands.Command;
+import org.eclipse.gef.requests.CreateConnectionRequest;
+import org.eclipse.gef.requests.SelectionRequest;
+import org.eclipse.jface.dialogs.ErrorDialog;
+import org.eclipse.jface.dialogs.MessageDialogWithToggle;
+import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.util.IPropertyChangeListener;
@@ -77,6 +90,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.views.properties.IPropertySource;
@@ -105,10 +119,13 @@ import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer.LoopStatus;
 import org.knime.core.node.workflow.WorkflowCipherPrompt;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.WorkflowManagerInput;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
+import org.knime.workbench.editor2.commands.CreateConnectionCommand;
+import org.knime.workbench.editor2.commands.ShiftConnectionCommand;
 import org.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 import org.knime.workbench.editor2.figures.ProgressFigure;
@@ -129,7 +146,7 @@ import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
  */
 public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         NodeStateChangeListener, NodeProgressListener, NodeMessageListener,
-        NodeUIInformationListener, EditPartListener, ConnectableEditPart,
+        NodeUIInformationListener, EditPartListener, ConnectableEditPart, NodeEditPart,
         NodePropertyChangedListener, IPropertyChangeListener, IAdaptable {
 
     private static final NodeLogger LOGGER = NodeLogger
@@ -305,7 +322,14 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     @Override
     public void performRequest(final Request request) {
         if (request.getType() == RequestConstants.REQ_OPEN) {
-            // caused by a double click on this edit part
+            // double click on node
+            if (request instanceof SelectionRequest) {
+                if (((SelectionRequest)request).isShiftKeyPressed()) {
+                    shiftConnection();
+                    return;
+                }
+            }
+            // simple dbl-click, no modifier key
              openDialog();
         } else if (request.getType() == RequestConstants.REQ_DIRECT_EDIT) {
             NodeAnnotationEditPart nodeAnnotationEditPart =
@@ -313,6 +337,14 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             if (nodeAnnotationEditPart != null) {
                 nodeAnnotationEditPart.performEdit();
             }
+        }
+    }
+
+    public void shiftConnection() {
+        ShiftConnectionCommand cmd =
+            new ShiftConnectionCommand(getWorkflowManager(), this);
+        if (cmd.canExecute()) {
+            getViewer().getEditDomain().getCommandStack().execute(cmd);
         }
     }
 
@@ -688,45 +720,83 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      */
     public void openDialog() {
         NodeContainer container = (NodeContainer)getModel();
-
         if (container instanceof WorkflowManager) {
             openSubWorkflowEditor();
-            return;
+        } else {
+            openNodeDialog();
         }
+    }
+
+    /** Opens the node's dialog (also meta node dialogs).
+     * @since 2.6
+     */
+    public void openNodeDialog() {
+        final NodeContainer container = (NodeContainer)getModel();
         // if this node does not have a dialog
         if (!container.hasDialog()) {
-
-            LOGGER.debug(container.getName()
-                    + ": Opening node dialog after double "
-                    + "click not possible");
+            LOGGER.debug("No dialog for " + container.getNameWithID());
             return;
         }
 
-        LOGGER.debug(container.getName()
-                + ": Opening node dialog after double click...");
+        final Shell shell = Display.getCurrent().getActiveShell();
+        if (container.hasDataAwareDialogPane()) {
+            IPreferenceStore store =
+                KNIMEUIPlugin.getDefault().getPreferenceStore();
+            final String key =
+                PreferenceConstants.P_CONFIRM_EXEC_NODES_DATA_AWARE_DIALOGS;
+            if (!store.contains(key) || store.getBoolean(key)) {
+                int returnCode = MessageDialogWithToggle.openOkCancelConfirm(
+                        shell,
+                        "Execute upstream nodes", "The " + container.getName()
+                        + " node requires the full input data in order to be "
+                        + "configured.\n\n"
+                        + "Upstream nodes will now be executed.",
+                        "Don't prompt me again", false, store,
+                        key).getReturnCode();
+                if (returnCode == MessageDialogWithToggle.CANCEL) {
+                    return;
+                }
+            }
+            try {
+                PlatformUI.getWorkbench().getProgressService().run(true, false,
+                        new IRunnableWithProgress() {
+                    @Override
+                    public void run(final IProgressMonitor monitor)
+                    throws InvocationTargetException, InterruptedException {
+                        container.getParent().executePredecessorsAndWait(
+                                container.getID());
+                    }
+                });
+            } catch (InvocationTargetException e) {
+                String error = "Exception while waiting for completion "
+                    + "of execution";
+                LOGGER.warn(error, e);
+                ErrorDialog.openError(shell, "Failed opening dialog", error,
+                        new Status(IStatus.ERROR, KNIMEEditorPlugin.PLUGIN_ID,
+                                error, e));
+            } catch (InterruptedException e) {
+                // ignore
+            }
+        }
 
         //
         // This is embedded in a special JFace wrapper dialog
         //
         try {
-            WrappedNodeDialog dlg =
-                    new WrappedNodeDialog(
-                            Display.getCurrent().getActiveShell(), container);
+            WrappedNodeDialog dlg = new WrappedNodeDialog(shell, container);
             dlg.open();
         } catch (NotConfigurableException ex) {
             MessageBox mb =
-                    new MessageBox(Display.getDefault().getActiveShell(),
-                            SWT.ICON_WARNING | SWT.OK);
+                    new MessageBox(shell, SWT.ICON_WARNING | SWT.OK);
             mb.setText("Dialog cannot be opened");
             mb.setMessage("The dialog cannot be opened for the following"
                     + " reason:\n" + ex.getMessage());
             mb.open();
         } catch (Throwable t) {
-            LOGGER.error(
-                    "The dialog pane for node '" + container.getNameWithID()
-                            + "' has thrown a '" + t.getClass().getSimpleName()
-                            + "'. That is most likely an implementation error.",
-                    t);
+            LOGGER.error("The dialog pane for node '"
+                    + container.getNameWithID() + "' has thrown a '"
+                    + t.getClass().getSimpleName()
+                    + "'. That is most likely an implementation error.", t);
         }
 
     }
@@ -954,6 +1024,96 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             return new NodeContainerProperties(getNodeContainer());
         }
         return super.getAdapter(adapter);
+    }
+
+    /**
+     * @param sourceNode
+     * @param srcPortIdx
+     * @return the first free port the specified port could be connected to. Or
+     *         -1 if there is none.
+     */
+    public int getFreeInPort(final ConnectableEditPart sourceNode,
+            final int srcPortIdx) {
+        WorkflowManager wm = getWorkflowManager();
+        if (wm == null || sourceNode == null || srcPortIdx < 0) {
+            return -1;
+        }
+        int startPortIdx = 1; // skip variable ports
+        int connPortIdx = -1;
+        NodeContainer nc = getNodeContainer();
+        if (nc instanceof WorkflowManager) {
+            startPortIdx = 0;
+        }
+        for (int i = startPortIdx; i < nc.getNrInPorts(); i++) {
+            if (wm.canAddNewConnection(sourceNode.getNodeContainer().getID(),
+                    srcPortIdx, nc.getID(), i)) {
+                connPortIdx = i;
+                break;
+            }
+        }
+        if (connPortIdx < 0 && startPortIdx == 1) {
+            // if the src is a flow var port, connect it to impl flow var port
+            if (wm.canAddConnection(sourceNode.getNodeContainer().getID(),
+                    srcPortIdx, nc.getID(), 0)) {
+                connPortIdx = 0;
+            }
+        }
+        return connPortIdx;
+    }
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ConnectionAnchor getTargetConnectionAnchor(
+            final ConnectionEditPart connection) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ConnectionAnchor getSourceConnectionAnchor(
+            final ConnectionEditPart connection) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ConnectionAnchor getSourceConnectionAnchor(final Request request) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ConnectionAnchor getTargetConnectionAnchor(final Request request) {
+        if (!(request instanceof CreateConnectionRequest)) {
+            return null;
+        }
+        CreateConnectionRequest req = (CreateConnectionRequest)request;
+        Command cmd = req.getStartCommand();
+        if (!(cmd instanceof CreateConnectionCommand)) {
+            return null;
+        }
+        CreateConnectionCommand connCmd = (CreateConnectionCommand)cmd;
+        // find a free port that could take the connection
+        int portIdx = getFreeInPort(connCmd.getSourceNode(), connCmd.getSourcePortID());
+        if (portIdx < 0) {
+            return null;
+        }
+        for (Object part : getChildren()) {
+            if (part instanceof AbstractPortEditPart) {
+                AbstractPortEditPart port = (AbstractPortEditPart)part;
+                if (port.isInPort() && port.getIndex() == portIdx) {
+                    return port.getTargetConnectionAnchor(request);
+                }
+            }
+        }
+        return null;
     }
 
 }

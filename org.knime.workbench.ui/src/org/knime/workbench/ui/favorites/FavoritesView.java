@@ -149,7 +149,7 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
                     NodeTemplate tmplt = (NodeTemplate)o;
                     NodeFactory<? extends NodeModel> nodeFact;
                     try {
-                        nodeFact = tmplt.getFactory().newInstance();
+                        nodeFact = tmplt.createFactoryInstance();
                     } catch (Exception e) {
                         NodeLogger.getLogger(FavoritesView.class).error(
                                 "Unable to instantiate the selected node "

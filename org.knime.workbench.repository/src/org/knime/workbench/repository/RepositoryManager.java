@@ -52,6 +52,7 @@ package org.knime.workbench.repository;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -66,6 +67,7 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.workbench.repository.model.AbstractContainerObject;
 import org.knime.workbench.repository.model.Category;
+import org.knime.workbench.repository.model.DynamicNodeTemplate;
 import org.knime.workbench.repository.model.IContainerObject;
 import org.knime.workbench.repository.model.IRepositoryObject;
 import org.knime.workbench.repository.model.MetaNodeTemplate;
@@ -141,11 +143,14 @@ public final class RepositoryManager {
             + ".nodes";
 
     // ID of "category" extension point
-    private static final String ID_CATEGORY = "org.knime.workbench."
-            + "repository.categories";
+    private static final String ID_CATEGORY
+            = "org.knime.workbench.repository.categories";
 
-    private static final String ID_META_NODE =
-            "org.knime.workbench.repository.metanode";
+    private static final String ID_META_NODE
+            = "org.knime.workbench.repository.metanode";
+
+    private static final String ID_NODE_SET
+            = "org.knime.workbench.repository.nodesets";
 
     private final Root m_root = new Root();
 
@@ -166,6 +171,7 @@ public final class RepositoryManager {
 
         readCategories(listener);
         readNodes(listener, isInExpertMode);
+        readNodeSets(listener, isInExpertMode);
         readMetanodes(listener, isInExpertMode);
         removeEmptyCategories(m_root);
     }
@@ -181,7 +187,7 @@ public final class RepositoryManager {
                 if (!Platform.isRunning()) { // shutdown was initiated
                     return;
                 }
-                
+
                 try {
                     MetaNodeTemplate metaNode =
                             RepositoryFactory.createMetaNode(mnConfig);
@@ -318,7 +324,7 @@ public final class RepositoryManager {
                 if (!Platform.isRunning()) { // shutdown was initiated
                     return;
                 }
-                
+
                 try {
                     NodeTemplate node = RepositoryFactory.createNode(e);
 
@@ -373,6 +379,83 @@ public final class RepositoryManager {
                         message +=
                                 " The corresponding plugin "
                                         + "bundle could not be activated!";
+                    }
+                    LOGGER.error(message, t);
+                }
+
+            } // for configuration elements
+        } // for node extensions
+    }
+
+
+    /**
+     * @param isInExpertMode
+     */
+    private void readNodeSets(final Listener l, final boolean isInExpertMode) {
+        //
+        // Process the contributed node sets
+        //
+        IExtension[] nodeExtensions = RepositoryManager
+                .getExtensions(ID_NODE_SET);
+        for (IExtension ext : nodeExtensions) {
+            // iterate through the config elements and create 'NodeTemplate'
+            // objects
+            IConfigurationElement[] elements = ext.getConfigurationElements();
+            for (IConfigurationElement elem : elements) {
+                if (!Platform.isRunning()) { // shutdown was initiated
+                    return;
+                }
+
+                try {
+                    Collection<DynamicNodeTemplate> dynamicNodeTemplates = RepositoryFactory
+                            .createNodeSet(m_root, elem);
+
+                    for (DynamicNodeTemplate node : dynamicNodeTemplates) {
+
+                        l.newNode(m_root, node);
+
+                        m_nodesById.put(node.getID(), node);
+                        String nodeName = node.getID();
+                        nodeName = nodeName
+                                .substring(nodeName.lastIndexOf('.') + 1);
+
+                        // Ask the root to lookup the category-container located
+                        // at
+                        // the given path
+                        IContainerObject parentContainer = m_root
+                                .findContainer(node.getCategoryPath());
+
+                        // If parent category is illegal, log an error and
+                        // append
+                        // the node to the repository root.
+                        if (parentContainer == null) {
+                            LOGGER.warn("Invalid category-path for node "
+                                    + "contribution: '"
+                                    + node.getCategoryPath()
+                                    + "' - adding to root instead");
+                            m_root.addChild(node);
+                        } else {
+                            // everything is fine, add the node to its parent
+                            // category
+                            parentContainer.addChild(node);
+                        }
+
+                    }
+
+                } catch (Throwable t) {
+                    String message = "Node " + elem.getAttribute("id")
+                            + "' from plugin '" + ext.getNamespaceIdentifier()
+                            + "' could not be created.";
+                    Bundle bundle = Platform.getBundle(ext
+                            .getNamespaceIdentifier());
+
+                    if ((bundle == null)
+                            || (bundle.getState() != Bundle.ACTIVE)) {
+                        // if the plugin is null, the plugin could not
+                        // be activated maybe due to a not
+                        // activateable plugin (plugin class can not be found)
+                        message += " The corresponding plugin "
+                                + "bundle could not be activated!";
                     }
                     LOGGER.error(message, t);
                 }

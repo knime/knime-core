@@ -67,7 +67,6 @@ import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.Node.LoopRole;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -91,8 +90,9 @@ import org.knime.workbench.editor2.actions.PasteActionContextMenu;
 import org.knime.workbench.editor2.actions.PauseLoopExecutionAction;
 import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.ResumeLoopAction;
-import org.knime.workbench.editor2.actions.SetNodeDescriptionAction;
+import org.knime.workbench.editor2.actions.RevealMetaNodeTemplateAction;
 import org.knime.workbench.editor2.actions.SaveAsMetaNodeTemplateAction;
+import org.knime.workbench.editor2.actions.SetNodeDescriptionAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
 import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -108,8 +108,6 @@ import org.knime.workbench.editor2.model.WorkflowPortBar;
  * @author Christoph Sieb, University of Konstanz
  */
 public class WorkflowContextMenuProvider extends ContextMenuProvider {
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(WorkflowContextMenuProvider.class);
 
     private final ActionRegistry m_actionRegistry;
 
@@ -356,6 +354,11 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
             ((AbstractNodeAction)action).update();
             action = m_actionRegistry.getAction(
                     CheckUpdateMetaNodeLinkAction.ID);
+            manager.appendToGroup(
+                    IWorkbenchActionConstants.GROUP_APP, action);
+            ((AbstractNodeAction)action).update();
+            action = m_actionRegistry.getAction(
+                    RevealMetaNodeTemplateAction.ID);
             manager.appendToGroup(
                     IWorkbenchActionConstants.GROUP_APP, action);
             ((AbstractNodeAction)action).update();

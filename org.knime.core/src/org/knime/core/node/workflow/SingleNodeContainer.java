@@ -66,6 +66,7 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.DataAwareNodeDialogPane;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -1203,7 +1204,7 @@ public final class SingleNodeContainer extends NodeContainer {
      * the execution will be halted. This can also be called on a paused node
      * to trigger a "single step" execution.
      *
-     * @param if true, pause is enabled. Otherwise disabled.
+     * @param enablePausing if true, pause is enabled. Otherwise disabled.
      */
     void pauseLoopExecution(final boolean enablePausing) {
         if (getState().executionInProgress()) {
@@ -1230,11 +1231,18 @@ public final class SingleNodeContainer extends NodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    NodeDialogPane getDialogPaneWithSettings(final PortObjectSpec[] inSpecs)
-            throws NotConfigurableException {
+    public final boolean hasDataAwareDialogPane() {
+        return m_node.hasDialog()
+        && m_node.getDialogPane() instanceof DataAwareNodeDialogPane;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    NodeDialogPane getDialogPaneWithSettings(final PortObjectSpec[] inSpecs,
+            final PortObject[] inData) throws NotConfigurableException {
         NodeSettings settings = new NodeSettings(getName());
         saveSettings(settings);
-        return m_node.getDialogPaneWithSettings(inSpecs, settings,
+        return m_node.getDialogPaneWithSettings(inSpecs, inData, settings,
                 getParent().isWriteProtected());
     }
 
@@ -1298,11 +1306,13 @@ public final class SingleNodeContainer extends NodeContainer {
      * @see {@link Node#isInactiveBranchConsumer()}
      */
     public boolean isInactiveBranchConsumer() {
-    	return m_node.isInactiveBranchConsumer();
+        return m_node.isInactiveBranchConsumer();
     }
 
+    /** Possible loop states. */
     public static enum LoopStatus { NONE, RUNNING, PAUSED, FINISHED };
     /**
+     * @return status of loop (determined from NodeState and LoopContext)
      */
     public LoopStatus getLoopStatus() {
         if (getNode().getLoopRole().equals(LoopRole.END)) {

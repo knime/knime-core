@@ -16,8 +16,7 @@
             </head>
             <body>
                 <xsl:apply-templates select="//div[@class='contentWrapper']" />
-                <xsl:apply-templates select="//div[@id='block-views-news-block_2']//div[@class='views-field-title']" />
-                <xsl:apply-templates select="//div[@id='block-views-events-block_2']//div[@class='views-field-title']" />
+                <xsl:apply-templates select="//div[@id='knime-client-news']" />
             </body>
         </html>
     </xsl:template>
@@ -26,7 +25,7 @@
         <xsl:apply-templates />
     </xsl:template>
 
-    <xsl:template match="span[@class='views-field-title']">
+    <xsl:template match="div[@id='knime-client-news']">
         <div id="news-entry">
             <xsl:apply-templates />
         </div>
