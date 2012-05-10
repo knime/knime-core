@@ -23,8 +23,8 @@
  */
 package org.knime.core.workflow.metaWithIndependentThroughConns;
 
-import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeContainer.State;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.workflow.WorkflowTestCase;
 
 /**
@@ -122,11 +122,14 @@ public class MetaWithIndependentThroughConnsTest extends WorkflowTestCase {
         checkState(m_bottomSource, State.EXECUTED);
         checkState(m_bottomSink, State.EXECUTED);
 
-        getManager().addConnection(m_bottomSource, 0,m_metaWithOnlyThrough, 0);
+        getManager().addConnection(m_bottomSource, 1, m_metaWithOnlyThrough, 0);
 
         checkState(m_topSource, State.EXECUTED);
         checkState(m_bottomSource, State.EXECUTED);
-        checkState(m_bottomSink, State.CONFIGURED);
+        checkState(m_bottomSink, State.EXECUTED);
+        checkState(m_topSink, State.CONFIGURED);
+
+        executeAllAndWait();
         checkState(m_topSink, State.EXECUTED);
 
     }
