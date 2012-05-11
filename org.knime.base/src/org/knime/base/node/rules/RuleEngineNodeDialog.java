@@ -654,6 +654,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
                 || specs[0].getNumColumns() == 0) {
             throw new NotConfigurableException("No columns available!");
         }
+        m_ruleEditor.setText("");
         m_spec = specs[0];
         m_variableModel.clear();
         for (DataColumnSpec s : getVariables()) {
