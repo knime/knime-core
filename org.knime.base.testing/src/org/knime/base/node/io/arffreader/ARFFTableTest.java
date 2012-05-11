@@ -321,7 +321,8 @@ public class ARFFTableTest extends TestCase {
      * @throws IOException if it wants to.
      * @throws InvalidSettingsException if it feels like.
      */
-    public void testCreateDataTableSpecFromARFFfileIRISCMT() throws IOException,
+    // disabled as part of bug 3235
+    public void DISABLEDtestCreateDataTableSpecFromARFFfileIRISCMT() throws IOException,
             InvalidSettingsException {
 
         File tempFile = File.createTempFile("ARFFReaderUnitTest", "mini");
