@@ -2029,11 +2029,16 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         try {
                             parallelizeLoop(nc.getID());
                         } catch (Exception e) {
+                            // make sure the start node is reset and
+                            // and approriate message is set.
                             latestNodeMessage = new NodeMessage(
                                     NodeMessage.Type.ERROR,
                                     "Parallel Branch Start Failure! ("
                                     + e.getMessage() + ")");
                             success = false;
+                            canConfigureSuccessors = false;
+                            disableNodeForExecution(nc.getID());
+                            resetAndConfigureNode(nc.getID());
                         }
                     }
                     // process loop context for "real" nodes:
@@ -2085,18 +2090,20 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             canConfigureSuccessors = false;
                         }
                         if (!success) {
-                            // make sure any marks are removed off (only for loop ends!)
+                            // make sure any marks are removed
+                            // (only for loop ends!)
                             disableNodeForExecution(snc.getID());
                             snc.getNode().clearLoopContext();
                         }
                     }
                 }
-                // not this is NOT the else of the if above - success can
+                // note this is NOT the else of the if above - success can
                 // be modified...
                 if (!success) {
                     // clean up node interna and status (but keep org. message!)
                     // switch from IDLE to CONFIGURED if possible!
-                    configureSingleNodeContainer(snc, /*keepNodeMessage=*/false);
+                    configureSingleNodeContainer(snc,
+                                                /*keepNodeMessage=*/false);
                     snc.setNodeMessage(latestNodeMessage);
                 }
             }
@@ -2323,39 +2330,43 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     private void parallelizeLoop(final NodeID startID)
     throws IllegalLoopException {
-    	synchronized (m_workflowMutex) {
-    		final NodeID endID = m_workflow.getMatchingLoopEnd(startID);
+        synchronized (m_workflowMutex) {
+            final NodeID endID = m_workflow.getMatchingLoopEnd(startID);
             LoopEndParallelizeNode endNode;
             LoopStartParallelizeNode startNode;
-    		try {
-    			// just for validation
-    			startNode = castNodeModel(startID, LoopStartParallelizeNode.class);
-    			endNode = castNodeModel(endID, LoopEndParallelizeNode.class);
-    		} catch (IllegalArgumentException iae) {
-    			throw new IllegalLoopException(iae.getMessage(), iae);
-    		}
+            try {
+                // just for validation
+                startNode = castNodeModel(startID,
+                                             LoopStartParallelizeNode.class);
+                endNode = castNodeModel(endID, LoopEndParallelizeNode.class);
+            } catch (IllegalArgumentException iae) {
+                throw new IllegalLoopException("Parallel Chunk Start Node"
+                             + " not connected to matching end node!", iae);
+            }
 
-    		final ArrayList<NodeAndInports> loopBody =
-    			m_workflow.findAllNodesConnectedToLoopBody(startID, endID);
-    		NodeID[] loopNodes = new NodeID[loopBody.size()];
-    		loopNodes[0] = startID;
-    		for (int i = 0; i < loopBody.size(); i++) {
-    			loopNodes[i] = loopBody.get(i).getID();
-    		}
-    		// creating matching sub workflow node holding all chunks
-    		Set<Pair<NodeID, Integer>> exposedInports =
-    		    findNodesWithExternalSources(startID, loopNodes);
-    		HashMap<Pair<NodeID, Integer>, Integer> extInConnections
-    		    = new HashMap<Pair<NodeID, Integer>, Integer>();
-            PortType[] exposedInportTypes = new PortType[exposedInports.size() + 1];
+            final ArrayList<NodeAndInports> loopBody =
+                   m_workflow.findAllNodesConnectedToLoopBody(startID, endID);
+            NodeID[] loopNodes = new NodeID[loopBody.size()];
+            loopNodes[0] = startID;
+            for (int i = 0; i < loopBody.size(); i++) {
+                loopNodes[i] = loopBody.get(i).getID();
+            }
+            // creating matching sub workflow node holding all chunks
+            Set<Pair<NodeID, Integer>> exposedInports =
+                           findNodesWithExternalSources(startID, loopNodes);
+            HashMap<Pair<NodeID, Integer>, Integer> extInConnections
+                            = new HashMap<Pair<NodeID, Integer>, Integer>();
+            PortType[] exposedInportTypes = 
+                                     new PortType[exposedInports.size() + 1];
             // the first port is the variable port
             exposedInportTypes[0] = FlowVariablePortObject.TYPE;
-            // the remaining ones will cover the exposed inports of the loop body
+            // the remaining ports cover the exposed inports of the loop body
             int index = 1;
             for (Pair<NodeID, Integer> npi : exposedInports) {
                 NodeContainer nc = getNodeContainer(npi.getFirst());
                 int portIndex = npi.getSecond();
-                exposedInportTypes[index] = nc.getInPort(portIndex).getPortType();
+                exposedInportTypes[index] =
+                                       nc.getInPort(portIndex).getPortType();
                 extInConnections.put(npi, index);
                 index++;
             }
@@ -3458,13 +3469,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     //////////////////////////////////////////////////////////
 
     /** Reset node and all executed successors of a specific node.
-    *
-    * @param orgId of first node in chain to be reset.
-    */
-    public void resetAndConfigureNode(final NodeID orgId) {
-        // for now we start here but if the node is inside a loop we
-        // will broaden the rest and replace this with the loop start:
-        NodeID id = orgId;
+     * Note that we will also reset nodes apart of the (in)direct
+     * successors if the list contains loopend nodes without their
+     * corresponding loopstart equivalents.
+     *
+     * @param id of first node in chain to be reset.
+     */
+    public void resetAndConfigureNode(final NodeID id) {
         synchronized (m_workflowMutex) {
             NodeContainer nc = getNodeContainer(id);
             if (hasSuccessorInProgress(id)) {
@@ -3490,12 +3501,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // Now perform the actual reset!
             // First find all the nodes in this workflow that are connected
             // to the node to be reset.
-            // NOTE that the sorting of this list is important - see note
-            // ~15 lines further down (when scope gets broadened.)
             LinkedHashMap<NodeID, Set<Integer>> allnodes
                 = m_workflow.getBreadthFirstListOfNodeAndSuccessors(id,
                            /*skipWFM=*/ true);
-            // now find any LoopEnd nodes without loop starts in the set:
+            // find any LoopEnd nodes without loop starts in the set:
             for (NodeID leid : allnodes.keySet()) {
                 NodeContainer lenc = getNodeContainer(leid);
                 if (lenc instanceof SingleNodeContainer) {
@@ -3512,12 +3521,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 	                    }
                         if ((lsid != null) && (!allnodes.containsKey(lsid))) {
                             // found a LoopEndNode without matching LoopStart
-	                    	// to be reset as well: we need to widen the
-	                    	// scope of the reset!
-                            // NOTE that this only works for nest loops (where
-                            // more than one node is outside the initial scope
-                            // because we started from a sorted set of nodes!)
-	                        id = lsid;
+	                    	// to be reset as well: try to reset this node.
+	                        resetAndConfigureNode(lsid);
+                            // now check if the node that we were originially
+                            // supposed to reset was reset:
+	                        if (!nc.isResetable()) {
+	                            // and abandon operation if true (then the
+	                            // node was upstream of the original target)
+	                        	return;
+	                        }
+	                        // otherwise continue, since the original
+	                        // target was not downstream of the loop start.
 	                    }
 	                }
                 }
