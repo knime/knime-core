@@ -403,9 +403,9 @@
             name="Node Description"/>
       <view
             category="org.knime.workbench.ui.category"
-            class="org.knime.workbench.nodemonitorview.VariableMonitorView"
+            class="org.knime.workbench.nodemonitorview.NodeMonitorView"
             icon="icons/node_description.png"
-            id="org.knime.workbench.nodemonitorview.variablemonitorview"
-            name="KNIME Variable Monitor"/>
+            id="org.knime.workbench.nodemonitorview.nodemonitorview"
+            name="KNIME Node Monitor"/>
    </extension>
 </plugin>

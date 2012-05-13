@@ -51,6 +51,7 @@
 package org.knime.workbench.nodemonitorview;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Stack;
@@ -87,12 +88,13 @@ import org.knime.core.node.config.base.AbstractConfigEntry;
 import org.knime.core.node.config.base.ConfigBase;
 import org.knime.core.node.config.base.ConfigEntries;
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
+import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.Pair;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
@@ -101,7 +103,7 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * 
  * @author M. Berthold, KNIME.com AG
  */
-public class VariableMonitorView extends ViewPart
+public class NodeMonitorView extends ViewPart
                               implements ISelectionListener, LocationListener,
                                          NodeStateChangeListener {
 
@@ -121,7 +123,7 @@ public class VariableMonitorView extends ViewPart
     /**
      * The Constructor.
      */
-    public VariableMonitorView() {
+    public NodeMonitorView() {
         super();
     }
 
@@ -297,11 +299,11 @@ public class VariableMonitorView extends ViewPart
         assert Display.getCurrent().getThread() == Thread.currentThread();
         if ((m_lastNode != null) && (m_lastNode != nc)) {
             m_lastNode.removeNodeStateChangeListener(
-                                   VariableMonitorView.this);
+                                   NodeMonitorView.this);
         }
         if ((m_lastNode == null) || (m_lastNode != nc)) {
             m_lastNode = nc;
-            nc.addNodeStateChangeListener(VariableMonitorView.this);
+            nc.addNodeStateChangeListener(NodeMonitorView.this);
         }
         m_title.setText(nc.getName() + "  (" + nc.getID() + ")");
         m_state.setText(nc.getState().toString());
@@ -328,7 +330,7 @@ public class VariableMonitorView extends ViewPart
      */
     private void updateVariableTable(final NodeContainer nc) {
         assert Display.getCurrent().getThread() == Thread.currentThread();
-        // initalize table
+        // Initialize table
         for (TableColumn tc : m_table.getColumns()) {
             tc.dispose();
         }
@@ -338,12 +340,17 @@ public class VariableMonitorView extends ViewPart
             column.setText(titles[i]);
         }
         // retrieve variables
-        FlowObjectStack fos = nc.getOutPort(0).getFlowObjectStack();
-        if (fos != null) {
-            Map<String, FlowVariable> vars
-                                  = fos.getAvailableFlowVariables();
-            // and update content
-            for (FlowVariable fv : vars.values()) {
+        Collection<FlowVariable> fvs;
+        if (nc instanceof SingleNodeContainer) {
+            // for normal nodes port 0 is available (hidden variable OutPort!)
+            fvs = nc.getOutPort(0).getFlowObjectStack()
+                               .getAvailableFlowVariables().values();
+        } else {
+            fvs = ((WorkflowManager)nc).getWorkflowVariables();
+        }
+        if (fvs != null) {
+            // update content
+            for (FlowVariable fv : fvs) {
                 TableItem item = new TableItem(m_table, SWT.NONE);
                 item.setText(0, fv.getName());
                 item.setText(1, fv.getValueAsString());
@@ -421,13 +428,17 @@ public class VariableMonitorView extends ViewPart
             tc.dispose();
         }
         // check if we can display something at all:
-        if (nc.getNrOutPorts() < 2) {
-            // we don't care about the (hidden) variable outport
+        int index = port;
+        if (nc instanceof SingleNodeContainer) {
+            index++;  // we don't care about (hidden) variable OutPort
+        }
+        if (nc.getNrOutPorts() <= index) {
+            // no (real) port available
             TableItem item = new TableItem(m_table, SWT.NONE);
             item.setText(0, "No output ports");
             return;
         }
-        NodeOutPort nop = nc.getOutPort(port + 1);
+        NodeOutPort nop = nc.getOutPort(index);
         PortObject po = nop.getPortObject();
         if ((po == null) || !(po instanceof BufferedDataTable)) {
             // no table in port - ignore.
