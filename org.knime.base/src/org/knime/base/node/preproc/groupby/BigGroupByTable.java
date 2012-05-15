@@ -104,6 +104,34 @@ GroupByTable {
      * to use in the order the columns should be appear in the result table
      * numerical columns
      * @param globalSettings the global settings
+     * @param enableHilite <code>true</code> if a row key map should be
+     * maintained to enable hiliting
+     * @param colNamePolicy the {@link ColumnNamePolicy} for the
+     * aggregation columns
+     * @param retainOrder returns the row of the table in the same order as the
+     * input table if set to <code>true</code>
+     * @throws CanceledExecutionException if the user has canceled the execution
+     * @since 2.6
+     */
+    public BigGroupByTable(final ExecutionContext exec,
+            final BufferedDataTable inDataTable,
+            final List<String> groupByCols,
+            final ColumnAggregator[] colAggregators,
+            final GlobalSettings globalSettings, final boolean enableHilite,
+            final ColumnNamePolicy colNamePolicy, final boolean retainOrder)
+    throws CanceledExecutionException {
+        super(exec, inDataTable, groupByCols, colAggregators, globalSettings,
+                enableHilite, colNamePolicy, retainOrder);
+    }
+
+    /**Constructor for class BigGroupByTable.
+     * @param exec the <code>ExecutionContext</code>
+     * @param inDataTable the table to aggregate
+     * @param groupByCols the name of all columns to group by
+     * @param colAggregators the aggregation columns with the aggregation method
+     * to use in the order the columns should be appear in the result table
+     * numerical columns
+     * @param globalSettings the global settings
      * @param sortInMemory <code>true</code> if the table should be sorted in
      * the memory
      * @param enableHilite <code>true</code> if a row key map should be
@@ -113,7 +141,12 @@ GroupByTable {
      * @param retainOrder returns the row of the table in the same order as the
      * input table if set to <code>true</code>
      * @throws CanceledExecutionException if the user has canceled the execution
+     * @deprecated sortInMemory option is no longer required
+     * @see #BigGroupByTable(ExecutionContext, BufferedDataTable, List,
+     * ColumnAggregator[], GlobalSettings, boolean, ColumnNamePolicy, boolean)
      */
+    @SuppressWarnings("deprecation")
+    @Deprecated
     public BigGroupByTable(final ExecutionContext exec,
             final BufferedDataTable inDataTable,
             final List<String> groupByCols,
@@ -174,7 +207,7 @@ GroupByTable {
         //of rows which return 0 for the pairwise group value comparison.
         //Usually only equal data cells return 0 when compared with each other
         //but in rare occasions also data cells that are NOT equal return 0 when
-        //compared to each other 
+        //compared to each other
         //(such as cells that contain chemical structures).
         //In this rare case this map will contain for each group of data cells
         //that are pairwise equal in the chunk a separate entry.
@@ -209,7 +242,7 @@ GroupByTable {
                         buf.append(chunkMembers.size());
                         buf.append(" members occured in groupby node. "
                                 + "Involved classes are: ");
-                        final GroupKey key = 
+                        final GroupKey key =
                             chunkMembers.keySet().iterator().next();
                         for (final DataCell cell : key.getGroupVals()) {
                             buf.append(cell.getClass().getCanonicalName());

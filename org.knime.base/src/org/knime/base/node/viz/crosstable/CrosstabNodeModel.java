@@ -50,27 +50,6 @@
  */
 package org.knime.base.node.viz.crosstable;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.knime.base.data.aggregation.ColumnAggregator;
-import org.knime.base.data.aggregation.GlobalSettings;
-import org.knime.base.data.aggregation.OperatorColumnSettings;
-import org.knime.base.data.aggregation.OperatorData;
-import org.knime.base.data.aggregation.deprecated.SumOperator;
-import org.knime.base.data.aggregation.general.CountOperator;
-import org.knime.base.node.preproc.groupby.BigGroupByTable;
-import org.knime.base.node.preproc.groupby.ColumnNamePolicy;
-import org.knime.base.node.preproc.groupby.GroupByTable;
-import org.knime.base.node.viz.crosstable.CrosstabStatisticsCalculator.CrosstabStatistics;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -96,6 +75,28 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
+
+import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
+import org.knime.base.data.aggregation.deprecated.SumOperator;
+import org.knime.base.data.aggregation.general.CountOperator;
+import org.knime.base.node.preproc.groupby.BigGroupByTable;
+import org.knime.base.node.preproc.groupby.ColumnNamePolicy;
+import org.knime.base.node.preproc.groupby.GroupByTable;
+import org.knime.base.node.viz.crosstable.CrosstabStatisticsCalculator.CrosstabStatistics;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * This is the model for the Crosstab node.
@@ -133,8 +134,8 @@ public class CrosstabNodeModel extends NodeModel
             throws InvalidSettingsException {
         // validate settings for the row variable column
         if (null == m_settings.getRowVarColumn()) {
-            List<String> compatibleCols = new ArrayList<String>();
-            for (DataColumnSpec c : inSpecs[0]) {
+            final List<String> compatibleCols = new ArrayList<String>();
+            for (final DataColumnSpec c : inSpecs[0]) {
                 if (c.getType().isCompatible(StringValue.class)
                         || c.getType().isCompatible(DoubleValue.class)) {
                     compatibleCols.add(c.getName());
@@ -154,8 +155,8 @@ public class CrosstabNodeModel extends NodeModel
             }
         }
         if (null == m_settings.getColVarColumn()) {
-            List<String> compatibleCols = new ArrayList<String>();
-            for (DataColumnSpec c : inSpecs[0]) {
+            final List<String> compatibleCols = new ArrayList<String>();
+            for (final DataColumnSpec c : inSpecs[0]) {
                 if (c.getType().isCompatible(StringValue.class)
                         || c.getType().isCompatible(DoubleValue.class)) {
                     compatibleCols.add(c.getName());
@@ -197,8 +198,8 @@ public class CrosstabNodeModel extends NodeModel
 
     private void weightColumnAutoConfigure(final DataTableSpec spec)
     throws InvalidSettingsException {
-        List<String> compatibleCols = new ArrayList<String>();
-        for (DataColumnSpec c : spec) {
+        final List<String> compatibleCols = new ArrayList<String>();
+        for (final DataColumnSpec c : spec) {
             if (c.getType().isCompatible(DoubleValue.class)) {
                 compatibleCols.add(c.getName());
             }
@@ -225,22 +226,22 @@ public class CrosstabNodeModel extends NodeModel
 
     private DataTableSpec createOutSpec(final DataTableSpec inSpec)
             throws InvalidSettingsException {
-        List<DataColumnSpec> cspecs = new ArrayList<DataColumnSpec>();
-        DataColumnSpec rowColSpec = inSpec.getColumnSpec(
+        final List<DataColumnSpec> cspecs = new ArrayList<DataColumnSpec>();
+        final DataColumnSpec rowColSpec = inSpec.getColumnSpec(
                 m_settings.getRowVarColumn());
         if (null == rowColSpec) {
             throw new InvalidSettingsException("The column used as "
                     + "\"Row variable\" is not found in the input.");
         }
         cspecs.add(rowColSpec);
-        DataColumnSpec colColSpec = inSpec.getColumnSpec(
+        final DataColumnSpec colColSpec = inSpec.getColumnSpec(
                 m_settings.getColVarColumn());
         if (null == colColSpec) {
             throw new InvalidSettingsException("The column used as "
                     + "\"Column variable\" is not found in the input.");
         }
         cspecs.add(colColSpec);
-        for (String col : m_settings.getProperties()) {
+        for (final String col : m_settings.getProperties()) {
             cspecs.add(new DataColumnSpecCreator(col, DoubleCell.TYPE)
                     .createSpec());
         }
@@ -254,113 +255,115 @@ public class CrosstabNodeModel extends NodeModel
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        BufferedDataTable table = inData[0];
-        List<String> cols = Arrays.asList(new String[]{
+        final BufferedDataTable table = inData[0];
+        final List<String> cols = Arrays.asList(new String[]{
                 m_settings.getRowVarColumn(),
                 m_settings.getColVarColumn()
         });
-        GroupByTable groupTable = createGroupByTable(
+        final GroupByTable groupTable = createGroupByTable(
                 exec.createSubExecutionContext(0.6), table, cols);
 
-        BufferedDataTable freqTable = groupTable.getBufferedTable();
+        final BufferedDataTable freqTable = groupTable.getBufferedTable();
         // the index of the row variable in the group table
-        int rowVarI = 0;
+        final int rowVarI = 0;
         // the index of the column variable in the group table
-        int colVarI = 1;
+        final int colVarI = 1;
         // the index of the frequency in the group table
-        int freqI = 2;
+        final int freqI = 2;
 
-        CrosstabTotals totals = computeTotals(freqTable, rowVarI, colVarI,
+        final CrosstabTotals totals = computeTotals(freqTable, rowVarI, colVarI,
                 freqI);
-        CrosstabProperties naming = CrosstabProperties.create(
+        final CrosstabProperties naming = CrosstabProperties.create(
                 m_settings.getNamingVersion());
-        CrosstabStatisticsCalculator stats = new CrosstabStatisticsCalculator(
-                freqTable, rowVarI,
+        final CrosstabStatisticsCalculator stats =
+            new CrosstabStatisticsCalculator(freqTable, rowVarI,
                 colVarI, freqI, totals, naming);
         stats.run(exec.createSubExecutionContext(0.1));
-        BufferedDataTable propsTable = stats.getTable();
-        int cellChiSquareI = propsTable.getDataTableSpec().findColumnIndex(
+        final BufferedDataTable propsTable = stats.getTable();
+        final int cellChiSquareI =
+            propsTable.getDataTableSpec().findColumnIndex(
                 naming.getCellChiSquareName());
 
         // create output table
-        BufferedDataContainer cont = exec.createDataContainer(
+        final BufferedDataContainer cont = exec.createDataContainer(
                 createOutSpec(table.getSpec()));
-        RowIterator freqIter = freqTable.iterator();
-        RowIterator statsIter = propsTable.iterator();
+        final RowIterator freqIter = freqTable.iterator();
+        final RowIterator statsIter = propsTable.iterator();
 
-        Map<String, Integer> props = new LinkedHashMap<String, Integer>();
+        final Map<String, Integer> props = new LinkedHashMap<String, Integer>();
         for (int i = 0; i < m_settings.getProperties().size();
                i++) {
-            String prop = m_settings.getProperties().get(i);
+            final String prop = m_settings.getProperties().get(i);
             props.put(prop, i + 2);
         }
 
         for (int i = 0; i < freqTable.getRowCount(); i++) {
-            DataCell[] cells = new DataCell[props.size() + 2];
-            DataRow freqRow = freqIter.next();
+            final DataCell[] cells = new DataCell[props.size() + 2];
+            final DataRow freqRow = freqIter.next();
             // add the row variable
-            DataCell rowVar = freqRow.getCell(rowVarI);
+            final DataCell rowVar = freqRow.getCell(rowVarI);
             cells[0] = rowVar;
             // add the column variable
-            DataCell colVar = freqRow.getCell(colVarI);
+            final DataCell colVar = freqRow.getCell(colVarI);
             cells[1] = colVar;
             // the frequency
-            DataCell freqCell = freqRow.getCell(freqI);
-            double freq = freqCell.isMissing() ? 0.0
+            final DataCell freqCell = freqRow.getCell(freqI);
+            final double freq = freqCell.isMissing() ? 0.0
                 : ((DoubleValue)freqCell).getDoubleValue();
             addToCells(cells, props, naming.getFrequencyName(),
                     new DoubleCell(freq));
             // the cell chi-square
-            DataRow statsRow = statsIter.next();
+            final DataRow statsRow = statsIter.next();
             addToCells(cells, props, naming.getCellChiSquareName(),
                     statsRow.getCell(cellChiSquareI));
 
             // the total
-            double total = totals.getTotal();
+            final double total = totals.getTotal();
             addToCells(cells, props, naming.getTotalCountName(),
                     new DoubleCell(total));
 
             // the rowTotal
-            double rowTotal = totals.getRowTotal().get(rowVar);
+            final double rowTotal = totals.getRowTotal().get(rowVar);
             addToCells(cells, props, naming.getTotalRowCountName(),
                     new DoubleCell(rowTotal));
 
             // the column Total
-            double colTotal = totals.getColTotal().get(colVar);
+            final double colTotal = totals.getColTotal().get(colVar);
             addToCells(cells, props, naming.getTotalColCountName(),
                     new DoubleCell(colTotal));
 
             // the percent = frequency / total
-            double percent = 100 * (freq / total);
+            final double percent = 100 * (freq / total);
             addToCells(cells, props, naming.getPercentName(),
                     new DoubleCell(percent));
 
             // the row percent
-            double rowPercent = 0.0 == freq ? 0.0
+            final double rowPercent = 0.0 == freq ? 0.0
                     : 100.0 * (freq / rowTotal);
             addToCells(cells, props, naming.getRowPercentName(),
                     new DoubleCell(rowPercent));
 
             // the col percent
-            double colPercent = 0.0 == freq ? 0.0
+            final double colPercent = 0.0 == freq ? 0.0
                     : 100.0 * (freq / colTotal);
             addToCells(cells, props, naming.getColPercentName(),
                     new DoubleCell(colPercent));
 
             // the expected frequency
-            double expected = 0.0 == total ? 0.0
+            final double expected = 0.0 == total ? 0.0
                     : colTotal / total * rowTotal;
             addToCells(cells, props, naming.getExpectedFrequencyName(),
                     new DoubleCell(expected));
 
             // the deviation (the difference of the frequency to the
             // expected frequency)
-            double deviation = freq - expected;
+            final double deviation = freq - expected;
             addToCells(cells, props, naming.getDeviationName(),
                     new DoubleCell(deviation));
 
 
-            DefaultRow row = new DefaultRow(RowKey.createRowKey(i), cells);
+            final DefaultRow row =
+                new DefaultRow(RowKey.createRowKey(i), cells);
             cont.addRowToTable(row);
         }
         cont.close();
@@ -377,7 +380,7 @@ public class CrosstabNodeModel extends NodeModel
             final Map<String, Integer> props,
             final String col, final DataCell value) {
         if (props.containsKey(col)) {
-            int index = props.get(col);
+            final int index = props.get(col);
             cells[index] = value;
         }
     }
@@ -392,11 +395,11 @@ public class CrosstabNodeModel extends NodeModel
         Map<DataCell, Double> colTotal =
             new LinkedHashMap<DataCell, Double>();
         double total = 0;
-        for (DataRow row : freqTable) {
-            DataCell rowVar = row.getCell(rowVarI);
-            DataCell colVar = row.getCell(colVarI);
-            DataCell freqCell = row.getCell(freqI);
-            double freq = freqCell.isMissing() ? 0.0
+        for (final DataRow row : freqTable) {
+            final DataCell rowVar = row.getCell(rowVarI);
+            final DataCell colVar = row.getCell(colVarI);
+            final DataCell freqCell = row.getCell(freqI);
+            final double freq = freqCell.isMissing() ? 0.0
                 : ((DoubleValue)freqCell).getDoubleValue();
             // sum up the row totals
             addToTotals(rowTotal, rowVar, freq);
@@ -419,19 +422,19 @@ public class CrosstabNodeModel extends NodeModel
 
     private void addToTotals(final Map<DataCell, Double> totals,
             final DataCell var, final double freq) {
-        double rowValue = totals.containsKey(var)
+        final double rowValue = totals.containsKey(var)
             ? totals.get(var) + freq : freq;
         totals.put(var, rowValue);
     }
 
     private Map<DataCell, Double> sortTotals(
             final Map<DataCell, Double> totals) {
-        List<DataCell> keys = new ArrayList<DataCell>();
+        final List<DataCell> keys = new ArrayList<DataCell>();
         keys.addAll(totals.keySet());
         Collections.sort(keys, keys.get(0).getType().getComparator());
-        Map<DataCell, Double> sorted =
+        final Map<DataCell, Double> sorted =
             new LinkedHashMap<DataCell, Double>();
-        for (DataCell key : keys) {
+        for (final DataCell key : keys) {
             sorted.put(key, totals.get(key));
         }
         return sorted;
@@ -450,7 +453,6 @@ public class CrosstabNodeModel extends NodeModel
             final BufferedDataTable table, final List<String> groupByCols)
             throws CanceledExecutionException {
         final int maxUniqueVals = Integer.MAX_VALUE;
-        final boolean sortInMemory = false;
         final boolean enableHilite = m_settings.getEnableHiliting();
         final boolean retainOrder = false;
 
@@ -463,10 +465,10 @@ public class CrosstabNodeModel extends NodeModel
             final String weightColumn = m_settings.getWeightColumn();
             // the column aggregator for the weighting column
             final boolean inclMissing = false;
-            DataColumnSpec originalColSpec =
+            final DataColumnSpec originalColSpec =
                 table.getDataTableSpec().getColumnSpec(weightColumn);
-            OperatorColumnSettings opColSettings = new OperatorColumnSettings(
-                    inclMissing, originalColSpec);
+            final OperatorColumnSettings opColSettings =
+                new OperatorColumnSettings(inclMissing, originalColSpec);
             collAggregator = new ColumnAggregator(
                     originalColSpec,
                     new NonNegativeSumOperator(globalSettings, opColSettings),
@@ -475,20 +477,20 @@ public class CrosstabNodeModel extends NodeModel
             // use any column, does not matter as long as it exists and
             // include missing is true;
             final boolean inclMissing = true;
-            DataColumnSpec originalColSpec =
+            final DataColumnSpec originalColSpec =
                 table.getDataTableSpec().getColumnSpec(groupByCols.get(0));
-            OperatorColumnSettings opColSettings = new OperatorColumnSettings(
-                    inclMissing, originalColSpec);
+            final OperatorColumnSettings opColSettings =
+                new OperatorColumnSettings(inclMissing, originalColSpec);
             collAggregator = new ColumnAggregator(
                     originalColSpec,
                     new CountOperator(globalSettings, opColSettings),
                     inclMissing);
         }
 
-        GroupByTable resultTable = new BigGroupByTable(exec, table, groupByCols,
+        final GroupByTable resultTable =
+            new BigGroupByTable(exec, table, groupByCols,
                     new ColumnAggregator[]{collAggregator},
-                    globalSettings, sortInMemory, enableHilite, colNamePolicy,
-                    retainOrder);
+                    globalSettings, enableHilite, colNamePolicy, retainOrder);
 
         if (enableHilite) {
             setHiliteMapping(new DefaultHiLiteMapper(
@@ -541,12 +543,14 @@ public class CrosstabNodeModel extends NodeModel
             return m_totals;
         }
         if (null != m_outTable) {
-            DataTableSpec spec = m_outTable.getDataTableSpec();
-            int rowVarI = spec.findColumnIndex(m_settings.getRowVarColumn());
-            int colVarI = spec.findColumnIndex(m_settings.getColVarColumn());
-            CrosstabProperties naming = CrosstabProperties.create(
+            final DataTableSpec spec = m_outTable.getDataTableSpec();
+            final int rowVarI =
+                spec.findColumnIndex(m_settings.getRowVarColumn());
+            final int colVarI =
+                spec.findColumnIndex(m_settings.getColVarColumn());
+            final CrosstabProperties naming = CrosstabProperties.create(
                     m_settings.getNamingVersion());
-            int freqI = spec.findColumnIndex(naming.getFrequencyName());
+            final int freqI = spec.findColumnIndex(naming.getFrequencyName());
             m_totals = computeTotals(m_outTable, rowVarI, colVarI, freqI);
             return m_totals;
         } else {

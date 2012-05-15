@@ -113,10 +113,6 @@
             the chosen aggregation method. The row order of the input table is 
             automatically retained.
           </option>
-          <option name="Sort in memory">
-            Performs necessary sorting in the memory. Speeds up the process
-            but consumes much more memory.
-          </option>
           <option name="Retain row order">
             Retains the original row order of the input table. 
             Could result in longer execution time.

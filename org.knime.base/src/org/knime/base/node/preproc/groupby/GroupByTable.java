@@ -110,6 +110,35 @@ public abstract class GroupByTable {
      * to use in the order the columns should be appear in the result table
      * numerical columns
      * @param globalSettings the global settings
+     * @param enableHilite <code>true</code> if a row key map should be
+     * maintained to enable hiliting
+     * @param colNamePolicy the {@link ColumnNamePolicy} for the
+     * aggregation columns
+     * input table if set to <code>true</code>
+     * @param retainOrder <code>true</code> if the original row order should be
+     * retained
+     * @throws CanceledExecutionException if the user has canceled the execution
+     * @since 2.6
+     */
+    protected GroupByTable(final ExecutionContext exec,
+            final BufferedDataTable inDataTable,
+            final List<String> groupByCols,
+            final ColumnAggregator[] colAggregators,
+            final GlobalSettings globalSettings, final boolean enableHilite,
+            final ColumnNamePolicy colNamePolicy, final boolean retainOrder)
+    throws CanceledExecutionException {
+        this(exec, inDataTable, groupByCols, colAggregators, globalSettings,
+                false, enableHilite, colNamePolicy, retainOrder);
+    }
+
+    /**Constructor for class GroupByTable.
+     * @param exec the <code>ExecutionContext</code>
+     * @param inDataTable the table to aggregate
+     * @param groupByCols the name of all columns to group by
+     * @param colAggregators the aggregation columns with the aggregation method
+     * to use in the order the columns should be appear in the result table
+     * numerical columns
+     * @param globalSettings the global settings
      * @param sortInMemory <code>true</code> if the table should be sorted in
      * the memory
      * @param enableHilite <code>true</code> if a row key map should be
@@ -120,7 +149,11 @@ public abstract class GroupByTable {
      * @param retainOrder <code>true</code> if the original row order should be
      * retained
      * @throws CanceledExecutionException if the user has canceled the execution
+     * @deprecated sortInMemory option is no longer required
+     * @see #GroupByTable(ExecutionContext, BufferedDataTable, List,
+     * ColumnAggregator[], GlobalSettings, boolean, ColumnNamePolicy, boolean)
      */
+    @Deprecated
     protected GroupByTable(final ExecutionContext exec,
             final BufferedDataTable inDataTable,
             final List<String> groupByCols,

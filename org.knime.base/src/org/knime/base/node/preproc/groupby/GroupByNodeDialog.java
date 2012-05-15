@@ -116,9 +116,6 @@ public class GroupByNodeDialog extends NodeDialogPane {
         new SettingsModelString(GroupByNodeModel.CFG_VALUE_DELIMITER,
             GlobalSettings.STANDARD_DELIMITER);
 
-    private final SettingsModelBoolean m_sortInMemory =
-        new SettingsModelBoolean(GroupByNodeModel.CFG_SORT_IN_MEMORY, false);
-
     private final SettingsModelBoolean m_retainOrder =
         new SettingsModelBoolean(GroupByNodeModel.CFG_RETAIN_ORDER, false);
 
@@ -215,8 +212,6 @@ public class GroupByNodeDialog extends NodeDialogPane {
     /** Call this method if the process in memory flag has changed. */
     protected void inMemoryChanged() {
         final boolean inMem = m_inMemory.getBooleanValue();
-        m_sortInMemory.setBooleanValue(inMem);
-        m_sortInMemory.setEnabled(!inMem);
         m_retainOrder.setBooleanValue(inMem);
         m_retainOrder.setEnabled(!inMem);
     }
@@ -252,10 +247,6 @@ public class GroupByNodeDialog extends NodeDialogPane {
         inMemory.setToolTipText(
         "Processes all data in memory.");
         memoryBox.add(inMemory.getComponentPanel());
-
-        final DialogComponent sortInMemory = new DialogComponentBoolean(
-                m_sortInMemory, "Sort in memory");
-        memoryBox.add(sortInMemory.getComponentPanel());
 
         final DialogComponent retainOrder = new DialogComponentBoolean(
                 m_retainOrder, "Retain row order");
@@ -304,7 +295,6 @@ public class GroupByNodeDialog extends NodeDialogPane {
         try {
             m_maxUniqueValues.loadSettingsFrom(settings);
             m_enableHilite.loadSettingsFrom(settings);
-            m_sortInMemory.loadSettingsFrom(settings);
             m_columnNamePolicy.loadSettingsFrom(settings);
         } catch (final InvalidSettingsException e) {
             throw new NotConfigurableException(e.getMessage());
@@ -351,7 +341,6 @@ public class GroupByNodeDialog extends NodeDialogPane {
         m_maxUniqueValues.saveSettingsTo(settings);
         m_enableHilite.saveSettingsTo(settings);
         m_valueDelimiter.saveSettingsTo(settings);
-        m_sortInMemory.saveSettingsTo(settings);
         m_columnNamePolicy.saveSettingsTo(settings);
         m_aggrColPanel.saveSettingsTo(settings);
         m_retainOrder.saveSettingsTo(settings);

@@ -175,9 +175,6 @@ public class GroupByNodeModel extends NodeModel {
     private final SettingsModelBoolean m_enableHilite =
         new SettingsModelBoolean(CFG_ENABLE_HILITE, false);
 
-    private final SettingsModelBoolean m_sortInMemory =
-        new SettingsModelBoolean(CFG_SORT_IN_MEMORY, false);
-
     private final SettingsModelBoolean m_retainOrder = new SettingsModelBoolean(
             CFG_RETAIN_ORDER, false);
 
@@ -229,8 +226,6 @@ public class GroupByNodeModel extends NodeModel {
      */
     protected void inMemoryChanged() {
         final boolean inMem = m_inMemory.getBooleanValue();
-        m_sortInMemory.setBooleanValue(inMem);
-        m_sortInMemory.setEnabled(!inMem);
         m_retainOrder.setBooleanValue(inMem);
         m_retainOrder.setEnabled(!inMem);
     }
@@ -280,7 +275,6 @@ public class GroupByNodeModel extends NodeModel {
         m_groupByCols.saveSettingsTo(settings);
         m_maxUniqueValues.saveSettingsTo(settings);
         m_enableHilite.saveSettingsTo(settings);
-        m_sortInMemory.saveSettingsTo(settings);
         if (m_columnAggregators.isEmpty() && m_oldNominal != null
                 && m_oldNumerical != null) {
             // these settings were used prior Knime 2.0
@@ -308,7 +302,6 @@ public class GroupByNodeModel extends NodeModel {
                 .createCloneWithValidatedValue(settings)).getIncludeList();
         m_maxUniqueValues.validateSettings(settings);
         m_enableHilite.validateSettings(settings);
-        m_sortInMemory.validateSettings(settings);
 
         // the option to use a column multiple times was introduced
         // with Knime 2.0 as well as the naming policy
@@ -418,7 +411,6 @@ public class GroupByNodeModel extends NodeModel {
         }
         m_maxUniqueValues.loadSettingsFrom(settings);
         m_enableHilite.loadSettingsFrom(settings);
-        m_sortInMemory.loadSettingsFrom(settings);
         try {
             // this option was introduce in KNIME 2.4.+
             m_valueDelimiter.loadSettingsFrom(settings);
@@ -623,10 +615,31 @@ public class GroupByNodeModel extends NodeModel {
             final BufferedDataTable table, final List<String> groupByCols)
             throws CanceledExecutionException {
         final boolean inMemory = m_inMemory.getBooleanValue();
-        final boolean sortInMemory = m_sortInMemory.getBooleanValue();
         final boolean retainOrder = m_retainOrder.getBooleanValue();
         return createGroupByTable(exec, table, groupByCols, inMemory,
-                sortInMemory, retainOrder, m_columnAggregators2Use);
+                retainOrder, m_columnAggregators2Use);
+    }
+
+    /**
+     * Create group-by table.
+     * @param exec execution context
+     * @param table input table to group
+     * @param groupByCols column selected for group-by operation
+     * @param inMemory keep data in memory
+     * @param retainOrder reconstructs original data order
+     * @param aggregators column aggregation to use
+     * @return table with group and aggregation columns
+     * @throws CanceledExecutionException if the group-by table generation was
+     *         canceled externally
+     * @since 2.6
+     */
+    protected final GroupByTable createGroupByTable(final ExecutionContext exec,
+            final BufferedDataTable table, final List<String> groupByCols,
+            final boolean inMemory, final boolean retainOrder,
+            final List<ColumnAggregator> aggregators)
+            throws CanceledExecutionException {
+        return createGroupByTable(exec, table, groupByCols, inMemory,
+                retainOrder, aggregators);
     }
 
     /**
@@ -641,7 +654,12 @@ public class GroupByNodeModel extends NodeModel {
      * @return table with group and aggregation columns
      * @throws CanceledExecutionException if the group-by table generation was
      *         canceled externally
+     * @deprecated sortInMemory is no longer required
+     * @see #createGroupByTable(ExecutionContext, BufferedDataTable, List,
+     * boolean, boolean, List)
      */
+    @Deprecated
+    @SuppressWarnings("deprecation")
     protected final GroupByTable createGroupByTable(final ExecutionContext exec,
             final BufferedDataTable table, final List<String> groupByCols,
             final boolean inMemory, final boolean sortInMemory,
@@ -702,9 +720,11 @@ public class GroupByNodeModel extends NodeModel {
 
     /**
      * @return <code>true</code> if any sorting should be performed in memory
+     * @deprecated sort in memory is no longer required
      */
+    @Deprecated
     protected boolean isSortInMemory() {
-        return m_sortInMemory.getBooleanValue();
+        return false;
     }
 
     /**
