@@ -638,7 +638,7 @@ public class GroupByNodeModel extends NodeModel {
             final boolean inMemory, final boolean retainOrder,
             final List<ColumnAggregator> aggregators)
             throws CanceledExecutionException {
-        return createGroupByTable(exec, table, groupByCols, inMemory,
+        return createGroupByTable(exec, table, groupByCols, inMemory, false,
                 retainOrder, aggregators);
     }
 
@@ -659,7 +659,6 @@ public class GroupByNodeModel extends NodeModel {
      * boolean, boolean, List)
      */
     @Deprecated
-    @SuppressWarnings("deprecation")
     protected final GroupByTable createGroupByTable(final ExecutionContext exec,
             final BufferedDataTable table, final List<String> groupByCols,
             final boolean inMemory, final boolean sortInMemory,
