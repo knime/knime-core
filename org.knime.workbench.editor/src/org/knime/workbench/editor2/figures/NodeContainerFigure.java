@@ -158,7 +158,7 @@ public class NodeContainerFigure extends RectangleFigure {
 
     /** Default node font for the status figure. */
     private static final Font NODE_FONT = new Font(Display.getCurrent(),
-            fontName(), 2, SWT.NORMAL);;
+            fontName(), 2, SWT.NORMAL);
 
     /** Get font name either from the system, or default "Arial". */
     private static String fontName() {
@@ -193,7 +193,9 @@ public class NodeContainerFigure extends RectangleFigure {
     private final InfoWarnErrorPanel m_infoWarnErrorPanel;
 
     /** The node name, e.g File Reader. */
-    private final Label m_heading;
+    private final Figure m_headingContainer;
+
+    private String m_label;
 
     /**
      * Tooltip for displaying the custom description. This tooltip is displayed
@@ -226,18 +228,18 @@ public class NodeContainerFigure extends RectangleFigure {
         // add sub-figures
         setLayoutManager(new DelegatingLayout());
 
+
         final IPreferenceStore store =
-                KNIMEUIPlugin.getDefault().getPreferenceStore();
+            KNIMEUIPlugin.getDefault().getPreferenceStore();
         final int height = store.getInt(PreferenceConstants.P_NODE_LABEL_FONT_SIZE);
         final String fontName = fontName();
         final Display current = Display.getDefault();
-        final Font boldFont = new Font(current, fontName, height, SWT.BOLD);
-        final Font normalFont = new Font(current, fontName, height, SWT.NORMAL);
+        Font normalFont = new Font(current, fontName, height, SWT.NORMAL);
+        super.setFont(normalFont);
+
 
         // Heading (Label)
-        m_heading = new Label();
-        m_heading.setFont(boldFont);
-        super.setFont(normalFont);
+        m_headingContainer = new Figure();
 
         // icon
         m_symbolFigure = new SymbolFigure();
@@ -257,13 +259,13 @@ public class NodeContainerFigure extends RectangleFigure {
         m_infoWarnErrorPanel = new InfoWarnErrorPanel();
 
         // the locators depend on the order!
-        add(m_heading);
+        add(m_headingContainer);
         add(m_symbolFigure);
         add(m_infoWarnErrorPanel);
         add(m_statusFigure);
 
         // layout the components
-        setConstraint(m_heading, new NodeContainerLocator(this));
+        setConstraint(m_headingContainer, new NodeContainerLocator(this));
         setConstraint(m_symbolFigure, new NodeContainerLocator(this));
         setConstraint(m_infoWarnErrorPanel, new NodeContainerLocator(this));
         setConstraint(m_statusFigure, new NodeContainerLocator(this));
@@ -362,12 +364,47 @@ public class NodeContainerFigure extends RectangleFigure {
      *
      * @param text The text to set.
      */
+    @SuppressWarnings("unchecked")
     public void setLabelText(final String text) {
-        m_heading.setText(wrapText(text));
+        m_label = text;
+        m_headingContainer.removeAll();
+        // needed, otherwise labels disappear after font size has changed
+        m_headingContainer.setBounds(new Rectangle(0, 0, 0, 0));
+
+        final IPreferenceStore store =
+                KNIMEUIPlugin.getDefault().getPreferenceStore();
+        final int fontSize =
+                store.getInt(PreferenceConstants.P_NODE_LABEL_FONT_SIZE);
+        final String fontName = fontName();
+        final Display current = Display.getDefault();
+        Font boldFont = new Font(current, fontName, fontSize, SWT.BOLD);
+        m_headingContainer.setFont(boldFont);
+
+        int width = 0;
+        for (String s : wrapText(text).split("\n")) {
+            Label l = new Label(s);
+            l.setForegroundColor(ColorConstants.black);
+            l.setFont(boldFont);
+            m_headingContainer.add(l);
+            Dimension size = l.getPreferredSize();
+            width = Math.max(width, size.width);
+        }
+
+        int height = 0;
+        for (IFigure child : (List<IFigure>)m_headingContainer.getChildren()) {
+            Dimension size = child.getPreferredSize();
+            int offset = (width - size.width) / 2;
+
+            child.setBounds(new Rectangle(offset, height, size.width,
+                    size.height));
+            height += size.height;
+        }
+
+        m_headingContainer.setBounds(new Rectangle(0, 0, width, height));
         repaint();
     }
 
-    private String wrapText(final String text) {
+    private static String wrapText(final String text) {
         if (text == null || text.length() == 0) {
             return "";
         }
@@ -576,7 +613,7 @@ public class NodeContainerFigure extends RectangleFigure {
         }
         for (final Object contentFigure : getChildren()) {
             if (((IFigure)contentFigure).containsPoint(x, y)) {
-                if (contentFigure == m_heading) {
+                if (contentFigure == m_headingContainer) {
                     return false;
                 } else {
                     return true;
@@ -599,11 +636,11 @@ public class NodeContainerFigure extends RectangleFigure {
     @Override
     public Dimension getPreferredSize(final int wHint, final int hHint) {
 
-        int prefWidth = Math.max(WIDTH, m_heading.getTextBounds().width);
+        int prefWidth = Math.max(WIDTH, m_headingContainer.getBounds().width);
 
         int prefHeight = 0;
         int compCount = 3;
-        prefHeight += m_heading.getPreferredSize().height;
+        prefHeight += m_headingContainer.getPreferredSize().height;
         prefHeight += m_symbolFigure.getPreferredSize().height;
         // meta node don't have a status figure
         if (isChild(m_statusFigure) || isChild(m_progressFigure)) {
@@ -1197,12 +1234,8 @@ public class NodeContainerFigure extends RectangleFigure {
      * @param fontSize the new font size to ba applied.
      */
     public void setFontSize(final int fontSize) {
-        // apply new font size for node name (bold)
-        final Font font1 = m_heading.getFont();
-        final FontData fontData1 = font1.getFontData()[0];
-        fontData1.setHeight(fontSize);
-        m_heading.setFont(new Font(Display.getDefault(), fontData1));
-        font1.dispose();
+        setLabelText(m_label);
+
         // apply new font for node label
         final Font font2 = super.getFont();
         final FontData fontData2 = font2.getFontData()[0];
@@ -1220,7 +1253,7 @@ public class NodeContainerFigure extends RectangleFigure {
      * @param hide true, if the node name is visible, otherwise false
      */
     public void hideNodeName(final boolean hide) {
-        m_heading.setVisible(!hide);
+        m_headingContainer.setVisible(!hide);
     }
 
     /**
@@ -1260,7 +1293,7 @@ public class NodeContainerFigure extends RectangleFigure {
      * @since KNIME 2.3.0
      */
     public Point getOffsetToRefPoint(final NodeUIInformation uiInfo) {
-        final int yDiff = m_heading.getPreferredSize().height
+        final int yDiff = m_headingContainer.getPreferredSize().height
                 + NodeContainerLocator.GAP * 2;
         final Rectangle t = this.getBounds();
         int thiswidth = uiInfo.getBounds()[2];

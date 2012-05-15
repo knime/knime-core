@@ -80,6 +80,9 @@ public final class ProgressPolylineConnection extends PolylineConnection {
         {0x1, 0x4, 0x4}
     };
 
+    /**
+     * Creates a new connection.
+     */
     public ProgressPolylineConnection() {
         ConnectionLocator locator = new ConnectionLocator(this);
         locator.setRelativePosition(PositionConstants.NORTH);
@@ -91,7 +94,11 @@ public final class ProgressPolylineConnection extends PolylineConnection {
     /** {@inheritDoc} */
     @Override
     protected void outlineShape(final Graphics g) {
-        g.setLineDash(m_state < 0 ? null : DASHES[m_state]);
+        if (m_state < 0) {
+            setLineStyle(SWT.LINE_SOLID);
+        } else {
+            g.setLineDash(DASHES[m_state]);
+        }
         super.outlineShape(g);
     }
 
