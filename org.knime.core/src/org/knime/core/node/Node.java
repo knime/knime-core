@@ -60,6 +60,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -858,7 +859,6 @@ public final class Node implements NodeModelWarningListener {
                     createWarningMessageAndNotify("Execution canceled");
                     return false;
                 } catch (Throwable e) {
-                    e.printStackTrace();
                     createErrorMessageAndNotify("Unable to clone input data "
                             + "at port " + i + ": " + e.getMessage(), e);
                     return false;
@@ -914,6 +914,17 @@ public final class Node implements NodeModelWarningListener {
             m_outputs[p].hiliteHdl = m_model.getOutHiLiteHandler(p - 1);
         }
 
+        // there might be previous internal tables in a loop
+        // (tables are kept between loop iterations)
+        // they can be discarded if no longer needed (i.e. they are not part of
+        // the internal tables after this execution)
+        BufferedDataTable[] previousInternalHeldTables = m_internalHeldTables;
+        if (previousInternalHeldTables != null
+                && !getLoopRole().equals(LoopRole.BEGIN)) {
+            m_logger.coding("Found internal tables for non loop "
+                    + "start node: " + getName());
+        }
+
         if (m_model instanceof BufferedDataTableHolder) {
             // copy the table array to prevent later modification by the user
             BufferedDataTable[] internalTbls =
@@ -937,6 +948,17 @@ public final class Node implements NodeModelWarningListener {
                 }
             } else {
                 m_internalHeldTables = null;
+            }
+        }
+        // see comment at variable declaration on what is done here
+        if (previousInternalHeldTables != null) {
+            Set<BufferedDataTable> disposableTables =
+                collectTableAndReferences(previousInternalHeldTables);
+            disposableTables.removeAll(
+                    collectTableAndReferences(m_internalHeldTables));
+            disposableTables.removeAll(collectTableAndReferences(newOutData));
+            for (BufferedDataTable t : disposableTables) {
+                t.clearSingle(this);
             }
         }
         return true;
@@ -1183,34 +1205,88 @@ public final class Node implements NodeModelWarningListener {
         setPauseLoopExecution(false);
         m_model.resetModel();
         clearNodeMessageAndNotify();
-        cleanOutPorts();
+        cleanOutPorts(false);
     }
 
+    /** Sets output objects to null, disposes tables that are created by
+     * this node.
+     * @deprecated Framework code should call {@link #cleanOutPorts(boolean)}
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    @Deprecated
     public void cleanOutPorts() {
+        cleanOutPorts(false);
+    }
+
+
+    /** Sets output objects to null.
+     * @param isLoopRestart If true, does not clear tables that are part
+     * of the internally held tables (loop start nodes implements the
+     * {@link BufferedDataTableHolder} interface). This can only be true
+     * between two loop iterations.
+     * @noreference This method is not intended to be referenced by clients. */
+    public void cleanOutPorts(final boolean isLoopRestart) {
+        if (isLoopRestart) { // just as an assertion
+            FlowObjectStack inStack = getFlowObjectStack();
+            FlowLoopContext flc = inStack.peek(FlowLoopContext.class);
+            if (flc == null && !getLoopRole().equals(LoopRole.BEGIN)) {
+                m_logger.coding("Encountered a loop restart action but there is"
+                        + " no loop context on the flow object stack (node "
+                        + getName() + ")");
+            }
+        }
         m_logger.debug("clean output ports.");
-        // blow away our data tables in the port
+        Set<BufferedDataTable> disposableTables =
+            new LinkedHashSet<BufferedDataTable>();
         for (int i = 0; i < m_outputs.length; i++) {
             PortObject portObject = m_outputs[i].object;
             if (portObject instanceof BufferedDataTable) {
-                ((BufferedDataTable)portObject).clear(this);
+                final BufferedDataTable table = (BufferedDataTable)portObject;
+                table.collectTableAndReferencesOwnedBy(this, disposableTables);
             }
             m_outputs[i].spec = null;
             m_outputs[i].object = null;
             m_outputs[i].summary = null;
         }
+
         if (m_internalHeldTables != null) {
-            for (BufferedDataTable t : m_internalHeldTables) {
-                if (t != null) {
-                    t.clear(this);
-                }
+            Set<BufferedDataTable> internalTableSet =
+                collectTableAndReferences(m_internalHeldTables);
+            // internal tables are also used by loop start implementations to
+            // keep temporary tables between two loop iterations (e.g. the
+            // the group loop start first sorts the table and then puts parts
+            // of the table into the loop -- the sorted table is kept as an
+            // internal table reference that must not be cleared).
+            if (isLoopRestart) {
+                disposableTables.removeAll(internalTableSet);
+            } else {
+                disposableTables.addAll(internalTableSet);
+                m_internalHeldTables = null;
             }
         }
-        m_internalHeldTables = null;
+        for (BufferedDataTable disposable : disposableTables) {
+            disposable.clearSingle(this);
+        }
         // clear temporary tables that have been created during execute
         for (ContainerTable t : m_localTempTables) {
             t.clear();
         }
         m_localTempTables.clear();
+    }
+
+    private Set<BufferedDataTable> collectTableAndReferences(
+            final PortObject[] objects) {
+        if (objects == null || objects.length == 0) {
+            return Collections.emptySet();
+        }
+        Set<BufferedDataTable> result = new LinkedHashSet<BufferedDataTable>();
+        for (PortObject t : objects) {
+            if (t instanceof BufferedDataTable) {
+                BufferedDataTable table = (BufferedDataTable)t;
+                table.collectTableAndReferencesOwnedBy(this, result);
+            }
+        }
+        return result;
     }
 
     /**
@@ -1296,7 +1372,7 @@ public final class Node implements NodeModelWarningListener {
             m_logger.error(t.getClass().getSimpleName()
                     + " during cleanup of node: " + t.getMessage(), t);
         }
-        cleanOutPorts();
+        cleanOutPorts(false);
     }
 
     /** Used before configure, to apply the variable mask to the nodesettings,

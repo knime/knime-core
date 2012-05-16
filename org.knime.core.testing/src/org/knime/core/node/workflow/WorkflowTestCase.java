@@ -21,7 +21,7 @@
  * History
  *   01.11.2008 (wiswedel): created
  */
-package org.knime.core.workflow;
+package org.knime.core.node.workflow;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -38,15 +38,7 @@ import junit.framework.TestCase;
 import org.eclipse.core.runtime.FileLocator;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.State;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.NodeStateChangeListener;
-import org.knime.core.node.workflow.NodeStateEvent;
-import org.knime.core.node.workflow.WorkflowLoadHelper;
-import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowOutPort;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 
@@ -346,6 +338,10 @@ public abstract class WorkflowTestCase extends TestCase {
             WorkflowManager.ROOT.removeProject(m_manager.getID());
             setManager(null);
         }
+    }
+
+    protected int getNrTablesInGlobalRepository() {
+        return m_manager.getGlobalTableRepository().size();
     }
 
     protected void dumpWorkflowToLog() throws IOException {

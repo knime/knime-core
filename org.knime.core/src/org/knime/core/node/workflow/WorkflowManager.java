@@ -1617,7 +1617,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 NodeContainer nc = m_workflow.getNode(nai.getID());
                 if (nc.isResetable()) {
                     if (nc instanceof SingleNodeContainer) {
-                        ((SingleNodeContainer)nc).cleanOutPorts();
+                        ((SingleNodeContainer)nc).cleanOutPorts(true);
                     } else {
                         assert nc instanceof WorkflowManager;
                         ((WorkflowManager)nc)
@@ -2243,7 +2243,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
             }
             // clean outports of start but do not call reset
-            headSNC.cleanOutPorts();
+            headSNC.cleanOutPorts(true);
             // (5a) configure the nodes from start to rest (it's not
             //     so important if we configure more than the body)
             //     do NOT configure start of loop because otherwise
@@ -2295,14 +2295,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         + " same workflow as head&tail!");
                 }
                 if (nc instanceof SingleNodeContainer) {
-                    ((SingleNodeContainer)nc).cleanOutPorts();
+                    ((SingleNodeContainer)nc).cleanOutPorts(true);
                 } else {
                     WorkflowManager wm = (WorkflowManager)nc;
                     wm.cleanOutputPortsInWFMConnectedToInPorts(nai.getInports());
                 }
             }
             // clean outports of start but do not call reset
-            headSNC.cleanOutPorts();
+            headSNC.cleanOutPorts(true);
             // (6b) ...only re-"mark" loop body (tail is already marked)
             for (NodeAndInports nai : loopBodyNodes) {
                 NodeID id = nai.getID();
@@ -2365,7 +2365,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                            findNodesWithExternalSources(startID, loopNodes);
             HashMap<Pair<NodeID, Integer>, Integer> extInConnections
                             = new HashMap<Pair<NodeID, Integer>, Integer>();
-            PortType[] exposedInportTypes = 
+            PortType[] exposedInportTypes =
                                      new PortType[exposedInports.size() + 1];
             // the first port is the variable port
             exposedInportTypes[0] = FlowVariablePortObject.TYPE;
@@ -3386,7 +3386,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         if (LoopRole.END.equals(snc.getLoopRole())) {
             snc.getNode().setLoopStartNode(null);
-    }
+        }
     }
 
     /** Reset those nodes which are connected to a specific workflow

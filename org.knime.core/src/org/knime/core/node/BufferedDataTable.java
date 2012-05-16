@@ -58,6 +58,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -684,6 +685,22 @@ public final class BufferedDataTable implements DataTable, PortObject {
         }
     }
 
+    /** Finds all tables owned by the argument node, which are directly
+     * reachable (including this table).
+     * @param dataOwner The owner.
+     * @param result The set to add to. */
+    synchronized void collectTableAndReferencesOwnedBy(
+            final Node dataOwner, final Collection<BufferedDataTable> result) {
+        if (dataOwner != getOwner()) {
+            return;
+        }
+        result.add(this);
+        BufferedDataTable[] references = m_delegate.getReferenceTables();
+        for (BufferedDataTable reference : references) {
+            reference.collectTableAndReferencesOwnedBy(dataOwner, result);
+        }
+    }
+
     /** Clears any associated storage, for instance temp files. This call also
      * clears all referenced tables (if they are owned by the same node).
      * @param dataOwner The owner of the tables. If
@@ -708,11 +725,9 @@ public final class BufferedDataTable implements DataTable, PortObject {
     }
 
     /** Clears any associated storage, for instance temp files. This call does
-     * not clear referenced tables owned by the same node. Only used if client
-     * code programmatically clears a temporary table created during the
-     * execution.
-     * @param dataOwner The owner of the tables. If
-     * getOwner() != dataOwner, we return immediately.
+     * not clear referenced tables owned by the same node.
+     * @param dataOwner The owner of the tables. Used for assertion (table
+     * must be owned by argument node!)
      */
     synchronized void clearSingle(final Node dataOwner) {
         // only take responsibility for our data tables

@@ -21,13 +21,13 @@
  * History
  *   01.11.2008 (wiswedel): created
  */
-package org.knime.core.workflow.simpleLoop;
+package org.knime.core.node.workflow.simpleLoop;
 
 import java.util.Map;
 
-import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeContainer.State;
-import org.knime.core.workflow.WorkflowTestCase;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowTestCase;
 import org.knime.testing.node.executioncount.ExecutionCountNodeModel;
 
 /**
@@ -82,6 +82,8 @@ public class SimpleLoopTest extends WorkflowTestCase {
         executeAndWait(m_tblView);
         checkState(m_tblView, State.EXECUTED);
 
+        getManager().resetAndConfigureAll();
+        assertEquals(getNrTablesInGlobalRepository(), 0);
     }
 
     /** {@inheritDoc} */

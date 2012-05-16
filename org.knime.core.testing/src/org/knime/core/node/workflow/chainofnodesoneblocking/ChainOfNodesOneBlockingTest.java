@@ -21,7 +21,7 @@
  * History
  *   01.11.2008 (wiswedel): created
  */
-package org.knime.core.workflow.chainofnodesoneblocking;
+package org.knime.core.node.workflow.chainofnodesoneblocking;
 
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -30,7 +30,7 @@ import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.workflow.WorkflowTestCase;
+import org.knime.core.node.workflow.WorkflowTestCase;
 import org.knime.testing.node.blocking.BlockingRepository;
 
 /**

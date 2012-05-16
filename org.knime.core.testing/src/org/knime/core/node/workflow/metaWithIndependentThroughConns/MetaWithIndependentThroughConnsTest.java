@@ -21,11 +21,11 @@
  * History
  *   01.11.2008 (wiswedel): created
  */
-package org.knime.core.workflow.metaWithIndependentThroughConns;
+package org.knime.core.node.workflow.metaWithIndependentThroughConns;
 
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.workflow.WorkflowTestCase;
+import org.knime.core.node.workflow.WorkflowTestCase;
 
 /**
  *

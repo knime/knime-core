@@ -483,7 +483,7 @@ public final class SingleNodeContainer extends NodeContainer {
             switch (getState()) {
             case EXECUTED:
                 m_node.reset();
-                cleanOutPorts();
+                cleanOutPorts(false);
                 // After reset we need explicit configure!
                 setState(State.IDLE);
                 return;
@@ -509,14 +509,17 @@ public final class SingleNodeContainer extends NodeContainer {
 
     /** Cleans outports, i.e. sets fields to null, calls clear() on BDT.
      * Usually happens as part of a reset() (except for loops that have
-     * their body not reset between iterations. */
-    void cleanOutPorts() {
-        m_node.cleanOutPorts();
-        // this should have no affect as m_node.cleanOutPorts() will remove
-        // all tables already
-        int nrRemovedTables = removeOutputTablesFromGlobalRepository();
-        assert nrRemovedTables == 0 : nrRemovedTables + " tables in global "
-            + "repository after node cleared outports (expected 0)";
+     * their body not reset between iterations.
+     * @param isLoopRestart See {@link Node#cleanOutPorts(boolean)}. */
+    void cleanOutPorts(final boolean isLoopRestart) {
+        m_node.cleanOutPorts(isLoopRestart);
+        if (!isLoopRestart) {
+            // this should have no affect as m_node.cleanOutPorts() will remove
+            // all tables already
+            int nrRemovedTables = removeOutputTablesFromGlobalRepository();
+            assert nrRemovedTables == 0 : nrRemovedTables + " tables in global "
+                + "repository after node cleared outports (expected 0)";
+        }
     }
 
     /** Enable (or disable) queuing of underlying node for execution. This
