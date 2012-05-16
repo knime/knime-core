@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   21.03.2012 (mb): created
  */
@@ -53,7 +53,6 @@ package org.knime.workbench.nodemonitorview;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.Map;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -100,7 +99,7 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /** An Eclipse View showing the variables of the currently
  * selected node.
- * 
+ *
  * @author M. Berthold, KNIME.com AG
  */
 public class NodeMonitorView extends ViewPart
@@ -113,13 +112,13 @@ public class NodeMonitorView extends ViewPart
     private Text m_title;
     private Text m_state;
     private Table m_table;
-    
+
     private IStructuredSelection m_lastSelection;
     private NodeContainer m_lastNode;
 
     private enum DISPLAYOPTIONS { VARS, SETTINGS, ALLSETTINGS, TABLE };
     private DISPLAYOPTIONS m_choice = DISPLAYOPTIONS.VARS;
-    
+
     /**
      * The Constructor.
      */
@@ -262,7 +261,7 @@ public class NodeMonitorView extends ViewPart
         // Nothing selected
         if (structSel.size() < 1) {
             m_title.setText("");
-            m_state.setText("no node selected");            
+            m_state.setText("no node selected");
             m_table.removeAll();
             return;
         }
@@ -398,7 +397,7 @@ public class NodeMonitorView extends ViewPart
                 // it's another Config entry, push on stack!
                 String val = ace.toStringValue();
                 if ((!val.endsWith("_Internals")) || showAll) {
-                    Iterator<String> it2 = ((ConfigBase)ace).iterator(); 
+                    Iterator<String> it2 = ((ConfigBase)ace).iterator();
                     if (it2.hasNext()) {
                         stack.push(new Pair<Iterator<String>, ConfigBase>(
                                                         it2, (ConfigBase)ace));
