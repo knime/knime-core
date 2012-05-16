@@ -160,7 +160,8 @@ public class DialogComponentButtonGroup extends DialogComponent {
      * like the labels
      * @param defaultAction the default action which should be selected
      * @deprecated use
-     * {@link DialogComponentButtonGroup#DialogComponentButtonGroup(SettingsModelString, String, boolean, String[], String[])}
+     * {@link DialogComponentButtonGroup#DialogComponentButtonGroup(
+     * SettingsModelString, String, boolean, String[], String[])}
      * instead
      */
     @Deprecated

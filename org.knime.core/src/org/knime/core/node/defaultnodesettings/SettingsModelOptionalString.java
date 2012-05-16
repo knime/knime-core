@@ -54,14 +54,13 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * 
  * @author Adae, University of Konstanz
  */
-public class SettingsModelOptionalString extends SettingsModelString{
+public class SettingsModelOptionalString extends SettingsModelString {
     
     private boolean m_active;
 
