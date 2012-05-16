@@ -56,6 +56,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
@@ -143,15 +144,16 @@ public class XValidatePartitionModel extends NodeModel implements
                     ExecutionMonitor subExec = exec.createSubProgress(0.0);
                     subExec.setMessage("Preparing stratified sampling");
                     Map<DataCell, List<Integer>> valueCounts =
-                            countValues(inData[0], subExec, m_settings
-                                    .classColumn());
+                            countValues(inData[0], subExec,
+                                    m_settings.classColumn());
 
                     int part = 0;
-                    for (Map.Entry<DataCell, List<Integer>> e : valueCounts.entrySet()) {
+                    for (Map.Entry<DataCell, List<Integer>> e : valueCounts
+                            .entrySet()) {
                         List<Integer> l = e.getValue();
 
                         for (Integer i : l) {
-                            m_partNumbers[i] = (short) part++;
+                            m_partNumbers[i] = (short)part++;
                             part %= m_settings.validations();
                         }
                     }
@@ -163,9 +165,14 @@ public class XValidatePartitionModel extends NodeModel implements
                     }
 
                     if (m_settings.randomSampling()) {
+                        long seed =
+                                m_settings.useRandomSeed() ? m_settings
+                                        .randomSeed() : System
+                                        .currentTimeMillis();
+                        Random rand = new Random(seed);
+
                         for (int i = 0; i < m_partNumbers.length; i++) {
-                            int pos =
-                                    (int)(Math.random() * m_partNumbers.length);
+                            int pos = rand.nextInt(m_partNumbers.length);
                             short x = m_partNumbers[pos];
                             m_partNumbers[pos] = m_partNumbers[i];
                             m_partNumbers[i] = x;
@@ -274,7 +281,7 @@ public class XValidatePartitionModel extends NodeModel implements
         // nothing to do here
     }
 
-    private static Map<DataCell, List<Integer>> countValues(
+    private Map<DataCell, List<Integer>> countValues(
             final BufferedDataTable table, final ExecutionMonitor exec,
             final String classColumn) throws CanceledExecutionException {
         HashMap<DataCell, List<Integer>> valueCounts =
@@ -286,8 +293,8 @@ public class XValidatePartitionModel extends NodeModel implements
         final double rowTotalCount = table.getRowCount();
         int rowCount = 0;
         for (DataRow row : table) {
-            exec.setProgress(rowCount / rowTotalCount, 
-                    "Row " + rowCount + " (\"" + row.getKey() + "\")");
+            exec.setProgress(rowCount / rowTotalCount, "Row " + rowCount
+                    + " (\"" + row.getKey() + "\")");
             exec.checkCanceled();
             DataCell cell = row.getCell(classColIndex);
             List<Integer> rowKeys = valueCounts.get(cell);
@@ -299,9 +306,12 @@ public class XValidatePartitionModel extends NodeModel implements
             rowCount++;
         }
 
+        long seed =
+                m_settings.useRandomSeed() ? m_settings.randomSeed() : System
+                        .currentTimeMillis();
         for (Map.Entry<DataCell, List<Integer>> e : valueCounts.entrySet()) {
             List<Integer> l = e.getValue();
-            Collections.shuffle(l);
+            Collections.shuffle(l, new Random(seed));
         }
 
         return valueCounts;

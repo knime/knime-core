@@ -53,10 +53,12 @@ import java.awt.GridBagLayout;
 import java.awt.Insets;
 
 import javax.swing.ButtonGroup;
+import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
+import javax.swing.JTextField;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.border.Border;
 import javax.swing.event.ChangeEvent;
@@ -90,8 +92,14 @@ public class XValidateDialog extends NodeDialogPane {
 
     private final JRadioButton m_stratifiedSampling = new JRadioButton();
 
+    private final JLabel m_classColumnLabel = new JLabel("   Class column   ");
+
     private final ColumnSelectionComboxBox m_classColumn =
             new ColumnSelectionComboxBox((Border)null, DataValue.class);
+
+    private final JCheckBox m_useRandomSeed = new JCheckBox("Random seed   ");
+
+    private final JTextField m_randomSeed = new JTextField(10);
 
     /**
      * Creates a new dialog for the cross validation settings.
@@ -115,6 +123,18 @@ public class XValidateDialog extends NodeDialogPane {
         p.add(new JLabel("Linear sampling   "), c);
         c.gridx = 1;
         p.add(m_linearSampling, c);
+        m_linearSampling.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                if (m_linearSampling.isSelected()) {
+                    m_useRandomSeed.setEnabled(false);
+                    m_randomSeed.setEnabled(false);
+                } else {
+                    m_useRandomSeed.setEnabled(true);
+                    m_randomSeed.setEnabled(m_useRandomSeed.isSelected());
+                }
+            }
+        });
 
         c.gridy++;
         c.gridx = 0;
@@ -130,15 +150,30 @@ public class XValidateDialog extends NodeDialogPane {
         m_stratifiedSampling.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
-                m_classColumn.setEnabled(m_stratifiedSampling.isSelected());
+                boolean b = m_stratifiedSampling.isSelected();
+                m_classColumnLabel.setEnabled(b);
+                m_classColumn.setEnabled(b);
             }
         });
 
         c.gridy++;
         c.gridx = 0;
-        p.add(new JLabel("   Class column   "), c);
+        p.add(m_classColumnLabel, c);
         c.gridx = 1;
         p.add(m_classColumn, c);
+
+
+        c.gridy++;
+        c.gridx = 0;
+        p.add(m_useRandomSeed, c);
+        m_useRandomSeed.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                m_randomSeed.setEnabled(m_useRandomSeed.isSelected());
+            }
+        });
+        c.gridx = 1;
+        p.add(m_randomSeed, c);
 
         c.gridy++;
         c.gridx = 0;
@@ -158,7 +193,6 @@ public class XValidateDialog extends NodeDialogPane {
         bg.add(m_stratifiedSampling);
         bg.add(m_leaveOneOut);
 
-        p.setSize(400, 90);
         addTab("Standard settings", p);
     }
 
@@ -168,11 +202,7 @@ public class XValidateDialog extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
-        try {
-            m_settings.loadSettingsFrom(settings);
-        } catch (InvalidSettingsException ex) {
-            // ignore it and use default values
-        }
+        m_settings.loadSettingsForDialog(settings);
 
         m_validations.setValue(m_settings.validations());
         if (m_settings.randomSampling()) {
@@ -185,6 +215,8 @@ public class XValidateDialog extends NodeDialogPane {
         } else {
             m_linearSampling.setSelected(true);
         }
+        m_useRandomSeed.setSelected(m_settings.useRandomSeed());
+        m_randomSeed.setText(Long.toString(m_settings.randomSeed()));
 
         m_classColumn.update(specs[0], m_settings.classColumn());
     }
@@ -201,6 +233,8 @@ public class XValidateDialog extends NodeDialogPane {
         m_settings.stratifiedSampling(m_stratifiedSampling.isSelected());
         m_settings.leaveOneOut(m_leaveOneOut.isSelected());
         m_settings.classColumn(m_classColumn.getSelectedColumn());
+        m_settings.useRandomSeed(m_useRandomSeed.isSelected());
+        m_settings.randomSeed(Long.parseLong(m_randomSeed.getText()));
         m_settings.saveSettingsTo(settings);
     }
 }

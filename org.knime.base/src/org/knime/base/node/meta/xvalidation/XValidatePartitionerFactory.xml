@@ -18,6 +18,15 @@
             If checked, the partitions are sampled randomly from the input table, otherwise it is cut into consecutive
             pieces.
         </option>
+        <option name="Stratified sampling">
+            If checked, the partitions are sampled randomly but the class distribution from the column selected
+            below is maintained.
+        </option>
+        <option name="Random seed">
+            For random and stratified sampling you can choose a seed for the random number
+            generator in order to get reproducible results. Otherwise you get different
+            partitions every time.
+        </option>        
         <option name="Class column name">The name of the column with the class labels.</option>
         <option name="Leave-one-out">
             Performs a leave-one-out cross validation, i.e. there are as many iterations as data points and in each

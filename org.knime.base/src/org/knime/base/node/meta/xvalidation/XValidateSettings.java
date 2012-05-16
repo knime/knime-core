@@ -68,6 +68,9 @@ public class XValidateSettings {
 
     private String m_classColumn;
 
+    private long m_randomSeed;
+
+    private boolean m_useRandomSeed;
 
     /**
      * Returns if leave-one-out cross validation should be performed.
@@ -83,7 +86,7 @@ public class XValidateSettings {
      * Sets if leave-one-out cross validation should be performed.
      *
      * @param b <code>true</code> if leave-one-out should be done,
-     *         <code>false</code> otherwise
+     *            <code>false</code> otherwise
      */
     public void leaveOneOut(final boolean b) {
         m_leaveOneOut = b;
@@ -100,6 +103,8 @@ public class XValidateSettings {
         settings.addBoolean("leaveOneOut", m_leaveOneOut);
         settings.addBoolean("stratifiedSampling", m_stratifiedSampling);
         settings.addString("classColumn", m_classColumn);
+        settings.addBoolean("useRandomSeed", m_useRandomSeed);
+        settings.addLong("randomSeed", m_randomSeed);
     }
 
     /**
@@ -113,9 +118,33 @@ public class XValidateSettings {
         m_validations = settings.getShort("validations");
         m_randomSampling = settings.getBoolean("randomSampling");
         m_leaveOneOut = settings.getBoolean("leaveOneOut");
+
         // added in v2.1
         m_stratifiedSampling = settings.getBoolean("stratifiedSampling", false);
         m_classColumn = settings.getString("classColumn", null);
+
+        // added in 2.6
+        m_useRandomSeed = settings.getBoolean("useRandomSeed", false);
+        m_randomSeed =
+                settings.getLong("randomSeed", System.currentTimeMillis());
+    }
+
+    /**
+     * Loads the settings from the node settings object using default values for
+     * missing settings.
+     *
+     * @param settings a node settings object
+     * @since 2.6
+     */
+    public void loadSettingsForDialog(final NodeSettingsRO settings) {
+        m_validations = settings.getShort("validations", (short)10);
+        m_randomSampling = settings.getBoolean("randomSampling", true);
+        m_leaveOneOut = settings.getBoolean("leaveOneOut", false);
+        m_stratifiedSampling = settings.getBoolean("stratifiedSampling", false);
+        m_classColumn = settings.getString("classColumn", null);
+        m_useRandomSeed = settings.getBoolean("useRandomSeed", false);
+        m_randomSeed =
+                settings.getLong("randomSeed", System.currentTimeMillis());
     }
 
     /**
@@ -192,5 +221,48 @@ public class XValidateSettings {
      */
     public void validations(final short validations) {
         m_validations = validations;
+    }
+
+    /**
+     * Returns if a pre-defined random seed should be used.
+     *
+     * @return <code>true</code> if a defined seed should be used,
+     *         <code>false</code> if a random random seed should be use
+     * @since 2.6
+     */
+    public boolean useRandomSeed() {
+        return m_useRandomSeed;
+    }
+
+    /**
+     * Sets if a pre-defined random seed should be used.
+     *
+     * @param b <code>true</code> if a defined seed should be used,
+     *         <code>false</code> if a random random seed should be use
+     * @since 2.6
+     */
+    public void useRandomSeed(final boolean b) {
+        m_useRandomSeed = b;
+    }
+
+
+    /**
+     * Returns the random seed used for random and stratified sampling.
+     *
+     * @return the seed
+     * @since 2.6
+     */
+    public long randomSeed() {
+        return m_randomSeed;
+    }
+
+    /**
+     * Sets the random seed used for random and stratified sampling.
+     *
+     * @param value the seed
+     * @since 2.6
+     */
+    public void randomSeed(final long value) {
+        m_randomSeed = value;
     }
 }
