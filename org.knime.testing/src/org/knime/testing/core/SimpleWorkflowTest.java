@@ -154,7 +154,7 @@ public class SimpleWorkflowTest implements WorkflowTest {
      */
     @Override
     public int countTestCases() {
-        return 2; // load + execute
+        return 1;
     }
 
     /**
