@@ -378,8 +378,6 @@ public class KnimeTestCase extends TestCase {
     // if not null, the executed workflow si saved here.
     private final File m_saveLoc;
 
-    private boolean m_newConfig;
-
     /**
      *
      * @param workflowFile the workflow dir
@@ -1057,14 +1055,12 @@ public class KnimeTestCase extends TestCase {
 
     private void readConfigFromFiles(final File workflowDir)
             throws IOException, InvalidSettingsException {
-        m_newConfig = false;
         readOwners(new File(workflowDir, OWNER_FILE));
         readNodeStatusFile(new File(workflowDir, STATUS_FILE));
     }
 
     private void readConfigFromNode(final SingleNodeContainer configNode)
             throws InvalidSettingsException {
-        m_newConfig = true;
         NodeSettings s = new NodeSettings("");
         configNode.getNode().saveSettingsTo(s);
         TestConfigSettings settings = new TestConfigSettings();
