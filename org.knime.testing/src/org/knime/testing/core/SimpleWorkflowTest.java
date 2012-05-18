@@ -162,6 +162,8 @@ public class SimpleWorkflowTest implements WorkflowTest {
      */
     @Override
     public void run(final TestResult result) {
+        result.startTest(this);
+
         WorkflowManager manager = null;
         try {
             manager = loadWorkflow(result);
@@ -192,6 +194,7 @@ public class SimpleWorkflowTest implements WorkflowTest {
                 manager.shutdown();
                 manager.getParent().removeNode(manager.getID());
             }
+            result.endTest(this);
         }
     }
 
