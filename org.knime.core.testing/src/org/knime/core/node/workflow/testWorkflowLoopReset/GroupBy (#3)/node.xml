@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="settings.xml">
+<entry key="name" type="xstring" value="GroupBy"/>
+<config key="model">
+<config key="grouByColumns_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_filterString"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<config key="grouByColumns">
+<config key="InclList">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<config key="ExclList">
+<entry key="array-size" type="xint" value="3"/>
+<entry key="0" type="xstring" value="group 1"/>
+<entry key="1" type="xstring" value="group 2"/>
+<entry key="2" type="xstring" value="value"/>
+</config>
+<entry key="keep_all_columns_selected" type="xboolean" value="false"/>
+</config>
+<config key="maxNoneNumericalVals_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_integer"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="maxNoneNumericalVals" type="xint" value="10000"/>
+<config key="enableHilite_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_boolean"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="enableHilite" type="xboolean" value="false"/>
+<config key="aggregationColumn">
+<config key="columnNames">
+<entry key="array-size" type="xint" value="1"/>
+<entry key="0" type="xstring" value="value"/>
+</config>
+<config key="columnTypes">
+<entry key="array-size" type="xint" value="1"/>
+<config key="0">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="aggregationMethod">
+<entry key="array-size" type="xint" value="1"/>
+<entry key="0" type="xstring" value="Sum_V2.5.2"/>
+</config>
+<config key="inclMissingVals">
+<entry key="array-size" type="xint" value="1"/>
+<entry key="0" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="columnNamePolicy_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="columnNamePolicy" type="xstring" value="Keep original name(s)"/>
+<config key="retainOrder_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_boolean"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="retainOrder" type="xboolean" value="false"/>
+<config key="inMemory_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_boolean"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="inMemory" type="xboolean" value="false"/>
+<config key="valueDelimiter_Internals">
+<entry key="SettingsModelID" type="xstring" value="SMID_string"/>
+<entry key="EnabledStatus" type="xboolean" value="true"/>
+</config>
+<entry key="valueDelimiter" type="xstring" value=", "/>
+</config>
+<entry key="hasContent" type="xboolean" value="false"/>
+<entry key="isInactive" type="xboolean" value="false"/>
+<entry key="node_message" type="xstring" value="No grouping column included. Aggregate complete table."/>
+<config key="ports">
+<config key="port_1">
+<entry key="index" type="xint" value="1"/>
+<entry key="port_dir_location" type="xstring" isnull="true" value=""/>
+</config>
+</config>
+</config>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="settings.xml">
+<entry key="factory" type="xstring" value="org.knime.ext.sun.nodes.script.node.editvar.JavaEditVariableNodeFactory"/>
+<config key="factory_settings"/>
+<entry key="node_file" type="xstring" value="node.xml"/>
+<config key="flow_stack">
+<config key="Variable_0">
+<entry key="type" type="xstring" value="variable"/>
+<entry key="name" type="xstring" value="currentIteration"/>
+<entry key="class" type="xstring" value="INTEGER"/>
+<entry key="value" type="xint" value="0"/>
+</config>
+</config>
+<config key="internal_node_subsettings">
+<entry key="memory_policy" type="xstring" value="CacheSmallInMemory"/>
+</config>
+<entry key="customDescription" type="xstring" isnull="true" value=""/>
+<entry key="state" type="xstring" value="CONFIGURED"/>
+</config>

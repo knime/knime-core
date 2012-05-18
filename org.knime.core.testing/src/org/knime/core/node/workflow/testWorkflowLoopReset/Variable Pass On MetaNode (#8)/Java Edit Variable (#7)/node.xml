@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="settings.xml">
+<entry key="name" type="xstring" value="Java Edit Variable"/>
+<config key="model">
+<entry key="expression" type="xstring" value="return $${IcurrentIteration}$$;"/>
+<entry key="header" type="xstring" value=""/>
+<entry key="replaced_column" type="xstring" value="currentIteration"/>
+<entry key="append_column" type="xboolean" value="true"/>
+<entry key="test_compilation_on_dialog_close" type="xboolean" value="true"/>
+<entry key="insert_missing_as_null" type="xboolean" value="false"/>
+<entry key="return_type" type="xstring" value="java.lang.Integer"/>
+<entry key="is_array_return" type="xboolean" value="false"/>
+<config key="java_libraries"/>
+<entry key="expression_version" type="xint" value="2"/>
+<config key="imports"/>
+</config>
+<entry key="hasContent" type="xboolean" value="false"/>
+<entry key="isInactive" type="xboolean" value="false"/>
+<config key="ports">
+<config key="port_1">
+<entry key="index" type="xint" value="1"/>
+<entry key="port_dir_location" type="xstring" isnull="true" value=""/>
+</config>
+</config>
+</config>

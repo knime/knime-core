@@ -249,6 +249,20 @@ public abstract class WorkflowTestCase extends TestCase {
         }
     }
 
+    protected void reset(final NodeID... ids) {
+        for (NodeID id : ids) {
+            WorkflowManager parent = findParent(id);
+            parent.resetAndConfigureNode(id);
+        }
+    }
+
+    protected void deleteConnection(final NodeID destination, final int destPort) {
+        WorkflowManager parent = findParent(destination);
+        final ConnectionContainer inConn =
+            parent.getIncomingConnectionFor(destination, destPort);
+        parent.removeConnection(inConn);
+    }
+
     protected void waitWhileInExecution() throws Exception {
         waitWhileNodeInExecution(m_manager);
     }
