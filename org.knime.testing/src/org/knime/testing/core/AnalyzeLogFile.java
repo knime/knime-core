@@ -254,7 +254,7 @@ public class AnalyzeLogFile {
 
         BufferedReader logReader = new BufferedReader(new FileReader(logFile));
         String testName = "_workbenchInitializing";
-        String ownerAddress = KnimeTestCase.REGRESSIONS_OWNER;
+        String ownerAddress = FullWorkflowTest.REGRESSIONS_OWNER;
 
         File testFile =
                 new File(m_tmpDir, testName + "_" + m_startTime + ".txt");
@@ -392,10 +392,10 @@ public class AnalyzeLogFile {
                 break;
             }
 
-            if (nextLine.endsWith(KnimeTestCase.FAIL_MSG)) {
+            if (nextLine.endsWith(FullWorkflowTest.FAIL_MSG)) {
                 failed = true;
             }
-            if (nextLine.endsWith(KnimeTestCase.SUCCESS_MSG)) {
+            if (nextLine.endsWith(FullWorkflowTest.SUCCESS_MSG)) {
                 succeeded = true;
             }
 

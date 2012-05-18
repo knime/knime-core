@@ -43,11 +43,8 @@ import org.knime.core.node.workflow.WorkflowPersistor;
  * @author Fabian Dill, University of Konstanz
  */
 public class KnimeTestRegistry {
-
-    private static NodeLogger m_logger =
-            NodeLogger.getLogger(KnimeTestRegistry.class);
-
-    private Collection<KnimeTestCase> m_registry;
+    private static NodeLogger m_logger = NodeLogger
+            .getLogger(KnimeTestRegistry.class);
 
     /**
      * pattern (regular expression) used to select test cases to run
@@ -73,7 +70,6 @@ public class KnimeTestRegistry {
             throw new IllegalArgumentException("Root dir for tests must"
                     + " be an existing directory");
         }
-        m_registry = new ArrayList<KnimeTestCase>();
 
         if ((testNamePattern != null) && (testNamePattern.length() == 0)) {
             m_pattern = ".*";
@@ -86,8 +82,7 @@ public class KnimeTestRegistry {
         Calendar now = Calendar.getInstance();
 
         saveSubDir +=
-            now.getDisplayName(Calendar.MONTH,
-                        Calendar.SHORT, Locale.US);
+                now.getDisplayName(Calendar.MONTH, Calendar.SHORT, Locale.US);
         if (now.get(Calendar.DATE) < 10) {
             saveSubDir += "0";
         }
@@ -121,20 +116,20 @@ public class KnimeTestRegistry {
     }
 
     /**
-     * @param testRootDir the dir to start the search in
+     * @param factory a factory for creating workflow tests
      * @return all registered test cases.
      */
-    public Test collectTestCases() {
+    public Test collectTestCases(final WorkflowTestFactory factory) {
+        Collection<WorkflowTest> workflowTests = new ArrayList<WorkflowTest>();
+        searchDirectory(m_testRootDir, workflowTests, factory);
 
-        searchDirectory(m_testRootDir);
-
-        if ((m_pattern != null) && (m_registry.size() == 0)) {
+        if ((m_pattern != null) && (workflowTests.size() == 0)) {
             System.out.println("Found no matching tests. "
                     + "Thank you very much.");
         }
 
         TestSuite suite = new TestSuite();
-        for (KnimeTestCase test : m_registry) {
+        for (WorkflowTest test : workflowTests) {
             m_logger.debug("adding: " + test.getName());
             suite.addTest(test);
         }
@@ -148,8 +143,9 @@ public class KnimeTestRegistry {
      * @param dir - the basedir for the search
      * @param saveRoot - the baseDir executed flows will be saved to (or null).
      */
-    private void searchDirectory(final File dir) {
-
+    private void searchDirectory(final File dir,
+            final Collection<WorkflowTest> tests,
+            final WorkflowTestFactory factory) {
         if (m_pattern == null) {
             // null pattern matches nothing!
             return;
@@ -161,10 +157,9 @@ public class KnimeTestRegistry {
             String name = dir.getName();
             if (name.matches(m_pattern)) {
                 File saveLoc = createSaveLocation(workflowFile);
-                KnimeTestCase testCase =
-                        new KnimeTestCase(workflowFile, saveLoc);
-                testCase.setName(name);
-                m_registry.add(testCase);
+                WorkflowTest testCase =
+                        factory.createTestcase(workflowFile, saveLoc);
+                tests.add(testCase);
             } else {
                 m_logger.info("Skipping testcase '" + name + "' (doesn't match"
                         + "pattern '" + m_pattern + "').");
@@ -179,7 +174,7 @@ public class KnimeTestRegistry {
                 return;
             }
             for (int i = 0; i < fileList.length; i++) {
-                searchDirectory(fileList[i]);
+                searchDirectory(fileList[i], tests, factory);
             }
 
         }

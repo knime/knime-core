@@ -255,7 +255,7 @@ public class KNIMETestingApplication implements IApplication {
         KnimeTestRegistry registry =
                 new KnimeTestRegistry(testPattern, new File(m_rootDir),
                         m_saveLocation);
-        Test tests = registry.collectTestCases();
+        Test tests = registry.collectTestCases(FullWorkflowTest.factory);
 
         System.out.println("=============  Running...  ==================");
 

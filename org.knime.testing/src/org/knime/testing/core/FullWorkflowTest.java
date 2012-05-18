@@ -84,8 +84,26 @@ import org.knime.testing.node.config.TestConfigSettings;
 
 /**
  *
+ * @since 2.6
  */
-public class KnimeTestCase extends TestCase {
+public class FullWorkflowTest extends TestCase implements WorkflowTest {
+    /**
+     * Factory for full workflow tests.
+     *
+     * @since 2.6
+     */
+    public static final WorkflowTestFactory factory =
+            new WorkflowTestFactory() {
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
+                public WorkflowTest createTestcase(final File workflowDir,
+                        final File saveLocation) {
+                    return new FullWorkflowTest(workflowDir, saveLocation);
+                }
+            };
+
     private final class MsgPattern {
         private static final String REGEXPRPATTERN = "_!_";
 
@@ -350,7 +368,7 @@ public class KnimeTestCase extends TestCase {
 
         @Override
         protected void append(final LoggingEvent event) {
-            KnimeTestCase.this.appendLogMessage(event);
+            FullWorkflowTest.this.appendLogMessage(event);
         }
     };
 
@@ -361,7 +379,7 @@ public class KnimeTestCase extends TestCase {
     public final static String REGRESSIONS_OWNER = "peter.ohl@uni-konstanz.de";
 
     private static final NodeLogger logger = NodeLogger
-            .getLogger(KnimeTestCase.class);
+            .getLogger(FullWorkflowTest.class);
 
     private static final int MAX_LINES = 100;
 
@@ -383,10 +401,10 @@ public class KnimeTestCase extends TestCase {
      * @param workflowFile the workflow dir
      * @param saveLoc the dir to save the flow into after execution, or null.
      */
-    public KnimeTestCase(final File workflowFile, final File saveLoc) {
+    public FullWorkflowTest(final File workflowFile, final File saveLoc) {
         m_knimeWorkFlow = workflowFile;
         m_saveLoc = saveLoc;
-        this.setName(workflowFile.getParent());
+        this.setName(workflowFile.getParentFile().getName());
     }
 
     private void appendLogMessage(final LoggingEvent aEvent) {
@@ -737,8 +755,7 @@ public class KnimeTestCase extends TestCase {
             if (status != null
                     && status.getMessageType().equals(NodeMessage.Type.ERROR)) {
 
-                MsgPattern expMsg =
-                        m_errorStatus.get(getNodeID(node));
+                MsgPattern expMsg = m_errorStatus.get(getNodeID(node));
                 if (expMsg == null) {
                     // node was not expected to finish with an error status
                     if (!m_preExecutedNodes.contains(getNodeID(node))) {
@@ -781,8 +798,7 @@ public class KnimeTestCase extends TestCase {
             } else if (status != null
                     && status.getMessageType().equals(NodeMessage.Type.WARNING)) {
 
-                MsgPattern expMsg =
-                        m_warningStatus.get(getNodeID(node));
+                MsgPattern expMsg = m_warningStatus.get(getNodeID(node));
                 if (expMsg == null) {
                     // Node was not supposed to finish with a warning status
                     if (!m_preExecutedNodes.contains(getNodeID(node))) {
@@ -847,8 +863,7 @@ public class KnimeTestCase extends TestCase {
             } else {
                 // no or unknown status
 
-                MsgPattern expMsg =
-                        m_warningStatus.get(getNodeID(node));
+                MsgPattern expMsg = m_warningStatus.get(getNodeID(node));
                 if (expMsg != null) {
                     String msg =
                             "Node '"
