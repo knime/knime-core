@@ -60,7 +60,9 @@ import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.DefaultListCellRenderer;
@@ -84,6 +86,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.SingleNodeContainer;
@@ -315,7 +318,7 @@ public class TestConfigNodeDialog extends NodeDialogPane {
     private void storeNodeConfiguration(final int index) {
         SingleNodeContainer cont =
                 (SingleNodeContainer)m_allNodesModel.get(index);
-        String nodeID = cont.getID().getIDWithoutRoot();
+        String nodeID = Integer.toString(cont.getID().getIndex());
 
         if (m_mustFail.isSelected()) {
             m_settings.addFailingNode(nodeID);
@@ -341,7 +344,7 @@ public class TestConfigNodeDialog extends NodeDialogPane {
     private void updateNodeConfigurationFields(final int index) {
         SingleNodeContainer cont =
                 (SingleNodeContainer)m_allNodesModel.get(index);
-        String nodeID = cont.getID().getIDWithoutRoot();
+        String nodeID = Integer.toString(cont.getID().getIndex());
 
         m_mustFail.setSelected(m_settings.failingNodes().contains(nodeID));
 
@@ -429,24 +432,41 @@ public class TestConfigNodeDialog extends NodeDialogPane {
     private void fillNodeList() {
         m_allNodesModel.removeAllElements();
         WorkflowManager root = findWorkflowManager(WorkflowManager.ROOT);
-        fillNodeList(root);
-    }
 
-    /**
-     * Fills the list of nodes with all nodes inside the current workflows. The
-     * testflow configuration node is excluded.
-     *
-     * @param root the workflow manager from where to start the search
-     */
-    private void fillNodeList(final WorkflowManager root) {
         for (NodeContainer cont : root.getNodeContainers()) {
             if (cont instanceof SingleNodeContainer) {
                 if (((SingleNodeContainer)cont).getNode().getDialogPane() != this) {
                     m_allNodesModel.addElement(cont);
                 }
-            } else if (cont instanceof WorkflowManager) {
-                fillNodeList((WorkflowManager)cont);
             }
+        }
+
+        // remove config of non-existing nodes
+        Set<String> set = new HashSet<String>();
+        for (String nodeId : m_settings.requiredNodeErrors().keySet()) {
+            try {
+                root.getNodeContainer(new NodeID(root.getID(), Integer
+                        .parseInt(nodeId)));
+            } catch (IllegalArgumentException ex) {
+                set.add(nodeId);
+            }
+        }
+        for (String s : set) {
+            m_settings.setRequiredNodeError(s, null);
+        }
+
+
+        set.clear();
+        for (String nodeId : m_settings.requiredNodeWarnings().keySet()) {
+            try {
+                root.getNodeContainer(new NodeID(root.getID(), Integer
+                        .parseInt(nodeId)));
+            } catch (IllegalArgumentException ex) {
+                set.add(nodeId);
+            }
+        }
+        for (String s : set) {
+            m_settings.setRequiredNodeWarning(s, null);
         }
     }
 

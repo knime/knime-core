@@ -62,6 +62,10 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  * This is the node model for the testflow configuration node. The model
@@ -144,6 +148,30 @@ public class TestConfigNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
+        WorkflowManager manager = findWorkflowManager(WorkflowManager.ROOT);
+
+        for (String nodeId : m_settings.requiredNodeErrors().keySet()) {
+            try {
+                manager.getNodeContainer(new NodeID(manager.getID(), Integer
+                        .parseInt(nodeId)));
+            } catch (IllegalArgumentException ex) {
+                throw new InvalidSettingsException("Configuration for node '"
+                        + nodeId + "' found but there is no such node in the "
+                        + "workflow");
+            }
+        }
+
+        for (String nodeId : m_settings.requiredNodeWarnings().keySet()) {
+            try {
+                manager.getNodeContainer(new NodeID(manager.getID(), Integer
+                        .parseInt(nodeId)));
+            } catch (IllegalArgumentException ex) {
+                throw new InvalidSettingsException("Configuration for node '"
+                        + nodeId + "' found but there is no such node in the "
+                        + "workflow");
+            }
+        }
+
         return new BufferedDataTable[0];
     }
 
@@ -153,4 +181,22 @@ public class TestConfigNodeModel extends NodeModel {
     @Override
     protected void reset() {
     }
+
+    private WorkflowManager findWorkflowManager(final WorkflowManager root) {
+        for (NodeContainer cont : root.getNodeContainers()) {
+            if (cont instanceof SingleNodeContainer) {
+                if (((SingleNodeContainer)cont).getNode().getNodeModel() == this) {
+                    return root;
+                }
+            } else if (cont instanceof WorkflowManager) {
+                WorkflowManager wfm =
+                        findWorkflowManager((WorkflowManager)cont);
+                if (wfm != null) {
+                    return wfm;
+                }
+            }
+        }
+        return null;
+    }
+
 }

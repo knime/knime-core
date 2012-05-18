@@ -686,7 +686,7 @@ public class KnimeTestCase extends TestCase {
     private void checkNodeExecution() {
         for (NodeContainer node : m_manager.getNodeContainers()) {
             State status = node.getState();
-            String nodeSimpleID = Integer.toString(node.getID().getIndex());
+            String nodeSimpleID = getNodeID(node);
 
             if (!status.equals(State.EXECUTED)
                     && !m_requiredUnexecutedNodes.contains(nodeSimpleID)) {
@@ -733,7 +733,6 @@ public class KnimeTestCase extends TestCase {
      * error is logged and the test fails.
      */
     private void checkNodeStatus() {
-        String idPrefix = m_manager.getID().toString() + ":";
         for (NodeContainer node : m_manager.getNodeContainers()) {
 
             NodeMessage status = node.getNodeMessage();
@@ -741,10 +740,10 @@ public class KnimeTestCase extends TestCase {
                     && status.getMessageType().equals(NodeMessage.Type.ERROR)) {
 
                 MsgPattern expMsg =
-                        m_errorStatus.get(getNodeID(node, idPrefix));
+                        m_errorStatus.get(getNodeID(node));
                 if (expMsg == null) {
                     // node was not expected to finish with an error status
-                    if (!m_preExecutedNodes.contains(getNodeID(node, idPrefix))) {
+                    if (!m_preExecutedNodes.contains(getNodeID(node))) {
                         // complain only if the node was not loaded in executed
                         String msg =
                                 "Node '" + node.getNameWithID() + "' has an "
@@ -785,10 +784,10 @@ public class KnimeTestCase extends TestCase {
                     && status.getMessageType().equals(NodeMessage.Type.WARNING)) {
 
                 MsgPattern expMsg =
-                        m_warningStatus.get(getNodeID(node, idPrefix));
+                        m_warningStatus.get(getNodeID(node));
                 if (expMsg == null) {
                     // Node was not supposed to finish with a warning status
-                    if (!m_preExecutedNodes.contains(getNodeID(node, idPrefix))) {
+                    if (!m_preExecutedNodes.contains(getNodeID(node))) {
                         // Complain only if node was not loaded in executed
                         String msg =
                                 "Node '"
@@ -827,7 +826,7 @@ public class KnimeTestCase extends TestCase {
                     // Pre-Executed nodes with warning status don't create
                     // log entries - except for reader nodes. Remove the
                     // message from the list of required messages!
-                    if (m_preExecutedNodes.contains(getNodeID(node, idPrefix))) {
+                    if (m_preExecutedNodes.contains(getNodeID(node))) {
                         String nodeWarnMsg = status.getMessage();
                         Iterator<MsgPattern> warns =
                                 m_requiredWarnings.iterator();
@@ -851,7 +850,7 @@ public class KnimeTestCase extends TestCase {
                 // no or unknown status
 
                 MsgPattern expMsg =
-                        m_warningStatus.get(getNodeID(node, idPrefix));
+                        m_warningStatus.get(getNodeID(node));
                 if (expMsg != null) {
                     String msg =
                             "Node '"
@@ -933,17 +932,8 @@ public class KnimeTestCase extends TestCase {
      * @return the node's ID w/o prefix or the full ID if the ID was not
      *         prefixed with the prefix
      */
-    private String getNodeID(final NodeContainer nc, final String prefix) {
-        if (m_newConfig) {
-            return nc.getID().getIDWithoutRoot();
-        } else {
-            String nodeID = nc.getID().toString();
-            if (nodeID.startsWith(prefix)) {
-                return nodeID.substring(prefix.length());
-            } else {
-                return nodeID;
-            }
-        }
+    private String getNodeID(final NodeContainer nc) {
+        return Integer.toString(nc.getID().getIndex());
     }
 
     /**
@@ -1100,12 +1090,36 @@ public class KnimeTestCase extends TestCase {
 
         for (Map.Entry<String, String> e : settings.requiredNodeErrors()
                 .entrySet()) {
-            m_errorStatus.put(e.getKey(), new MsgPattern(e.getValue()));
+            try {
+                m_manager.getNodeContainer(new NodeID(m_manager.getID(),
+                        Integer.parseInt(e.getKey())));
+
+                MsgPattern msg = new MsgPattern(e.getValue());
+                m_errorStatus.put(e.getKey(), msg);
+                // error status on node also creates an error in the log
+                m_requiredErrors.add(msg);
+            } catch (IllegalArgumentException ex) {
+                logger.warn("No node with id '" + e.getKey() + "' found in "
+                        + "workflow, but we have a configuration for it. "
+                        + "Ignoring the configuration.");
+            }
         }
 
         for (Map.Entry<String, String> e : settings.requiredNodeWarnings()
                 .entrySet()) {
-            m_warningStatus.put(e.getKey(), new MsgPattern(e.getValue()));
+            try {
+                m_manager.getNodeContainer(new NodeID(m_manager.getID(),
+                        Integer.parseInt(e.getKey())));
+
+                MsgPattern msg = new MsgPattern(e.getValue());
+                m_warningStatus.put(e.getKey(), msg);
+                // warning status on node also creates a warning in the log
+                m_requiredWarnings.add(msg);
+            } catch (IllegalArgumentException ex) {
+                logger.warn("No node with id '" + e.getKey() + "' found in "
+                        + "workflow, but we have a configuration for it. "
+                        + "Ignoring the configuration.");
+            }
         }
     }
 
@@ -1189,7 +1203,6 @@ public class KnimeTestCase extends TestCase {
      * @param wfm the workflow to examine
      */
     private void registerExecutedNodes() {
-        String prefix = m_manager.getID().toString() + ":";
         for (NodeContainer nc : m_manager.getNodeContainers()) {
             if (!nc.getState().equals(State.EXECUTED)) {
                 continue;
@@ -1199,7 +1212,7 @@ public class KnimeTestCase extends TestCase {
                 continue;
             }
             String status = nc.getNodeMessage().getMessageType().name();
-            m_preExecutedNodes.add(getNodeID(nc, prefix));
+            m_preExecutedNodes.add(getNodeID(nc));
             logger.debug("Registering node " + nc.getNameWithID()
                     + " as pre-executed with a " + status + " status");
         }
