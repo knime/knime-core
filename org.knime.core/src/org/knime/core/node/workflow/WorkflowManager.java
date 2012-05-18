@@ -1654,12 +1654,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             checkForNodeStateChanges(true);
         }
     }
-    
+
     /** Execute workflow until nodes of the given class - those will
      * usually be QuickForm or view nodes requiring user interaction.
-     * 
+     *
      * @param <T> ...
      * @param nodeModelClass the interface of the "stepping" nodes
+     * @since 2.6
      */
     public <T> void stepExecutionUpToNodeType(final Class<T> nodeModelClass) {
         synchronized (m_workflowMutex) {
@@ -1668,7 +1669,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 stepExecutionUpToNodeType(id, nodeModelClass);
             }
         }
-        
+
     }
 
     private <T> boolean stepExecutionUpToNodeType(final NodeID id,
@@ -1711,7 +1712,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         return true;
     }
-    
+
     /** Attempts to execute all nodes upstream of the argument node. The method
      * waits (until either all predecessors are executed or there is no further
      * chance to execute anything).
@@ -7104,7 +7105,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** Find all nodes of a certain type that are currently ready to
      * be executed (= node is configured, all predecessors are executed).
      * See {@link #findNodes(Class, boolean)}
-     * 
+     *
      * @param <T> ...
      * @param nodeModelClass ...
      * @return ...
@@ -7112,7 +7113,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public <T> Map<NodeID, T> findWaitingNodes(final Class<T> nodeModelClass) {
     	synchronized (m_workflowMutex) {
-	    	Map<NodeID, T> nodes = 
+	    	Map<NodeID, T> nodes =
 	    		findNodes(nodeModelClass, /*recurse=*/false);
 	    	Iterator<Map.Entry<NodeID, T>> it
 	    	                        = nodes.entrySet().iterator();
@@ -7127,8 +7128,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 	    	return nodes;
     	}
     }
-    
-    
+
+
 
     /** Remove workflow variable of given name.
      * The method may change in future versions or removed entirely (bug 1937).
