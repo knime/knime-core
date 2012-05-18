@@ -57,7 +57,6 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.PlatformUI;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.NodeID;
@@ -76,8 +75,8 @@ import org.knime.workbench.explorer.view.ExplorerView;
  */
 public class RevealMetaNodeTemplateAction extends AbstractNodeAction {
 
-    private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(RevealMetaNodeTemplateAction.class);
+//    private static final NodeLogger LOGGER =
+//        NodeLogger.getLogger(RevealMetaNodeTemplateAction.class);
 
     /** Action ID. */
     public static final String ID = "knime.action.meta_node_reveal_template";

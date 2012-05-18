@@ -97,8 +97,8 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.Pair;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
-/** An Eclipse View showing the variables of the currently
- * selected node.
+/** An Eclipse View showing the interna of the currently
+ * selected (meta)node.
  *
  * @author M. Berthold, KNIME.com AG
  */

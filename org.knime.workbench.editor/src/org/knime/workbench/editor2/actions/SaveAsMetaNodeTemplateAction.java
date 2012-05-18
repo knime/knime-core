@@ -59,7 +59,6 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
@@ -81,8 +80,8 @@ import org.knime.workbench.explorer.view.ContentObject;
  */
 public class SaveAsMetaNodeTemplateAction extends AbstractNodeAction {
 
-    private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(SaveAsMetaNodeTemplateAction.class);
+//    private static final NodeLogger LOGGER =
+//        NodeLogger.getLogger(SaveAsMetaNodeTemplateAction.class);
 
     /** Action ID. */
     public static final String ID = "knime.action.meta_node_save_as_template";
