@@ -7142,7 +7142,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * 
      * @param <T> ...
      * @param nodeModelClass ...
-     * @return Workflowmanager with waiting nodes or null of none exists.
+     * @return Workflowmanager with waiting nodes or null if none exists.
      * @since 2.6
      */
     public <T> WorkflowManager findNextWaitingWorkflowManager(
