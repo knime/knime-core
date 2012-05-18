@@ -1672,6 +1672,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     }
 
+    /* Recursively continue to trigger execution of nodes until first
+     * unexecuted node of specified type is encountered.
+     * 
+     * @param NodeID node to start from
+     * @param <T> ...
+     * @param nodeModelClass the interface of the "stepping" nodes
+     */
     private <T> boolean stepExecutionUpToNodeType(final NodeID id,
             final Class<T> nodeModelClass) {
         NodeContainer nc = getNodeContainer(id);
@@ -7128,9 +7135,40 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 	    	return nodes;
     	}
     }
-
-
-
+    
+    /** Find "next" workflowmanager which contains nodes of a certain type
+     * that are currently ready to be executed.
+     * See {@link #findWaitingNodes(Class)}
+     * 
+     * @param <T> ...
+     * @param nodeModelClass ...
+     * @return Workflowmanager with waiting nodes or null of none exists.
+     * @since 2.6
+     */
+    public <T> WorkflowManager findNextWaitingWorkflowManager(
+            final Class<T> nodeModelClass) {
+        synchronized (m_workflowMutex) {
+            Map<NodeID, T> nodes = this.findWaitingNodes(nodeModelClass);
+            if (nodes.size() > 0) {
+                return this;
+            }
+            // search metanodes:
+            for (NodeID id : m_workflow.getNodeIDs()) {
+                NodeContainer nc = m_workflow.getNode(id);
+                if (nc.isLocalWFM()) {
+                    WorkflowManager wfm = (WorkflowManager)nc;
+                    Map<NodeID, T> n2s = wfm.findWaitingNodes(nodeModelClass);
+                    if (n2s.size() > 0) {
+                        return wfm;
+                    }
+                }
+            }
+            // didn't find anything:
+            return null;
+        }
+    }
+    
+    
     /** Remove workflow variable of given name.
      * The method may change in future versions or removed entirely (bug 1937).
      *
