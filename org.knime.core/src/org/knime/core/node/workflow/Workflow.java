@@ -56,6 +56,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
@@ -271,24 +272,13 @@ class Workflow {
             final boolean skipWFM) {
         // first create list of nodes without predecessor or only the WFM
         // itself (i.e. connected to outside "world" only.
+    	Set<NodeID> sources = getSourceNodes(ids);
         LinkedHashMap<NodeID, Set<Integer>> bfsSortedNodes
                         = new LinkedHashMap<NodeID, Set<Integer>>();
-        for (NodeID thisNode : ids) {
-            // find the nodes in the list which are sources (i.e. not
-            // preceeded by any others in the list)
-            Set<ConnectionContainer> incomingConns
-                       = m_connectionsByDest.get(thisNode);
-            boolean isSource = true;
-            for (ConnectionContainer thisConn : incomingConns) {
-                if (ids.contains(thisConn.getSource())) {
-                    isSource = false;
-                }
-            }
-            if (isSource) {
-                // put this source - note that none of it's ports (if any
-                // exist) are of interest
-                bfsSortedNodes.put(thisNode, new HashSet<Integer>());
-            }
+        for (NodeID thisNode : sources) {
+            // put this source - note that none of it's ports (if any
+            // exist) are of interest
+            bfsSortedNodes.put(thisNode, new HashSet<Integer>());
         }
         // and finally complete this list by adding all successors...
         expandListBreadthFirst(bfsSortedNodes, ids);
@@ -405,6 +395,56 @@ class Workflow {
         }
     }
 
+    /** Return set of nodes without any predecessors (sources) in the
+     * set of given nodes.
+     * 
+     * @param ids the nodes to check
+     * @return set of nodes without predecessors
+     */
+    private LinkedHashSet<NodeID> getSourceNodes(final Set<NodeID> ids) {
+    	LinkedHashSet<NodeID> result = new LinkedHashSet<NodeID>();
+    	for (NodeID thisNode : ids) {
+    		// find the nodes in the list which are sources (i.e. not
+    		// preceded by any others in the list)
+    		Set<ConnectionContainer> incomingConns
+    		= m_connectionsByDest.get(thisNode);
+    		boolean isSource = true;
+    		for (ConnectionContainer thisConn : incomingConns) {
+    			if (ids.contains(thisConn.getSource())) {
+    				isSource = false;
+    			}
+    		}
+    		if (isSource) {
+    			result.add(thisNode);
+    		}
+    	}
+    	return result;
+    }
+
+    /** Return list of nodes directly connected to given port or unconnected
+     * start nodes if inPort = -1.
+     * 
+     * @param inPort port index of -1 if no port given.
+     * @return set of directly connected nodes or source nodes.
+     */
+    HashMap<NodeID, Integer> getStartNodes(final int inPort) {
+    	LinkedHashMap<NodeID, Integer> result
+    	                = new LinkedHashMap<NodeID, Integer>();
+    	if (inPort < 0) {
+    		Set<NodeID> sources = getSourceNodes(m_nodes.keySet());
+    		for (NodeID id : sources) {
+    			result.put(id, -1);
+    		}
+    	} else {
+            for (ConnectionContainer cc : m_connectionsBySource.get(getID())) {
+                if (cc.getSourcePort() == inPort) {
+                    result.put(cc.getDest(), cc.getDestPort());
+                }
+            }
+    	}
+    	return result;
+    }
+    
     /** Determine outports which are connected (directly or indirectly) to
      * the given inport in this workflow.
      *

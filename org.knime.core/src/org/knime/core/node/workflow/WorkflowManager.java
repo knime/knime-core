@@ -1654,7 +1654,64 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             checkForNodeStateChanges(true);
         }
     }
+    
+    /** Execute workflow until nodes of the given class - those will
+     * usually be QuickForm or view nodes requiring user interaction.
+     * 
+     * @param <T> ...
+     * @param nodeModelClass the interface of the "stepping" nodes
+     */
+    public <T> void stepExecutionUpToNodeType(final Class<T> nodeModelClass) {
+        synchronized (m_workflowMutex) {
+            HashMap<NodeID, Integer> nodes = m_workflow.getStartNodes(-1);
+            for (NodeID id : nodes.keySet()) {
+                stepExecutionUpToNodeType(id, nodeModelClass);
+            }
+        }
+        
+    }
 
+    private <T> boolean stepExecutionUpToNodeType(final NodeID id,
+            final Class<T> nodeModelClass) {
+        NodeContainer nc = getNodeContainer(id);
+        NodeOutPort[] incoming = assemblePredecessorOutPorts(id);
+        for (int i = 0; i < incoming.length; i++) {
+            if (incoming[i] == null) {
+                if (!nc.getInPort(i).getPortType().isOptional()) {
+                    return false;
+                }
+            } else {
+                State state = incoming[i].getNodeState();
+                if (!State.EXECUTED.equals(state)
+                        && !state.executionInProgress()) {
+                    return false;
+                }
+            }
+        }
+        // node has all required predecessors and they are all marked
+        // or executing or executed....
+        State state = nc.getState();
+        if (!State.EXECUTED.equals(state)
+                && !state.executionInProgress()) {
+            // the node itself is not yet marked/executed - mark it
+            // ...but first check if it's not the stopping type!
+            if (nodeModelClass.isInstance(nc)) {
+                return false;
+            }
+            // mark...
+            if (nc.isLocalWFM()) {
+                ((WorkflowManager)nc).stepExecutionUpToNodeType(nodeModelClass);
+            } else {
+                this.markAndQueueNodeAndPredecessors(id, -1);
+            }
+        }
+        // and also mark successors
+        for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
+            stepExecutionUpToNodeType(cc.getDest(), nodeModelClass);
+        }
+        return true;
+    }
+    
     /** Attempts to execute all nodes upstream of the argument node. The method
      * waits (until either all predecessors are executed or there is no further
      * chance to execute anything).
@@ -7021,27 +7078,57 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public <T> Map<NodeID, T> findNodes(
             final Class<T> nodeModelClass, final boolean recurse) {
-        Map<NodeID, T> result = new LinkedHashMap<NodeID, T>();
-        for (NodeContainer nc : m_workflow.getNodeValues()) {
-            if (nc instanceof SingleNodeContainer) {
-                SingleNodeContainer snc = (SingleNodeContainer)nc;
-                NodeModel model = snc.getNode().getNodeModel();
-                if (nodeModelClass.isAssignableFrom(model.getClass())) {
-                    result.put(snc.getID(), nodeModelClass.cast(model));
-                }
-            }
-        }
-        if (recurse) { // do separately to maintain some sort of order
-            for (NodeContainer nc : m_workflow.getNodeValues()) {
-                if (nc instanceof WorkflowManager) {
-                    result.putAll(((WorkflowManager)nc).findNodes(
-                            nodeModelClass, true));
-                }
-            }
-        }
-        return result;
+    	synchronized (m_workflowMutex) {
+    		Map<NodeID, T> result = new LinkedHashMap<NodeID, T>();
+    		for (NodeContainer nc : m_workflow.getNodeValues()) {
+    			if (nc instanceof SingleNodeContainer) {
+                    SingleNodeContainer snc = (SingleNodeContainer)nc;
+    				NodeModel model = snc.getNode().getNodeModel();
+                    if (nodeModelClass.isAssignableFrom(model.getClass())) {
+                        result.put(snc.getID(), nodeModelClass.cast(model));
+    				}
+    			}
+    		}
+    		if (recurse) { // do separately to maintain some sort of order
+    			for (NodeContainer nc : m_workflow.getNodeValues()) {
+    				if (nc instanceof WorkflowManager) {
+                        result.putAll(((WorkflowManager)nc).findNodes(
+    							nodeModelClass, true));
+    				}
+    			}
+    		}
+    		return result;
+		}
     }
 
+    /** Find all nodes of a certain type that are currently ready to
+     * be executed (= node is configured, all predecessors are executed).
+     * See {@link #findNodes(Class, boolean)}
+     * 
+     * @param <T> ...
+     * @param nodeModelClass ...
+     * @return ...
+     * @since 2.6
+     */
+    public <T> Map<NodeID, T> findWaitingNodes(final Class<T> nodeModelClass) {
+    	synchronized (m_workflowMutex) {
+	    	Map<NodeID, T> nodes = 
+	    		findNodes(nodeModelClass, /*recurse=*/false);
+	    	Iterator<Map.Entry<NodeID, T>> it
+	    	                        = nodes.entrySet().iterator();
+	    	while (it.hasNext()) {
+	    		NodeID id = it.next().getKey();
+	    		NodeContainer nc = getNodeContainer(id);
+	    		PortObject[] inData = new PortObject[nc.getNrInPorts()];
+	    		if (!assembleInputData(id, inData)) {
+	    			it.remove();
+	    		}
+	    	}
+	    	return nodes;
+    	}
+    }
+    
+    
 
     /** Remove workflow variable of given name.
      * The method may change in future versions or removed entirely (bug 1937).
