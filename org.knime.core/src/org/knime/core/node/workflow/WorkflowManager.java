@@ -7120,10 +7120,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public <T> Map<NodeID, T> findWaitingNodes(final Class<T> nodeModelClass) {
     	synchronized (m_workflowMutex) {
-	    	Map<NodeID, T> nodes =
-	    		findNodes(nodeModelClass, /*recurse=*/false);
-	    	Iterator<Map.Entry<NodeID, T>> it
-	    	                        = nodes.entrySet().iterator();
+            Map<NodeID, T> nodes = findNodes(nodeModelClass, /*recurse=*/false);
+	    	Iterator<Map.Entry<NodeID, T>> it = nodes.entrySet().iterator();
 	    	while (it.hasNext()) {
 	    		NodeID id = it.next().getKey();
 	    		NodeContainer nc = getNodeContainer(id);
@@ -7134,6 +7132,29 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 	    	}
 	    	return nodes;
     	}
+    }
+
+    /** Find all nodes of a certain type that are already executed.
+     * See {@link #findNodes(Class, boolean)}
+     *
+     * @param <T> ...
+     * @param nodeModelClass ...
+     * @return ...
+     * @since 2.6
+     */
+    public <T> Map<NodeID, T> findExecutedNodes(final Class<T> nodeModelClass) {
+        synchronized (m_workflowMutex) {
+            Map<NodeID, T> nodes = findNodes(nodeModelClass, /*recurse=*/false);
+            Iterator<Map.Entry<NodeID, T>> it = nodes.entrySet().iterator();
+            while (it.hasNext()) {
+                NodeID id = it.next().getKey();
+                NodeContainer nc = getNodeContainer(id);
+                if (!State.EXECUTED.equals(nc.getState())) {
+                    it.remove();
+                }
+            }
+            return nodes;
+        }
     }
     
     /** Find "next" workflowmanager which contains nodes of a certain type
