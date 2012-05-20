@@ -1147,13 +1147,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             NodeContainer nc = getNodeContainer(id);
             if (!nc.getState().executionInProgress()
                     && !hasSuccessorInProgress(id)) {
-                resetSuccessors(id);
                 if (nc.isResetable()) {
-                    if (nc instanceof SingleNodeContainer) {
-                        ((SingleNodeContainer)nc).reset();
-                    } else {
-                        ((WorkflowManager)nc).resetAllNodesInWFM();
-                    }
+                    // make sure we are consistent (that is reset + configure)
+                    // if we touch upstream nodes implicitly (e.g. loop heads)
+                    resetAndConfigureNode(id);
                 }
                 nc.loadSettings(settings);
                 // bug fix 2593: can't simply call configureNodeAndSuccessor
