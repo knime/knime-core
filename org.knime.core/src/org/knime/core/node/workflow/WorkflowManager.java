@@ -1026,7 +1026,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
             } else {
                 // otherwise just reset successor, rest will be handled by WFM
-                resetAndConfigureNode(cc.getDest());
+                resetAndConfigureNode(dest);
             }
         }
         setDirty();
@@ -1585,6 +1585,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 NodeContainer nc = m_workflow.getNode(nai.getID());
                 if (nc.isResetable()) {
                     if (nc instanceof SingleNodeContainer) {
+                        // TODO: this ignores loops that could potentially
+                        //   be connected to this node upstream but NOT
+                        //   connected to the incoming port.
                         ((SingleNodeContainer)nc).reset();
                     } else {
                         assert nc instanceof WorkflowManager;
