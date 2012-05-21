@@ -165,11 +165,12 @@ public class SimpleWorkflowTest implements WorkflowTest {
         result.startTest(this);
 
         WorkflowManager manager = null;
+        TimerTask timeout = null;
         try {
             manager = loadWorkflow(result);
             final WorkflowManager m = manager;
 
-            TimerTask timeout = new TimerTask() {
+            timeout = new TimerTask() {
                 @Override
                 public void run() {
                     String status = m.printNodeSummary(m.getID(), 0);
@@ -195,6 +196,9 @@ public class SimpleWorkflowTest implements WorkflowTest {
                 manager.getParent().removeNode(manager.getID());
             }
             result.endTest(this);
+            if (timeout != null) {
+                timeout.cancel();
+            }
         }
     }
 
