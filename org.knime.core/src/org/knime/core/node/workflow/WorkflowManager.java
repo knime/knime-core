@@ -969,7 +969,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             // 0) clean the node (and especially any upstream dependencies
             //    by first reseting it:
-            resetAndConfigureNode(dest);
+            resetNodeAndSuccessors(dest);
             // 1) try to delete it from set of outgoing connections
             Set<ConnectionContainer> outConns =
                 m_workflow.getConnectionsBySource(source);
@@ -1147,11 +1147,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             NodeContainer nc = getNodeContainer(id);
             if (!nc.getState().executionInProgress()
                     && !hasSuccessorInProgress(id)) {
-                if (nc.isResetable()) {
-                    // make sure we are consistent (that is reset + configure)
-                    // if we touch upstream nodes implicitly (e.g. loop heads)
-                    resetAndConfigureNode(id);
-                }
+                // make sure we are consistent (that is reset + configure)
+                // if we touch upstream nodes implicitly (e.g. loop heads)
+                resetNodeAndSuccessors(id);
                 nc.loadSettings(settings);
                 // bug fix 2593: can't simply call configureNodeAndSuccessor
                 // with meta node as argument: will miss contained source nodes
@@ -1677,7 +1675,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /* Recursively continue to trigger execution of nodes until first
      * unexecuted node of specified type is encountered.
-     * 
+     *
      * @param NodeID node to start from
      * @param <T> ...
      * @param nodeModelClass the interface of the "stepping" nodes
@@ -3546,93 +3544,100 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     //////////////////////////////////////////////////////////
 
     /** Reset node and all executed successors of a specific node.
-     * Note that we will also reset nodes apart of the (in)direct
+     * Note that we will reset & configure(!) nodes apart of the (in)direct
      * successors if the list contains loopend nodes without their
      * corresponding loopstart equivalents.
      *
      * @param id of first node in chain to be reset.
      */
+    private void resetNodeAndSuccessors(final NodeID id) {
+        assert Thread.holdsLock(m_workflowMutex);
+        NodeContainer nc = getNodeContainer(id);
+        if (!nc.isResetable()) {
+            if (nc.getState().equals(State.IDLE)) {
+                // the node is IDLE: we don't need to reset it but we
+                // should remove its node message! (This for instance
+                // matters when we disconnect the inport of this node
+                // and it showed an error due to conflicting stacks!)
+                nc.setNodeMessage(null);
+            }
+            // any other reasons for "non reset-ability" are ignored until
+            // now (Mar 2012) - not sure if there could be others?
+        	return;
+        }
+        // Now perform the actual reset!
+        // First find all the nodes in this workflow that are connected
+        // to the node to be reset.
+        LinkedHashMap<NodeID, Set<Integer>> allnodes
+            = m_workflow.getBreadthFirstListOfNodeAndSuccessors(id,
+                       /*skipWFM=*/ true);
+        // find any LoopEnd nodes without loop starts in the set:
+        for (NodeID leid : allnodes.keySet()) {
+            NodeContainer lenc = getNodeContainer(leid);
+            if (lenc instanceof SingleNodeContainer) {
+                if (((SingleNodeContainer)lenc).getNodeModel()
+                		instanceof LoopEndNode) {
+                    NodeID lsid;
+                    try {
+                    	lsid = m_workflow.getMatchingLoopStart(leid);
+                    } catch (Exception e) {
+                        // this should have been caught earlier...
+                        LOGGER.coding("WorkflowManager.reset() LoopEnd "
+                            + "encountered invalid state: ", e);
+                    	lsid = null;
+                    }
+                    if ((lsid != null) && (!allnodes.containsKey(lsid))) {
+                        // found a LoopEndNode without matching LoopStart
+                    	// to be reset as well: try to reset this node.
+                        resetAndConfigureNode(lsid);
+                        // now check if the node that we were originially
+                        // supposed to reset was reset:
+                        if (!nc.isResetable()) {
+                            // and abandon operation if true (then the
+                            // node was upstream of the original target)
+                        	return;
+                        }
+                        // otherwise continue, since the original
+                        // target was not downstream of the loop start.
+                    }
+                }
+            }
+        }
+        nc = getNodeContainer(id);
+        // a) Reset all successors first
+        resetSuccessors(id);
+        // b) and then reset node itself
+        if (nc instanceof SingleNodeContainer) {
+            invokeResetOnSingleNodeContainer(
+                    (SingleNodeContainer)nc);
+        } else {
+            WorkflowManager wfm = (WorkflowManager)nc;
+            // this is ok, since we will never call this again
+            // while traversing a flow - this is the main entry
+            // point from the outside and should reset all children
+            // (resetSuccessors() follows ports and will be
+            // called throughout subsequent calls...)
+
+            // TODO this configures the meta node, too!
+            wfm.resetAndReconfigureAllNodesInWFM();
+        }
+        nc.resetJobManagerViews();
+    }
+
+    /** Reset node and all executed successors of a specific node and
+     * launch configure storm.
+     *
+     * @param id of first node in chain to be reset.
+     */
     public void resetAndConfigureNode(final NodeID id) {
         synchronized (m_workflowMutex) {
-            NodeContainer nc = getNodeContainer(id);
             if (hasSuccessorInProgress(id)) {
                 // we can not reset nodes with executing successors.
                 throw new IllegalStateException(
                     "Can not reset node (wrong state of node or successors) "
-                		+ id);
+                        + id);
             }
-            if (!nc.isResetable()) {
-	            if (nc.getState().equals(State.IDLE)) {
-	                // the node is IDLE: we don't need to reset it but we
-	                // should remove its node message! (This for instance
-	                // matters when we disconnect the inport of this node
-	                // and it showed an error due to conflicting stacks!)
-	                nc.setNodeMessage(null);
-	                // But maybe the node is configurable?
-	                configureNodeAndSuccessors(id, true);
-	            }
-                // any other reasons for "non reset-ability" are ignored until
-	            // now (Mar 2012) - not sure if there could be others?
-            	return;
-            }
-            // Now perform the actual reset!
-            // First find all the nodes in this workflow that are connected
-            // to the node to be reset.
-            LinkedHashMap<NodeID, Set<Integer>> allnodes
-                = m_workflow.getBreadthFirstListOfNodeAndSuccessors(id,
-                           /*skipWFM=*/ true);
-            // find any LoopEnd nodes without loop starts in the set:
-            for (NodeID leid : allnodes.keySet()) {
-                NodeContainer lenc = getNodeContainer(leid);
-                if (lenc instanceof SingleNodeContainer) {
-	                if (((SingleNodeContainer)lenc).getNodeModel()
-	                		instanceof LoopEndNode) {
-	                    NodeID lsid;
-	                    try {
-	                    	lsid = m_workflow.getMatchingLoopStart(leid);
-	                    } catch (Exception e) {
-	                        // this should have been caught earlier...
-	                        LOGGER.coding("WorkflowManager.reset() LoopEnd "
-	                            + "encountered invalid state: ", e);
-	                    	lsid = null;
-	                    }
-                        if ((lsid != null) && (!allnodes.containsKey(lsid))) {
-                            // found a LoopEndNode without matching LoopStart
-	                    	// to be reset as well: try to reset this node.
-	                        resetAndConfigureNode(lsid);
-                            // now check if the node that we were originially
-                            // supposed to reset was reset:
-	                        if (!nc.isResetable()) {
-	                            // and abandon operation if true (then the
-	                            // node was upstream of the original target)
-	                        	return;
-	                        }
-	                        // otherwise continue, since the original
-	                        // target was not downstream of the loop start.
-	                    }
-	                }
-                }
-            }
-            nc = getNodeContainer(id);
-            // a) Reset all successors first
-            resetSuccessors(id);
-            // b) and then reset node itself
-            if (nc instanceof SingleNodeContainer) {
-                invokeResetOnSingleNodeContainer(
-                        (SingleNodeContainer)nc);
-            } else {
-                WorkflowManager wfm = (WorkflowManager)nc;
-                // this is ok, since we will never call this again
-                // while traversing a flow - this is the main entry
-                // point from the outside and should reset all children
-                // (resetSuccessors() follows ports and will be
-                // called throughout subsequent calls...)
-
-                // TODO this configures the meta node already, which
-                // is done 2nd time two lines below
-                wfm.resetAndReconfigureAllNodesInWFM();
-            }
-            nc.resetJobManagerViews();
+            resetNodeAndSuccessors(id);
             // and launch configure starting with this node
             configureNodeAndSuccessors(id, true);
         }
@@ -7159,11 +7164,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             return nodes;
         }
     }
-    
+
     /** Find "next" workflowmanager which contains nodes of a certain type
      * that are currently ready to be executed.
      * See {@link #findWaitingNodes(Class)}
-     * 
+     *
      * @param <T> ...
      * @param nodeModelClass ...
      * @return Workflowmanager with waiting nodes or null if none exists.
@@ -7191,8 +7196,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             return null;
         }
     }
-    
-    
+
+
     /** Remove workflow variable of given name.
      * The method may change in future versions or removed entirely (bug 1937).
      *
