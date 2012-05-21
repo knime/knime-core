@@ -968,8 +968,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 assert cc.getType() == ConnectionType.STD;
             }
             // 0) clean the node (and especially any upstream dependencies
-            //    by first reseting it:
-            resetNodeAndSuccessors(dest);
+            //    by first reseting it (if it's not the WFM itself):
+            if (!dest.equals(this.getID())) {
+                resetNodeAndSuccessors(dest);
+            }
             // 1) try to delete it from set of outgoing connections
             Set<ConnectionContainer> outConns =
                 m_workflow.getConnectionsBySource(source);
