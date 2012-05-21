@@ -155,8 +155,7 @@ public class WorkflowLoopReset extends WorkflowTestCase {
         checkState(m_groupByInLoopNode3, State.CONFIGURED);
     }
 
-    /** disabled, see bug 3246. */
-    public void AtestAddConnectionInExecutedLoop() throws Exception {
+    public void testAddConnectionInExecutedLoop() throws Exception {
         deleteConnection(m_groupByInLoopNode3, 0);
         executeAllAndWait();
         checkState(m_loopEndNode4, State.EXECUTED);
@@ -171,8 +170,7 @@ public class WorkflowLoopReset extends WorkflowTestCase {
         checkState(m_groupByInLoopNode3, State.CONFIGURED);
     }
 
-    /** disabled, see bug 3246. */
-    public void AtestChangeConfigInExecutedLoop() throws Exception {
+    public void testChangeConfigInExecutedLoop() throws Exception {
         NodeSettings s = new NodeSettings("groupByModel");
         WorkflowManager m = getManager();
         m.saveNodeSettings(m_groupByInLoopNode3, s);
