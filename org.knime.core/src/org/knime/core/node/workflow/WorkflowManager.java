@@ -1705,14 +1705,16 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         if (!State.EXECUTED.equals(state)
                 && !state.executionInProgress()) {
             // the node itself is not yet marked/executed - mark it
-            // ...but first check if it's not the stopping type!
-            if (nodeModelClass.isInstance(nc)) {
-                return false;
-            }
             // mark...
             if (nc.isLocalWFM()) {
                 ((WorkflowManager)nc).stepExecutionUpToNodeType(nodeModelClass);
             } else {
+                assert nc instanceof SingleNodeContainer;
+                SingleNodeContainer snc = (SingleNodeContainer)nc;
+                // ...but first check if it's not the stopping type!
+                if (nodeModelClass.isInstance(snc.getNodeModel())) {
+                    return false;
+                }
                 this.markAndQueueNodeAndPredecessors(id, -1);
             }
         }
