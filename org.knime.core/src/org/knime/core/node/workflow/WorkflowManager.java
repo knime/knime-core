@@ -7138,7 +7138,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 	    		NodeID id = it.next().getKey();
 	    		NodeContainer nc = getNodeContainer(id);
 	    		PortObject[] inData = new PortObject[nc.getNrInPorts()];
-	    		if (!assembleInputData(id, inData)) {
+	    		if (State.EXECUTED.equals(nc.getState())
+	    		    || (!assembleInputData(id, inData))) {
+	    		    // only keep nodes that can be executed (= have all
+	    		    // data available) but are not yet executed
 	    			it.remove();
 	    		}
 	    	}
