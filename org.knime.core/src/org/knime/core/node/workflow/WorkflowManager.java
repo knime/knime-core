@@ -1694,20 +1694,20 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param <T> ...
      * @param nodeModelClass the interface of the "stepping" nodes
      */
-    private <T> boolean stepExecutionUpToNodeType(final NodeID id,
+    private <T> void stepExecutionUpToNodeType(final NodeID id,
             final Class<T> nodeModelClass) {
         NodeContainer nc = getNodeContainer(id);
         NodeOutPort[] incoming = assemblePredecessorOutPorts(id);
         for (int i = 0; i < incoming.length; i++) {
             if (incoming[i] == null) {
                 if (!nc.getInPort(i).getPortType().isOptional()) {
-                    return false;
+                    return;  // stop here
                 }
             } else {
                 State state = incoming[i].getNodeState();
                 if (!State.EXECUTED.equals(state)
                         && !state.executionInProgress()) {
-                    return false;
+                    return;  // stop here
                 }
             }
         }
@@ -1724,20 +1724,24 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 SingleNodeContainer snc = (SingleNodeContainer)nc;
                 // ...but first check if it's not the stopping type!
                 if (nodeModelClass.isInstance(snc.getNodeModel())) {
-                    return false;
+                    return;  // stop here
                 }
                 this.markAndQueueNodeAndPredecessors(id, -1);
             }
         }
         // and also mark successors
+        stepSuccessors(id, nodeModelClass);
+    }
+    
+    private <T> void stepSuccessors(final NodeID id,
+            final Class<T> nodeModelClass) {
         for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
             if (!this.getID().equals(cc.getDest())) {
                 stepExecutionUpToNodeType(cc.getDest(), nodeModelClass);
             } else {
-                getParent().stepExecutionUpToNodeType(cc.getDest(), nodeModelClass);
+                getParent().stepSuccessors(cc.getDest(), nodeModelClass);
             }
         }
-        return true;
     }
 
     /** Attempts to execute all nodes upstream of the argument node. The method
