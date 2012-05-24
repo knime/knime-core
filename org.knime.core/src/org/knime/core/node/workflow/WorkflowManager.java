@@ -1683,8 +1683,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             for (NodeID id : nodes.keySet()) {
                 stepExecutionUpToNodeType(id, nodeModelClass);
             }
+            checkForNodeStateChanges(true);
         }
-
     }
 
     /* Recursively continue to trigger execution of nodes until first
@@ -1717,7 +1717,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         if (!State.EXECUTED.equals(state)
                 && !state.executionInProgress()) {
             // the node itself is not yet marked/executed - mark it
-            // mark...
             if (nc.isLocalWFM()) {
                 ((WorkflowManager)nc).stepExecutionUpToNodeType(nodeModelClass);
             } else {
