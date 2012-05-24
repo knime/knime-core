@@ -25,6 +25,7 @@ package org.knime.core.node.workflow.metaWithIndependentThroughConns;
 
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowTestCase;
 
 /**
@@ -96,6 +97,21 @@ public class MetaWithIndependentThroughConnsTest extends WorkflowTestCase {
         checkState(m_topSource, State.EXECUTED);
         checkState(m_topSink, State.IDLE);
 
+        checkState(m_bottomSink, State.EXECUTED);
+    }
+
+    public void testExecuteAllThenDeleteThroughConnection() throws Exception {
+        executeAllAndWait();
+        checkState(m_topSink, State.EXECUTED);
+        checkState(m_bottomSink, State.EXECUTED);
+        // remove top through connection
+        WorkflowManager internalWFM = (WorkflowManager)(getManager()
+                             .getNodeContainer(m_metaWithOnlyThrough));
+        internalWFM.removeConnection(internalWFM.getIncomingConnectionFor(
+                m_metaWithOnlyThrough, 0));
+        checkState(m_topSource, State.EXECUTED);
+        checkState(m_bottomSource, State.EXECUTED);
+        checkState(m_topSink, State.IDLE);
         checkState(m_bottomSink, State.EXECUTED);
     }
 
