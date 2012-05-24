@@ -937,7 +937,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             // make sure connection exists
             if ((!m_workflow.getConnectionsByDest(cc.getDest()).contains(cc))) {
-                if ((!m_workflow.getConnectionsBySource(cc.getSource()).contains(cc))) {
+                if ((!m_workflow.getConnectionsBySource(
+                        cc.getSource()).contains(cc))) {
                     // if connection doesn't exist anywhere, we are fine
                     return;
                 } else {
@@ -954,6 +955,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // check type and underlying nodes
             NodeID source = cc.getSource();
             NodeID dest = cc.getDest();
+            int destPort = cc.getDestPort();
             NodeContainer sourceNC = m_workflow.getNode(source);
             NodeContainer destNC = m_workflow.getNode(dest);
             assert (source.equals(this.getID())) || (sourceNC != null);
@@ -967,13 +969,29 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             } else {
                 assert cc.getType() == ConnectionType.STD;
             }
-            // 0) clean the node (and especially any upstream dependencies
-            //    by first reseting it (if it's not the WFM itself):
-            // the below does not work because Metanode resets sometimes
-            // fully reset the metanode and don't follow ports properly
-//            if (!dest.equals(this.getID())) {
-//                resetNodeAndSuccessors(dest);
-//            }
+            // 0) clean everything after this connection:
+            // (note that just reseting everything connected to the
+            //  outport of the sourcenode does not work - there may
+            //  be other connections!)
+            if (destNC instanceof SingleNodeContainer) {
+                // connection goes directly into normal node:
+                resetNodeAndSuccessors(dest);
+            } else if (!dest.equals(this.getID())) {
+                // connection goes into a metanode
+                WorkflowManager destWFM = (WorkflowManager)destNC;
+                destWFM.resetNodesInWFMConnectedToInPorts(
+                           Collections.singleton(cc.getDestPort()));
+                // also reset successors of this "port"
+                Set<Integer> outPorts =
+                    destWFM.getWorkflow().connectedOutPorts(destPort);
+                for (int i : outPorts) {
+                    resetSuccessors(dest, i);
+                }
+            } else {
+                // connection leaves workflow
+                assert cc.getType().isLeavingWorkflow();
+                getParent().resetSuccessors(this.getID(), cc.getDestPort());
+            }
             // 1) try to delete it from set of outgoing connections
             Set<ConnectionContainer> outConns =
                 m_workflow.getConnectionsBySource(source);
@@ -982,14 +1000,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 "Connection does not exist!");
             }
             // 2) remove connection from set of ingoing connections
-            Set<ConnectionContainer> inConns = m_workflow.getConnectionsByDest(dest);
+            Set<ConnectionContainer> inConns
+                              = m_workflow.getConnectionsByDest(dest);
             if (!inConns.remove(cc)) {
                 throw new IllegalArgumentException(
                 "Connection did not exist (it did exist as outcoming conn.)!");
             }
             // handle special cases with port reference chains (WFM border
             // crossing connections:
-            int destPort = cc.getDestPort();
             if ((source.equals(getID()))
                 && (dest.equals(getID()))) {
                 // connection goes directly from workflow in to workflow outport
@@ -1006,13 +1024,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 assert cc.getType() == ConnectionType.WFMOUT;
                 getOutPort(destPort).setUnderlyingPort(null);
             }
-            // and finally reset the destination node - since it has incomplete
-            // incoming connections now...
+            // and finally reconfigure destination node(s)
             if (cc.getType().isLeavingWorkflow()) {
-                // in case of WFM being disconnected make sure outside
-                // successors are reset
-                this.getParent().resetSuccessors(this.getID());
-                // reconfigure successors as well (of still existing conns)
+                // this is a bit too broad (configure ALL successors)
+                // but should not be harmful
                 this.getParent().configureNodeAndSuccessors(this.getID(),
                         false);
                 // make sure to reflect state changes
@@ -1020,17 +1035,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             } else if (destNC instanceof WorkflowManager) {
                 // connection entered a meta node
                 WorkflowManager destWFM = (WorkflowManager)destNC;
-                destWFM.resetNodesInWFMConnectedToInPorts(
-                        Collections.singleton(destPort));
                 destWFM.configureNodesConnectedToPortInWFM(destPort);
-                Set<Integer> outPorts =
-                    destWFM.getWorkflow().connectedOutPorts(destPort);
-                for (int i : outPorts) {
-                    resetSuccessors(dest, i);
-                }
+                // also configure successors (too broad again, see above)
+                configureNodeAndSuccessors(dest, false);
             } else {
-                // otherwise just reset successor, rest will be handled by WFM
-                resetAndConfigureNode(dest);
+                // otherwise just configure successor
+                configureNodeAndSuccessors(dest, true);
             }
         }
         setDirty();
@@ -3662,8 +3672,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /*
-     * Reset successors of a node connected to a specific port. If id == -1
-     * reset successors connected to all nodes.
+     * Reset successors of a node connected to a specific out port. If id == -1
+     * reset successors connected to all out ports.
      */
     private void resetSuccessors(final NodeID id, final int portID) {
         assert Thread.holdsLock(m_workflowMutex);
