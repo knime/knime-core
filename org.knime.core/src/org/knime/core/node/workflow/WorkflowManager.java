@@ -1730,16 +1730,26 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
         }
         // and also mark successors
-        stepSuccessors(id, nodeModelClass);
+        stepExecutionUpToNodeTypeSuccessorsOnly(id, nodeModelClass);
     }
     
-    private <T> void stepSuccessors(final NodeID id,
+    /* Recursively continue to trigger execution of nodes until first
+     * unexecuted node of specified type is encountered. This routine
+     * only inspects the successors of the given node, see
+     * {@link #stepExecutionUpToNodeType(Class)} for the complementary
+     * version.
+     * 
+     * @param NodeID node to start from
+     * @param <T> ...
+     * @param nodeModelClass the interface of the "stepping" nodes
+     */
+    private <T> void stepExecutionUpToNodeTypeSuccessorsOnly(final NodeID id,
             final Class<T> nodeModelClass) {
         for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
             if (!this.getID().equals(cc.getDest())) {
                 stepExecutionUpToNodeType(cc.getDest(), nodeModelClass);
             } else {
-                getParent().stepSuccessors(cc.getDest(), nodeModelClass);
+                getParent().stepExecutionUpToNodeTypeSuccessorsOnly(cc.getDest(), nodeModelClass);
             }
         }
     }
@@ -3588,45 +3598,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // now (Mar 2012) - not sure if there could be others?
         	return;
         }
-        // Now perform the actual reset!
-        // First find all the nodes in this workflow that are connected
-        // to the node to be reset.
-        LinkedHashMap<NodeID, Set<Integer>> allnodes
-            = m_workflow.getBreadthFirstListOfNodeAndSuccessors(id,
-                       /*skipWFM=*/ true);
-        // find any LoopEnd nodes without loop starts in the set:
-        for (NodeID leid : allnodes.keySet()) {
-            NodeContainer lenc = getNodeContainer(leid);
-            if (lenc instanceof SingleNodeContainer) {
-                if (((SingleNodeContainer)lenc).getNodeModel()
-                		instanceof LoopEndNode) {
-                    NodeID lsid;
-                    try {
-                    	lsid = m_workflow.getMatchingLoopStart(leid);
-                    } catch (Exception e) {
-                        // this should have been caught earlier...
-                        LOGGER.coding("WorkflowManager.reset() LoopEnd "
-                            + "encountered invalid state: ", e);
-                    	lsid = null;
-                    }
-                    if ((lsid != null) && (!allnodes.containsKey(lsid))) {
-                        // found a LoopEndNode without matching LoopStart
-                    	// to be reset as well: try to reset this node.
-                        resetAndConfigureNode(lsid);
-                        // now check if the node that we were originially
-                        // supposed to reset was reset:
-                        if (!nc.isResetable()) {
-                            // and abandon operation if true (then the
-                            // node was upstream of the original target)
-                        	return;
-                        }
-                        // otherwise continue, since the original
-                        // target was not downstream of the loop start.
-                    }
-                }
-            }
+        // clean context - that is make sure all loops affected by
+        // this reset-"chain" are completely reset/configured!
+        resetAndConfigureAffectedLoopContext(id);
+        if (!nc.isResetable()) {
+            // if the above led to an implicit reset of our node: stop here.
+            return;
         }
-        nc = getNodeContainer(id);
+        // Now perform the actual reset!
         // a) Reset all successors first
         resetSuccessors(id);
         // b) and then reset node itself
@@ -3645,6 +3624,46 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             wfm.resetAndReconfigureAllNodesInWFM();
         }
         nc.resetJobManagerViews();
+    }
+
+    /** Check all successors of the given node and make sure that
+     * all loops that are partially contained in the set of
+     * successors are completely reset and freshly configured. This
+     * is used to ensure proper reset/configure of the entire loop
+     * if only parts of a loop are affected by a reset propagation.
+     * 
+     * @param id ...
+     */
+    private void resetAndConfigureAffectedLoopContext(final NodeID id) {
+        // First find all the nodes in this workflow that are connected
+        // to the origin:
+        LinkedHashMap<NodeID, Set<Integer>> allnodes
+            = m_workflow.getBreadthFirstListOfNodeAndSuccessors(id,
+                       /*skipWFM=*/ true);
+        // find any LoopEnd nodes without loop starts in the set:
+        for (NodeID leid : allnodes.keySet()) {
+            NodeContainer lenc = getNodeContainer(leid);
+            if (lenc instanceof SingleNodeContainer) {
+                if (((SingleNodeContainer)lenc).getNodeModel()
+                        instanceof LoopEndNode) {
+                    NodeID lsid;
+                    try {
+                        lsid = m_workflow.getMatchingLoopStart(leid);
+                    } catch (Exception e) {
+                        // this should have been caught earlier...
+                        LOGGER.coding("WorkflowManager.reset() LoopEnd "
+                            + "encountered invalid state: ", e);
+                        lsid = null;
+                    }
+                    if ((lsid != null) && (!allnodes.containsKey(lsid))) {
+                        // found a LoopEndNode without matching LoopStart
+                        // to be reset as well: try to reset&configure the
+                        // node (and its successors).
+                        resetAndConfigureNode(lsid);
+                    }
+                }
+            }
+        }
     }
 
     /** Reset node and all executed successors of a specific node and
