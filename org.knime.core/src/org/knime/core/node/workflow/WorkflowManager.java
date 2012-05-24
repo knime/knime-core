@@ -969,9 +969,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             // 0) clean the node (and especially any upstream dependencies
             //    by first reseting it (if it's not the WFM itself):
-            if (!dest.equals(this.getID())) {
-                resetNodeAndSuccessors(dest);
-            }
+            // the below does not work because Metanode resets sometimes
+            // fully reset the metanode and don't follow ports properly
+//            if (!dest.equals(this.getID())) {
+//                resetNodeAndSuccessors(dest);
+//            }
             // 1) try to delete it from set of outgoing connections
             Set<ConnectionContainer> outConns =
                 m_workflow.getConnectionsBySource(source);
