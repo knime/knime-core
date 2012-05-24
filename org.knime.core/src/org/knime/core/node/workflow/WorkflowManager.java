@@ -1731,7 +1731,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         // and also mark successors
         for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
-            stepExecutionUpToNodeType(cc.getDest(), nodeModelClass);
+            if (!this.getID().equals(cc.getDest())) {
+                stepExecutionUpToNodeType(cc.getDest(), nodeModelClass);
+            } else {
+                getParent().stepExecutionUpToNodeType(cc.getDest(), nodeModelClass);
+            }
         }
         return true;
     }
