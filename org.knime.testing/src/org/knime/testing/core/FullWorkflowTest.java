@@ -726,9 +726,9 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                 // executed but shouldn't be
 
                 String msg =
-                        "Node " + node.getNameWithID()
-                                + " is executed even though it shouldn't "
-                                + "(as specified in the node status file)";
+                        "Execution of node " + node.getNameWithID()
+                                + " should have failed (as specified in the "
+                                + " testflow settings)";
                 // make sure to log an error - during wrapUp the test fails then
                 logger.error(msg);
             } else {
