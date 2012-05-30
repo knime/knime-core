@@ -135,14 +135,9 @@ public class DataContainer implements RowAppender {
      * @see KNIMEConstants#PROPERTY_TABLE_GZIP_COMPRESSION */
     public static final boolean DEF_GZIP_COMPRESSION = true;
 
-    /** Java property name to set a different threshold for the number of
-     * cells to be held in main memory. This property is set at startup, usually
-     * by adding a line such as
-     * <code>-Dorg.knime.container.cellsinmemory=1000</code> to the knime.ini
-     * file in the installation directory.
-     */
+    /** See {@link KNIMEConstants#PROPERTY_CELLS_IN_MEMORY}. */
     public static final String PROPERTY_CELLS_IN_MEMORY =
-        "org.knime.container.cellsinmemory";
+        KNIMEConstants.PROPERTY_CELLS_IN_MEMORY;
 
     /** The default number of cells to be held in memory. */
     public static final int DEF_MAX_CELLS_IN_MEMORY = 100000;

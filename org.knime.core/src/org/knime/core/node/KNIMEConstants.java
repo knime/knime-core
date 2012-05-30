@@ -57,7 +57,6 @@ import java.util.Locale;
 import javax.swing.ImageIcon;
 
 import org.eclipse.core.runtime.Platform;
-import org.knime.core.data.container.DataContainer;
 import org.knime.core.internal.CorePlugin;
 import org.knime.core.internal.KNIMEPath;
 import org.knime.core.util.ThreadPool;
@@ -114,11 +113,21 @@ public final class KNIMEConstants {
      * smaller the synchronization overhead but the larger the memory
      * requirements.
      * <p>
-     * The default value is {@value DataContainer#DEF_ASYNC_CACHE_SIZE}. This
+     * The default value is {@value
+     * org.knime.core.data.container.DataContainer#DEF_ASYNC_CACHE_SIZE}. This
      * property has no effect if tables are written synchronously
      * (see {@link #PROPERTY_SYNCHRONOUS_IO}). */
     public static final String PROPERTY_ASYNC_WRITE_CACHE_SIZE =
         "knime.async.io.cachesize";
+
+    /** Java property name to set a different threshold for the number of
+     * cells to be held in main memory (if memory setting is
+     * "Keep only small tables in memory"). The default is {@value
+     * org.knime.core.data.container.DataContainer#DEF_MAX_CELLS_IN_MEMORY}.
+     * @since 2.6
+     */
+    public static final String PROPERTY_CELLS_IN_MEMORY =
+        "org.knime.container.cellsinmemory";
 
     /** Java property to enable/disable table stream compression. Compression
      * results in smaller temp-file sizes but also (sometimes significant)
