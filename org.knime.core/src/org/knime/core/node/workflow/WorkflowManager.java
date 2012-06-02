@@ -4658,11 +4658,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 	                    	// odd: head is not in the same workflow,
 	                    	// ignore as well during configure
 	                    	snc.getNode().setLoopStartNode(null);
+                        } else {
+    	                    // head found, let the end node know about it:
+                            snc.getNode().setLoopStartNode(
+                                ((SingleNodeContainer)headNode).getNode());
+                        }
                     }
-	                    // head found, let the end node know about it:
-                    snc.getNode().setLoopStartNode(
-                            ((SingleNodeContainer)headNode).getNode());
-                }
                 }
                 // update HiLiteHandlers on inports of SNC only
                 // TODO think about it... happens magically
