@@ -3750,9 +3750,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             for (Integer i : outcomingPorts) {
                                 this.resetSuccessors(currID, i);
                             }
-                            // clean loop context affected one level down
-                            wfm.resetAndConfigureAffectedLoopContext(currID,
-                                    conn.getDestPort());
+//                            // clean loop context affected one level down
+//                            wfm.resetAndConfigureAffectedLoopContext(currID,
+//                                    conn.getDestPort());
                             // ...then reset nodes inside WFM.
                             wfm.invokeResetOnPortSuccessors(conn.getDestPort());
                         }
@@ -3763,9 +3763,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     // Only reset nodes which are connected to the currently
                     // interesting port.
                     int outGoingPortID = conn.getDestPort();
-                    // clean loop context affected on level up
-                    getParent().resetAndConfigureAffectedLoopContext(
-                            this.getID(), conn.getDestPort());
+//                    // clean loop context affected on level up
+//                    getParent().resetAndConfigureAffectedLoopContext(
+//                            this.getID(), conn.getDestPort());
                     getParent().resetSuccessors(this.getID(), outGoingPortID);
                 }
             }
