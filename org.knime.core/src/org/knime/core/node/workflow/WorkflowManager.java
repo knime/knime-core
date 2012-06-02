@@ -1732,13 +1732,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // and also mark successors
         stepExecutionUpToNodeTypeSuccessorsOnly(id, nodeModelClass);
     }
-    
+
     /* Recursively continue to trigger execution of nodes until first
      * unexecuted node of specified type is encountered. This routine
      * only inspects the successors of the given node, see
      * {@link #stepExecutionUpToNodeType(Class)} for the complementary
      * version.
-     * 
+     *
      * @param NodeID node to start from
      * @param <T> ...
      * @param nodeModelClass the interface of the "stepping" nodes
@@ -2531,15 +2531,16 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         HashSet<Pair<NodeID, Integer>> exposedInports =
             new HashSet<Pair<NodeID, Integer>>();
         for (NodeID id : ids) {
-            if (m_workflow.getConnectionsByDest(id) != null)
-            for (ConnectionContainer cc : m_workflow.getConnectionsByDest(id)) {
-                if (   (!orgIDsHash.contains(cc.getSource()))
-                    && (!cc.getSource().equals(startID))) {
-                    Pair<NodeID, Integer> npi
-                            = new Pair<NodeID, Integer>(cc.getDest(),
-                                                        cc.getDestPort());
-                    if (!exposedInports.contains(npi)) {
-                        exposedInports.add(npi);
+            if (m_workflow.getConnectionsByDest(id) != null) {
+                for (ConnectionContainer cc : m_workflow.getConnectionsByDest(id)) {
+                    if (   (!orgIDsHash.contains(cc.getSource()))
+                        && (!cc.getSource().equals(startID))) {
+                        Pair<NodeID, Integer> npi
+                                = new Pair<NodeID, Integer>(cc.getDest(),
+                                                            cc.getDestPort());
+                        if (!exposedInports.contains(npi)) {
+                            exposedInports.add(npi);
+                        }
                     }
                 }
             }
@@ -3508,7 +3509,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 if ((cc.getType().equals(ConnectionType.WFMIN))
                         &&    ((inportIndex < 0)
                             || (cc.getSourcePort() == inportIndex))) {
-                    // avoid WFMTHROUGH connections
+                    // (avoid WFMTHROUGH connections)
                     sourceNodes.put(nc, cc.getDestPort());
                 }
             }
@@ -3631,7 +3632,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * successors are completely reset and freshly configured. This
      * is used to ensure proper reset/configure of the entire loop
      * if only parts of a loop are affected by a reset propagation.
-     * 
+     *
      * @param id ...
      */
     private void resetAndConfigureAffectedLoopContext(final NodeID id) {
@@ -3658,9 +3659,23 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     if ((lsid != null) && (!allnodes.containsKey(lsid))) {
                         // found a LoopEndNode without matching LoopStart
                         // to be reset as well: try to reset&configure the
-                        // node (and its successors).
-                        resetAndConfigureNode(lsid);
+                        // node (and its successors) if it is executed:
+                        if (State.EXECUTED.equals(
+                                m_workflow.getNode(lsid).getState())) {
+                            resetAndConfigureNode(lsid);
+                        }
                     }
+                }
+            }
+        }
+    }
+
+    private void resetAndConfigureAffectedLoopContext(final NodeID id,
+            final int portIndex) {
+        for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
+            if (cc.getSourcePort() == portIndex) {
+                if (!cc.getType().isLeavingWorkflow()) {
+                    resetAndConfigureAffectedLoopContext(cc.getDest());
                 }
             }
         }
@@ -3723,7 +3738,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             this.resetSuccessors(currID, -1);
                             // ..then reset immediate successor itself
                             invokeResetOnSingleNodeContainer(
-                                (SingleNodeContainer)nc);
+                                    (SingleNodeContainer)nc);
                         } else {
                             assert nc instanceof WorkflowManager;
                             WorkflowManager wfm = (WorkflowManager)nc;
@@ -3735,9 +3750,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             for (Integer i : outcomingPorts) {
                                 this.resetSuccessors(currID, i);
                             }
-                            // ...then reset nodes inside WFM.
-                            ((WorkflowManager)nc).invokeResetOnPortSuccessors(
+                            // clean loop context affected one level down
+                            wfm.resetAndConfigureAffectedLoopContext(currID,
                                     conn.getDestPort());
+                            // ...then reset nodes inside WFM.
+                            wfm.invokeResetOnPortSuccessors(conn.getDestPort());
                         }
                     }
                 } else {
@@ -3746,6 +3763,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     // Only reset nodes which are connected to the currently
                     // interesting port.
                     int outGoingPortID = conn.getDestPort();
+                    // clean loop context affected on level up
+                    getParent().resetAndConfigureAffectedLoopContext(
+                            this.getID(), conn.getDestPort());
                     getParent().resetSuccessors(this.getID(), outGoingPortID);
                 }
             }
@@ -4383,7 +4403,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     clearWaitingLoopList();
                 }
             } else if (!isExecuting) {
-                // if something went wrong and any others loops were waiting
+                // if something went wrong and any other loops were waiting
                 // for this node: clean them up!
                 // (most likely this is just an IDLE node, however, which
                 // had other flows that were not executed (such as ROOT!)
