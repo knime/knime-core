@@ -260,7 +260,7 @@ class Workflow {
 
     /** Return map of node ids connected to the given outpot of the given node
      * sorted in breadth first order mapped to a set of portIDs.
-     * See also {#link getBreadthFirstListOfNodeAndSuccessors()}
+     * See also {@link #getBreadthFirstListOfNodeAndSuccessors()}
      *
      * @param id of node
      * @param outPortIndex of node
@@ -370,7 +370,7 @@ class Workflow {
     }
 
     /** Complete set of nodes depth-first starting with all nodes connected
-     * to the outport of the given node. See {#link completeSet()}.
+     * to the outport of the given node. See {@link #completeSet()}.
      *
      * @param nodes set of nodes to be completed
      * @param id of node to start search from
