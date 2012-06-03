@@ -97,7 +97,7 @@ public class WorkflowLoopReset extends WorkflowTestCase {
 
 
     /** disabled, see bug 3246. */
-    public void AtestNodeInMetaNodeInLoopReset() throws Exception {
+    public void testNodeInMetaNodeInLoopReset() throws Exception {
         executeAllAndWait();
         reset(m_javaEditInMetaThroughNode8_7);
         checkState(m_javaEditInMetaThroughNode8_7, State.CONFIGURED);
@@ -109,7 +109,7 @@ public class WorkflowLoopReset extends WorkflowTestCase {
     }
 
     /** disabled, see bug 3246. */
-    public void AtestSourceNodeInMetaNodeInLoopReset() throws Exception {
+    public void testSourceNodeInMetaNodeInLoopReset() throws Exception {
         executeAllAndWait();
         reset(m_javaEditInMetaNewSourceNode8_8);
         checkState(m_javaEditInMetaNewSourceNode8_8, State.CONFIGURED);
@@ -132,7 +132,7 @@ public class WorkflowLoopReset extends WorkflowTestCase {
     }
 
     /** disabled, see bug 3246. */
-    public void AtestDeleteConnectionInMetaNodeInLoop() throws Exception {
+    public void testDeleteConnectionInMetaNodeInLoop() throws Exception {
         executeAllAndWait();
         deleteConnection(m_javaEditInMetaThroughNode8_7, 1);
         checkState(m_javaEditInMetaNewSourceNode8_8, State.EXECUTED);
@@ -144,14 +144,14 @@ public class WorkflowLoopReset extends WorkflowTestCase {
     }
 
     /** disabled, see bug 3246. */
-    public void AtestDeleteConnectionInMetaNodeInIndirectLoop() throws Exception {
+    public void testDeleteConnectionInMetaNodeInIndirectLoop() throws Exception {
         executeAllAndWait();
         deleteConnection(m_javaEditInMetaThroughNode8_7, 0);
         checkState(m_javaEditInMetaNewSourceNode8_8, State.EXECUTED);
-        checkState(m_javaEditInMetaThroughNode8_7, State.IDLE);
+        checkState(m_javaEditInMetaThroughNode8_7, State.CONFIGURED);
         checkState(m_tableCreateNode1, State.EXECUTED);
         checkState(m_loopStartNode2, State.CONFIGURED);
-        checkState(m_loopEndNode4, State.IDLE);
+        checkState(m_loopEndNode4, State.CONFIGURED);
         checkState(m_groupByInLoopNode3, State.CONFIGURED);
     }
 
