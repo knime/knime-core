@@ -427,6 +427,7 @@ public final class SingleNodeContainer extends NodeContainer {
      * node's output).
      *
      * @param inSpecs the input specs to node configure
+     * @return true of configure succeeded.
      */
     private boolean nodeConfigure(final PortObjectSpec[] inSpecs) {
 
