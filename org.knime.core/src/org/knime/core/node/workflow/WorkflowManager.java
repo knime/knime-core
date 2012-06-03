@@ -3627,7 +3627,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         nc.resetJobManagerViews();
     }
 
-    /** Check all successors of the given node and make sure that
+    /* Check all successors and the given node and make sure that
      * all loops that are partially contained in the set of
      * successors are completely reset and freshly configured. This
      * is used to ensure proper reset/configure of the entire loop
@@ -3641,6 +3641,37 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         LinkedHashMap<NodeID, Set<Integer>> allnodes
             = m_workflow.getBreadthFirstListOfNodeAndSuccessors(id,
                        /*skipWFM=*/ true);
+        // the do cleanup
+        resetAndConfigureAffectedLoopContext(allnodes);
+    }
+
+    /* Check only successors of the given node/port and make sure that
+     * all loops that are partially contained in the set of
+     * successors are completely reset and freshly configured. This
+     * is used to ensure proper reset/configure of the entire loop
+     * if only parts of a loop are affected by a reset propagation.
+     *
+     * @param id ...
+     * @param portIndex ...
+     */
+    private void resetAndConfigureAffectedLoopContext(final NodeID id,
+            final int portIndex) {
+        // First find all the nodes in this workflow that are connected
+        // to the origin:
+        LinkedHashMap<NodeID, Set<Integer>> allnodes
+            = m_workflow.getBreadthFirstListOfPortSuccessors(id, portIndex,
+                       /*skipWFM=*/ true);
+        // the do cleanup
+        resetAndConfigureAffectedLoopContext(allnodes);
+    }
+
+    /* Check list of nodes and reset/configure all loops that are only
+     * partially contained in the list.
+     *
+     * @param allnodes ...
+     */
+    private void resetAndConfigureAffectedLoopContext(
+            final LinkedHashMap<NodeID, Set<Integer>> allnodes) {
         // find any LoopEnd nodes without loop starts in the set:
         for (NodeID leid : allnodes.keySet()) {
             NodeContainer lenc = getNodeContainer(leid);
@@ -3662,20 +3693,19 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         // node (and its successors) if it is executed:
                         if (State.EXECUTED.equals(
                                 m_workflow.getNode(lsid).getState())) {
+                            // this is ugly but necessary: we need to make
+                            // sure we don't go into an infinite loop here,
+                            // trying to reset this part over and over again.
+                            // so reset this node "out of the order" first
+                            // as a "flag" that we have already done it:
+                            SingleNodeContainer lsnc = (SingleNodeContainer)m_workflow.getNode(lsid);
+                            invokeResetOnSingleNodeContainer(lsnc);
+                            configureSingleNodeContainer(lsnc, true);
+                            // and now launch the proper reset (&configure!)
+                            // for this branch:
                             resetAndConfigureNode(lsid);
                         }
                     }
-                }
-            }
-        }
-    }
-
-    private void resetAndConfigureAffectedLoopContext(final NodeID id,
-            final int portIndex) {
-        for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
-            if (cc.getSourcePort() == portIndex) {
-                if (!cc.getType().isLeavingWorkflow()) {
-                    resetAndConfigureAffectedLoopContext(cc.getDest());
                 }
             }
         }
@@ -3750,9 +3780,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             for (Integer i : outcomingPorts) {
                                 this.resetSuccessors(currID, i);
                             }
-//                            // clean loop context affected one level down
-//                            wfm.resetAndConfigureAffectedLoopContext(currID,
-//                                    conn.getDestPort());
+                            // clean loop context affected one level down
+                            wfm.resetAndConfigureAffectedLoopContext(currID,
+                                    conn.getDestPort());
                             // ...then reset nodes inside WFM.
                             wfm.invokeResetOnPortSuccessors(conn.getDestPort());
                         }
@@ -3763,9 +3793,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     // Only reset nodes which are connected to the currently
                     // interesting port.
                     int outGoingPortID = conn.getDestPort();
-//                    // clean loop context affected on level up
-//                    getParent().resetAndConfigureAffectedLoopContext(
-//                            this.getID(), conn.getDestPort());
+                    // clean loop context affected one level up
+                    getParent().resetAndConfigureAffectedLoopContext(
+                            this.getID(), outGoingPortID);
                     getParent().resetSuccessors(this.getID(), outGoingPortID);
                 }
             }

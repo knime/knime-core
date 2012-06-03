@@ -177,7 +177,7 @@ class Workflow {
     Set<NodeID> getNodeIDs() {
         return m_nodes.keySet();
     }
-    
+
     /**
      * @return tree map of NodeID/NodeContainers.
      */
@@ -258,6 +258,40 @@ class Workflow {
         return bfsSortedNodes;
     }
 
+    /** Return map of node ids connected to the given outpot of the given node
+     * sorted in breadth first order mapped to a set of portIDs.
+     * See also {#link getBreadthFirstListOfNodeAndSuccessors()}
+     *
+     * @param id of node
+     * @param outPortIndex of node
+     * @param skipWFM if true, do not include WFM in the list
+     * @return map as described above.
+     */
+    LinkedHashMap<NodeID, Set<Integer>> getBreadthFirstListOfPortSuccessors(
+            final NodeID id, final int outPortIndex, final boolean skipWFM) {
+        // assemble unsorted list of successors
+        HashSet<NodeID> inclusionList = new HashSet<NodeID>();
+        completeSetFromOutPort(inclusionList, id, outPortIndex);
+        // add starting node as well (since it will be predecessor
+        // for the following BFS!
+        inclusionList.add(id);
+        // and then get all successors which are part of this list in a nice
+        // BFS order
+        LinkedHashMap<NodeID, Set<Integer>> bfsSortedNodes
+                    = new LinkedHashMap<NodeID, Set<Integer>>();
+        // put the origin - note that none of it's ports (if any) are of
+        // interest -  into the map
+        bfsSortedNodes.put(id, new HashSet<Integer>(outPortIndex));
+        expandListBreadthFirst(bfsSortedNodes, inclusionList);
+        // if wanted (and contained): remove WFM itself
+        if (skipWFM && bfsSortedNodes.keySet().contains(this.getID())) {
+            bfsSortedNodes.remove(this.getID());
+        }
+        // and finally remove start node from result list:
+        bfsSortedNodes.remove(id);
+        return bfsSortedNodes;
+    }
+
     /** Return map of node ids to set of port indices based on argument list
      * of node ids. The map is sorted by traversing the graph breadth first,
      * the set of port indices represents the input ports actually used
@@ -272,7 +306,7 @@ class Workflow {
             final boolean skipWFM) {
         // first create list of nodes without predecessor or only the WFM
         // itself (i.e. connected to outside "world" only.
-    	Set<NodeID> sources = getSourceNodes(ids);
+        Set<NodeID> sources = getSourceNodes(ids);
         LinkedHashMap<NodeID, Set<Integer>> bfsSortedNodes
                         = new LinkedHashMap<NodeID, Set<Integer>>();
         for (NodeID thisNode : sources) {
@@ -297,6 +331,7 @@ class Workflow {
      * @param nodes set of nodes to be completed
      * @param id of node to start search from
      * @param index of port the incoming connection connected to
+     *   (useful when start node is a metanode!)
      */
     private void completeSet(final HashSet<NodeID> nodes, final NodeID id,
             final int incomingPortIndex) {
@@ -330,6 +365,24 @@ class Workflow {
                     // make sure the WFM itself is in the list (if reached)
                     nodes.add(nextNodeID);
                 }
+            }
+        }
+    }
+
+    /** Complete set of nodes depth-first starting with all nodes connected
+     * to the outport of the given node. See {#link completeSet()}.
+     *
+     * @param nodes set of nodes to be completed
+     * @param id of node to start search from
+     * @param outPortIndex of outport
+     */
+    private void completeSetFromOutPort(final HashSet<NodeID> nodes,
+            final NodeID id, final int outPortIndex) {
+        for (ConnectionContainer cc : m_connectionsBySource.get(id)) {
+            NodeID nextNodeID = cc.getDest();
+            if (!nextNodeID.equals(getID())) {
+                // avoid to follow any connections leaving the workflow!
+                completeSet(nodes, nextNodeID, cc.getDestPort());
             }
         }
     }
@@ -397,7 +450,7 @@ class Workflow {
 
     /** Return set of nodes without any predecessors (sources) in the
      * set of given nodes.
-     * 
+     *
      * @param ids the nodes to check
      * @return set of nodes without predecessors
      */
@@ -423,7 +476,7 @@ class Workflow {
 
     /** Return list of nodes directly connected to given port or unconnected
      * start nodes if inPort = -1.
-     * 
+     *
      * @param inPort port index of -1 if no port given.
      * @return set of directly connected nodes or source nodes.
      */
@@ -444,7 +497,7 @@ class Workflow {
     	}
     	return result;
     }
-    
+
     /** Determine outports which are connected (directly or indirectly) to
      * the given inport in this workflow.
      *
@@ -595,7 +648,7 @@ class Workflow {
                 for (Integer inPortIx : currInports) {
                     Workflow currWorkflow
                                   = ((WorkflowManager)currNode).getWorkflow();
-                    Set<Integer> connectedOutports 
+                    Set<Integer> connectedOutports
                                    = currWorkflow.connectedOutPorts(inPortIx);
                     currOutports.addAll(connectedOutports);
                 }
