@@ -1296,7 +1296,7 @@ public final class SingleNodeContainer extends NodeContainer {
     }
 
     /**
-     * @return true if configure or execute were skipped because nodes is
+     * @return true if configure or execute were skipped because node is
      *   part of an inactive branch.
      * @see Node#isInactive()
      */
