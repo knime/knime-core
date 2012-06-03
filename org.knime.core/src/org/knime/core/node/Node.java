@@ -756,12 +756,12 @@ public final class Node implements NodeModelWarningListener {
      * @return true if any input is inactive.
      */
     public static boolean containsInactiveObjects(final PortObject[] ins) {
-    	for (PortObject portObject : ins) {
-			if (portObject instanceof InactiveBranchPortObject) {
-				return true;
-			}
-		}
-    	return false;
+        for (PortObject portObject : ins) {
+            if (portObject instanceof InactiveBranchPortObject) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
