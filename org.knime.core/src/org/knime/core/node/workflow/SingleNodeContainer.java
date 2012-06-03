@@ -359,6 +359,7 @@ public final class SingleNodeContainer extends NodeContainer {
             for (int i = 0; i < prevSpecs.length; i++) {
                 prevSpecs[i] = getOutPort(i).getPortObjectSpec();
             }
+            boolean prevInactivity = isInactive();
             // perform action
             switch (getState()) {
             case IDLE:
@@ -406,6 +407,15 @@ public final class SingleNodeContainer extends NodeContainer {
             default:
                 throwIllegalStateException();
             }
+            // if state stayed the same but inactivity of node changed
+            // fake a state change to make sure it's displayed properly
+            if (prevInactivity != isInactive()) {
+                State oldSt = this.getState();
+                setState(State.IDLE.equals(oldSt) ? State.CONFIGURED
+                        : State.IDLE);
+                setState(oldSt);
+                return true;
+            }
             // compare old and new specs
             for (int i = 0; i < prevSpecs.length; i++) {
                 PortObjectSpec newSpec = getOutPort(i).getPortObjectSpec();
@@ -417,7 +427,7 @@ public final class SingleNodeContainer extends NodeContainer {
                     return true; // newSpec is null!
                 }
             }
-            return false; // all specs stayed the same!
+            return false; // all specs & inactivity stayed the same!
         }
     }
 
