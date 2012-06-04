@@ -62,9 +62,9 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.DataAwareNodeDialogPane;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.DataAwareNodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialog;
 import org.knime.core.node.NodeDialogPane;
@@ -824,7 +824,7 @@ public abstract class NodeContainer implements NodeProgressListener {
     /** Set new status and notify listeners.
      * @param state the new state
      * @param setDirty whether to set this node &quot;dirty&quot; (needs save).
-     * @return true if change was changed.
+     * @return true if state was changed.
      */
     protected boolean setState(final State state, final boolean setDirty) {
         if (state == null) {
