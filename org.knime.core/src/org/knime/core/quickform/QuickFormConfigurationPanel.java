@@ -69,7 +69,6 @@ public abstract class QuickFormConfigurationPanel
      *  */
     public QuickFormConfigurationPanel() {
         super();
-        // TODO Auto-generated constructor stub
     }
 
     /**
