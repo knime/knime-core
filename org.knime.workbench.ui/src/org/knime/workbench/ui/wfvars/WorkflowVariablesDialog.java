@@ -115,12 +115,9 @@ public class WorkflowVariablesDialog extends Dialog {
         return true;
     }
 
-    /**
-     *
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    protected Control createDialogArea(final Composite parent) {
+    public Control createDialogArea(final Composite parent) {
         parent.getShell().setText("Workflow Variable Administration");
         Composite composite = new Composite(parent, SWT.NONE);
         composite.setLayout(new GridLayout(1, false));
@@ -396,13 +393,10 @@ public class WorkflowVariablesDialog extends Dialog {
         m_workflow.addWorkflowVariables(skipReset,
                 m_table.getVariables().toArray(vars));
     }
-
-    /**
-     *
-     * {@inheritDoc}
-     */
+    
+    /** {@inheritDoc} */
     @Override
-    protected void okPressed() {
+    public void okPressed() {
         // if one or more variables were added or edited
         // first ask flag -> if true do a closer investigation...
         if (hasChanges()) {

@@ -126,11 +126,9 @@ public class CredentialVariablesDialog extends Dialog {
         return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    protected Control createDialogArea(final Composite parent) {
+    public Control createDialogArea(final Composite parent) {
         parent.getShell().setText("Workflow Credentials...");
         Composite composite = new Composite(parent, SWT.NONE);
         if (m_workflowName != null) {
@@ -290,12 +288,9 @@ public class CredentialVariablesDialog extends Dialog {
         m_table.getViewer().refresh();
     }
 
-    /**
-     *
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    protected void okPressed() {
+    public void okPressed() {
         m_credentials = m_table.getCredentials();
         super.okPressed();
     }
