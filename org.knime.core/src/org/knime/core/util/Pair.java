@@ -44,13 +44,15 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.core.util;
 
+import org.knime.core.node.util.ConvenienceMethods;
+
 /**
  * This class is a simple pair of objects.
- * 
+ *
  * @param <T> class of the first object
  * @param <M> class of the second object
  * @author Thorsten Meinl, University of Konstanz
@@ -58,10 +60,10 @@ package org.knime.core.util;
 public final class Pair<T, M> {
     private final T m_first;
     private final M m_second;
-    
+
     /**
      * Creates a new pair.
-     * 
+     *
      * @param first the first object
      * @param second the second object
      */
@@ -72,14 +74,14 @@ public final class Pair<T, M> {
 
     /**
      * Returns the first object.
-     * 
+     *
      * @return the first object
      */
     public T getFirst() { return m_first; }
-    
+
     /**
      * Returns the second object.
-     * 
+     *
      * @return the second object
      */
     public M getSecond() { return m_second; }
@@ -90,10 +92,14 @@ public final class Pair<T, M> {
     @Override
     public boolean equals(final Object o) {
         if (!(o instanceof Pair)) { return false; }
-        
+
         Pair<?, ?> p = (Pair<?, ?>) o;
-        if (!m_first.equals(p.m_first)) { return false; }
-        if (!m_second.equals(p.m_second)) { return false; }
+        if (!ConvenienceMethods.areEqual(m_first, p.m_first)) {
+            return false;
+        }
+        if (!ConvenienceMethods.areEqual(m_second, p.m_second)) {
+            return false;
+        }
         return true;
     }
 
@@ -102,6 +108,8 @@ public final class Pair<T, M> {
      */
     @Override
     public int hashCode() {
-        return m_first.hashCode() ^ (m_second.hashCode() << 2); 
+        int firstHash = m_first == null ? 0 : m_first.hashCode();
+        int secondHash = m_second == null ? 0 : m_second.hashCode();
+        return firstHash ^ (secondHash << 2);
     }
 }

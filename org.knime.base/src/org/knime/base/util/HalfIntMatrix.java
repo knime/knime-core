@@ -175,6 +175,36 @@ public final class HalfIntMatrix {
         }
     }
 
+
+    /**
+     * Adds a value in the matrix. See also {@link #set(int, int, int)} for
+     * details on the arguments.
+     *
+     * @param row the value's row
+     * @param col the value's column
+     * @param value the value to add to the previous value
+     * @since 2.6
+     */
+    public void add(final int row, final int col, final int value) {
+        if (!m_withDiagonal && row == col) {
+            throw new IllegalArgumentException("Can't set value in diagonal "
+                    + "of the matrix (no space reserved)");
+        }
+        if (row > col) {
+            if (m_withDiagonal) {
+                m_matrix[row * (row + 1) / 2 + col] += value;
+            } else {
+                m_matrix[row * (row - 1) / 2 + col] += value;
+            }
+        } else {
+            if (m_withDiagonal) {
+                m_matrix[col * (col + 1) / 2 + row] += value;
+            } else {
+                m_matrix[col * (col - 1) / 2 + row] += value;
+            }
+        }
+    }
+
     /**
      * Returns a value in the matrix. This function works symmetrically, i.e.
      * <code>get(i, j)</code> is the same as <code>get(j, i)</code>.

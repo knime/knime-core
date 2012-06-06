@@ -44,12 +44,15 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   05.06.2007 (thor): created
  */
 package org.knime.base.util;
 
+import java.util.Arrays;
+
+import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
@@ -58,10 +61,10 @@ import org.knime.core.node.config.ConfigWO;
  * This stores half a matrix of doubles efficiently in just one array. The
  * access function {@link #get(int, int)} works symmetrically. Upon creating the
  * matrix you can choose if place for the diagonal should be reserved or not.
- * 
+ *
  * It is also possible to save the contents of the matrix into a node settings
  * object and load it again from there afterwards.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public final class HalfDoubleMatrix {
@@ -71,7 +74,7 @@ public final class HalfDoubleMatrix {
 
     /**
      * Creates a new half-matrix of doubles.
-     * 
+     *
      * @param rows the number of rows (and columns) in the matrix
      * @param withDiagonal <code>true</code> if the diagonal should be stored
      *            too, <code>false</code> otherwise
@@ -87,7 +90,7 @@ public final class HalfDoubleMatrix {
 
     /**
      * Loads a half int matrix from the given node settings object.
-     * 
+     *
      * @param config a node settings object
      * @throws InvalidSettingsException if the passed node settings do not
      *             contain valid settings
@@ -101,7 +104,7 @@ public final class HalfDoubleMatrix {
     /**
      * Sets a value in the matrix. This function works symmetrically, i.e.
      * <code>set(i, j, 1)</code> is the same as <code>set(j, i, 1)</code>.
-     * 
+     *
      * @param row the value's row
      * @param col the value's column
      * @param value the value
@@ -127,9 +130,38 @@ public final class HalfDoubleMatrix {
     }
 
     /**
+     * Adds a value in the matrix. See also {@link #set(int, int, int)} for
+     * details on the arguments.
+     *
+     * @param row the value's row
+     * @param col the value's column
+     * @param value the value to add to the previous value
+     * @since 2.6
+     */
+    public void add(final int row, final int col, final double value) {
+        if (!m_withDiagonal && row == col) {
+            throw new IllegalArgumentException("Can't add value in diagonal "
+                    + "of the matrix (no space reserved)");
+        }
+        if (row > col) {
+            if (m_withDiagonal) {
+                m_matrix[row * (row + 1) / 2 + col] += value;
+            } else {
+                m_matrix[row * (row - 1) / 2 + col] += value;
+            }
+        } else {
+            if (m_withDiagonal) {
+                m_matrix[col * (col + 1) / 2 + row] += value;
+            } else {
+                m_matrix[col * (col - 1) / 2 + row] += value;
+            }
+        }
+    }
+
+    /**
      * Returns a value in the matrix. This function works symmetrically, i.e.
      * <code>get(i, j)</code> is the same as <code>get(j, i)</code>.
-     * 
+     *
      * @param row the value's row
      * @param col the value's column
      * @return the value
@@ -156,7 +188,7 @@ public final class HalfDoubleMatrix {
 
     /**
      * Fills the matrix with the given value.
-     * 
+     *
      * @param value any value
      */
     public void fill(final double value) {
@@ -167,7 +199,7 @@ public final class HalfDoubleMatrix {
 
     /**
      * Saves the matrix directly into the passed node settings object.
-     * 
+     *
      * @param config a node settings object.
      */
     public void save(final ConfigWO config) {
@@ -177,7 +209,7 @@ public final class HalfDoubleMatrix {
 
     /**
      * Returns if the half matrix also stores the diagonal or not.
-     * 
+     *
      * @return <code>true</code> if the diagonal is stored, <code>false</code>
      *         otherwise
      */
@@ -187,7 +219,7 @@ public final class HalfDoubleMatrix {
 
     /**
      * Returns the number of rows the half matrix has.
-     * 
+     *
      * @return the number of rows
      */
     public int getRowCount() {
@@ -200,7 +232,7 @@ public final class HalfDoubleMatrix {
 
     /**
      * Permutes the matrix based on the permutation given in the parameter.
-     * 
+     *
      * @param permutation an array in which at position <i>i</i> is the index
      *            where the old row <i>i</i> is moved to, i.e.
      *            <code>{ 2, 3, 0, 1 }</code> means that rows (and columns) 0
@@ -229,4 +261,39 @@ public final class HalfDoubleMatrix {
 
         System.arraycopy(temp.m_matrix, 0, m_matrix, 0, m_matrix.length);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        int maxDigits = 0;
+        for (int i = 0; i < m_matrix.length; i++) {
+            double m = m_matrix[i];
+            maxDigits =
+                Math.max(DoubleFormat.formatDouble(m).length(), maxDigits);
+        }
+
+        StringBuilder buf = new StringBuilder();
+        for (int i = 0; i < getRowCount(); i++) {
+            for (int k = 0; k < i; k++) {
+                buf.append(toString(get(i, k), maxDigits)).append(' ');
+            }
+            if (m_withDiagonal) {
+                buf.append(toString(get(i, i), maxDigits)).append(' ');
+            }
+            buf.append('\n');
+        }
+
+        return buf.toString();
+    }
+
+    private static String toString(final double d, final int length) {
+        char[] cs = DoubleFormat.formatDouble(d).toCharArray();
+        char[] result = new char[length];
+        Arrays.fill(result, ' ');
+        System.arraycopy(cs, 0, result, 0, cs.length);
+        return new String(result);
+    }
+
 }

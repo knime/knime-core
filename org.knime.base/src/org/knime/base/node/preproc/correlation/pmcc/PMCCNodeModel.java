@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 17, 2007 (wiswedel): created
  */
@@ -64,6 +64,7 @@ import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.base.data.normalize.Normalizer;
 import org.knime.base.data.statistics.StatisticsTable;
 import org.knime.base.util.HalfDoubleMatrix;
+import org.knime.base.util.HalfIntMatrix;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -72,14 +73,15 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
+import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTableHolder;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
@@ -89,22 +91,25 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
-public class PMCCNodeModel extends NodeModel 
+final class PMCCNodeModel extends NodeModel
     implements BufferedDataTableHolder {
-    
+
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(PMCCNodeModel.class);
+
     private final SettingsModelFilterString m_columnIncludesList;
     private final SettingsModelIntegerBounded m_maxPossValueCountModel;
-    
+
     private BufferedDataTable m_correlationTable;
 
     /** One input, one output.
      */
-    public PMCCNodeModel() {
+    PMCCNodeModel() {
         super(new PortType[]{BufferedDataTable.TYPE},
-                new PortType[]{BufferedDataTable.TYPE, 
+                new PortType[]{BufferedDataTable.TYPE,
                 PMCCPortObjectAndSpec.TYPE});
         m_columnIncludesList = createNewSettingsObject();
         m_maxPossValueCountModel = createNewPossValueCounterModel();
@@ -117,7 +122,65 @@ public class PMCCNodeModel extends NodeModel
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
         final BufferedDataTable in = (BufferedDataTable)inData[0];
-        final double rC = in.getRowCount(); // floating point operation
+        ColumnRearranger filteredTableRearranger =
+            new ColumnRearranger(in.getDataTableSpec());
+        List<String> includeNameList = m_columnIncludesList.getIncludeList();
+        String[] includeNames =
+            includeNameList.toArray(new String[includeNameList.size()]);
+        filteredTableRearranger.keepOnly(includeNames);
+        final BufferedDataTable filteredTable = exec.createColumnRearrangeTable(
+                in, filteredTableRearranger,
+                exec.createSilentSubExecutionContext(0.0));
+        final DataTableSpec filteredTableSpec =
+            filteredTable.getDataTableSpec();
+        double progStep1 = 0.48;
+        double progStep2 = 0.48;
+        double progFinish = 1.0 - progStep1 - progStep2;
+        PMCCCalculator calculator = new PMCCCalculator(filteredTableSpec,
+                m_maxPossValueCountModel.getIntValue());
+        exec.setMessage("Calculating table statistics");
+        ExecutionContext execStep1 = exec.createSubExecutionContext(progStep1);
+        calculator.calculateStatistics(filteredTable, execStep1);
+        execStep1.setProgress(1.0);
+        exec.setMessage("Calculating correlation values");
+        ExecutionMonitor execStep2 = exec.createSubExecutionContext(progStep2);
+        HalfDoubleMatrix correlationMatrix =
+            calculator.calculateOutput(filteredTable, execStep2);
+        execStep2.setProgress(1.0);
+        exec.setMessage("Assembling output");
+        ExecutionContext execFinish =
+            exec.createSubExecutionContext(progFinish);
+        PMCCPortObjectAndSpec pmccModel =
+            new PMCCPortObjectAndSpec(includeNames, correlationMatrix);
+        BufferedDataTable out = pmccModel.createCorrelationMatrix(execFinish);
+        m_correlationTable = out;
+        String missValueString = calculator.getNumericMissingValueWarning(4);
+        StringBuilder warning = null;
+        if (missValueString != null) {
+            LOGGER.debug(calculator.getNumericMissingValueWarning(1000));
+            warning = new StringBuilder(missValueString);
+        }
+        String constantColString = calculator.getNumericConstantColumnPairs(4);
+        if (constantColString != null) {
+            LOGGER.debug(calculator.getNumericConstantColumnPairs(1000));
+            if (warning == null) {
+                warning = new StringBuilder(constantColString);
+            } else {
+                warning.append("\n");
+                warning.append(constantColString);
+            }
+        }
+        if (warning != null) {
+            setWarningMessage(warning.toString());
+        }
+        return new PortObject[]{out, pmccModel};
+
+    }
+
+    PortObject[] executeOld(final PortObject[] inData,
+            final ExecutionContext exec) throws Exception {
+        final BufferedDataTable in = (BufferedDataTable)inData[0];
+        final int rC = in.getRowCount();
         int[] includes = getIncludes(in.getDataTableSpec());
         String[] includeNames = m_columnIncludesList.getIncludeList().toArray(
                 new String[0]);
@@ -129,11 +192,11 @@ public class PMCCNodeModel extends NodeModel
         FilterColumnTable filterTable = new FilterColumnTable(in, includes);
         final int l = includes.length;
         int nomCount = (l - 1) * l / 2;
-        final HalfDoubleMatrix nominatorMatrix = 
+        final HalfDoubleMatrix nominatorMatrix =
             new HalfDoubleMatrix(includes.length, /*withDiagonal*/false);
         nominatorMatrix.fill(Double.NaN);
         @SuppressWarnings("unchecked")
-        final LinkedHashMap<DataCell, Integer>[] possibleValues = 
+        final LinkedHashMap<DataCell, Integer>[] possibleValues =
             new LinkedHashMap[l];
         DataTableSpec filterTableSpec = filterTable.getDataTableSpec();
         for (int i = 0; i < l; i++) {
@@ -143,22 +206,35 @@ public class PMCCNodeModel extends NodeModel
             }
         }
         final int possValueUpperBound = m_maxPossValueCountModel.getIntValue();
+        final HalfIntMatrix missingValueCountMatrix =
+            new HalfIntMatrix(l, true);
         // determines possible values. We can't use those from the domain
-        // as the domain can also contain values not present in the data 
+        // as the domain can also contain values not present in the data
         // but in the contingency table we need rows/columns to have at least
         // one cell with a value >= 1
         StatisticsTable statTable = new StatisticsTable(filterTable) {
+            private final boolean[] m_isMissing = new boolean[l];
             // that is sort of the constructor in this derived class
             { calculateAllMoments(in.getRowCount(), normProg); }
             @Override
             protected void calculateMomentInSubClass(final DataRow row) {
                 for (int i = 0; i < l; i++) {
+                    DataCell c = row.getCell(i);
                     if (possibleValues[i] != null) {
-                        DataCell c = row.getCell(i);
                         // note: also take missing value as possible value
                         possibleValues[i].put(c, null);
                         if (possibleValues[i].size() > possValueUpperBound) {
                             possibleValues[i] = null;
+                        }
+                    }
+                    boolean isMissing = c.isMissing();
+                    m_isMissing[i] = isMissing;
+                    if (isMissing) {
+                        missingValueCountMatrix.add(i, i, 1);
+                        for (int j = 0; j < i; j++) {
+                            if (m_isMissing[j]) {
+                                missingValueCountMatrix.add(i, j, 1);
+                            }
                         }
                     }
                 }
@@ -172,7 +248,7 @@ public class PMCCNodeModel extends NodeModel
                 }
             }
         }
-        // stores all pair-wise contingency tables, 
+        // stores all pair-wise contingency tables,
         // contingencyTables[i] == null <--> either column of the corresponding
         // pair is non-categorical.
         // What is a contingency table?
@@ -192,14 +268,14 @@ public class PMCCNodeModel extends NodeModel
                 DataColumnSpec colSpecJ = filterTableSpec.getColumnSpec(j);
                 DataType ti = colSpecI.getType();
                 DataType tj = colSpecJ.getType();
-                if (ti.isCompatible(DoubleValue.class) 
+                if (ti.isCompatible(DoubleValue.class)
                         && tj.isCompatible(DoubleValue.class)) {
                     // one of the two columns contains only one value
-                    if (statTable.getVariance(i) 
+                    if (statTable.getVariance(i)
                             < PMCCPortObjectAndSpec.ROUND_ERROR_OK) {
                         constantColumns.add(colSpecI.getName());
                         nominatorMatrix.set(i, j, Double.NaN);
-                    } else if (statTable.getVariance(j) 
+                    } else if (statTable.getVariance(j)
                             < PMCCPortObjectAndSpec.ROUND_ERROR_OK) {
                         constantColumns.add(colSpecJ.getName());
                         nominatorMatrix.set(i, j, Double.NaN);
@@ -215,20 +291,20 @@ public class PMCCNodeModel extends NodeModel
         if (!constantColumns.isEmpty()) {
             String[] constantColumnNames = constantColumns.toArray(
                     new String[constantColumns.size()]);
-            NodeLogger.getLogger(getClass()).info("The following numeric " 
-                    + "columns contain only one distinct value or have " 
-                    + "otherwise a low standard deviation: " 
+            NodeLogger.getLogger(getClass()).info("The following numeric "
+                    + "columns contain only one distinct value or have "
+                    + "otherwise a low standard deviation: "
                     + Arrays.toString(constantColumnNames));
             int maxLength = 4;
             if (constantColumns.size() > maxLength) {
-                constantColumnNames = 
+                constantColumnNames =
                     Arrays.copyOf(constantColumnNames, maxLength);
                 constantColumnNames[maxLength - 1] = "...";
             }
             setWarningMessage("Some columns contain only one distinct value: "
                     + Arrays.toString(constantColumnNames));
         }
-        
+
         DataTable att;
         if (statTable.getNrRows() > 0) {
             att = new Normalizer(statTable, includeNames).doZScoreNorm(
@@ -269,10 +345,10 @@ public class PMCCNodeModel extends NodeModel
                         nominatorMatrix.set(i, j, old + b1 * b2);
                     } else if (catBuf[i] != null && catBuf[j] != null) {
                         int iIndex = possibleValues[i].get(catBuf[i]);
-                        assert iIndex >= 0 : "Value unknown in value list " 
+                        assert iIndex >= 0 : "Value unknown in value list "
                             + "of column " + includeNames[i] + ": " + catBuf[i];
                         int jIndex = possibleValues[j].get(catBuf[j]);
-                        assert jIndex >= 0 : "Value unknown in value list " 
+                        assert jIndex >= 0 : "Value unknown in value list "
                             + "of column " + includeNames[j] + ": " + catBuf[j];
                         contingencyTables[valIndex][iIndex][jIndex]++;
                     }
@@ -280,21 +356,25 @@ public class PMCCNodeModel extends NodeModel
                 }
             }
             rowIndex++;
-            detProg.setProgress(rowIndex / rC, "Processing row " + rowIndex 
-                    + " (\"" + r.getKey() + "\")");
+            detProg.setProgress(rowIndex / (double)rC,
+                    "Processing row " + rowIndex + " (\"" + r.getKey() + "\")");
         }
         if (containsMissing) {
             setWarningMessage("Some row(s) contained missing values.");
         }
         detProg.setProgress(1.0);
-        double normalizer = 1.0 / (rC - 1.0);
         valIndex = 0;
         for (int i = 0; i < l; i++) {
             for (int j = i + 1; j < l; j++) {
                 if (contingencyTables[valIndex] != null) {
-                    nominatorMatrix.set(i, j, 
+                    nominatorMatrix.set(i, j,
                             computeCramersV(contingencyTables[valIndex]));
                 } else if (!Double.isNaN(nominatorMatrix.get(i, j))) {
+                    int missI = missingValueCountMatrix.get(i, i);
+                    int missJ = missingValueCountMatrix.get(j, j);
+                    int missIAndJ = missingValueCountMatrix.get(i, j);
+                    double nonMissingPairs = rC - (missI + missJ - missIAndJ);
+                    double normalizer = 1.0 / (nonMissingPairs - 1.0);
                     double old = nominatorMatrix.get(i, j);
                     nominatorMatrix.set(i, j, old * normalizer);
                 } // else pair of columns is double - string (for instance)
@@ -302,16 +382,16 @@ public class PMCCNodeModel extends NodeModel
             }
         }
         normProg.setProgress(progDetermine);
-        PMCCPortObjectAndSpec pmccModel = 
+        PMCCPortObjectAndSpec pmccModel =
             new PMCCPortObjectAndSpec(includeNames, nominatorMatrix);
         ExecutionContext subExec = exec.createSubExecutionContext(progFinish);
         BufferedDataTable out = pmccModel.createCorrelationMatrix(subExec);
         m_correlationTable = out;
         return new PortObject[]{out, pmccModel};
     }
-    
+
     /** Get for each included column the corresponding index. */
-    private int[] getIncludes(final DataTableSpec spec) 
+    private int[] getIncludes(final DataTableSpec spec)
         throws InvalidSettingsException {
         List<String> includes = m_columnIncludesList.getIncludeList();
         int[] result = new int[includes.size()];
@@ -325,9 +405,9 @@ public class PMCCNodeModel extends NodeModel
         }
         return result;
     }
-    
+
     /** Calculates G formula, for details see
-     * http://en.wikipedia.org/wiki/Chi-square_test and 
+     * http://en.wikipedia.org/wiki/Chi-square_test and
      * http://planetmath.org/encyclopedia/CramersV.html.
      */
     private static double computeCramersV(final int[][] contingency) {
@@ -352,19 +432,18 @@ public class PMCCNodeModel extends NodeModel
                 // one value >= 1
                 assert expected > 0.0 : "value should be > 0 " + expected;
                 double diff = contingency[i][j] - expected;
-                chisquare += diff * diff / expected; 
+                chisquare += diff * diff / expected;
             }
         }
         int minValueCount = Math.min(rowSums.length , colSums.length) - 1;
         return Math.sqrt(chisquare / (totalSum * minValueCount));
     }
-    
+
     /** Calculates G formula, for details see
-     * http://en.wikipedia.org/wiki/G-test and 
+     * http://en.wikipedia.org/wiki/G-test and
      * http://planetmath.org/encyclopedia/CramersV.html.
      */
 //    private static double computeGTestCramersV(final int[][] contingency) {
-//        if (contingency.length <= 1 || contingency[0].length <= 1) {
 //            return 0.0;
 //        }
 //        double[] rowSums = new double[contingency.length];
@@ -382,7 +461,7 @@ public class PMCCNodeModel extends NodeModel
 //            for (int j = 0; j < contingency[0].length; j++) {
 //                double expected = rowSums[i] * colSums[j] / totalSum;
 //                if (contingency[i][j] > 0) {
-//                    g += contingency[i][j] 
+//                    g += contingency[i][j]
 //                        * Math.log(contingency[i][j] / expected);
 //                }
 //            }
@@ -391,8 +470,8 @@ public class PMCCNodeModel extends NodeModel
 //        // FIXME: Use appropriate normalization here. Cramer's V doesn't work
 //        // here.
 //        int minValueCount = Math.min(rowSums.length , colSums.length) - 1;
-//        return 
-//          g / (minValueCount * Math.log(rowSums.length * colSums.length)); 
+//        return
+//          g / (minValueCount * Math.log(rowSums.length * colSums.length));
 //    }
 
     /**
@@ -409,7 +488,7 @@ public class PMCCNodeModel extends NodeModel
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         DataTableSpec in = (DataTableSpec)inSpecs[0];
-        if (!in.containsCompatibleType(DoubleValue.class) 
+        if (!in.containsCompatibleType(DoubleValue.class)
                 && !in.containsCompatibleType(NominalValue.class)) {
             throw new InvalidSettingsException(
                     "Neither double nor nominal compatible columns in input");
@@ -438,7 +517,7 @@ public class PMCCNodeModel extends NodeModel
             }
             if (!sp.getType().isCompatible(DoubleValue.class)
                     && !sp.getType().isCompatible(NominalValue.class)) {
-                throw new InvalidSettingsException("Column is neither double " 
+                throw new InvalidSettingsException("Column is neither double "
                         + "nor nominal compatible: " + s);
             }
         }
@@ -446,7 +525,7 @@ public class PMCCNodeModel extends NodeModel
         return new PortObjectSpec[]{PMCCPortObjectAndSpec.createOutSpec(
                 toArray), new PMCCPortObjectAndSpec(toArray)};
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -462,7 +541,7 @@ public class PMCCNodeModel extends NodeModel
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        SettingsModelFilterString clone = 
+        SettingsModelFilterString clone =
             m_columnIncludesList.createCloneWithValidatedValue(settings);
         if (clone.getIncludeList().isEmpty()) {
             throw new InvalidSettingsException("No column selected");
@@ -479,7 +558,7 @@ public class PMCCNodeModel extends NodeModel
         m_columnIncludesList.loadSettingsFrom(settings);
         m_maxPossValueCountModel.loadSettingsFrom(settings);
     }
-    
+
     /**
      * Getter for correlation table to display. <code>null</code> if not
      * executed.
@@ -488,12 +567,12 @@ public class PMCCNodeModel extends NodeModel
     public DataTable getCorrelationTable() {
         return m_correlationTable;
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
+    protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
     }
@@ -502,11 +581,11 @@ public class PMCCNodeModel extends NodeModel
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
+    protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
     }
-    
+
     /** Factory method to instantiate a default settings object, used
      * in constructor and in dialog.
      * @return A new default settings object.
@@ -516,8 +595,8 @@ public class PMCCNodeModel extends NodeModel
         return new SettingsModelFilterString(
             "includeList", Collections.EMPTY_LIST,  Collections.EMPTY_LIST);
     }
-    
-    /** Factory method to create the bounded range model for the 
+
+    /** Factory method to create the bounded range model for the
      * possible values count.
      * @return A new model.
      */

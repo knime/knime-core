@@ -96,6 +96,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/node/preproc/correlation/pmcc/PMCCNodeModel.java" type="org.knime.base.node.preproc.correlation.pmcc.PMCCNodeModel">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.correlation.pmcc.PMCCNodeModel"/>
+                <message_argument value="org.knime.base_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/node/preproc/sorter/SorterNodeDialogPanel2.java" type="org.knime.base.node.preproc.sorter.SorterNodeDialogPanel2">
         <filter comment="changed scope of method as part of bug fix 3199" id="338792546">
             <message_arguments>

@@ -51,7 +51,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.knime.base.node.preproc.filter.column.FilterColumnPanel.SelectionOption;
-import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.DataAwareNodeDialogPane;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
@@ -62,11 +63,11 @@ import org.knime.core.node.NotConfigurableException;
 /**
  * This is the dialog for the column filter. The user can specify which columns
  * should be excluded in the output table.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  * @author Thomas Gabriel, University of Konstanz
  */
-final class FilterColumnNodeDialog extends NodeDialogPane {
+final class FilterColumnNodeDialog extends DataAwareNodeDialogPane {
 
     /*
      * The tab's name.
@@ -85,7 +86,7 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
     /**
      * Calls the update method of the underlying filter panel using the input
      * data table spec from this {@link FilterColumnNodeModel}.
-     * 
+     *
      * @param settings the node settings to read from
      * @param specs the input specs
      * @throws NotConfigurableException if no columns are available for
@@ -93,10 +94,10 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
      */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
+            final BufferedDataTable[] specs) throws NotConfigurableException {
         assert (settings != null && specs.length == 1);
         if (specs[FilterColumnNodeModel.INPORT] == null
-                || specs[FilterColumnNodeModel.INPORT].getNumColumns() == 0) {
+                || specs[FilterColumnNodeModel.INPORT].getSpec().getNumColumns() == 0) {
             throw new NotConfigurableException("No columns available for "
                     + "selection.");
         }
@@ -104,31 +105,31 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
                 new String[0]);
         HashSet<String> list = new HashSet<String>();
         for (int i = 0; i < columns.length; i++) {
-            if (specs[FilterColumnNodeModel.INPORT].containsName(columns[i])) {
+            if (specs[FilterColumnNodeModel.INPORT].getSpec().containsName(columns[i])) {
                 list.add(columns[i]);
             }
         }
         String selOptionS = settings.getString(
-                FilterColumnNodeModel.CFG_KEY_SELECTIONOPTION, 
+                FilterColumnNodeModel.CFG_KEY_SELECTIONOPTION,
                 SelectionOption.EnforceExclusion.toString());
         SelectionOption selectionOption = SelectionOption.parse(
                 selOptionS, SelectionOption.EnforceExclusion);
-        
+
         // set exclusion list on the panel
         FilterColumnPanel p = (FilterColumnPanel)getTab(TAB);
-        p.update(specs[FilterColumnNodeModel.INPORT], selectionOption, list);
+        p.update(specs[FilterColumnNodeModel.INPORT].getSpec(), selectionOption, list);
     }
 
     /**
      * Sets the list of columns to exclude inside the underlying
      * {@link FilterColumnNodeModel} retrieving them from the filter panel.
-     * 
+     *
      * @param settings the node settings to write into
-     * 
+     *
      * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
      */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) 
+    protected void saveSettingsTo(final NodeSettingsWO settings)
         throws InvalidSettingsException {
         FilterColumnPanel p = (FilterColumnPanel)getTab(TAB);
         SelectionOption selOption = p.getSelectionOption();
@@ -145,7 +146,7 @@ final class FilterColumnNodeDialog extends NodeDialogPane {
         }
         settings.addString(FilterColumnNodeModel.CFG_KEY_SELECTIONOPTION,
                 selOption.toString());
-        settings.addStringArray(FilterColumnNodeModel.KEY, 
+        settings.addStringArray(FilterColumnNodeModel.KEY,
                 list.toArray(new String[0]));
     }
 }
