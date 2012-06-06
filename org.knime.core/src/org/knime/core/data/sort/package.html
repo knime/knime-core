@@ -52,7 +52,12 @@
 		into chunks, whereby the chunk size is determined at runtime based on
 		available memory. Each chunk is then sorted in memory and flushed out
 		into a temporary container. The final step is to compose the output
-		table by merging the temporary containers.</p>
+		table by merging the temporary containers. 
+	</p>
+	<p>
+		TableSorter produce a stable sort, which means that the implementation
+		preserves the input order of equal elements in the sorted output.
+	</p>
 	<p>The implementation itself is contained in the abstract TableSorter class,
 	two extensions allow for sorting arbitrary tables and BufferedDataTables in
 	particular.
