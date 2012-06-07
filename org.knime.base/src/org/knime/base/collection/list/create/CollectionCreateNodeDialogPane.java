@@ -89,7 +89,7 @@ public class CollectionCreateNodeDialogPane extends DefaultNodeSettingsPane {
             CollectionCreateNodeModel.createSettingsModelRemoveCols();
         DialogComponentBoolean remove =
             new DialogComponentBoolean(remCols,
-                    "Remove aggregated column from table");
+                    "Remove aggregated columns from table");
         addDialogComponent(remove);
         SettingsModelString colName =
             CollectionCreateNodeModel.createSettingsModelColumnName();
