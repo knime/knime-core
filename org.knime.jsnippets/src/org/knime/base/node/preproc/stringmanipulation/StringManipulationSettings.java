@@ -370,8 +370,8 @@ public class StringManipulationSettings {
 
     private String getAmbigiousReturnTypeMessage() {
         return "Ambiguous return type! "
-        + "Use 'string()' or another function from \"Convert Type\" "
-        + "to specify the return type.";
+        + "Use 'string()' or another function from the \"Convert Type\" "
+        + "category to specify the return type.";
     }
 
     /**
