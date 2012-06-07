@@ -100,7 +100,11 @@ import org.knime.base.node.preproc.stringmanipulation.manipulator.StripManipulat
 import org.knime.base.node.preproc.stringmanipulation.manipulator.StripStartManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.SubstringOffsetLengthManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.SubstringOffsetManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.ToBooleanManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.ToDoubleManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ToEmptyManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.ToIntManipulator;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.ToLongManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.ToNullManipulator;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.UpperCaseManipulator;
 import org.knime.base.node.util.ManipulatorProvider;
@@ -177,7 +181,11 @@ public final class StringManipulatorProvider implements ManipulatorProvider {
         manipulators.add(new StripStartManipulator());
         manipulators.add(new SubstringOffsetManipulator());
         manipulators.add(new SubstringOffsetLengthManipulator());
+        manipulators.add(new ToBooleanManipulator());
+        manipulators.add(new ToDoubleManipulator());
         manipulators.add(new ToEmptyManipulator());
+        manipulators.add(new ToIntManipulator());
+        manipulators.add(new ToLongManipulator());
         manipulators.add(new ToNullManipulator());
         manipulators.add(new StringManipulator());
         manipulators.add(new UpperCaseManipulator());

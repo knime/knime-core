@@ -346,8 +346,7 @@ public class StringManipulationSettings {
         }
         int endIndex = StringUtils.indexOf(expression, '(');
         if (endIndex < 0) {
-            throw new InvalidSettingsException("Ambiguous return type! "
-            + "Use 'string()' or 'toInt()' to specify return type.");
+            throw new InvalidSettingsException(getAmbigiousReturnTypeMessage());
         }
         String function = expression.substring(0, endIndex);
 
@@ -363,11 +362,16 @@ public class StringManipulationSettings {
             }
         }
         if (null == returnType) {
-            throw new InvalidSettingsException("The function "
-                    + function + " ist not known.");
+            throw new InvalidSettingsException(getAmbigiousReturnTypeMessage());
         }
         return returnType;
 
+    }
+
+    private String getAmbigiousReturnTypeMessage() {
+        return "Ambiguous return type! "
+        + "Use 'string()' or another function from \"Convert Type\" "
+        + "to specify the return type.";
     }
 
     /**
