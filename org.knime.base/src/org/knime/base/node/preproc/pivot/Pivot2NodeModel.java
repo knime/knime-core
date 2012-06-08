@@ -534,7 +534,10 @@ public class Pivot2NodeModel extends GroupByNodeModel {
         final DataCell[] outcells = new DataCell[pivotSpec.getNumColumns()];
         final Map<RowKey, Set<RowKey>> map =
             new LinkedHashMap<RowKey, Set<RowKey>>();
-        Set<RowKey> groupKeys = new LinkedHashSet<RowKey>();
+        Set<RowKey> groupKeys = null;
+        if (hiliteMapping != null) {
+            groupKeys = new LinkedHashSet<RowKey>();
+        }
         final int totalRowCount = groupTable.getRowCount();
         int rowIndex = 0;
         for (final DataRow row : groupTable) {
@@ -548,8 +551,10 @@ public class Pivot2NodeModel extends GroupByNodeModel {
                     if (outcells[i] != null && !cell.equals(outcells[i])) {
                         // write row to out table
                         final RowKey key = write(buf, outcells);
-                        map.put(key, groupKeys);
-                        groupKeys = new LinkedHashSet<RowKey>();
+                        if (hiliteMapping != null) {
+                            map.put(key, groupKeys);
+                            groupKeys = new LinkedHashSet<RowKey>();
+                        }
                         // reset pivot column name and out data row
                         pivotColumn = null;
                         for (int j = i + 1; j < outcells.length; j++) {
@@ -608,8 +613,10 @@ public class Pivot2NodeModel extends GroupByNodeModel {
         // write last group - if any.
         if (outcells[0] != null) {
             final RowKey key = write(buf, outcells);
-            map.put(key, groupKeys);
-            groupKeys = new LinkedHashSet<RowKey>();
+            if (hiliteMapping != null) {
+                map.put(key, groupKeys);
+                groupKeys = new LinkedHashSet<RowKey>();
+            }
         }
         buf.close();
         if (hiliteMapping != null) {
