@@ -214,12 +214,12 @@ GroupByTable {
             chunkMembers = new HashMap<GroupKey,
             Pair<ColumnAggregator[], Set<RowKey>>>(3);
         boolean logUnusualCells = true;
+        String groupLabel = "";
         for (final DataRow row : sortedTable) {
             //fetch the current group column values
             for (int i = 0, length = groupColIdx.length; i < length; i++) {
                 currentGroup[i] = row.getCell(groupColIdx[i]);
             }
-            String groupLabel = "";
             if (firstRow) {
                 groupLabel = createGroupLabelForProgress(currentGroup);
                 System.arraycopy(currentGroup, 0, previousGroup, 0,
