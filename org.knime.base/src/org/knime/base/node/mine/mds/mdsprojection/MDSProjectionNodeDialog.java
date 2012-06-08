@@ -59,7 +59,6 @@ import javax.swing.event.ChangeListener;
 import org.knime.base.node.mine.mds.MDSNodeDialog;
 import org.knime.base.node.mine.mds.distances.DistanceManagerFactory;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.FuzzyIntervalValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
@@ -158,8 +157,7 @@ public class MDSProjectionNodeDialog extends DefaultNodeSettingsPane {
         createNewGroup("Data to project");
         
         addDialogComponent(new DialogComponentColumnFilter(
-                MDSNodeDialog.getColumnModel(), 1, FuzzyIntervalValue.class, 
-                DoubleValue.class));
+                MDSNodeDialog.getColumnModel(), 1, true, DoubleValue.class));
         
         closeCurrentGroup();
         
@@ -170,7 +168,7 @@ public class MDSProjectionNodeDialog extends DefaultNodeSettingsPane {
         
         // add fixed column selection panel
         addDialogComponent(new DialogComponentColumnFilter(
-                MDSProjectionNodeDialog.getFixedColumnModel(), 0, 
+                MDSProjectionNodeDialog.getFixedColumnModel(), 0, false, 
                 DoubleValue.class));
         
         closeCurrentGroup();
@@ -187,6 +185,7 @@ public class MDSProjectionNodeDialog extends DefaultNodeSettingsPane {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void stateChanged(final ChangeEvent e) {
             checkUncheck();
         }

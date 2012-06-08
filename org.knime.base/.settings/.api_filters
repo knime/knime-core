@@ -96,6 +96,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/node/mine/mds/mdsprojection/MDSProjectionManager.java" type="org.knime.base.node.mine.mds.mdsprojection.MDSProjectionManager">
+        <filter id="388161617">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.mds.mdsprojection.MDSProjectionManager"/>
+                <message_argument value="m_distMan"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/node/preproc/correlation/pmcc/PMCCNodeModel.java" type="org.knime.base.node.preproc.correlation.pmcc.PMCCNodeModel">
         <filter id="305365105">
             <message_arguments>

@@ -73,7 +73,7 @@ public final class DistanceManagerFactory {
     public static final String MANHATTAN_DIST = "Manhattan";
     
     
-    private DistanceManagerFactory() { }
+    private DistanceManagerFactory() { /* empty */ }
     
     /**
      * Creates a new instance extending the <code>DistanceManager</code> 
@@ -148,9 +148,9 @@ public final class DistanceManagerFactory {
      * Creates a new instance extending the <code>DistanceManager</code> 
      * interface. According to the kind of distance a particular 
      * <code>DistanceManager</code> is returned. If you want to compute for 
-     * instance euclidean distances, then use
+     * instance Euclidean distances, then use
      * <code>DistanceManagerFactory.EUCLIDEAN_DIST</code> as distance parameter 
-     * and the <code>EuclideanDistanceManager</code> is returned. If an unvalid
+     * and the <code>EuclideanDistanceManager</code> is returned. If an invalid
      * kind of distance is given null will be returned.
      * The fuzzy parameter specifies if the created <code>DistanceManager</code>
      * will compute distances between <code>FuzzyIntervalCell</code>s or
@@ -175,7 +175,7 @@ public final class DistanceManagerFactory {
      * Creates a new instance extending the <code>DistanceManager</code> 
      * interface. According to the kind of distance a particular 
      * <code>DistanceManager</code> is returned. If you want to compute for 
-     * instance euclidean distances, then use
+     * instance Euclidean distances, then use
      * <code>DistanceManagerFactory.EUCLIDEAN_DIST</code> as distance parameter 
      * and the <code>EuclideanDistanceManager</code> is returned. If an unvalid
      * kind of distance is given null will be returned.

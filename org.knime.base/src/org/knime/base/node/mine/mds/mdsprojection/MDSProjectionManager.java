@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   07.03.2008 (Kilian Thiel): created
  */
@@ -61,6 +61,7 @@ import org.knime.base.node.mine.mds.DataPoint;
 import org.knime.base.node.mine.mds.MDSManager;
 import org.knime.base.node.mine.mds.distances.DistanceManager;
 import org.knime.base.node.mine.mds.distances.DistanceManagerFactory;
+import org.knime.base.node.mine.mds.distances.RowDistanceManager;
 import org.knime.base.node.preproc.filter.row.RowFilterTable;
 import org.knime.base.node.preproc.filter.row.rowfilter.MissingCellRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
@@ -75,15 +76,15 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 
 /**
- * The <code>MDSProjectionManager</code> handling the MDS algorithmic. 
- * Like the {@link MDSManager} for each row of the input data a lower 
+ * The <code>MDSProjectionManager</code> handling the MDS algorithmic.
+ * Like the {@link MDSManager} for each row of the input data a lower
  * dimensional representation is computed. The difference is that the points
  * of the input data are not adjusted to themselves but to a set of fixed
  * data points and their corresponding lower dimensional representation.
  * The rearrangement is an iterative process running as
- * many epochs as specified. The learn rate, specifying the step size is 
+ * many epochs as specified. The learn rate, specifying the step size is
  * reduced after each epoch, so that the process converges at the end.
- * 
+ *
  * @author Kilian Thiel, University of Konstanz
  */
 public class MDSProjectionManager {
@@ -107,12 +108,12 @@ public class MDSProjectionManager {
      * Threshold of minimum distance.
      */
     protected double m_minDistThreshold = MDSManager.DEF_MINDIST_THRESHOLD;
-    
+
     /**
      * The set of unmodifyable data points.
      */
     protected Set<DataPoint> m_unmodifiablePoints = new HashSet<DataPoint>();
-    
+
     /**
      * The dimension of the target space.
      */
@@ -121,7 +122,7 @@ public class MDSProjectionManager {
     /**
      * The distance manager to use.
      */
-    protected DistanceManager m_distMan;
+    protected RowDistanceManager m_distMan;
 
     /**
      * The Euclidean distance manager used in the target space.
@@ -134,7 +135,7 @@ public class MDSProjectionManager {
     protected DataTable m_inData;
 
     /**
-     * A hashtable holding keys of input rows and related points of the target 
+     * A hashtable holding keys of input rows and related points of the target
      * space.
      */
     protected Hashtable<RowKey, DataPoint> m_points;
@@ -143,10 +144,10 @@ public class MDSProjectionManager {
      * The input data table storing the fixed data points.
      */
     protected DataTable m_fixedDataPoints;
-    
+
     /**
      * A hashtable holding row keys of fixed points and related points of
-     * the target space. 
+     * the target space.
      */
     protected Hashtable<RowKey, DataPoint> m_fixedPoints;
 
@@ -180,7 +181,7 @@ public class MDSProjectionManager {
      * The execution context to show progress information an enable cancel.
      */
     protected ExecutionContext m_exec;
-    
+
     /**
      * Flag, indicating if data points have to be projected only according to
      * the fixed points (if <code>true</code>) or adjusted according to the
@@ -189,35 +190,72 @@ public class MDSProjectionManager {
     protected boolean m_projectOnly = true;
 
     /**
-     * Creates a new instance of <code>MDSProjectionManager</code> with the 
-     * given dimension, distance metric, fuzzy flag, in data and fixed data to 
-     * use. If the dimension is less or equals zero, the fixedDataPoints is 
+     * Creates a new instance of <code>MDSProjectionManager</code> with the
+     * given dimension, distance metric, fuzzy flag, in data and fixed data to
+     * use. If the dimension is less or equals zero, the fixedDataPoints is
      * <code>null</code>, the low dimension of the fixed data is not equal the
      * specified dimension or the high dimension of the fixed data is not equal
-     * to the dimension of the input data an 
+     * to the dimension of the input data an
      * <code>IllegalArgumentException</code> is thrown. The fixed data is used
-     * to project the input data. First the in data is placed with respect to 
-     * the fixed data and than it is moved by means of mds. 
-     * 
+     * to project the input data. First the in data is placed with respect to
+     * the fixed data and than it is moved by means of mds.
+     *
      * @param dimension The output MDS dimension
      * @param distance The distance metric to use.
      * @param fuzzy <code>true</code> if the in data is fuzzy valued data.
      * @param inData The in data to use.
-     * @param exec The <code>ExecutionContext</code> to monitor the 
+     * @param exec The <code>ExecutionContext</code> to monitor the
      * progress.
      * @param fixedDataPoints The fixed data points to project the in data at.
      * @param fixedDataMdsIndices Array, containing the indices of the
      * fixed mds data points according to the fixedDataPoints data table.
-     * @throws IllegalArgumentException if the specified dimension is less or 
-     * equals zero or dimension incompatibilities of in data and fixed data 
-     * occur. 
+     * @throws IllegalArgumentException if the specified dimension is less or
+     * equals zero or dimension incompatibilities of in data and fixed data
+     * occur.
      * @throws CanceledExecutionException If execution was canceled by the user.
      */
-    public MDSProjectionManager(final int dimension, final String distance, 
+    public MDSProjectionManager(final int dimension, final String distance,
             final boolean fuzzy, final BufferedDataTable inData,
-            final BufferedDataTable fixedDataPoints, 
-            final int[] fixedDataMdsIndices, 
-            final ExecutionContext exec) 
+            final BufferedDataTable fixedDataPoints,
+            final int[] fixedDataMdsIndices,
+            final ExecutionContext exec)
+    throws IllegalArgumentException, CanceledExecutionException {
+        this(dimension, DistanceManagerFactory.createDistanceManager(
+                distance, fuzzy), fuzzy, inData, fixedDataPoints,
+                fixedDataMdsIndices, exec);
+    }
+
+    /**
+     * Creates a new instance of <code>MDSProjectionManager</code> with the
+     * given dimension, distance metric (manager), fuzzy flag, in data and
+     * fixed data to use. If the dimension is less or equals zero, the
+     * fixedDataPoints or the distance manager is <code>null</code>, the low
+     * dimension of the fixed data is not equal the specified dimension or
+     * the high dimension of the fixed data is not equal to the dimension of
+     * the input data an <code>IllegalArgumentException</code> is thrown. The
+     * fixed data is used to project the input data. First the in data is placed
+     * with respect to the fixed data and than it is moved by means of mds.
+     *
+     * @param dimension The output MDS dimension
+     * @param distManager The distance metric (manager) to use.
+     * @param fuzzy <code>true</code> if the in data is fuzzy valued data.
+     * @param inData The in data to use.
+     * @param exec The <code>ExecutionContext</code> to monitor the
+     * progress.
+     * @param fixedDataPoints The fixed data points to project the in data at.
+     * @param fixedDataMdsIndices Array, containing the indices of the
+     * fixed mds data points according to the fixedDataPoints data table.
+     * @throws IllegalArgumentException if the specified dimension is less or
+     * equals zero or dimension incompatibilities of in data and fixed data
+     * occur.
+     * @throws CanceledExecutionException If execution was canceled by the user.
+     * @since 2.6
+     */
+    public MDSProjectionManager(final int dimension,
+            final RowDistanceManager distManager, final boolean fuzzy,
+            final BufferedDataTable inData,
+            final BufferedDataTable fixedDataPoints,
+            final int[] fixedDataMdsIndices, final ExecutionContext exec)
     throws IllegalArgumentException, CanceledExecutionException {
         if (dimension <= 0) {
             throw new IllegalArgumentException(
@@ -239,63 +277,66 @@ public class MDSProjectionManager {
                       + "than 0!");
             }
         }
-        
+        if (distManager == null) {
+            throw new IllegalArgumentException(
+                    "Distance Manager may not be null!");
+        }
+
         m_dimension = dimension;
-        m_distMan = DistanceManagerFactory.createDistanceManager(distance, 
-                fuzzy, true);
+        m_distMan = distManager;
         m_euclideanDistMan = DistanceManagerFactory.createDistanceManager(
                 DistanceManagerFactory.EUCLIDEAN_DIST, fuzzy);
         m_exec = exec;
-        
+
         // handle data table with fixed data
         m_fixedDataPoints = fixedDataPoints;
         m_fixedPoints = new Hashtable<RowKey, DataPoint>();
         preprocFixedDataPoints(fixedDataMdsIndices);
-        m_fixedDataPoints = new FilterColumnTable(m_fixedDataPoints, false, 
+        m_fixedDataPoints = new FilterColumnTable(m_fixedDataPoints, false,
                         fixedDataMdsIndices);
-        
+
         RowFilter rf = new MissingCellRowFilter();
         m_inData = new RowFilterTable(inData, rf);
-        
+
         m_points = new Hashtable<RowKey, DataPoint>();
     }
-    
+
     /**
-     * Initializes for each of the fixed data points a point in the 
-     * target space. Which of the columns of the data table containing the 
+     * Initializes for each of the fixed data points a point in the
+     * target space. Which of the columns of the data table containing the
      * fixed points have to be considered (according to the non fixed points)
      * is specified by the given array of indices.
-     *  
-     * 
+     *
+     *
      * @param fixedDataMdsIndices The indices specifying the columns of
-     * the data table containing the fixed data points, to consider. 
+     * the data table containing the fixed data points, to consider.
      * @throws CanceledExecutionException If the process is canceled.
      */
-    protected void preprocFixedDataPoints(final int[] fixedDataMdsIndices) 
+    protected void preprocFixedDataPoints(final int[] fixedDataMdsIndices)
     throws CanceledExecutionException {
         m_exec.setMessage("Preprocessing fixed data points");
-        
+
         // sort indices
         Arrays.sort(fixedDataMdsIndices);
-        
+
         RowIterator it = m_fixedDataPoints.iterator();
         while (it.hasNext()) {
             m_exec.checkCanceled();
             DataRow row = it.next();
-            
+
             DataPoint p = new DataPoint(m_dimension);
             for (int i = 0; i < m_dimension; i++) {
-                DoubleValue d = 
+                DoubleValue d =
                     (DoubleValue)row.getCell(fixedDataMdsIndices[i]);
                 p.setElementAt(i, d.getDoubleValue());
             }
             m_fixedPoints.put(row.getKey(), p);
         }
     }
-    
+
     /**
      * Initializes the lower dimensional data points randomly.
-     * 
+     *
      * @param seed The random seed to use.
      * @throws CanceledExecutionException If execution was canceled by the user.
      */
@@ -322,12 +363,12 @@ public class MDSProjectionManager {
     }
 
     /**
-     * Does the training by adjusting the lower dimensional data points 
+     * Does the training by adjusting the lower dimensional data points
      * according to their distances and the distances of the original data.
-     * 
+     *
      * @param epochs The number of epochs to train.
-     * @param learningrate The learn rate, specifying the step size of 
-     * adjustment. 
+     * @param learningrate The learn rate, specifying the step size of
+     * adjustment.
      * @throws CanceledExecutionException If execution was canceled by the user.
      */
     public void train(final int epochs, final double learningrate)
@@ -355,9 +396,9 @@ public class MDSProjectionManager {
      * Computing one epoch if the iterative mds. In one epoch all points are
      * adjusted according to all fixed points and if <code>projectOnly</code>
      * is set <code>false</code> to all other points too.
-     * 
+     *
      * @param epoch The current epoch.
-     * @param exec The execution monitor to show the progress and enable 
+     * @param exec The execution monitor to show the progress and enable
      * canceling.
      * @throws CanceledExecutionException If the process was canceled.
      */
@@ -378,7 +419,7 @@ public class MDSProjectionManager {
                 DataPoint p2 = m_fixedPoints.get(fixedRow.getKey());
                 adjustDataPoint(p1, p2, r1, fixedRow);
             }
-            
+
             // through all data points again
             if (!m_projectOnly) {
                 RowIterator it2 = m_inData.iterator();
@@ -392,26 +433,26 @@ public class MDSProjectionManager {
 
         adjustLearningRate(epoch);
     }
-        
+
     /**
-     * Adjusts the low dimensional mapping of the first data point according 
-     * to the second data point and its mapping.  
-     * 
+     * Adjusts the low dimensional mapping of the first data point according
+     * to the second data point and its mapping.
+     *
      * @param p1 The mapping of the first data point in the target space.
      * @param p2 The mapping of the second data point in the target space.
      * @param r1 The first data point in the original space.
-     * @param r2 The second data point in the original space. 
+     * @param r2 The second data point in the original space.
      */
     protected void adjustDataPoint(final DataPoint p1, final DataPoint p2,
             final DataRow r1, final DataRow r2) {
         if (!p1.equals(p2) && !m_unmodifiablePoints.contains(p1)) {
             double disparity = disparityTransformation(
                     m_distMan.getDistance(r1, r2));
-            
+
             //double distance = m_distMan.getDistance(p1, p2);
             // use only the Euclidean distance for low dimensional data.
             double distance = m_euclideanDistMan.getDistance(p1, p2);
-            
+
             if (disparity <= m_minDistThreshold) {
                 // if r1 is equal r2 (or nearly equal, set p1 equal p2
                 for (int d = 0; d < m_dimension; d++) {
@@ -424,7 +465,7 @@ public class MDSProjectionManager {
                     double value = p1.getElementAt(d);
                     if (distance != 0) {
                         double delta = m_learningrate
-                            * (1 - (disparity / distance)) 
+                            * (1 - (disparity / distance))
                             * (p2.getElementAt(d) - value);
                             //* activation;
                         p1.setElementAt(d, value + delta);
@@ -432,8 +473,8 @@ public class MDSProjectionManager {
                 }
             }
         }
-    }    
-    
+    }
+
     /**
      * Computes the disparity value for the given distance value.
      * @param distance The distance value to compute the disparity value for.
@@ -446,7 +487,7 @@ public class MDSProjectionManager {
     /**
      * Adjusts learning rate according to the given epoch. The learning rate
      * is decreased over time.
-     * 
+     *
      * @param epoch The epoch for which the learning rate has to be computed.
      * The higher the given epoch (according to the maximum epochs) the more
      * is the learning rate decreased.
@@ -454,7 +495,7 @@ public class MDSProjectionManager {
     protected void adjustLearningRate(final int epoch) {
         m_learningrate = m_initialLearningrate * Math.pow(
                 (m_finalLearningRate / m_initialLearningrate),
-                (double)epoch / (double)m_epochs);
+                epoch / m_epochs);
     }
 
     /**
@@ -467,7 +508,7 @@ public class MDSProjectionManager {
     }
 
     /**
-     * Clears the <code>Hashtable</code> containing the high and the 
+     * Clears the <code>Hashtable</code> containing the high and the
      * corresponding low dimensional data points.
      */
     public void reset() {

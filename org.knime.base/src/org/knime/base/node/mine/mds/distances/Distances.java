@@ -63,7 +63,7 @@ import org.knime.core.data.FuzzyIntervalValue;
  * @author Kilian Thiel, University of Konstanz
  */
 public final class Distances {
-    private Distances() { }
+    private Distances() { /* empty */ }
 
     /**
      * Calculates the Minkowski distance between two <code>DataPoint</code>s. 
@@ -91,7 +91,7 @@ public final class Distances {
      * Calculates the Minkowski distance between two rows. If fuzzy is set true
      * only columns with cells containing numbers are used to compute the 
      * distance. The given power specifies the distance kind, i.e. if power 
-     * is set to 2 the euclidean distance will be computed.
+     * is set to 2 the Euclidean distance will be computed.
      * 
      * @param power The power to use.
      * @param row1 The first row
@@ -137,7 +137,7 @@ public final class Distances {
      * of gravity is used as number value, if they contain number values
      * the number is used as value.
      * The given power specifies the distance kind, i.e. if power 
-     * is set to 2 the euclidean distance will be computed.
+     * is set to 2 the Euclidean distance will be computed.
      * 
      * @param power The power to use.
      * @param row1 The first row
@@ -180,7 +180,7 @@ public final class Distances {
     
     
     /**
-     * Calculates the euclidean distance between two <code>DataRow</code>s
+     * Calculates the Euclidean distance between two <code>DataRow</code>s
      * using the Minkowski distance with power 2.
      * @see Distances#getMinkowskiDistance(int, DataRow, DataRow, boolean)
      * 
@@ -210,7 +210,7 @@ public final class Distances {
     }    
     
     /**
-     * Calculates the euclidean distance between two <code>DataPoints</code>s
+     * Calculates the Euclidean distance between two <code>DataPoints</code>s
      * using the Minkowski distance with power 2.
      * @see Distances#getMinkowskiDistance(int, DataPoint, DataPoint)
      * 
@@ -274,7 +274,7 @@ public final class Distances {
      * 
      * @param row1 first row to compute the cosinus distance of
      * @param row2 second row to compute the cosinus distance of
-     * @param offset offset to substract cosinus distance from
+     * @param offset offset to subtract cosinus distance from
      * @param fuzzy if <code>true</code> only fuzzy data is respected, if
      *            <code>false</code> only number data
      * @return the cosinus distance between the given two rows
@@ -334,7 +334,7 @@ public final class Distances {
      * 
      * @param point1 first point to compute the cosinus distance of
      * @param point2 second point to compute the cosinus distance of
-     * @param offset offset to substract cosinus distance from
+     * @param offset offset to subtract cosinus distance from
 
      * @return the cosinus distance between the given two rows
      */

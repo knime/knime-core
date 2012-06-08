@@ -54,6 +54,7 @@ import java.util.Hashtable;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
@@ -94,6 +95,7 @@ public class MDSCellFactory implements CellFactory {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataCell[] getCells(final DataRow row) {
         DataCell[] cells = new DataCell[m_dimension];
         if (m_points.containsKey(row.getKey())) {
@@ -114,13 +116,23 @@ public class MDSCellFactory implements CellFactory {
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataColumnSpec[] getColumnSpecs() {
-        return MDSNodeModel.getColumnSpecs(m_dimension);
+        DataColumnSpec[] specs = new DataColumnSpec[m_dimension]; 
+        for (int i = 0; i < m_dimension; i++) {
+            DataColumnSpecCreator creator =
+                new DataColumnSpecCreator("MDS Col " + (i + 1), 
+                        DoubleCell.TYPE);
+            specs[i] = creator.createSpec();
+            
+        }
+        return specs;
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setProgress(final int curRowNr, final int rowCount, 
             final RowKey lastKey, final ExecutionMonitor exec) {
         double prog = (double)curRowNr / (double)rowCount;

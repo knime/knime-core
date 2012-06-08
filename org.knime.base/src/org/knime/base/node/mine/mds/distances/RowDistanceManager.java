@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -46,59 +46,40 @@
  * -------------------------------------------------------------------
  * 
  * History
- *   Jan 12, 2006 (Kilian Thiel): created
+ *   Nov 23, 2005 (Kilian Thiel): created
  */
 package org.knime.base.node.mine.mds.distances;
 
-import org.knime.base.node.mine.mds.DataPoint;
 import org.knime.core.data.DataRow;
 
 /**
+ * Provides distances between two data rows.
  * 
  * @author Kilian Thiel, University of Konstanz
+ * @since 2.6
  */
-public class CosinusDistanceManager implements DistanceManager {
-    
-    private double m_offset;
-
-    private boolean m_fuzzy;
+public interface RowDistanceManager {
 
     /**
-     * Creates new instance of CosinusDistanceManager with given offset and
-     * fuzzy flag. If fuzzy is set <code>true</code>, only fuzzy columns are
-     * considered to compute distance, if <code>false</code> only number
-     * columns.
+     * Returns the distance between the given <code>DataRow</code>s, row1 and 
+     * row2. The distance metric is up to the concrete implementation.
      * 
-     * @param offset offset to use for distance calculation
-     * @param fuzzy if <code>true</code> only fuzzy data is respected, if
-     *            <code>false</code> only number data
+     * @param row1 First <code>DataRow</code> to compute distance.
+     * @param row2 Second <code>DataRow</code> to compute distance.
+     * @return The distance between given <code>DataRow</code>s.
      */
-    public CosinusDistanceManager(final double offset, final boolean fuzzy) {
-        m_offset = offset;
-        m_fuzzy = fuzzy;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public double getDistance(final DataRow row1, final DataRow row2) {
-        return Distances.getCosinusDistance(row1, row2, m_offset, m_fuzzy);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public double getDistance(final DataPoint point1, final DataPoint point2) {
-        return Distances.getCosinusDistance(point1, point2, m_offset);
-    }    
+    public double getDistance(DataRow row1, DataRow row2);    
     
     /**
-     * {@inheritDoc}
+     * @return The type of the <code>RowDistanceManager</code>. See
+     *         <code>DistanceManagerFactory</code> for valid types.
+     * 
+     * @see org.knime.base.node.mine.mds.distances.DistanceManagerFactory#
+     *      COS_DIST
+     * @see org.knime.base.node.mine.mds.distances.DistanceManagerFactory#
+     *      EUCLIDEAN_DIST
+     * @see org.knime.base.node.mine.mds.distances.DistanceManagerFactory#
+     *      MANHATTAN_DIST
      */
-    @Override
-    public String getType() {
-        return DistanceManagerFactory.COS_DIST;
-    }
+    public String getType();
 }

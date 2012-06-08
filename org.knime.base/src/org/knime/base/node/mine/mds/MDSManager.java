@@ -55,6 +55,7 @@ import java.util.Random;
 
 import org.knime.base.node.mine.mds.distances.DistanceManager;
 import org.knime.base.node.mine.mds.distances.DistanceManagerFactory;
+import org.knime.base.node.mine.mds.distances.RowDistanceManager;
 import org.knime.base.node.preproc.filter.row.RowFilterTable;
 import org.knime.base.node.preproc.filter.row.rowfilter.MissingCellRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
@@ -103,7 +104,7 @@ public class MDSManager {
 
     private int m_dimension;
 
-    private DistanceManager m_distMan;
+    private RowDistanceManager m_distMan;
 
     private DistanceManager m_euclideanDistMan;
 
@@ -125,7 +126,7 @@ public class MDSManager {
 
     /**
      * Creates a new instance of <code>MDSManager</code> with the given
-     * dimension, distance metric, fuzzy flag and in data to use. If the
+     * dimension, type of distance metric, fuzzy flag and in data to use. If the
      * dimension is less or equals zero a <code>IllegalArgumentException</code>
      * is thrown.
      *
@@ -142,13 +143,57 @@ public class MDSManager {
             final boolean fuzzy, final BufferedDataTable inData,
             final ExecutionContext exec)
     throws IllegalArgumentException {
+        this(dimension, DistanceManagerFactory.createDistanceManager(
+                distance, fuzzy), fuzzy, inData, exec);
+    }
+    
+    /**
+     * Creates a new instance of <code>MDSManager</code> with the given
+     * dimension, distance metric (manager), and in data to use. If the
+     * dimension is less or equals zero a <code>IllegalArgumentException</code>
+     * is thrown. The fuzzy flag is set to <code>false</code> be default.
+     * 
+     * @param dimension The output MDS dimension
+     * @param distManager The distance metric (manager) to use.
+     * @param inData The in data to use.
+     * @param exec The <code>ExecutionContext</code> to monitor the
+     * progress.
+     * @throws IllegalArgumentException if the specified dimension is less or
+     * equals zero.
+     * @since 2.6
+     */
+    public MDSManager(final int dimension, final RowDistanceManager distManager,
+            final BufferedDataTable inData, final ExecutionContext exec)
+    throws IllegalArgumentException {
+        this(dimension, distManager, false, inData, exec);
+    }
+    
+    /**
+     * Creates a new instance of <code>MDSManager</code> with the given
+     * dimension, distance metric (manager), fuzzy flag and in data to use. 
+     * If the dimension is less or equals zero a 
+     * <code>IllegalArgumentException</code> is thrown.
+     *
+     * @param dimension The output MDS dimension
+     * @param distManager The distance metric (manager) to use.
+     * @param fuzzy <code>true</code> if the in data is fuzzy valued data.
+     * @param inData The in data to use.
+     * @param exec The <code>ExecutionContext</code> to monitor the
+     * progress.
+     * @throws IllegalArgumentException if the specified dimension is less or
+     * equals zero.
+     * @since 2.6
+     */
+    public MDSManager(final int dimension, final RowDistanceManager distManager,
+            final boolean fuzzy, final BufferedDataTable inData,
+            final ExecutionContext exec)
+    throws IllegalArgumentException {
         if (dimension <= 0) {
             throw new IllegalArgumentException(
                     "Dimension must not be smaller than 1!");
         }
         m_dimension = dimension;
-        m_distMan = DistanceManagerFactory.createDistanceManager(distance,
-                fuzzy);
+        m_distMan = distManager;
         m_euclideanDistMan = DistanceManagerFactory.createDistanceManager(
                 DistanceManagerFactory.EUCLIDEAN_DIST, fuzzy);
 
@@ -190,7 +235,7 @@ public class MDSManager {
 
     /**
      * Does the training by adjusting the lower dimensional data points
-     * accordant to their distances and the distances of the original data.
+     * according to their distances and the distances of the original data.
      *
      * @param epochs The number of epochs to train.
      * @param learningrate The learn rate, specifying the step size of

@@ -251,7 +251,12 @@ public class MDSNodeModel extends NodeModel {
             throw new InvalidSettingsException(buffer.toString());
         }
 
-        return new DataTableSpec[]{null};
+        // create output table spec (input spec with the additional mds columns
+        // appended).
+        ColumnRearranger rearranger = createColumnRearranger(inSpecs[0], 
+                new MDSCellFactory(null, m_outputDimModel.getIntValue()));
+        
+        return new DataTableSpec[]{rearranger.createSpec()};
     }
 
     /**
@@ -299,10 +304,9 @@ public class MDSNodeModel extends NodeModel {
                 m_learnrateModel.getDoubleValue());
         
         // create BufferedDataTable out of mapped data.
-        ColumnRearranger rearranger = new ColumnRearranger(
-                rowCutDataTable.getDataTableSpec());
-        rearranger.append(new MDSCellFactory(m_manager.getDataPoints(), 
-                m_manager.getDimension()));
+        ColumnRearranger rearranger = createColumnRearranger(
+                rowCutDataTable.getDataTableSpec(), new MDSCellFactory(
+                        m_manager.getDataPoints(), m_manager.getDimension()));
         
         return new BufferedDataTable[] {
                 exec.createColumnRearrangeTable(rowCutDataTable, rearranger, 
@@ -310,11 +314,28 @@ public class MDSNodeModel extends NodeModel {
     }
 
     /**
+     * Creates and returns the column rearranger to append columns.
+     * @param originalSpec The spec of the original input data.
+     * @param mdsCellFac The cell factory.
+     * @return The column rearranger to append mds columns.
+     * @since 2.6
+     */
+    private static ColumnRearranger createColumnRearranger(
+            final DataTableSpec originalSpec, final MDSCellFactory mdsCellFac) {
+        ColumnRearranger rearranger = new ColumnRearranger(originalSpec);
+        rearranger.append(mdsCellFac);
+        return rearranger;
+    }
+    
+    /**
      * Creates the <code>DataTableSpec</code> of the output data table.
      * 
      * @param inPsec The <code>DataTableSpec</code> of the input data table.
      * @param dimensions The dimensions of the output data.
      * @return The <code>DataTableSpec</code> of the output data table.
+     * @deprecated should not be used anymore, since column rearranger creates
+     * the output spec.
+     * @since 2.6
      */
     static DataTableSpec createDataTableSpec(final DataTableSpec inPsec,
             final int dimensions) {
@@ -327,6 +348,8 @@ public class MDSNodeModel extends NodeModel {
      * 
      * @param dimensions The dimension of the mds data. 
      * @return The <code>DataColumnSpec</code>s of the mds data.
+     * @deprecated should not be used anymore, since column rearranger creates
+     * the output spec.
      */
     static DataColumnSpec[] getColumnSpecs(final int dimensions) {
         DataColumnSpec[] specs = new DataColumnSpec[dimensions]; 
@@ -339,8 +362,6 @@ public class MDSNodeModel extends NodeModel {
         }
         return specs;
     }
-    
-    
 
     /**
      * {@inheritDoc}
@@ -408,6 +429,7 @@ public class MDSNodeModel extends NodeModel {
     protected void saveInternals(final File nodeInternDir, 
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
+        // Nothing to do ...
     }
 
     /**
@@ -417,6 +439,7 @@ public class MDSNodeModel extends NodeModel {
     protected void loadInternals(final File nodeInternDir, 
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
+        // Nothing to do ...
     }
     
     
@@ -429,6 +452,7 @@ public class MDSNodeModel extends NodeModel {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void stateChanged(final ChangeEvent e) {
             checkUncheck();
         }

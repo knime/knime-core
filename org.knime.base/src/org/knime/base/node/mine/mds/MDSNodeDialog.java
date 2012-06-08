@@ -214,8 +214,8 @@ public class MDSNodeDialog extends DefaultNodeSettingsPane {
         
         createNewGroup("Data to project");
         
-        addDialogComponent(new DialogComponentColumnFilter(getColumnModel(),
-                0, FuzzyIntervalValue.class, DoubleValue.class));
+        addDialogComponent(new DialogComponentColumnFilter(getColumnModel(), 
+                0, true, FuzzyIntervalValue.class, DoubleValue.class));
 
         closeCurrentGroup();
         
@@ -231,6 +231,7 @@ public class MDSNodeDialog extends DefaultNodeSettingsPane {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void stateChanged(final ChangeEvent e) {
             checkUncheck();
         }

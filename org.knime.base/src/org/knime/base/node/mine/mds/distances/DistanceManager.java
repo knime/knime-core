@@ -51,23 +51,13 @@
 package org.knime.base.node.mine.mds.distances;
 
 import org.knime.base.node.mine.mds.DataPoint;
-import org.knime.core.data.DataRow;
 
 /**
  *
  * @author Kilian Thiel, University of Konstanz
+ * @noimplement
  */
-public interface DistanceManager {
-
-    /**
-     * Returns the distance between the given <code>DataRow</code>s, row1 and
-     * row2. The distance metric is up to the concrete implementation.
-     *
-     * @param row1 First <code>DataRow</code> to compute distance.
-     * @param row2 Second <code>DataRow</code> to compute distance.
-     * @return The distance between given <code>DataRow</code>s.
-     */
-    public double getDistance(DataRow row1, DataRow row2);
+public interface DistanceManager extends RowDistanceManager {
 
     /**
      * Returns the distance between the given <code>DataPoint</code>s, point1
@@ -79,16 +69,4 @@ public interface DistanceManager {
      */
     public double getDistance(DataPoint point1, DataPoint point2);
 
-    /**
-     * @return The type of the <code>DistanceManager</code>. See
-     *         <code>DistanceManagerFactory</code> for valid types.
-     *
-     * @see org.knime.base.node.mine.mds.distances.DistanceManagerFactory
-     *      #COS_DIST
-     * @see org.knime.base.node.mine.mds.distances.DistanceManagerFactory
-     *      #EUCLIDEAN_DIST
-     * @see org.knime.base.node.mine.mds.distances.DistanceManagerFactory
-     *      #MANHATTAN_DIST
-     */
-    public String getType();
 }

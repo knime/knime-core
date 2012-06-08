@@ -90,6 +90,7 @@ public class EuclideanDistanceManager implements DistanceManager {
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getDistance(final DataRow row1, final DataRow row2) {
         if (m_ignoreType) {
             return Distances.getEuclideanDistance(row1, row2);    
@@ -100,6 +101,7 @@ public class EuclideanDistanceManager implements DistanceManager {
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getDistance(final DataPoint point1, final DataPoint point2) {
         return Distances.getEuclideanDistance(point1, point2);
     }    
@@ -107,6 +109,7 @@ public class EuclideanDistanceManager implements DistanceManager {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getType() {
         return DistanceManagerFactory.EUCLIDEAN_DIST;
     }
