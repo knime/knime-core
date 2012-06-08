@@ -48,6 +48,17 @@
 
 package org.knime.base.node.preproc.groupby;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
+import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -64,18 +75,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
 import org.knime.core.util.MutableInteger;
 import org.knime.core.util.Pair;
-
-import org.knime.base.data.aggregation.AggregationOperator;
-import org.knime.base.data.aggregation.ColumnAggregator;
-import org.knime.base.data.aggregation.GlobalSettings;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 
 /**
@@ -193,6 +192,7 @@ GroupByTable {
             }
         }
         final BufferedDataContainer dc = exec.createDataContainer(resultSpec);
+        exec.setMessage("Creating groups");
         final DataCell[] previousGroup = new DataCell[groupColIdx.length];
         final DataCell[] currentGroup = new DataCell[groupColIdx.length];
         final MutableInteger groupCounter = new MutableInteger(0);
@@ -219,7 +219,9 @@ GroupByTable {
             for (int i = 0, length = groupColIdx.length; i < length; i++) {
                 currentGroup[i] = row.getCell(groupColIdx[i]);
             }
+            String groupLabel = "";
             if (firstRow) {
+                groupLabel = createGroupLabelForProgress(currentGroup);
                 System.arraycopy(currentGroup, 0, previousGroup, 0,
                         currentGroup.length);
                 firstRow = false;
@@ -228,6 +230,7 @@ GroupByTable {
             //rows that return 0 for all pairwise comparisons of their
             //group column data cells
             if (!sameChunk(comparators, previousGroup, currentGroup)) {
+                groupLabel = createGroupLabelForProgress(currentGroup);
                 createTableRows(dc, chunkMembers, groupCounter);
                 //set the current group as previous group
                 System.arraycopy(currentGroup, 0, previousGroup, 0,
@@ -281,13 +284,37 @@ GroupByTable {
                 member.getSecond().add(row.getKey());
             }
             groupExec.checkCanceled();
-            groupExec.setProgress(progressPerRow * rowCounter++);
+            groupExec.setProgress(progressPerRow * rowCounter++, groupLabel);
         }
         //create the final row for the last chunk after processing the last
         //table row
         createTableRows(dc, chunkMembers, groupCounter);
         dc.close();
         return dc.getTable();
+    }
+
+    /** Get a string describing the current group. Used in progress message.
+     * @param currentGroup The current group
+     * @return That string. */
+    private String createGroupLabelForProgress(final DataCell[] currentGroup) {
+        StringBuilder b = new StringBuilder("(");
+        for (int i = 0; i < currentGroup.length; i++) {
+            b.append(i > 0 ? "; " : "");
+            if (i > 3) {
+                b.append("...");
+                break;
+            } else {
+                b.append('\"');
+                String s = currentGroup[i].toString();
+                if (s.length() > 31) {
+                    s = s.substring(0, 30).concat("...");
+                }
+                s.replace('\n', '_');
+                b.append(s).append('\"');
+            }
+        }
+        b.append(')');
+        return b.toString();
     }
 
     /**
