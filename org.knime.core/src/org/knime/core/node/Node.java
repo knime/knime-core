@@ -1520,9 +1520,10 @@ public final class Node implements NodeModelWarningListener {
 
                 // check if the node is part of a skipped branch and return
                 // appropriate specs without actually configuring the node.
+                // Note that we must also check the incoming variable port!
                 if (!isInactiveBranchConsumer()) {
-                    for (int i = 0; i < inSpecs.length; i++) {
-                        if (inSpecs[i]
+                    for (int i = 0; i < rawInSpecs.length; i++) {
+                        if (rawInSpecs[i]
                                     instanceof InactiveBranchPortObjectSpec) {
                             for (int j = 0; j < m_outputs.length; j++) {
                                 m_outputs[j].spec =
