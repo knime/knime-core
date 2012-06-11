@@ -7232,8 +7232,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 	    		    // only keep nodes that can be executed (= have all
 	    		    // data available) but are not yet executed
 	    			it.remove();
-	    		}
-	    		if (nc instanceof SingleNodeContainer) {
+	    		} else if (nc instanceof SingleNodeContainer) {
 	    		    if (((SingleNodeContainer)nc).isInactive()) {
 	    		        // also remove inactive nodes:
 	                    it.remove();
