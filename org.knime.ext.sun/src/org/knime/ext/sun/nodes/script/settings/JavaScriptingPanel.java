@@ -468,8 +468,9 @@ public class JavaScriptingPanel extends JPanel {
         DefaultComboBoxModel cmbModel =
             (DefaultComboBoxModel)m_replaceVariableCombo.getModel();
         cmbModel.removeAllElements();
-        for (FlowVariable v
-                : m_varProvider.getAvailableFlowVariables().values()) {
+        final Map<String, FlowVariable> availableFlowVariables =
+            m_varProvider.getAvailableFlowVariables();
+        for (FlowVariable v : availableFlowVariables.values()) {
             switch (v.getScope()) {
             case Flow:
                 cmbModel.addElement(v);
@@ -477,6 +478,10 @@ public class JavaScriptingPanel extends JPanel {
             default:
                 // ignore
             }
+        }
+        if (isReplace && availableFlowVariables.containsKey(newName)) {
+            m_replaceVariableCombo.setSelectedItem(
+                    availableFlowVariables.get(newName));
         }
 
         m_currentSpec = spec;
@@ -532,8 +537,7 @@ public class JavaScriptingPanel extends JPanel {
         DefaultListModel fvListModel =
             (DefaultListModel)m_flowVarsList.getModel();
         fvListModel.removeAllElements();
-        Map<String, FlowVariable> m = m_varProvider.getAvailableFlowVariables();
-        for (FlowVariable v : m.values()) {
+        for (FlowVariable v : availableFlowVariables.values()) {
             fvListModel.addElement(v);
         }
         m_compileOnCloseChecker.setSelected(isTestCompilation);
