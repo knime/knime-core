@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.knime.core.pmml" version="2">
+    <resource path="src/eclipse/org/knime/core/pmml/PMMLFormatter.java" type="org.knime.core.pmml.PMMLFormatter">
+        <filter id="305426566">
+            <message_arguments>
+                <message_argument value="org.knime.core.pmml.PMMLFormatter"/>
+                <message_argument value="org.knime.core_2.5.4"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/pmml/PMMLModelType.java" type="org.knime.core.pmml.PMMLModelType">
+        <filter id="305426566">
+            <message_arguments>
+                <message_argument value="org.knime.core.pmml.PMMLModelType"/>
+                <message_argument value="org.knime.core_2.5.4"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/pmml/PMMLUtils.java" type="org.knime.core.pmml.PMMLUtils">
+        <filter id="305426566">
+            <message_arguments>
+                <message_argument value="org.knime.core.pmml.PMMLUtils"/>
+                <message_argument value="org.knime.core_2.5.4"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/pmml/PMMLValidator.java" type="org.knime.core.pmml.PMMLValidator">
+        <filter id="305426566">
+            <message_arguments>
+                <message_argument value="org.knime.core.pmml.PMMLValidator"/>
+                <message_argument value="org.knime.core_2.5.4"/>
+            </message_arguments>
+        </filter>
+    </resource>
+</component>

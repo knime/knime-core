@@ -8,7 +8,8 @@ Bundle-ClassPath: knime-pmml.jar,
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: org.dmg.pmml40,
  org.dmg.pmml40.impl,
- org.knime.core.pmml
+ org.knime.core.pmml,
+ schemaorg_apache_xmlbeans.system.s401A87426FAA35C4072086675CF0C468
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
 Require-Bundle: org.apache.xmlbeans;bundle-version="2.5.0";visibility:=reexport,
