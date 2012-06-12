@@ -3864,30 +3864,6 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/eclipse/org/knime/core/node/Node.java" type="org.knime.core.node.Node">
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.Node"/>
-                <message_argument value="getDialogPaneWithSettings(PortObjectSpec[], NodeSettingsRO, boolean)"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/NodeDialogPane.java" type="org.knime.core.node.NodeDialogPane">
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.NodeDialogPane"/>
-                <message_argument value="internalLoadSettingsFrom(NodeSettingsRO, PortObjectSpec[], FlowObjectStack, CredentialsProvider, boolean)"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/SingleNodeContainerPersistorVersion200.java" type="org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200">
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200"/>
-                <message_argument value="saveNodeFactoryClassName(NodeSettingsWO, SingleNodeContainer)"/>
-            </message_arguments>
-        </filter>
-    </resource>
     <resource path="src/xmlbeans/org/knime/node2012/ADocument.java" type="org.knime.node2012.ADocument">
         <filter id="1110441988">
             <message_arguments>
