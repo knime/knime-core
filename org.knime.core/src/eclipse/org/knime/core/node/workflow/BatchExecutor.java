@@ -107,25 +107,39 @@ import org.knime.core.util.tokenizer.TokenizerSettings;
  * @author Thorsten Meinl, University of Konstanz
  */
 public final class BatchExecutor {
-    /** Return code for successful execution: {@value} . */
+    /**
+     * Return code for successful execution: {@value} .
+     *
+     * @since 2.6
+     */
     public static final int EXIT_SUCCESS = 0;
 
-    /** Return code for execution with warnings: {@value} . */
+    /**
+     * Return code for execution with warnings: {@value} .
+     *
+     * @since 2.6
+     */
     public static final int EXIT_WARN = 1;
 
     /**
      * Return code for errors before the workflow has been loaded (e.g. wrong
      * parameter): {@value} .
+     *
+     * @since 2.6
      */
     public static final int EXIT_ERR_PRESTART = 2;
 
     /**
-     * Return code for errors during workflow loading: {@value}.
+     * Return code for errors during workflow loading: {@value} .
+     *
+     * @since 2.6
      */
     public static final int EXIT_ERR_LOAD = 3;
 
     /**
-     * Return code for errors during workflow execution: {@value}.
+     * Return code for errors during workflow execution: {@value} .
+     *
+     * @since 2.6
      */
     public static final int EXIT_ERR_EXECUTION = 4;
 
