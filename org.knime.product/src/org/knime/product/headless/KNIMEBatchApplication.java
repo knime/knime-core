@@ -80,12 +80,11 @@ public class KNIMEBatchApplication implements IApplication {
         // this actually returns with a non-0 value when failed,
         // we ignore it here
         try {
-            BatchExecutor.mainRun(stringArgs);
+            return BatchExecutor.mainRun(stringArgs);
         } catch (Exception e) {
             e.printStackTrace();
             throw e;
         }
-        return EXIT_OK;
     }
 
     /**
