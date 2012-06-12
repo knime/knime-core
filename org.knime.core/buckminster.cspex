@@ -19,7 +19,7 @@
         </public>
     </groups>
     <artifacts>
-        <private name="knime.constants.java" path="src/org/knime/core/node/KNIMEConstants.java" />
+        <private name="knime.constants.java" path="src/eclipse/org/knime/core/node/KNIMEConstants.java" />
     </artifacts>
     <alterActions>
         <private name="eclipse.build">

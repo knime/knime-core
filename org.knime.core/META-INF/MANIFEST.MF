@@ -6,7 +6,7 @@ Bundle-Version: 2.6.0.qualifier
 Bundle-ClassPath: knime-core.jar,
  lib/saxon-he-9.2.0.5.jar,
  lib/stax-1.2.0.jar,
- lib/nodefactory.jar
+ lib/schemas.jar
 Bundle-Activator: org.knime.core.internal.CorePlugin
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: 
@@ -68,8 +68,8 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.6.0,4.0.0)";visibili
  org.eclipse.ecf.filetransfer;bundle-version="[4.0.0,6.0.0)",
  org.apache.xerces;bundle-version="[2.9.0,3.0.0)",
  org.apache.xalan;bundle-version="[2.7.1,2.8.0)",
- org.knime.core.pmml;bundle-version="[2.5.0,3.0.0)";visibility:=reexport,
- org.apache.commons.httpclient;bundle-version="[3.1.0,3.2.0)"
+ org.apache.commons.httpclient;bundle-version="[3.1.0,3.2.0)",
+ org.knime.core.pmml;bundle-version="2.6.0";visibility:=reexport
 Eclipse-RegisterBuddy: org.apache.log4j
 Eclipse-BuddyPolicy: dependent
 Bundle-ActivationPolicy: lazy
