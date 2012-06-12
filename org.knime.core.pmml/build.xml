@@ -7,14 +7,25 @@
 
 	<!-- ========================== build ==== -->
 	<target name="schemas.check">
-		<uptodate property="schemas.notRequired" targetfile="lib/schemas.jar">
-			<srcfiles dir="src" includes="**/*.xsd" />
-		</uptodate>
+		<condition property="schemas.notRequired">
+			<or>
+			    <os family="windows" /><!-- Windows cannot create classes for the PMML schema -->
+        		<uptodate property="schemas.notRequired" targetfile="lib/schemas.jar">
+        			<srcfiles dir="src" includes="**/*.xsd" />
+        		</uptodate>
+			</or>
+		</condition>
+	</target>
+	
+	<target name="checkOS">
+		<condition property="isWindows">
+			<os family="windows" /><!-- Windows cannot create classes for the PMML schema -->
+		</condition>	
 	</target>
 
 	<target name="build" depends="schemas.check,init" unless="schemas.notRequired">
 		<antcall target="clean" />
-		<xmlbean schema="schemas" destfile="lib/schemas.jar" srcgendir="src/xmlbeans" javasource="1.5" optimize="on" debug="on" classpath="${xbean.jar}">
+		<xmlbean destfile="lib/schemas.jar" srcgendir="src/xmlbeans" javasource="1.5" optimize="on" debug="on" classpath="${xbean.jar}">
 			<fileset dir="src">
 				<include name="**/*.xsd" />
 			</fileset>
@@ -23,10 +34,13 @@
 		<eclipse.refreshLocal resource="${projectName}" depth="infinite" />
 	</target>
 
-	<target name="clean">
-		<delete file="lib/schemas.jar" />
+	<target name="clean" depends="checkOS,clean-jar">
 		<delete dir="src/xmlbeans">
 			<include name="**/*" />
 		</delete>
+	</target>
+	
+	<target name="clean-jar" unless="isWindows">
+		<delete file="lib/schemas.jar" />	
 	</target>
 </project>
