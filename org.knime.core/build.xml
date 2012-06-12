@@ -14,7 +14,7 @@
 
 	<target name="build" depends="schemas.check,init" unless="schemas.notRequired">
 		<antcall target="clean" />
-		<xmlbean schema="schemas" destfile="lib/schemas.jar" srcgendir="src/xmlbeans" javasource="1.5" optimize="on" debug="on" classpath="${xbean.jar}">
+		<xmlbean destfile="lib/schemas.jar" srcgendir="src/xmlbeans" javasource="1.5" optimize="on" debug="on" classpath="${xbean.jar}">
 			<fileset dir="src">
 				<include name="**/*.xsd" />
 				<exclude name="**/pmml/schemata/**" />
