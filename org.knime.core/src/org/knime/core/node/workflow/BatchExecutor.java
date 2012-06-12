@@ -107,6 +107,27 @@ import org.knime.core.util.tokenizer.TokenizerSettings;
  * @author Thorsten Meinl, University of Konstanz
  */
 public final class BatchExecutor {
+    /** Return code for successful execution: {@value} . */
+    public static final int EXIT_SUCCESS = 0;
+
+    /** Return code for execution with warnings: {@value} . */
+    public static final int EXIT_WARN = 1;
+
+    /**
+     * Return code for errors before the workflow has been loaded (e.g. wrong
+     * parameter): {@value} .
+     */
+    public static final int EXIT_ERR_PRESTART = 2;
+
+    /**
+     * Return code for errors during workflow loading: {@value}.
+     */
+    public static final int EXIT_ERR_LOAD = 3;
+
+    /**
+     * Return code for errors during workflow execution: {@value}.
+     */
+    public static final int EXIT_ERR_EXECUTION = 4;
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(BatchExecutor.class);
@@ -294,7 +315,7 @@ public final class BatchExecutor {
         long t = System.currentTimeMillis();
         if (args.length < 1) {
             usage();
-            return 1;
+            return EXIT_ERR_PRESTART;
         }
 
         File input = null, output = null;
@@ -328,7 +349,7 @@ public final class BatchExecutor {
                 if (parts.length > 1) {
                     if (parts[1].length() == 0) {
                         System.err.println("Master key must not be empty.");
-                        return 1;
+                        return EXIT_ERR_PRESTART;
                     }
                     masterKey = parts[1];
                 } else {
@@ -339,7 +360,7 @@ public final class BatchExecutor {
                     if (parts[1].length() == 0) {
                         System.err
                                 .println("Credential name must not be empty.");
-                        return 1;
+                        return EXIT_ERR_PRESTART;
                     }
                     String credential = parts[1];
                     String[] credParts = credential.split(";", 3);
@@ -348,7 +369,7 @@ public final class BatchExecutor {
                         if (credName.length() == 0) {
                             System.err
                                     .println("Credentials must not be empty.");
-                            return 1;
+                            return EXIT_ERR_PRESTART;
                         }
                         if (credParts.length > 1) {
                             String credLogin = null;
@@ -368,50 +389,50 @@ public final class BatchExecutor {
                 } else {
                     System.err.println("Couldn't parse -credential argument: "
                             + s);
-                    return 1;
+                    return EXIT_ERR_PRESTART;
                 }
             } else if ("-preferences".equals(parts[0])) {
                 if (parts.length != 2) {
                     System.err.println("Couldn't parse -preferences argument: "
                             + s);
-                    return 1;
+                    return EXIT_ERR_PRESTART;
                 }
                 preferenceFile = new File(parts[1]);
                 if (!preferenceFile.isFile()) {
                     System.err.println("Preference File '" + parts[1]
                             + "' is not a file.");
-                    return 1;
+                    return EXIT_ERR_PRESTART;
                 }
             } else if ("-workflowFile".equals(parts[0])) {
                 if (parts.length != 2) {
                     System.err
                             .println("Couldn't parse -workflowFile argument: "
                                     + s);
-                    return 1;
+                    return EXIT_ERR_PRESTART;
                 }
                 input = new File(parts[1]);
                 if (!input.isFile()) {
                     System.err.println("Workflow file '" + parts[1]
                             + "' is not a file.");
-                    return 1;
+                    return EXIT_ERR_PRESTART;
                 }
             } else if ("-workflowDir".equals(parts[0])) {
                 if (parts.length != 2) {
                     System.err.println("Couldn't parse -workflowDir argument: "
                             + s);
-                    return 1;
+                    return EXIT_ERR_PRESTART;
                 }
                 input = new File(parts[1]);
                 if (!input.isDirectory()) {
                     System.err.println("Workflow directory '" + parts[1]
                             + "' is not a directory.");
-                    return 1;
+                    return EXIT_ERR_PRESTART;
                 }
             } else if ("-destFile".equals(parts[0])) {
                 if (parts.length != 2) {
                     System.err.println("Couldn't parse -destFile argument: "
                             + s);
-                    return 1;
+                    return EXIT_ERR_PRESTART;
                 }
                 output = new File(parts[1]);
                 outputZip = true;
@@ -419,7 +440,7 @@ public final class BatchExecutor {
                 if (parts.length != 2) {
                     System.err
                             .println("Couldn't parse -destDir argument: " + s);
-                    return 1;
+                    return EXIT_ERR_PRESTART;
                 }
                 output = new File(parts[1]);
                 outputZip = false;
@@ -427,7 +448,7 @@ public final class BatchExecutor {
                 if (parts.length != 2) {
                     System.err.println("Couldn't parse -workflow.variable "
                             + "argument: " + s);
-                    return 1;
+                    return EXIT_ERR_PRESTART;
                 }
                 String[] parts2 = splitWorkflowVariableArg(parts[1]);
                 FlowVariable var = null;
@@ -436,20 +457,20 @@ public final class BatchExecutor {
                 } catch (Exception e) {
                     System.err.println("Couldn't parse -workflow.variable "
                             + "argument: " + s + ": " + e.getMessage());
-                    System.exit(1);
+                    return EXIT_ERR_PRESTART;
                 }
                 wkfVars.add(var);
             } else if ("-option".equals(parts[0])) {
                 if (parts.length != 2) {
                     System.err.println("Couldn't parse -option argument: " + s);
-                    return 1;
+                    return EXIT_ERR_PRESTART;
                 }
                 String[] parts2;
                 try {
                     parts2 = splitOption(parts[1]);
                 } catch (IndexOutOfBoundsException ex) {
                     System.err.println("Couldn't parse -option argument: " + s);
-                    return 1;
+                    return EXIT_ERR_PRESTART;
                 }
                 String[] nodeIDPath = parts2[0].split("/");
                 int[] nodeIDs = new int[nodeIDPath.length];
@@ -464,7 +485,7 @@ public final class BatchExecutor {
             } else {
                 System.err.println("Unknown option '" + parts[0] + "'");
                 usage();
-                return 1;
+                return EXIT_ERR_PRESTART;
             }
         }
         if (preferenceFile != null) {
@@ -479,7 +500,7 @@ public final class BatchExecutor {
         File workflowDir;
         if (input == null) {
             System.err.println("No input file or directory given.");
-            return 1;
+            return EXIT_ERR_PRESTART;
         } else if (input.isFile()) {
             File dir = FileUtil.createTempDir("BatchExecutorInput");
             FileUtil.unzip(input, dir);
@@ -503,17 +524,17 @@ public final class BatchExecutor {
                     workflowDir, new ExecutionMonitor(), batchLH);
         } catch (UnsupportedWorkflowVersionException e) {
             System.err.println("Unknown workflow version: " + e.getMessage());
-            return 1;
+            return EXIT_ERR_LOAD;
         } catch (LockFailedException lfe) {
             System.err.println("Failed to lock workflow: " + lfe.getMessage());
-            return 1;
+            return EXIT_ERR_LOAD;
         }
         if (failOnLoadError && loadResult.hasErrors()) {
             System.err.println("Error(s) during workflow loading. "
                     + "Check log file for details.");
             LOGGER.error(loadResult.getFilteredError("",
                     LoadResultEntryType.Error));
-            return 1;
+            return EXIT_ERR_LOAD;
         }
         final WorkflowManager wfm = loadResult.getWorkflowManager();
 
@@ -528,10 +549,10 @@ public final class BatchExecutor {
             } catch (Exception e) {
                 LOGGER.error("Failed to update meta node links: "
                         + e.getMessage(), e);
-                return 1;
+                return EXIT_ERR_LOAD;
             }
             if (!couldUpdate) {
-                return 1;
+                return EXIT_ERR_LOAD;
             }
             LOGGER.debug("Checking for meta node link updates... done");
         }
@@ -665,7 +686,7 @@ public final class BatchExecutor {
         LOGGER.debug("------------------------------------");
         dumpWorkflowToDebugLog(wfm);
         LOGGER.debug("------------------------------------");
-        return successful ? 0 : 1;
+        return successful ? EXIT_SUCCESS : EXIT_ERR_EXECUTION;
     }
 
     /** Update meta node links (recursively).
