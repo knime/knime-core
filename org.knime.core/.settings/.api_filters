@@ -1,13 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
-    <resource path="META-INF/MANIFEST.MF">
-        <filter id="923795461">
-            <message_arguments>
-                <message_argument value="2.6.0.qualifier"/>
-                <message_argument value="2.5.4.0032975"/>
-            </message_arguments>
-        </filter>
-    </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.dmg.pmml40.ACTIVATIONFUNCTION">
         <filter id="305426566">
             <message_arguments>
