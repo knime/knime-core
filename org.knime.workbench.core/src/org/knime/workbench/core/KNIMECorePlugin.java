@@ -67,6 +67,7 @@ import org.knime.core.node.port.database.DatabaseDriverLoader;
 import org.knime.core.util.KnimeEncryption;
 import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
 import org.osgi.framework.BundleContext;
+import org.osgi.framework.FrameworkUtil;
 
 
 /**
@@ -79,9 +80,9 @@ import org.osgi.framework.BundleContext;
  * @author Florian Georg, University of Konstanz
  */
 public class KNIMECorePlugin extends AbstractUIPlugin {
-
     /** Make sure that this *always* matches the ID in plugin.xml. */
-    public static final String PLUGIN_ID = "org.knime.workbench.core";
+    public static final String PLUGIN_ID = FrameworkUtil.getBundle(
+            KNIMECorePlugin.class).getSymbolicName();
 
     // The shared instance.
     private static KNIMECorePlugin plugin;
@@ -242,13 +243,13 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
             String dbDrivers = pStore.getString(
                     HeadlessPreferencesConstants.P_DATABASE_DRIVERS);
             initDatabaseDriver(dbDrivers);
-            
+
         } catch (Throwable e) {
             LOGGER.error("FATAL: error initializing KNIME"
                     + " repository - check plugin.xml" + " and classpath", e);
         }
     }
-    
+
     private void initDatabaseDriver(final String dbDrivers) {
         if (dbDrivers != null && !dbDrivers.trim().isEmpty()) {
             for (String d : dbDrivers.split(";")) {
@@ -256,7 +257,7 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
                     DatabaseDriverLoader.loadDriver(new File(d));
                 } catch (IOException ioe) {
                     LOGGER.warn("Can't load driver file \"" + d + "\""
-                        + (ioe.getMessage() != null 
+                        + (ioe.getMessage() != null
                             ? ", reason: " + ioe.getMessage() : "."));
                 }
             }
