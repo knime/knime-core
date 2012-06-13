@@ -242,7 +242,6 @@ Export-Package: org.dmg.pmml40,
  schemaorg_apache_xmlbeans.javaname.org.dmg.pmml40.YCoordinatesDocument,
  schemaorg_apache_xmlbeans.modelgroup.http_3A_2F_2Fwww_2Edmg_2Eorg_2FPMML_2D4_5F0,
  schemaorg_apache_xmlbeans.namespace.http_3A_2F_2Fwww_2Edmg_2Eorg_2FPMML_2D4_5F0,
- schemaorg_apache_xmlbeans.src.URI_SHA_1_65C30C8392DFD8576AEF25F928412A11D632D9E0,
  schemaorg_apache_xmlbeans.system.s401A87426FAA35C4072086675CF0C468,
  schemaorg_apache_xmlbeans.type.http_3A_2F_2Fwww_2Edmg_2Eorg_2FPMML_2D4_5F0
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
