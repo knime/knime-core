@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="XMLBeans" default="build">
+<project name="XMLBeans" default="build" basedir=".">
 	<target name="init">
 		<eclipse.convertPath resourcePath="org.apache.xmlbeans/lib/xbean.jar" property="xbean.jar" />
 		<taskdef name="xmlbean" classname="org.apache.xmlbeans.impl.tool.XMLBean" classpath="${xbean.jar}" />
