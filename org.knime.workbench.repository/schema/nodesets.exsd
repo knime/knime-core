@@ -17,7 +17,7 @@
          </appInfo>
       </annotation>
       <complexType>
-         <sequence>
+         <sequence minOccurs="1" maxOccurs="unbounded">
             <choice>
                <element ref="nodeset"/>
             </choice>
