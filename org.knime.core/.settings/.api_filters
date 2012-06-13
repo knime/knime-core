@@ -1,29 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
-    <resource path="src/eclipse/org/knime/core/node/Node.java" type="org.knime.core.node.Node">
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.Node"/>
-                <message_argument value="getDialogPaneWithSettings(PortObjectSpec[], NodeSettingsRO, boolean)"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/NodeDialogPane.java" type="org.knime.core.node.NodeDialogPane">
-        <filter comment="NodeDialogPane#internalLoadSettingsFrom was never meant to be API" id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.NodeDialogPane"/>
-                <message_argument value="internalLoadSettingsFrom(NodeSettingsRO, PortObjectSpec[], FlowObjectStack, CredentialsProvider, boolean)"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/SingleNodeContainerPersistorVersion200.java" type="org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200">
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200"/>
-                <message_argument value="saveNodeFactoryClassName(NodeSettingsWO, SingleNodeContainer)"/>
-            </message_arguments>
-        </filter>
-    </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.dmg.pmml40.ACTIVATIONFUNCTION">
         <filter id="305426566">
             <message_arguments>
@@ -3877,6 +3853,38 @@
             <message_arguments>
                 <message_argument value="org.dmg.pmml40.impl.YCoordinatesDocumentImpl"/>
                 <message_argument value="org.knime.core_2.5.4"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="META-INF/MANIFEST.MF" type="schemaorg_apache_xmlbeans.system.s401A87426FAA35C4072086675CF0C468.TypeSystemHolder">
+        <filter id="305426566">
+            <message_arguments>
+                <message_argument value="schemaorg_apache_xmlbeans.system.s401A87426FAA35C4072086675CF0C468.TypeSystemHolder"/>
+                <message_argument value="org.knime.core_2.5.4"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/Node.java" type="org.knime.core.node.Node">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.Node"/>
+                <message_argument value="getDialogPaneWithSettings(PortObjectSpec[], NodeSettingsRO, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/NodeDialogPane.java" type="org.knime.core.node.NodeDialogPane">
+        <filter comment="NodeDialogPane#internalLoadSettingsFrom was never meant to be API" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.NodeDialogPane"/>
+                <message_argument value="internalLoadSettingsFrom(NodeSettingsRO, PortObjectSpec[], FlowObjectStack, CredentialsProvider, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/SingleNodeContainerPersistorVersion200.java" type="org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200"/>
+                <message_argument value="saveNodeFactoryClassName(NodeSettingsWO, SingleNodeContainer)"/>
             </message_arguments>
         </filter>
     </resource>
