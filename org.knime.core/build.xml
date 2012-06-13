@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="XMLBeans" default="build" basedir=".">
+<project name="XMLBeans" default="build">
 	<target name="init">
 		<eclipse.convertPath resourcePath="org.apache.xmlbeans/lib/xbean.jar" property="xbean.jar" />
 		<taskdef name="xmlbean" classname="org.apache.xmlbeans.impl.tool.XMLBean" classpath="${xbean.jar}" />
@@ -14,7 +14,7 @@
 
 	<target name="build" depends="schemas.check,init" unless="schemas.notRequired">
 		<antcall target="clean" />
-		<xmlbean destfile="lib/schemas.jar" srcgendir="src/xmlbeans" javasource="1.5" optimize="on" debug="on" classpath="${xbean.jar}">
+		<xmlbean schema="schemas" destfile="lib/schemas.jar" srcgendir="src/xmlbeans" javasource="1.5" optimize="on" debug="on" classpath="${xbean.jar}">
 			<fileset dir="src">
 				<include name="**/*.xsd" />
 				<exclude name="**/pmml/schemata/**" />
