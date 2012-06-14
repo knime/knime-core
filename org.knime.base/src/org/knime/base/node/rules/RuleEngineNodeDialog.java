@@ -690,6 +690,11 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
+        if (m_ruleEditor.getText().length() > 0) {
+            throw new InvalidSettingsException("The condition field contains "
+                    + "a rule that has not been added to the list yet.");
+        }
+
         RuleEngineSettings ruleSettings = new RuleEngineSettings();
         ruleSettings.setDefaultLabel(m_defaultLabelEditor.getText());
         ruleSettings.setDefaultLabelIsColumn(m_defaultLabelIsColumn
