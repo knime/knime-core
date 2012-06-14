@@ -649,8 +649,13 @@ public final class DatabaseReaderConnection {
             int rowId = m_rowCounter;
             try {
                 rowId = m_result.getRow();
+                // Bug 2729: ResultSet#getRow return 0 if there is no row id
+                if (rowId <= 0) {
+                    // use row counter
+                    rowId = m_rowCounter;
+                }
             } catch (SQLException sqle) {
-                 // ignored
+                 // ignored: use m_rowCounter
             }
             m_rowCounter++;
             return new DefaultRow(RowKey.createRowKey(rowId), cells);
