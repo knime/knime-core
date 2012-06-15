@@ -44,91 +44,100 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   14.03.2008 (Fabian Dill): created
  */
 package org.knime.workbench.ui.favorites;
 
+import java.util.Iterator;
+
 import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.DropTargetAdapter;
 import org.eclipse.swt.dnd.DropTargetEvent;
-import org.eclipse.swt.widgets.TreeItem;
-import org.eclipse.ui.views.navigator.LocalSelectionTransfer;
 import org.knime.workbench.repository.model.NodeTemplate;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class FavoriteNodesDropTarget extends DropTargetAdapter {
 
     private FavoritesView m_view;
-    
-//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-//            FavoriteNodesDropTarget.class); 
-    
+
+    // private static final NodeLogger LOGGER = NodeLogger.getLogger(
+    // FavoriteNodesDropTarget.class);
+
     /**
-     * 
+     *
      * @param view the view
      */
     public FavoriteNodesDropTarget(final FavoritesView view) {
         m_view = view;
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public void dragEnter(final DropTargetEvent event) {
-       event.detail = DND.DROP_COPY;
-//       LOGGER.debug("event item: " + event.item);
+        event.detail = DND.DROP_COPY;
+        // LOGGER.debug("event item: " + event.item);
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public void dragOver(final DropTargetEvent event) {
-        event.detail = DND.DROP_NONE;
-        if (event.item != null & event.item instanceof TreeItem) {
-                event.detail = DND.DROP_COPY;
-//            }
+        IStructuredSelection selection =
+                (IStructuredSelection)LocalSelectionTransfer.getTransfer()
+                        .getSelection();
+        Iterator<?> it = selection.iterator();
+        while (it.hasNext()) {
+            Object o = it.next();
+            if (!isNodeTemplate(o)) {
+                event.detail = DND.DROP_NONE;
+                return;
+            }
         }
+
+        event.detail = DND.DROP_COPY;
     }
-    
-       
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public void drop(final DropTargetEvent event) {
-//        LOGGER.debug("drop " + event);
-        if (isNodeTemplate()) {
-            NodeTemplate template = (NodeTemplate)((IStructuredSelection)
-                    LocalSelectionTransfer.getTransfer()
-                    .getSelection()).getFirstElement();
-            m_view.addNodeTemplate(template);
+        IStructuredSelection selection =
+                (IStructuredSelection)LocalSelectionTransfer.getTransfer()
+                        .getSelection();
+        Iterator<?> it = selection.iterator();
+        while (it.hasNext()) {
+            Object o = it.next();
+            if (isNodeTemplate(o)) {
+                m_view.addNodeTemplate((NodeTemplate)o);
+            }
         }
     }
-    
-    
-    private boolean isNodeTemplate() {
-        Object template = ((IStructuredSelection)LocalSelectionTransfer
-                .getTransfer().getSelection()).getFirstElement();
+
+    private boolean isNodeTemplate(final Object o) {
+        Object template = o;
         if (!(template instanceof NodeTemplate)) {
             // Last change: Ask adaptables for an adapter object
             if (template instanceof IAdaptable) {
-                template = ((IAdaptable) template).getAdapter(
-                        NodeTemplate.class);
+                template =
+                        ((IAdaptable)template).getAdapter(NodeTemplate.class);
             }
         }
         return template instanceof NodeTemplate;
-    } 
-    
+    }
+
 }
