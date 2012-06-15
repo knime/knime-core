@@ -68,10 +68,21 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
 
     private boolean m_sortChildren = true;
 
+    /**
+     * Creates a new container object.
+     *
+     * @param id the object's unique id
+     * @param name the object's display name
+     */
     protected AbstractContainerObject(final String id, final String name) {
         super(id, name);
     }
 
+    /**
+     * Creates a copy of the given object.
+     *
+     * @param copy the object that should be copied
+     */
     protected AbstractContainerObject(final AbstractContainerObject copy) {
         super(copy);
         this.m_sortChildren = copy.m_sortChildren;
@@ -86,10 +97,28 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
         this.m_problemCategories.addAll(copy.m_problemCategories);
     }
 
+    /**
+     * Sets if children should be sorted according to the "after" declarations
+     * and the node names.
+     *
+     * @param sort <code>true</code> if the nodes should be sorted,
+     *            <code>false</code> if the order in which they have been added
+     *            should be retained
+     * @see #setAfterID(String)
+     */
     public void setSortChildren(final boolean sort) {
         m_sortChildren = sort;
     }
 
+    /**
+     * Returns if children should be sorted according to the "after"
+     * declarations and the node names.
+     *
+     * @return <code>true</code> if the nodes should be sorted,
+     *         <code>false</code> if the order in which they have been added
+     *         should be retained
+     * @see #setAfterID(String)
+     */
     protected boolean sortChildren() {
         return m_sortChildren;
     }
@@ -141,10 +170,20 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
 
     }
 
+    /**
+     * Removes all children from this container.
+     */
     public void removeAllChildren() {
         m_children.clear();
     }
 
+    /**
+     * Adds all repository objects from the given list as children to this
+     * container.
+     *
+     * @param children a collection of repository objects
+     * @see #addChild(AbstractRepositoryObject)
+     */
     public void addAllChildren(
             final Collection<? extends AbstractRepositoryObject> children) {
         for (AbstractRepositoryObject aro : children) {
@@ -185,9 +224,9 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
         // create two seperate lists of categories and nodes, as categories
         // are ordered according to the after-relationship (see plugin.xml)
         ArrayList<AbstractRepositoryObject> categoryChildren =
-            new ArrayList<AbstractRepositoryObject>();
+                new ArrayList<AbstractRepositoryObject>();
         ArrayList<AbstractRepositoryObject> nodeChildren =
-            new ArrayList<AbstractRepositoryObject>();
+                new ArrayList<AbstractRepositoryObject>();
         for (AbstractRepositoryObject object : children) {
             if (object instanceof Category) {
                 categoryChildren.add(object);
@@ -198,7 +237,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
 
         // the ordered result list
         ArrayList<AbstractRepositoryObject> result =
-            new ArrayList<AbstractRepositoryObject>();
+                new ArrayList<AbstractRepositoryObject>();
 
         // ---------- Category sorting -----------------------------------------
         // Create the root element of the after-relationship tree for the
@@ -391,14 +430,14 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
      * {@inheritDoc}
      */
     @Override
-    public synchronized IRepositoryObject getChildByID(
-            final String id, final boolean rec) {
+    public synchronized IRepositoryObject getChildByID(final String id,
+            final boolean rec) {
         // The slash and the empty string represent 'this'
         if ("/".equals(id) || "".equals(id.trim())) {
             return this;
         }
-        for (Iterator<AbstractRepositoryObject> it =
-            m_children.iterator(); it.hasNext();) {
+        for (Iterator<AbstractRepositoryObject> it = m_children.iterator(); it
+                .hasNext();) {
             IRepositoryObject o = it.next();
 
             if (o.getID().equals(id)) {
@@ -408,8 +447,8 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
             // if it is a container, recursivly dive inside it !
             if (rec) {
                 if (o instanceof IContainerObject) {
-                    IRepositoryObject result = ((IContainerObject)o)
-                            .getChildByID(id, rec);
+                    IRepositoryObject result =
+                            ((IContainerObject)o).getChildByID(id, rec);
                     if (result != null) {
                         return result;
                     }
@@ -435,8 +474,9 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
                     return t;
                 }
             } else if (c[i] instanceof AbstractContainerObject) {
-                NodeTemplate t = ((AbstractContainerObject)c[i])
-                        .findTemplateByFactory(factory);
+                NodeTemplate t =
+                        ((AbstractContainerObject)c[i])
+                                .findTemplateByFactory(factory);
                 if (t != null) {
                     return t;
                 }
