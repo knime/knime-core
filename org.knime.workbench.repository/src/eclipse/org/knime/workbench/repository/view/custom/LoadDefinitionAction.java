@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2012
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -43,51 +43,55 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   16.03.2005 (georg): created
+ *   04.06.2012 (meinl): created
  */
-package org.knime.workbench.repository.model;
+package org.knime.workbench.repository.view.custom;
 
-import org.eclipse.core.runtime.IAdaptable;
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.jface.wizard.WizardDialog;
+import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.PlatformUI;
+import org.knime.workbench.repository.model.CustomRepositoryManager;
 
 /**
- * Base interface for objects in the repository.
+ * Action to load a custom repository definition.
  *
- * @author Florian Georg, University of Konstanz
+ * @author Thorsten Meinl, University of Konstanz
  */
-public interface IRepositoryObject extends IAdaptable {
-    /**
-     * Returns an ID for this object.The semantics may differ in the concrete
-     * implementations.
-     *
-     * @return A (semantically) id for this object
-     */
-    public String getID();
+class LoadDefinitionAction extends Action {
+    private final CustomRepositoryManager m_manager;
+
+    private final TreeViewer m_tree;
+
+    LoadDefinitionAction(final CustomRepositoryManager manager,
+            final TreeViewer tree) {
+        m_manager = manager;
+        m_tree = tree;
+
+        ISharedImages images = PlatformUI.getWorkbench().getSharedImages();
+        setImageDescriptor(images
+                .getImageDescriptor(ISharedImages.IMG_OBJ_FOLDER));
+
+        setToolTipText("Load definition from file");
+    }
 
     /**
-     * Returns the parent object. May be <code>null</code> if this is a root
-     * object, or detached from the model tree.
-     *
-     * @return The parent, or <code>null</code>
+     * {@inheritDoc}
      */
-    public IContainerObject getParent();
+    @Override
+    public void run() {
+        CustomReposImportWizard wizard =
+                new CustomReposImportWizard(m_manager, m_tree);
 
-    /**
-     * Moves this object to a new parent object.
-     *
-     * @param newParent The new parent.
-     */
-    public void move(IContainerObject newParent);
-
-    /**
-     * Creates a deep copy of this object. Deep means that all other
-     * {@link IRepositoryObject} associated with this object are also
-     * deep-copied. Other objects are not copied, they are shared afterwards
-     * instead.
-     *
-     * @return a deep copy
-     */
-    public IRepositoryObject deepCopy();
+        WizardDialog dialog =
+                new WizardDialog(m_tree.getControl().getShell(), wizard);
+        dialog.create();
+        dialog.getShell().setSize(Math.max(100, dialog.getShell().getSize().x),
+                300);
+        dialog.open();
+    }
 }

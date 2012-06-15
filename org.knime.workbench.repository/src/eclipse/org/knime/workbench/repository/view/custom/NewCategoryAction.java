@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2012
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -43,71 +43,85 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   12.01.2005 (Flo): created
+ *   01.06.2012 (meinl): created
  */
-package org.knime.workbench.repository.view;
+package org.knime.workbench.repository.view.custom;
 
-import org.eclipse.jface.util.LocalSelectionTransfer;
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
-import org.eclipse.swt.dnd.DND;
-import org.eclipse.swt.dnd.DragSource;
-import org.eclipse.swt.dnd.DragSourceEvent;
-import org.eclipse.swt.dnd.DragSourceListener;
+import org.eclipse.ui.ISharedImages;
+import org.eclipse.ui.PlatformUI;
+import org.knime.workbench.repository.RepositoryFactory;
+import org.knime.workbench.repository.model.AbstractContainerObject;
+import org.knime.workbench.repository.model.Category;
+import org.knime.workbench.repository.model.CustomRepositoryManager;
+import org.knime.workbench.repository.model.Root;
 
 /**
- * Drag listener for dragging NodeTemplates out of the Repository tree viewer.
+ * Action for creating a new custom category.
  *
- * @author Florian Georg, University of Konstanz
+ * @author Thorsten Meinl, University of Konstanz
  */
-public class NodeTemplateDragListener implements DragSourceListener {
+class NewCategoryAction extends Action {
     private final TreeViewer m_viewer;
 
-    /**
-     * @param viewer The viewer to add drag support to
-     */
-    public NodeTemplateDragListener(final TreeViewer viewer) {
+    NewCategoryAction(final TreeViewer viewer) {
+        super("New category");
         m_viewer = viewer;
+        ISharedImages images = PlatformUI.getWorkbench().getSharedImages();
+        setImageDescriptor(images
+                .getImageDescriptor(ISharedImages.IMG_TOOL_NEW_WIZARD));
+        setDisabledImageDescriptor(images
+                .getImageDescriptor(ISharedImages.IMG_TOOL_NEW_WIZARD_DISABLED));
     }
 
-    /**
-     * Only start the drag, if there's exactly one NodeTemplate selected in the
-     * viewer.
-     *
-     * @see org.eclipse.swt.dnd.DragSourceListener
-     *      #dragStart(org.eclipse.swt.dnd.DragSourceEvent)
-     */
     @Override
-    public void dragStart(final DragSourceEvent event) {
-        IStructuredSelection sel = (IStructuredSelection)m_viewer
-                .getSelection();
-        event.detail = DND.DROP_COPY;
-        event.doit = true;
-        ((DragSource)event.widget).getControl().setData("isDragSource",
-                Boolean.TRUE);
+    public void run() {
+        IStructuredSelection sel =
+                (IStructuredSelection)m_viewer.getSelection();
+        AbstractContainerObject parent;
+        if (sel.isEmpty()) {
+            parent = (Root)m_viewer.getInput();
+        } else if (sel.getFirstElement() instanceof Category) {
+            parent = (Category)sel.getFirstElement();
+        } else {
+            return;
+        }
+        Category newCategory =
+                CustomRepositoryManager.createCustomCategory("New Category");
+        String path =
+                (parent instanceof Root) ? "/" : (((Category)parent).getPath()
+                        + "/" + parent.getID());
+        newCategory.setPath(path);
 
-        // setting the data already in dragStart and not in dragSetData
-        // is non-standard behavior but some drop listeners expect the
-        // data already be set when the first events occur
-        event.data = sel.getFirstElement();
-        LocalSelectionTransfer.getTransfer().setSelection(sel);
+        parent.addChild(newCategory);
+        newCategory.setParent(parent);
+        newCategory.setIconDescriptor(RepositoryFactory.defaultIcon);
+        newCategory.setIcon(RepositoryFactory.defaultIcon.createImage());
+
+        m_viewer.refresh(parent);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void dragSetData(final DragSourceEvent event) {
-    }
+    public boolean canBeEnabled() {
+        if (m_viewer.getSelection().isEmpty()) {
+            return true;
+        }
+        IStructuredSelection sel =
+                (IStructuredSelection)m_viewer.getSelection();
+        if (sel.size() > 1) {
+            return false;
+        }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void dragFinished(final DragSourceEvent event) {
-        ((DragSource)event.widget).getControl().setData("isDragSource", null);
+        Object selectedObject = sel.getFirstElement();
+
+        if (!(selectedObject instanceof Category)) {
+            return false;
+        }
+        return CustomRepositoryManager
+                .isCustomCategory((Category)selectedObject);
     }
 }

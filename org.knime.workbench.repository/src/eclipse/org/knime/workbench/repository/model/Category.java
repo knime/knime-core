@@ -70,13 +70,22 @@ public class Category extends AbstractContainerObject {
 
     private String m_pluginID;
 
+    protected Category(final Category copy) {
+        super(copy);
+        this.m_description = copy.m_description;
+        this.m_path = copy.m_path;
+        this.m_icon = copy.m_icon;
+        this.m_iconDescriptor = copy.m_iconDescriptor;
+        this.m_pluginID = copy.m_pluginID;
+    }
+
     /**
      * Creates a new repository category with the given level-id.
      *
      * @param id The id
      */
-    public Category(final String id) {
-        setID(id);
+    public Category(final String id, final String name) {
+        super(id, name);
     }
 
     /**
@@ -144,10 +153,8 @@ public class Category extends AbstractContainerObject {
     public Object getAdapter(final Class adapter) {
         /*
          * Disabled since it is of no use for the user. Maybe it is useful for
-         * debugging purposes?
-         if (adapter == IPropertySource.class) {
-              return new CategoryPropertySource(this);
-         }
+         * debugging purposes? if (adapter == IPropertySource.class) { return
+         * new CategoryPropertySource(this); }
          */
 
         return super.getAdapter(adapter);
@@ -176,5 +183,47 @@ public class Category extends AbstractContainerObject {
     public String toString() {
         return "Id: " + getID() + " Name: " + getName() + " After-id: "
                 + getAfterID();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public IRepositoryObject deepCopy() {
+        return new Category(this);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return ((m_path == null) ? 0x6e14987 : m_path.hashCode())
+                ^ getID().hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        Category other = (Category)obj;
+        if (this.getPath() == other.getPath()) {
+            return this.getID().equals(other.getID());
+        } else if (this.getPath() != null) {
+            return this.getPath().equals(other.getPath())
+                    && this.getID().equals(other.getID());
+        } else {
+            return false;
+        }
     }
 }

@@ -112,13 +112,19 @@ public class NodeTemplate extends AbstractNodeTemplate {
     private String m_type;
 
 
+    protected NodeTemplate(final NodeTemplate copy) {
+        super(copy);
+        this.m_factory = copy.m_factory;
+        this.m_type = copy.m_type;
+    }
+
     /**
      * Constructs a new NodeTemplate.
      *
      * @param id The id, usually parsed from the extension
      */
-    public NodeTemplate(final String id) {
-        setID(id);
+    public NodeTemplate(final String id, final String name) {
+        super(id, name);
     }
 
     /**
@@ -222,4 +228,11 @@ public class NodeTemplate extends AbstractNodeTemplate {
         return m_factory.getName();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public IRepositoryObject deepCopy() {
+        return new NodeTemplate(this);
+    }
 }

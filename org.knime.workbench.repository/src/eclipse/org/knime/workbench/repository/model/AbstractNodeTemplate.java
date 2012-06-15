@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   16.03.2005 (georg): created
  */
@@ -54,17 +54,30 @@ import org.eclipse.swt.graphics.Image;
 
 /**
  * Abstract base class of "leaf" objects (that is, objects without children).
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public abstract class AbstractNodeTemplate extends AbstractRepositoryObject
         implements ISimpleObject {
-    
+
     private Image m_icon;
-    
+
     private String m_categoryPath;
-    
+
     private String m_pluginID;
+
+    protected AbstractNodeTemplate(final String id, final String name) {
+        super(id, name);
+    }
+
+    protected AbstractNodeTemplate(final AbstractNodeTemplate copy) {
+        super(copy);
+        this.m_icon = copy.m_icon;
+        this.m_categoryPath = copy.m_categoryPath;
+        this.m_pluginID = copy.m_pluginID;
+    }
+
+
     /**
      * @return Returns the pluginID.
      */
@@ -78,7 +91,7 @@ public abstract class AbstractNodeTemplate extends AbstractRepositoryObject
     public void setPluginID(final String pluginID) {
         m_pluginID = pluginID;
     }
-    
+
     /**
      * @return Returns the icon.
      */
@@ -92,7 +105,7 @@ public abstract class AbstractNodeTemplate extends AbstractRepositoryObject
     public void setIcon(final Image icon) {
         m_icon = icon;
     }
-    
+
     /**
      * @return Returns the categoryPath.
      */
@@ -106,5 +119,4 @@ public abstract class AbstractNodeTemplate extends AbstractRepositoryObject
     public void setCategoryPath(final String categoryPath) {
         m_categoryPath = categoryPath;
     }
-    
 }

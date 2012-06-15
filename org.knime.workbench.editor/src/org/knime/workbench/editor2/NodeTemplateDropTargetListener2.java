@@ -185,18 +185,16 @@ public class NodeTemplateDropTargetListener2 implements
             CreateRequest request = new CreateRequest();
             // TODO for some reason sometimes the event contains no object - but
             // this doesn't seem to matter - dragging continues as expected
-            if (template != null) {
-                // Set the factory on the current request
-                NodeFromNodeTemplateCreationFactory factory
-                    = new NodeFromNodeTemplateCreationFactory(template);
-                request.setFactory(factory);
-                m_viewer.getEditDomain().getCommandStack().execute(
-                        new CreateNodeCommand(wfm, factory.getNewObject(),
-                                getDropLocation(event)));
-                NodeUsageRegistry.addNode(template);
-                // bugfix: 1500
-                m_viewer.getControl().setFocus();
-            }
+            // Set the factory on the current request
+            NodeFromNodeTemplateCreationFactory factory
+                = new NodeFromNodeTemplateCreationFactory(template);
+            request.setFactory(factory);
+            m_viewer.getEditDomain().getCommandStack().execute(
+                    new CreateNodeCommand(wfm, factory.getNewObject(),
+                            getDropLocation(event)));
+            NodeUsageRegistry.addNode(template);
+            // bugfix: 1500
+            m_viewer.getControl().setFocus();
         } else if (ant instanceof MetaNodeTemplate) {
             MetaNodeTemplate mnt = (MetaNodeTemplate)ant;
             NodeID id = mnt.getManager().getID();
@@ -213,6 +211,12 @@ public class NodeTemplateDropTargetListener2 implements
         if (LocalSelectionTransfer.getTransfer().getSelection() == null) {
             return null;
         }
+        if (((IStructuredSelection)LocalSelectionTransfer
+                .getTransfer().getSelection()).size() > 1) {
+            // allow dropping a single node only
+            return null;
+        }
+
         Object template = ((IStructuredSelection)LocalSelectionTransfer
                 .getTransfer().getSelection()).getFirstElement();
         if (template instanceof AbstractNodeTemplate) {

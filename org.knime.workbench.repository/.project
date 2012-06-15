@@ -6,6 +6,32 @@
 	</projects>
 	<buildSpec>
 		<buildCommand>
+			<name>org.eclipse.ui.externaltools.ExternalToolBuilder</name>
+			<arguments>
+				<dictionary>
+					<key>LaunchConfigHandle</key>
+					<value>&lt;project&gt;/.externalToolBuilders/XMLBeans-org.knime.workbench.repository.launch</value>
+				</dictionary>
+			</arguments>
+		</buildCommand>
+		<buildCommand>
+			<name>org.eclipse.buckminster.ant.AntBuilder</name>
+			<arguments>
+				<dictionary>
+					<key>derived.resource</key>
+					<value>src/xmlbeans</value>
+				</dictionary>
+				<dictionary>
+					<key>given.name</key>
+					<value>XMLBeans</value>
+				</dictionary>
+				<dictionary>
+					<key>script.file</key>
+					<value>build.xml</value>
+				</dictionary>
+			</arguments>
+		</buildCommand>
+		<buildCommand>
 			<name>org.eclipse.jdt.core.javabuilder</name>
 			<arguments>
 			</arguments>

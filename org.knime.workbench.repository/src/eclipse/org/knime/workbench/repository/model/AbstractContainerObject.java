@@ -55,6 +55,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 
 /**
  * Abstract base implementation of a container object.
@@ -67,6 +68,24 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
 
     private boolean m_sortChildren = true;
 
+    protected AbstractContainerObject(final String id, final String name) {
+        super(id, name);
+    }
+
+    protected AbstractContainerObject(final AbstractContainerObject copy) {
+        super(copy);
+        this.m_sortChildren = copy.m_sortChildren;
+        this.m_children = new ArrayList<AbstractRepositoryObject>();
+        for (AbstractRepositoryObject child : copy.m_children) {
+            AbstractRepositoryObject childCopy =
+                    (AbstractRepositoryObject)child.deepCopy();
+            childCopy.setParent(this);
+            this.m_children.add(childCopy);
+        }
+        this.m_problemCategories = new ArrayList<Category>();
+        this.m_problemCategories.addAll(copy.m_problemCategories);
+    }
+
     public void setSortChildren(final boolean sort) {
         m_sortChildren = sort;
     }
@@ -78,7 +97,8 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
     /**
      * The list of categories and nodes.
      */
-    private ArrayList<AbstractRepositoryObject> m_children = new ArrayList<AbstractRepositoryObject>();
+    private ArrayList<AbstractRepositoryObject> m_children =
+            new ArrayList<AbstractRepositoryObject>();
 
     /**
      * Contains a list of categories that could not inserted properly.
@@ -125,8 +145,11 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
         m_children.clear();
     }
 
-    public void addAllChildren(final Collection<? extends AbstractRepositoryObject> children) {
-        m_children.addAll(children);
+    public void addAllChildren(
+            final Collection<? extends AbstractRepositoryObject> children) {
+        for (AbstractRepositoryObject aro : children) {
+            addChild(aro);
+        }
     }
 
     /**
@@ -440,5 +463,53 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
                         .appendProblemCategories(problemList);
             }
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean addChildAfter(final AbstractRepositoryObject child,
+            final AbstractRepositoryObject before) {
+        if (m_children.contains(child)) {
+            return false;
+        }
+
+        ListIterator<AbstractRepositoryObject> it = m_children.listIterator();
+        while (it.hasNext()) {
+            if (it.next() == before) {
+                it.add(child);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean addChildBefore(final AbstractRepositoryObject child,
+            final AbstractRepositoryObject after) {
+        if (m_children.contains(child)) {
+            return false;
+        }
+        ListIterator<AbstractRepositoryObject> it = m_children.listIterator();
+        while (it.hasNext()) {
+            if (it.next() == after) {
+                it.previous();
+                it.add(child);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean contains(final IRepositoryObject child) {
+        return m_children.contains(child);
     }
 }

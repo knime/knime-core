@@ -56,7 +56,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
@@ -118,20 +120,6 @@ public final class RepositoryManager {
         public void newMetanode(Root root, MetaNodeTemplate metanode);
     }
 
-    private static final Listener NULL_LISTENER = new Listener() {
-        @Override
-        public void newCategory(final Root root, final Category category) {
-        }
-
-        @Override
-        public void newNode(final Root root, final NodeTemplate node) {
-        }
-
-        @Override
-        public void newMetanode(final Root root, final MetaNodeTemplate meta) {
-        }
-    };
-
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(RepositoryManager.class);
 
@@ -152,6 +140,9 @@ public final class RepositoryManager {
     private static final String ID_NODE_SET
             = "org.knime.workbench.repository.nodesets";
 
+    private final List<Listener> m_loadListeners =
+            new CopyOnWriteArrayList<Listener>();
+
     private final Root m_root = new Root();
 
     private final Map<String, NodeTemplate> m_nodesById =
@@ -165,18 +156,20 @@ public final class RepositoryManager {
     private RepositoryManager() {
     }
 
-    private void readRepository(final Listener listener) {
+    private void readRepository() {
+        assert !m_root.hasChildren();
         boolean isInExpertMode =
                 Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE);
 
-        readCategories(listener);
-        readNodes(listener, isInExpertMode);
-        readNodeSets(listener, isInExpertMode);
-        readMetanodes(listener, isInExpertMode);
+        readCategories();
+        readNodes(isInExpertMode);
+        readNodeSets(isInExpertMode);
+        readMetanodes(isInExpertMode);
         removeEmptyCategories(m_root);
+        m_loadListeners.clear();
     }
 
-    private void readMetanodes(final Listener l, final boolean isInExpertMode) {
+    private void readMetanodes(final boolean isInExpertMode) {
         // iterate over the meta node config elements
         // and create meta node templates
         IExtension[] metanodeExtensions = getExtensions(ID_META_NODE);
@@ -201,7 +194,9 @@ public final class RepositoryManager {
                         LOGGER.debug("Found meta node definition '"
                             + metaNode.getID() + "': " + metaNode.getName());
                     }
-                    l.newMetanode(m_root, metaNode);
+                    for (Listener l : m_loadListeners) {
+                        l.newMetanode(m_root, metaNode);
+                    }
 
                     IContainerObject parentContainer =
                             m_root.findContainer(metaNode.getCategoryPath());
@@ -245,7 +240,7 @@ public final class RepositoryManager {
         }
     }
 
-    private void readCategories(final Listener l) {
+    private void readCategories() {
         //
         // First, process the contributed categories
         //
@@ -293,7 +288,9 @@ public final class RepositoryManager {
                 Category category = RepositoryFactory.createCategory(m_root, e);
                 LOGGER.debug("Found category extension '" + category.getID()
                         + "' on path '" + category.getPath() + "'");
-                l.newCategory(m_root, category);
+                for (Listener l : m_loadListeners) {
+                    l.newCategory(m_root, category);
+                }
             } catch (Exception ex) {
                 String message =
                         "Category '"
@@ -311,7 +308,7 @@ public final class RepositoryManager {
     /**
      * @param isInExpertMode
      */
-    private void readNodes(final Listener l, final boolean isInExpertMode) {
+    private void readNodes(final boolean isInExpertMode) {
         //
         // Second, process the contributed nodes
         //
@@ -338,7 +335,9 @@ public final class RepositoryManager {
                         LOGGER.debug("Found node extension '" + node.getID()
                                 + "': " + node.getName());
                     }
-                    l.newNode(m_root, node);
+                    for (Listener l : m_loadListeners) {
+                        l.newNode(m_root, node);
+                    }
 
                     m_nodesById.put(node.getID(), node);
                     String nodeName = node.getID();
@@ -387,11 +386,10 @@ public final class RepositoryManager {
         } // for node extensions
     }
 
-
     /**
      * @param isInExpertMode
      */
-    private void readNodeSets(final Listener l, final boolean isInExpertMode) {
+    private void readNodeSets(final boolean isInExpertMode) {
         //
         // Process the contributed node sets
         //
@@ -407,12 +405,13 @@ public final class RepositoryManager {
                 }
 
                 try {
-                    Collection<DynamicNodeTemplate> dynamicNodeTemplates = RepositoryFactory
-                            .createNodeSet(m_root, elem);
+                    Collection<DynamicNodeTemplate> dynamicNodeTemplates =
+                            RepositoryFactory.createNodeSet(m_root, elem);
 
                     for (DynamicNodeTemplate node : dynamicNodeTemplates) {
-
-                        l.newNode(m_root, node);
+                        for (Listener l : m_loadListeners) {
+                            l.newNode(m_root, node);
+                        }
 
                         m_nodesById.put(node.getID(), node);
                         String nodeName = node.getID();
@@ -556,26 +555,20 @@ public final class RepositoryManager {
      */
     public synchronized Root getRoot() {
         if (!m_root.hasChildren()) {
-            readRepository(NULL_LISTENER);
+            readRepository();
         }
         return m_root;
     }
 
     /**
-     * Returns the repository root. If the repository has not yet read, it will
-     * be created during the call. If the listener is non-<code>null</code>, it
-     * will be notified of all read items (categories, nodes, metanodes).
+     * Adds a listener which is notified while the node repository is loaded.
+     * The listener is automatically removed from the list once the node
+     * repository is fully loaded.
      *
-     *
-     * @param listener a listener that is notified of newly read items
-     * @return the root object
-     * @since 2.4
+     * @param listener a listener
      */
-    public synchronized Root getRoot(final Listener listener) {
-        if (!m_root.hasChildren()) {
-            readRepository(listener);
-        }
-        return m_root;
+    public void addLoadListener(final Listener listener) {
+        m_loadListeners.add(listener);
     }
 
     /**
@@ -588,7 +581,7 @@ public final class RepositoryManager {
      */
     public synchronized NodeTemplate getNodeTemplate(final String id) {
         if (!m_root.hasChildren()) {
-            readRepository(NULL_LISTENER);
+            readRepository();
         }
         return m_nodesById.get(id);
     }

@@ -51,7 +51,6 @@
 package org.knime.workbench.repository.view;
 
 import java.util.ConcurrentModificationException;
-import java.util.List;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -75,7 +74,6 @@ import org.eclipse.swt.graphics.Cursor;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Menu;
-import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.IActionBars;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.PlatformUI;
@@ -103,13 +101,19 @@ import org.knime.workbench.repository.model.Root;
  * hierarchy of categories / nodes.
  *
  * @author Florian Georg, University of Konstanz
+ * @author Thorsten Meinl, University of Konstanz
  */
-public class RepositoryView extends ViewPart implements
+public abstract class AbstractRepositoryView extends ViewPart implements
         RepositoryManager.Listener {
     private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(RepositoryView.class);
+            .getLogger(AbstractRepositoryView.class);
 
-    private TreeViewer m_viewer;
+    /**
+     * The tree component for showing the repository contents. It will be
+     * initialized in {@link #createPartControl(Composite)}, thus do not try to
+     * use if before.
+     */
+    protected TreeViewer m_viewer;
 
     private DrillDownAdapter m_drillDownAdapter;
 
@@ -118,12 +122,17 @@ public class RepositoryView extends ViewPart implements
 
     private FilterViewContributionItem m_toolbarFilterCombo;
 
-    private static final Boolean NON_INSTANT_SEARCH = Boolean.getBoolean(
-            KNIMEConstants.PROPERTY_REPOSITORY_NON_INSTANT_SEARCH);
+    private static final Boolean NON_INSTANT_SEARCH = Boolean
+            .getBoolean(KNIMEConstants.PROPERTY_REPOSITORY_NON_INSTANT_SEARCH);
+
+    private int m_nodeCounter = 0;
+
+    private long m_lastViewUpdate = 0;
+
     /**
      * The constructor.
      */
-    public RepositoryView() {
+    public AbstractRepositoryView() {
     }
 
     /**
@@ -152,7 +161,7 @@ public class RepositoryView extends ViewPart implements
         // (well, actually only drag - objects are dropped into the editor ;-)
         Transfer[] transfers =
                 new Transfer[]{LocalSelectionTransfer.getTransfer()};
-        m_viewer.addDragSupport(DND.DROP_COPY, transfers,
+        m_viewer.addDragSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers,
                 new NodeTemplateDragListener(m_viewer));
         PlatformUI
                 .getWorkbench()
@@ -160,9 +169,8 @@ public class RepositoryView extends ViewPart implements
                 .setHelp(m_viewer.getControl(),
                         "org.knime.workbench.help.repository_view_context");
 
-
-        boolean fastLoad = Boolean.getBoolean(
-                KNIMEConstants.PROPERTY_ENABLE_FAST_LOADING);
+        boolean fastLoad =
+                Boolean.getBoolean(KNIMEConstants.PROPERTY_ENABLE_FAST_LOADING);
 
         if (fastLoad) {
             final Job treeUpdater = new Job("Node Repository Loader") {
@@ -179,58 +187,22 @@ public class RepositoryView extends ViewPart implements
         }
     }
 
-    private void readRepository(final Composite parent) {
-        m_count = 0;
-        final Root root = RepositoryManager.INSTANCE.getRoot(this);
-        // check if there were categories that could not be
-        // processed properly
-        // i.e. the after-relationship information was wrong
-        List<Category> problemCategories = root.getProblemCategories();
-        if (problemCategories.size() > 0) {
-            final StringBuilder message = new StringBuilder();
-            message.append("The following categories could not be inserted at a "
-                    + "proper position in the node repository due to wrong "
-                    + "positioning information.\n"
-                    + "See the corresponding plugin.xml file.\n "
-                    + "The categories were instead appended at the end "
-                    + "in each level.\n\n");
-            for (Category category : problemCategories) {
-                message.append("ID: ").append(category.getID());
-                message.append(" Name: ").append(category.getName());
-                message.append(" After-ID: ").append(category.getAfterID());
-                message.append("\n");
-            }
+    /**
+     * This method reads the repository contents and sets them as model into the
+     * {@link #m_viewer tree view}.
+     *
+     * @param parent the parent component of this view
+     */
+    protected void readRepository(final Composite parent) {
+        RepositoryManager.INSTANCE.addLoadListener(this);
+        Root repository = RepositoryManager.INSTANCE.getRoot();
 
-            // send the message also to the log file.
-            LOGGER.warn(message.toString());
-            Display.getDefault().asyncExec(new Runnable() {
-                @Override
-                public void run() {
-                    if (Display.getDefault().getActiveShell() != null) {
-                        MessageBox mb =
-                                new MessageBox(Display.getDefault()
-                                        .getActiveShell(), SWT.ICON_INFORMATION
-                                        | SWT.OK);
-                        mb.setText("Problem categories...");
-                        mb.setMessage(message.toString());
-                        mb.open();
-                    }
-                }
-            });
-        }
-
+        updateRepositoryView(repository);
         Display.getDefault().asyncExec(new Runnable() {
             @Override
             public void run() {
-                if (!m_viewer.getControl().isDisposed()) {
-                    if (!(m_viewer.getInput() instanceof Root)) {
-                        m_viewer.setInput(root);
-                    } else {
-                        m_viewer.refresh(root);
-                    }
-                    m_viewer.getControl().setToolTipText(null);
-                    parent.setCursor(null);
-                }
+                parent.setCursor(null);
+                m_viewer.getControl().setToolTipText(null);
             }
         });
     }
@@ -273,7 +245,7 @@ public class RepositoryView extends ViewPart implements
         menuMgr.addMenuListener(new IMenuListener() {
             @Override
             public void menuAboutToShow(final IMenuManager manager) {
-                RepositoryView.this.fillContextMenu(manager);
+                AbstractRepositoryView.this.fillContextMenu(manager);
             }
         });
         Menu menu = menuMgr.createContextMenu(m_viewer.getControl());
@@ -299,7 +271,13 @@ public class RepositoryView extends ViewPart implements
         manager.add(new Separator());
     }
 
-    private void fillContextMenu(final IMenuManager manager) {
+    /**
+     * Fills the context menu for the repository view. Subclasses can add
+     * additional entries.
+     *
+     * @param manager the menu manager for the context menu
+     */
+    protected void fillContextMenu(final IMenuManager manager) {
         // manager.add(m_action1);
         // manager.add(m_action2);
         // manager.add(new Separator());
@@ -311,7 +289,13 @@ public class RepositoryView extends ViewPart implements
         manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
     }
 
-    private void fillLocalToolBar(final IToolBarManager manager) {
+    /**
+     * Fills the tool bar of the repository view. Subclasses can add additional
+     * buttons to the toolbar.
+     *
+     * @param manager the toolbar manager
+     */
+    protected void fillLocalToolBar(final IToolBarManager manager) {
         // create the combo contribution item that can filter our view
         m_toolbarFilterCombo =
                 new FilterViewContributionItem(m_viewer,
@@ -335,7 +319,7 @@ public class RepositoryView extends ViewPart implements
      * {@inheritDoc}
      */
     @Override
-    public Object getAdapter(final Class adapter) {
+    public Object getAdapter(@SuppressWarnings("rawtypes") final Class adapter) {
         if (adapter == IPropertySourceProvider.class) {
             return m_propertyProvider;
         }
@@ -377,35 +361,18 @@ public class RepositoryView extends ViewPart implements
         // do nothing yet (this is quite fast)
     }
 
-    private int m_count = 0;
-
     /**
      * {@inheritDoc}
      */
     @Override
     public void newNode(final Root root, final NodeTemplate node) {
-        if (m_count++ % 20 == 0) {
-            Display.getDefault().asyncExec(new Runnable() {
-                @Override
-                public void run() {
-                    if (!m_viewer.getControl().isDisposed()) {
-                        m_viewer.getControl().setToolTipText(
-                                "Loading node repository... " + m_count
-                                        + " nodes found");
-                        if (!(m_viewer.getInput() instanceof Root)) {
-                            m_viewer.setInput(root);
-                        } else {
-                            try {
-                                m_viewer.refresh(root);
-                            } catch (ConcurrentModificationException ex) {
-                                // ignore, this may happen if new nodes
-                                // are added while the viewer is updating
-                            }
-                        }
-                    }
-                }
-            });
+        m_nodeCounter++;
+        if (System.currentTimeMillis() - m_lastViewUpdate < 500) {
+            return;
         }
+        updateRepositoryView(root);
+        m_lastViewUpdate = System.currentTimeMillis();
+
     }
 
     /**
@@ -413,27 +380,50 @@ public class RepositoryView extends ViewPart implements
      */
     @Override
     public void newMetanode(final Root root, final MetaNodeTemplate metanode) {
-        if (m_count++ % 20 == 0) {
-            Display.getDefault().asyncExec(new Runnable() {
-                @Override
-                public void run() {
-                    if (!m_viewer.getControl().isDisposed()) {
-                        m_viewer.getControl().setToolTipText(
-                                "Loading node repository... " + m_count
-                                        + " nodes found");
-                        if (!(m_viewer.getInput() instanceof Root)) {
-                            m_viewer.setInput(root);
-                        } else {
-                            try {
-                                m_viewer.refresh(root);
-                            } catch (ConcurrentModificationException ex) {
-                                // ignore, this may happen if new nodes
-                                // are added while the viewer is updating
-                            }
+        m_nodeCounter++;
+        if (System.currentTimeMillis() - m_lastViewUpdate < 500) {
+            return;
+        }
+        updateRepositoryView(root);
+        m_lastViewUpdate = System.currentTimeMillis();
+    }
+
+    private void updateRepositoryView(final Root root) {
+        final Root transformedRepository = transformRepository(root);
+
+        Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                if (!m_viewer.getControl().isDisposed()) {
+                    m_viewer.getControl().setToolTipText(
+                            "Loading node repository... " + m_nodeCounter
+                            + " nodes found");
+                    if (m_viewer.getInput() != transformedRepository) {
+                        m_viewer.setInput(transformedRepository);
+                    } else {
+                        try {
+                            m_viewer.refresh(transformedRepository);
+                        } catch (ConcurrentModificationException ex) {
+                            // ignore, this may happen if new nodes
+                            // are added while the viewer is updating
                         }
                     }
                 }
-            });
-        }
+            }
+        });
+    }
+
+    /**
+     * This method may be overridden by subclasses in order to transform the
+     * current repository into a different structure. The method gets the
+     * current repository (its root) as argument and should return a new
+     * repository (its root). The default implementation does not change the
+     * repository.
+     *
+     * @param originalRoot the root if the original repository
+     * @return the root of a potentially transformed repository
+     */
+    protected Root transformRepository(final Root originalRoot) {
+        return originalRoot;
     }
 }

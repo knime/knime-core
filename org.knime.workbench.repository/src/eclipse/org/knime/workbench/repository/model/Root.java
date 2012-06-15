@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   16.03.2005 (georg): created
  */
@@ -56,20 +56,24 @@ import java.util.List;
 /**
  * Realizes a root node. This has no parent (<code>null</code>) and can't be
  * added as a child to other containers.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
-public class Root extends AbstractContainerObject implements Cloneable {
-    
+public class Root extends AbstractContainerObject {
     /**
      * Constructor for a root.
      */
     public Root() {
+        super("", "Root");
+    }
+
+    protected Root(final Root copy) {
+        super(copy);
     }
 
     /**
      * This returns the '/' as ID for the root repository element.
-     * 
+     *
      * @see org.knime.workbench.repository.model.IRepositoryObject#getID()
      */
     @Override
@@ -89,7 +93,7 @@ public class Root extends AbstractContainerObject implements Cloneable {
 
     /**
      * Throws a <code>UnsupportedOperationException</code>.
-     * 
+     *
      * @see org.knime.workbench.repository.model.AbstractRepositoryObject#
      *      setParent
      *      (org.knime.workbench.repository.model.IContainerObject)
@@ -102,7 +106,7 @@ public class Root extends AbstractContainerObject implements Cloneable {
 
     /**
      * Locates a sub-container given by the supplied name.
-     * 
+     *
      * @param path The path that is made up of ID segments, seperated by a slash
      *            "/"
      * @return The container, or <code>null</code> if not found
@@ -137,17 +141,15 @@ public class Root extends AbstractContainerObject implements Cloneable {
     public List<Category> getProblemCategories() {
         List<Category> problemCategories = new ArrayList<Category>();
         appendProblemCategories(problemCategories);
-        
+
         return problemCategories;
     }
-    
-    public Root clone() {
-        Root clone = new Root();
-        for (IRepositoryObject o : getChildren()) {
-            clone.addChild((AbstractRepositoryObject)o);
-        }
-        clone.appendProblemCategories(getProblemCategories());
-        clone.setSortChildren(sortChildren());
-        return clone;
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public IRepositoryObject deepCopy() {
+        return new Root(this);
     }
 }

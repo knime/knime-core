@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   16.03.2005 (georg): created
  */
@@ -52,7 +52,7 @@ package org.knime.workbench.repository.model;
 
 /**
  * Interface for repository objects that act as a container of other objects.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public interface IContainerObject extends IRepositoryObject {
@@ -64,40 +64,75 @@ public interface IContainerObject extends IRepositoryObject {
 
     /**
      * Returns wheter this container conatains cildren.
-     * 
+     *
      * @return <code>true</code>, if this container has children
-     * 
+     *
      */
     public boolean hasChildren();
 
     /**
      * Returns the children.
-     * 
+     *
      * @return Array containing the children
      */
     public IRepositoryObject[] getChildren();
 
     /**
-     * Adds a child, should throw an excpetion if invalid.
-     * 
+     * Adds a child, should throw an exception if invalid.
+     *
      * @param child The child to add
      */
     public void addChild(AbstractRepositoryObject child);
 
     /**
+     * Adds a child after an existing object. If the specified existing object
+     * does not exist or the child is already contained in this container, the
+     * child is not added and <code>false</code> is returned.
+     *
+     * @param child the child to add
+     * @param before the object that is before the new child
+     * @return <code>true</code> if the child was added, <code>false</code> if
+     *         the child has not been added
+     */
+    public boolean addChildAfter(AbstractRepositoryObject child,
+            AbstractRepositoryObject before);
+
+    /**
+     * Adds a child before an existing object. If the specified existing object
+     * does not exist or the child is already contained in this container, the
+     * child is not added and <code>false</code> is returned.
+     *
+     * @param child the child to add
+     * @param after the object that is after the new child
+     * @return <code>true</code> if the child was added, <code>false</code> if
+     *         the child has not been added
+     */
+    public boolean addChildBefore(AbstractRepositoryObject child,
+            AbstractRepositoryObject after);
+
+    /**
      * Removes a child, should throw an exception if invalid.
-     * 
+     *
      * @param child The child to remove
      */
     public void removeChild(AbstractRepositoryObject child);
 
     /**
      * Looks up a child, given by id.
-     * 
+     *
      * @param id The (level) id
-     * @param recurse wheter to dive into sub-containers
-     * 
+     * @param recurse whether to dive into sub-containers
+     *
      * @return The child, or <code>null</code>
      */
     public IRepositoryObject getChildByID(String id, boolean recurse);
+
+    /**
+     * Returns if the given object is a direct child of this object.
+     *
+     * @param child a potential child of this container
+     * @return <code>true</code> if it is a child of this container,
+     *         <code>false</code> otherwise
+     */
+    public boolean contains(IRepositoryObject child);
 }

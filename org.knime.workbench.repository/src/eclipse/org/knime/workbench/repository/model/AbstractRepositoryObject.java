@@ -61,11 +61,25 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
 
     private String m_name;
 
-    private String m_id;
+    private final String m_id;
 
-    private String m_afterID;
+    private String m_afterID = "";
 
     private boolean m_isExpertNode;
+
+
+    protected AbstractRepositoryObject(final String id, final String name) {
+        m_id = id;
+        m_name = name;
+    }
+
+    protected AbstractRepositoryObject(final AbstractRepositoryObject copy) {
+        this.m_parent = copy.m_parent;
+        this.m_name = copy.m_name;
+        this.m_id = copy.m_id;
+        this.m_afterID = copy.m_afterID;
+        this.m_isExpertNode = copy.m_isExpertNode;
+    }
 
     /**
      * Default implementation, provides no adapters.
@@ -129,19 +143,14 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
     }
 
     /**
-     * Set the id.
-     *
-     * @param id the id
-     */
-    protected void setID(final String id) {
-        m_id = id;
-    }
-
-    /**
      * @return Returns the name.
      */
     public String getName() {
         return m_name;
+    }
+
+    public void setName(final String newName) {
+        m_name = newName;
     }
 
     /**
@@ -149,13 +158,6 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
      */
     public String getAfterID() {
         return m_afterID;
-    }
-
-    /**
-     * @param name The name to set.
-     */
-    public void setName(final String name) {
-        m_name = name;
     }
 
     /**

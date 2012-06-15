@@ -99,7 +99,14 @@ public final class RepositoryFactory {
     private static final String META_NODE_ICON =
             "icons/meta_nodes/metanode_template.png";
 
-    private static ImageDescriptor defaultIcon;
+    public final static ImageDescriptor defaultIcon;
+
+    static {
+        defaultIcon =
+                AbstractUIPlugin.imageDescriptorFromPlugin(
+                        KNIMERepositoryPlugin.PLUGIN_ID,
+                        "icons/knime_default.png");
+    }
 
     /**
      * Workflow manager instance loading and administering the predefined meta
@@ -125,12 +132,6 @@ public final class RepositoryFactory {
     public static NodeTemplate createNode(final IConfigurationElement element) {
         String id = element.getAttribute("id");
 
-        NodeTemplate node = new NodeTemplate(id);
-
-        node.setAfterID(str(element.getAttribute("after"), ""));
-        boolean b = Boolean.parseBoolean(element.getAttribute("expert-flag"));
-        node.setExpertNode(b);
-
         // Try to load the node factory class...
         NodeFactory<? extends NodeModel> factory;
         // this ensures that the class is loaded by the correct eclipse
@@ -148,10 +149,14 @@ public final class RepositoryFactory {
         } finally {
             GlobalClassCreator.lock.unlock();
         }
+
+        NodeTemplate node = new NodeTemplate(id, factory.getNodeName());
+        node.setAfterID(str(element.getAttribute("after"), ""));
+        boolean b = Boolean.parseBoolean(element.getAttribute("expert-flag"));
+        node.setExpertNode(b);
         node.setFactory((Class<NodeFactory<? extends NodeModel>>)factory
                 .getClass());
 
-        node.setName(factory.getNodeName());
         node.setType(str(element.getAttribute("type"), NodeTemplate.TYPE_OTHER));
 
         String pluginID =
@@ -286,10 +291,11 @@ public final class RepositoryFactory {
         String pluginID =
                 element.getDeclaringExtension().getNamespaceIdentifier();
 
-        Category cat = new Category(id);
+        Category cat =
+                new Category(id, str(element.getAttribute("name"),
+                        "!name is missing!"));
         cat.setPluginID(pluginID);
         cat.setDescription(str(element.getAttribute("description"), ""));
-        cat.setName(str(element.getAttribute("name"), "!name is missing!"));
         cat.setAfterID(str(element.getAttribute("after"), ""));
         if (!Boolean.valueOf(System.getProperty("java.awt.headless", "false"))) {
             ImageDescriptor descriptor =
@@ -345,13 +351,7 @@ public final class RepositoryFactory {
             }
         }
         // if we have not returned an image yet we have to return the default
-        // icon. lazy initialization
-        if (defaultIcon == null) {
-            defaultIcon =
-                    AbstractUIPlugin.imageDescriptorFromPlugin(
-                            KNIMERepositoryPlugin.PLUGIN_ID,
-                            "icons/knime_default.png");
-        }
+        // icon.
         return defaultIcon;
     }
 
@@ -390,11 +390,8 @@ public final class RepositoryFactory {
 
         // for all nodes in the node set
         for (String factoryId : nodeSet.getNodeFactoryIds()) {
-            DynamicNodeTemplate node =
-                    new DynamicNodeTemplate(id, factoryId, nodeSet);
             Class<? extends NodeFactory<? extends NodeModel>> factoryClass =
                     nodeSet.getNodeFactory(factoryId);
-            node.setFactory(factoryClass);
 
             // Try to load the node factory class...
             NodeFactory<? extends NodeModel> factory;
@@ -402,7 +399,9 @@ public final class RepositoryFactory {
             // classloaders
             GlobalClassCreator.lock.lock();
             try {
-                factory = node.createFactoryInstance();
+                factory =
+                        DynamicNodeTemplate.createFactoryInstance(factoryClass,
+                                nodeSet, factoryId);
             } catch (Throwable e) {
                 throw new IllegalArgumentException(
                         "Can't load factory class for node: "
@@ -411,12 +410,15 @@ public final class RepositoryFactory {
                 GlobalClassCreator.lock.unlock();
             }
 
+            DynamicNodeTemplate node =
+                    new DynamicNodeTemplate(id, factoryId, nodeSet,
+                            factory.getNodeName());
+            node.setFactory(factoryClass);
+
             node.setAfterID(nodeSet.getAfterID(factoryId));
             boolean b =
                     Boolean.parseBoolean(element.getAttribute("expert-flag"));
             node.setExpertNode(b);
-
-            node.setName(factory.getNodeName());
 
             String pluginID =
                     element.getDeclaringExtension().getNamespaceIdentifier();
@@ -485,13 +487,11 @@ public final class RepositoryFactory {
             final String name, final String afterID, final String icon,
             final String categoryPath) {
 
-        Category cat = new Category(categoryID);
+        Category cat = new Category(categoryID, str(name, "!name is missing!"));
         cat.setPluginID(pluginID);
         cat.setDescription(str(description, ""));
-        cat.setName(str(name, "!name is missing!"));
         cat.setAfterID(str(afterID, ""));
-        if (!Boolean.valueOf(System.getProperty("java.awt.headless",
-                "false"))) {
+        if (!Boolean.valueOf(System.getProperty("java.awt.headless", "false"))) {
             ImageDescriptor descriptor = getIcon(pluginID, icon);
             cat.setIcon(descriptor.createImage(true));
             cat.setIconDescriptor(descriptor);

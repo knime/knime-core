@@ -51,6 +51,7 @@
 
 package org.knime.workbench.repository.model;
 
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSetFactory;
@@ -75,17 +76,24 @@ public class DynamicNodeTemplate extends NodeTemplate {
      * @param factoryId The id of the NodeFactory
      * @param nodeSetFactory the NodeSetFactory that created this
      *            DynamicNodeTemplate
+     * @param name the name of this repository entry
      */
     public DynamicNodeTemplate(final String nodeSetId, final String factoryId,
-            final NodeSetFactory nodeSetFactory) {
-        super(nodeSetId + "_" + factoryId);
+            final NodeSetFactory nodeSetFactory, final String name) {
+        super(nodeSetId + "_" + factoryId, name);
         m_factoryId = factoryId;
         m_nodeSetFactory = nodeSetFactory;
     }
 
+    protected DynamicNodeTemplate(final DynamicNodeTemplate copy) {
+        super(copy);
+        this.m_nodeSetFactory = copy.m_nodeSetFactory;
+        this.m_factoryId = copy.m_factoryId;
+    }
+
     /**
      * @param factory the nodeSetFactory needed to restore a instance of
-     *      underlying node
+     *            underlying node
      */
     public void setNodeSetFactory(final NodeSetFactory factory) {
         m_nodeSetFactory = factory;
@@ -105,11 +113,8 @@ public class DynamicNodeTemplate extends NodeTemplate {
     @Override
     public NodeFactory<? extends NodeModel> createFactoryInstance()
             throws Exception {
-        NodeFactory<? extends NodeModel> instance =
-                super.createFactoryInstance();
-        instance.loadAdditionalFactorySettings(m_nodeSetFactory
-                .getAdditionalSettings(m_factoryId));
-        return instance;
+        return createFactoryInstance(getFactory(), m_nodeSetFactory,
+                m_factoryId);
     }
 
     /**
@@ -135,5 +140,24 @@ public class DynamicNodeTemplate extends NodeTemplate {
     @Override
     public int hashCode() {
         return getID().hashCode();
+    }
+
+    public static NodeFactory<? extends NodeModel> createFactoryInstance(
+            final Class<? extends NodeFactory<? extends NodeModel>> factoryClass,
+            final NodeSetFactory nodeSetFactory, final String factoryId)
+            throws InstantiationException, IllegalAccessException,
+            InvalidSettingsException {
+        NodeFactory<? extends NodeModel> instance = factoryClass.newInstance();
+        instance.loadAdditionalFactorySettings(nodeSetFactory
+                .getAdditionalSettings(factoryId));
+        return instance;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public IRepositoryObject deepCopy() {
+        return new DynamicNodeTemplate(this);
     }
 }

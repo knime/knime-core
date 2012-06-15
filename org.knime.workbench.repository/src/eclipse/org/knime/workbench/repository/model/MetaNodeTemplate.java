@@ -30,15 +30,19 @@ public class MetaNodeTemplate extends AbstractNodeTemplate {
 
     private String m_description;
 
+    protected MetaNodeTemplate(final MetaNodeTemplate copy) {
+        super(copy);
+        this.m_manager = copy.m_manager;
+        this.m_description = copy.m_description;
+    }
+
     /**
      *
      */
     public MetaNodeTemplate(final String id, final String name,
             final String categoryPath, final WorkflowManager manager) {
-        super();
+        super(id, name);
         m_manager = manager;
-        setID(id);
-        setName(name);
         setAfterID("");
         setCategoryPath(categoryPath);
     }
@@ -84,6 +88,43 @@ public class MetaNodeTemplate extends AbstractNodeTemplate {
             m_manager.setCustomDescription(m_manager.getCustomDescription()
                     + " " + m_description);
         }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public IRepositoryObject deepCopy() {
+        return new MetaNodeTemplate(this);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        return getDescription().hashCode();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        MetaNodeTemplate other = (MetaNodeTemplate)obj;
+        if (this.m_manager == other.m_manager) {
+            return true;
+        }
+        return this.getDescription().equals(other.getDescription());
     }
 
 
