@@ -200,7 +200,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
     }
 
     /**
-     * Add additional panel (i.e. for pivoting) to this dialog.
+     * Add additional panel (for example for pivoting) to this dialog.
      * @param p the panel to add to tabs
      * @param title the title for the new tab
      */
