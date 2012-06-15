@@ -5,17 +5,13 @@ Bundle-SymbolicName: org.knime.jsnippets;singleton:=true
 Bundle-Version: 2.6.0.qualifier
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Require-Bundle: org.knime.base;bundle-version="[2.5.0,3.0.0)",
- org.eclipse.jdt.core;bundle-version="3.6.1"
+ org.eclipse.jdt.core;bundle-version="3.6.1",
+ org.eclipse.core.resources;bundle-version="3.6.1",
+ org.knime.ext.sun;bundle-version="2.6.0"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy
-Export-Package: org.apache.commons.lang3,
- org.fife.ui.autocomplete,
- org.knime.base.node.preproc.stringmanipulation,
- org.knime.base.node.preproc.stringmanipulation.manipulator,
- org.knime.base.node.util,
- org.knime.ext.sun.nodes.script,
- org.knime.ext.sun.nodes.script.compile
 Bundle-ClassPath: knime-jsnippets.jar,
- lib/autocomplete_2.0.2/autocomplete.jar,
- lib/autocomplete_2.0.2/rsyntaxtextarea.jar,
+ lib/autocomplete_2.0.3.jar,
+ lib/rsyntaxtextarea_2.0.3.jar,
+ lib/rsta-language-support_2.0.3.jar,
  lib/snippet_inc/commons-lang3-3.0.1.jar

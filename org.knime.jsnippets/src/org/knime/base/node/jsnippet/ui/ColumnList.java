@@ -61,10 +61,10 @@ import javax.swing.DefaultListModel;
 import javax.swing.JList;
 import javax.swing.ListSelectionModel;
 
+import org.knime.base.node.jsnippet.JavaSnippet;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
-import org.knime.ext.sun.nodes.script.expression.Expression;
 
 /**
  * A component that presents a list of input columns for the snippet dialogs.
@@ -177,9 +177,9 @@ public class ColumnList extends JList {
     public void setSpec(final DataTableSpec spec) {
         DefaultListModel listModel = (DefaultListModel)getModel();
         listModel.removeAllElements();
-        listModel.addElement(Expression.ROWID);
-        listModel.addElement(Expression.ROWINDEX);
-        listModel.addElement(Expression.ROWCOUNT);
+        listModel.addElement(JavaSnippet.ROWID);
+        listModel.addElement(JavaSnippet.ROWINDEX);
+        listModel.addElement(JavaSnippet.ROWCOUNT);
 
         for (int i = 0; i < spec.getNumColumns(); i++) {
             DataColumnSpec colSpec = spec.getColumnSpec(i);

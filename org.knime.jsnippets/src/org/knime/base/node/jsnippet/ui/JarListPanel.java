@@ -54,6 +54,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.io.File;
+import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
@@ -84,8 +85,11 @@ import org.knime.core.util.SimpleFileFilter;
 public class JarListPanel extends JPanel {
 
     private final JList m_addJarList;
+    private JButton m_addButton;
+    private JButton m_removeButton;
 
     private JFileChooser m_jarFileChooser;
+    private String[] m_filesCache;
 
     /** Inits GUI. */
     public JarListPanel() {
@@ -105,16 +109,16 @@ public class JarListPanel extends JPanel {
         m_addJarList.setCellRenderer(new ConvenientComboBoxRenderer());
         add(new JScrollPane(m_addJarList), BorderLayout.CENTER);
         JPanel southP = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 5));
-        JButton addButton = new JButton("Add...");
-        addButton.addActionListener(new ActionListener() {
+        m_addButton = new JButton("Add...");
+        m_addButton.addActionListener(new ActionListener() {
             /** {@inheritDoc} */
             @Override
             public void actionPerformed(final ActionEvent e) {
                 onJarAdd();
             }
         });
-        final JButton removeButton = new JButton("Remove");
-        removeButton.addActionListener(new ActionListener() {
+        m_removeButton = new JButton("Remove");
+        m_removeButton.addActionListener(new ActionListener() {
             /** {@inheritDoc} */
             @Override
             public void actionPerformed(final ActionEvent e) {
@@ -125,12 +129,12 @@ public class JarListPanel extends JPanel {
             /** {@inheritDoc} */
             @Override
             public void valueChanged(final ListSelectionEvent e) {
-                removeButton.setEnabled(!m_addJarList.isSelectionEmpty());
+                m_removeButton.setEnabled(!m_addJarList.isSelectionEmpty());
             }
         });
-        removeButton.setEnabled(!m_addJarList.isSelectionEmpty());
-        southP.add(addButton);
-        southP.add(removeButton);
+        m_removeButton.setEnabled(!m_addJarList.isSelectionEmpty());
+        southP.add(m_addButton);
+        southP.add(m_removeButton);
         add(southP, BorderLayout.SOUTH);
 
         JPanel northP = new JPanel(new FlowLayout());
@@ -201,15 +205,27 @@ public class JarListPanel extends JPanel {
      * @param files the files
      */
     public void setJarFiles(final String[] files) {
-        DefaultListModel jarListModel =
-            (DefaultListModel)m_addJarList.getModel();
-        jarListModel.removeAllElements();
-        for (String f : files) {
-            try {
-                File file = JavaSnippetUtil.toFile(f);
-                jarListModel.addElement(file.getAbsolutePath());
-            } catch (InvalidSettingsException e) {
-                // ignore
+        boolean doUpdate = false;
+        if (m_filesCache == null) {
+            m_filesCache = files;
+            doUpdate = true;
+        } else {
+            if (!Arrays.deepEquals(m_filesCache, files)) {
+                m_filesCache = files;
+                doUpdate = true;
+            }
+        }
+        if (doUpdate) {
+            DefaultListModel jarListModel =
+                (DefaultListModel)m_addJarList.getModel();
+            jarListModel.removeAllElements();
+            for (String f : files) {
+                try {
+                    File file = JavaSnippetUtil.toFile(f);
+                    jarListModel.addElement(file.getAbsolutePath());
+                } catch (InvalidSettingsException e) {
+                    // ignore
+                }
             }
         }
     }
@@ -227,6 +243,23 @@ public class JarListPanel extends JPanel {
             jarListModel.copyInto(copy);
         }
         return copy;
+    }
+
+    /**
+     * Sets whether or not this component is enabled.
+     * A component that is enabled may respond to user input,
+     * while a component that is not enabled cannot respond to
+     * user input.
+     * @param enabled true if this component should be enabled, false otherwise
+     */
+    @Override
+    public void setEnabled(final boolean enabled) {
+        if (isEnabled() != enabled) {
+            m_addJarList.setEnabled(enabled);
+            m_addButton.setEnabled(enabled);
+            m_removeButton.setEnabled(enabled);
+        }
+        super.setEnabled(enabled);
     }
 
 }

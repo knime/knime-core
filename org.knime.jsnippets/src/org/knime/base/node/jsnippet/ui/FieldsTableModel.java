@@ -50,6 +50,9 @@
  */
 package org.knime.base.node.jsnippet.ui;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.knime.core.node.util.DefaultConfigTableModel;
 
 /**
@@ -60,20 +63,97 @@ import org.knime.core.node.util.DefaultConfigTableModel;
 @SuppressWarnings("serial")
 public abstract class FieldsTableModel extends DefaultConfigTableModel {
     /**
+     * The columns of the output table.
+     */
+    public enum Column {
+        /** The index of the column with the fields type. */
+        FIELD_TYPE,
+        /** The index of the replace existing column. */
+        REPLACE_EXISTING,
+        /** The index of the input column / flow variable column. */
+        COLUMN,
+        /** The index of the column with the data type. */
+        DATA_TYPE,
+        /** The index of the column if a list cell should be created. */
+        IS_COLLECTION,
+        /** The index of the java type column. */
+        JAVA_TYPE,
+        /** The index of the java field name column. */
+        JAVA_FIELD
+    }
+
+    private Map<Column, Integer> m_columns;
+    private Map<Integer, Column> m_columnsReverse;
+
+    /**
      * Create a model with the given column names.
      * @param columns the column names.
      */
     public FieldsTableModel(final String[] columns) {
         super(columns);
+
+    }
+
+    /**
+     * Fill the mapping of columns to there actual position on the table.
+     * @param columns the columns map to fill.
+     */
+    protected void setColumnsMap(final Map<Column, Integer> columns) {
+        m_columns = columns;
+
+        m_columnsReverse = new HashMap<Integer, FieldsTableModel.Column>();
+        for (Column column : m_columns.keySet()) {
+            m_columnsReverse.put(m_columns.get(column), column);
+        }
+    }
+
+    /**
+     * Returns an attribute value for the cell at <code>row</code>
+     * and <code>column</code>.
+     *
+     * @param   row             the row whose value is to be queried
+     * @param   column          the column whose value is to be queried
+     * @return                  the value Object at the specified cell
+     * @exception  ArrayIndexOutOfBoundsException  if an invalid row or
+     *               column was given
+     */
+    public Object getValueAt(final int row, final Column column) {
+        return getValueAt(row, m_columns.get(column));
+    }
+
+    /**
+     * Sets the object value for the cell at <code>column</code> and
+     * <code>row</code>.  <code>aValue</code> is the new value.  This method
+     * will generate a <code>tableChanged</code> notification.
+     *
+     * @param   aValue          the new value; this can be null
+     * @param   row             the row whose value is to be changed
+     * @param   column          the column whose value is to be changed
+     * @exception  ArrayIndexOutOfBoundsException  if an invalid row or
+     *               column was given
+     */
+    public void setValueAt(final Object aValue, final int row,
+            final Column column) {
+        setValueAt(aValue, row, m_columns.get(column));
+    }
+
+    /**
+     * Get the index of the column.
+     * @param column the column
+     * @return the index of the column of -1 if the column is not found.
+     */
+    public int getIndex(final Column column) {
+        Integer index = m_columns.get(column);
+        return null != index ? index : -1;
     }
 
     /**
      * Test whether the value of the cell defined by row and column is valid.
      * @param row the row index of the cell
-     * @param column the column index of the cell
+     * @param column the column of the cell
      * @return true when cell value is valid
      */
-    abstract boolean isValidValue(int row, int column);
+    abstract boolean isValidValue(int row, Column column);
 
     /**
      * Gives the error message when isValidValue(row, column) returns false.
@@ -81,7 +161,27 @@ public abstract class FieldsTableModel extends DefaultConfigTableModel {
      * @param column the column index of the cell
      * @return the error message or null when cell value is valid.
      */
-    abstract String getErrorMessage(int row, int column);
+    abstract String getErrorMessage(int row, Column column);
+
+    /**
+     * Test whether the value of the cell defined by row and column is valid.
+     * @param row the row index of the cell
+     * @param column the column of the cell
+     * @return true when cell value is valid
+     */
+    boolean isValidValue(final int row, final int column) {
+        return isValidValue(row, m_columnsReverse.get(column));
+    }
+
+    /**
+     * Gives the error message when isValidValue(row, column) returns false.
+     * @param row the row index of the cell
+     * @param column the column index of the cell
+     * @return the error message or null when cell value is valid.
+     */
+    String getErrorMessage(final int row, final int column) {
+        return getErrorMessage(row, m_columnsReverse.get(column));
+    }
 
     /**
      * The possible java types for the given row. For the input table it depends
@@ -99,7 +199,7 @@ public abstract class FieldsTableModel extends DefaultConfigTableModel {
      * @return true when all tested values are valid
      */
     public boolean validateValues(final int row) {
-        for (int c = 0; c < getColumnCount(); c++) {
+        for (Column c : m_columns.keySet()) {
             if (!isValidValue(row, c)) {
                 return false;
             }
@@ -120,4 +220,28 @@ public abstract class FieldsTableModel extends DefaultConfigTableModel {
         return true;
     }
 
+    /**
+     * Checks whether to given value is unique in the given column.
+     *
+     * @param value the value to check
+     * @param row the row
+     * @param column the column
+     * @return true when value is unique with special constraints.
+     */
+    boolean isUnique(
+            final Object value,
+            final int row, final Column column) {
+        boolean isUnique = true;
+        for (int i = 0; i < getRowCount(); i++) {
+            if (i == row) {
+                continue;
+            }
+            Object value2 = getValueAt(i, column);
+            if (value.equals(value2)) {
+                isUnique = false;
+                break;
+            }
+        }
+        return isUnique;
+    }
 }

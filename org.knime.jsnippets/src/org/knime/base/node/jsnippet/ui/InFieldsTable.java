@@ -51,9 +51,6 @@
 package org.knime.base.node.jsnippet.ui;
 
 
-import static org.knime.base.node.jsnippet.ui.InFieldsTableModel.COL_COLUMN;
-import static org.knime.base.node.jsnippet.ui.InFieldsTableModel.COL_JAVA_FIELD;
-import static org.knime.base.node.jsnippet.ui.InFieldsTableModel.COL_JAVA_TYPE;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -72,13 +69,14 @@ import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.TableCellEditor;
 
-import org.knime.base.node.jsnippet.JavaFieldSettings.InCol;
-import org.knime.base.node.jsnippet.JavaFieldSettings.InVar;
-import org.knime.base.node.jsnippet.JavaFieldSettingsList.InColList;
-import org.knime.base.node.jsnippet.JavaFieldSettingsList.InVarList;
+import org.knime.base.node.jsnippet.JavaField.InCol;
+import org.knime.base.node.jsnippet.JavaField.InVar;
+import org.knime.base.node.jsnippet.JavaFieldList.InColList;
+import org.knime.base.node.jsnippet.JavaFieldList.InVarList;
 import org.knime.base.node.jsnippet.JavaSnippetFields;
-import org.knime.base.node.jsnippet.type.DataValueToJava;
 import org.knime.base.node.jsnippet.type.TypeProvider;
+import org.knime.base.node.jsnippet.type.data.DataValueToJava;
+import org.knime.base.node.jsnippet.ui.FieldsTableModel.Column;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -95,7 +93,10 @@ import org.knime.core.node.workflow.FlowVariable;
  */
 @SuppressWarnings({"rawtypes", "serial" })
 public class InFieldsTable extends ConfigTablePanel {
-
+    /**
+     * Property fired when a row is manually added by the user.
+     */
+    public static final String PROP_FIELD_ADDED = "prop_field_added";
 
     private InFieldsTableModel m_model;
     private DataTableSpec m_spec;
@@ -120,6 +121,9 @@ public class InFieldsTable extends ConfigTablePanel {
                         0, m_model.getRowCount()));
             }
         });
+
+        // commit editor on focus lost
+        getTable().putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
     }
 
     /**
@@ -134,7 +138,7 @@ public class InFieldsTable extends ConfigTablePanel {
                 if (null != m_spec) {
                     Set<String> cols = new HashSet<String>();
                     for (int r = 0; r < m_model.getRowCount(); r++) {
-                        Object value = m_model.getValueAt(r, COL_COLUMN);
+                        Object value = m_model.getValueAt(r, Column.COLUMN);
                         if (value instanceof DataColumnSpec) {
                             cols.add(((DataColumnSpec)value).getName());
                         }
@@ -146,7 +150,12 @@ public class InFieldsTable extends ConfigTablePanel {
                         }
                         if (!cols.contains(colSpec.getName())) {
                             // Add a row and fill it
-                            addRow(colSpec);
+                            boolean rowAdded = addRow(colSpec);
+                            if (rowAdded) {
+                                firePropertyChange(PROP_FIELD_ADDED,
+                                    m_model.getRowCount() - 1 ,
+                                    m_model.getRowCount());
+                            }
                             return;
                         }
                     }
@@ -155,7 +164,7 @@ public class InFieldsTable extends ConfigTablePanel {
                 if (null != m_flowVars) {
                     Set<String> flowVars = new HashSet<String>();
                     for (int r = 0; r < m_model.getRowCount(); r++) {
-                        Object value = m_model.getValueAt(r, COL_COLUMN);
+                        Object value = m_model.getValueAt(r, Column.COLUMN);
                         if (value instanceof FlowVariable) {
                             flowVars.add(((FlowVariable)value).getName());
                         }
@@ -165,29 +174,32 @@ public class InFieldsTable extends ConfigTablePanel {
                     for (FlowVariable flowVar : m_flowVars.values()) {
                         if (!flowVars.contains(flowVar.getName())) {
                             // Add a row and fill it
-                            addRow(flowVar);
+                            boolean rowAdded = addRow(flowVar);
+                            if (rowAdded) {
+                                firePropertyChange(PROP_FIELD_ADDED,
+                                    m_model.getRowCount() - 1 ,
+                                    m_model.getRowCount());
+                            }
                             return;
                         }
                     }
                 }
+                boolean rowAdded = false;
                 if (null != defaultColTarget) {
-                    addRow(defaultColTarget);
+                    rowAdded = addRow(defaultColTarget);
                 } else if (null != defaultVarTarget) {
-                    addRow(defaultVarTarget);
+                    rowAdded = addRow(defaultVarTarget);
                 } else {
                     m_model.addRow();
+                    rowAdded = true;
                 }
-
+                if (rowAdded) {
+                    firePropertyChange(PROP_FIELD_ADDED,
+                        m_model.getRowCount() - 1 ,
+                        m_model.getRowCount());
+                }
             }
         };
-    }
-
-    /**
-     * Get the column index defining the java field name.
-     * @return the index of the column with the java field names.
-     */
-    public int getFieldNameColumnIndex() {
-        return COL_JAVA_FIELD;
     }
 
 
@@ -198,26 +210,26 @@ public class InFieldsTable extends ConfigTablePanel {
      * @return true when the row was added successfully
      */
     public boolean addRow(final DataColumnSpec colSpec) {
-        int row = m_model.getRowCount();
+        int r = m_model.getRowCount();
         m_model.addRow();
 
-        m_model.setValueAt(colSpec, row, COL_COLUMN);
+        m_model.setValueAt(colSpec, r, Column.COLUMN);
         String colName = colSpec.getName();
         Set<String> taken = new HashSet<String>();
         for (int i = 0; i < m_model.getRowCount(); i++) {
-            taken.add((String)m_model.getValueAt(i, COL_JAVA_FIELD));
+            taken.add((String)m_model.getValueAt(i, Column.JAVA_FIELD));
         }
         String fieldName = FieldsTableUtil.createUniqueJavaIdentifier(
                 colName, taken, "c_");
-        m_model.setValueAt(fieldName, row, COL_JAVA_FIELD);
+        m_model.setValueAt(fieldName, r, Column.JAVA_FIELD);
         DataType elemType = colSpec.getType().isCollectionType()
             ? colSpec.getType().getCollectionElementType()
             : colSpec.getType();
         DataValueToJava dvToJava =
-            TypeProvider.getDefault().getCompatibleTypes(elemType,
+            TypeProvider.getDefault().getDataValueToJava(elemType,
                     colSpec.getType().isCollectionType());
         Class javaType = dvToJava.getPreferredJavaType();
-        m_model.setValueAt(javaType, row, COL_JAVA_TYPE);
+        m_model.setValueAt(javaType, r, Column.JAVA_TYPE);
         return true;
     }
 
@@ -228,20 +240,20 @@ public class InFieldsTable extends ConfigTablePanel {
      * @return true when the row was added successfully
      */
     public boolean addRow(final FlowVariable var) {
-        int row = m_model.getRowCount();
+        int r = m_model.getRowCount();
         m_model.addRow();
-        m_model.setValueAt(var, row, COL_COLUMN);
+        m_model.setValueAt(var, r, Column.COLUMN);
         String varName = var.getName();
         Set<String> taken = new HashSet<String>();
         for (int i = 0; i < m_model.getRowCount(); i++) {
-            taken.add((String)m_model.getValueAt(i, COL_JAVA_FIELD));
+            taken.add((String)m_model.getValueAt(i, Column.JAVA_FIELD));
         }
         String fieldName = FieldsTableUtil.createUniqueJavaIdentifier(
                 varName, taken, "v_");
-        m_model.setValueAt(fieldName, row, COL_JAVA_FIELD);
+        m_model.setValueAt(fieldName, r, Column.JAVA_FIELD);
         Class javaType = TypeProvider.getDefault()
             .getTypeConverter(var.getType()).getPreferredJavaType();
-        m_model.setValueAt(javaType, row, COL_JAVA_TYPE);
+        m_model.setValueAt(javaType, r, Column.JAVA_TYPE);
         return true;
     }
 
@@ -265,9 +277,9 @@ public class InFieldsTable extends ConfigTablePanel {
             String colName = field.getKnimeName();
             DataColumnSpec colSpec = spec.getColumnSpec(colName);
             Object value = null != colSpec ? colSpec : colName;
-            m_model.setValueAt(value, r, COL_COLUMN);
-            m_model.setValueAt(field.getJavaName(), r, COL_JAVA_FIELD);
-            m_model.setValueAt(field.getJavaType(), r, COL_JAVA_TYPE);
+            m_model.setValueAt(value, r, Column.COLUMN);
+            m_model.setValueAt(field.getJavaName(), r, Column.JAVA_FIELD);
+            m_model.setValueAt(field.getJavaType(), r, Column.JAVA_TYPE);
         }
         int offset = m_model.getRowCount();
         for (int r = 0; r < fields.getInVarFields().size(); r++) {
@@ -276,21 +288,28 @@ public class InFieldsTable extends ConfigTablePanel {
             String name = field.getKnimeName();
             FlowVariable flowVar = m_flowVars.get(name);
             Object value = null != flowVar ? flowVar : name;
-            m_model.setValueAt(value, offset + r, COL_COLUMN);
-            m_model.setValueAt(field.getJavaName(), offset + r, COL_JAVA_FIELD);
-            m_model.setValueAt(field.getJavaType(), offset + r, COL_JAVA_TYPE);
+            m_model.setValueAt(value, offset + r, Column.COLUMN);
+            m_model.setValueAt(field.getJavaName(), offset + r,
+                    Column.JAVA_FIELD);
+            m_model.setValueAt(field.getJavaType(), offset + r,
+                    Column.JAVA_TYPE);
         }
 
         JTable table = getTable();
-        table.getColumnModel().getColumn(COL_COLUMN).setCellRenderer(
+        table.getColumnModel().getColumn(
+                m_model.getIndex(Column.COLUMN)).setCellRenderer(
                 new InputTableCellRenderer());
-        table.getColumnModel().getColumn(COL_COLUMN).setCellEditor(
+        table.getColumnModel().getColumn(
+                m_model.getIndex(Column.COLUMN)).setCellEditor(
                 createInputCellEditor());
-        table.getColumnModel().getColumn(COL_JAVA_FIELD).setCellRenderer(
+        table.getColumnModel().getColumn(
+                m_model.getIndex(Column.JAVA_FIELD)).setCellRenderer(
                 FieldsTableUtil.createJavaFieldTableCellRenderer());
-        table.getColumnModel().getColumn(COL_JAVA_TYPE).setCellRenderer(
+        table.getColumnModel().getColumn(
+                m_model.getIndex(Column.JAVA_TYPE)).setCellRenderer(
                 FieldsTableUtil.createJavaTypeTableCellRenderer());
-        table.getColumnModel().getColumn(COL_JAVA_TYPE).setCellEditor(
+        table.getColumnModel().getColumn(
+                m_model.getIndex(Column.JAVA_TYPE)).setCellEditor(
                 FieldsTableUtil.createJavaTypeTableCellEditor());
     }
 
@@ -308,7 +327,9 @@ public class InFieldsTable extends ConfigTablePanel {
                 comboBox.addItem(flowVar);
             }
         }
-        return new DefaultCellEditor(comboBox);
+        DefaultCellEditor editor =  new DefaultCellEditor(comboBox);
+        editor.setClickCountToStart(2);
+        return editor;
     }
 
 
@@ -324,15 +345,16 @@ public class InFieldsTable extends ConfigTablePanel {
                 // there are errors in this row
                 continue;
             }
-            Object value = m_model.getValueAt(r, COL_COLUMN);
+            Object value = m_model.getValueAt(r, Column.COLUMN);
             if (value instanceof DataColumnSpec) {
                 DataColumnSpec colSpec = (DataColumnSpec)value;
                 InCol inCol = new InCol();
                 inCol.setKnimeType(colSpec.getType());
                 inCol.setKnimeName(colSpec.getName());
                 inCol.setJavaName(
-                        (String)m_model.getValueAt(r, COL_JAVA_FIELD));
-                Object javaTypeObject = m_model.getValueAt(r, COL_JAVA_TYPE);
+                        (String)m_model.getValueAt(r, Column.JAVA_FIELD));
+                Object javaTypeObject = m_model.getValueAt(r,
+                        Column.JAVA_TYPE);
                 if (javaTypeObject instanceof Class) {
                     inCol.setJavaType((Class)javaTypeObject);
                 }
@@ -354,15 +376,16 @@ public class InFieldsTable extends ConfigTablePanel {
                 // there are errors in this row
                 continue;
             }
-            Object value = m_model.getValueAt(r, COL_COLUMN);
+            Object value = m_model.getValueAt(r, Column.COLUMN);
             if (value instanceof FlowVariable) {
                 FlowVariable colSpec = (FlowVariable)value;
                 InVar inVar = new InVar();
                 inVar.setKnimeType(colSpec.getType());
                 inVar.setKnimeName(colSpec.getName());
                 inVar.setJavaName(
-                        (String)m_model.getValueAt(r, COL_JAVA_FIELD));
-                inVar.setJavaType((Class)m_model.getValueAt(r, COL_JAVA_TYPE));
+                        (String)m_model.getValueAt(r, Column.JAVA_FIELD));
+                inVar.setJavaType((Class)m_model.getValueAt(r,
+                        Column.JAVA_TYPE));
                 inCols.add(inVar);
             }
         }

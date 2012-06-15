@@ -50,10 +50,10 @@
  */
 package org.knime.base.node.jsnippet;
 
-import org.knime.base.node.jsnippet.JavaFieldSettingsList.InColList;
-import org.knime.base.node.jsnippet.JavaFieldSettingsList.InVarList;
-import org.knime.base.node.jsnippet.JavaFieldSettingsList.OutColList;
-import org.knime.base.node.jsnippet.JavaFieldSettingsList.OutVarList;
+import org.knime.base.node.jsnippet.JavaFieldList.InColList;
+import org.knime.base.node.jsnippet.JavaFieldList.InVarList;
+import org.knime.base.node.jsnippet.JavaFieldList.OutColList;
+import org.knime.base.node.jsnippet.JavaFieldList.OutVarList;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -74,6 +74,7 @@ public class JavaSnippetSettings {
     private static final String IN_VARS = "inVars";
     private static final String INSERT_MISSING_AS_NULL =
         "m_insertMissingAsNull";
+    private static final String TEMPLATE_UUID = "templateUUID";
     private static final String VERSION = "version";
 
     /** Custom imports. */
@@ -95,6 +96,9 @@ public class JavaSnippetSettings {
     /** Output variables definition. */
     private OutVarList m_outVars;
 
+    /** The UUID of the blueprint for this setting. */
+    private String m_templateUUID;
+
     /** Represent missing cells as null in script. Default (false) is to
      * return a missing cell without executing the script.
      */
@@ -111,15 +115,6 @@ public class JavaSnippetSettings {
         m_scriptImports = "// Your custom imports:\n";
         m_scriptFields = "// Your custom variables:\n";
         m_scriptBody = "// Enter your code here:\n\n\n\n";
-//            "// Use getCell(column, Type) to retrieve input.\n"
-//                    + "// Predefined types are:\n"
-//                    + "//   String : String\n"
-//                    + "//   Int : Integer\n"
-//                    + "//   Double : Double\n"
-//                    + "//   Long : Long\n"
-//                    + "//   Boolean : Boolean\n"
-//                    + "//   Date : Date\n"
-//                    + "//   XML  : Document\n\n\n\n";
         m_jarFiles = new String[0];
         m_outCols = new OutColList();
         m_outVars = new OutVarList();
@@ -127,6 +122,7 @@ public class JavaSnippetSettings {
         m_inVars = new InVarList();
         m_insertMissingAsNull = false;
         m_version = JavaSnippet.VERSION_1_X;
+        m_templateUUID = null;
     }
 
 
@@ -235,6 +231,22 @@ public class JavaSnippetSettings {
     }
 
     /**
+     * @return the templateUUID
+     */
+    public String getTemplateUUID() {
+        return m_templateUUID;
+    }
+
+
+    /**
+     * @param templateUUID the templateUUID to set
+     */
+    void setTemplateUUID(final String templateUUID) {
+        m_templateUUID = templateUUID;
+    }
+
+
+    /**
      * Set the system fields definitions of the java snippet.
      * @param fields the system fields definitions of the java snippet
      */
@@ -260,6 +272,7 @@ public class JavaSnippetSettings {
         m_inVars.saveSettings(settings.addConfig(IN_VARS));
         settings.addBoolean(INSERT_MISSING_AS_NULL, m_insertMissingAsNull);
         settings.addString(VERSION, m_version);
+        settings.addString(TEMPLATE_UUID, m_templateUUID);
     }
 
     /** Loads parameters in NodeModel.
@@ -278,6 +291,7 @@ public class JavaSnippetSettings {
         m_inVars.loadSettings(settings.getConfig(IN_VARS));
         m_insertMissingAsNull = settings.getBoolean(INSERT_MISSING_AS_NULL);
         m_version = settings.getString(VERSION);
+        m_templateUUID = settings.getString(TEMPLATE_UUID);
     }
 
 
@@ -296,7 +310,8 @@ public class JavaSnippetSettings {
             m_inVars.loadSettingsForDialog(settings.getConfig(IN_VARS));
             m_insertMissingAsNull = settings.getBoolean(INSERT_MISSING_AS_NULL,
                     false);
-            m_version = settings.getString(m_version, JavaSnippet.VERSION_1_X);
+            m_version = settings.getString(VERSION, JavaSnippet.VERSION_1_X);
+            m_templateUUID = settings.getString(TEMPLATE_UUID, null);
         } catch (InvalidSettingsException e) {
             throw new IllegalStateException(e);
         }

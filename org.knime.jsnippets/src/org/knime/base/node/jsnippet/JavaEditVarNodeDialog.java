@@ -55,11 +55,10 @@ import javax.swing.JScrollPane;
 
 import org.knime.base.node.jsnippet.ui.ColumnList;
 import org.knime.base.node.jsnippet.ui.FieldsTableModel;
+import org.knime.base.node.jsnippet.ui.FieldsTableModel.Column;
 import org.knime.base.node.jsnippet.ui.FlowVariableList;
 import org.knime.base.node.jsnippet.ui.InFieldsTable;
-import org.knime.base.node.jsnippet.ui.InFieldsTableModel;
 import org.knime.base.node.jsnippet.ui.OutFieldsTable;
-import org.knime.base.node.jsnippet.ui.OutFieldsTableModel;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NotConfigurableException;
@@ -73,14 +72,23 @@ import org.knime.core.node.port.PortObjectSpec;
 public class JavaEditVarNodeDialog extends JavaSnippetNodeDialog {
 
     /**
+     * Create a new Dialog.
+     * @param templateMetaCategory the meta category used in the templates
+     * tab or to create templates
+     */
+    @SuppressWarnings("rawtypes")
+    public JavaEditVarNodeDialog(final Class templateMetaCategory) {
+        super(templateMetaCategory);
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
     protected InFieldsTable createInFieldsTable() {
         InFieldsTable table = new InFieldsTable();
         FieldsTableModel model = (FieldsTableModel)table.getTable().getModel();
-        model.setColumnName(InFieldsTableModel.COL_COLUMN,
-                "Flow Variable");
+        model.setColumnName(model.getIndex(Column.COLUMN), "Flow Variable");
         return table;
     }
 
@@ -91,8 +99,9 @@ public class JavaEditVarNodeDialog extends JavaSnippetNodeDialog {
     protected OutFieldsTable createOutFieldsTable() {
         OutFieldsTable table = new OutFieldsTable(true);
         FieldsTableModel model = (FieldsTableModel)table.getTable().getModel();
-        model.setColumnName(OutFieldsTableModel.COL_COLUMN,
-                "Flow Variable");
+        model.setColumnName(model.getIndex(Column.COLUMN), "Flow Variable");
+        table.getTable().getColumnModel().getColumn(model.getIndex(
+                Column.REPLACE_EXISTING)).setPreferredWidth(15);
         return table;
     }
 

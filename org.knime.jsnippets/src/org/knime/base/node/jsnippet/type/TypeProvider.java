@@ -57,6 +57,26 @@ import java.util.List;
 import java.util.Map;
 
 import org.knime.base.node.jsnippet.expression.TypeException;
+import org.knime.base.node.jsnippet.type.data.BooleanValueToJava;
+import org.knime.base.node.jsnippet.type.data.DataValueToJava;
+import org.knime.base.node.jsnippet.type.data.DateAndTimeValueToJava;
+import org.knime.base.node.jsnippet.type.data.DoubleValueToJava;
+import org.knime.base.node.jsnippet.type.data.IntValueToJava;
+import org.knime.base.node.jsnippet.type.data.JavaToBooleanCell;
+import org.knime.base.node.jsnippet.type.data.JavaToDataCell;
+import org.knime.base.node.jsnippet.type.data.JavaToDateAndTimeCell;
+import org.knime.base.node.jsnippet.type.data.JavaToDoubleCell;
+import org.knime.base.node.jsnippet.type.data.JavaToIntCell;
+import org.knime.base.node.jsnippet.type.data.JavaToLongCell;
+import org.knime.base.node.jsnippet.type.data.JavaToStringCell;
+import org.knime.base.node.jsnippet.type.data.JavaToXMLCell;
+import org.knime.base.node.jsnippet.type.data.LongValueToJava;
+import org.knime.base.node.jsnippet.type.data.StringValueToJava;
+import org.knime.base.node.jsnippet.type.data.XMLValueToJava;
+import org.knime.base.node.jsnippet.type.flowvar.DoubleFlowVarToJava;
+import org.knime.base.node.jsnippet.type.flowvar.IntFlowVarToJava;
+import org.knime.base.node.jsnippet.type.flowvar.StringFlowVarToJava;
+import org.knime.base.node.jsnippet.type.flowvar.TypeConverter;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
@@ -64,18 +84,23 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.LongValue;
 import org.knime.core.data.StringValue;
+import org.knime.core.data.date.DateAndTimeCell;
+import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.xml.XMLCell;
+import org.knime.core.data.xml.XMLValue;
 import org.knime.core.node.workflow.FlowVariable.Type;
 
 /**
+ * A central place for type converters for data cells and flow variables.
  *
  * @author Heiko Hofer
  */
-public class TypeProvider {
+public final class TypeProvider {
     private static TypeProvider provider;
     private Map<Class<? extends DataValue>, DataValueToJava>
         m_dataValueConverter;
@@ -86,7 +111,7 @@ public class TypeProvider {
     private Map<DataType, JavaToDataCell> m_javaToCell;
     private Map<DataType, JavaToDataCell> m_javaToListCell;
 
-    private Map<Type, FlowVarTypeConversion> m_flowVarConverter;
+    private Map<Type, TypeConverter> m_flowVarConverter;
 
     /** Prevent creation of class instances. */
     private TypeProvider() {
@@ -97,6 +122,9 @@ public class TypeProvider {
         m_dataValueConverter.put(DoubleValue.class, new DoubleValueToJava());
         m_dataValueConverter.put(LongValue.class, new LongValueToJava());
         m_dataValueConverter.put(StringValue.class, new StringValueToJava());
+        m_dataValueConverter.put(XMLValue.class, new XMLValueToJava());
+        m_dataValueConverter.put(DateAndTimeValue.class,
+                new DateAndTimeValueToJava());
 
 
         m_dataValueToJava = new LinkedHashMap<DataType, DataValueToJava>();
@@ -113,12 +141,19 @@ public class TypeProvider {
                 m_dataValueConverter.get(DoubleValue.class));
         m_dataValueToJava.put(BooleanCell.TYPE,
                 m_dataValueConverter.get(BooleanValue.class));
+        m_dataValueToJava.put(XMLCell.TYPE,
+                new MultiValueToJava(
+                        m_dataValueConverter.get(XMLValue.class)
+                      , m_dataValueConverter.get(StringValue.class)
+                  ));
+        m_dataValueToJava.put(DateAndTimeCell.TYPE,
+                m_dataValueConverter.get(DateAndTimeValue.class));
 
         // add list cell converters
         m_collDataValueToJava = new LinkedHashMap<DataType, DataValueToJava>();
         for (DataType type : m_dataValueToJava.keySet()) {
             DataValueToJava dvtj = m_dataValueToJava.get(type);
-            m_collDataValueToJava.put(type, new ListCellTypeConversion(dvtj));
+            m_collDataValueToJava.put(type, new ListCellToJava(dvtj));
         }
 
         // the converters from java to a data cell
@@ -128,6 +163,8 @@ public class TypeProvider {
         m_javaToCell.put(DoubleCell.TYPE, new JavaToDoubleCell());
         m_javaToCell.put(LongCell.TYPE, new JavaToLongCell());
         m_javaToCell.put(StringCell.TYPE, new JavaToStringCell());
+        m_javaToCell.put(XMLCell.TYPE, new JavaToXMLCell());
+        m_javaToCell.put(DateAndTimeCell.TYPE, new JavaToDateAndTimeCell());
         // add list cell converter
         m_javaToListCell = new LinkedHashMap<DataType, JavaToDataCell>();
         for (DataType type : m_javaToCell.keySet()) {
@@ -136,7 +173,7 @@ public class TypeProvider {
         }
 
         // Converters for flow variables
-        m_flowVarConverter = new LinkedHashMap<Type, FlowVarTypeConversion>();
+        m_flowVarConverter = new LinkedHashMap<Type, TypeConverter>();
         m_flowVarConverter.put(Type.DOUBLE, new DoubleFlowVarToJava());
         m_flowVarConverter.put(Type.INTEGER, new IntFlowVarToJava());
         m_flowVarConverter.put(Type.STRING, new StringFlowVarToJava());
@@ -144,59 +181,14 @@ public class TypeProvider {
     }
 
     /**
-     * @return
+     * Get default type provider.
+     * @return the default instance
      */
     public static TypeProvider getDefault() {
         if (null == provider) {
             provider = new TypeProvider();
         }
         return provider;
-    }
-
-
-    public DataValueToJava getCompatibleTypes(final DataType type,
-            final boolean isCollectionType) {
-        // if this is a known data type
-        if (isCollectionType) {
-            if (m_collDataValueToJava.containsKey(type)) {
-                return m_collDataValueToJava.get(type);
-            }
-        } else {
-            if (m_dataValueToJava.containsKey(type)) {
-                return m_dataValueToJava.get(type);
-            }
-        }
-
-        // check data value converters this type is compatible with
-        List<DataValueToJava> compatibleList = new ArrayList<DataValueToJava>();
-        for (Class<? extends DataValue> dv : m_dataValueConverter.keySet()) {
-            if (type.isCompatible(dv)) {
-                compatibleList.add(m_dataValueConverter.get(dv));
-            }
-        }
-        DataValueToJava[] compatible = compatibleList.toArray(
-                new DataValueToJava[compatibleList.size()]);
-        if (compatible.length > 0) {
-            // remember compatible types
-            DataValueToJava cellToJava = new MultiValueToJava(compatible);
-            m_dataValueToJava.put(type, cellToJava);
-            DataValueToJava listCellToJava
-                = new ListCellTypeConversion(cellToJava);
-            m_collDataValueToJava.put(type, listCellToJava);
-            return type.isCollectionType() ? listCellToJava : cellToJava;
-        } else {
-            throw new TypeException("The data type "
-                    + type
-                    + " is not supported.");
-        }
-    }
-
-    /**
-     * @param type
-     * @return
-     */
-    public FlowVarTypeConversion getTypeConverter(final Type type) {
-        return m_flowVarConverter.get(type);
     }
 
 
@@ -225,8 +217,68 @@ public class TypeProvider {
     }
 
     /**
-     * @param type
-     * @return
+     * Get the type converter for the give flow variable type.
+     * @param type the flow variable type
+     * @return the type converter for the given flow variable type
+     */
+    public TypeConverter getTypeConverter(final Type type) {
+        return m_flowVarConverter.get(type);
+    }
+
+    /**
+     * Get the type converter to convert a data value of the given type to a
+     * java object.
+     *
+     * @param type the type to be converted
+     * @param isCollectionType if collection of the given type should be
+     * converted
+     * @return the type converter
+     */
+    public DataValueToJava getDataValueToJava(final DataType type,
+            final boolean isCollectionType) {
+        // if this is a known data type
+        if (isCollectionType) {
+            if (m_collDataValueToJava.containsKey(type)) {
+                return m_collDataValueToJava.get(type);
+            }
+        } else {
+            if (m_dataValueToJava.containsKey(type)) {
+                return m_dataValueToJava.get(type);
+            }
+        }
+
+        // check data value converters this type is compatible with
+        List<DataValueToJava> compatibleList = new ArrayList<DataValueToJava>();
+        for (Class<? extends DataValue> dv : m_dataValueConverter.keySet()) {
+            if (type.isCompatible(dv)) {
+                compatibleList.add(m_dataValueConverter.get(dv));
+            }
+        }
+        DataValueToJava[] compatible = compatibleList.toArray(
+                new DataValueToJava[compatibleList.size()]);
+        if (compatible.length > 0) {
+            // remember compatible types
+            DataValueToJava cellToJava = new MultiValueToJava(compatible);
+            m_dataValueToJava.put(type, cellToJava);
+            DataValueToJava listCellToJava
+                = new ListCellToJava(cellToJava);
+            m_collDataValueToJava.put(type, listCellToJava);
+            return type.isCollectionType() ? listCellToJava : cellToJava;
+        } else {
+            throw new TypeException("The data type "
+                    + type
+                    + " is not supported.");
+        }
+    }
+
+
+
+    /**
+     * Get an type converter that can be utilized to create data cells of the
+     * given type or collection cells with elements of the given type.
+     * @param type the type
+     * @param isCollectionType if collection cells should be created
+     * @return the converter from java class to a data cell.
      */
     public JavaToDataCell getJavaToDataCell(final DataType type,
             final boolean isCollectionType) {
@@ -243,10 +295,5 @@ public class TypeProvider {
         throw new TypeException("The data type "
                 + type
                 + " is not supported.");
-
     }
-
-
-
-
 }

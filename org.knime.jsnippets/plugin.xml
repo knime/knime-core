@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.2"?>
 <plugin>
+   <extension-point id="templaterepository" name="JavaSnippet Template Repository" schema="schema/templaterepository.exsd"/>
+   
    <extension
          point="org.knime.workbench.repository.nodes">
       <node
@@ -17,7 +19,18 @@
             category-path="/flowcontrol/variables"
             factory-class="org.knime.base.node.jsnippet.JavaEditVarNodeFactory"
             id="org.knime.base.node.jsnippet.JavaEditVarNodeFactory">
-      </node>
+      </node>      
+   </extension>
+   <extension
+         point="org.knime.jsnippets.templaterepository">
+         <template-repository
+               provider-class="org.knime.base.node.jsnippet.template.DefaultFileTemplateRepositoryProvider"
+               id="org.knime.base.node.jsnippet.template.DefaultFileTemplateRepositoryProvider">
+         </template-repository>
+         <template-repository
+               provider-class="org.knime.base.node.jsnippet.template.PluginFileTemplateRepositoryProvider"
+               id="org.knime.base.node.jsnippet.template.PluginFileTemplateRepositoryProvider">
+         </template-repository>                  
    </extension>
 
 </plugin>

@@ -50,18 +50,14 @@
  */
 package org.knime.base.node.jsnippet.ui;
 
-import static org.knime.base.node.jsnippet.ui.OutFieldsTableModel.COL_COLUMN;
-import static org.knime.base.node.jsnippet.ui.OutFieldsTableModel.COL_DATA_TYPE;
-import static org.knime.base.node.jsnippet.ui.OutFieldsTableModel.COL_FIELD_TYPE;
-import static org.knime.base.node.jsnippet.ui.OutFieldsTableModel.COL_JAVA_FIELD;
-import static org.knime.base.node.jsnippet.ui.OutFieldsTableModel.COL_JAVA_TYPE;
-import static org.knime.base.node.jsnippet.ui.OutFieldsTableModel.COL_REPLACE_EXISTING;
-
 import java.awt.Color;
 import java.awt.Component;
 import java.awt.Font;
+import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.lang.reflect.Array;
 import java.util.EventObject;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -75,6 +71,7 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.border.EmptyBorder;
@@ -84,17 +81,18 @@ import javax.swing.plaf.UIResource;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 
-import org.knime.base.node.jsnippet.JavaFieldSettings.OutCol;
-import org.knime.base.node.jsnippet.JavaFieldSettings.OutVar;
-import org.knime.base.node.jsnippet.JavaFieldSettingsList.OutColList;
-import org.knime.base.node.jsnippet.JavaFieldSettingsList.OutVarList;
+import org.knime.base.node.jsnippet.JavaField;
+import org.knime.base.node.jsnippet.JavaField.OutCol;
+import org.knime.base.node.jsnippet.JavaField.OutVar;
+import org.knime.base.node.jsnippet.JavaFieldList.OutColList;
+import org.knime.base.node.jsnippet.JavaFieldList.OutVarList;
 import org.knime.base.node.jsnippet.JavaSnippetFields;
 import org.knime.base.node.jsnippet.type.TypeProvider;
+import org.knime.base.node.jsnippet.ui.FieldsTableModel.Column;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.collection.ListCell;
-import org.knime.core.data.def.StringCell;
 import org.knime.core.node.util.ConfigTablePanel;
 import org.knime.core.node.util.FlowVariableListCellRenderer;
 import org.knime.core.node.util.FlowVariableTableCellRenderer;
@@ -109,6 +107,11 @@ import org.knime.core.node.workflow.FlowVariable.Type;
  */
 @SuppressWarnings({"rawtypes", "serial" })
 public class OutFieldsTable extends ConfigTablePanel {
+    /**
+     * Property fired when a row is manually added by the user.
+     */
+    public static final String PROP_FIELD_ADDED = "prop_field_added";
+
     /**
      * The KNIME type of an output field.
      * @author Heiko Hofer
@@ -134,7 +137,7 @@ public class OutFieldsTable extends ConfigTablePanel {
      * be defined.
      */
     public OutFieldsTable(final boolean flowVarsOnly) {
-        super(new OutFieldsTableModel());
+        super(new OutFieldsTableModel(flowVarsOnly));
         final JTable table = getTable();
         m_flowVarsOnly = flowVarsOnly;
         m_model = (OutFieldsTableModel)getModel();
@@ -142,6 +145,9 @@ public class OutFieldsTable extends ConfigTablePanel {
             @Override
             public void tableChanged(final TableModelEvent e) {
                 checkColColumn(e);
+                autoUpdateIsArray(e);
+                autoUpdateJavaType(e);
+
                 // The table is highly interactive. Changing the input column
                 // can invalidate the java type and a editing the java
                 // identifier can invalidate other java identifiers (duplicate
@@ -159,7 +165,7 @@ public class OutFieldsTable extends ConfigTablePanel {
                     if (r < 0) {
                         continue;
                     }
-                    Object value = m_model.getValueAt(r, COL_COLUMN);
+                    Object value = m_model.getValueAt(r, Column.COLUMN);
                     String str;
                     if (null == value) {
                         return;
@@ -179,17 +185,93 @@ public class OutFieldsTable extends ConfigTablePanel {
                     if (getFieldType(r).equals(FieldType.Column)
                             && m_spec.containsName(str)) {
                         m_model.setValueAt(m_spec.getColumnSpec(str),
-                                r, COL_COLUMN);
+                                r, Column.COLUMN);
                     }
                     if (getFieldType(r).equals(FieldType.FlowVariable)
                             && m_flowVars.containsKey(str)) {
                         m_model.setValueAt(m_flowVars.get(str),
-                                r, COL_COLUMN);
+                                r, Column.COLUMN);
+                    }
+                }
+            }
+
+            private void autoUpdateIsArray(final TableModelEvent e) {
+                if (e.getType() == TableModelEvent.DELETE) {
+                    return;
+                }
+                // if Column.FIELD_TYPE is not in the table
+                if (-1 == m_model.getIndex(Column.FIELD_TYPE)) {
+                    return;
+                }
+                if (e.getColumn() != m_model.getIndex(Column.FIELD_TYPE)) {
+                    return;
+                }
+                for (int r = e.getFirstRow(); r <= e.getLastRow(); r++) {
+                    boolean isVariable = m_model.getValueAt(r,
+                            Column.FIELD_TYPE).equals(FieldType.FlowVariable);
+                    if (isVariable) {
+                        Object isArray = m_model.getValueAt(r,
+                                Column.IS_COLLECTION);
+                        if (null != isArray && (Boolean)isArray) {
+                            m_model.setValueAt(Boolean.FALSE, r,
+                                    Column.IS_COLLECTION);
+                        }
+                        // update the java type
+                        Object javaTypeObject = m_model.getValueAt(r,
+                                Column.JAVA_TYPE);
+                        if (javaTypeObject == null
+                                || !(javaTypeObject instanceof Class)) {
+                            return;
+                        }
+                        Class javaType = (Class)javaTypeObject;
+                        if (javaType.isArray()) {
+                            m_model.setValueAt(javaType.getComponentType(), r,
+                                Column.JAVA_TYPE);
+                        }
+                    }
+                }
+            }
+
+            private void autoUpdateJavaType(final TableModelEvent e) {
+                if (e.getType() == TableModelEvent.DELETE) {
+                    return;
+                }
+                // if Column.IS_COLLECTION is not in the table
+                if (-1 == m_model.getIndex(Column.IS_COLLECTION)) {
+                    return;
+                }
+                if (e.getColumn() != m_model.getIndex(Column.IS_COLLECTION)) {
+                    return;
+                }
+                for (int r = e.getFirstRow(); r <= e.getLastRow(); r++) {
+                    boolean isCollection = (Boolean)m_model.getValueAt(r,
+                            Column.IS_COLLECTION);
+                    // update the java type
+                    Object javaTypeObject = m_model.getValueAt(r,
+                            Column.JAVA_TYPE);
+                    if (!(javaTypeObject instanceof Class)) {
+                        return;
+                    }
+                    Class javaType = (Class)javaTypeObject;
+                    if (javaType.isArray() && !isCollection) {
+                        m_model.setValueAt(javaType.getComponentType(), r,
+                            Column.JAVA_TYPE);
+                    }
+                    if (!javaType.isArray() && isCollection) {
+                        Class arrayType = Array.newInstance(
+                                javaType, 0).getClass();
+                        m_model.setValueAt(arrayType, r,
+                                Column.JAVA_TYPE);
                     }
                 }
             }
         });
+
+        // commit editor on focus lost
+        getTable().putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
     }
+
+
 
     /**
      * {@inheritDoc}
@@ -203,7 +285,7 @@ public class OutFieldsTable extends ConfigTablePanel {
                 if (null != m_spec) {
                     Set<String> cols = new HashSet<String>();
                     for (int r = 0; r < m_model.getRowCount(); r++) {
-                        Object value = m_model.getValueAt(r, COL_COLUMN);
+                        Object value = m_model.getValueAt(r, Column.COLUMN);
                         if (value instanceof DataColumnSpec) {
                             cols.add(((DataColumnSpec)value).getName());
                         }
@@ -215,7 +297,12 @@ public class OutFieldsTable extends ConfigTablePanel {
                         }
                         if (!cols.contains(colSpec.getName())) {
                             // Add a row and fill it
-                            addRow(colSpec);
+                            boolean rowAdded = addRow(colSpec);
+                            if (rowAdded) {
+                                firePropertyChange(PROP_FIELD_ADDED,
+                                        m_model.getRowCount() - 1 ,
+                                        m_model.getRowCount());
+                            }
                             return;
                         }
                     }
@@ -224,7 +311,7 @@ public class OutFieldsTable extends ConfigTablePanel {
                 if (null != m_flowVars) {
                     Set<String> flowVars = new HashSet<String>();
                     for (int r = 0; r < m_model.getRowCount(); r++) {
-                        Object value = m_model.getValueAt(r, COL_COLUMN);
+                        Object value = m_model.getValueAt(r, Column.COLUMN);
                         if (value instanceof FlowVariable) {
                             flowVars.add(((FlowVariable)value).getName());
                         }
@@ -240,22 +327,31 @@ public class OutFieldsTable extends ConfigTablePanel {
                             }
                             if (!flowVars.contains(flowVar.getName())) {
                                 // Add a row and fill it
-                                addRow(flowVar);
+                                boolean rowAdded = addRow(flowVar);
+                                if (rowAdded) {
+                                    firePropertyChange(PROP_FIELD_ADDED,
+                                            m_model.getRowCount() - 1 ,
+                                            m_model.getRowCount());
+                                }
                                 return;
                             }
                         }
 
                     }
                 }
+                boolean rowAdded = false;
                 if (null != defaultColTarget) {
-                    addRow(defaultColTarget);
+                    rowAdded = addRow(defaultColTarget);
                 } else if (null != defaultVarTarget) {
-                    addRow(defaultVarTarget);
+                    rowAdded = addRow(defaultVarTarget);
                 } else {
-                    addRow("var", Type.STRING);
+                    rowAdded = addRow("var", Type.STRING);
                 }
-
-
+                if (rowAdded) {
+                    firePropertyChange(PROP_FIELD_ADDED,
+                        m_model.getRowCount() - 1 ,
+                        m_model.getRowCount());
+                }
             }
         };
     }
@@ -268,7 +364,7 @@ public class OutFieldsTable extends ConfigTablePanel {
      * @return true when the replace flag is set on the given row
      */
     public boolean getReplaceExisting(final int row) {
-        return (Boolean)m_model.getValueAt(row, COL_REPLACE_EXISTING);
+        return (Boolean)m_model.getValueAt(row, Column.REPLACE_EXISTING);
     }
 
     /**
@@ -278,106 +374,80 @@ public class OutFieldsTable extends ConfigTablePanel {
      * @return the field type of the given column
      */
     public FieldType getFieldType(final int row) {
-        return (FieldType)m_model.getValueAt(row, COL_FIELD_TYPE);
+        if (m_flowVarsOnly) {
+            return FieldType.FlowVariable;
+        } else {
+            return (FieldType)m_model.getValueAt(row, Column.FIELD_TYPE);
+        }
     }
 
     /**
-     * Adds a row for the given input column.
+     * Adds a row using the give colSpec as a hint for the new row.
      *
      * @param colSpec the input column
      * @return true when the row was added successfully
      */
     public boolean addRow(final DataColumnSpec colSpec) {
-        int row = m_model.getRowCount();
-        m_model.addRow();
-
-        m_model.setValueAt(true, row, COL_REPLACE_EXISTING);
-        m_model.setValueAt(FieldType.Column, row, COL_FIELD_TYPE);
-        m_model.setValueAt(colSpec, row, COL_COLUMN);
-        String colName = colSpec.getName();
-        Set<String> taken = new HashSet<String>();
-        for (int i = 0; i < m_model.getRowCount(); i++) {
-            taken.add((String)m_model.getValueAt(i, COL_JAVA_FIELD));
+        Frame parent = (Frame)SwingUtilities.getAncestorOfClass(
+                Frame.class, this);
+        JavaField newRow = AddOutFieldDialog.openUserDialog(parent,
+                m_model, m_spec, m_flowVars, m_flowVarsOnly);
+        if (null != newRow) {
+            return addRow(newRow);
+        } else {
+            return false;
         }
-
-        DataType dataType = colSpec.getType();
-        DataType elemType = dataType.isCollectionType()
-            ? dataType.getCollectionElementType() : dataType;
-        boolean isCollection = dataType.isCollectionType();
-        TypeProvider typeProvider = TypeProvider.getDefault();
-        if (!typeProvider.getOutputDataTypes().contains(elemType)) {
-            elemType = new StringCell("").getType();
-            isCollection = false;
-        }
-
-        String fieldName = FieldsTableUtil.createUniqueJavaIdentifier(
-                    colName, taken, "out_");
-        m_model.setValueAt(elemType, row, COL_DATA_TYPE);
-
-        Class javaType = typeProvider.getJavaToDataCell(elemType, isCollection)
-                .getPreferredJavaType();
-
-        m_model.setValueAt(javaType, row, COL_JAVA_TYPE);
-        m_model.setValueAt(fieldName, row, COL_JAVA_FIELD);
-
-        return true;
     }
 
     /**
-     * Adds a row for the given flow variable.
+     * Adds a row to the output table.
+     * @param newRow the new row
+     * @return true when the row was added succesfully
+     */
+    private boolean addRow(final JavaField newRow) {
+        if (newRow instanceof OutCol) {
+            return addRow((OutCol)newRow);
+        } else if (newRow instanceof OutVar) {
+            return addRow((OutVar)newRow);
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Adds a row using the given flow variable as a hint.
      *
      * @param var the flow variable definition
      * @return true when the row was added successfully
      */
     public boolean addRow(final FlowVariable var) {
-        int row = m_model.getRowCount();
-        m_model.addRow();
-
-        m_model.setValueAt(true, row, COL_REPLACE_EXISTING);
-        m_model.setValueAt(FieldType.FlowVariable, row, COL_FIELD_TYPE);
-        m_model.setValueAt(var, row, COL_COLUMN);
-        String varName = var.getName();
-        Set<String> taken = new HashSet<String>();
-        for (int i = 0; i < m_model.getRowCount(); i++) {
-            taken.add((String)m_model.getValueAt(i, COL_JAVA_FIELD));
+        Frame parent = (Frame)SwingUtilities.getAncestorOfClass(
+                Frame.class, this);
+        JavaField newRow = AddOutFieldDialog.openUserDialog(parent,
+                m_model, m_spec, m_flowVars, m_flowVarsOnly);
+        if (null != newRow) {
+            return addRow(newRow);
+        } else {
+            return false;
         }
-        String fieldName = FieldsTableUtil.createUniqueJavaIdentifier(
-                varName, taken, "out_");
-        m_model.setValueAt(var.getType(), row, COL_DATA_TYPE);
-        Class javaType = TypeProvider.getDefault()
-            .getTypeConverter(var.getType()).getPreferredJavaType();
-        m_model.setValueAt(javaType, row, COL_JAVA_TYPE);
-        m_model.setValueAt(fieldName, row, COL_JAVA_FIELD);
-
-        return true;
     }
 
     /**
-     * Adds a row for a new flow variable with given values.
+     * Adds a row using the give values as a hint.
      * @param name the knime name
      * @param type the Type
      * @return true when the row was added successfully
      */
     public boolean addRow(final String name, final Type type) {
-        int row = m_model.getRowCount();
-        m_model.addRow();
-
-        m_model.setValueAt(false, row, COL_REPLACE_EXISTING);
-        m_model.setValueAt(FieldType.FlowVariable, row, COL_FIELD_TYPE);
-        m_model.setValueAt(name, row, COL_COLUMN);
-        Set<String> taken = new HashSet<String>();
-        for (int i = 0; i < m_model.getRowCount(); i++) {
-            taken.add((String)m_model.getValueAt(i, COL_JAVA_FIELD));
+        Frame parent = (Frame)SwingUtilities.getAncestorOfClass(
+                Frame.class, this);
+        JavaField newRow = AddOutFieldDialog.openUserDialog(parent,
+                m_model, m_spec, m_flowVars, m_flowVarsOnly);
+        if (null != newRow) {
+            return addRow(newRow);
+        } else {
+            return false;
         }
-        String fieldName = FieldsTableUtil.createUniqueJavaIdentifier(
-                name, taken, "out_");
-        m_model.setValueAt(type, row, COL_DATA_TYPE);
-        Class javaType = TypeProvider.getDefault()
-            .getTypeConverter(type).getPreferredJavaType();
-        m_model.setValueAt(javaType, row, COL_JAVA_TYPE);
-        m_model.setValueAt(fieldName, row, COL_JAVA_FIELD);
-
-        return true;
     }
 
     /**
@@ -396,70 +466,142 @@ public class OutFieldsTable extends ConfigTablePanel {
         m_model.clear();
         for (int r = 0; r < fields.getOutColFields().size(); r++) {
             OutCol field = fields.getOutColFields().get(r);
-            m_model.addRow();
-            m_model.setValueAt(field.getReplaceExisting(),
-                    r, COL_REPLACE_EXISTING);
-            m_model.setValueAt(FieldType.Column, r, COL_FIELD_TYPE);
-            String colName = field.getKnimeName();
-            DataColumnSpec colSpec = spec.getColumnSpec(colName);
-            Object value = null != colSpec ? colSpec : colName;
-            m_model.setValueAt(value, r, COL_COLUMN);
-            m_model.setValueAt(field.getKnimeType(), r, COL_DATA_TYPE);
-            m_model.setValueAt(field.getJavaName(), r, COL_JAVA_FIELD);
-            m_model.setValueAt(field.getJavaType(), r, COL_JAVA_TYPE);
+            addRow(field);
         }
-        int offset = m_model.getRowCount();
         for (int r = 0; r < fields.getOutVarFields().size(); r++) {
             OutVar field = fields.getOutVarFields().get(r);
-            m_model.addRow();
-            m_model.setValueAt(field.getReplaceExisting(),
-                    offset + r, COL_REPLACE_EXISTING);
-            m_model.setValueAt(FieldType.FlowVariable, offset + r,
-                    COL_FIELD_TYPE);
-            String name = field.getKnimeName();
-            FlowVariable flowVar = m_flowVars.get(name);
-            Object value = null != flowVar ? flowVar : name;
-            m_model.setValueAt(value, offset + r, COL_COLUMN);
-            m_model.setValueAt(field.getKnimeType(), offset + r, COL_DATA_TYPE);
-            m_model.setValueAt(field.getJavaName(), offset + r, COL_JAVA_FIELD);
-            m_model.setValueAt(field.getJavaType(), offset + r, COL_JAVA_TYPE);
+            addRow(field);
         }
 
         JTable table = getTable();
-        table.getColumnModel().getColumn(COL_REPLACE_EXISTING).setCellRenderer(
+        table.getColumnModel().getColumn(
+                m_model.getIndex(Column.REPLACE_EXISTING)).setCellRenderer(
                 new BooleanRenderer());
-        table.getColumnModel().getColumn(COL_REPLACE_EXISTING).setCellEditor(
+        table.getColumnModel().getColumn(
+                m_model.getIndex(Column.REPLACE_EXISTING)).setCellEditor(
                 new DefaultCellEditor(new JCheckBox()));
         if (!m_flowVarsOnly) {
-            table.getColumnModel().getColumn(COL_FIELD_TYPE).setCellEditor(
+            table.getColumnModel().getColumn(
+                    m_model.getIndex(Column.FIELD_TYPE)).setCellEditor(
                     createFieldTypeCellEditor());
-        } else {
-            table.getColumnModel().getColumn(COL_FIELD_TYPE).setCellEditor(
-                new DefaultCellEditor(new JTextField()) {
-                    /**
-                     * {@inheritDoc}
-                     */
-                    @Override
-                    public boolean isCellEditable(final EventObject anEvent) {
-                        return false;
-                    }
-                });
         }
-        table.getColumnModel().getColumn(COL_COLUMN).setCellRenderer(
-                new InputTableCellRenderer());
-        table.getColumnModel().getColumn(COL_COLUMN).setCellEditor(
-                new InputTableCellEditor(this, m_spec, m_flowVars));
-        table.getColumnModel().getColumn(COL_DATA_TYPE).setCellRenderer(
-                new DataTypeTableCellRenderer());
-        table.getColumnModel().getColumn(COL_DATA_TYPE).setCellEditor(
-                new DataTypeTableCellEditor(this, m_spec, m_flowVars));
-        table.getColumnModel().getColumn(COL_JAVA_TYPE).setCellRenderer(
-                FieldsTableUtil.createJavaTypeTableCellRenderer());
-        table.getColumnModel().getColumn(COL_JAVA_TYPE).setCellEditor(
-                FieldsTableUtil.createJavaTypeTableCellEditor());
-        table.getColumnModel().getColumn(COL_JAVA_FIELD).setCellRenderer(
-                FieldsTableUtil.createJavaFieldTableCellRenderer());
 
+        table.getColumnModel().getColumn(
+                m_model.getIndex(Column.COLUMN)).setCellRenderer(
+                new InputTableCellRenderer());
+        table.getColumnModel().getColumn(
+                m_model.getIndex(Column.COLUMN)).setCellEditor(
+                new InputTableCellEditor(this, m_spec, m_flowVars));
+        table.getColumnModel().getColumn(
+                m_model.getIndex(Column.DATA_TYPE)).setCellRenderer(
+                new DataTypeTableCellRenderer());
+        table.getColumnModel().getColumn(
+                m_model.getIndex(Column.DATA_TYPE)).setCellEditor(
+                new DataTypeTableCellEditor(this, m_spec, m_flowVars));
+        if (!m_flowVarsOnly) {
+            table.getColumnModel().getColumn(
+                    m_model.getIndex(Column.IS_COLLECTION)).setCellRenderer(
+                    new BooleanRenderer() {
+                        /**
+                         * {@inheritDoc}
+                         */
+                        @Override
+                        public Component getTableCellRendererComponent(
+                                final JTable fooTable, final Object value,
+                                final boolean isSelected,
+                                final boolean hasFocus, final int row,
+                                final int column) {
+                            Component comp =
+                                super.getTableCellRendererComponent(
+                                    fooTable, value, isSelected, hasFocus,
+                                    row, column);
+                            FieldType fieldType = getFieldType(row);
+                            comp.setEnabled(fieldType.equals(FieldType.Column));
+                            return comp;
+                        }
+                    });
+            table.getColumnModel().getColumn(
+                    m_model.getIndex(Column.IS_COLLECTION)).setCellEditor(
+                    new DefaultCellEditor(new JCheckBox()) {
+                        /**
+                         * {@inheritDoc}
+                         */
+                        @Override
+                        public boolean isCellEditable(
+                                final EventObject anEvent) {
+                            int row = getTable().rowAtPoint(
+                                    ((MouseEvent)anEvent).getPoint());
+                            FieldType fieldType = getFieldType(row);
+                            return fieldType.equals(FieldType.Column);
+                        }
+                    });
+        }
+        table.getColumnModel().getColumn(
+                m_model.getIndex(Column.JAVA_TYPE)).setCellRenderer(
+                FieldsTableUtil.createJavaTypeTableCellRenderer());
+        table.getColumnModel().getColumn(
+                m_model.getIndex(Column.JAVA_TYPE)).setCellEditor(
+                FieldsTableUtil.createJavaTypeTableCellEditor());
+        table.getColumnModel().getColumn(
+                m_model.getIndex(Column.JAVA_FIELD)).setCellRenderer(
+                FieldsTableUtil.createJavaFieldTableCellRenderer());
+    }
+
+    /**
+     * Adds a row using the values of the given output column.
+     *
+     * @param outCol the output column definition
+     * @return true when the row was added successfully
+     */
+    public boolean addRow(final OutCol outCol) {
+        int r = m_model.getRowCount();
+        m_model.addRow();
+        m_model.setValueAt(outCol.getReplaceExisting(),
+                r, Column.REPLACE_EXISTING);
+        m_model.setValueAt(FieldType.Column, r, Column.FIELD_TYPE);
+
+        String colName = outCol.getKnimeName();
+        DataColumnSpec colSpec = m_spec.getColumnSpec(colName);
+        Object value = null != colSpec ? colSpec : colName;
+        m_model.setValueAt(value, r, Column.COLUMN);
+        DataType type = outCol.getKnimeType();
+        boolean isCollection = type.isCollectionType();
+        m_model.setValueAt(
+                isCollection ? type.getCollectionElementType() : type,
+                r, Column.DATA_TYPE);
+        m_model.setValueAt(isCollection, r, Column.IS_COLLECTION);
+        m_model.setValueAt(outCol.getJavaName(), r, Column.JAVA_FIELD);
+        m_model.setValueAt(outCol.getJavaType(), r, Column.JAVA_TYPE);
+        return true;
+    }
+
+    /**
+     * Adds a row using the values of the given output variable.
+     *
+     * @param outVar the output variable definition
+     * @return true when the row was added successfully
+     */
+    public boolean addRow(final OutVar outVar) {
+        int r = m_model.getRowCount();
+        m_model.addRow();
+        m_model.setValueAt(outVar.getReplaceExisting(),
+                r, Column.REPLACE_EXISTING);
+        if (!m_flowVarsOnly) {
+            m_model.setValueAt(FieldType.FlowVariable,  r,
+                    Column.FIELD_TYPE);
+        }
+        String name = outVar.getKnimeName();
+        FlowVariable flowVar = m_flowVars.get(name);
+        Object value = null != flowVar ? flowVar : name;
+        m_model.setValueAt(value, r, Column.COLUMN);
+        m_model.setValueAt(outVar.getKnimeType(), r, Column.DATA_TYPE);
+        if (!m_flowVarsOnly) {
+            m_model.setValueAt(false, r, Column.IS_COLLECTION);
+        }
+
+        m_model.setValueAt(outVar.getJavaName(), r, Column.JAVA_FIELD);
+        m_model.setValueAt(outVar.getJavaType(), r, Column.JAVA_TYPE);
+        return true;
     }
 
     /** Create cell editor for for the input columns / flow variables. */
@@ -467,7 +609,9 @@ public class OutFieldsTable extends ConfigTablePanel {
         JComboBox comboBox = new JComboBox();
         comboBox.addItem(FieldType.Column);
         comboBox.addItem(FieldType.FlowVariable);
-        return new DefaultCellEditor(comboBox);
+        DefaultCellEditor editor = new DefaultCellEditor(comboBox);
+        editor.setClickCountToStart(2);
+        return editor;
     }
 
 
@@ -483,16 +627,16 @@ public class OutFieldsTable extends ConfigTablePanel {
                 // there are errors in this row
                 continue;
             }
-            Object fieldTypeValue = m_model.getValueAt(r, COL_FIELD_TYPE);
+            Object fieldTypeValue = getFieldType(r);
             if (null == fieldTypeValue) {
                 continue;
             }
             boolean isColumn = fieldTypeValue.equals(FieldType.Column);
             if (isColumn) {
                 OutCol outCol = new OutCol();
-                outCol.setReplaceExisting(
-                        (Boolean)m_model.getValueAt(r, COL_REPLACE_EXISTING));
-                Object colColValue = m_model.getValueAt(r, COL_COLUMN);
+                outCol.setReplaceExisting((Boolean)m_model.getValueAt(r,
+                                Column.REPLACE_EXISTING));
+                Object colColValue = m_model.getValueAt(r, Column.COLUMN);
                 if (colColValue instanceof DataColumnSpec) {
                     DataColumnSpec colSpec = (DataColumnSpec)colColValue;
                     outCol.setKnimeName(colSpec.getName());
@@ -501,16 +645,23 @@ public class OutFieldsTable extends ConfigTablePanel {
                 } else {
                     continue;
                 }
-                Object dataTypeValue = m_model.getValueAt(r, COL_DATA_TYPE);
+                Object dataTypeValue = m_model.getValueAt(r,
+                        Column.DATA_TYPE);
+                boolean isArray = (Boolean)m_model.getValueAt(r,
+                        Column.IS_COLLECTION);
                 if (dataTypeValue instanceof DataType) {
                     DataType type = (DataType)dataTypeValue;
+                    if (isArray) {
+                        type = ListCell.getCollectionType(type);
+                    }
                     outCol.setKnimeType(type);
                 } else {
                     continue;
                 }
                 outCol.setJavaName(
-                        (String)m_model.getValueAt(r, COL_JAVA_FIELD));
-                Object javaTypeObject = m_model.getValueAt(r, COL_JAVA_TYPE);
+                        (String)m_model.getValueAt(r, Column.JAVA_FIELD));
+                Object javaTypeObject = m_model.getValueAt(r,
+                        Column.JAVA_TYPE);
                 if (javaTypeObject instanceof Class) {
                     outCol.setJavaType((Class)javaTypeObject);
                 } else {
@@ -534,16 +685,16 @@ public class OutFieldsTable extends ConfigTablePanel {
                 // there are errors in this row
                 continue;
             }
-            Object fieldTypeValue = m_model.getValueAt(r, COL_FIELD_TYPE);
+            Object fieldTypeValue = getFieldType(r);
             if (null == fieldTypeValue) {
                 continue;
             }
             boolean isFlowVar = fieldTypeValue.equals(FieldType.FlowVariable);
             if (isFlowVar) {
                 OutVar outVar = new OutVar();
-                outVar.setReplaceExisting(
-                        (Boolean)m_model.getValueAt(r, COL_REPLACE_EXISTING));
-                Object colColValue = m_model.getValueAt(r, COL_COLUMN);
+                outVar.setReplaceExisting((Boolean)m_model.getValueAt(r,
+                                Column.REPLACE_EXISTING));
+                Object colColValue = m_model.getValueAt(r, Column.COLUMN);
                 if (colColValue instanceof FlowVariable) {
                     FlowVariable flowVar = (FlowVariable)colColValue;
                     outVar.setKnimeName(flowVar.getName());
@@ -552,7 +703,7 @@ public class OutFieldsTable extends ConfigTablePanel {
                 } else {
                     continue;
                 }
-                Object dataTypeValue = m_model.getValueAt(r, COL_DATA_TYPE);
+                Object dataTypeValue = m_model.getValueAt(r, Column.DATA_TYPE);
                 if (dataTypeValue instanceof Type) {
                     Type type = (Type)dataTypeValue;
                     outVar.setKnimeType(type);
@@ -560,8 +711,9 @@ public class OutFieldsTable extends ConfigTablePanel {
                     continue;
                 }
                 outVar.setJavaName(
-                        (String)m_model.getValueAt(r, COL_JAVA_FIELD));
-                Object javaTypeObject = m_model.getValueAt(r, COL_JAVA_TYPE);
+                        (String)m_model.getValueAt(r, Column.JAVA_FIELD));
+                Object javaTypeObject = m_model.getValueAt(r,
+                        Column.JAVA_TYPE);
                 if (javaTypeObject instanceof Class) {
                     outVar.setJavaType((Class)javaTypeObject);
                 } else {
@@ -844,6 +996,7 @@ public class OutFieldsTable extends ConfigTablePanel {
                 }
             };
             m_stringEditor.addActionListener(delegate);
+            setClickCountToStart(2);
         }
 
         /** Create an editor component for the input columns. */
@@ -930,6 +1083,7 @@ public class OutFieldsTable extends ConfigTablePanel {
             m_editor.setRenderer(new InputListCellRenderer());
             m_colComboBox = createDataTypeComboBox();
             m_flowVarComboBox = createTypeComboBox();
+            setClickCountToStart(2);
         }
 
         /** Create an editor component for the input columns. */
@@ -939,7 +1093,9 @@ public class OutFieldsTable extends ConfigTablePanel {
                 TypeProvider typeProvider = TypeProvider.getDefault();
                 for (DataType type : typeProvider.getOutputDataTypes()) {
                     comboBox.addItem(type);
-                    comboBox.addItem(ListCell.getCollectionType(type));
+                    // skip collection types, there is now a separate column
+                    // for this.
+                    // comboBox.addItem(ListCell.getCollectionType(type));
                 }
             }
             return comboBox;

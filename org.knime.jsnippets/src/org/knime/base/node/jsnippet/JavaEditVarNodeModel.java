@@ -53,6 +53,8 @@ package org.knime.base.node.jsnippet;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.commons.lang3.StringUtils;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
@@ -75,8 +77,8 @@ import org.knime.core.node.workflow.FlowVariable.Type;
  * @author Heiko Hofer
  */
 public class JavaEditVarNodeModel extends NodeModel {
-	private JavaSnippetSettings m_settings;
-	private JavaSnippet m_snippet;
+    private JavaSnippetSettings m_settings;
+    private JavaSnippet m_snippet;
 
     /**
      * Create a new instance.
@@ -92,10 +94,35 @@ public class JavaEditVarNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-	protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
-    		throws InvalidSettingsException {
-    	m_snippet.setSettings(m_settings);
-    	return new PortObjectSpec[] {FlowVariablePortObjectSpec.INSTANCE};
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
+            throws InvalidSettingsException {
+        m_snippet.setSettings(m_settings);
+        FlowVariableRepository flowVarRepository =
+            new FlowVariableRepository(getAvailableFlowVariables());
+        ValidationReport report = m_snippet.validateSettings(
+                new DataTableSpec(), flowVarRepository);
+        if (report.hasWarnings()) {
+            setWarningMessage(StringUtils.join(report.getWarnings(), "\n"));
+        }
+        if (report.hasErrors()) {
+            throw new InvalidSettingsException(
+                    StringUtils.join(report.getErrors(), "\n"));
+        }
+
+
+        m_snippet.configure(new DataTableSpec(), flowVarRepository);
+        for (FlowVariable flowVar : flowVarRepository.getModified()) {
+            if (flowVar.getType().equals(Type.INTEGER)) {
+                pushFlowVariableInt(flowVar.getName(), flowVar.getIntValue());
+            } else if (flowVar.getType().equals(Type.DOUBLE)) {
+                pushFlowVariableDouble(flowVar.getName(),
+                        flowVar.getDoubleValue());
+            } else {
+                pushFlowVariableString(flowVar.getName(),
+                        flowVar.getStringValue());
+            }
+        }
+        return new PortObjectSpec[] {FlowVariablePortObjectSpec.INSTANCE};
     }
 
     /**
@@ -104,10 +131,10 @@ public class JavaEditVarNodeModel extends NodeModel {
     @Override
     protected PortObject[] execute(final PortObject[] inObjects,
             final ExecutionContext exec) throws Exception {
-    	m_snippet.setSettings(m_settings);
-    	FlowVariableRepository flowVarRepo =
-    	    new FlowVariableRepository(getAvailableFlowVariables());
-    	m_snippet.execute(flowVarRepo, exec);
+        m_snippet.setSettings(m_settings);
+        FlowVariableRepository flowVarRepo =
+            new FlowVariableRepository(getAvailableFlowVariables());
+        m_snippet.execute(flowVarRepo, exec);
         for (FlowVariable var : flowVarRepo.getModified()) {
             Type type = var.getType();
             if (type.equals(Type.INTEGER)) {

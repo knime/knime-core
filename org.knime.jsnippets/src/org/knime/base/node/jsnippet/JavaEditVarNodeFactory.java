@@ -99,6 +99,6 @@ public class JavaEditVarNodeFactory extends NodeFactory<JavaEditVarNodeModel> {
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new JavaEditVarNodeDialog();
+        return new JavaEditVarNodeDialog(this.getClass());
     }
 }

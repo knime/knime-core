@@ -53,6 +53,7 @@ package org.knime.base.node.jsnippet;
 import java.io.File;
 import java.io.IOException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -72,8 +73,8 @@ import org.knime.core.node.workflow.FlowVariable.Type;
  * @author Heiko Hofer
  */
 public class JavaSnippetNodeModel extends NodeModel {
-	private JavaSnippetSettings m_settings;
-	private JavaSnippet m_snippet;
+    private JavaSnippetSettings m_settings;
+    private JavaSnippet m_snippet;
 
     /**
      * Create a new instance.
@@ -88,24 +89,49 @@ public class JavaSnippetNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-	protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-    		throws InvalidSettingsException {
-    	m_snippet.setSettings(m_settings);
-    	return new DataTableSpec[] {m_snippet.configure(inSpecs[0], new
-    	        FlowVariableRepository(getAvailableFlowVariables()))};
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+            throws InvalidSettingsException {
+        m_snippet.setSettings(m_settings);
+        FlowVariableRepository flowVarRepository =
+            new FlowVariableRepository(getAvailableFlowVariables());
+        ValidationReport report = m_snippet.validateSettings(inSpecs[0],
+                flowVarRepository);
+        if (report.hasWarnings()) {
+            setWarningMessage(StringUtils.join(report.getWarnings(), "\n"));
+        }
+        if (report.hasErrors()) {
+            throw new InvalidSettingsException(
+                    StringUtils.join(report.getErrors(), "\n"));
+        }
+
+
+        DataTableSpec outSpec = m_snippet.configure(inSpecs[0],
+                flowVarRepository);
+        for (FlowVariable flowVar : flowVarRepository.getModified()) {
+            if (flowVar.getType().equals(Type.INTEGER)) {
+                pushFlowVariableInt(flowVar.getName(), flowVar.getIntValue());
+            } else if (flowVar.getType().equals(Type.DOUBLE)) {
+                pushFlowVariableDouble(flowVar.getName(),
+                        flowVar.getDoubleValue());
+            } else {
+                pushFlowVariableString(flowVar.getName(),
+                        flowVar.getStringValue());
+            }
+        }
+        return new DataTableSpec[] {outSpec};
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-	protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-    		final ExecutionContext exec) throws Exception {
-    	m_snippet.setSettings(m_settings);
-    	FlowVariableRepository flowVarRepo =
-    	    new FlowVariableRepository(getAvailableFlowVariables());
-    	BufferedDataTable output = m_snippet.execute(inData[0],
-    	        flowVarRepo, exec);
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+            final ExecutionContext exec) throws Exception {
+        m_snippet.setSettings(m_settings);
+        FlowVariableRepository flowVarRepo =
+            new FlowVariableRepository(getAvailableFlowVariables());
+        BufferedDataTable output = m_snippet.execute(inData[0],
+                flowVarRepo, exec);
         for (FlowVariable var : flowVarRepo.getModified()) {
             Type type = var.getType();
             if (type.equals(Type.INTEGER)) {
@@ -116,7 +142,7 @@ public class JavaSnippetNodeModel extends NodeModel {
                 pushFlowVariableString(var.getName(), var.getStringValue());
             }
         }
-    	return new BufferedDataTable[] {output};
+        return new BufferedDataTable[] {output};
     }
 
     /**

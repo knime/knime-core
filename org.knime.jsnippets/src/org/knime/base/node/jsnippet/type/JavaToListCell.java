@@ -55,10 +55,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import org.knime.base.node.jsnippet.expression.TypeException;
+import org.knime.base.node.jsnippet.type.data.JavaToDataCell;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.collection.CollectionCellFactory;
 
 /**
+ * Converter to create a ListCell from a java object.
  *
  * @author Heiko Hofer
  */
@@ -99,8 +101,8 @@ public class JavaToListCell extends JavaToDataCell {
      * {@inheritDoc}
      */
     @Override
-    public DataCell createDataCell(final Object value) throws TypeException {
-        if (canJavaType(value.getClass())) {
+    public DataCell createDataCell(final Object value) throws Exception {
+        if (canProcess(value)) {
             Object[] values = (Object[])value;
             Collection<DataCell> cells = new ArrayList<DataCell>();
             for (Object v : values) {

@@ -51,12 +51,35 @@
 package org.knime.base.node.jsnippet.expression;
 
 /**
+ * Represents a data cell for the java snippet.
  *
  * @author Heiko Hofer
  */
 public interface Cell {
 
-	public <T> T getValueAs(final T t) throws TypeException;
+    /**
+     * Get the value of the cell.
+     *
+     * @param <T> the expected type
+     * @param t the type to be returned
+     * @return the value of the cell
+     * @throws TypeException if the type cannot be provided
+     */
+    public <T> T getValueAs(final T t) throws TypeException;
 
-	public Object getValueOfType(final Class c) throws TypeException;
+    /**
+     * Get the value of the cell.
+     *
+     * @param c the class of the object to be returned
+     * @return the value of the cell
+     * @throws TypeException if the type cannot be provided
+     */
+    @SuppressWarnings("rawtypes")
+    public Object getValueOfType(final Class c) throws TypeException;
+
+    /**
+     * Returns true when the cell is a missing cell.
+     * @return true when the cell is a missing cell
+     */
+    public boolean isMissing();
 }

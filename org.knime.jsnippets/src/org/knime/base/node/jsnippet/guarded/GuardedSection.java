@@ -141,36 +141,19 @@ public final class GuardedSection {
 
         boolean orig = m_document.getBreakGuarded();
         m_document.setBreakGuarded(true);
-        String text = t.endsWith("\n") ? t : t + "\n";
+        // Empty text is not allowed, this would break the positioning
+        String text = null == t || t.isEmpty() ? " " : t;
+        text = text.endsWith("\n")
+                ? text.substring(0, text.length() - 1)
+                : text;
 
         int docLen = m_document.getLength();
-        if ((p2 - p1) >= 1) {
-            m_document.insertString(p1 + 1, text, null);
+        m_document.insertString(p1 + 1, text, null);
 
-            // compute length of inserted string
-            int len = m_document.getLength() - docLen;
-            m_document.remove(p1 + 1 + len, p2 - p1);
-            m_document.remove(p1, 1);
-            m_end = m_document.createPosition(p1 + len - 1);
-        } else {
-            m_document.insertString(p1, text, null);
-
-            // compute length of inserted string
-            int len = m_document.getLength() - docLen;
-
-            if (p2 >= p1) {
-                m_document.remove(p1 + len, p2 - p1 + 1);
-            }
-
-            if (m_start.getOffset() != p1) {
-                m_start = m_document.createPosition(p1);
-            }
-
-            if (m_end.getOffset() != p1 + len - 1) {
-                m_end = m_document.createPosition(p1 + len - 1);
-            }
-        }
-
+        // compute length of inserted string
+        int len = m_document.getLength() - docLen;
+        m_document.remove(p1 + 1 + len, p2 - p1 - 1);
+        m_document.remove(p1, 1);
         m_document.setBreakGuarded(orig);
     }
 
@@ -184,7 +167,7 @@ public final class GuardedSection {
     public String getText() throws BadLocationException {
         int p1 = m_start.getOffset();
         int p2 = m_end.getOffset();
-        // for negative length when p2 > p1 => return ""
+        // for negative length when p1 > p2 => return ""
         return (p1 <= p2) ? m_document.getText(p1, p2 - p1 + 1) : "";
     }
 

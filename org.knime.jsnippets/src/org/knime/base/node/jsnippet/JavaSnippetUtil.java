@@ -60,7 +60,11 @@ import org.knime.core.node.InvalidSettingsException;
  *
  * @author Heiko Hofer
  */
-public class JavaSnippetUtil {
+public final class JavaSnippetUtil {
+
+    private JavaSnippetUtil() {
+        // private constructor to prevent instantiation.
+    }
 
     /** Convert file location to File. Also accepts file in URL format
      * (e.g. local drop files as URL).

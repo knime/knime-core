@@ -50,10 +50,10 @@
  */
 package org.knime.base.node.jsnippet;
 
-import org.knime.base.node.jsnippet.JavaFieldSettingsList.InColList;
-import org.knime.base.node.jsnippet.JavaFieldSettingsList.InVarList;
-import org.knime.base.node.jsnippet.JavaFieldSettingsList.OutColList;
-import org.knime.base.node.jsnippet.JavaFieldSettingsList.OutVarList;
+import org.knime.base.node.jsnippet.JavaFieldList.InColList;
+import org.knime.base.node.jsnippet.JavaFieldList.InVarList;
+import org.knime.base.node.jsnippet.JavaFieldList.OutColList;
+import org.knime.base.node.jsnippet.JavaFieldList.OutVarList;
 
 /**
  * Holds definition of system fields in the java snippet. A field can be an
@@ -62,67 +62,67 @@ import org.knime.base.node.jsnippet.JavaFieldSettingsList.OutVarList;
  * @author Heiko Hofer
  */
 public class JavaSnippetFields {
-	private InColList m_inCols;
-	private InVarList m_inVars;
-	private OutColList m_outCols;
-	private OutVarList m_outVars;
+    private InColList m_inCols;
+    private InVarList m_inVars;
+    private OutColList m_outCols;
+    private OutVarList m_outVars;
 
-	/**
-	 * @param inCols the fields representing input columns
-	 * @param inVars the fields representing input variables
-	 * @param outCols the fields representing output columns
-	 * @param outVars the fields representing output variables
-	 */
-	public JavaSnippetFields(final InColList inCols,
-			final InVarList inVars,
-			final OutColList outCols,
-			final OutVarList outVars) {
-		m_inCols = inCols;
-		m_inVars = inVars;
-		m_outCols = outCols;
-		m_outVars = outVars;
-	}
+    /**
+     * @param inCols the fields representing input columns
+     * @param inVars the fields representing input variables
+     * @param outCols the fields representing output columns
+     * @param outVars the fields representing output variables
+     */
+    public JavaSnippetFields(final InColList inCols,
+            final InVarList inVars,
+            final OutColList outCols,
+            final OutVarList outVars) {
+        m_inCols = inCols;
+        m_inVars = inVars;
+        m_outCols = outCols;
+        m_outVars = outVars;
+    }
 
-	/**
-	 *
-	 */
-	public JavaSnippetFields() {
+    /**
+     *
+     */
+    public JavaSnippetFields() {
         m_inCols = new InColList();
         m_inVars = new InVarList();
         m_outCols = new OutColList();
         m_outVars = new OutVarList();
-	}
+    }
 
-	/**
-	 * Get the fields representing input columns.
-	 * @return the fields representing input columns
-	 */
-	public InColList getInColFields() {
-		return m_inCols;
-	}
+    /**
+     * Get the fields representing input columns.
+     * @return the fields representing input columns
+     */
+    public InColList getInColFields() {
+        return m_inCols;
+    }
 
-	/**
-	 * Get the fields representing input variables.
-	 * @return the fields representing input variables
-	 */
-	public InVarList getInVarFields() {
-		return m_inVars;
-	}
+    /**
+     * Get the fields representing input variables.
+     * @return the fields representing input variables
+     */
+    public InVarList getInVarFields() {
+        return m_inVars;
+    }
 
-	/**
-	 * Get the fields representing output columns.
-	 * @return the fields representing output columns
-	 */
-	public OutColList getOutColFields() {
-		return m_outCols;
-	}
+    /**
+     * Get the fields representing output columns.
+     * @return the fields representing output columns
+     */
+    public OutColList getOutColFields() {
+        return m_outCols;
+    }
 
-	/**
-	 * Get the fields representing output variables.
-	 * @return the fields representing output variables
-	 */
-	public OutVarList getOutVarFields() {
-		return m_outVars;
-	}
+    /**
+     * Get the fields representing output variables.
+     * @return the fields representing output variables
+     */
+    public OutVarList getOutVarFields() {
+        return m_outVars;
+    }
 
 }

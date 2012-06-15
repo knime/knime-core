@@ -77,7 +77,6 @@ public class GuardedSectionsFoldParser implements FoldParser {
     @Override
     public List getFolds(final RSyntaxTextArea textArea) {
         List folds = new ArrayList();
-
         GuardedDocument doc = (GuardedDocument)textArea.getDocument();
         for (String name : doc.getGuardedSections()) {
             GuardedSection guard = doc.getGuardedSection(name);

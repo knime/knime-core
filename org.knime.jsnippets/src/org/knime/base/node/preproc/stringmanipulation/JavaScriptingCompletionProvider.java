@@ -75,6 +75,7 @@ public class JavaScriptingCompletionProvider extends KnimeCompletionProvider {
 
     /**
      * {@inheritDoc}
+     * @since 2.6
      */
     @Override
     public String escapeColumnName(final String colName) {
@@ -83,6 +84,7 @@ public class JavaScriptingCompletionProvider extends KnimeCompletionProvider {
 
     /**
      * {@inheritDoc}
+     * @since 2.6
      */
     @Override
     public String escapeFlowVariableName(final String varName) {

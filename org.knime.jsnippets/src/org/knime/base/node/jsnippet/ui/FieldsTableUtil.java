@@ -63,7 +63,6 @@ import javax.swing.JTable;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableModel;
 
 import org.knime.core.node.workflow.FlowVariable;
 
@@ -103,35 +102,11 @@ final class FieldsTableUtil {
      * @return the editor
      */
     static TableCellEditor createJavaTypeTableCellEditor() {
-        return new JavaTypeTableCellEditor();
+        JavaTypeTableCellEditor editor = new JavaTypeTableCellEditor();
+        editor.setClickCountToStart(2);
+        return editor;
     }
 
-    /**
-     * Checks whether to given value is unique in the given column in the rows
-     * from zero to the given row of the given model.
-     *
-     * @param model the model
-     * @param value the value to check
-     * @param row the row
-     * @param column the column
-     * @return true when value is unique with special constraints.
-     */
-    static boolean isUnique(final TableModel model,
-            final Object value,
-            final int row, final int column) {
-        boolean isUnique = true;
-        for (int i = 0; i < model.getRowCount(); i++) {
-            if (i == row) {
-                continue;
-            }
-            Object value2 = model.getValueAt(i, column);
-            if (value.equals(value2)) {
-                isUnique = false;
-                break;
-            }
-        }
-        return isUnique;
-    }
 
     /**
      * Checks whether the given String is a valid java identifier.

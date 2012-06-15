@@ -55,9 +55,12 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.knime.base.node.jsnippet.expression.TypeException;
+import org.knime.base.node.jsnippet.type.data.DataValueToJava;
 import org.knime.core.data.DataCell;
 
 /**
+ * A {@link DataValueToJava} converter that can utilize several converters for
+ * doing his job.
  *
  * @author Heiko Hofer
  */
@@ -65,7 +68,10 @@ public class MultiValueToJava extends DataValueToJava {
     private DataValueToJava[] m_converters;
 
     /**
+     * Create a {@link DataValueToJava} converter that uses one of the given
+     * converters.
      *
+     * @param converters the converters that do the work.
      */
     public MultiValueToJava(final DataValueToJava... converters) {
         super(getJavaTypes(converters));

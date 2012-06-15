@@ -33,6 +33,9 @@
           <i>Double</i> : Double (f)<br/>
           <i>Long</i> : Long<br/>
           <i>Boolean</i> : Boolean<br/>
+          <i>Date</i> : java.util.Date<br/>
+          <i>Calendar</i> : java.util.Calendar<br/>
+          <i>XML</i> : org.w3c.document<br/>
           (f) These Types can be used for flow variables.
           <p>Please define output columns and flow variables by adding columns
           to <b>Snippet fields for output</b>. Values assigned to those field

@@ -50,14 +50,18 @@
  */
 package org.knime.base.node.jsnippet.ui;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.knime.base.node.jsnippet.type.JavaToDataCell;
-import org.knime.base.node.jsnippet.type.TypeConverter;
 import org.knime.base.node.jsnippet.type.TypeProvider;
+import org.knime.base.node.jsnippet.type.data.JavaToDataCell;
+import org.knime.base.node.jsnippet.type.flowvar.TypeConverter;
 import org.knime.base.node.jsnippet.ui.OutFieldsTable.FieldType;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.collection.ListCell;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.FlowVariable.Type;
 
@@ -68,45 +72,66 @@ import org.knime.core.node.workflow.FlowVariable.Type;
  */
 @SuppressWarnings("serial")
 public class OutFieldsTableModel extends FieldsTableModel {
-    /** The index of the replace existing column. */
-    public static final int COL_REPLACE_EXISTING = 0;
-    /** The index of the column with the fields type. */
-    public static final int COL_FIELD_TYPE = 1;
-    /** The index of the input column / flow variable column. */
-    public static final int COL_COLUMN = 2;
-    /** The index of the column with the data type. */
-    public static final int COL_DATA_TYPE = 3;
-    /** The index of the java type column. */
-    public static final int COL_JAVA_TYPE = 4;
-    /** The index of the java field name column. */
-    public static final int COL_JAVA_FIELD = 5;
+    private static String[] getColumns(final boolean flowVarsOnly) {
+        if (flowVarsOnly) {
+            return new String[]{"Replace", "Column / Flow Variable",
+                    "Output Type", "Java Type",  "Java Field"};
+        } else {
+            return new String[]{"Field Type", "Replace",
+                    "Column / Flow Variable",
+                    "Output Type", "Array", "Java Type",  "Java Field"};
+        }
+    }
 
+
+    private boolean m_flowVarsOnly;
 
     /**
      * Create a new instance.
+     * @param flowVarsOnly true when only flow variables and no columns can
+     * be defined.
      */
-    public OutFieldsTableModel() {
-        super(new String[]{"Replace", "Field Type", "Column / Flow Variable",
-                        "Type", "Java Type", "Java Field"});
+    public OutFieldsTableModel(final boolean flowVarsOnly) {
+        super(getColumns(flowVarsOnly));
+        m_flowVarsOnly = flowVarsOnly;
+        Map<Column, Integer> columns = new HashMap<Column, Integer>();
+        if (flowVarsOnly) {
+            columns.put(Column.REPLACE_EXISTING, 0);
+            columns.put(Column.COLUMN, 1);
+            columns.put(Column.DATA_TYPE, 2);
+            columns.put(Column.JAVA_TYPE, 3);
+            columns.put(Column.JAVA_FIELD, 4);
+        } else {
+            columns.put(Column.FIELD_TYPE, 0);
+            columns.put(Column.REPLACE_EXISTING, 1);
+            columns.put(Column.COLUMN, 2);
+            columns.put(Column.DATA_TYPE, 3);
+            columns.put(Column.IS_COLLECTION, 4);
+            columns.put(Column.JAVA_TYPE, 5);
+            columns.put(Column.JAVA_FIELD, 6);
+        }
+        setColumnsMap(columns);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    boolean isValidValue(final int row, final int column) {
+    boolean isValidValue(final int row, final Column column) {
         switch (column) {
-        case COL_REPLACE_EXISTING:
+        case REPLACE_EXISTING:
             return validateColReplaceExisting(row) == null;
-        case COL_FIELD_TYPE:
+        case FIELD_TYPE:
             return validateColFieldType(row) == null;
-        case COL_COLUMN:
+        case COLUMN:
             return validateColColumn(row) == null;
-        case COL_DATA_TYPE:
+        case DATA_TYPE:
             return validateColDataType(row) == null;
-        case COL_JAVA_TYPE:
+        case JAVA_TYPE:
             return validateJavaTypeColumn(row) == null;
-        case COL_JAVA_FIELD:
+        case IS_COLLECTION:
+            return true;
+        case JAVA_FIELD:
             return validateJavaFieldColumn(row) == null;
         default:
             throw new IllegalStateException("Unknown column.");
@@ -117,22 +142,38 @@ public class OutFieldsTableModel extends FieldsTableModel {
      * {@inheritDoc}
      */
     @Override
-    String getErrorMessage(final int row, final int column) {
+    String getErrorMessage(final int row, final Column column) {
         switch (column) {
-        case COL_REPLACE_EXISTING:
+        case REPLACE_EXISTING:
             return validateColReplaceExisting(row);
-        case COL_FIELD_TYPE:
+        case FIELD_TYPE:
             return validateColFieldType(row);
-        case COL_COLUMN:
+        case COLUMN:
             return validateColColumn(row);
-        case COL_DATA_TYPE:
+        case DATA_TYPE:
             return validateColDataType(row);
-        case COL_JAVA_TYPE:
+        case IS_COLLECTION:
+            return null;
+        case JAVA_TYPE:
             return validateJavaTypeColumn(row);
-        case COL_JAVA_FIELD:
+        case JAVA_FIELD:
             return validateJavaFieldColumn(row);
         default:
             throw new IllegalStateException("Unknown column.");
+        }
+    }
+
+    /**
+     * Returns the field type for the given column.
+     *
+     * @param row the row to check
+     * @return the field type of the given column
+     */
+    private FieldType getFieldType(final int row) {
+        if (m_flowVarsOnly) {
+            return FieldType.FlowVariable;
+        } else {
+            return (FieldType)getValueAt(row, Column.FIELD_TYPE);
         }
     }
 
@@ -152,7 +193,7 @@ public class OutFieldsTableModel extends FieldsTableModel {
      * @return error message if error occurs
      */
     private String validateColFieldType(final int row) {
-        Object value = getValueAt(row, COL_FIELD_TYPE);
+        Object value = getFieldType(row);
         if (null == value) {
             return "Please select a value.";
         }
@@ -168,16 +209,18 @@ public class OutFieldsTableModel extends FieldsTableModel {
      * @return error message if error occurs
      */
     private String validateColColumn(final int row) {
-        Object value = getValueAt(row, COL_COLUMN);
+        Object value = getValueAt(row, Column.COLUMN);
         if (null == value) {
             return "Please select a value";
         }
-        boolean isDataColumn =
-            getValueAt(row, COL_FIELD_TYPE).equals(FieldType.Column);
-        boolean isReplacing = (Boolean)getValueAt(row, COL_REPLACE_EXISTING);
+        boolean isDataColumn = getFieldType(row).equals(FieldType.Column);
+        boolean isReplacing = (Boolean)getValueAt(row, Column.REPLACE_EXISTING);
         if (value instanceof String) {
             if (isReplacing) {
                 return "Please select an input.";
+            }
+            if (((String)value).trim().isEmpty()) {
+                return "Please define a name.";
             }
             if (!FieldsTableUtil.verifyNameOfFlowVariable((String)value)) {
                 return "Flow variable has reserved prefix. "
@@ -204,8 +247,7 @@ public class OutFieldsTableModel extends FieldsTableModel {
             }
         }
         // check if data column is unique
-        boolean isUnique = FieldsTableUtil.isUnique(
-                this, value, row, COL_COLUMN);
+        boolean isUnique = isUnique(value, row, Column.COLUMN);
         if (!isUnique) {
             if (isDataColumn) {
                 return "Duplicated data column.";
@@ -223,17 +265,16 @@ public class OutFieldsTableModel extends FieldsTableModel {
      * @return error message if error occurs
      */
     private String validateColDataType(final int row) {
-        Object value = getValueAt(row, COL_DATA_TYPE);
+        Object value = getValueAt(row, Column.DATA_TYPE);
         if (null == value) {
             return "Please select a value";
         }
         if (value instanceof Type) {
-            if (getValueAt(row, COL_FIELD_TYPE).equals(FieldType.Column)) {
+            if (getFieldType(row).equals(FieldType.Column)) {
                 return "Please select a data type.";
             }
         } else if (value instanceof DataType) {
-            if (getValueAt(row, COL_FIELD_TYPE).equals(
-                    FieldType.FlowVariable)) {
+            if (getFieldType(row).equals(FieldType.FlowVariable)) {
                 return "Please select a flow variable type.";
             }
         } else if (null == value || value instanceof String) {
@@ -249,25 +290,31 @@ public class OutFieldsTableModel extends FieldsTableModel {
      * @param row the row to check
      * @return error message if error occurs
      */
+    @SuppressWarnings("rawtypes")
     private String validateJavaTypeColumn(final int row) {
-        Object value = this.getValueAt(row, COL_JAVA_TYPE);
+        Object value = this.getValueAt(row, Column.JAVA_TYPE);
         if (null == value) {
             return "Please select a value";
         }
         if (!(value instanceof Class)) {
             return "Cannot find class " + value.toString();
         }
-        @SuppressWarnings("rawtypes")
+
         Class javaType = (Class)value;
 
-        Object outType = getValueAt(row, COL_DATA_TYPE);
+        Object outType = getValueAt(row, Column.DATA_TYPE);
         if (outType instanceof DataType) {
-            DataType dataType = (DataType)outType;
-            DataType elemType = dataType.isCollectionType()
-                ? dataType.getCollectionElementType() : dataType;
-            Collection<DataType> outTypes =
-                TypeProvider.getDefault().getOutputDataTypes();
-            if (!outTypes.contains(elemType)) {
+            DataType elemType = (DataType)outType;
+            boolean isCollection = (Boolean)getValueAt(row,
+                    Column.IS_COLLECTION);
+            DataType dataType = isCollection
+                ? ListCell.getCollectionType(elemType) : elemType;
+            JavaToDataCell javaToDataCell =
+                TypeProvider.getDefault().getJavaToDataCell(elemType,
+                        isCollection);
+            Collection<Class> canTypes =
+                Arrays.asList(javaToDataCell.canJavaTypes());
+            if (!canTypes.contains(javaType)) {
                 return "The java type \"" + javaType.getSimpleName()
                       + "\" is not supported for output columns.";
             }
@@ -298,13 +345,12 @@ public class OutFieldsTableModel extends FieldsTableModel {
      * @return error message if error occurs
      */
     private String validateJavaFieldColumn(final int row) {
-        Object value = getValueAt(row, COL_JAVA_FIELD);
+        Object value = getValueAt(row, Column.JAVA_FIELD);
         if (null == value) {
             return "Please select a value";
         }
         // check if a field with the same name exists
-        boolean isUnique = FieldsTableUtil.isUnique(this, value,
-                row, COL_JAVA_FIELD);
+        boolean isUnique = isUnique(value, row, Column.JAVA_FIELD);
         // check if value is a valid java identifier
         boolean isValid = FieldsTableUtil.isValidJavaIdentifier((String)value);
         if (isUnique && isValid) {
@@ -325,13 +371,13 @@ public class OutFieldsTableModel extends FieldsTableModel {
     @SuppressWarnings("rawtypes")
     @Override
     public Class[] getAllowedJavaTypes(final int row) {
-        Object input = getValueAt(row, COL_DATA_TYPE);
+        Object input = getValueAt(row, Column.DATA_TYPE);
         if (input instanceof DataType) {
-            DataType dataType = (DataType)input;
-            DataType elemType = dataType.isCollectionType()
-                ? dataType.getCollectionElementType() : dataType;
+            DataType elemType = (DataType)input;
+            boolean isCollection = (Boolean)getValueAt(row,
+                    Column.IS_COLLECTION);
             JavaToDataCell javaToDataCell = TypeProvider.getDefault()
-                .getJavaToDataCell(elemType, dataType.isCollectionType());
+                .getJavaToDataCell(elemType, isCollection);
             return javaToDataCell.canJavaTypes();
         } else if (input instanceof Type) {
             Type type = (Type)input;

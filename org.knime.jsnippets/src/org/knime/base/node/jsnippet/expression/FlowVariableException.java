@@ -51,9 +51,11 @@
 package org.knime.base.node.jsnippet.expression;
 
 /**
+ * This exception is thrown when a flow variable is not found.
  *
  * @author Heiko Hofer
  */
+@SuppressWarnings("serial")
 public class FlowVariableException extends RuntimeException {
 
     /** Empty exception. */

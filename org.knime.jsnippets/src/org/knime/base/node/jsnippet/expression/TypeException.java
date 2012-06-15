@@ -51,9 +51,12 @@
 package org.knime.base.node.jsnippet.expression;
 
 /**
+ * A TypeException is thrown when there is a type mismatch when accessing
+ * column or flow variables.
  *
  * @author Heiko Hofer
  */
+@SuppressWarnings("serial")
 public class TypeException extends RuntimeException {
 
     /** Empty exception. */

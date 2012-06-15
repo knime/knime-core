@@ -99,6 +99,6 @@ public class JavaSnippetNodeFactory extends NodeFactory<JavaSnippetNodeModel> {
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new JavaSnippetNodeDialog();
+        return new JavaSnippetNodeDialog(this.getClass());
     }
 }

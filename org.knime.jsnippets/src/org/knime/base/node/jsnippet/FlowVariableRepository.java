@@ -56,8 +56,8 @@ import java.util.Map;
 
 import org.knime.base.node.jsnippet.expression.FlowVariableException;
 import org.knime.base.node.jsnippet.expression.TypeException;
-import org.knime.base.node.jsnippet.type.FlowVarTypeConversion;
 import org.knime.base.node.jsnippet.type.TypeProvider;
+import org.knime.base.node.jsnippet.type.flowvar.TypeConverter;
 import org.knime.core.node.workflow.FlowVariable;
 
 /**
@@ -117,29 +117,30 @@ public class FlowVariableRepository {
             throw new FlowVariableException("The flow variable with name \""
                     + name + "\" does not exist.");
         }
-        FlowVarTypeConversion converter =
+        TypeConverter converter =
             TypeProvider.getDefault().getTypeConverter(flowVar.getType());
         return converter.getValue(flowVar, className);
     }
 
     /**
-     * Get the current flow variable associated with the given name.
-     * @param name the name of the flow variable
+     * Get the current flow variable associated with the given name or null if
+     * a flow variable with the given name does not exist.
+     * @param name the name of the flow variable r null if
+     * a flow variable with the given name does not exist.
      * @return the flow variable
      */
-    private FlowVariable getFlowVariable(final String name) {
+    public FlowVariable getFlowVariable(final String name) {
         FlowVariable var = m_modified.get(name);
         return null != var ? var : m_input.get(name);
     }
 
 
     /**
-     * Set the flow variable associated wit the given name.
-     * @param name the name of the flow variable
+     * Add a new or updated flow variable.
      * @param flowVar the flow variable associated with name
      */
-    public void put(final String name, final FlowVariable flowVar) {
-        m_modified.put(name, flowVar);
+    public void put(final FlowVariable flowVar) {
+        m_modified.put(flowVar.getName(), flowVar);
     }
 
 }

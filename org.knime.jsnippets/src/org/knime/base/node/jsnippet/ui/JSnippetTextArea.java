@@ -55,14 +55,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
+import javax.swing.ToolTipManager;
+
+import org.fife.rsta.ac.LanguageSupportFactory;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.Theme;
 import org.fife.ui.rsyntaxtextarea.Token;
 import org.fife.ui.rsyntaxtextarea.folding.FoldParserManager;
 import org.knime.base.node.jsnippet.JavaSnippet;
+import org.knime.base.node.jsnippet.JavaSnippetDocument;
 import org.knime.base.node.jsnippet.guarded.GuardedDocument;
 import org.knime.base.node.jsnippet.guarded.GuardedSection;
 import org.knime.base.node.jsnippet.guarded.GuardedSectionsFoldParser;
+import org.knime.core.node.NodeLogger;
 
 /**
  * A text area for the java snippet expression.
@@ -71,6 +76,8 @@ import org.knime.base.node.jsnippet.guarded.GuardedSectionsFoldParser;
  */
 @SuppressWarnings("serial")
 public class JSnippetTextArea extends RSyntaxTextArea {
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(JSnippetTextArea.class);
 
     /**
      * Create a new component.
@@ -78,7 +85,7 @@ public class JSnippetTextArea extends RSyntaxTextArea {
      */
     public JSnippetTextArea(final JavaSnippet snippet) {
         // initial text != null causes a null pointer exception
-        super(new JSnippetDocument(), null, 20, 60);
+        super(new JavaSnippetDocument(), null, 20, 60);
 
         setDocument(snippet.getDocument());
         addParser(snippet.getParser());
@@ -86,7 +93,7 @@ public class JSnippetTextArea extends RSyntaxTextArea {
         try {
             applySyntaxColors();
         } catch (Exception e) {
-            // TODO: Add LOGGER.debug, this is not mission critical
+            LOGGER.debug(e.getMessage(), e);
         }
 
 
@@ -99,27 +106,8 @@ public class JSnippetTextArea extends RSyntaxTextArea {
         setCodeFoldingEnabled(true);
         setSyntaxEditingStyle(SYNTAX_STYLE_JAVA);
 
-
-
-         // A CompletionProvider is what knows of all possible completions, and
-        // analyzes the contents of the text area at the caret position to
-        // determine what completion choices should be presented. Most
-        // instances of CompletionProvider (such as DefaultCompletionProvider)
-        // are designed so that they can be shared among multiple text
-        // components.
-//        CompletionProvider provider = createCompletionProvider();
-//
-//        // An AutoCompletion acts as a "middle-man" between a text component
-//        // and a CompletionProvider. It manages any options associated with
-//        // the auto-completion (the popup trigger key, whether to display a
-//        // documentation window along with completion choices, etc.). Unlike
-//        // CompletionProviders, instances of AutoCompletion cannot be shared
-//        // among multiple text components.
-//        AutoCompletion ac = new AutoCompletion(provider);
-//        ac.setShowDescWindow(true);
-//
-//        ac.install(this);
-//
+        ToolTipManager.sharedInstance().registerComponent(this);
+        LanguageSupportFactory.get().register(this);
     }
 
 

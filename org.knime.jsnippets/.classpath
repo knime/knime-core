@@ -1,15 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry exported="true" kind="lib" path="lib/snippet_inc/commons-lang3-3.0.1.jar" sourcepath="/media/disk/apache-commons/commons-lang3-3.0.1-src/src"/>
+	<classpathentry exported="true" kind="lib" path="lib/snippet_inc/commons-lang3-3.0.1.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Apache Commons Lang"/>
-	<classpathentry kind="lib" path="lib/autocomplete_2.0.2/autocomplete.jar">
-		<attributes>
-			<attribute name="javadoc_location" value="http://javadoc.fifesoft.com/autocomplete/"/>
-		</attributes>
-	</classpathentry>
-	<classpathentry kind="lib" path="lib/autocomplete_2.0.2/rsyntaxtextarea.jar"/>
+	<classpathentry kind="lib" path="lib/autocomplete_2.0.3.jar"/>
+	<classpathentry kind="lib" path="lib/rsyntaxtextarea_2.0.3.jar"/>
+	<classpathentry kind="lib" path="lib/rsta-language-support_2.0.3.jar" sourcepath="/media/disk/heiko_netbeans/org.fife.rsyntaxtextarea_rev507/RSTALanguageSupport/tags/0.8.0/src"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

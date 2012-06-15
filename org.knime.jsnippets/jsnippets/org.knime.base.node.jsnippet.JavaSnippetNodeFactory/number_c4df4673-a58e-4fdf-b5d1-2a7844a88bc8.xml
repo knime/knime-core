@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="number_c4df4673-a58e-4fdf-b5d1-2a7844a88bc8.xml">
+<entry key="Meta category" type="xstring" value="org.knime.base.node.jsnippet.JavaSnippetNodeFactory"/>
+<entry key="Category" type="xstring" value="KNIME"/>
+<entry key="Name" type="xstring" value="number"/>
+<entry key="Description" type="xstring" value="foo"/>
+<entry key="Version" type="xstring" value="version 1.x"/>
+<config key="Snippet">
+<entry key="scriptImports" type="xstring" value="// Your custom imports:%%00010"/>
+<entry key="scriptFields" type="xstring" value="// Your custom variables:%%00010"/>
+<entry key="scriptBody" type="xstring" value="// Enter your code here:%%00010out_number = c_numbers + 1;%%00010%%00010"/>
+<config key="jarFiles">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<config key="outCols">
+<entry key="array-size" type="xint" value="1"/>
+<config key="0">
+<entry key="Name" type="xstring" value="numbers"/>
+<entry key="JavaName" type="xstring" value="out_number"/>
+<entry key="JavaType" type="xstring" value="java.lang.Integer"/>
+<config key="Type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+<entry key="replaceExisting" type="xboolean" value="true"/>
+</config>
+</config>
+<config key="outVars">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<config key="inCols">
+<entry key="array-size" type="xint" value="2"/>
+<config key="0">
+<entry key="Name" type="xstring" value="numbers"/>
+<entry key="JavaName" type="xstring" value="c_numbers"/>
+<entry key="JavaType" type="xstring" value="java.lang.Integer"/>
+<config key="Type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.IntCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+<config key="1">
+<entry key="Name" type="xstring" value="real num"/>
+<entry key="JavaName" type="xstring" value="c_realnum"/>
+<entry key="JavaType" type="xstring" value="java.lang.Double"/>
+<config key="Type">
+<entry key="cell_class" type="xstring" value="org.knime.core.data.def.DoubleCell"/>
+<entry key="is_null" type="xboolean" value="false"/>
+</config>
+</config>
+</config>
+<config key="inVars">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<entry key="m_insertMissingAsNull" type="xboolean" value="false"/>
+<entry key="version" type="xstring" value="version 1.x"/>
+<entry key="templateUUID" type="xstring" value="c4df4673-a58e-4fdf-b5d1-2a7844a88bc8"/>
+</config>
+</config>

@@ -50,7 +50,9 @@
  */
 package org.knime.base.node.jsnippet.expression;
 
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -63,44 +65,66 @@ import org.w3c.dom.Document;
  * @author Heiko Hofer
  */
 public final class Type {
-	/** the string type. */
-	public static final String String = "";
-	/** the integer type. */
-	public static final Integer Int = 0;
-	/** the double type. */
-	public static final Double Double = 0.0;
-	/** the long type. */
-	public static final Long Long = 0l;
-	/** the boolean type. */
-	public static final Boolean Boolean = false;
-	/** the java.util.Date type. */
-	public static final Date Date = new Date(0);
-	/** the DOM type. */
-	public static Document XML = null;
-	static {
-		try {
-			XML = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
-		} catch (ParserConfigurationException e) {
-			// should never be reached
-		}
-	}
+    /** the string type. */
+    public static final String String = "";
 
-	public static String getIdentifierFor(final Class type) {
-		if (type.equals(String.class)) {
-			return "String";
-		} else if (type.equals(Integer.class)) {
-			return "Int";
-		} else if (type.equals(Double.class)) {
-			return "Double";
-		} else if (type.equals(Long.class)) {
-			return "Boolean";
-		} else if (type.equals(Boolean.class)) {
-			return "String";
-		} else if (type.equals(Date.class)) {
-			return "Date";
-		} else if (type.equals(Document.class)) {
-			return "XML";
-		}
-		throw new TypeException("Unknown type: " + type.getName());
-	}
+    /** the integer type. */
+    public static final Integer Int = 0;
+
+    /** the double type. */
+    public static final Double Double = 0.0;
+
+    /** the long type. */
+    public static final Long Long = 0l;
+
+    /** the boolean type. */
+    public static final Boolean Boolean = false;
+
+    /** the java.util.Date type. */
+    public static final Date Date = new Date(0);
+
+    /** the java.util.Calendar type. */
+    public static final Calendar Calendar = new GregorianCalendar();
+
+    /** the DOM type. */
+    public static Document XML = null;
+    static {
+        try {
+            XML = DocumentBuilderFactory.newInstance().
+                         newDocumentBuilder().newDocument();
+        } catch (ParserConfigurationException e) {
+            // should never be reached
+        }
+    }
+
+    private Type() {
+        // utility classes do not need to be instantiated.
+    }
+
+    /**
+     * Get the identifier associated with the given type.
+     * @param type the type
+     * @return the identifier associated with the given type
+     */
+    @SuppressWarnings("rawtypes")
+    public static String getIdentifierFor(final Class type) {
+        if (type.equals(String.class)) {
+            return "String";
+        } else if (type.equals(Integer.class)) {
+            return "Int";
+        } else if (type.equals(Double.class)) {
+            return "Double";
+        } else if (type.equals(Long.class)) {
+            return "Boolean";
+        } else if (type.equals(Boolean.class)) {
+            return "String";
+        } else if (type.equals(Date.class)) {
+            return "Date";
+        } else if (type.equals(Calendar.class)) {
+            return "Calendar";
+        } else if (type.equals(Document.class)) {
+            return "XML";
+        }
+        throw new TypeException("Unknown type: " + type.getName());
+    }
 }

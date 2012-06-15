@@ -50,9 +50,12 @@
  */
 package org.knime.base.node.jsnippet.ui;
 
-import org.knime.base.node.jsnippet.type.DataValueToJava;
-import org.knime.base.node.jsnippet.type.TypeConverter;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.knime.base.node.jsnippet.type.TypeProvider;
+import org.knime.base.node.jsnippet.type.data.DataValueToJava;
+import org.knime.base.node.jsnippet.type.flowvar.TypeConverter;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.node.workflow.FlowVariable;
@@ -64,12 +67,12 @@ import org.knime.core.node.workflow.FlowVariable;
  */
 @SuppressWarnings("serial")
 public class InFieldsTableModel extends FieldsTableModel {
-    /** The index of the input column / flow variable column. */
-    public static final int COL_COLUMN = 0;
-    /** The index of the java type column. */
-    public static final int COL_JAVA_TYPE = 1;
-    /** The index of the java field name column. */
-    public static final int COL_JAVA_FIELD = 2;
+//    /** The index of the input column / flow variable column. */
+//    public static final int COLUMN = 0;
+//    /** The index of the java type column. */
+//    public static final int JAVA_TYPE = 1;
+//    /** The index of the java field name column. */
+//    public static final int JAVA_FIELD = 2;
 
     /**
      * Create a new instance.
@@ -77,18 +80,23 @@ public class InFieldsTableModel extends FieldsTableModel {
     public InFieldsTableModel() {
         super(new String[]{
                 "Column / Flow variable", "Java Type", "Java Field"});
+        Map<Column, Integer> columns = new HashMap<Column, Integer>();
+        columns.put(Column.COLUMN, 0);
+        columns.put(Column.JAVA_TYPE, 1);
+        columns.put(Column.JAVA_FIELD, 2);
+        setColumnsMap(columns);
     }
     /**
      * {@inheritDoc}
      */
     @Override
-    boolean isValidValue(final int row, final int column) {
+    boolean isValidValue(final int row, final Column column) {
         switch (column) {
-        case COL_COLUMN:
+        case COLUMN:
             return validateColColumn(row) == null;
-        case COL_JAVA_TYPE:
+        case JAVA_TYPE:
             return validateJavaTypeColumn(row) == null;
-        case COL_JAVA_FIELD:
+        case JAVA_FIELD:
             return validateJavaFieldColumn(row) == null;
         default:
             throw new IllegalStateException("Unknown column.");
@@ -99,13 +107,13 @@ public class InFieldsTableModel extends FieldsTableModel {
      * {@inheritDoc}
      */
     @Override
-    String getErrorMessage(final int row, final int column) {
+    String getErrorMessage(final int row, final Column column) {
         switch (column) {
-        case COL_COLUMN:
+        case COLUMN:
             return validateColColumn(row);
-        case COL_JAVA_TYPE:
+        case JAVA_TYPE:
             return validateJavaTypeColumn(row);
-        case COL_JAVA_FIELD:
+        case JAVA_FIELD:
             return validateJavaFieldColumn(row);
         default:
             throw new IllegalStateException("Unknown column.");
@@ -118,13 +126,12 @@ public class InFieldsTableModel extends FieldsTableModel {
      * @return error message if error occurs
      */
     private String validateJavaFieldColumn(final int row) {
-        Object value = getValueAt(row, COL_JAVA_FIELD);
+        Object value = getValueAt(row, Column.JAVA_FIELD);
         if (null == value) {
             return "Please select a value";
         }
         // check if a field with the same name exists
-        boolean isUnique = FieldsTableUtil.isUnique(this, value,
-                row, COL_JAVA_FIELD);
+        boolean isUnique = isUnique(value, row, Column.JAVA_FIELD);
         // check if value is a valid java identifier
         boolean isValid = FieldsTableUtil.isValidJavaIdentifier((String)value);
         if (isUnique && isValid) {
@@ -145,7 +152,7 @@ public class InFieldsTableModel extends FieldsTableModel {
      */
     @SuppressWarnings("rawtypes")
     private String validateJavaTypeColumn(final int row) {
-        Object value = this.getValueAt(row, COL_JAVA_TYPE);
+        Object value = this.getValueAt(row, Column.JAVA_TYPE);
         if (null == value) {
             return "Please select a value";
         }
@@ -153,14 +160,14 @@ public class InFieldsTableModel extends FieldsTableModel {
             return "Cannot find class " + value.toString();
         }
         Class javaType = (Class)value;
-        Object input = this.getValueAt(row, COL_COLUMN);
+        Object input = this.getValueAt(row, Column.COLUMN);
         if (input instanceof DataColumnSpec) {
             DataColumnSpec colSpec = (DataColumnSpec)input;
             DataType elemType = colSpec.getType().isCollectionType()
                 ? colSpec.getType().getCollectionElementType()
                 : colSpec.getType();
             DataValueToJava dvToJava =
-                TypeProvider.getDefault().getCompatibleTypes(elemType,
+                TypeProvider.getDefault().getDataValueToJava(elemType,
                         colSpec.getType().isCollectionType());
             return dvToJava.canProvideJavaType(javaType) ? null
                     : "The java type \"" + javaType.getSimpleName()
@@ -184,7 +191,7 @@ public class InFieldsTableModel extends FieldsTableModel {
      * @return error message if error occurs
      */
     private String validateColColumn(final int row) {
-        Object value = getValueAt(row, COL_COLUMN);
+        Object value = getValueAt(row, Column.COLUMN);
         if (null == value || value instanceof String) {
             return ("Please select an input.");
         } else {
@@ -199,14 +206,14 @@ public class InFieldsTableModel extends FieldsTableModel {
     @SuppressWarnings("rawtypes")
     @Override
     public Class[] getAllowedJavaTypes(final int row) {
-        Object input = getValueAt(row, COL_COLUMN);
+        Object input = getValueAt(row, Column.COLUMN);
         if (input instanceof DataColumnSpec) {
             DataColumnSpec colSpec = (DataColumnSpec)input;
             DataType elemType = colSpec.getType().isCollectionType()
                 ? colSpec.getType().getCollectionElementType()
                 : colSpec.getType();
             DataValueToJava dvToJava =
-                TypeProvider.getDefault().getCompatibleTypes(elemType,
+                TypeProvider.getDefault().getDataValueToJava(elemType,
                         colSpec.getType().isCollectionType());
             return dvToJava.canProvideJavaTypes();
         } else if (input instanceof FlowVariable) {
@@ -219,5 +226,6 @@ public class InFieldsTableModel extends FieldsTableModel {
             return new Class[0];
         }
     }
+
 
 }

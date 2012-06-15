@@ -50,9 +50,15 @@
  */
 package org.knime.base.node.jsnippet.expression;
 
+import java.util.List;
 import java.util.Map;
 
 import org.knime.base.node.jsnippet.FlowVariableRepository;
+import org.knime.base.node.jsnippet.type.TypeProvider;
+import org.knime.base.node.jsnippet.type.data.DataValueToJava;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 
 /**
  *
@@ -60,38 +66,195 @@ import org.knime.base.node.jsnippet.FlowVariableRepository;
  */
 public abstract class AbstractJSnippet {
     /** the id of the current row. */
-    protected String ROWID = "";
-    /** the index of the current row. */
-    protected int ROWINDEX = -1;
-    /** the number of rows of the input. */
-    protected int ROWCOUNT = -1;
+    public String ROWID = "";
 
-    private Map<String, Cell> m_cells;
+    /** the index of the current row. */
+    public int ROWINDEX = -1;
+
+    /** the number of rows of the input. */
+    public int ROWCOUNT = -1;
+
+    private DataTableSpec m_inSpec;
+    private Map<String, Cell> m_cellsMap;
+    private List<Cell> m_cells;
+    private List<String> m_columns;
     private FlowVariableRepository m_flowVars;
 
+
     /**
-     * @param <T>
-     * @param col
-     * @param t
-     * @return
-     * @throws TypeException
-     * @throws ColumnException
+     * Get the cell contents of the given column.
+     *
+     * @param <T> the expected type
+     * @param col the name of the column
+     * @param t the type to be returned
+     * @return the value of the cell of the given column
+     * @throws TypeException if the column cannot provide the given type
+     * @throws ColumnException if the column does not exist
      */
     protected <T> T getCell(final String col, final T t) throws TypeException,
             ColumnException {
-        if (m_cells.containsKey(col)) {
-            Cell cell = m_cells.get(col);
+        if (m_cellsMap.containsKey(col)) {
+            Cell cell = m_cellsMap.get(col);
             return cell.getValueAs(t);
         } else {
             throw new ColumnException("The column " + col + " does not exist.");
         }
     }
 
+
+    /**
+     * Get the cell contents of the column with the given index.
+     *
+     * @param <T> the expected type
+     * @param col the index of the column
+     * @param t the type to be returned
+     * @return the value of the cell of the given column
+     * @throws TypeException if the column cannot provide the given type
+     * @throws ColumnException if the column does not exist
+     */
+    protected <T> T getCell(final int col, final T t) throws TypeException,
+            ColumnException {
+        if (col >= 0 || col < m_cells.size()) {
+            Cell cell = m_cells.get(col);
+            return cell.getValueAs(t);
+        } else {
+            throw new ColumnException("The column index " + col
+                    + " is out of the allowed range"
+                    + " [0," + m_cells.size() + "].");
+        }
+    }
+
+    /**
+     * Returns true when the column is of the given type.
+     *
+     * @param <T> the expected type
+     * @param column the name of the column
+     * @param t the type to test for
+     * @return true when the column is of the given type
+     * @throws ColumnException if the column does not exist
+     */
+    protected <T> boolean isType(final String column, final T t)
+            throws ColumnException {
+        if (m_cellsMap.containsKey(column)) {
+            return canProvideJavaType(m_inSpec.getColumnSpec(column),
+                    t.getClass());
+        } else {
+            throw new ColumnException("The column " + column
+                    + " does not exist.");
+        }
+    }
+
+
+    /**
+     * Returns true when the column is of the given type.
+     *
+     * @param <T> the expected type
+     * @param column the index of the column
+     * @param t the type to test for
+     * @return true when the column is of the given type
+     * @throws ColumnException if the column does not exist
+     */
+    protected <T> boolean isType(final int column, final T t)
+            throws ColumnException {
+        if (column >= 0 || column < m_cells.size()) {
+            return canProvideJavaType(m_inSpec.getColumnSpec(column),
+                    t.getClass());
+        } else {
+            throw new ColumnException("The column index " + column
+                    + " is out of the allowed range"
+                    + " [0," + m_cells.size() + "].");
+        }
+    }
+
+    /**
+     * Returns true when the cell of the given column is a missing cell.
+     *
+     * @param column the name of the column
+     * @return true when the column is a missing cell
+     * @throws ColumnException if the column does not exist
+     */
+    protected boolean isMissing(final String column)
+            throws ColumnException {
+        if (m_cellsMap.containsKey(column)) {
+            Cell cell = m_cellsMap.get(column);
+            return cell.isMissing();
+        } else {
+            throw new ColumnException("The column " + column
+                    + " does not exist.");
+        }
+    }
+
+
+    /**
+     * Returns true when the cell of the given column is a missing cell.
+     *
+     * @param column the index of the column
+     * @return true when the column is a missing cell
+     * @throws ColumnException if the column does not exist
+     */
+    protected boolean isMissing(final int column)
+            throws ColumnException {
+        if (column >= 0 || column < m_cells.size()) {
+            Cell cell = m_cells.get(column);
+            return cell.isMissing();
+        } else {
+            throw new ColumnException("The column index " + column
+                    + " is out of the allowed range"
+                    + " [0," + m_cells.size() + "].");
+        }
+    }
+
+    /**
+     * Get the number of columns.
+     * @return the number of columns.
+     */
+    protected int getColumnCount() {
+        return m_cells.size();
+    }
+
+    /**
+     * Get the name of the column at the specified index.
+     * @param index the index
+     * @return the name of the column at the given index
+     */
+    protected String getColumnName(final int index) {
+        return m_columns.get(index);
+    }
+
+    /**
+     * Get the value of the flow variable.
+     *
+     * @param <T> the expected type
+     * @param var the name of the flow variable
+     * @param t the type to be returned
+     * @return the flow variable with given name
+     * @throws TypeException if the given type do not match to the type of
+     * the flow variable
+     * @throws FlowVariableException if the flow variable does not exist
+     */
     protected <T> T getFlowVariable(final String var, final T t)
         throws TypeException, FlowVariableException {
         return m_flowVars.getValueAs(var, t);
     }
 
+    /** Returns true when the cells of the column can provide the given type. */
+    private boolean canProvideJavaType(final DataColumnSpec colSpec,
+            @SuppressWarnings("rawtypes") final Class c) {
+        TypeProvider p = TypeProvider.getDefault();
+        DataType type = colSpec.getType();
+        DataType elemType = type.isCollectionType()
+            ? type.getCollectionElementType() : type;
+        DataValueToJava conv = p.getDataValueToJava(elemType,
+                type.isCollectionType());
+        return conv.canProvideJavaType(c);
+    }
 
+    /**
+     * The method for custom code.
+     *
+     * @throws TypeException if a type mismatch with columns or flow variables
+     * occurs
+     * @throws ColumnException if an expected column does not exist
+     */
     public abstract void snippet() throws TypeException, ColumnException;
 }

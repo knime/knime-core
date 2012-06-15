@@ -175,56 +175,56 @@ public class GuardedDocument extends RSyntaxDocument {
      * character between the guarded sections.
      */
     public void replaceBetween(final String guard1, final String guard2,
-    		final String s) throws BadLocationException {
-		int start = getGuardedSection(guard1).getEnd().getOffset();
-		int end = getGuardedSection(guard2).getStart().getOffset();
-		if (end < start) {
-			throw new BadLocationException("The offset of the first guarded"
-					+ " section is greaten than the offset of the second"
-					+ " guarded section.", start);
-		}
+            final String s) throws BadLocationException {
+        int start = getGuardedSection(guard1).getEnd().getOffset();
+        int end = getGuardedSection(guard2).getStart().getOffset();
+        if (end < start) {
+            throw new BadLocationException("The offset of the first guarded"
+                    + " section is greaten than the offset of the second"
+                    + " guarded section.", start);
+        }
 
-		int offset = start + 1;
-		int length = end - start - 2;
+        int offset = start + 1;
+        int length = end - start - 2;
 
-		replace(offset, length, s, null);
-	}
+        replace(offset, length, s, null);
+    }
 
     /**
      * Get the text between two subsequent guarded sections.
      *
      * @param guard1 the first guarded section
      * @param guard2 the second guarded section
-     * @param s the string to replace with
+     * @return the string between the given guarded sections
      * @throws BadLocationException when the guarded sections do not exist,
      * when they are no subsequent guarded sections.
      */
     public String getTextBetween(final String guard1, final String guard2)
     throws BadLocationException {
-		int start = getGuardedSection(guard1).getEnd().getOffset();
-		int end = getGuardedSection(guard2).getStart().getOffset();
-		if (end < start) {
-			throw new BadLocationException("The offset of the first guarded"
-					+ " section is greaten than the offset of the second"
-					+ " guarded section.", start);
-		}
+        int start = getGuardedSection(guard1).getEnd().getOffset();
+        int end = getGuardedSection(guard2).getStart().getOffset();
+        if (end < start) {
+            throw new BadLocationException("The offset of the first guarded"
+                    + " section is greaten than the offset of the second"
+                    + " guarded section.", start);
+        }
 
-		int offset = start + 1;
-		int length = end - start - 2;
-		if (m_breakGuarded) {
-			return getText(offset, length);
-		} else {
-	        // check if a guarded section intersects with [offset, offset+len]
-	        for (GuardedSection gs : m_guards.values()) {
-	            if (gs.intersects(offset, length)) {
-	                throw new BadLocationException("Cannot replace text "
-	                        + "that intersects with a guarded section.",
-	                        offset);
-	            }
-	        }
-	        return getText(offset, length);
-		}
-	}
+        int offset = start + 1;
+        int length = end - start - 2;
+        if (m_breakGuarded) {
+            return getText(offset, length);
+        } else {
+            // check if a guarded section intersects with [offset, offset+len]
+            for (GuardedSection gs : m_guards.values()) {
+                if (gs.intersects(offset, length)) {
+                    throw new BadLocationException("Cannot replace text "
+                            + "that intersects with a guarded section.",
+                            offset);
+                }
+            }
+            return getText(offset, length);
+        }
+    }
 
 
     /**
@@ -276,17 +276,17 @@ public class GuardedDocument extends RSyntaxDocument {
         }
         boolean orig = getBreakGuarded();
         setBreakGuarded(true);
-        this.insertString(offset, "\n", null);
+        this.insertString(offset, " \n", null);
         setBreakGuarded(orig);
 
         GuardedSection guard = isFooter
             ? GuardedSection.createFooter(
                 this.createPosition(offset),
-                this.createPosition(offset),
+                this.createPosition(offset + 1),
                 this)
             : GuardedSection.create(
                 this.createPosition(offset),
-                this.createPosition(offset),
+                this.createPosition(offset + 1),
                 this);
         m_guards.put(name, guard);
 

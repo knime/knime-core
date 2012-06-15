@@ -50,6 +50,8 @@
  */
 package org.knime.base.node.jsnippet.ui;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.util.Map;
 
 import javax.swing.event.TableModelEvent;
@@ -59,8 +61,9 @@ import org.knime.base.node.jsnippet.JavaSnippet;
 import org.knime.base.node.jsnippet.JavaSnippetFields;
 import org.knime.base.node.jsnippet.JavaSnippetSettings;
 import org.knime.base.node.jsnippet.expression.Type;
-import org.knime.base.node.jsnippet.type.DataValueToJava;
 import org.knime.base.node.jsnippet.type.TypeProvider;
+import org.knime.base.node.jsnippet.type.data.DataValueToJava;
+import org.knime.base.node.jsnippet.ui.FieldsTableModel.Column;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -77,6 +80,10 @@ public class JSnippetFieldsController {
     private final JavaSnippet m_snippet;
     private final InFieldsTable m_inFieldsTable;
     private final OutFieldsTable m_outFieldsTable;
+    /** flag to recreate snippets system fields only if needed. */
+    private boolean m_inListenerArmed;
+    /** flag to recreate snippets system fields only if needed. */
+    private boolean m_outListenerArmed;
 
     /**
      * Create a new instance.
@@ -91,22 +98,49 @@ public class JSnippetFieldsController {
         m_snippet = snippet;
         m_inFieldsTable = inFieldsTable;
         m_outFieldsTable = outFieldsTable;
+        m_inListenerArmed = false;
+        m_outListenerArmed = false;
+
         m_inFieldsTable.getTable().getModel().addTableModelListener(
                 new TableModelListener() {
             @Override
             public void tableChanged(final TableModelEvent e) {
-                // update snippet when table changes.
-                m_snippet.setJavaSnippetFields(new JavaSnippetFields(
-                        m_inFieldsTable.getInColFields(),
-                        m_inFieldsTable.getInVarFields(),
-                        m_outFieldsTable.getOutColFields(),
-                        m_outFieldsTable.getOutVarFields()));
+                if (e.getType() == TableModelEvent.INSERT) {
+                    m_inListenerArmed = false;
+                }
+                if (m_inListenerArmed) {
+                    // update snippet when table changes.
+                    m_snippet.setJavaSnippetFields(new JavaSnippetFields(
+                            m_inFieldsTable.getInColFields(),
+                            m_inFieldsTable.getInVarFields(),
+                            m_outFieldsTable.getOutColFields(),
+                            m_outFieldsTable.getOutVarFields()));
+                }
             }
         });
         m_outFieldsTable.getTable().getModel().addTableModelListener(
                 new TableModelListener() {
             @Override
             public void tableChanged(final TableModelEvent e) {
+                if (e.getType() == TableModelEvent.INSERT) {
+                    m_outListenerArmed = false;
+                }
+                if (m_outListenerArmed) {
+                    // update snippet when table changes.
+                    m_snippet.setJavaSnippetFields(new JavaSnippetFields(
+                            m_inFieldsTable.getInColFields(),
+                            m_inFieldsTable.getInVarFields(),
+                            m_outFieldsTable.getOutColFields(),
+                            m_outFieldsTable.getOutVarFields()));
+                }
+            }
+        });
+        m_inFieldsTable.addPropertyChangeListener(
+                InFieldsTable.PROP_FIELD_ADDED, new PropertyChangeListener() {
+
+            @Override
+            public void propertyChange(final PropertyChangeEvent evt) {
+                m_inListenerArmed = true;
                 // update snippet when table changes.
                 m_snippet.setJavaSnippetFields(new JavaSnippetFields(
                         m_inFieldsTable.getInColFields(),
@@ -115,7 +149,20 @@ public class JSnippetFieldsController {
                         m_outFieldsTable.getOutVarFields()));
             }
         });
+        m_outFieldsTable.addPropertyChangeListener(
+                OutFieldsTable.PROP_FIELD_ADDED, new PropertyChangeListener() {
 
+            @Override
+            public void propertyChange(final PropertyChangeEvent evt) {
+                m_outListenerArmed = true;
+                // update snippet when table changes.
+                m_snippet.setJavaSnippetFields(new JavaSnippetFields(
+                        m_inFieldsTable.getInColFields(),
+                        m_inFieldsTable.getInVarFields(),
+                        m_outFieldsTable.getOutColFields(),
+                        m_outFieldsTable.getOutVarFields()));
+            }
+        });
     }
 
     /**
@@ -130,7 +177,7 @@ public class JSnippetFieldsController {
             (FieldsTableModel) m_inFieldsTable.getTable().getModel();
         int index = -1;
         for (int r = 0; r < model.getRowCount(); r++) {
-            Object value = model.getValueAt(r, InFieldsTableModel.COL_COLUMN);
+            Object value = model.getValueAt(r, Column.COLUMN);
             if (value instanceof DataColumnSpec) {
                 DataColumnSpec foo = (DataColumnSpec)value;
                 if (foo.getName().equals(colSpec.getName())) {
@@ -142,15 +189,14 @@ public class JSnippetFieldsController {
 
         if (index >= 0) {
             // return java field name
-            return (String)model.getValueAt(index,
-                    m_inFieldsTable.getFieldNameColumnIndex());
+            return (String)model.getValueAt(index, Column.JAVA_FIELD);
         } else {
             // try to add a row for the colSpec
             boolean success = m_inFieldsTable.addRow(colSpec);
             if (success) {
                 // return java field name
                 return (String)model.getValueAt(model.getRowCount() - 1,
-                        m_inFieldsTable.getFieldNameColumnIndex());
+                        Column.JAVA_FIELD);
             } else {
                 // return generic code
                 String name = colSpec.getName();
@@ -158,7 +204,7 @@ public class JSnippetFieldsController {
                     ? colSpec.getType().getCollectionElementType()
                     : colSpec.getType();
                 DataValueToJava dvToJava =
-                    TypeProvider.getDefault().getCompatibleTypes(elemType,
+                    TypeProvider.getDefault().getDataValueToJava(elemType,
                             colSpec.getType().isCollectionType());
                 Class javaType = dvToJava.getPreferredJavaType();
                 return "getCell(\"" + name + "\", "
@@ -179,7 +225,7 @@ public class JSnippetFieldsController {
             (FieldsTableModel) m_inFieldsTable.getTable().getModel();
         int index = -1;
         for (int r = 0; r < model.getRowCount(); r++) {
-            Object value = model.getValueAt(r, InFieldsTableModel.COL_COLUMN);
+            Object value = model.getValueAt(r, Column.COLUMN);
             if (value instanceof FlowVariable) {
                 FlowVariable foo = (FlowVariable)value;
                 if (foo.getName().equals(v.getName())) {
@@ -192,14 +238,14 @@ public class JSnippetFieldsController {
         if (index >= 0) {
             // return java field name
             return (String)model.getValueAt(index,
-                    InFieldsTableModel.COL_COLUMN);
+                    Column.COLUMN);
         } else {
             // try to add a row for the flow variable
             boolean success = m_inFieldsTable.addRow(v);
             if (success) {
                 // return java field name
                 return (String)model.getValueAt(model.getRowCount() - 1,
-                        m_inFieldsTable.getFieldNameColumnIndex());
+                        Column.JAVA_FIELD);
             } else {
                 // return generic code
                 String name = v.getName();
@@ -221,13 +267,20 @@ public class JSnippetFieldsController {
     public void updateData(final JavaSnippetSettings settings,
             final DataTableSpec spec,
             final Map<String, FlowVariable> flowVars) {
+        m_inListenerArmed = false;
+        m_outListenerArmed = false;
         m_inFieldsTable.updateData(settings.getJavaSnippetFields(),
                 spec, flowVars);
         m_outFieldsTable.updateData(settings.getJavaSnippetFields(),
                 spec, flowVars);
-
+        // update snippet.
+        m_snippet.setJavaSnippetFields(new JavaSnippetFields(
+                m_inFieldsTable.getInColFields(),
+                m_inFieldsTable.getInVarFields(),
+                m_outFieldsTable.getOutColFields(),
+                m_outFieldsTable.getOutVarFields()));
+        m_inListenerArmed = true;
+        m_outListenerArmed = true;
     }
-
-
 
 }

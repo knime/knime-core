@@ -50,17 +50,22 @@
  */
 package org.knime.base.node.jsnippet;
 
+import static org.knime.base.node.jsnippet.JavaSnippetDocument.GUARDED_BODY_END;
+import static org.knime.base.node.jsnippet.JavaSnippetDocument.GUARDED_BODY_START;
+import static org.knime.base.node.jsnippet.JavaSnippetDocument.GUARDED_FIELDS;
+import static org.knime.base.node.jsnippet.JavaSnippetDocument.GUARDED_IMPORTS;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStreamWriter;
+import java.io.StringWriter;
 import java.io.Writer;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
@@ -70,14 +75,18 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.tools.DiagnosticCollector;
+import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 
 import org.eclipse.jdt.internal.compiler.tool.EclipseFileObject;
-import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.parser.Parser;
-import org.knime.base.node.jsnippet.JavaFieldSettings.OutCol;
-import org.knime.base.node.jsnippet.JavaFieldSettingsList.OutColList;
+import org.knime.base.node.jsnippet.JavaField.InCol;
+import org.knime.base.node.jsnippet.JavaField.InVar;
+import org.knime.base.node.jsnippet.JavaField.OutCol;
+import org.knime.base.node.jsnippet.JavaField.OutVar;
+import org.knime.base.node.jsnippet.JavaFieldList.OutColList;
 import org.knime.base.node.jsnippet.expression.AbstractJSnippet;
 import org.knime.base.node.jsnippet.expression.Cell;
 import org.knime.base.node.jsnippet.expression.ColumnException;
@@ -86,28 +95,40 @@ import org.knime.base.node.jsnippet.expression.Type;
 import org.knime.base.node.jsnippet.expression.TypeException;
 import org.knime.base.node.jsnippet.guarded.GuardedDocument;
 import org.knime.base.node.jsnippet.guarded.GuardedSection;
+import org.knime.base.node.jsnippet.type.TypeProvider;
+import org.knime.base.node.jsnippet.type.data.DataValueToJava;
 import org.knime.base.node.jsnippet.ui.JSnippetParser;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.FileUtil;
 
 /**
+ * The java snippet which can be controlled by changing the settings, fields
+ * and jar-files to be included or by changing the contents of the snippets
+ * document. The document is a java class which is compiled for execution.
  *
  * @author Heiko Hofer
  */
+@SuppressWarnings("restriction")
 public final class JavaSnippet {
-    static final String GUARDED_IMPORTS = "imports";
-    static final String GUARDED_FIELDS = "fields";
-    static final String GUARDED_BODY_START = "bodyStart";
-    static final String GUARDED_BODY_END = "bodyEnd";
+    /** Identifier for row index (starting with 0). */
+    public static final String ROWINDEX = "ROWINDEX";
+    /** Identifier for row ID. */
+    public static final String ROWID = "ROWID";
+    /** Identifier for row count. */
+    public static final String ROWCOUNT = "ROWCOUNT";
 
+    /** The version 1.x of the java snippet. */
     public static final String VERSION_1_X = "version 1.x";
 
     private static File jSnippetJar;
@@ -130,20 +151,21 @@ public final class JavaSnippet {
     private File m_tempClassPathDir;
 
     /**
-     *
+     * Create a new snippet.
      */
     public JavaSnippet() {
-    	m_fields = new JavaSnippetFields();
+        m_fields = new JavaSnippetFields();
     }
 
 
     /**
-     * @param settings
+     * Create a new snippet with the given settings.
+     * @param settings the settings
      */
     public void setSettings(final JavaSnippetSettings settings) {
         m_settings = settings;
-   		m_fields = settings.getJavaSnippetFields();
-   		m_jarFiles = settings.getJarFiles();
+           m_fields = settings.getJavaSnippetFields();
+           m_jarFiles = settings.getJarFiles();
         init();
     }
 
@@ -155,7 +177,8 @@ public final class JavaSnippet {
 
 
     /**
-     * @param settings
+     * Get the updated settings java snippet.
+     * @return the settings
      */
     public JavaSnippetSettings getSettings() {
         updateSettings();
@@ -176,9 +199,9 @@ public final class JavaSnippet {
             throw new IllegalStateException(e);
         }
         // update input fields
-		m_settings.setJavaSnippetFields(m_fields);
-		// update jar files
-		m_settings.setJarFiles(m_jarFiles);
+        m_settings.setJavaSnippetFields(m_fields);
+        // update jar files
+        m_settings.setJarFiles(m_jarFiles);
     }
 
 
@@ -207,7 +230,7 @@ public final class JavaSnippet {
                     jarFiles.add(JavaSnippetUtil.toFile(m_jarFiles[i]));
                 } catch (InvalidSettingsException e) {
                     // jar file does not exist
-                    // TODO how to react
+                    // TODO how to react?
                 }
             }
             m_jarFileCache = jarFiles.toArray(new File[jarFiles.size()]);
@@ -248,7 +271,7 @@ public final class JavaSnippet {
     }
 
     /**
-     * @return
+     * Create the java-file of the snippet.
      */
     private JavaFileObject createJSnippetFile() throws IOException {
         m_tempClassPathDir = FileUtil.createTempDir("knime_javasnippet");
@@ -274,6 +297,12 @@ public final class JavaSnippet {
     }
 
 
+    /**
+     * Return true when this snippet is the creator and maintainer of the
+     * given source.
+     * @param source the source
+     * @return if this snippet is the given source
+     */
     public boolean isSnippetSource(final JavaFileObject source) {
         return null != m_snippet ? source.equals(m_snippet) : false;
     }
@@ -291,10 +320,10 @@ public final class JavaSnippet {
             File tempClassPathDir = FileUtil
                     .createTempDir("knime_javasnippet");
             tempClassPathDir.deleteOnExit();
-            File m_jarFile = new File(tempClassPathDir.getPath()
+            File jarFile = new File(tempClassPathDir.getPath()
                     + File.separator + "jsnippet.jar");
-            m_jarFile.deleteOnExit();
-            FileOutputStream out = new FileOutputStream(m_jarFile);
+            jarFile.deleteOnExit();
+            FileOutputStream out = new FileOutputStream(jarFile);
             JarOutputStream jar = new JarOutputStream(out);
 
             Collection<Object> classes = new ArrayList<Object>();
@@ -320,10 +349,10 @@ public final class JavaSnippet {
             }
 
 
-        return m_jarFile;
+        return jarFile;
     }
 
-    // TODO: This code is copied from StringManipulatorProvider create common code base
+
     private DefaultMutableTreeNode createTree(
             final Collection<? extends Object> classes) {
         DefaultMutableTreeNode root = new DefaultMutableTreeNode("build");
@@ -347,7 +376,7 @@ public final class JavaSnippet {
         return root;
     }
 
-    // TODO: This code is copied from StringManipulatorProvider create common code base
+
     private DefaultMutableTreeNode getChild(final DefaultMutableTreeNode curr,
             final String p) {
         for (int i = 0; i < curr.getChildCount(); i++) {
@@ -360,7 +389,7 @@ public final class JavaSnippet {
         return null;
     }
 
-    // TODO: This code is copied from StringManipulatorProvider create common code base
+
     private void createJar(final DefaultMutableTreeNode node,
             final JarOutputStream jar,
             final String path) throws IOException {
@@ -400,7 +429,8 @@ public final class JavaSnippet {
 
 
     /**
-     * @return
+     * Get the document with the code of the snippet.
+     * @return the document
      */
     public GuardedDocument getDocument() {
         // Lazy initialization of the document
@@ -429,38 +459,13 @@ public final class JavaSnippet {
     }
 
 
+    /** Create the document with the default skeleton. */
     private GuardedDocument createDocument() {
-        GuardedDocument doc = new GuardedDocument(
-                SyntaxConstants.SYNTAX_STYLE_JAVA);
-        try {
-            doc.addGuardedSection(
-                    GUARDED_IMPORTS, doc.getLength());
-            doc.insertString(doc.getLength(),
-                    " \n", null);
-            doc.addGuardedSection(
-                    GUARDED_FIELDS, doc.getLength());
-            doc.insertString(doc.getLength(),
-                    " \n", null);
-            GuardedSection bodyStart = doc.addGuardedSection(
-                    GUARDED_BODY_START, doc.getLength());
-            bodyStart.setText("// expression start\n"
-                    + "  public void snippet() "
-                    + "throws TypeException, ColumnException {\n");
-            doc.insertString(doc.getLength(),
-                    " \n", null);
-
-            GuardedSection bodyEnd = doc.addGuardedFooterSection(
-                    GUARDED_BODY_END, doc.getLength());
-            bodyEnd.setText("// expression end\n"
-                    + "    }\n"
-                    + "}");
-        } catch (BadLocationException e) {
-            throw new IllegalStateException(e.getMessage(), e);
-        }
-
+        GuardedDocument doc = new JavaSnippetDocument();
         return doc;
     }
 
+    /** Initialize document with information from the settings. */
     private void initDocument(final GuardedDocument doc) {
         try {
             initGuardedSections(doc);
@@ -477,6 +482,9 @@ public final class JavaSnippet {
         }
     }
 
+    /** Initialize GUARDED_IMPORTS and GUARDED_FIELDS with information from
+     * the settings.
+     */
     private void initGuardedSections(final GuardedDocument doc) {
         try {
             GuardedSection imports = doc.getGuardedSection(GUARDED_IMPORTS);
@@ -490,53 +498,71 @@ public final class JavaSnippet {
 
 
     /**
-     * @return
+     * Create the system variable (input and output) section of the snippet.
      */
     private String createFieldsSection() {
         StringBuilder out = new StringBuilder();
         out.append("// system variables\n");
         out.append("public class JSnippet extends AbstractJSnippet {\n");
         if (m_fields.getInColFields().size() > 0) {
-        	out.append("  // Fields for input columns\n");
-        	appendFields(out, m_fields.getInColFields().iterator());
+            out.append("  // Fields for input columns\n");
+            for (InCol field : m_fields.getInColFields()) {
+                out.append("/** Input column: \"");
+                out.append(field.getKnimeName());
+                out.append("\" */\n");
+                appendFields(out, field);
+            }
         }
         if (m_fields.getInVarFields().size() > 0) {
-        	out.append("  // Fields for input flow variables\n");
-        	appendFields(out, m_fields.getInVarFields().iterator());
+            out.append("  // Fields for input flow variables\n");
+            for (InVar field : m_fields.getInVarFields()) {
+                out.append("/** Input flow variable: \"");
+                out.append(field.getKnimeName());
+                out.append("\" */\n");
+                appendFields(out, field);
+            }
         }
         out.append("\n");
         if (m_fields.getOutColFields().size() > 0) {
-        	out.append("  // Fields for output columns\n");
-        	appendFields(out, m_fields.getOutColFields().iterator());
+            out.append("  // Fields for output columns\n");
+            for (OutCol field : m_fields.getOutColFields()) {
+                out.append("/** Output column: \"");
+                out.append(field.getKnimeName());
+                out.append("\" */\n");
+                appendFields(out, field);
+            }
         }
         if (m_fields.getOutVarFields().size() > 0) {
-        	out.append("  // Fields for output flow variables\n");
-        	appendFields(out, m_fields.getOutVarFields().iterator());
+            out.append("  // Fields for output flow variables\n");
+            for (OutVar field : m_fields.getOutVarFields()) {
+                out.append("/** Output flow variable: \"");
+                out.append(field.getKnimeName());
+                out.append("\" */\n");
+                appendFields(out, field);
+            }
         }
 
         out.append("\n");
         return out.toString();
     }
 
+    /** Append field declaration to the string builder. */
     private void appendFields(final StringBuilder out,
-    		final Iterator<? extends JavaFieldSettings> fields) {
-        while (fields.hasNext()) {
-        	JavaFieldSettings f = fields.next();
-            out.append("  public ");
-            if (null != f.getJavaType()) {
-				out.append(f.getJavaType().getSimpleName());
-			} else {
-				out.append("<invalid>");
-			}
-
-            out.append(" ");
-            out.append(f.getJavaName());
-            out.append(";\n");
+            final JavaField f) {
+        out.append("  public ");
+        if (null != f.getJavaType()) {
+            out.append(f.getJavaType().getSimpleName());
+        } else {
+            out.append("<invalid>");
         }
+
+        out.append(" ");
+        out.append(f.getJavaName());
+        out.append(";\n");
     }
 
     /**
-     * @return
+     * Create the imports section for the snippet's document.
      */
     private String createImportsSection() {
         StringBuilder imports = new StringBuilder();
@@ -552,7 +578,8 @@ public final class JavaSnippet {
 
 
     /**
-     * @return
+     * Get the parser for the snippet's document.
+     * @return the parser
      */
     public Parser getParser() {
         // lazy initialization of the parser
@@ -562,6 +589,11 @@ public final class JavaSnippet {
         return m_parser;
     }
 
+    /**
+     * Get the list of default imports. Override this method to append or
+     * modify this list.
+     * @return the list of default imports
+     */
     protected String[] getSystemImports() {
         String pkg = "org.knime.base.node.jsnippet.expression";
         return new String[] {AbstractJSnippet.class.getName()
@@ -569,40 +601,168 @@ public final class JavaSnippet {
                 , ColumnException.class.getName()
                 , TypeException.class.getName()
                 , "static " + pkg + ".Type.*"
-                , "java.util.Date"};
+                , "java.util.Date"
+                , "java.util.Calendar"
+                , "org.w3c.dom.Document"};
     }
 
 
     /**
-     * @param spec
-     * @param flowVariableRepository
-     * @return
+     * Validate settings which is typically called in the configure method
+     * of a node.
+     * @param spec the spec of the data table at the inport
+     * @param flowVariableRepository the flow variables at the inport
+     * @return the validation results
+     */
+    public ValidationReport validateSettings(final DataTableSpec spec,
+        final FlowVariableRepository flowVariableRepository) {
+        List<String> errors = new ArrayList<String>();
+        List<String> warnings = new ArrayList<String>();
+
+        // check input fields
+        for (InCol field : m_fields.getInColFields()) {
+            int index = spec.findColumnIndex(field.getKnimeName());
+            if (index >= 0) {
+                DataColumnSpec colSpec = spec.getColumnSpec(index);
+                if (!colSpec.getType().equals(field.getKnimeType())) {
+                    TypeProvider provider = TypeProvider.getDefault();
+                    DataValueToJava converter = provider.getDataValueToJava(
+                            colSpec.getType(),
+                            field.getJavaType().isArray());
+                    if (converter.canProvideJavaType(field.getJavaType())) {
+                        warnings.add("The type of the column \""
+                                + field.getKnimeName()
+                                + "\" has changed but is compatible.");
+                    } else {
+                        errors.add("The type of the column \""
+                                + field.getKnimeName()
+                                + "\" has changed.");
+                    }
+                }
+            } else {
+                errors.add("The column \"" + field.getKnimeName()
+                        + "\" is not found in the input table.");
+            }
+        }
+        // check input variables
+        for (InVar field : m_fields.getInVarFields()) {
+            FlowVariable var = flowVariableRepository.getFlowVariable(
+                    field.getKnimeName());
+            if (var != null) {
+                if (!var.getType().equals(field.getKnimeType())) {
+                    errors.add("The type of the flow variable \""
+                                + field.getKnimeName()
+                                + "\" has changed.");
+                }
+            } else {
+                errors.add("The flow variable \"" + field.getKnimeName()
+                        + "\" is not found in the input.");
+            }
+        }
+
+        // check output fields
+        for (OutCol field : m_fields.getOutColFields()) {
+            int index = spec.findColumnIndex(field.getKnimeName());
+            if (field.getReplaceExisting() && index < 0) {
+                errors.add("The output column \""
+                        + field.getKnimeName()
+                        + "\" is marked to be a replacement, "
+                        + "but an input with this name does not exist.");
+            }
+            if (!field.getReplaceExisting() && index > 0) {
+                errors.add("The output column \""
+                        + field.getKnimeName()
+                        + "\" is marked to be new, "
+                        + "but an input with this name does exist.");
+            }
+        }
+
+        // check output variables
+        for (OutVar field : m_fields.getOutVarFields()) {
+            FlowVariable var = flowVariableRepository.getFlowVariable(
+                    field.getKnimeName());
+            if (field.getReplaceExisting() && var == null) {
+                errors.add("The output flow variable \""
+                        + field.getKnimeName()
+                        + "\" is marked to be a replacement, "
+                        + "but an input with this name does not exist.");
+            }
+            if (!field.getReplaceExisting() && var != null) {
+                errors.add("The output flow variable \""
+                        + field.getKnimeName()
+                        + "\" is marked to be new, "
+                        + "but an input with this name does exist.");
+            }
+        }
+
+        try {
+            // test if snippet compiles and if the file can be created
+            createSnippetClass();
+        } catch (Exception e) {
+            errors.add(e.getMessage());
+        }
+        return new ValidationReport(errors.toArray(new String[errors.size()]),
+                warnings.toArray(new String[warnings.size()]));
+    }
+
+    /**
+     * Create the outspec of the java snippet node. This method is typically
+     * used in the configure of a node.
+     * @param spec the spec of the data table at the inport
+     * @param flowVariableRepository the flow variables at the inport
+     * @return the spec at the output
+     * @throws InvalidSettingsException when settings are inconsistent with
+     *  the spec or the flow variables at the inport
      */
     public DataTableSpec configure(final DataTableSpec spec,
             final FlowVariableRepository flowVariableRepository)
-        throws InvalidSettingsException {
-        return createRearranger(spec, flowVariableRepository, -1).createSpec();
+            throws InvalidSettingsException {
+        DataTableSpec outSpec =
+            createRearranger(spec, flowVariableRepository, -1).createSpec();
+        // populate flowVariableRepository with new flow variables having
+        // default values
+        for (OutVar outVar : m_fields.getOutVarFields()) {
+            FlowVariable flowVar = null;
+            if (outVar.getKnimeType().equals(
+                    org.knime.core.node.workflow.FlowVariable.Type.INTEGER)) {
+                flowVar = new FlowVariable(outVar.getKnimeName(), -1);
+            } else if (outVar.getKnimeType().equals(
+                    org.knime.core.node.workflow.FlowVariable.Type.DOUBLE)) {
+                flowVar = new FlowVariable(outVar.getKnimeName(), -1.0);
+            } else {
+                flowVar = new FlowVariable(outVar.getKnimeName(), "");
+            }
+            flowVariableRepository.put(flowVar);
+        }
+        return outSpec;
     }
 
 
     /**
-     * @param table
-     * @param flowVariableRepository
-     * @param exec
-     * @return
+     * Execute the snippet.
+     * @param table the data table at the inport
+     * @param flowVariableRepository the flow variables at the inport
+     * @param exec the execution context to report progress
+     * @return the table for the output
+     * @throws InvalidSettingsException when settings are inconsistent with
+     * the table or the flow variables at the input
+     * @throws CanceledExecutionException when execution is canceled by the user
      */
     public BufferedDataTable execute(
             final BufferedDataTable table,
             final FlowVariableRepository flowVariableRepository,
-            final ExecutionContext exec) throws Exception {
+            final ExecutionContext exec) throws CanceledExecutionException,
+            InvalidSettingsException  {
         return exec.createColumnRearrangeTable(table,
                 createRearranger(table.getDataTableSpec(),
                         flowVariableRepository, table.getRowCount()), exec);
     }
 
     /**
-     * @param flowVarRepo
-     * @param exec
+     * The execution method when no input table is present. I.e. used by
+     * the java edit variable node.
+     * @param flowVariableRepository flow variables at the input
+     * @param exec the execution context to report progress
      */
     public void execute(final FlowVariableRepository flowVariableRepository,
             final ExecutionContext exec) {
@@ -613,6 +773,7 @@ public final class JavaSnippet {
                 new DataCell[0]));
     }
 
+    /** The rearranger is the working horse for creating the ouput table. */
     private ColumnRearranger createRearranger(final DataTableSpec spec,
             final FlowVariableRepository flowVariableRepository,
             final int rowCount)
@@ -644,39 +805,88 @@ public final class JavaSnippet {
         return c;
     }
 
-    public File getTempClassPath() {
+    /**
+     * Create a template for this snippet.
+     * @param metaCategory the meta category of the template
+     * @return the template with a new uuid.
+     */
+    @SuppressWarnings("rawtypes")
+    public JSnippetTemplate createTemplate(final Class metaCategory) {
+        JSnippetTemplate template = new JSnippetTemplate(metaCategory,
+                getSettings());
+        return template;
+    }
+
+    /** Get the path to the temporary directory of this java snippet.
+     * @return the path to the temporary directory
+     */
+    File getTempClassPath() {
         return m_tempClassPathDir;
     }
 
-	/**
-	 * Get the system fields of the snippet.
-	 * @return the fields
-	 */
-	public JavaSnippetFields getSystemFields() {
-		return m_fields;
-	}
+    /**
+     * Get the system fields of the snippet.
+     * @return the fields
+     */
+    public JavaSnippetFields getSystemFields() {
+        return m_fields;
+    }
 
-	/**
-	 * Set the system fields in the java snippet.
-	 * @param fields the fields to set
-	 */
-	public void setJavaSnippetFields(final JavaSnippetFields fields) {
-		m_fields = fields;
-		initGuardedSections(m_document);
-	}
+    /**
+     * Set the system fields in the java snippet.
+     * @param fields the fields to set
+     */
+    public void setJavaSnippetFields(final JavaSnippetFields fields) {
+        m_fields = fields;
+        initGuardedSections(m_document);
+    }
 
-	/**
-	 * Set the list of additional jar files to be added to the class path
-	 * of the snippet.
-	 * @param jarFiles the jar files
-	 */
-	public void setJarFiles(final String[] jarFiles) {
-	    m_jarFiles = jarFiles;
-	    // reset cache
-	    m_jarFileCache = null;
-	}
+    /**
+     * Set the list of additional jar files to be added to the class path
+     * of the snippet.
+     * @param jarFiles the jar files
+     */
+    public void setJarFiles(final String[] jarFiles) {
+        m_jarFiles = jarFiles;
+        // reset cache
+        m_jarFileCache = null;
+    }
 
-
-
+    /**
+     * Create the class file of the snippet.
+     * @return the compiled snippet
+     */
+    @SuppressWarnings("unchecked")
+    Class<? extends AbstractJSnippet> createSnippetClass() {
+        JavaSnippetCompiler compiler = new JavaSnippetCompiler(this);
+        StringWriter log = new StringWriter();
+        DiagnosticCollector<JavaFileObject> digsCollector =
+            new DiagnosticCollector<JavaFileObject>();
+        CompilationTask compileTask = null;
+        try {
+            compileTask = compiler.getTask(log, digsCollector);
+        } catch (IOException e) {
+            throw new IllegalStateException("Compile with errors", e);
+        }
+        boolean success = compileTask.call();
+        if (success) {
+            try {
+                ClassLoader loader = compiler.createClassLoader(
+                        this.getClass().getClassLoader());
+                return (Class<? extends AbstractJSnippet>)
+                    loader.loadClass("JSnippet");
+            } catch (ClassNotFoundException e) {
+                throw new IllegalStateException(
+                        "Could not load class file.", e);
+            } catch (IOException e) {
+                throw new IllegalStateException(
+                        "Could not load jar files.", e);
+            }
+        } else {
+            throw new IllegalStateException("Compile with errors");
+        }
+    }
 
 }
+
+
