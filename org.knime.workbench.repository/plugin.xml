@@ -21,16 +21,5 @@
 a data &quot;workflow&quot;
          </description>
       </view>
-      <view
-            category="org.knime.workbench.ui.category"
-            class="org.knime.workbench.repository.view.custom.CustomRepositoryView"
-            icon="icons/node_repository.png"
-            id="org.knime.workbench.repository.view.CustomRepositoryView"
-            name="Custom Node Repository">
-         <description>
-            This view offer a customitable node repository.
-         </description>
-      </view>
    </extension>
-
 </plugin>
