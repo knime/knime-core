@@ -52,9 +52,11 @@ package org.knime.workbench.repository;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.ui.IMemento;
@@ -70,11 +72,11 @@ public final class NodeUsageRegistry {
 
     private static int maxLastUsed = 10;
 
-    private static final List<NodeTemplateFrequency> FREQUENCIES =
-            new LinkedList<NodeTemplateFrequency>();
+    private static final Map<NodeTemplateFrequency, NodeTemplateFrequency> FREQUENCIES =
+            new HashMap<NodeTemplateFrequency, NodeTemplateFrequency>();
 
-    private static final List<NodeTemplate> LAST_USED =
-            new ArrayList<NodeTemplate>();
+    private static final LinkedList<NodeTemplate> LAST_USED =
+            new LinkedList<NodeTemplate>();
 
     private static final Set<NodeUsageListener> LISTENERS =
             new HashSet<NodeUsageListener>();
@@ -139,12 +141,9 @@ public final class NodeUsageRegistry {
     public static void setMaxLastUsedSize(final int newMaxSize) {
         synchronized (LAST_USED) {
             maxLastUsed = newMaxSize;
-            List<NodeTemplate> temp = new ArrayList<NodeTemplate>();
-            for (int i = 0; i < Math.min(LAST_USED.size(), maxLastUsed); i++) {
-                temp.add(LAST_USED.get(i));
+            while (LAST_USED.size() > maxLastUsed) {
+                LAST_USED.removeLast();
             }
-            LAST_USED.clear();
-            LAST_USED.addAll(temp);
         }
         notifyLastHistoryListener();
     }
@@ -156,32 +155,27 @@ public final class NodeUsageRegistry {
      */
     public static void addNode(final NodeTemplate node) {
         NodeTemplateFrequency nodeFreq = new NodeTemplateFrequency(node);
-        if (!FREQUENCIES.contains(nodeFreq)) {
-            FREQUENCIES.add(nodeFreq);
-            Collections.sort(FREQUENCIES);
+        NodeTemplateFrequency existing = FREQUENCIES.get(nodeFreq);
+        if (existing == null) {
+            FREQUENCIES.put(nodeFreq, nodeFreq);
+            existing = nodeFreq;
         }
         cachedFrequent = null;
-        int pos = FREQUENCIES.indexOf(nodeFreq);
-
-        FREQUENCIES.get(pos).increment();
-        Collections.sort(FREQUENCIES);
-
+        existing.increment();
         addToLastUsedNodes(node);
         notifyListener();
     }
 
     private static void addToLastUsedNodes(final NodeTemplate node) {
-        // check if it is already contained in
-        if (LAST_USED.contains(node)) {
-            // if yes move it again to top
-            LAST_USED.remove(LAST_USED.lastIndexOf(node));
-        }
-        LAST_USED.add(0, node);
-        // check size of list
-        // if larger 10 (TODO: adjustable via preferences)
-        if (LAST_USED.size() > maxLastUsed) {
-            // remove first node
-            LAST_USED.remove(LAST_USED.size() - 1);
+        synchronized(LAST_USED) {
+            LAST_USED.remove(node);
+            LAST_USED.addFirst(node);
+            // check size of list
+            // if larger 10 (TODO: adjustable via preferences)
+            if (LAST_USED.size() > maxLastUsed) {
+                // remove first node
+                LAST_USED.removeLast();
+            }
         }
     }
 
@@ -190,22 +184,18 @@ public final class NodeUsageRegistry {
      * @return the n (defined by max size) most frequently used nodes
      */
     public static List<NodeTemplate> getMostFrequentNodes() {
-
         if (cachedFrequent != null) {
             return cachedFrequent;
         }
         List<NodeTemplateFrequency> mostFrequent =
-                FREQUENCIES.subList(0,
-                        Math.min(FREQUENCIES.size(), maxMostFrequent));
+                new ArrayList<NodeTemplateFrequency>(FREQUENCIES.values());
+        Collections.sort(mostFrequent);
         cachedFrequent = new ArrayList<NodeTemplate>();
-        // TODO: add in correct order
-        for (NodeTemplateFrequency freq : mostFrequent) {
-            cachedFrequent.add(freq.getNode());
+
+        int max = Math.min(maxMostFrequent, mostFrequent.size());
+        for (int i = 0; i < max; i++) {
+            cachedFrequent.add(mostFrequent.get(i).getNode());
         }
-        /*
-         * for (int i = (mostFrequent.size() - 1); i >= 0; i--) {
-         * cachedFrequent.add(mostFrequent.get(i).getNode()); }
-         */
         return cachedFrequent;
     }
 
@@ -319,7 +309,7 @@ public final class NodeUsageRegistry {
      * @param freqNodes XML memento to save most frequently used nodes to
      */
     public static void saveFrequentNodes(final IMemento freqNodes) {
-        for (NodeTemplateFrequency nodeFreq : FREQUENCIES) {
+        for (NodeTemplateFrequency nodeFreq : FREQUENCIES.values()) {
             IMemento item = freqNodes.createChild(TAG_FAVORITE);
             item.putString(TAG_NODE_ID, nodeFreq.getNode().getID());
             item.putInteger(TAG_FREQUENCY, nodeFreq.m_frequency);
@@ -357,7 +347,7 @@ public final class NodeUsageRegistry {
                 NodeTemplateFrequency nodeFreq =
                         new NodeTemplateFrequency(node);
                 nodeFreq.m_frequency = frequency;
-                FREQUENCIES.add(nodeFreq);
+                FREQUENCIES.put(nodeFreq, nodeFreq);
             }
         }
     }

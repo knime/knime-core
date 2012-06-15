@@ -366,7 +366,8 @@ public final class RepositoryManager {
                     String message =
                             "Node " + e.getAttribute("id") + "' from plugin '"
                                     + ext.getNamespaceIdentifier()
-                                    + "' could not be created.";
+                                    + "' could not be created: "
+                                    + t.getMessage();
                     Bundle bundle =
                             Platform.getBundle(ext.getNamespaceIdentifier());
 
