@@ -52,6 +52,8 @@ package org.knime.workbench.repository.view.custom;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.TreeViewer;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.knime.workbench.repository.model.Root;
@@ -77,9 +79,17 @@ class RemoveAllAction extends Action {
 
     @Override
     public void run() {
-        if (m_viewer.getInput() instanceof Root) {
-            ((Root) m_viewer.getInput()).removeAllChildren();
-            m_viewer.refresh();
+        MessageBox mbox =
+                new MessageBox(m_viewer.getControl().getShell(), SWT.YES
+                        | SWT.NO | SWT.ICON_QUESTION);
+        mbox.setText("Remove All?");
+        mbox.setMessage("Do you really want to remove all entries in the "
+                + "custom node repository?");
+        if (mbox.open() == SWT.YES) {
+            if (m_viewer.getInput() instanceof Root) {
+                ((Root)m_viewer.getInput()).removeAllChildren();
+                m_viewer.refresh();
+            }
         }
     }
 }
