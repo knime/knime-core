@@ -218,7 +218,8 @@ public final class RepositoryManager {
                             "MetaNode " + mnConfig.getAttribute("id")
                                     + "' from plugin '"
                                     + mnConfig.getNamespaceIdentifier()
-                                    + "' could not be created.";
+                                    + "' could not be created: "
+                                    + t.getMessage();
                     Bundle bundle =
                             Platform.getBundle(mnConfig
                                     .getNamespaceIdentifier());
