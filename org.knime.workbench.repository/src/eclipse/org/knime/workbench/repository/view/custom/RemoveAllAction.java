@@ -77,8 +77,9 @@ class RemoveAllAction extends Action {
 
     @Override
     public void run() {
-        Root root = new Root();
-        root.setSortChildren(false);
-        m_viewer.setInput(root);
+        if (m_viewer.getInput() instanceof Root) {
+            ((Root) m_viewer.getInput()).removeAllChildren();
+            m_viewer.refresh();
+        }
     }
 }
