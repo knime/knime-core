@@ -68,7 +68,12 @@ public class ToLongManipulator implements Manipulator {
         if (null == s) {
             return null;
         }
-        return Long.valueOf(s);
+        try {
+            return Long.valueOf(s);
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("String \"" + s
+                    + "\" cannot be cast to long.", e);
+        }
     }
 
     /**

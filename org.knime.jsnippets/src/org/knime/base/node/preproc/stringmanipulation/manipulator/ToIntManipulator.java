@@ -68,7 +68,12 @@ public class ToIntManipulator implements Manipulator {
         if (null == s) {
             return null;
         }
-        return Integer.valueOf(s);
+        try {
+            return Integer.valueOf(s);
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("String \"" + s
+                    + "\" cannot be cast to int.", e);
+        }
     }
 
     /**

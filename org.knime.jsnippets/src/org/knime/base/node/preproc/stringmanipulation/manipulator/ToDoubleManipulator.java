@@ -68,7 +68,12 @@ public class ToDoubleManipulator implements Manipulator {
         if (null == s) {
             return null;
         }
-        return Double.valueOf(s);
+        try {
+            return Double.valueOf(s);
+        } catch (NumberFormatException e) {
+            throw new RuntimeException("String \"" + s
+                    + "\" cannot be cast to double.", e);
+        }
     }
 
     /**

@@ -68,7 +68,7 @@ public class ToIntManipulatorTest {
      * {@link ToIntManipulator#toInt(Long)}.
      */
     @Test
-    public void testToStringAdditional() {
+    public void testToLongAdditional() {
         Assert.assertEquals(null,
                 ToIntManipulator.toInt((String)null));
         Assert.assertEquals(null,
@@ -91,7 +91,7 @@ public class ToIntManipulatorTest {
      * Test method for the examples of the toInt Manipulator
      */
     @Test
-    public void testToStringExamples() {
+    public void testToIntExamples() {
         // Test the examples in the description of the toInt function
         Assert.assertEquals(null,
                 ToIntManipulator.toInt((String)null));
@@ -99,6 +99,13 @@ public class ToIntManipulatorTest {
                 ToIntManipulator.toInt(2.0));
         Assert.assertEquals(new Integer(2),
                 ToIntManipulator.toInt("2"));
+    }
+
+    /**
+     * Test cast failure.
+     */
+    @Test(expected=RuntimeException.class)
+    public void failTestToInt() {
         Assert.assertEquals(null,
                 ToIntManipulator.toInt("2.0"));
     }

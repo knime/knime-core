@@ -68,7 +68,7 @@ public class ToLongManipulatorTest {
      * {@link ToLongManipulator#toLong(Long)}.
      */
     @Test
-    public void testToStringAdditional() {
+    public void testToLongAdditional() {
         Assert.assertEquals(null,
                 ToLongManipulator.toLong((String)null));
         Assert.assertEquals(null,
@@ -91,7 +91,7 @@ public class ToLongManipulatorTest {
      * Test method for the examples of the toLong Manipulator
      */
     @Test
-    public void testToStringExamples() {
+    public void testToLongExamples() {
         // Test the examples in the description of the toLong function
         Assert.assertEquals(null,
                 ToLongManipulator.toLong((String)null));
@@ -99,6 +99,13 @@ public class ToLongManipulatorTest {
                 ToLongManipulator.toLong(2.0));
         Assert.assertEquals(new Long(2),
                 ToLongManipulator.toLong("2"));
+    }
+
+    /**
+     * Test cast failure.
+     */
+    @Test(expected=RuntimeException.class)
+    public void failTestToLong() {
         Assert.assertEquals(null,
                 ToLongManipulator.toLong("2.0"));
     }
