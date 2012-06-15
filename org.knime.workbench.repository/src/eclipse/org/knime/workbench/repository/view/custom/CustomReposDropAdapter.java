@@ -50,6 +50,8 @@
  */
 package org.knime.workbench.repository.view.custom;
 
+import java.util.Iterator;
+
 import org.eclipse.jface.util.LocalSelectionTransfer;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
@@ -87,7 +89,8 @@ class CustomReposDropAdapter extends ViewerDropAdapter {
      */
     @Override
     public boolean performDrop(final Object data) {
-        IRepositoryObject target = (IRepositoryObject)getCurrentTarget();
+        AbstractRepositoryObject target =
+                (AbstractRepositoryObject)getCurrentTarget();
 
         if (!isValidTarget(target)) {
             return false;
@@ -99,21 +102,35 @@ class CustomReposDropAdapter extends ViewerDropAdapter {
         if (selection.isEmpty()) {
             return false;
         }
-        if (!(selection.getFirstElement() instanceof AbstractRepositoryObject)) {
-            return false;
-        }
-        final AbstractRepositoryObject copy;
-        if (sourceAndTargetEqual(getCurrentEvent())) {
-            copy = (AbstractRepositoryObject)selection.getFirstElement();
-            copy.getParent().removeChild(copy);
-        } else {
-            copy =
-                    (AbstractRepositoryObject)((AbstractRepositoryObject)selection
-                            .getFirstElement()).deepCopy();
+        Iterator<?> it = selection.iterator();
+        while (it.hasNext()) {
+            if (!(it.next() instanceof AbstractRepositoryObject)) {
+                return false;
+            }
         }
 
         if (target == null) {
             target = m_manager.getRoot();
+        }
+
+        it = selection.iterator();
+        boolean ok = true;
+        while (it.hasNext()) {
+            ok &= addOneObject(target, (AbstractRepositoryObject)it.next());
+        }
+
+        getViewer().refresh();
+        return ok;
+    }
+
+    private boolean addOneObject(final AbstractRepositoryObject target,
+            final AbstractRepositoryObject o) {
+        final AbstractRepositoryObject copy;
+        if (sourceAndTargetEqual(getCurrentEvent())) {
+            copy = o;
+        } else {
+            copy = (AbstractRepositoryObject)o.deepCopy();
+
         }
         if (target instanceof Root) {
             Root root = (Root)target;
@@ -123,21 +140,19 @@ class CustomReposDropAdapter extends ViewerDropAdapter {
 
             root.addChild(copy);
             copy.setParent(root);
-        } else if (target instanceof AbstractRepositoryObject) {
+        } else {
             int location = getCurrentLocation();
             IContainerObject parent = target.getParent();
             assert ((parent instanceof Root) || ((parent instanceof Category) && CustomRepositoryManager
                     .isCustomCategory((Category)parent)));
 
             if (location == LOCATION_AFTER) {
-                if (!parent.addChildAfter(copy,
-                        (AbstractRepositoryObject)target)) {
+                if (!parent.addChildAfter(copy, target)) {
                     return false;
                 }
                 copy.setParent(parent);
             } else if (location == LOCATION_BEFORE) {
-                if (!parent.addChildBefore(copy,
-                        (AbstractRepositoryObject)target)) {
+                if (!parent.addChildBefore(copy, target)) {
                     return false;
                 }
                 copy.setParent(parent);
@@ -155,8 +170,6 @@ class CustomReposDropAdapter extends ViewerDropAdapter {
                 return false;
             }
         }
-
-        getViewer().refresh();
         return true;
     }
 
