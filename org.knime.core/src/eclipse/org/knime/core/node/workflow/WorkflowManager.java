@@ -1587,16 +1587,21 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 return;
             }
             ArrayList<NodeAndInports> nodes
-              = m_workflow.findAllConnectedNodes(inPorts);
+                              = m_workflow.findAllConnectedNodes(inPorts);
+            // TODO: ideally we should call this here (and not later...):
+//            resetAndConfigureAffectedLoopContext(nodes)
+            // ...requires rewrite of BFS search in WF to return <NodeAndInports>
             ListIterator<NodeAndInports> li = nodes.listIterator(nodes.size());
             while (li.hasPrevious()) {
                 NodeAndInports nai = li.previous();
                 NodeContainer nc = m_workflow.getNode(nai.getID());
                 if (nc.isResetable()) {
                     if (nc instanceof SingleNodeContainer) {
-                        // TODO: this ignores loops that could potentially
-                        //   be connected to this node upstream but NOT
-                        //   connected to the incoming port.
+                        // make sure we clean up potentially affected
+                        // loop start nodes inside this WFM:
+                        // TODO: ... and not here (for every node):
+                        resetAndConfigureAffectedLoopContext(nc.getID());
+                        // and then reset node
                         ((SingleNodeContainer)nc).reset();
                     } else {
                         assert nc instanceof WorkflowManager;
@@ -1606,12 +1611,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     }
                 }
             }
-            // TODO Michael: this can be replaced by checkForNodeState...
-            //
-            // don't let the WFM decide on the state himself - for example,
-            // if there is only one WFMTHROUGH connection contained, it will
-            // produce wrong states! Force it to be idle.
-            setState(State.IDLE);
+            checkForNodeStateChanges(false);
         }
     }
 
@@ -3489,51 +3489,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
-    /** Reset those nodes which are connected to a specific workflow
-     * incoming port.
-     *
-     * @param inportIndex index of port.
-     */
-    void invokeResetOnPortSuccessors(final int inportIndex) {
-        synchronized (m_workflowMutex) {
-            // will contain source nodes (meta input nodes) connected to
-            // correct port
-            HashMap<NodeContainer, Integer> sourceNodes
-                    = new HashMap<NodeContainer, Integer>();
-            // find all nodes that are directly connected to this meta nodes
-            // input port
-            for (ConnectionContainer cc
-                          : m_workflow.getConnectionsBySource(getID())) {
-                NodeID id = cc.getDest();
-                NodeContainer nc = m_workflow.getNode(id);
-                if ((cc.getType().equals(ConnectionType.WFMIN))
-                        &&    ((inportIndex < 0)
-                            || (cc.getSourcePort() == inportIndex))) {
-                    // (avoid WFMTHROUGH connections)
-                    sourceNodes.put(nc, cc.getDestPort());
-                }
-            }
-            // and then reset those nodes (all of their successors will be
-            // reset automatically)
-            for (NodeContainer nc : sourceNodes.keySet()) {
-                assert !this.getID().equals(nc.getID());
-                if (nc.isResetable()) {
-                    this.resetSuccessors(nc.getID());
-                    if (nc instanceof SingleNodeContainer) {
-                        invokeResetOnSingleNodeContainer(
-                                (SingleNodeContainer)nc);
-                    } else {
-                        assert nc instanceof WorkflowManager;
-                        int portIndex = sourceNodes.get(nc);
-                        ((WorkflowManager)nc).invokeResetOnPortSuccessors(
-                                portIndex);
-                    }
-                }
-            }
-        }
-        checkForNodeStateChanges(true);
-    }
-
     /**
      * Test if successors of a node are currently executing.
      *
@@ -3748,6 +3703,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     private void resetSuccessors(final NodeID id, final int portID) {
         assert Thread.holdsLock(m_workflowMutex);
+        assert !this.getID().equals(id);
         Set<ConnectionContainer> succs = m_workflow.getConnectionsBySource(id);
         for (ConnectionContainer conn : succs) {
             NodeID currID = conn.getDest();
@@ -3780,11 +3736,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             for (Integer i : outcomingPorts) {
                                 this.resetSuccessors(currID, i);
                             }
-                            // clean loop context affected one level down
-                            wfm.resetAndConfigureAffectedLoopContext(currID,
-                                    conn.getDestPort());
-                            // ...then reset nodes inside WFM.
-                            wfm.invokeResetOnPortSuccessors(conn.getDestPort());
+                            // Reset nodes inside WFM.
+                            // (cleaning of  loop context affected one level
+                            //  down will be done in there.)
+                            wfm.resetNodesInWFMConnectedToInPorts(
+                                    Collections.singleton(conn.getDestPort()));
                         }
                     }
                 } else {

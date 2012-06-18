@@ -1074,8 +1074,9 @@ class Workflow {
                 assert currentID.equals(cc.getDest());
                 NodeID srcID = cc.getSource();
                 if (this.getID().equals(srcID)) {
-                    throw new IllegalLoopException("Loops can not start"
-                            + " from outside of a workflow!");
+                    // ignore connections from outside the workflow (they
+                    // can still feed data into an existing loop).
+                    continue;
                 }
                 NodeContainer srcNC = getNode(srcID);
                 if (srcNC instanceof SingleNodeContainer) {
