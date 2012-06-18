@@ -66,10 +66,11 @@ public class RepositoryContentProvider implements ITreeContentProvider {
      */
     @Override
     public Object[] getElements(final Object inputElement) {
-        if (inputElement instanceof String) {
+        if (inputElement instanceof IContainerObject) {
+            return ((IContainerObject)inputElement).getChildren();
+        } else {
             return new Object[] {inputElement};
         }
-        return ((IContainerObject)inputElement).getChildren();
     }
 
     /**
@@ -88,7 +89,11 @@ public class RepositoryContentProvider implements ITreeContentProvider {
      */
     @Override
     public Object getParent(final Object element) {
-        return ((IRepositoryObject)element).getParent();
+        if (element instanceof IRepositoryObject) {
+            return ((IRepositoryObject)element).getParent();
+        } else {
+            return null;
+        }
     }
 
     /**
@@ -111,22 +116,11 @@ public class RepositoryContentProvider implements ITreeContentProvider {
     }
 
     /**
-     * Changes the input.
-     *
-     * @see org.eclipse.jface.viewers.IContentProvider#
-     *      inputChanged(org.eclipse.jface.viewers.Viewer, java.lang.Object,
-     *      java.lang.Object)
+     * {@inheritDoc}
      */
     @Override
     public void inputChanged(final Viewer viewer, final Object oldInput,
             final Object newInput) {
-        if (newInput instanceof String) {
-            return;
-        }
-
-        if (!((newInput instanceof IContainerObject) || (newInput == null))) {
-            throw new IllegalArgumentException(
-                    "ContentProvider needs an 'IContainerObject' as input");
-        }
+        // do nothing
     }
 }
