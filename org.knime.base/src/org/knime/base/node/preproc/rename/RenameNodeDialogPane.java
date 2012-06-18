@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 1, 2006 (wiswedel): created
  */
@@ -82,7 +82,7 @@ import org.knime.core.node.NotConfigurableException;
 
 /**
  * Dialog for the renaming node.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class RenameNodeDialogPane extends NodeDialogPane {
@@ -183,8 +183,9 @@ public class RenameNodeDialogPane extends NodeDialogPane {
         for (int i = 0; i < m_colSettings.length; i++) {
             RenameColumnSetting colSet = m_colSettings[i];
             String newName = colSet.getNewColumnName();
+            final String oldName = colSet.getName();
             if (newName == null) {
-                newName = colSet.getName();
+                newName = oldName;
             }
             if (newName == null || newName.length() == 0) {
                 String warnMessage = "Column name at index " + i + " is empty.";
@@ -192,18 +193,18 @@ public class RenameNodeDialogPane extends NodeDialogPane {
             }
             Integer duplIndex = duplicateHash.put(newName, i);
             if (duplIndex != null) {
-                String warnMessage = "Duplicate column name \"" + newName 
+                String warnMessage = "Duplicate column name \"" + newName
                 + "\" at index " + duplIndex + " and " + i;
                 throw new InvalidSettingsException(warnMessage);
             }
-            NodeSettingsWO subSub = subSettings.addNodeSettings(newName);
+            NodeSettingsWO subSub = subSettings.addNodeSettings(oldName);
             colSet.saveSettingsTo(subSub);
         }
     }
 
     /**
      * Adds one row to m_panel.
-     * 
+     *
      * @param colSet the settings for the column
      * @param labelWidth the width to be used for the column's name
      */
@@ -227,9 +228,11 @@ public class RenameNodeDialogPane extends NodeDialogPane {
         // add listeners to all fields that can change: They will update their
         // RenameColumnSetting immediately
         newNameField.addFocusListener(new FocusListener() {
+            @Override
             public void focusGained(final FocusEvent e) {
             }
 
+            @Override
             public void focusLost(final FocusEvent e) {
                 String newText = newNameField.getText();
                 colSet.setNewColumnName(newText);
@@ -246,6 +249,7 @@ public class RenameNodeDialogPane extends NodeDialogPane {
             }
         });
         checker.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 if (checker.isSelected()) {
                     newNameField.setEnabled(true);
@@ -265,6 +269,7 @@ public class RenameNodeDialogPane extends NodeDialogPane {
         typeChooser.setRenderer(new DataTypeNameRenderer());
         typeChooser.setSelectedIndex(selectedType);
         typeChooser.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 colSet.setNewValueClassIndex(typeChooser.getSelectedIndex());
             }
