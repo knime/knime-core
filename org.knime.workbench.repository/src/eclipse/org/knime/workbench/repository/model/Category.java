@@ -198,8 +198,15 @@ public class Category extends AbstractContainerObject {
      */
     @Override
     public int hashCode() {
-        return ((m_path == null) ? 0x6e14987 : m_path.hashCode())
-                ^ getID().hashCode();
+        final int prime = 31;
+        int result = super.hashCode();
+        result =
+                prime
+                        * result
+                        + ((m_description == null) ? 0 : m_description
+                                .hashCode());
+        result = prime * result + ((m_path == null) ? 0 : m_path.hashCode());
+        return result;
     }
 
     /**
@@ -210,20 +217,27 @@ public class Category extends AbstractContainerObject {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
+        if (!super.equals(obj)) {
             return false;
         }
         if (getClass() != obj.getClass()) {
             return false;
         }
         Category other = (Category)obj;
-        if (this.getPath() == other.getPath()) {
-            return this.getID().equals(other.getID());
-        } else if (this.getPath() != null) {
-            return this.getPath().equals(other.getPath())
-                    && this.getID().equals(other.getID());
-        } else {
+        if (m_description == null) {
+            if (other.m_description != null) {
+                return false;
+            }
+        } else if (!m_description.equals(other.m_description)) {
             return false;
         }
+        if (m_path == null) {
+            if (other.m_path != null) {
+                return false;
+            }
+        } else if (!m_path.equals(other.m_path)) {
+            return false;
+        }
+        return true;
     }
 }

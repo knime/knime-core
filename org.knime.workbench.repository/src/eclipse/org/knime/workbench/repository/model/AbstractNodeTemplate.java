@@ -119,4 +119,44 @@ public abstract class AbstractNodeTemplate extends AbstractRepositoryObject
     public void setCategoryPath(final String categoryPath) {
         m_categoryPath = categoryPath;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result =
+                prime
+                        * result
+                        + ((m_categoryPath == null) ? 0 : m_categoryPath
+                                .hashCode());
+        return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!super.equals(obj)) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        AbstractNodeTemplate other = (AbstractNodeTemplate)obj;
+        if (m_categoryPath == null) {
+            if (other.m_categoryPath != null) {
+                return false;
+            }
+        } else if (!m_categoryPath.equals(other.m_categoryPath)) {
+            return false;
+        }
+        return true;
+    }
 }

@@ -51,7 +51,6 @@ public class MetaNodeTemplate extends AbstractNodeTemplate {
         return m_manager;
     }
 
-
     @Override
     public String getCategoryPath() {
         if (super.getCategoryPath() != null) {
@@ -64,9 +63,8 @@ public class MetaNodeTemplate extends AbstractNodeTemplate {
         if (m_description != null) {
             return m_description;
         }
-        return m_manager.getName() + ": "
-            + m_manager.getCustomDescription() != null
-            ? m_manager.getCustomDescription() : "";
+        return m_manager.getName() + ": " + m_manager.getCustomDescription() != null ? m_manager
+                .getCustomDescription() : "";
     }
 
     /**
@@ -76,9 +74,9 @@ public class MetaNodeTemplate extends AbstractNodeTemplate {
     public void setDescription(final String description) {
         /*
          * If we have a description in the extension but no custome description
-         * in the meta node -> set description also as custom description
-         * If we have a custom description -> add the description found
-         * in the extension.
+         * in the meta node -> set description also as custom description If we
+         * have a custom description -> add the description found in the
+         * extension.
          */
         m_description = description;
         if (m_manager != null && m_manager.getCustomDescription() == null) {
@@ -103,7 +101,14 @@ public class MetaNodeTemplate extends AbstractNodeTemplate {
      */
     @Override
     public int hashCode() {
-        return getDescription().hashCode();
+        final int prime = 31;
+        int result = super.hashCode();
+        result =
+                prime
+                        * result
+                        + ((m_description == null) ? 0 : m_description
+                                .hashCode());
+        return result;
     }
 
     /**
@@ -114,18 +119,20 @@ public class MetaNodeTemplate extends AbstractNodeTemplate {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
+        if (!super.equals(obj)) {
             return false;
         }
         if (getClass() != obj.getClass()) {
             return false;
         }
         MetaNodeTemplate other = (MetaNodeTemplate)obj;
-        if (this.m_manager == other.m_manager) {
-            return true;
+        if (m_description == null) {
+            if (other.m_description != null) {
+                return false;
+            }
+        } else if (!m_description.equals(other.m_description)) {
+            return false;
         }
-        return this.getDescription().equals(other.getDescription());
+        return true;
     }
-
-
 }

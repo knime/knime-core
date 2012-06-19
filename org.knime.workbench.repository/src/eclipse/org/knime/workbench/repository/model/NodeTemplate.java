@@ -202,7 +202,7 @@ public class NodeTemplate extends AbstractNodeTemplate {
         if (obj == this) {
             return true;
         }
-        if (obj == null) {
+        if (!super.equals(obj)) {
             return false;
         }
         if (!(obj instanceof NodeTemplate)) {
