@@ -50,6 +50,22 @@
  */
 package org.knime.base.node.preproc.groupby;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
+import org.knime.base.data.aggregation.AggregationMethod;
+import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -72,26 +88,6 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
-
-import org.knime.base.data.aggregation.AggregationMethod;
-import org.knime.base.data.aggregation.AggregationMethods;
-import org.knime.base.data.aggregation.ColumnAggregator;
-import org.knime.base.data.aggregation.GlobalSettings;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 /**
  * The {@link NodeModel} implementation of the group by node which uses the
@@ -211,23 +207,17 @@ public class GroupByNodeModel extends NodeModel {
      */
     public GroupByNodeModel(final int ins, final int outs) {
         super(ins, outs);
-        // add the process in memory change listener
-        m_inMemory.addChangeListener(new ChangeListener() {
-            @Override
-            public void stateChanged(final ChangeEvent e) {
-                inMemoryChanged();
-            }
-        });
-        inMemoryChanged();
+        m_retainOrder.setEnabled(!m_inMemory.getBooleanValue());
     }
-
+    
     /**
-     * Call this method if the process in memory flag has changed.
+     * Call this method if the process in memory flag has changed. 
+     * @deprecated obsolete to be notified when consistent settings are 
+     *          loaded into the model (since 2.6)
      */
+    @Deprecated
     protected void inMemoryChanged() {
-        final boolean inMem = m_inMemory.getBooleanValue();
-        m_retainOrder.setBooleanValue(inMem);
-        m_retainOrder.setEnabled(!inMem);
+        // no op
     }
 
     /**

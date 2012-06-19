@@ -188,7 +188,6 @@ public class GroupByNodeDialog extends NodeDialogPane {
                 inMemoryChanged();
             }
         });
-        inMemoryChanged();
 
 //add description tab
         final Component descriptionTab =
