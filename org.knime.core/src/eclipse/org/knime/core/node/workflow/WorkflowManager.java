@@ -1974,6 +1974,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 return true;
             case UNCONFIGURED_MARKEDFOREXEC:
                 disableNodeForExecution(nc.getID());
+                // clean loops which were waiting for this one to be executed.
+                for (FlowLoopContext flc : nc.getWaitingLoops()) {
+                    disableNodeForExecution(flc.getTailNode());
+                }
+                nc.clearWaitingLoopList();
                 checkForNodeStateChanges(true);
                 return false;
             default:
