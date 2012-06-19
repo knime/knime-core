@@ -3508,26 +3508,25 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         if (nc == null) {  // somehow the node has disappeared...
             return false;
         }
-        // else it's a node inside the WFM
-        for (ConnectionContainer cc : m_workflow.getConnectionsBySource(nodeID)) {
-            switch (cc.getType()) {
-            case WFMIN:
-            case WFMTHROUGH:
-                assert false : "Outgoing connection can't be of type " +
-                    cc.getType();
-            case STD:
-                NodeID succID = cc.getDest();
-                NodeContainer succNC = getNodeContainer(succID);
-                if (succNC.getState().executionInProgress()
-                        || hasSuccessorInProgress(succID)) {
+        // get all successors of the node, including the WFM itself
+        // if there are outgoing connections:
+        LinkedHashMap<NodeID, Set<Integer>> nodes
+            = m_workflow.getBreadthFirstListOfNodeAndSuccessors(nodeID, false);
+        for (NodeID id : nodes.keySet()) {
+            if (this.getID().equals(id)) {
+                // skip outgoing connections for now
+            } else {
+                NodeContainer currentNC = getNodeContainer(id);
+                if (currentNC.getState().executionInProgress()) {
                     return true;
                 }
-                break;
-            case WFMOUT:
-                // TODO check only nodes connection to the specific WF outport
-                if (getParent().hasSuccessorInProgress(getID())) {
-                    return true;
-                }
+            }
+        }
+        // now also check successors of the metanode itself
+        if (nodes.keySet().contains(this.getID())) {
+            // TODO check only nodes connection to the specific WF outport
+            if (getParent().hasSuccessorInProgress(getID())) {
+                return true;
             }
         }
         return false;
