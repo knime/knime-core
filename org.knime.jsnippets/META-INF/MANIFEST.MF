@@ -15,4 +15,5 @@ Bundle-ClassPath: knime-jsnippets.jar,
  lib/rsyntaxtextarea_2.0.3.jar,
  lib/rsta-language-support_2.0.3.jar,
  lib/snippet_inc/commons-lang3-3.0.1.jar
-Export-Package: org.knime.base.node.util
+Export-Package: org.knime.base.node.preproc.stringmanipulation.manipulator,
+ org.knime.base.node.util
