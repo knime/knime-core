@@ -177,6 +177,12 @@
         </filter>
     </resource>
     <resource path="src/org/knime/base/node/preproc/stringmanipulation/JavaScriptingCompletionProvider.java" type="org.knime.base.node.preproc.stringmanipulation.JavaScriptingCompletionProvider">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.JavaScriptingCompletionProvider"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.base.node.preproc.stringmanipulation.JavaScriptingCompletionProvider"/>
@@ -202,11 +208,345 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/StringManipulationNodeDialog.java" type="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeDialog">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeDialog"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/StringManipulationNodeFactory.java" type="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeFactory">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeFactory"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/StringManipulationNodeModel.java" type="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeModel">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeModel"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/StringManipulationSettings.java" type="org.knime.base.node.preproc.stringmanipulation.StringManipulationSettings">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.StringManipulationSettings"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/node/preproc/stringmanipulation/StringManipulatorProvider.java" type="org.knime.base.node.preproc.stringmanipulation.StringManipulatorProvider">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.StringManipulatorProvider"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.base.node.preproc.stringmanipulation.StringManipulatorProvider"/>
                 <message_argument value="getCategories()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/CapitalizeDelimManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.CapitalizeDelimManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.CapitalizeDelimManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/CapitalizeManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.CapitalizeManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.CapitalizeManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/CompareManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.CompareManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.CompareManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/CountCharsManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.CountCharsManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.CountCharsManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/CountCharsModifiersManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.CountCharsModifiersManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.CountCharsModifiersManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/CountManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.CountManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.CountManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/CountModifiersManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.CountModifiersManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.CountModifiersManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/IndexOfCharsManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfCharsManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfCharsManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/IndexOfCharsModifiersManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfCharsModifiersManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfCharsModifiersManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/IndexOfCharsOffsetManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfCharsOffsetManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfCharsOffsetManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/IndexOfCharsOffsetModifiersManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfCharsOffsetModifiersManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfCharsOffsetModifiersManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/IndexOfManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/IndexOfModifiersManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfModifiersManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfModifiersManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/IndexOfOffsetManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfOffsetManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfOffsetManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/IndexOfOffsetModifiersManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfOffsetModifiersManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.IndexOfOffsetModifiersManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/JoinManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.JoinManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.JoinManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/JoinSepManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.JoinSepManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.JoinSepManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/LengthManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.LengthManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.LengthManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/LowerCaseManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.LowerCaseManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.LowerCaseManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/Manipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/RemoveCharsManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveCharsManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveCharsManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/RemoveSpaceCharDuplicatesManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveSpaceCharDuplicatesManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveSpaceCharDuplicatesManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/RemoveSpaceCharsManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveSpaceCharsManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.RemoveSpaceCharsManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/ReplaceCharsManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceCharsManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceCharsManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/ReplaceCharsModifiersManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceCharsModifiersManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceCharsModifiersManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/ReplaceManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/ReplaceModifiersManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceModifiersManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.ReplaceModifiersManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/ReverseManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.ReverseManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.ReverseManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/StringManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.StringManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.StringManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/StripEndManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.StripEndManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.StripEndManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/StripManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.StripManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.StripManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/StripStartManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.StripStartManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.StripStartManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/SubstringOffsetLengthManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.SubstringOffsetLengthManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.SubstringOffsetLengthManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/SubstringOffsetManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.SubstringOffsetManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.SubstringOffsetManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/ToEmptyManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.ToEmptyManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.ToEmptyManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/ToNullManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.ToNullManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.ToNullManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/stringmanipulation/manipulator/UpperCaseManipulator.java" type="org.knime.base.node.preproc.stringmanipulation.manipulator.UpperCaseManipulator">
+        <filter id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.stringmanipulation.manipulator.UpperCaseManipulator"/>
+                <message_argument value="org.knime.jsnippets_2.6.0"/>
             </message_arguments>
         </filter>
     </resource>
