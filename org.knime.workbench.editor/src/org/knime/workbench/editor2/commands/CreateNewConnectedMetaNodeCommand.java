@@ -52,39 +52,39 @@ package org.knime.workbench.editor2.commands;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.EditPartViewer;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowCopyContent;
 import org.knime.core.node.workflow.WorkflowManager;
 
 /**
+ * Creates a new meta node - and may auto connect it to another one.
  *
  * @author ohl, University of Konstanz
  */
-public class CreateNewConnectedMetaNodeCommand
-    extends CreateNewConnectedNodeCommand {
+public class CreateNewConnectedMetaNodeCommand extends
+        AbstractCreateNewConnectedNodeCommand {
 
     private final WorkflowManager m_source;
 
     private final NodeID m_sourceID;
 
-    private final Point m_location;
-
     /**
-     * @param viewer
-     * @param manager
-     * @param factory
+     * Creates a new command to insert a new metanode.
+     *
+     * @param viewer the current viewer (usually a workflow editor)
+     * @param hostWfm the workflow manager in which the node should be inserted
+     * @param sourceWfm the workflow manager that contains the meta node
+     *            template
+     * @param sourceID the id of the meta node in the source workflow manager
      * @param location absolute coordinates of the new node
-     * @param connectTo
+     * @param connectTo the node to which the new node should be connected
      */
     public CreateNewConnectedMetaNodeCommand(final EditPartViewer viewer,
-            final WorkflowManager hostWFM, final WorkflowManager source,
+            final WorkflowManager hostWfm, final WorkflowManager sourceWfm,
             final NodeID sourceID, final Point location, final NodeID connectTo) {
-        super(viewer, hostWFM, null, location, connectTo);
-        m_source = source;
+        super(viewer, hostWfm, location, connectTo);
+        m_source = sourceWfm;
         m_sourceID = sourceID;
-        m_location = location;
     }
 
     /**
@@ -92,8 +92,7 @@ public class CreateNewConnectedMetaNodeCommand
      */
     @Override
     public boolean canExecute() {
-        return super.canExecute() && m_source != null && m_sourceID != null
-                && m_location != null;
+        return super.canExecute() && m_source != null && m_sourceID != null;
 
     }
 
@@ -106,25 +105,8 @@ public class CreateNewConnectedMetaNodeCommand
         content.setNodeIDs(m_sourceID);
         WorkflowManager hostWFM = getHostWFM();
         NodeID[] copied =
-                hostWFM.copyFromAndPasteHere(m_source, content)
-                        .getNodeIDs();
+                hostWFM.copyFromAndPasteHere(m_source, content).getNodeIDs();
         assert copied.length == 1;
-        // create UI info
-        NodeContainer newNode = hostWFM.getNodeContainer(copied[0]);
-        NodeUIInformation uiInfo =
-                newNode.getUIInformation();
-        // create extra info and set it
-        if (uiInfo == null) {
-            uiInfo =
-                    new NodeUIInformation(m_location.x, m_location.y, -1, -1,
-                            true);
-        } else {
-            uiInfo.setNodeLocation(m_location.x, m_location.y,
-                    uiInfo.getBounds()[2], uiInfo.getBounds()[3]);
-        }
-        newNode.setUIInformation(uiInfo);
         return copied[0];
-
     }
-
 }
