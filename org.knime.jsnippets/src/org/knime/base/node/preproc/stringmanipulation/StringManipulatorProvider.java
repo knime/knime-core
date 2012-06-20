@@ -214,6 +214,7 @@ public final class StringManipulatorProvider implements ManipulatorProvider {
      * Get all categories.
      *
      * @return the categories
+     * @since 2.6
      */
     @Override
     public Collection<String> getCategories() {

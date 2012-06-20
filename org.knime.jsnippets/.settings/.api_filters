@@ -1,13 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.jsnippets" version="2">
-    <resource path="META-INF/MANIFEST.MF">
-        <filter id="923795461">
-            <message_arguments>
-                <message_argument value="2.6.0.qualifier"/>
-                <message_argument value="2.5.4.0032739"/>
-            </message_arguments>
-        </filter>
-    </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.apache.commons.lang3.AnnotationUtils">
         <filter id="305365105">
             <message_arguments>
@@ -184,50 +176,6 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.base.node.preproc.stringmanipulation.JavaScriptingCompletionProvider">
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.base.node.preproc.stringmanipulation.JavaScriptingCompletionProvider"/>
-                <message_argument value="addCompletion(Completion)"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.base.node.preproc.stringmanipulation.JavaScriptingCompletionProvider"/>
-                <message_argument value="addCompletions(List)"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.base.node.preproc.stringmanipulation.JavaScriptingCompletionProvider"/>
-                <message_argument value="clear()"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.base.node.preproc.stringmanipulation.JavaScriptingCompletionProvider"/>
-                <message_argument value="isValidChar(char)"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.base.node.preproc.stringmanipulation.JavaScriptingCompletionProvider"/>
-                <message_argument value="removeCompletion(Completion)"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.base.node.preproc.stringmanipulation.JavaScriptingCompletionProvider"/>
-                <message_argument value="setColumns(Iterable&lt;DataColumnSpec&gt;)"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.base.node.preproc.stringmanipulation.JavaScriptingCompletionProvider"/>
-                <message_argument value="setFlowVariables(Iterable&lt;FlowVariable&gt;)"/>
-            </message_arguments>
-        </filter>
-    </resource>
     <resource path="src/org/knime/base/node/preproc/stringmanipulation/JavaScriptingCompletionProvider.java" type="org.knime.base.node.preproc.stringmanipulation.JavaScriptingCompletionProvider">
         <filter id="338792546">
             <message_arguments>
@@ -250,39 +198,7 @@
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.base.node.preproc.stringmanipulation.JavaScriptingCompletionProvider"/>
-                <message_argument value="isValidChar(char)"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.base.node.preproc.stringmanipulation.JavaScriptingCompletionProvider"/>
                 <message_argument value="removeCompletion(Completion)"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.base.node.preproc.stringmanipulation.JavaScriptingCompletionProvider"/>
-                <message_argument value="setColumns(Iterable&lt;DataColumnSpec&gt;)"/>
-            </message_arguments>
-        </filter>
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.base.node.preproc.stringmanipulation.JavaScriptingCompletionProvider"/>
-                <message_argument value="setFlowVariables(Iterable&lt;FlowVariable&gt;)"/>
-            </message_arguments>
-        </filter>
-        <filter id="576720909">
-            <message_arguments>
-                <message_argument value="KnimeCompletionProvider"/>
-                <message_argument value="JavaScriptingCompletionProvider"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/org/knime/base/node/preproc/stringmanipulation/StringManipulationNodeModel.java" type="org.knime.base.node.preproc.stringmanipulation.StringManipulationNodeModel">
-        <filter id="576725006">
-            <message_arguments>
-                <message_argument value="FlowVariableProvider"/>
-                <message_argument value="StringManipulationNodeModel"/>
             </message_arguments>
         </filter>
     </resource>
@@ -290,11 +206,6 @@
         <filter id="338792546">
             <message_arguments>
                 <message_argument value="org.knime.base.node.preproc.stringmanipulation.StringManipulatorProvider"/>
-                <message_argument value="getCategories()"/>
-            </message_arguments>
-        </filter>
-        <filter id="1143996420">
-            <message_arguments>
                 <message_argument value="getCategories()"/>
             </message_arguments>
         </filter>
