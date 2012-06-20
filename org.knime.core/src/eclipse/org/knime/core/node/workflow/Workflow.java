@@ -62,6 +62,8 @@ import java.util.Stack;
 import java.util.TreeMap;
 
 import org.knime.core.node.Node.LoopRole;
+import org.knime.core.node.port.MetaPortInfo;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
 import org.knime.core.util.Pair;
 
@@ -944,6 +946,116 @@ class Workflow {
                 }
             }
         }
+    }
+
+    /** Get the NC for the argument ID and cast it to a WFM. Throws
+     * exception when the argument is unknown/invalid. */
+    private WorkflowManager getAsWFMMetaNode(final NodeID metaNodeID) {
+        NodeContainer nc = m_nodes.get(metaNodeID);
+        if (nc == null) {
+            throw new IllegalArgumentException("Node ID \""
+                    + metaNodeID + "\" is invalid (no such node).");
+        }
+        if (!(nc instanceof WorkflowManager)) {
+            throw new IllegalArgumentException("Node \""
+                    + nc.getNameWithID() + "\" is not a meta node.");
+        }
+        WorkflowManager wfm = (WorkflowManager)nc;
+        return wfm;
+    }
+
+    /** Implementation of {@link WorkflowManager#getMetanodeInputPortInfo(NodeID)}.
+     * @param metaNodeID ...
+     * @return ...
+     */
+    MetaPortInfo[] getMetanodeInputPortInfo(final NodeID metaNodeID) {
+        WorkflowManager wfm = getAsWFMMetaNode(metaNodeID);
+        Workflow wfmFlow = wfm.getWorkflow();
+
+        MetaPortInfo[] result = new MetaPortInfo[wfm.getNrInPorts()];
+        for (int i = 0; i < result.length; i++) {
+            int insideCount = 0;
+            for (ConnectionContainer cc : wfmFlow.getConnectionsBySource(
+                    metaNodeID)) {
+                if (cc.getSourcePort() == i) {
+                    // could also be a through connection
+                    insideCount += 1;
+                }
+            }
+            boolean hasOutsideConnection = false;
+            for (ConnectionContainer outCC : getConnectionsByDest(metaNodeID)) {
+                if (outCC.getDestPort() == i) {
+                    hasOutsideConnection = true;
+                    break;
+                }
+            }
+            String message;
+            boolean isConnected;
+            PortType portType = wfm.getInPort(i).getPortType();
+            if (hasOutsideConnection || insideCount > 0) {
+                isConnected = true;
+                if (hasOutsideConnection && insideCount > 0) {
+                    message = "Connected to one upstream node and "
+                        + insideCount + " downstream node(s)";
+                } else if (hasOutsideConnection) {
+                    message = "Connected to one upstream node";
+                } else {
+                    message = "Connected to " + insideCount + " downstream node(s)";
+                }
+            } else {
+                isConnected = false;
+                message = null;
+            }
+            result[i] = new MetaPortInfo(portType, isConnected, message, i);
+        }
+        return result;
+    }
+
+    /** Implementation of {@link WorkflowManager#getMetanodeOutputPortInfo(NodeID)}.
+     * @param metaNodeID ...
+     * @return ...
+     */
+    MetaPortInfo[] getMetanodeOutputPortInfo(final NodeID metaNodeID) {
+        WorkflowManager wfm = getAsWFMMetaNode(metaNodeID);
+        Workflow wfmFlow = wfm.getWorkflow();
+
+        MetaPortInfo[] result = new MetaPortInfo[wfm.getNrOutPorts()];
+        for (int i = 0; i < result.length; i++) {
+            boolean hasInsideConnection = false;
+            for (ConnectionContainer cc : wfmFlow.getConnectionsByDest(
+                    metaNodeID)) {
+                if (cc.getDestPort() == i) {
+                    hasInsideConnection = true;
+                    break;
+                }
+            }
+            int outsideCount = 0;
+            for (ConnectionContainer outCC : getConnectionsBySource(metaNodeID)) {
+                if (outCC.getSourcePort() == i) {
+                    outsideCount += 1;
+                }
+            }
+            String message;
+            boolean isConnected;
+            PortType portType = wfm.getOutPort(i).getPortType();
+            if (hasInsideConnection || outsideCount > 0) {
+                isConnected = true;
+                if (hasInsideConnection && outsideCount > 0) {
+                    message = "Connected to one upstream node and "
+                        + outsideCount + " downstream node(s)";
+                } else if (hasInsideConnection) {
+                    // could also be a through conn but we ignore here
+                    message = "Connected to one upstream node";
+                } else {
+                    message = "Connected to " + outsideCount + " downstream node(s)";
+                }
+            } else {
+                isConnected = false;
+                message = null;
+            }
+            result[i] = new MetaPortInfo(portType, isConnected, message, i);
+        }
+        return result;
     }
 
     /** Helper class for lists of nodes with their inports and the depth

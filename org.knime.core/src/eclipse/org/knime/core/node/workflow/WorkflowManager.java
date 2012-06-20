@@ -1144,20 +1144,29 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
-    /**
-     * @param metaNodeID
-     * @return
+    /** Get information on input ports of the argument (meta) node. It's used
+     * by the routines that allow the user to change the port information
+     * (add, delete, move).
+     * @param metaNodeID The argument node
+     * @return the meta node's port info.
+     * @throws IllegalArgumentException If the node is invalid.
      * @since 2.6 */
     public MetaPortInfo[] getMetanodeInputPortInfo(final NodeID metaNodeID) {
-        return null;
+        synchronized (m_workflowMutex) {
+            return m_workflow.getMetanodeInputPortInfo(metaNodeID);
+        }
     }
 
-    /**
-     * @param metaNodeID
-     * @return
+    /** Get information on output ports of the argument (meta) node. Similar
+     * to {@link #getMetanodeInputPortInfo(NodeID)}.
+     * @param metaNodeID ...
+     * @return ...
+     * @throws IllegalArgumentException If the node is invalid.
      * @since 2.6 */
     public MetaPortInfo[] getMetanodeOutputPortInfo(final NodeID metaNodeID) {
-        return null;
+        synchronized (m_workflowMutex) {
+            return m_workflow.getMetanodeOutputPortInfo(metaNodeID);
+        }
     }
 
     /**

@@ -50,7 +50,11 @@
  */
 package org.knime.core.node.port;
 
-/**
+/** Object describing a meta node port. Used in the action to modify meta node
+ * port orders, types, etc. It comprises the port type, whether it's connected
+ * (only if created from the WFM) and what its index in the list of all
+ * in/out ports is.
+ *
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @noinstantiate This class is not intended to be instantiated by clients.
@@ -64,12 +68,13 @@ public final class MetaPortInfo {
     private int m_oldIndex;
     private int m_newIndex;
 
-    /**
-     * @param type
-     * @param isConnected
-     * @param message
-     * @param oldIndex */
-    MetaPortInfo(final PortType type, final boolean isConnected,
+    /** Created from the WFM. Fills the object according the arguments. A port
+     * may be connected or not.
+     * @param type ...
+     * @param isConnected .. if connected somewhere in (or outside) the flow
+     * @param message The tooltip (only if isConnected)
+     * @param oldIndex the port index. */
+    public MetaPortInfo(final PortType type, final boolean isConnected,
             final String message, final int oldIndex) {
         m_type = type;
         m_isConnected = isConnected;
@@ -78,10 +83,10 @@ public final class MetaPortInfo {
         m_newIndex = -1;
     }
 
-    /**
-     * @param type
-     * @param newIndex */
-    MetaPortInfo(final PortType type, final int newIndex) {
+    /** Called from the UI to define a new port (not connected).
+     * @param type ...
+     * @param newIndex Index of port. */
+    public MetaPortInfo(final PortType type, final int newIndex) {
         m_type = type;
         m_newIndex = newIndex;
         m_oldIndex = -1;
@@ -89,8 +94,29 @@ public final class MetaPortInfo {
         m_message = null;
     }
 
+    /** @return the isConnected */
+    public boolean isConnected() {
+        return m_isConnected;
+    }
 
+    /** @return the message */
+    public String getMessage() {
+        return m_message;
+    }
 
+    /** @return the oldIndex */
+    public int getOldIndex() {
+        return m_oldIndex;
+    }
 
+    /** @return the newIndex */
+    public int getNewIndex() {
+        return m_newIndex;
+    }
+
+    /** @param newIndex the newIndex to set */
+    public void setNewIndex(final int newIndex) {
+        m_newIndex = newIndex;
+    }
 
 }
