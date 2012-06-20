@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="settings.xml">
+<entry key="name" type="xstring" value="CSV Writer"/>
+<config key="model">
+<entry key="colSeparator" type="xstring" value=","/>
+<entry key="missing" type="xstring" value=""/>
+<entry key="quoteBegin" type="xstring" value="&quot;"/>
+<entry key="quoteEnd" type="xstring" value="&quot;"/>
+<entry key="quoteMode" type="xstring" value="STRINGS"/>
+<entry key="quoteReplacement" type="xstring" value=""/>
+<entry key="sepReplacePattern" type="xstring" value=""/>
+<entry key="ReplSepInStrings" type="xboolean" value="false"/>
+<entry key="writeColHeader" type="xboolean" value="false"/>
+<entry key="writeRowHeader" type="xboolean" value="false"/>
+<entry key="decimalSeparator" type="xchar" value="."/>
+<entry key="filename" type="xstring" isnull="true" value=""/>
+<entry key="fileOverwritePolicy" type="xstring" value="Abort"/>
+<entry key="skipWriteColHeaderOnAppend" type="xboolean" value="false"/>
+<entry key="commentBegin" type="xstring" value=""/>
+<entry key="commentEnd" type="xstring" value=""/>
+<entry key="addTime" type="xboolean" value="false"/>
+<entry key="addUser" type="xboolean" value="false"/>
+<entry key="addTablename" type="xboolean" value="false"/>
+<entry key="userCommentLine" type="xstring" value=""/>
+<entry key="gzip" type="xboolean" value="false"/>
+</config>
+<entry key="hasContent" type="xboolean" value="false"/>
+<entry key="isInactive" type="xboolean" value="false"/>
+<config key="ports"/>
+</config>
