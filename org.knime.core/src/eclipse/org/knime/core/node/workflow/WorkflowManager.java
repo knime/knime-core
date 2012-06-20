@@ -106,6 +106,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
+import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -1143,6 +1144,33 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
+    /**
+     * @param metaNodeID
+     * @return
+     * @since 2.6 */
+    public MetaPortInfo[] getMetanodeInputPortInfo(final NodeID metaNodeID) {
+        return null;
+    }
+
+    /**
+     * @param metaNodeID
+     * @return
+     * @since 2.6 */
+    public MetaPortInfo[] getMetanodeOutputPortInfo(final NodeID metaNodeID) {
+        return null;
+    }
+
+    /**
+     * @param newPorts
+     * @since 2.6 */
+    public void changeMetaNodeInputPorts(final MetaPortInfo[] newPorts) {
+    }
+
+    /**
+     * @param newPorts
+     * @since 2.6 */
+    public void changeMetaNodeOutputPorts(final MetaPortInfo[] newPorts) {
+    }
 
     /////////////////////
     // Node Settings
