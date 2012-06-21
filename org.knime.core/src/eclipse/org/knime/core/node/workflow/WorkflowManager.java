@@ -1623,22 +1623,21 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 // only attempt to do this if possible.
                 return;
             }
+            // first make sure we clean up indirectly affected
+            // loop start nodes inside this WFM
+            for (Integer inPort : inPorts) {
+                resetAndConfigureAffectedLoopContext(this.getID(), inPort);
+            }
+            // now find all nodes that are directly affected:
             ArrayList<NodeAndInports> nodes
                               = m_workflow.findAllConnectedNodes(inPorts);
-            // TODO: ideally we should call this here (and not later...):
-//            resetAndConfigureAffectedLoopContext(nodes)
-            // ...requires rewrite of BFS search in WF to return <NodeAndInports>
             ListIterator<NodeAndInports> li = nodes.listIterator(nodes.size());
             while (li.hasPrevious()) {
                 NodeAndInports nai = li.previous();
                 NodeContainer nc = m_workflow.getNode(nai.getID());
                 if (nc.isResetable()) {
                     if (nc instanceof SingleNodeContainer) {
-                        // make sure we clean up potentially affected
-                        // loop start nodes inside this WFM:
-                        // TODO: ... and not here (for every node):
-                        resetAndConfigureAffectedLoopContext(nc.getID());
-                        // and then reset node
+                        // reset node
                         ((SingleNodeContainer)nc).reset();
                     } else {
                         assert nc instanceof WorkflowManager;
