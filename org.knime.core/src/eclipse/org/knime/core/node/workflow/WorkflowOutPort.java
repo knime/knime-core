@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   18.09.2007 (mb): created
  */
@@ -54,23 +54,20 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 
 /**
- * 
+ *
  * @author M. Berthold, University of Konstanz
  */
 public class WorkflowOutPort extends NodeOutPortWrapper  {
-    
+
     private final NodeInPort m_simulatedInPort;
-    
+
     /**
-     * Creates a new output port with a fixed type and index (should unique 
+     * Creates a new output port with a fixed type and index (should unique
      * to all other output ports of this node) for the given node.
-     * 
-     * @param wm The workflow manger containing this port
-     * @param pType The port's type
      * @param portIndex This port index
+     * @param pType The port's type
      */
-    WorkflowOutPort(final WorkflowManager wm, 
-            final int portIndex, final PortType pType) {
+    WorkflowOutPort(final int portIndex, final PortType pType) {
         super(portIndex, pType);
         m_simulatedInPort = new NodeInPort(portIndex, pType);
     }
@@ -79,13 +76,13 @@ public class WorkflowOutPort extends NodeOutPortWrapper  {
      * of a node within the WFM can connect to it as an "input". Since InPorts
      * only wrap name/type this is really all it does: it wraps this information
      * as specified during WFM construction into an InPort.
-     * 
+     *
      * @return fake InPort.
      */
     NodeInPort getSimulatedInPort() {
         return m_simulatedInPort;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -95,5 +92,5 @@ public class WorkflowOutPort extends NodeOutPortWrapper  {
         // the individual ports
         return super.getPortObject();
     }
-    
+
 }

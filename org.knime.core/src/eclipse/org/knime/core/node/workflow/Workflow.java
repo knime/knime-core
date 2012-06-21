@@ -1113,11 +1113,11 @@ class Workflow {
                     }
                     break;
                 }
-                if (!hasBeenFound) {
-                    throw new IllegalStateException("New meta port information array "
-                            + "does not include currently connected ports, unseen connection: "
-                            + cc);
-                }
+            }
+            if (!hasBeenFound) {
+                throw new IllegalStateException("New meta port information array "
+                        + "does not include currently connected ports, unseen connection: "
+                        + cc);
             }
         }
         return result;

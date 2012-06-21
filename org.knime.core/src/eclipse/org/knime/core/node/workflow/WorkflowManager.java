@@ -280,7 +280,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         m_outPorts = new WorkflowOutPort[outTypes.length];
         for (int i = 0; i < outTypes.length; i++) {
-            m_outPorts[i] = new WorkflowOutPort(this, i, outTypes[i]);
+            m_outPorts[i] = new WorkflowOutPort(i, outTypes[i]);
         }
         if (m_inPorts.length == 0 && m_outPorts.length == 0) {
             // this workflow is not connected to parent via any ports
@@ -341,7 +341,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         for (int i = 0; i < outPortTemplates.length; i++) {
             WorkflowPortTemplate t = outPortTemplates[i];
             m_outPorts[i] = new WorkflowOutPort(
-                    this, t.getPortIndex(), t.getPortType());
+                    t.getPortIndex(), t.getPortType());
             m_outPorts[i].setPortName(t.getPortName());
         }
         m_workflowMutex = m_inPorts.length == 0
@@ -1172,62 +1172,137 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /**
      * @param newPorts
      * @since 2.6 */
-    public void changeMetaNodeInputPorts(final NodeID metaNodeID,
+    public void changeMetaNodeInputPorts(final NodeID subFlowID,
             final MetaPortInfo[] newPorts) {
         synchronized (m_workflowMutex) {
-            WorkflowManager metaNode = getMetaNodeContainer(metaNodeID);
-            // test if changed
-            boolean hasChanged = newPorts.length != metaNode.getNrInPorts();
-            for (int i = 0; i < newPorts.length && !hasChanged; i++) {
-                if (newPorts[i].getOldIndex() != newPorts[i].getNewIndex()) {
-                    hasChanged = true;
-                }
-            }
-            if (!hasChanged) {
+            WorkflowManager subFlowMgr = getMetaNodeContainer(subFlowID);
+            if (!haveMetaPortsChanged(newPorts, subFlowMgr)) {
                 return;
             }
             final Set<ConnectionContainer> connectionsToMetaNode =
-                m_workflow.getConnectionsByDest(metaNodeID);
-            List<Pair<ConnectionContainer, ConnectionContainer>> changedConnections =
-                m_workflow.changeDestinationPortsForMetaNode(metaNodeID, newPorts);
-            for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnections) {
+                m_workflow.getConnectionsByDest(subFlowID);
+            List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsThisFlow =
+                m_workflow.changeDestinationPortsForMetaNode(subFlowID, newPorts);
+            for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
                 ConnectionContainer old = p.getFirst();
                 connectionsToMetaNode.remove(old);
                 notifyWorkflowListeners(new WorkflowEvent(
                         WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
             }
+
+            Workflow subFlow = subFlowMgr.m_workflow;
+            List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsSubFlow =
+                subFlow.changeSourcePortsForMetaNode(subFlowID, newPorts);
+            Set<ConnectionContainer> connectionsFromInsideMetaNode = subFlow.getConnectionsBySource(subFlowID);
+            for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
+                ConnectionContainer old = p.getFirst();
+                connectionsFromInsideMetaNode.remove(old);
+                subFlowMgr.notifyWorkflowListeners(new WorkflowEvent(
+                        WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
+            }
+
             WorkflowInPort[] newMNPorts = new WorkflowInPort[newPorts.length];
-            for (int i = 0; i < newPorts.length; i++ ) {
+            for (int i = 0; i < newPorts.length; i++) {
                 final int oldIndex = newPorts[i].getOldIndex();
                 if (oldIndex >= 0) {
-                    newMNPorts[i] = metaNode.getInPort(oldIndex);
+                    newMNPorts[i] = subFlowMgr.getInPort(oldIndex);
                 } else {
                     newMNPorts[i] = new WorkflowInPort(i, newPorts[i].getType());
                 }
             }
-            metaNode.m_inPorts = newMNPorts;
-            metaNode.notifyNodePropertyChangedListener(NodeProperty.MetaNodePorts);
-            for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnections) {
+            subFlowMgr.m_inPorts = newMNPorts;
+            subFlowMgr.notifyNodePropertyChangedListener(NodeProperty.MetaNodePorts);
+
+            for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
                 ConnectionContainer newConn = p.getSecond();
                 connectionsToMetaNode.add(newConn);
                 notifyWorkflowListeners(new WorkflowEvent(
                         WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
             }
-            metaNode.setDirty();
+            for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
+                ConnectionContainer newConn = p.getSecond();
+                connectionsFromInsideMetaNode.add(newConn);
+                subFlowMgr.notifyWorkflowListeners(new WorkflowEvent(
+                        WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
+            }
+            subFlowMgr.setDirty();
         }
     }
 
     /**
      * @param newPorts
      * @since 2.6 */
-    public void changeMetaNodeOutputPorts(final NodeID metaNodeID,
+    public void changeMetaNodeOutputPorts(final NodeID subFlowID,
             final MetaPortInfo[] newPorts) {
         synchronized (m_workflowMutex) {
-//            Pair<List<ConnectionContainer>, List<ConnectionContainer>> changed =
-//                m_workflow.changeSourcePortsForMetaNode(metaNodeID, newPorts);
-//            WorkflowManager wfm = (WorkflowManager)getNodeContainer(metaNodeID);
-//            wfm.m_workflow.changeDestinationPortsForMetaNode(metaNodeID, newPorts);
+            WorkflowManager subFlowMgr = getMetaNodeContainer(subFlowID);
+            if (!haveMetaPortsChanged(newPorts, subFlowMgr)) {
+                return;
+            }
+            final Set<ConnectionContainer> connectionsFromMetaNode =
+                m_workflow.getConnectionsBySource(subFlowID);
+            List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsThisFlow =
+                m_workflow.changeSourcePortsForMetaNode(subFlowID, newPorts);
+            for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
+                ConnectionContainer old = p.getFirst();
+                connectionsFromMetaNode.remove(old);
+                notifyWorkflowListeners(new WorkflowEvent(
+                        WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
+            }
+
+            Workflow subFlow = subFlowMgr.m_workflow;
+            List<Pair<ConnectionContainer, ConnectionContainer>> changedConnectionsSubFlow =
+                subFlow.changeDestinationPortsForMetaNode(subFlowID, newPorts);
+            Set<ConnectionContainer> connectionsFromInsideMetaNode = subFlow.getConnectionsByDest(subFlowID);
+            for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
+                ConnectionContainer old = p.getFirst();
+                connectionsFromInsideMetaNode.remove(old);
+                subFlowMgr.notifyWorkflowListeners(new WorkflowEvent(
+                        WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
+            }
+
+            WorkflowOutPort[] newMNPorts = new WorkflowOutPort[newPorts.length];
+            for (int i = 0; i < newPorts.length; i++) {
+                final int oldIndex = newPorts[i].getOldIndex();
+                if (oldIndex >= 0) {
+                    newMNPorts[i] = subFlowMgr.getOutPort(oldIndex);
+                } else {
+                    newMNPorts[i] = new WorkflowOutPort(i, newPorts[i].getType());
+                }
+            }
+            subFlowMgr.m_outPorts = newMNPorts;
+            subFlowMgr.notifyNodePropertyChangedListener(NodeProperty.MetaNodePorts);
+
+            for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsThisFlow) {
+                ConnectionContainer newConn = p.getSecond();
+                connectionsFromMetaNode.add(newConn);
+                notifyWorkflowListeners(new WorkflowEvent(
+                        WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
+            }
+            for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnectionsSubFlow) {
+                ConnectionContainer newConn = p.getSecond();
+                connectionsFromInsideMetaNode.add(newConn);
+                subFlowMgr.notifyWorkflowListeners(new WorkflowEvent(
+                        WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
+            }
+            subFlowMgr.setDirty();
         }
+    }
+
+    /**
+     * @param newPorts
+     * @param subFlowMgr */
+    private static boolean haveMetaPortsChanged(final MetaPortInfo[] newPorts,
+            final WorkflowManager subFlowMgr) {
+        if (newPorts.length != subFlowMgr.getNrInPorts()) {
+            return true;
+        }
+        for (int i = 0; i < newPorts.length; i++) {
+            if (newPorts[i].getOldIndex() != newPorts[i].getNewIndex()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /////////////////////
