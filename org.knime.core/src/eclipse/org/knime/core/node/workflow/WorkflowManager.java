@@ -201,9 +201,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     // Ports of the workflow (empty if it is not a subworkflow):
 
     /** ports of this Metanode (both arrays can have 0 length!). */
-    private final WorkflowInPort[] m_inPorts;
+    private WorkflowInPort[] m_inPorts;
     private UIInformation m_inPortsBarUIInfo;
-    private final WorkflowOutPort[] m_outPorts;
+    private WorkflowOutPort[] m_outPorts;
     private UIInformation m_outPortsBarUIInfo;
 
     /** Vector holding workflow specific variables. */
@@ -1172,13 +1172,62 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /**
      * @param newPorts
      * @since 2.6 */
-    public void changeMetaNodeInputPorts(final MetaPortInfo[] newPorts) {
+    public void changeMetaNodeInputPorts(final NodeID metaNodeID,
+            final MetaPortInfo[] newPorts) {
+        synchronized (m_workflowMutex) {
+            WorkflowManager metaNode = getMetaNodeContainer(metaNodeID);
+            // test if changed
+            boolean hasChanged = newPorts.length != metaNode.getNrInPorts();
+            for (int i = 0; i < newPorts.length && !hasChanged; i++) {
+                if (newPorts[i].getOldIndex() != newPorts[i].getNewIndex()) {
+                    hasChanged = true;
+                }
+            }
+            if (!hasChanged) {
+                return;
+            }
+            final Set<ConnectionContainer> connectionsToMetaNode =
+                m_workflow.getConnectionsByDest(metaNodeID);
+            List<Pair<ConnectionContainer, ConnectionContainer>> changedConnections =
+                m_workflow.changeDestinationPortsForMetaNode(metaNodeID, newPorts);
+            for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnections) {
+                ConnectionContainer old = p.getFirst();
+                connectionsToMetaNode.remove(old);
+                notifyWorkflowListeners(new WorkflowEvent(
+                        WorkflowEvent.Type.CONNECTION_REMOVED, null, old, null));
+            }
+            WorkflowInPort[] newMNPorts = new WorkflowInPort[newPorts.length];
+            for (int i = 0; i < newPorts.length; i++ ) {
+                final int oldIndex = newPorts[i].getOldIndex();
+                if (oldIndex >= 0) {
+                    newMNPorts[i] = metaNode.getInPort(oldIndex);
+                } else {
+                    newMNPorts[i] = new WorkflowInPort(i, newPorts[i].getType());
+                }
+            }
+            metaNode.m_inPorts = newMNPorts;
+            metaNode.notifyNodePropertyChangedListener(NodeProperty.MetaNodePorts);
+            for (Pair<ConnectionContainer, ConnectionContainer> p : changedConnections) {
+                ConnectionContainer newConn = p.getSecond();
+                connectionsToMetaNode.add(newConn);
+                notifyWorkflowListeners(new WorkflowEvent(
+                        WorkflowEvent.Type.CONNECTION_ADDED, null, null, newConn));
+            }
+            metaNode.setDirty();
+        }
     }
 
     /**
      * @param newPorts
      * @since 2.6 */
-    public void changeMetaNodeOutputPorts(final MetaPortInfo[] newPorts) {
+    public void changeMetaNodeOutputPorts(final NodeID metaNodeID,
+            final MetaPortInfo[] newPorts) {
+        synchronized (m_workflowMutex) {
+//            Pair<List<ConnectionContainer>, List<ConnectionContainer>> changed =
+//                m_workflow.changeSourcePortsForMetaNode(metaNodeID, newPorts);
+//            WorkflowManager wfm = (WorkflowManager)getNodeContainer(metaNodeID);
+//            wfm.m_workflow.changeDestinationPortsForMetaNode(metaNodeID, newPorts);
+        }
     }
 
     /////////////////////
@@ -5053,6 +5102,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             throw new IllegalArgumentException("No such node ID: " + id);
         }
         return nc;
+    }
+
+    /** Get contained node container and cast to WFM. Throws exception if
+     * it not exists or is not a WFM. */
+    private WorkflowManager getMetaNodeContainer(final NodeID id) {
+        NodeContainer nc = getNodeContainer(id);
+        if (!(nc instanceof WorkflowManager)) {
+            throw new IllegalArgumentException("Node "
+                    + nc.getNameWithID() + " is not a meta node.");
+        }
+        return (WorkflowManager)nc;
     }
 
     /** Does the workflow contain a node with the argument id?

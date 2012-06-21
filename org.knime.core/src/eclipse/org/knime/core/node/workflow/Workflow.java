@@ -57,6 +57,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
@@ -956,28 +957,12 @@ class Workflow {
         }
     }
 
-    /** Get the NC for the argument ID and cast it to a WFM. Throws
-     * exception when the argument is unknown/invalid. */
-    private WorkflowManager getAsWFMMetaNode(final NodeID metaNodeID) {
-        NodeContainer nc = m_nodes.get(metaNodeID);
-        if (nc == null) {
-            throw new IllegalArgumentException("Node ID \""
-                    + metaNodeID + "\" is invalid (no such node).");
-        }
-        if (!(nc instanceof WorkflowManager)) {
-            throw new IllegalArgumentException("Node \""
-                    + nc.getNameWithID() + "\" is not a meta node.");
-        }
-        WorkflowManager wfm = (WorkflowManager)nc;
-        return wfm;
-    }
-
     /** Implementation of {@link WorkflowManager#getMetanodeInputPortInfo(NodeID)}.
      * @param metaNodeID ...
      * @return ...
      */
     MetaPortInfo[] getMetanodeInputPortInfo(final NodeID metaNodeID) {
-        WorkflowManager wfm = getAsWFMMetaNode(metaNodeID);
+        WorkflowManager wfm = (WorkflowManager)m_nodes.get(metaNodeID);
         Workflow wfmFlow = wfm.getWorkflow();
 
         MetaPortInfo[] result = new MetaPortInfo[wfm.getNrInPorts()];
@@ -1024,7 +1009,7 @@ class Workflow {
      * @return ...
      */
     MetaPortInfo[] getMetanodeOutputPortInfo(final NodeID metaNodeID) {
-        WorkflowManager wfm = getAsWFMMetaNode(metaNodeID);
+        WorkflowManager wfm = (WorkflowManager)m_nodes.get(metaNodeID);
         Workflow wfmFlow = wfm.getWorkflow();
 
         MetaPortInfo[] result = new MetaPortInfo[wfm.getNrOutPorts()];
@@ -1062,6 +1047,78 @@ class Workflow {
                 message = null;
             }
             result[i] = new MetaPortInfo(portType, isConnected, message, i);
+        }
+        return result;
+    }
+
+    /**
+     * @param newPorts */
+    List<Pair<ConnectionContainer, ConnectionContainer>>
+        changeDestinationPortsForMetaNode(final NodeID metaNodeID,
+                final MetaPortInfo[] newPorts) {
+        // argument node is either a contained meta node or this wfm itself
+        // (latter only when updating outgoing connections)
+        assert metaNodeID.equals(getID()) || m_nodes.get(metaNodeID) instanceof WorkflowManager;
+        List<Pair<ConnectionContainer, ConnectionContainer>> result =
+            new ArrayList<Pair<ConnectionContainer, ConnectionContainer>>();
+        final Set<ConnectionContainer> connectionsToMetaNode = m_connectionsByDest.get(metaNodeID);
+        for (ConnectionContainer cc : connectionsToMetaNode) {
+            int destPort = cc.getDestPort();
+            boolean hasBeenFound = false;
+            for (MetaPortInfo mpi : newPorts) {
+                if (mpi.getOldIndex() == destPort) {
+                    hasBeenFound = true;
+                    if (mpi.getNewIndex() != destPort) {
+                        ConnectionContainer newConn = new ConnectionContainer(cc.getSource(),
+                                cc.getSourcePort(), metaNodeID, mpi.getNewIndex(), cc.getType());
+                        newConn.setUIInfo(cc.getUIInfo());
+                        result.add(new Pair<ConnectionContainer, ConnectionContainer>(cc, newConn));
+                    }
+                    break;
+                }
+            }
+            if (!hasBeenFound) {
+                throw new IllegalStateException("New meta port information array "
+                        + "does not include currently connected ports, unseen connection: "
+                        + cc);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * @param metaNodeID
+     * @param newPorts
+     * @return */
+    List<Pair<ConnectionContainer, ConnectionContainer>>
+        changeSourcePortsForMetaNode(final NodeID metaNodeID,
+                final MetaPortInfo[] newPorts) {
+        // argument node is either a contained meta node or this wfm itself
+        // (latter only when updating outgoing connections)
+        assert metaNodeID.equals(getID()) || m_nodes.get(metaNodeID) instanceof WorkflowManager;
+        List<Pair<ConnectionContainer, ConnectionContainer>> result =
+            new ArrayList<Pair<ConnectionContainer, ConnectionContainer>>();
+        final Set<ConnectionContainer> connectionsFromMetaNode = m_connectionsBySource.get(metaNodeID);
+        for (ConnectionContainer cc : connectionsFromMetaNode) {
+            int sourcePort = cc.getSourcePort();
+            boolean hasBeenFound = false;
+            for (MetaPortInfo mpi : newPorts) {
+                if (mpi.getOldIndex() == sourcePort) {
+                    hasBeenFound = true;
+                    if (mpi.getNewIndex() != sourcePort) {
+                        ConnectionContainer newConn = new ConnectionContainer(metaNodeID,
+                                mpi.getNewIndex(), cc.getDest(), cc.getDestPort(), cc.getType());
+                        newConn.setUIInfo(cc.getUIInfo());
+                        result.add(new Pair<ConnectionContainer, ConnectionContainer>(cc, newConn));
+                    }
+                    break;
+                }
+                if (!hasBeenFound) {
+                    throw new IllegalStateException("New meta port information array "
+                            + "does not include currently connected ports, unseen connection: "
+                            + cc);
+                }
+            }
         }
         return result;
     }

@@ -68,7 +68,10 @@ public class NodePropertyChangedEvent extends EventObject {
         /** Meta node template information has changed. */
         TemplateConnection,
         /** Meta node encryption/lock status has changed. */
-        LockStatus
+        LockStatus,
+        /** Meta node ports have changed.
+         * @since 2.6*/
+        MetaNodePorts
     }
 
     /** Create new event.

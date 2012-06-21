@@ -94,6 +94,11 @@ public final class MetaPortInfo {
         m_message = null;
     }
 
+    /** @return the type */
+    public PortType getType() {
+        return m_type;
+    }
+
     /** @return the isConnected */
     public boolean isConnected() {
         return m_isConnected;
