@@ -410,8 +410,11 @@ public abstract class NodeFactory<T extends NodeModel> {
      */
     private URL readIconFromXML(final Element knimeNode) {
         String imagePath = knimeNode.getAttribute("icon");
-        imagePath = imagePath.replaceAll("//", "/");
+        if (imagePath.trim().length() == 0) {
+            return getDefaultIcon();
+        }
 
+        imagePath = imagePath.replaceAll("//", "/");
         if (imagePath.startsWith("./")) {
             imagePath = imagePath.substring("./".length());
         }
