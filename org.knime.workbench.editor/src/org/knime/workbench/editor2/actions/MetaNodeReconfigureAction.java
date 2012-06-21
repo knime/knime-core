@@ -47,32 +47,33 @@
  *
  * History
  *   12.05.2010 (Bernd Wiswedel): created
+ *   21.06.2012 (Peter Ohl): reconfigure instead of rename only. Using a wizard dialog.
  */
 package org.knime.workbench.editor2.actions;
 
-import org.eclipse.jface.dialogs.Dialog;
-import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.commands.MetaNodeSetNameCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.editor2.meta.ReconfigureMetaNodeWizard;
 
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class MetaNodeSetNameAction extends AbstractNodeAction {
+public class MetaNodeReconfigureAction extends AbstractNodeAction {
 
-    public static final String ID = "knime.action.meta_node_set_name";
+    /** id of this action. */
+    public static final String ID = "knime.action.meta_node_reconfigure";
 
     /**
-     * @param node container edit part
+     * @param editor the current workflow editor
      */
-    public MetaNodeSetNameAction(final WorkflowEditor editor) {
+    public MetaNodeReconfigureAction(final WorkflowEditor editor) {
         super(editor);
     }
 
@@ -90,7 +91,7 @@ public class MetaNodeSetNameAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Rename Meta Node";
+        return "Reconfigure Meta Node";
     }
 
     /**
@@ -99,7 +100,7 @@ public class MetaNodeSetNameAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Set name on meta node";
+        return "Change name and ports of Meta Node";
     }
 
     /**
@@ -107,18 +108,15 @@ public class MetaNodeSetNameAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor(
-                "icons/meta/metanode_setname.png");
+        return ImageRepository.getImageDescriptor("icons/meta/metanode_setname.png");
     }
 
     /**
-     * @return true, if underlying model instance of
-     *         <code>WorkflowManager</code>, otherwise false
+     * @return true, if underlying model instance of <code>WorkflowManager</code>, otherwise false
      */
     @Override
     protected boolean calculateEnabled() {
-        NodeContainerEditPart[] nodes =
-            getSelectedParts(NodeContainerEditPart.class);
+        NodeContainerEditPart[] nodes = getSelectedParts(NodeContainerEditPart.class);
         if (nodes.length != 1) {
             return false;
         }
@@ -133,16 +131,12 @@ public class MetaNodeSetNameAction extends AbstractNodeAction {
     /** {@inheritDoc} */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        WorkflowManager w = (WorkflowManager)nodeParts[0].getModel();
-        String oldName = w.getNameField();
-        InputDialog id = new InputDialog(Display.getCurrent().getActiveShell(),
-                "Meta node name", "Enter name of meta node:", oldName, null);
-        String newName = null;
-        if (id.open() == Dialog.OK) {
-            String value = id.getValue();
-            newName = value == null || value.length() == 0 ? null : value;
-            getCommandStack().execute(new MetaNodeSetNameCommand(w, newName));
-        }
+        NodeContainerEditPart ep = nodeParts[0];
+        ReconfigureMetaNodeWizard wizard =
+                new ReconfigureMetaNodeWizard(ep.getViewer(), (WorkflowManager)ep.getModel());
+        WizardDialog dlg = new WizardDialog(Display.getCurrent().getActiveShell(), wizard);
+        dlg.create();
+        dlg.open();
     }
 
 }

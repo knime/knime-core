@@ -80,7 +80,7 @@ import org.knime.workbench.editor2.actions.ExecuteAction;
 import org.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
 import org.knime.workbench.editor2.actions.ExpandMetaNodeAction;
 import org.knime.workbench.editor2.actions.LockMetaNodeAction;
-import org.knime.workbench.editor2.actions.MetaNodeSetNameAction;
+import org.knime.workbench.editor2.actions.MetaNodeReconfigureAction;
 import org.knime.workbench.editor2.actions.OpenDialogAction;
 import org.knime.workbench.editor2.actions.OpenPortViewAction;
 import org.knime.workbench.editor2.actions.OpenSubworkflowEditorAction;
@@ -313,7 +313,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                             action);
 
                     action = m_actionRegistry.getAction(
-                            MetaNodeSetNameAction.ID);
+                            MetaNodeReconfigureAction.ID);
                     manager.appendToGroup(
                             IWorkbenchActionConstants.GROUP_APP, action);
                     ((AbstractNodeAction)action).update();

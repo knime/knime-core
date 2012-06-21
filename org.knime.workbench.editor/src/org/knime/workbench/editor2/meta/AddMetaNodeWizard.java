@@ -58,9 +58,10 @@ import org.eclipse.gef.editparts.ScalableFreeformRootEditPart;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.wizard.Wizard;
 import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
@@ -73,10 +74,6 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * @author Fabian Dill, University of Konstanz
  */
 public class AddMetaNodeWizard extends Wizard {
-
-//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-//            AddMetaNodeWizard.class);
-
 
     private final WorkflowEditor m_wfEditor;
 
@@ -96,7 +93,6 @@ public class AddMetaNodeWizard extends Wizard {
         // what to do with meta nodes and how to deploy them
         setHelpAvailable(false);
     }
-   
 
     /**
      *
@@ -109,12 +105,10 @@ public class AddMetaNodeWizard extends Wizard {
         setDefaultPageImageDescriptor(ImageDescriptor.createFromImage(
                 ImageRepository.getImage("icons/meta/meta_node_wizard2.png")));
         m_selectPage = new SelectMetaNodePage();
-        m_addPage = new AddMetaNodePage();
+        m_addPage = new AddMetaNodePage("Create a new Meta Node");
         addPage(m_selectPage);
         addPage(m_addPage);
     }
-
-    
 
     /**
      *
@@ -235,11 +229,11 @@ public class AddMetaNodeWizard extends Wizard {
         PortType[] inPorts = new PortType[m_addPage.getInports().size()];
         PortType[] outPorts = new PortType[m_addPage.getOutPorts().size()];
         int i = 0;
-        for (Port p : m_addPage.getInports()) {
+        for (MetaPortInfo p : m_addPage.getInports()) {
             inPorts[i++] = p.getType();
         }
         i = 0;
-        for (Port p : m_addPage.getOutPorts()) {
+        for (MetaPortInfo p : m_addPage.getOutPorts()) {
             outPorts[i++] = p.getType();
         }
         String name = "";

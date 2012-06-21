@@ -183,7 +183,7 @@ import org.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
 import org.knime.workbench.editor2.actions.ExpandMetaNodeAction;
 import org.knime.workbench.editor2.actions.HideNodeNamesAction;
 import org.knime.workbench.editor2.actions.LockMetaNodeAction;
-import org.knime.workbench.editor2.actions.MetaNodeSetNameAction;
+import org.knime.workbench.editor2.actions.MetaNodeReconfigureAction;
 import org.knime.workbench.editor2.actions.NodeConnectionContainerDeleteAction;
 import org.knime.workbench.editor2.actions.OpenDialogAction;
 import org.knime.workbench.editor2.actions.PasteAction;
@@ -527,8 +527,8 @@ public class WorkflowEditor extends GraphicalEditor implements
             new ToggleFlowVarPortsAction(this);
         AbstractNodeAction defaultOpenView = new DefaultOpenViewAction(this);
 
-        AbstractNodeAction metaNodeSetName =
-            new MetaNodeSetNameAction(this);
+        AbstractNodeAction metaNodeReConfigure =
+            new MetaNodeReconfigureAction(this);
         AbstractNodeAction defineMetaNodeTemplate =
             new SaveAsMetaNodeTemplateAction(this);
         AbstractNodeAction checkUpdateMetaNodeLink =
@@ -579,7 +579,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(collapse);
         m_actionRegistry.registerAction(expand);
 
-        m_actionRegistry.registerAction(metaNodeSetName);
+        m_actionRegistry.registerAction(metaNodeReConfigure);
         m_actionRegistry.registerAction(defineMetaNodeTemplate);
         m_actionRegistry.registerAction(checkUpdateMetaNodeLink);
         m_actionRegistry.registerAction(revealMetaNodeTemplate);
@@ -610,7 +610,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_editorActions.add(copy.getId());
         m_editorActions.add(cut.getId());
         m_editorActions.add(paste.getId());
-        m_editorActions.add(metaNodeSetName.getId());
+        m_editorActions.add(metaNodeReConfigure.getId());
         m_editorActions.add(defineMetaNodeTemplate.getId());
         m_editorActions.add(checkUpdateMetaNodeLink.getId());
         m_editorActions.add(annotation.getId());
