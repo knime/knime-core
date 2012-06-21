@@ -20,21 +20,16 @@ package org.knime.workbench.ui.navigator.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.core.util.ImageRepository;
+import org.knime.workbench.core.util.ImageRepository.SharedImages;
 
 /**
- * 
+ *
  * @author Fabian Dill, KNIME.com AG
  */
 public class CancelWorkflowAction extends AbstractWorkflowAction {
-    
-    private static final ImageDescriptor IMG 
-        = KNIMEUIPlugin.imageDescriptorFromPlugin(
-                KNIMEUIPlugin.PLUGIN_ID, 
-                "icons/actions/cancel.gif");
-    
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -43,25 +38,25 @@ public class CancelWorkflowAction extends AbstractWorkflowAction {
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public String getDescription() {
         return "Cancels the execution of all nodes of this workflow";
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return IMG;
+        return ImageRepository.getImageDescriptor(SharedImages.CancelExecution);
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -71,9 +66,9 @@ public class CancelWorkflowAction extends AbstractWorkflowAction {
             WorkflowManager.ROOT.cancelExecution(workflow);
         }
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override

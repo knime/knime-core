@@ -29,11 +29,11 @@ import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.Transfer;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.part.ViewPart;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.core.util.ImageRepository;
+import org.knime.workbench.core.util.ImageRepository.SharedImages;
 
 /**
  * The view displaying the meta node templates.
@@ -47,19 +47,6 @@ public class MetaNodeTemplateRepositoryView extends ViewPart {
     private MetaNodeTemplateRepositoryManager m_manager;
 
     private static MetaNodeTemplateRepositoryView instance;
-
-    private static final Image ICON;
-
-    static {
-        if (Display.getCurrent() != null) {
-            // do not load UI stuff if we run, e.g. the batch executor
-            ICON = KNIMEUIPlugin.imageDescriptorFromPlugin(
-                    KNIMEUIPlugin.PLUGIN_ID,
-                    "icons/meta/metanode_template.png").createImage();
-        } else {
-            ICON = null;
-        }
-    }
 
     // for the tree viewer content provider (no children at all)
     private static final Object[] EMPTY_ARRAY = new Object[0];
@@ -153,8 +140,8 @@ public class MetaNodeTemplateRepositoryView extends ViewPart {
         m_viewer.setLabelProvider(new LabelProvider() {
             @Override
             public Image getImage(final Object element) {
-                return ICON;
-//                return super.getImage(element);
+                return ImageRepository
+                        .getImage(SharedImages.DefaultMetaNodeIcon);
             }
 
             @Override

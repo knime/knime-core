@@ -20,36 +20,31 @@ package org.knime.workbench.ui.navigator.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.core.util.ImageRepository;
+import org.knime.workbench.core.util.ImageRepository.SharedImages;
 
 /**
- * 
+ *
  * @author Fabian Dill, KNIME.com AG
  */
 public class ExecuteWorkflowAction extends AbstractWorkflowAction {
-    
-    private static final ImageDescriptor IMG 
-        = KNIMEUIPlugin.imageDescriptorFromPlugin(
-                KNIMEUIPlugin.PLUGIN_ID, 
-                "/icons/actions/execute.gif");
-    
     @Override
     public String getText() {
         return "Execute...";
     }
-    
+
     @Override
     public String getDescription() {
         return "Executes the workflow with the conigured JobExecutor";
     }
-    
+
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return IMG;
+        return ImageRepository.getImageDescriptor(SharedImages.Execute);
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -59,7 +54,7 @@ public class ExecuteWorkflowAction extends AbstractWorkflowAction {
         }
         return false;
     }
-    
+
     @Override
     public void run() {
         WorkflowManager.ROOT.executeUpToHere(getWorkflow().getID());

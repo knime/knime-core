@@ -22,35 +22,30 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.core.util.ImageRepository;
+import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 
 /**
- * 
+ *
  * @author Fabian Dill, KNIME.com AG
  */
 public class ConfigureWorkflowAction extends AbstractWorkflowAction {
-    
-    private static final ImageDescriptor IMG 
-        = KNIMEUIPlugin.imageDescriptorFromPlugin(
-                KNIMEUIPlugin.PLUGIN_ID, 
-                "icons/actions/configure.gif");
-    
     @Override
     public String getText() {
         return "Configure...";
     }
-    
+
     @Override
     public String getDescription() {
         return "Opens a configuration dialog for this workflow";
     }
-    
+
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return IMG;
+        return ImageRepository.getImageDescriptor(SharedImages.ConfigureNode);
     }
-    
+
     @Override
     public void run() {
         Display.getDefault().syncExec(new Runnable() {
@@ -58,7 +53,7 @@ public class ConfigureWorkflowAction extends AbstractWorkflowAction {
             public void run() {
                 try {
                     WrappedNodeDialog dialog = new WrappedNodeDialog(
-                            Display.getDefault().getActiveShell(), 
+                            Display.getDefault().getActiveShell(),
                             getWorkflow());
                     dialog.setBlockOnOpen(true);
                     dialog.open();
@@ -67,20 +62,20 @@ public class ConfigureWorkflowAction extends AbstractWorkflowAction {
                         @Override
                         public void run() {
                             MessageDialog.openError(
-                                    Display.getDefault().getActiveShell(), 
-                                    "Workflow Not Configurable", 
+                                    Display.getDefault().getActiveShell(),
+                                    "Workflow Not Configurable",
                                     "This workflow can not be configured: "
                                     + nce.getMessage());
                         }
                     });
                 }
-                
+
             }
         });
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override

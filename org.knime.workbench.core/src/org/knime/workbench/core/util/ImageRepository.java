@@ -97,10 +97,35 @@ public class ImageRepository {
         DefaultNodeIcon(NodeFactory.getDefaultIcon()),
         /** The default metanode icon. */
         DefaultMetaNodeIcon("icons/meta_nodes/metanode_template.png"),
+        /** Disabled icon for metanodes. */
+        MetanodeDisabled("icons/meta_nodes/metanode_template_disabled.png"),
+        /** Icon for a metanode in the node repository or navigator. */
+        MetanodeRepository("icons/meta_nodes/metanode_template_repository.png"),
         /** The default category icon. */
         DefaultCategoryIcon(NodeFactory.getDefaultIcon()),
         /** Icon with a lock. */
-        Lock("icons/lockedstate.gif");
+        Lock("icons/lockedstate.gif"),
+        /** Icon for canceling node or workflow execution. */
+        CancelExecution("icons/actions/cancel.gif"),
+        /** Icon for configuring a node. */
+        ConfigureNode("icons/actions/configure.gif"),
+        /** Icon for executing a node or workflow. */
+        Execute("icons/actions/execute.gif"),
+        /** Icon for opening a node view. */
+        OpenNodeView("icons/actions/openView.gif"),
+        /** Icon for reseting a node or workflow. */
+        Reset("icons/actions/reset.gif"),
+        /** Icon for collapsing all levels in a tree. */
+        CollapseAll("icons/collapseall.png"),
+        /** Icon for expanding all levels in a tree. */
+        ExpandAll("icons/expandeall.png"),
+        /** Icon for the favorite nodes view. */
+        FavoriteNodesFolder("icons/fav/folder_fav.png"),
+        /** Icon for the most frequently used nodes category. */
+        FavoriteNodesFrequentlyUsed("icons/fav/folder_freq.png"),
+        /** Icon for the last used nodes category. */
+        FavoriteNodesLastUsed("icons/fav/folder_last.png");
+
 
         private final URL m_url;
 

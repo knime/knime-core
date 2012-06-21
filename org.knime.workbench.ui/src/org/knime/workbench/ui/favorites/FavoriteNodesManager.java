@@ -56,11 +56,11 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
-import org.eclipse.swt.graphics.Image;
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.XMLMemento;
-import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.node.NodeLogger;
+import org.knime.workbench.core.util.ImageRepository;
+import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.repository.NodeUsageRegistry;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.repository.model.Category;
@@ -84,16 +84,6 @@ public final class FavoriteNodesManager {
     private Category m_favNodes;
     private Category m_freqNodes;
     private Category m_lastNodes;
-
-    private static Image favIcon = null;
-
-    // icons swapped on purpose
-    private static Image freqIcon = null;
-
-    // icons swapped on purpose
-    private static Image lastIcon = null;
-
-
 
     // loading and saving
     private static final String TAG_FAVORITES = "favoritenodes";
@@ -149,41 +139,25 @@ public final class FavoriteNodesManager {
      *
      */
     private void createTreeModel() {
-        if (lastIcon == null) {
-            // only initialize when needed
-            // to avoid loading of images for static access
-            // especially #wasInitialized()
-            lastIcon = AbstractUIPlugin.imageDescriptorFromPlugin(
-                    KNIMEUIPlugin.PLUGIN_ID, "icons/fav/folder_freq.png")
-                    .createImage();
-        }
-        if (freqIcon == null) {
-            // icons swapped on purpose (last vs. frequent)
-            freqIcon = AbstractUIPlugin.imageDescriptorFromPlugin(
-                    KNIMEUIPlugin.PLUGIN_ID, "icons/fav/folder_last.png")
-                    .createImage();
-        }
-        if (favIcon == null) {
-            favIcon = AbstractUIPlugin.imageDescriptorFromPlugin(
-                    KNIMEUIPlugin.PLUGIN_ID, "icons/fav/folder_fav.png")
-                    .createImage();
-        }
         m_root = new Root();
         m_root.setSortChildren(false);
         m_favNodes = new Category(FAV_CAT_ID, FAV_TITLE);
-        m_favNodes.setIcon(favIcon);
+        m_favNodes.setIcon(ImageRepository
+                .getImage(SharedImages.FavoriteNodesFolder));
         m_favNodes.setAfterID("");
         m_favNodes.setSortChildren(true);
         m_root.addChild(m_favNodes);
 
         m_freqNodes = new Category("freq", "Most frequently used nodes");
-        m_freqNodes.setIcon(freqIcon);
+        m_freqNodes.setIcon(ImageRepository
+                .getImage(SharedImages.FavoriteNodesFrequentlyUsed));
         m_freqNodes.setAfterID("fav");
         m_freqNodes.setSortChildren(false);
         m_root.addChild(m_freqNodes);
 
         m_lastNodes = new Category("last", "Last used nodes");
-        m_lastNodes.setIcon(lastIcon);
+        m_lastNodes.setIcon(ImageRepository
+                .getImage(SharedImages.FavoriteNodesLastUsed));
         m_lastNodes.setAfterID("freq");
         m_lastNodes.setSortChildren(false);
         m_root.addChild(m_lastNodes);

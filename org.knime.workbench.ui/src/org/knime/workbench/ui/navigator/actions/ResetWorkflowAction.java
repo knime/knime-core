@@ -20,19 +20,14 @@ package org.knime.workbench.ui.navigator.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.core.util.ImageRepository;
+import org.knime.workbench.core.util.ImageRepository.SharedImages;
 
 /**
  *
  * @author Fabian Dill, KNIME.com AG
  */
 public class ResetWorkflowAction extends AbstractWorkflowAction {
-
-    private static final ImageDescriptor IMG
-        = KNIMEUIPlugin.imageDescriptorFromPlugin(
-                KNIMEUIPlugin.PLUGIN_ID,
-                "icons/actions/reset.gif");
-
     /**
      *
      * {@inheritDoc}
@@ -48,7 +43,7 @@ public class ResetWorkflowAction extends AbstractWorkflowAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return IMG;
+        return ImageRepository.getImageDescriptor(SharedImages.Reset);
     }
 
     /**
