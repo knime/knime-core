@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   16.03.2005 (georg): created
  */
@@ -53,12 +53,11 @@ package org.knime.workbench.repository.model.props;
 import org.eclipse.ui.views.properties.IPropertyDescriptor;
 import org.eclipse.ui.views.properties.IPropertySource;
 import org.eclipse.ui.views.properties.PropertyDescriptor;
-
 import org.knime.workbench.repository.model.Category;
 
 /**
  * Property Source for a "Category" object.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class CategoryPropertySource implements IPropertySource {
@@ -100,7 +99,7 @@ public class CategoryPropertySource implements IPropertySource {
 
     /**
      * Constructs a new property source for the category.
-     * 
+     *
      * @param model The category that is wrapped by this property source
      */
     public CategoryPropertySource(final Category model) {
@@ -110,6 +109,7 @@ public class CategoryPropertySource implements IPropertySource {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object getEditableValue() {
         return this;
     }
@@ -117,6 +117,7 @@ public class CategoryPropertySource implements IPropertySource {
     /**
      * {@inheritDoc}
      */
+    @Override
     public IPropertyDescriptor[] getPropertyDescriptors() {
         return new IPropertyDescriptor[] {ID_DESC, NAME_DESC, DESC_DESC,
                 CAT_DESC, ICON_DESC, AFTER_DESC};
@@ -125,6 +126,7 @@ public class CategoryPropertySource implements IPropertySource {
     /**
      * {@inheritDoc}
      */
+    @Override
     public Object getPropertyValue(final Object id) {
         if ("name".equals(id)) {
             return m_category.getName();
@@ -139,10 +141,10 @@ public class CategoryPropertySource implements IPropertySource {
             return m_category.getPath();
         }
         if ("icon".equals(id)) {
-            return m_category.getIconDescriptor();
+            return m_category.getIcon();
         }
         if ("after".equals(id)) {
-            return m_category.getIconDescriptor();
+            return m_category.getAfterID();
         }
 
         // this should not happen
@@ -153,6 +155,7 @@ public class CategoryPropertySource implements IPropertySource {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isPropertySet(final Object id) {
         return false;
     }
@@ -160,6 +163,7 @@ public class CategoryPropertySource implements IPropertySource {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void resetPropertyValue(final Object id) {
 
     }
@@ -167,6 +171,7 @@ public class CategoryPropertySource implements IPropertySource {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setPropertyValue(final Object id, final Object value) {
         // TODO Auto-generated method stub
     }
