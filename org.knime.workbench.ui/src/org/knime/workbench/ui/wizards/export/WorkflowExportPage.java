@@ -65,7 +65,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.dialogs.IDialogSettings;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.AbstractTreeViewer;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
@@ -90,11 +89,11 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.workbench.ui.KNIMEUIPlugin;
+import org.knime.workbench.core.util.ImageRepository;
+import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.ui.navigator.KnimeResourceLabelProvider;
 import org.knime.workbench.ui.navigator.KnimeResourceUtil;
 import org.knime.workbench.ui.navigator.ProjectWorkflowMap;
-
 
 /**
  * Page to enter the select the workflows to export and enter the destination.
@@ -118,10 +117,6 @@ public class WorkflowExportPage extends WizardPage {
 
     private static String lastSelectedTargetLocation;
 
-    private static final ImageDescriptor ICON =
-        KNIMEUIPlugin.imageDescriptorFromPlugin(
-        KNIMEUIPlugin.PLUGIN_ID, "icons/knime_export55.png");
-
     /**
      * Constructor for NewWorkflowPage.
      *
@@ -131,7 +126,8 @@ public class WorkflowExportPage extends WizardPage {
         super("wizardPage");
         setTitle("Export KNIME workflows");
         setDescription("Exports a KNIME workflow.");
-        setImageDescriptor(ICON);
+        setImageDescriptor(ImageRepository
+                .getImageDescriptor(SharedImages.ExportBig));
         this.m_selection = selection;
     }
 
@@ -142,9 +138,9 @@ public class WorkflowExportPage extends WizardPage {
     @Override
     public boolean isPageComplete() {
         // there are some elements selected
-        return (!m_treeViewer.getTree().isVisible()
-                || m_treeViewer.getCheckedElements().length > 0)
-                // and a target location
+        return (!m_treeViewer.getTree().isVisible() || m_treeViewer
+                .getCheckedElements().length > 0)
+        // and a target location
                 && !m_fileText.getText().isEmpty();
     }
 
@@ -166,8 +162,8 @@ public class WorkflowExportPage extends WizardPage {
         Label label = new Label(exportGroup, SWT.NULL);
         label.setText("Select workflow(s) to export:");
 
-        m_containerText = new Text(exportGroup,
-                SWT.BORDER | SWT.SINGLE | SWT.READ_ONLY);
+        m_containerText =
+                new Text(exportGroup, SWT.BORDER | SWT.SINGLE | SWT.READ_ONLY);
         GridData gd = new GridData(GridData.FILL_HORIZONTAL);
         m_containerText.setLayoutData(gd);
         m_containerText.addModifyListener(new ModifyListener() {
@@ -238,8 +234,8 @@ public class WorkflowExportPage extends WizardPage {
                     IContainer container = (IContainer)parentElement;
                     try {
                         // return only workflows and workflow groups
-                        Collection<IContainer> children
-                            = new ArrayList<IContainer>();
+                        Collection<IContainer> children =
+                                new ArrayList<IContainer>();
                         for (IResource r : container.members(false)) {
                             if (KnimeResourceUtil.isWorkflow(r)
                                     || KnimeResourceUtil.isWorkflowGroup(r)) {
@@ -255,6 +251,7 @@ public class WorkflowExportPage extends WizardPage {
                 }
                 return new Object[0];
             }
+
             @Override
             public Object getParent(final Object element) {
                 if (element instanceof IResource) {
@@ -262,30 +259,33 @@ public class WorkflowExportPage extends WizardPage {
                 }
                 return null;
             }
+
             @Override
             public boolean hasChildren(final Object element) {
                 if (element instanceof IWorkspaceRoot) {
                     return true;
                 }
                 if (element instanceof IContainer) {
-                    if (KnimeResourceUtil.isWorkflowGroup(
-                            (IContainer)element)) {
+                    if (KnimeResourceUtil.isWorkflowGroup((IContainer)element)) {
                         return true;
                     }
                 }
                 return false;
             }
+
             @Override
             public Object[] getElements(final Object inputElement) {
                 return getChildren(inputElement);
             }
+
             @Override
             public void dispose() {
                 // nothing to do
             }
+
             @Override
-            public void inputChanged(final Viewer viewer, final Object oldInput,
-                    final Object newInput) {
+            public void inputChanged(final Viewer viewer,
+                    final Object oldInput, final Object newInput) {
                 // nothing to do
             }
         });
@@ -297,13 +297,11 @@ public class WorkflowExportPage extends WizardPage {
                 Object o = event.getElement();
                 boolean isChecked = event.getChecked();
                 // first expand in order to be able to check children as well
-                m_treeViewer.expandToLevel(o,
-                        AbstractTreeViewer.ALL_LEVELS);
+                m_treeViewer.expandToLevel(o, AbstractTreeViewer.ALL_LEVELS);
                 m_treeViewer.setSubtreeChecked(o, isChecked);
                 if (o instanceof IResource) {
                     IResource element = (IResource)o;
-                    setParentTreeChecked(
-                            m_treeViewer, element, isChecked);
+                    setParentTreeChecked(m_treeViewer, element, isChecked);
                 }
                 dialogChanged();
                 getWizard().getContainer().updateButtons();
@@ -368,8 +366,8 @@ public class WorkflowExportPage extends WizardPage {
      */
 
     private void handleBrowse() {
-        WorkflowSelectionDialog dialog = new WorkflowSelectionDialog(
-                getShell());
+        WorkflowSelectionDialog dialog =
+                new WorkflowSelectionDialog(getShell());
         if (m_selection instanceof IStructuredSelection) {
             dialog.setInitialSelection((IStructuredSelection)m_selection);
         }
@@ -393,8 +391,8 @@ public class WorkflowExportPage extends WizardPage {
         }
 
         if (resultContainer != null) {
-            String containerSelectionText = resultContainer.getFullPath()
-            .toString();
+            String containerSelectionText =
+                    resultContainer.getFullPath().toString();
             if (resultContainer instanceof IWorkspaceRoot) {
                 containerSelectionText = "/";
             }
@@ -405,22 +403,21 @@ public class WorkflowExportPage extends WizardPage {
         return resultContainer;
     }
 
-
     private IContainer handleSingleSelection(
             final IStructuredSelection selection) {
         Object obj = selection.getFirstElement();
         IContainer resultContainer = null;
         // prepare default export file name
         if (obj instanceof IContainer) {
-            resultContainer = (IContainer) obj;
+            resultContainer = (IContainer)obj;
         } else if (obj instanceof IResource) {
-            resultContainer = ((IResource) obj).getParent();
+            resultContainer = ((IResource)obj).getParent();
         }
         if (obj instanceof NodeContainer) {
             resultContainer = getContainerForWorkflow((NodeContainer)obj);
         }
         if (obj instanceof IContainer) {
-            IContainer container = (IContainer) obj;
+            IContainer container = (IContainer)obj;
             // check whether it is a workflow group -> list all workflows
             if (KnimeResourceUtil.isWorkflowGroup(container)
                     || container instanceof IWorkspaceRoot) {
@@ -434,11 +431,11 @@ public class WorkflowExportPage extends WizardPage {
                 // all
                 if (selection.size() <= 1) {
                     /*
-                     * Since the tree is expanded before the deprecated
-                     * method should work. Reason why it is deprecated:
-                     * "this method only checks or unchecks visible items"
-                     * but CheckboxTreeViewer#setSubtreeChecked(Object,
-                     * boolean) does not work.
+                     * Since the tree is expanded before the deprecated method
+                     * should work. Reason why it is deprecated:
+                     * "this method only checks or unchecks visible items" but
+                     * CheckboxTreeViewer#setSubtreeChecked(Object, boolean)
+                     * does not work.
                      */
                     m_treeViewer.setAllChecked(true);
                 }
@@ -450,8 +447,7 @@ public class WorkflowExportPage extends WizardPage {
         return resultContainer;
     }
 
-    private IContainer handleMultiSelection(
-            final IStructuredSelection selection) {
+    private IContainer handleMultiSelection(final IStructuredSelection selection) {
         // set root as input and select all objects
         IContainer resultContainer = ResourcesPlugin.getWorkspace().getRoot();
         m_treeViewer.setInput(resultContainer);
@@ -460,7 +456,7 @@ public class WorkflowExportPage extends WizardPage {
         for (Object o : selection.toArray()) {
             m_treeViewer.setChecked(o, true);
             if (o instanceof IResource) {
-                setParentTreeChecked(m_treeViewer, (IResource) o, true);
+                setParentTreeChecked(m_treeViewer, (IResource)o, true);
             }
         }
         return resultContainer;
@@ -476,14 +472,14 @@ public class WorkflowExportPage extends WizardPage {
             // wf not in workspace
             return null;
         }
-        return getContainerForFullPath(
-                new Path(wfURI.toString().substring(
-                        rootURI.toString().length())));
+        return getContainerForFullPath(new Path(wfURI.toString().substring(
+                rootURI.toString().length())));
     }
 
     private IContainer getContainerForFullPath(final IPath workflowPath) {
-        IResource resource = ResourcesPlugin.getWorkspace().getRoot()
-            .findMember(workflowPath);
+        IResource resource =
+                ResourcesPlugin.getWorkspace().getRoot()
+                        .findMember(workflowPath);
         if (resource instanceof IContainer) {
             return (IContainer)resource;
         }
@@ -519,8 +515,8 @@ public class WorkflowExportPage extends WizardPage {
         if (filePath.trim().length() > 0) {
             // remember the selected path
             // append "zip" extension if not there.
-            String extension = filePath.substring(filePath.length() - 4,
-                    filePath.length());
+            String extension =
+                    filePath.substring(filePath.length() - 4, filePath.length());
             if (!extension.equals(".zip")) {
                 filePath = filePath + ".zip";
             }
@@ -571,8 +567,8 @@ public class WorkflowExportPage extends WizardPage {
         Object[] checkedObjs = m_treeViewer.getCheckedElements();
         List<IContainer> workflows = new ArrayList<IContainer>();
         // also add the root
-        IContainer rootContainer = getContainerForFullPath(
-                new Path(m_containerText.getText()));
+        IContainer rootContainer =
+                getContainerForFullPath(new Path(m_containerText.getText()));
         if (rootContainer != null) {
             workflows.add(rootContainer);
         }
@@ -610,7 +606,6 @@ public class WorkflowExportPage extends WizardPage {
         }
     }
 
-
     /**
      *
      * @param viewer the viewer which items should be (un-)checked
@@ -618,8 +613,7 @@ public class WorkflowExportPage extends WizardPage {
      * @param state true for checked, false for uncheck
      */
     private void setParentTreeChecked(final CheckboxTreeViewer viewer,
-            final IResource element,
-            final boolean state) {
+            final IResource element, final boolean state) {
         // see also WorkflowImportSelectionPage where the same method for
         // IWorkflowImportElement instead of IResources exists
         // -> no common super type for IWorkflowImportElement and IResource
@@ -641,8 +635,7 @@ public class WorkflowExportPage extends WizardPage {
                 // since we change the checked elements in this while loop we
                 // have to retrieve the currently checked elements in each
                 // iteration
-                List allChecked = Arrays.asList(
-                        viewer.getCheckedElements());
+                List allChecked = Arrays.asList(viewer.getCheckedElements());
                 Collection children = new ArrayList();
                 if (parent instanceof IContainer) {
                     try {

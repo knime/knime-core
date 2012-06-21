@@ -58,7 +58,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.xmlbeans.XmlException;
 import org.knime.core.node.NodeLogger;
-import org.knime.workbench.repository.RepositoryFactory;
+import org.knime.workbench.core.util.ImageRepository;
+import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.repository.model.customNodeRepository.AbstractCategory;
 import org.knime.workbench.repository.model.customNodeRepository.CustomCategory;
 import org.knime.workbench.repository.model.customNodeRepository.CustomNode;
@@ -174,8 +175,8 @@ public class CustomRepositoryManager {
                 newCategory.setSortChildren(false);
                 newCategory.setParent(parent);
                 parent.addChild(newCategory);
-                newCategory
-                        .setIcon(RepositoryFactory.defaultIcon.createImage());
+                newCategory.setIcon(ImageRepository
+                        .getImage(SharedImages.DefaultCategoryIcon));
 
                 processCategory(newCategory, cat, nodeMap);
             } else {

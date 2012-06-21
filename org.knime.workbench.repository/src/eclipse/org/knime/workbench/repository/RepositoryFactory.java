@@ -59,9 +59,7 @@ import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
-import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -73,6 +71,8 @@ import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.WorkflowPersistorVersion1xx;
+import org.knime.workbench.core.util.ImageRepository;
+import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.DynamicNodeTemplate;
 import org.knime.workbench.repository.model.IContainerObject;
@@ -95,18 +95,6 @@ public final class RepositoryFactory {
 
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(RepositoryFactory.class);
-
-    private static final String META_NODE_ICON =
-            "icons/meta_nodes/metanode_template.png";
-
-    public final static ImageDescriptor defaultIcon;
-
-    static {
-        defaultIcon =
-                AbstractUIPlugin.imageDescriptorFromPlugin(
-                        KNIMERepositoryPlugin.PLUGIN_ID,
-                        "icons/knime_default.png");
-    }
 
     /**
      * Workflow manager instance loading and administering the predefined meta
@@ -165,15 +153,7 @@ public final class RepositoryFactory {
 
         if (!Boolean.valueOf(System.getProperty("java.awt.headless", "false"))) {
             // Load images from declaring plugin
-            Image icon =
-                    ImageRepository.getScaledImage(factory.getIcon(), 16, 16);
-            // get default image if null
-            if (icon == null) {
-                icon =
-                        ImageRepository.getScaledImage(
-                                NodeFactory.getDefaultIcon(), 16, 16);
-            }
-            // FIXME dispose this somewhere !!
+            Image icon = ImageRepository.getScaledImage(factory, 16, 16);
             node.setIcon(icon);
         }
 
@@ -217,23 +197,17 @@ public final class RepositoryFactory {
             template.setDescription(description);
         }
         template.setExpertNode(isExpertNode);
-        if (!Boolean.valueOf(System.getProperty("java.awt.headless", "false"))) {
+        if (!Boolean.getBoolean("java.awt.headless")) {
             // Load images from declaring plugin
-            ImageDescriptor descriptor = null;
             Image icon = null;
             if (iconPath != null) {
-                descriptor =
-                        AbstractUIPlugin.imageDescriptorFromPlugin(pluginId,
-                                iconPath);
+                icon = ImageRepository.getImage(pluginId, iconPath);
             }
-            if (descriptor != null) {
-                icon = descriptor.createImage();
-            }
-            // get default image if null
             if (icon == null) {
-                icon = ImageRepository.getImage(META_NODE_ICON);
+                icon =
+                        ImageRepository
+                                .getImage(SharedImages.DefaultMetaNodeIcon);
             }
-            // FIXME dispose this somewhere !!
             template.setIcon(icon);
         }
         return template;
@@ -297,11 +271,14 @@ public final class RepositoryFactory {
         cat.setPluginID(pluginID);
         cat.setDescription(str(element.getAttribute("description"), ""));
         cat.setAfterID(str(element.getAttribute("after"), ""));
-        if (!Boolean.valueOf(System.getProperty("java.awt.headless", "false"))) {
-            ImageDescriptor descriptor =
-                    getIcon(pluginID, element.getAttribute("icon"));
-            cat.setIcon(descriptor.createImage(true));
-            cat.setIconDescriptor(descriptor);
+        if (!Boolean.getBoolean("java.awt.headless")) {
+            Image img =
+                    ImageRepository.getImage(pluginID,
+                            element.getAttribute("icon"));
+            if (img == null) {
+                img = ImageRepository.getImage(SharedImages.DefaultCategoryIcon);
+            }
+            cat.setIcon(img);
         }
         String path = str(element.getAttribute("path"), "/");
         cat.setPath(path);
@@ -339,20 +316,6 @@ public final class RepositoryFactory {
     // little helper, returns a default if s==null
     private static String str(final String s, final String defaultString) {
         return s == null ? defaultString : s;
-    }
-
-    private static ImageDescriptor getIcon(final String pluginID,
-            final String path) {
-        if (path != null && pluginID != null) {
-            ImageDescriptor desc =
-                    AbstractUIPlugin.imageDescriptorFromPlugin(pluginID, path);
-            if (desc != null) {
-                return desc;
-            }
-        }
-        // if we have not returned an image yet we have to return the default
-        // icon.
-        return defaultIcon;
     }
 
     /**
@@ -424,19 +387,8 @@ public final class RepositoryFactory {
                     element.getDeclaringExtension().getNamespaceIdentifier();
             node.setPluginID(pluginID);
 
-            if (!Boolean.valueOf(System.getProperty("java.awt.headless",
-                    "false"))) {
-                // Load images from declaring plugin
-                Image icon =
-                        ImageRepository.getScaledImage(factory.getIcon(), 16,
-                                16);
-                // get default image if null
-                if (icon == null) {
-                    icon =
-                            ImageRepository.getScaledImage(
-                                    NodeFactory.getDefaultIcon(), 16, 16);
-                }
-                // FIXME dispose this somewhere !!
+            if (!Boolean.getBoolean("java.awt.headless")) {
+                Image icon = ImageRepository.getScaledImage(factory, 16, 16);
                 node.setIcon(icon);
             }
 
@@ -491,10 +443,12 @@ public final class RepositoryFactory {
         cat.setPluginID(pluginID);
         cat.setDescription(str(description, ""));
         cat.setAfterID(str(afterID, ""));
-        if (!Boolean.valueOf(System.getProperty("java.awt.headless", "false"))) {
-            ImageDescriptor descriptor = getIcon(pluginID, icon);
-            cat.setIcon(descriptor.createImage(true));
-            cat.setIconDescriptor(descriptor);
+        if (!Boolean.getBoolean("java.awt.headless")) {
+            Image img = ImageRepository.getImage(pluginID, icon);
+            if (img == null) {
+                img = ImageRepository.getImage(SharedImages.DefaultCategoryIcon);
+            }
+            cat.setIcon(img);
         }
         String path = str(categoryPath, "/");
         cat.setPath(path);

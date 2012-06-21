@@ -50,7 +50,6 @@
  */
 package org.knime.workbench.repository.model;
 
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.graphics.Image;
 
 /**
@@ -66,8 +65,6 @@ public class Category extends AbstractContainerObject {
 
     private Image m_icon;
 
-    private ImageDescriptor m_iconDescriptor;
-
     private String m_pluginID;
 
     protected Category(final Category copy) {
@@ -75,7 +72,6 @@ public class Category extends AbstractContainerObject {
         this.m_description = copy.m_description;
         this.m_path = copy.m_path;
         this.m_icon = copy.m_icon;
-        this.m_iconDescriptor = copy.m_iconDescriptor;
         this.m_pluginID = copy.m_pluginID;
     }
 
@@ -156,24 +152,7 @@ public class Category extends AbstractContainerObject {
          * debugging purposes? if (adapter == IPropertySource.class) { return
          * new CategoryPropertySource(this); }
          */
-
         return super.getAdapter(adapter);
-    }
-
-    /**
-     * Sets the image descriptor for the icon.
-     *
-     * @param imageDescriptor The descriptor
-     */
-    public void setIconDescriptor(final ImageDescriptor imageDescriptor) {
-        m_iconDescriptor = imageDescriptor;
-    }
-
-    /**
-     * @return Returns the iconDescriptor.
-     */
-    public ImageDescriptor getIconDescriptor() {
-        return m_iconDescriptor;
     }
 
     /**

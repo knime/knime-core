@@ -53,7 +53,6 @@ package org.knime.workbench.core.util;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.wizard.WizardPage;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
@@ -66,8 +65,7 @@ import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
-import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.knime.workbench.core.KNIMECorePlugin;
+import org.knime.workbench.core.util.ImageRepository.SharedImages;
 
 /**
  * Abstract class for import or export wizard pages.
@@ -85,14 +83,6 @@ public abstract class AbstractImExPage extends WizardPage {
     private final List<String> m_extensionDescriptions =
             new ArrayList<String>();
 
-    private static final ImageDescriptor IMPORT_ICON = AbstractUIPlugin
-            .imageDescriptorFromPlugin(KNIMECorePlugin.PLUGIN_ID,
-                    "icons/knime_import55.png");
-
-    private static final ImageDescriptor EXPORT_ICON = AbstractUIPlugin
-            .imageDescriptorFromPlugin(KNIMECorePlugin.PLUGIN_ID,
-                    "icons/knime_export55.png");
-
     private final boolean m_export;
 
     /**
@@ -106,7 +96,9 @@ public abstract class AbstractImExPage extends WizardPage {
      */
     protected AbstractImExPage(final String title, final String description,
             final boolean export) {
-        super("wizardPage", title, export ? EXPORT_ICON : IMPORT_ICON);
+        super("wizardPage", title, export ? ImageRepository
+                .getImageDescriptor(SharedImages.ExportBig) : ImageRepository
+                .getImageDescriptor(SharedImages.ImportBig));
         setDescription(description);
         m_export = export;
         m_extensions.add("*.*");

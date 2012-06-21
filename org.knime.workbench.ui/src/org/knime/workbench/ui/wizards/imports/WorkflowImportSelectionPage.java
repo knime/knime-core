@@ -73,7 +73,6 @@ import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.operation.IRunnableWithProgress;
-import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.AbstractTreeViewer;
 import org.eclipse.jface.viewers.CheckStateChangedEvent;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
@@ -105,6 +104,8 @@ import org.eclipse.ui.internal.wizards.datatransfer.TarFile;
 import org.eclipse.ui.internal.wizards.datatransfer.TarLeveledStructureProvider;
 import org.eclipse.ui.internal.wizards.datatransfer.ZipLeveledStructureProvider;
 import org.knime.core.node.NodeLogger;
+import org.knime.workbench.core.util.ImageRepository;
+import org.knime.workbench.core.util.ImageRepository.SharedImages;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.navigator.KnimeResourceLabelProvider;
 import org.knime.workbench.ui.navigator.KnimeResourceUtil;
@@ -123,10 +124,6 @@ public class WorkflowImportSelectionPage extends WizardPage {
 
     /** Identifier for this page within a wizard. */
     public static final String NAME = "Workflow import selection";
-
-    private static final ImageDescriptor ICON = KNIMEUIPlugin
-        .imageDescriptorFromPlugin(KNIMEUIPlugin.PLUGIN_ID,
-            "icons/knime_import55.png");
 
     private static final Image IMG_WARN
         = KNIMEUIPlugin.imageDescriptorFromPlugin(KNIMEUIPlugin.PLUGIN_ID,
@@ -189,7 +186,8 @@ public class WorkflowImportSelectionPage extends WizardPage {
         super(NAME);
         setTitle("Workflow Import Selection");
         setDescription("Select the workflows to import.");
-        setImageDescriptor(ICON);
+        setImageDescriptor(ImageRepository
+                .getImageDescriptor(SharedImages.ImportBig));
         m_btnData = new GridData();
         m_btnData.widthHint = 70;
         m_btnData.horizontalAlignment = SWT.RIGHT;
