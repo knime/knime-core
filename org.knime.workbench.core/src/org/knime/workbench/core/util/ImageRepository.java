@@ -118,7 +118,7 @@ public class ImageRepository {
         /** Icon for collapsing all levels in a tree. */
         CollapseAll("icons/collapseall.png"),
         /** Icon for expanding all levels in a tree. */
-        ExpandAll("icons/expandeall.png"),
+        ExpandAll("icons/expandall.png"),
         /** Icon for the favorite nodes view. */
         FavoriteNodesFolder("icons/fav/folder_fav.png"),
         /** Icon for the most frequently used nodes category. */
