@@ -94,6 +94,30 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
 
     private final JSpinner m_columnNumber = new JSpinner();
 
+    /**
+     * @since 2.6
+     */
+    private final JRadioButton m_outputAsList = new JRadioButton(
+            "as list");
+
+    /**
+     * @since 2.6
+     */
+    private final JRadioButton m_outputAsSet = new JRadioButton(
+            "as set (remove duplicates)");
+
+    /**
+     * @since 2.6
+     */
+    private final JRadioButton m_outputAsColumns = new JRadioButton(
+            "as new columns");
+
+    /**
+     * @since 2.6
+     */
+    private final JCheckBox m_trim = new JCheckBox(
+            "remove leading and trailing white space chars (trim)");
+
     private final JRadioButton m_fixedSize = new JRadioButton("set array size");
 
     private final JRadioButton m_guessSize =
@@ -160,6 +184,42 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
         quoteBox.add(Box.createHorizontalGlue());
         settingsBox.add(quoteBox);
 
+        // - the trim checkbox
+        Box trimBox = Box.createHorizontalBox();
+        trimBox.add(m_trim);
+        trimBox.add(Box.createHorizontalGlue());
+        settingsBox.add(trimBox);
+
+        // output box
+        Box outputBox = Box.createVerticalBox();
+        outputBox.setBorder(BorderFactory.createTitledBorder(BorderFactory
+                .createEtchedBorder(), "Output"));
+
+        // - the output group (as list, as set, as columns)
+        ButtonGroup obg = new ButtonGroup();
+        obg.add(m_outputAsList);
+        obg.add(m_outputAsSet);
+        obg.add(m_outputAsColumns);
+        m_outputAsColumns.setSelected(true);
+        m_outputAsColumns.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(final ItemEvent e) {
+                m_fixedSize.setEnabled(m_outputAsColumns.isSelected());
+                m_guessSize.setEnabled(m_outputAsColumns.isSelected());
+                m_columnNumber.setEnabled(m_outputAsColumns.isSelected());
+            }
+        });
+        Box outputColBox = Box.createHorizontalBox();
+        outputColBox.add(Box.createVerticalStrut(10));
+        outputColBox.add(m_outputAsList);
+        outputColBox.add(Box.createHorizontalStrut(5));
+        outputColBox.add(m_outputAsSet);
+        outputColBox.add(Box.createHorizontalStrut(5));
+        outputColBox.add(m_outputAsColumns);
+        outputColBox.add(Box.createHorizontalGlue());
+        outputBox.add(outputColBox);
+        outputBox.add(Box.createVerticalGlue());
+
         // - the size group
         ButtonGroup bg = new ButtonGroup();
         bg.add(m_fixedSize);
@@ -195,9 +255,9 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
         sizeBox.add(Box.createVerticalStrut(3));
         sizeBox.add(guessSizeBox);
 
-        settingsBox.add(Box.createVerticalStrut(7));
-        settingsBox.add(sizeBox);
-        settingsBox.add(Box.createVerticalGlue());
+        outputBox.add(Box.createVerticalStrut(7));
+        outputBox.add(sizeBox);
+        outputBox.add(Box.createVerticalGlue());
 
         // the missing value handling box
         m_useEmptyString.setToolTipText("If checked, empty string cells are "
@@ -211,6 +271,8 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
         pane.add(colSelBox);
         pane.add(Box.createVerticalStrut(7));
         pane.add(settingsBox);
+        pane.add(Box.createVerticalStrut(7));
+        pane.add(outputBox);
         pane.add(Box.createVerticalStrut(7));
         pane.add(missValBox);
 
@@ -241,6 +303,10 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
             csSettings.setRemoveQuotes(true);
             csSettings.setUseEmptyString(false);
             csSettings.setUseEscapeCharacter(false);
+            csSettings.setOutputAsList(false);
+            csSettings.setOutputAsSet(false);
+            csSettings.setOutputAsCols(true);
+            csSettings.setTrim(true);
             // set the first string column as default column
             for (DataColumnSpec cSpec : specs[0]) {
                 if (cSpec.getType().isCompatible(StringValue.class)) {
@@ -276,6 +342,16 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
         }
         m_useEmptyString.setSelected(csSettings.isUseEmptyString());
         m_useEscapeCharacter.setSelected(csSettings.isUseEscapeCharacter());
+
+        if (csSettings.isOutputAsCols()) {
+            m_outputAsColumns.setSelected(true);
+        } else if (csSettings.isOutputAsList()) {
+            m_outputAsList.setSelected(true);
+        } else {
+            m_outputAsSet.setSelected(true);
+        }
+
+        m_trim.setSelected(csSettings.isTrim());
     }
 
     /**
@@ -315,6 +391,11 @@ public class CellSplitterNodeDialogPane extends NodeDialogPane {
         csSettings.setGuessNumOfCols(m_guessSize.isSelected());
         csSettings.setUseEmptyString(m_useEmptyString.isSelected());
         csSettings.setUseEscapeCharacter(m_useEscapeCharacter.isSelected());
+
+        csSettings.setOutputAsList(m_outputAsList.isSelected());
+        csSettings.setOutputAsSet(m_outputAsSet.isSelected());
+        csSettings.setOutputAsCols(m_outputAsColumns.isSelected());
+        csSettings.setTrim(m_trim.isSelected());
 
         csSettings.saveSettingsTo(settings);
 

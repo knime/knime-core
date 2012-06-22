@@ -110,8 +110,7 @@ public class CellSplitterNodeModel extends NodeModel {
         // Guessing is done in the execute method
         if (!m_settings.isGuessNumOfCols()) {
             try {
-                m_settings =
-                        CellSplitterCellFactory.createNewColumnTypes(null,
+                m_settings = CellSplitterCellFactory.createNewColumnTypes(null,
                                 m_settings, null);
             } catch (CanceledExecutionException cee) {
                 // can't happen
@@ -120,7 +119,9 @@ public class CellSplitterNodeModel extends NodeModel {
 
         DataTableSpec outSpec = null;
 
-        if ((inSpecs[0] != null) && (!m_settings.isGuessNumOfCols())) {
+        if ((inSpecs[0] != null) 
+           && (((!m_settings.isGuessNumOfCols()) && m_settings.isOutputAsCols())
+                || !m_settings.isOutputAsCols())) {
             // if we are supposed to guess we don't know the num of cols here
             outSpec = createColumnRearranger(inSpecs[0]).createSpec();
         }

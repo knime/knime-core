@@ -4,14 +4,20 @@
 	<name>Cell Splitter</name>
 	
 	<shortDescription>
-	    Splits cells in one column of the table into separate columns based on a specified delimiter.
+	    Splits the string representation of cells in one column of the table 
+	    into separate columns or into one column containing a collection of 
+	    cells, based on a specified delimiter.
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>This node uses a user-specified delimiter character to
-		split the content of a selected column into parts. It appends a fixed
-		number of columns to the input table, each carrying one part of the 
-		original column.<br />
+		split the content of a selected column into parts. It appends either a 
+		fixed number of columns to the input table, each carrying one part of the 
+		original column, or a single column containing a collection (list or 
+		set) of cells with the split output. It can be specified whether the
+		output consists of one or more columns, only one column containing 
+		list cells, or only one column containing set cells in which duplicates
+		are removed.<br />
 		If the column contains more delimiters than needed 
 		(leading to more parts than appended columns are available) the 
 		additional delimiters are ignored (resulting in the last column containing
@@ -19,8 +25,10 @@
 		If the selected column contains too
 		few delimiters (leading to less parts than expected), empty columns
 		will be created in that row.<br />
-		The content of the new columns will be trimmed (i.e. leading and trailing
-		spaces will be deleted).
+		Based on the delimiters and the resulting parts the collection cells
+		can have different sizes.
+		The content of the new columns will be trimmed if specified 
+		(i.e. leading and trailing spaces will be deleted).
 		</intro>
 		<option name="Column selection"> 
 			Select the column whose values are split.
@@ -37,6 +45,24 @@
 	    quotes is always the backslash.) If no quotation character
 	    is needed leave it empty.
 		</option>
+        <option name="remove leading and trailing white space chars (trim)">
+        If checked, leading and trailing white spaces of each part (token) will 
+        be deleted.
+        </option>		
+        <option name="Output - as list">
+        If selected, the output will consist of one column containing list
+        collection cells in which the split parts are stored. Duplicates
+        can occur in list cells.
+        </option>
+        <option name="Output - as set (remove duplicates)">
+        If selected, the output will consist of one column containing set
+        collection cells in which the split parts are stored. Duplicates
+        are removed and can not occur in set cells.
+        </option>
+        <option name="Output - as new columns">
+        If selected, the output will consist of one or more columns, each 
+        containing a split part.
+        </option>
 		<option name="Set Array Size">Check this and specify the number of columns
 		to append. All created columns will be of type String. (See above for 
 		what happens if the split produces a different number of parts.)

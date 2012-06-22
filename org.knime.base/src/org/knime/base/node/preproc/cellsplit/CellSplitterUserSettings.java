@@ -83,6 +83,14 @@ public class CellSplitterUserSettings {
     private static final String CFG_USEEMPTYSTRING = "useEmptyString";
 
     private static final String CFG_USEESCAPECHAR = "useEscapeCharacter";
+    
+    private static final String CFG_OUTPUTASLIST = "outputAsList";
+    
+    private static final String CFG_OUTPUTASSET = "outputAsSet";
+    
+    private static final String CFG_OUTPUTASCOLS = "outputAsColumns";
+    
+    private static final String CFG_TRIM = "removeWhitespaces";
 
     private String m_columnName = null;
 
@@ -99,12 +107,32 @@ public class CellSplitterUserSettings {
     private boolean m_useEmptyStrings = false;
 
     private boolean m_useEscapeCharacter = false;
+    
+    /**
+     * @since 2.6
+     */
+    private boolean m_outputAsList = false;
 
+    /**
+     * @since 2.6
+     */
+    private boolean m_outputAsSet = false;
+    
+    /**
+     * @since 2.6
+     */    
+    private boolean m_outputAsCols = true;
+
+    /**
+     * @since 2.6
+     */    
+    private boolean m_trim = true;
+    
     /**
      * Creates a new settings object with no (or default) settings.
      */
     CellSplitterUserSettings() {
-
+        /* empty */
     }
 
     /**
@@ -133,6 +161,12 @@ public class CellSplitterUserSettings {
 
         /** @since 2.6 */
         m_useEscapeCharacter = settings.getBoolean(CFG_USEESCAPECHAR, false);
+
+        /** @since 2.6 */
+        m_outputAsList = settings.getBoolean(CFG_OUTPUTASLIST, false);
+        m_outputAsSet = settings.getBoolean(CFG_OUTPUTASSET, false);
+        m_outputAsCols = settings.getBoolean(CFG_OUTPUTASCOLS, true);
+        m_trim = settings.getBoolean(CFG_TRIM, true);
     }
 
     /**
@@ -149,6 +183,10 @@ public class CellSplitterUserSettings {
         settings.addBoolean(CFG_REMOVEQUOTES, m_removeQuotes);
         settings.addBoolean(CFG_USEEMPTYSTRING, m_useEmptyStrings);
         settings.addBoolean(CFG_USEESCAPECHAR, m_useEscapeCharacter);
+        settings.addBoolean(CFG_OUTPUTASLIST, m_outputAsList);
+        settings.addBoolean(CFG_OUTPUTASSET, m_outputAsSet);
+        settings.addBoolean(CFG_OUTPUTASCOLS, m_outputAsCols);
+        settings.addBoolean(CFG_TRIM, m_trim);
     }
 
     /**
@@ -179,7 +217,7 @@ public class CellSplitterUserSettings {
             return "Specify a quotation character (or disable it).";
         }
 
-        if (!m_guessNumOfCols && (m_numOfCols < 1)) {
+        if (m_outputAsCols && !m_guessNumOfCols && (m_numOfCols < 1)) {
             return "Specify the number of columns to add (or enable guessing).";
         }
 
@@ -310,5 +348,73 @@ public class CellSplitterUserSettings {
      */
     void setUseEscapeCharacter(final boolean b) {
         m_useEscapeCharacter = b;
+    }
+
+    /**
+     * @return the outputAsList <code>true</code> if output is list, otherwise
+     * <code>false</code>.
+     * @since 2.6
+     */
+    boolean isOutputAsList() {
+        return m_outputAsList;
+    }
+
+    /**
+     * @param outputAsList the outputAsList to set
+     * @since 2.6
+     */
+    void setOutputAsList(final boolean outputAsList) {
+        m_outputAsList = outputAsList;
+    }
+
+    /**
+     * @return the outputAsSet <code>true</code> if output is set, otherwise
+     * <code>false</code>.
+     * @since 2.6
+     */
+    boolean isOutputAsSet() {
+        return m_outputAsSet;
+    }
+
+    /**
+     * @param outputAsSet the outputAsSet to set
+     * @since 2.6
+     */
+    void setOutputAsSet(final boolean outputAsSet) {
+        m_outputAsSet = outputAsSet;
+    }
+
+    /**
+     * @return the outputAsCols <code>true</code> if output are columns, 
+     * otherwise <code>false</code>.
+     * @since 2.6
+     */
+    boolean isOutputAsCols() {
+        return m_outputAsCols;
+    }
+
+    /**
+     * @param outputAsCols the outputAsCols to set
+     * @since 2.6
+     */
+    void setOutputAsCols(final boolean outputAsCols) {
+        m_outputAsCols = outputAsCols;
+    }
+
+    /**
+     * @return the trim <code>true</code> if leading and trailing white spaces 
+     * need to be removed, otherwise <code>false</code>.
+     * @since 2.6
+     */
+    boolean isTrim() {
+        return m_trim;
+    }
+
+    /**
+     * @param trim the trim to set
+     * @since 2.6
+     */
+    void setTrim(final boolean trim) {
+        m_trim = trim;
     }
 }

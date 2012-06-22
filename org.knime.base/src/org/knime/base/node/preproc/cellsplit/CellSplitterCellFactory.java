@@ -53,7 +53,9 @@ package org.knime.base.node.preproc.cellsplit;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.knime.core.data.DataCell;
@@ -64,6 +66,9 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
+import org.knime.core.data.collection.CollectionCellFactory;
+import org.knime.core.data.collection.ListCell;
+import org.knime.core.data.collection.SetCell;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -158,7 +163,8 @@ class CellSplitterCellFactory implements CellFactory {
             throw new IllegalStateException(msg);
         }
         if (m_settings.isGuessNumOfCols()
-                && m_settings.getNumOfColsGuessed() < 1) {
+                && m_settings.getNumOfColsGuessed() < 1 
+                && m_settings.isOutputAsCols()) {
             // guess the number of columns before creating the table
             assert false;
             throw new IllegalStateException("Number of new columns is not set");
@@ -174,12 +180,116 @@ class CellSplitterCellFactory implements CellFactory {
         }
 
         int numOfCols = m_settings.getNumOfCols();
-        if (m_settings.isGuessNumOfCols()) {
+        if (m_settings.isGuessNumOfCols() && m_settings.isOutputAsCols()) {
             numOfCols = m_settings.getNumOfColsGuessed();
         }
-        DataCell[] result = new DataCell[numOfCols];
-
+        
         DataCell inputCell = row.getCell(m_colIdx);
+        
+        // if regular output as columns
+        if (m_settings.isOutputAsCols()) {
+            return tokenizeAndCreateCells(inputCell, numOfCols);
+        }
+        
+        // if output as collection cell
+        return tokenizeAndCreateCollectionsCell(inputCell);
+    }
+
+    /**
+     * Extracts the string representation of the given cell and returns it.
+     * @param inputCell The cell to extract the string representation from.
+     * @return The string representation of the given cell.
+     * @since 2.6
+     */
+    private String getInputString(final DataCell inputCell) {
+        final String inputString;
+        if (inputCell instanceof StringValue) {
+            inputString = ((StringValue)inputCell).getStringValue();
+        } else {
+            inputString = inputCell.toString();
+        }
+        return inputString;
+    }
+    
+    /**
+     * Creates a tokenizer on the given string reader and prepares it with 
+     * specific settings.
+     * and returns it.
+     * @param inputReader The string reader to create a tokenizer on.
+     * @return The tokenizer created on the string reader.
+     * @since 2.6
+     */
+    private Tokenizer prepareTokenizer(final StringReader inputReader) {
+        assert inputReader.markSupported();
+        Tokenizer tokenizer = new Tokenizer(inputReader);
+        tokenizer.setSettings(m_tokenizerSettings);
+        return tokenizer;
+    }
+    
+    /**
+     * Tokenizes the string representation of the given data cell and returns
+     * an array of data cells. The array contains only one data cell, which
+     * is a collection cell. Whether it is a List or Set cell is specified in 
+     * the settings. The collection cell contains string cells. For each
+     * token one string cell is created.
+     * @param inputCell the cell to tokenize (its string representation)
+     * @return An array containing exactly one collection cell, storing string
+     * cells. For each token one string cell.
+     * @since 2.6
+     */
+    private DataCell[] tokenizeAndCreateCollectionsCell(
+            final DataCell inputCell) {
+        DataCell[] result = new DataCell[1];
+        
+        // missing value handling
+        if (inputCell.isMissing()) {
+            Arrays.fill(result, DataType.getMissingCell());
+            
+            if (m_settings.isUseEmptyString()) {
+                Collection<DataCell> strColl = new ArrayList<DataCell>(1);
+                strColl.add(EMPTY_STRINGCELL);
+                result[0] = CollectionCellFactory.createListCell(strColl);
+            }
+            return result;
+        }
+        
+        final String inputString = getInputString(inputCell);
+
+        // init the tokenizer
+        StringReader inputReader = new StringReader(inputString);
+        Tokenizer tokenizer = prepareTokenizer(inputReader);
+        
+        Collection<DataCell> strColl = new ArrayList<DataCell>();
+        String token = null;
+        while ((token = tokenizer.nextToken()) != null) {
+            if (m_settings.isTrim()) {
+                token = token.trim();
+            }
+            strColl.add(new StringCell(token));
+        }
+
+        if (m_settings.isOutputAsList()) {
+            result[0] = CollectionCellFactory.createListCell(strColl);
+        } else {
+            result[0] = CollectionCellFactory.createSetCell(strColl);
+        }
+
+        return result;
+    }
+    
+    /**
+     * Tokenizes the string representation of the given data cell and returns
+     * an array of data cells containing the tokens.
+     * @param inputCell the cell to tokenize (its string representation)
+     * @param numOfCells The number of cells to create, containing the tokens 
+     * @return An arrays of cells containing the tokens. The length of the array
+     * is specified by <code>numOfCells</code>.
+     * @since 2.6
+     */
+    private DataCell[] tokenizeAndCreateCells(final DataCell inputCell, 
+            final int numOfCells) {
+        DataCell[] result = new DataCell[numOfCells];
+
         if (inputCell.isMissing()) {
 
             Arrays.fill(result, DataType.getMissingCell());
@@ -195,20 +305,11 @@ class CellSplitterCellFactory implements CellFactory {
             return result;
         }
 
-        final String inputString;
-        if (inputCell instanceof StringValue) {
-            inputString = ((StringValue)inputCell).getStringValue();
-        } else {
-            inputString = inputCell.toString();
-        }
+        final String inputString = getInputString(inputCell);
 
         // init the tokenizer
         StringReader inputReader = new StringReader(inputString);
-        // the reader is no good if it doesn't support the mark operation
-        assert inputReader.markSupported();
-
-        Tokenizer tokenizer = new Tokenizer(inputReader);
-        tokenizer.setSettings(m_tokenizerSettings);
+        Tokenizer tokenizer = prepareTokenizer(inputReader);
 
         // tokenize the column value and create new output cells
         for (int col = 0; col < result.length; col++) {
@@ -252,12 +353,13 @@ class CellSplitterCellFactory implements CellFactory {
                     result[col] = DataType.getMissingCell();
                 }
             } else {
-                result[col] =
-                        createDataCell(token.trim(), m_settings
-                                .getTypeOfColumn(col));
+                if (m_settings.isTrim()) {
+                    token = token.trim();
+                }
+                result[col] = createDataCell(token, 
+                        m_settings.getTypeOfColumn(col));
             }
         }
-
         return result;
     }
 
@@ -325,8 +427,9 @@ class CellSplitterCellFactory implements CellFactory {
     @Override
     public DataColumnSpec[] getColumnSpecs() {
 
-        // make sure number of column is set or guessed
-        if (m_outSpecs == null) {
+        // make sure number of column is set or guessed but only if output as
+        // columns is specified
+        if (m_settings.isOutputAsCols() && m_outSpecs == null) {
             int colNum = m_settings.getNumOfCols();
             if (m_settings.isGuessNumOfCols()) {
                 colNum = m_settings.getNumOfColsGuessed();
@@ -364,22 +467,51 @@ class CellSplitterCellFactory implements CellFactory {
         // now, create the output specs
         if (m_outSpecs == null) {
 
-            int colNum = m_settings.getNumOfCols();
-            if (m_settings.isGuessNumOfCols()) {
-                colNum = m_settings.getNumOfColsGuessed();
-            }
+            // create regular columns output spec if output as column is 
+            // specified
+            if (m_settings.isOutputAsCols()) {
+                int colNum = m_settings.getNumOfCols();
+                if (m_settings.isGuessNumOfCols()) {
+                    colNum = m_settings.getNumOfColsGuessed();
+                }
 
-            m_outSpecs = new DataColumnSpec[colNum];
-            String selColName = m_settings.getColumnName();
+                m_outSpecs = new DataColumnSpec[colNum];
+                String selColName = m_settings.getColumnName();
 
-            for (int col = 0; col < colNum; col++) {
-                String colName = selColName + "_Arr[" + col + "]";
+                for (int col = 0; col < colNum; col++) {
+                    String colName = selColName + "_Arr[" + col + "]";
+                    colName = uniquifyName(colName, m_inSpec);
+                    DataType colType = m_settings.getTypeOfColumn(col);
+
+                    DataColumnSpecCreator dcsc =
+                            new DataColumnSpecCreator(colName, colType);
+                    m_outSpecs[col] = dcsc.createSpec();
+                }
+                
+            // create list or set cell output spec
+            } else {
+                m_outSpecs = new DataColumnSpec[1];
+                String selColName = m_settings.getColumnName();
+                
+                String colName;
+                if (m_settings.isOutputAsList()) {
+                    colName = selColName + "_SplitResultList";
+                } else {
+                    colName = selColName + "_SplitResultSet";
+                }
                 colName = uniquifyName(colName, m_inSpec);
-                DataType colType = m_settings.getTypeOfColumn(col);
-
+                
+                DataType colType = null;
+                // list cell type
+                if (m_settings.isOutputAsList()) {
+                    colType = ListCell.getCollectionType(StringCell.TYPE);
+                // set cell type otherwise (there is no other option left)    
+                } else {
+                    colType = SetCell.getCollectionType(StringCell.TYPE);
+                }
                 DataColumnSpecCreator dcsc =
                         new DataColumnSpecCreator(colName, colType);
-                m_outSpecs[col] = dcsc.createSpec();
+                m_outSpecs[0] = dcsc.createSpec();
             }
 
         }
@@ -425,6 +557,9 @@ class CellSplitterCellFactory implements CellFactory {
      * Analyzes the values in the user selected column and tries to figure out
      * how many columns are needed to hold the splitted values and of which type
      * the new resulting column have to be. <br>
+     * If the "output as list" or "output as set" flag IS set in the settings
+     * object it returns one as column number, since only one collection cell
+     * is needed to store the output.
      * If the "guess" flag in the settings object is NOT set, it returns the
      * column number entered by the user and string type for all columns.
      * Otherwise it runs once through the entire table, splits the value of the
@@ -471,9 +606,9 @@ class CellSplitterCellFactory implements CellFactory {
         }
 
         /*
-         * not guessing types:
+         * not guessing types: output as columns
          */
-        if (!userSettings.isGuessNumOfCols()) {
+        if (!userSettings.isGuessNumOfCols() && userSettings.isOutputAsCols()) {
             // we are not supposed to analyze the file.
             for (int col = 0; col < userSettings.getNumOfCols(); col++) {
                 // create as many string columns as the user set
@@ -482,6 +617,22 @@ class CellSplitterCellFactory implements CellFactory {
             return result;
         }
 
+        /*
+         * not guessing types: output as list or set
+         */
+        if (userSettings.isOutputAsList() || userSettings.isOutputAsSet()) {
+            DataType colType = null;
+            // list cell type
+            if (userSettings.isOutputAsList()) {
+                colType = ListCell.getCollectionType(StringCell.TYPE);
+            // set cell type otherwise (there is no other option left)    
+            } else {
+                colType = SetCell.getCollectionType(StringCell.TYPE);
+            }
+            result.addColumnOfType(colType);
+            return result;
+        }
+        
         /*
          * analyze table
          */
