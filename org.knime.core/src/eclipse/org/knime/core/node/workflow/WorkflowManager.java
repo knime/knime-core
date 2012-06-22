@@ -1176,7 +1176,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             final MetaPortInfo[] newPorts) {
         synchronized (m_workflowMutex) {
             WorkflowManager subFlowMgr = getMetaNodeContainer(subFlowID);
-            if (!haveMetaPortsChanged(newPorts, subFlowMgr)) {
+            if (!haveMetaPortsChanged(newPorts, true, subFlowMgr)) {
                 return;
             }
             final Set<ConnectionContainer> connectionsToMetaNode =
@@ -1236,7 +1236,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             final MetaPortInfo[] newPorts) {
         synchronized (m_workflowMutex) {
             WorkflowManager subFlowMgr = getMetaNodeContainer(subFlowID);
-            if (!haveMetaPortsChanged(newPorts, subFlowMgr)) {
+            if (!haveMetaPortsChanged(newPorts, false, subFlowMgr)) {
                 return;
             }
             final Set<ConnectionContainer> connectionsFromMetaNode =
@@ -1291,10 +1291,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /**
      * @param newPorts
+     * @param inPorts if true, otherwise outports
      * @param subFlowMgr */
-    private static boolean haveMetaPortsChanged(final MetaPortInfo[] newPorts,
+    private static boolean haveMetaPortsChanged(final MetaPortInfo[] newPorts, final boolean inPorts,
             final WorkflowManager subFlowMgr) {
-        if (newPorts.length != subFlowMgr.getNrInPorts()) {
+        if (newPorts.length != (inPorts ? subFlowMgr.getNrInPorts() : subFlowMgr.getNrOutPorts())) {
             return true;
         }
         for (int i = 0; i < newPorts.length; i++) {
