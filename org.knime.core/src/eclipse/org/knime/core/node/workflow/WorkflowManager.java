@@ -1759,9 +1759,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             // first make sure we clean up indirectly affected
             // loop start nodes inside this WFM
-            for (Integer inPort : inPorts) {
-                resetAndConfigureAffectedLoopContext(this.getID(), inPort);
-            }
+            resetAndConfigureAffectedLoopContext(this.getID(), inPorts);
             // now find all nodes that are directly affected:
             ArrayList<NodeAndInports> nodes
                               = m_workflow.findAllConnectedNodes(inPorts);
@@ -3774,21 +3772,21 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         resetAndConfigureAffectedLoopContext(allnodes);
     }
 
-    /* Check only successors of the given node/port and make sure that
+    /* Check only successors of the given node/ports and make sure that
      * all loops that are partially contained in the set of
      * successors are completely reset and freshly configured. This
      * is used to ensure proper reset/configure of the entire loop
      * if only parts of a loop are affected by a reset propagation.
      *
      * @param id ...
-     * @param portIndex ...
+     * @param portIndices ...
      */
     private void resetAndConfigureAffectedLoopContext(final NodeID id,
-            final int portIndex) {
+            final Set<Integer>portIndices) {
         // First find all the nodes in this workflow that are connected
         // to the origin:
         LinkedHashMap<NodeID, Set<Integer>> allnodes
-            = m_workflow.getBreadthFirstListOfPortSuccessors(id, portIndex,
+            = m_workflow.getBreadthFirstListOfPortSuccessors(id, portIndices,
                        /*skipWFM=*/ true);
         // the do cleanup
         resetAndConfigureAffectedLoopContext(allnodes);
@@ -3925,7 +3923,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     int outGoingPortID = conn.getDestPort();
                     // clean loop context affected one level up
                     getParent().resetAndConfigureAffectedLoopContext(
-                            this.getID(), outGoingPortID);
+                           this.getID(), Collections.singleton(outGoingPortID));
                     getParent().resetSuccessors(this.getID(), outGoingPortID);
                 }
             }

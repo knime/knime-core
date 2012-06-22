@@ -271,10 +271,11 @@ class Workflow {
      * @return map as described above.
      */
     LinkedHashMap<NodeID, Set<Integer>> getBreadthFirstListOfPortSuccessors(
-            final NodeID id, final int outPortIndex, final boolean skipWFM) {
+            final NodeID id, final Set<Integer> outPortIndices,
+            final boolean skipWFM) {
         // assemble unsorted list of successors
         HashSet<NodeID> inclusionList = new HashSet<NodeID>();
-        completeSetFromOutPort(inclusionList, id, outPortIndex);
+        completeSetFromOutPort(inclusionList, id, outPortIndices);
         // add starting node as well (since it will be predecessor
         // for the following BFS!
         inclusionList.add(id);
@@ -284,7 +285,7 @@ class Workflow {
                     = new LinkedHashMap<NodeID, Set<Integer>>();
         // put the origin - note that none of it's ports (if any) are of
         // interest -  into the map
-        bfsSortedNodes.put(id, new HashSet<Integer>(outPortIndex));
+        bfsSortedNodes.put(id, outPortIndices);
         expandListBreadthFirst(bfsSortedNodes, inclusionList);
         // if wanted (and contained): remove WFM itself
         if (skipWFM && bfsSortedNodes.keySet().contains(this.getID())) {
@@ -377,13 +378,14 @@ class Workflow {
      *
      * @param nodes set of nodes to be completed
      * @param id of node to start search from
-     * @param outPortIndex of outport
+     * @param outPortIndices of outports
      */
     private void completeSetFromOutPort(final HashSet<NodeID> nodes,
-            final NodeID id, final int outPortIndex) {
+            final NodeID id, final Set<Integer> outPortIndices) {
         for (ConnectionContainer cc : m_connectionsBySource.get(id)) {
             NodeID nextNodeID = cc.getDest();
-            if (!nextNodeID.equals(getID())) {
+            if (!nextNodeID.equals(getID())
+                    && outPortIndices.contains(cc.getSourcePort())) {
                 // avoid to follow any connections leaving the workflow!
                 completeSet(nodes, nextNodeID, cc.getDestPort());
             }
