@@ -161,6 +161,8 @@ public final class Node implements NodeModelWarningListener {
 
     private NodeSettings m_variablesSettings;
 
+    private boolean m_forceSychronousIO;
+
     /** Keeps outgoing information (specs, objects, HiLiteHandlers...). */
     static class Output {
         String name;
@@ -238,6 +240,7 @@ public final class Node implements NodeModelWarningListener {
     public Node(final NodeFactory<NodeModel> nodeFactory) {
         this(nodeFactory, null);
     }
+
     public Node(final NodeFactory<NodeModel> nodeFactory,
             final NodeCreationContext context) {
 
@@ -277,8 +280,8 @@ public final class Node implements NodeModelWarningListener {
             m_outputs[i].summary = null;
             m_outputs[i].hiliteHdl = m_model.getOutHiLiteHandler(i - 1);
         }
-
         m_localTempTables = new HashSet<ContainerTable>();
+        setForceSynchronousIO(false); // may set to true if this is a loop end
     }
 
     /** Create a persistor that is used to paste a copy of this node into
@@ -870,7 +873,7 @@ public final class Node implements NodeModelWarningListener {
         try {
             // INVOKE MODEL'S EXECUTE
             // (warnings will now be processed "automatically" - we listen)
-            rawOutData = m_model.executeModel(inData, exec);
+            rawOutData = invokeNodeModelExecute(exec, inData);
         } catch (Throwable th) {
             boolean isCanceled = th instanceof CanceledExecutionException;
             isCanceled = isCanceled || th instanceof InterruptedException;
@@ -918,6 +921,7 @@ public final class Node implements NodeModelWarningListener {
         // (tables are kept between loop iterations)
         // they can be discarded if no longer needed (i.e. they are not part of
         // the internal tables after this execution)
+        // (for instance used in group by loop start node)
         BufferedDataTable[] previousInternalHeldTables = m_internalHeldTables;
         if (previousInternalHeldTables != null
                 && !getLoopRole().equals(LoopRole.BEGIN)) {
@@ -963,6 +967,20 @@ public final class Node implements NodeModelWarningListener {
         }
         return true;
     } // execute
+
+    /** Invokes protected method {@link NodeModel#executeModel(
+     * PortObject[], ExecutionContext)}. Isolated in a separate method call
+     * as it may be (ab)used by other executors.
+     * @param exec The execution context.
+     * @param inData The input data to the node (excluding flow var port)
+     * @return The output of node
+     * @throws Exception An exception thrown by the client.
+     * @since 2.6 */
+    public PortObject[] invokeNodeModelExecute(
+            final ExecutionContext exec,
+            final PortObject[] inData) throws Exception {
+        return m_model.executeModel(inData, exec);
+    }
 
     /** Called after execute in order to put the computed result into the
      * outports. It will do a sequence of sanity checks whether the argument
@@ -1361,6 +1379,26 @@ public final class Node implements NodeModelWarningListener {
         return c.getLocalTableRepository();
     }
 
+    /** Force any tables written by the associated execution context to be
+     * written synchronously. This will be the default for loop end nodes
+     * (they always write synchronously) but can also be forced by calling this
+     * method. Calling this method with value = false doesn't mean tables
+     * get written asynchronously.
+     *
+     * @param value The value to set.
+     * @since 2.6
+     */
+    public void setForceSynchronousIO(final boolean value) {
+        m_forceSychronousIO = value || LoopRole.END.equals(getLoopRole());
+    }
+
+    /** Getter for {@link #setForceSynchronousIO(boolean)}.
+     * @return the forceSychronousIO
+     * @since 2.6 */
+    public boolean isForceSychronousIO() {
+        return m_forceSychronousIO;
+    }
+
     /**
      * Deletes any temporary resources associated with this node.
      */
@@ -1543,7 +1581,7 @@ public final class Node implements NodeModelWarningListener {
 
                 // call configure model to create output table specs
                 // guaranteed to return non-null, correct-length array
-                newOutSpec = m_model.configureModel(inSpecs);
+                newOutSpec = invokeNodeModelConfigure(inSpecs);
                 if (postConfigure != null) {
                     newOutSpec = postConfigure.configure(inSpecs, newOutSpec);
                 }
@@ -1572,6 +1610,19 @@ public final class Node implements NodeModelWarningListener {
             m_logger.debug("Configure succeeded. (" + this.getName() + ")");
         }
         return success;
+    }
+
+    /** Invokes protected method NodeModel#configureModel. Isolated in a
+     * separate method call as it may be (ab)used by other executors.
+     * @param inSpecs The input data to the node (excluding flow var port)
+     * @return The output of node
+     * @throws InvalidSettingsException An exception thrown by the client.
+     * @since 2.6 */
+    public PortObjectSpec[] invokeNodeModelConfigure(
+            final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        PortObjectSpec[] newOutSpec;
+        newOutSpec = m_model.configureModel(inSpecs);
+        return newOutSpec;
     }
 
     /**

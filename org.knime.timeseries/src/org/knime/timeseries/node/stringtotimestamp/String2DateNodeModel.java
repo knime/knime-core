@@ -50,8 +50,6 @@
  */
 package org.knime.timeseries.node.stringtotimestamp;
 
-import java.io.File;
-import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -68,17 +66,14 @@ import org.knime.core.data.StringValue;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.date.DateAndTimeCell;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.streamable.simple.SimpleStreamableFunctionWithInternalsNodeModel;
+import org.knime.core.node.streamable.simple.SimpleStreamableOperatorInternals;
 import org.knime.core.node.util.StringHistory;
 
 /**
@@ -88,48 +83,78 @@ import org.knime.core.node.util.StringHistory;
  * @author Rosaria Silipo
  * @author Fabian Dill, KNIME.com AG, Zurich, Switzerland
  */
-public class String2DateNodeModel extends NodeModel {
-    
-    /** 
-     * Suffix to be appended to the selected column name to create a proposed 
-     * new column name. 
+public class String2DateNodeModel extends
+    SimpleStreamableFunctionWithInternalsNodeModel<SimpleStreamableOperatorInternals> {
+
+    /** Key put into streamable internals to represent fail count. */
+    private static final String INTERNALS_KEY_FAIL_COUNT = "fail_count";
+
+    /**
+     * Suffix to be appended to the selected column name to create a proposed
+     * new column name.
      */
     static final String DEFAUL_COLUMN_NAME_SUFFIX = "time";
-    
+
     private final SettingsModelString m_selectedColModel
         = String2DateDialog.createColumnSelectionModel();
-    private final SettingsModelString m_newColNameModel 
+    private final SettingsModelString m_newColNameModel
         = String2DateDialog.createColumnNameModel();
-    private final SettingsModelBoolean m_replace 
+    private final SettingsModelBoolean m_replace
         = String2DateDialog.createReplaceModel();
-    private final SettingsModelString m_formatModel 
+    private final SettingsModelString m_formatModel
         = String2DateDialog.createFormatModel();
-    private final SettingsModelBoolean m_cancelOnFail 
+    private final SettingsModelBoolean m_cancelOnFail
         = String2DateDialog.createCancelOnFailModel();
-    private final SettingsModelInteger m_failNumberModel 
+    private final SettingsModelInteger m_failNumberModel
         = String2DateDialog.createFailNumberModel();
 
     private SimpleDateFormat m_dateFormat;
-    
+
     private boolean m_useDate;
-    
+
     private boolean m_useTime;
-    
+
     private boolean m_useMillis;
-    
+
     /** Inits node, 1 input, 1 output. */
     public String2DateNodeModel() {
-        super(1, 1);
-        String2DateDialog.addColSelectionListener(m_selectedColModel, 
+        super(SimpleStreamableOperatorInternals.class);
+        String2DateDialog.addColSelectionListener(m_selectedColModel,
                 m_newColNameModel, DEFAUL_COLUMN_NAME_SUFFIX);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc}
+     * @since 2.6*/
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
+    protected SimpleStreamableOperatorInternals mergeStreamingOperatorInternals(
+            final SimpleStreamableOperatorInternals[] internals) {
+        long failCount = 0L;
+        for (SimpleStreamableOperatorInternals m : internals) {
+            long f = m.getConfig().getLong(INTERNALS_KEY_FAIL_COUNT, 0L);
+            failCount += f;
+        }
+        SimpleStreamableOperatorInternals r =
+            new SimpleStreamableOperatorInternals();
+        r.getConfig().addLong(INTERNALS_KEY_FAIL_COUNT, failCount);
+        return r;
+    }
+
+    /** {@inheritDoc}
+     * @since 2.6*/
+    @Override
+    protected void finishStreamableExecution(
+            final SimpleStreamableOperatorInternals internals) {
+        long failCount = internals.getConfig().getLong(INTERNALS_KEY_FAIL_COUNT, 0);
+        setFailMessage(failCount);
+    }
+
+    /** {@inheritDoc}
+     * @throws InvalidSettingsException
+     * @since 2.6*/
+    @Override
+    protected ColumnRearranger createColumnRearranger(final DataTableSpec spec,
+            final SimpleStreamableOperatorInternals emptyInternals)
+        throws InvalidSettingsException {
         if (m_formatModel.getStringValue() == null) {
             throw new InvalidSettingsException("No format selected.");
         }
@@ -140,10 +165,10 @@ public class String2DateNodeModel extends NodeModel {
         }
         m_dateFormat.setTimeZone(DateAndTimeCell.UTC_TIMEZONE);
 
-        if (m_selectedColModel.getStringValue() == null 
-                || m_selectedColModel.getStringValue().isEmpty()) {
+        String selectedCol = m_selectedColModel.getStringValue();
+        if (selectedCol == null || selectedCol.isEmpty()) {
             // try to find first String compatible one and auto-guess it
-            for (DataColumnSpec cs : inSpecs[0]) {
+            for (DataColumnSpec cs : spec) {
                 if (cs.getType().isCompatible(StringValue.class)) {
                     m_selectedColModel.setStringValue(cs.getName());
                     setWarningMessage(
@@ -153,36 +178,27 @@ public class String2DateNodeModel extends NodeModel {
                 }
             }
         }
-        String selectedCol = m_selectedColModel.getStringValue();
         // if still null -> no String compatible column at all
         if (selectedCol == null || selectedCol.isEmpty()) {
             throw new InvalidSettingsException(
                     "No String compatible column found!");
         }
-        int colIndex = inSpecs[0]
-                .findColumnIndex(selectedCol);
+        final int colIndex = spec.findColumnIndex(selectedCol);
         if (colIndex < 0) {
-            throw new InvalidSettingsException("No such column: " 
+            throw new InvalidSettingsException("No such column: "
                     + selectedCol);
         }
-        DataColumnSpec colSpec = inSpecs[0].getColumnSpec(colIndex);
+        DataColumnSpec colSpec = spec.getColumnSpec(colIndex);
         if (!colSpec.getType().isCompatible(StringValue.class)) {
-            throw new InvalidSettingsException("Column \"" 
+            throw new InvalidSettingsException("Column \""
                     + selectedCol + "\" does not contain string values: "
                     + colSpec.getType().toString());
         }
-        ColumnRearranger c = createColRearranger(inSpecs[0]);
-        return new DataTableSpec[]{c.createSpec()};
-    }
-
-    private ColumnRearranger createColRearranger(final DataTableSpec spec) {
         ColumnRearranger result = new ColumnRearranger(spec);
-        final int colIndex = spec
-                .findColumnIndex(m_selectedColModel.getStringValue());
-        String uniqueColName = m_selectedColModel.getStringValue();
+        String uniqueColName = selectedCol;
         if (!m_replace.getBooleanValue()) {
             // if we do not have a default new column name yet
-            // create one as done in 
+            // create one as done in
             // check whether the new column name is unique...
             uniqueColName = DataTableSpec.getUniqueColumnName(spec,
                     m_newColNameModel.getStringValue());
@@ -203,27 +219,29 @@ public class String2DateNodeModel extends NodeModel {
                 try {
                     String source = ((StringValue)cell).getStringValue();
                     Date date = m_dateFormat.parse(source);
-                    Calendar c = DateAndTimeCell.getUTCCalendar();
-                    c.setTimeInMillis(date.getTime());
-                    m_failCounter = 0;
+                    Calendar calendar = DateAndTimeCell.getUTCCalendar();
+                    calendar.setTimeInMillis(date.getTime());
                     // dependent on the type create the referring cell
-                    DateAndTimeCell result = new DateAndTimeCell(
-                            c.getTimeInMillis(), 
+                    return new DateAndTimeCell(calendar.getTimeInMillis(),
                             m_useDate, m_useTime, m_useMillis);
-                    return result;
                 } catch (ParseException pe) {
-                    setWarningMessage("Missing Cell due to Parse Exception.\n"
-                            + "Date format incorrect?");
                     m_failCounter++;
-                    if (m_cancelOnFail.getBooleanValue() 
+                    if (m_cancelOnFail.getBooleanValue()
                             && m_failCounter >= m_failNumberModel
                                 .getIntValue()) {
                         throw new RuntimeException(
-                                "Maximum number of fails reached: " 
+                                "Maximum number of fails reached: "
                                 + m_failNumberModel.getIntValue());
                     }
                     return DataType.getMissingCell();
                 }
+            }
+
+            @Override
+            public void afterProcessing() {
+                setFailMessage(m_failCounter);
+                emptyInternals.getConfig().addLong(
+                        INTERNALS_KEY_FAIL_COUNT, m_failCounter);
             }
         };
         if (m_replace.getBooleanValue()) {
@@ -232,18 +250,6 @@ public class String2DateNodeModel extends NodeModel {
             result.append(c);
         }
         return result;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
-        ColumnRearranger c = createColRearranger(inData[0].getDataTableSpec());
-        BufferedDataTable out = exec.createColumnRearrangeTable(
-                inData[0], c, exec);
-        return new BufferedDataTable[]{out};
     }
 
     /**
@@ -273,9 +279,9 @@ public class String2DateNodeModel extends NodeModel {
             new SimpleDateFormat(format);
         } catch (Exception e) {
             String msg = "Invalid date format: \"" + format + "\".";
-            String errMsg = e.getMessage(); 
+            String errMsg = e.getMessage();
             if (errMsg != null && !errMsg.isEmpty()) {
-                msg += " Reason: " + errMsg; 
+                msg += " Reason: " + errMsg;
             }
             throw new InvalidSettingsException(msg);
         }
@@ -308,19 +314,19 @@ public class String2DateNodeModel extends NodeModel {
                     dateformat);
         }
     }
-    
+
     private boolean containsTime(final String dateFormat) {
         return dateFormat.contains("H") || dateFormat.contains("m")
             || dateFormat.contains("s");
     }
-    
+
     private boolean containsMillis(final String dateFormat) {
         if (!containsTime(dateFormat)) {
             return false;
         }
         return dateFormat.contains("S");
     }
-    
+
     private boolean containsDate(final String dateFormat) {
         return dateFormat.contains("y") || dateFormat.contains("M")
             || dateFormat.contains("d");
@@ -339,31 +345,12 @@ public class String2DateNodeModel extends NodeModel {
         m_failNumberModel.saveSettingsTo(settings);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void reset() {
-        // nothing to do here
+    private void setFailMessage(final long failCounter) {
+        if (failCounter > 0) {
+            setWarningMessage("Couldn't parse " + failCounter
+                    + " row(s) due to parsing errors "
+                    + "(data format wrong?)");
+        }
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
-        // nothing to do here.
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
-        // nothing to do here
-    }
 }

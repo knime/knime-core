@@ -56,7 +56,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 
 /**
@@ -143,7 +142,7 @@ public class BufferedDataContainer extends DataContainer {
         // buffer is discarded in the next loop iteration, see bug 2935
         super(spec, initDomain, maxCellsInMemory < 0
                 ? getMaxCellsInMemory(policy) : maxCellsInMemory,
-                        LoopRole.END.equals(node.getLoopRole()));
+                        node.isForceSychronousIO());
         m_node = node;
         m_globalTableRepository = globalTableRepository;
         m_localTableRepository = localTableRepository;

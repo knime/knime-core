@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Jun 22, 2006 (wiswedel): created
  */
@@ -65,24 +65,24 @@ class JoinTableIterator extends CloseableRowIterator {
     private final CloseableRowIterator m_itAppended;
     private final int[] m_map;
     private final boolean[] m_flags;
-    
+
     /**
      * Creates new iterator based on two iterators.
      * @param itReference The reference iterator, providing the keys, e.g.
      * @param itAppended The row to be appended.
-     * @param map The internal map which columns are contributed from what 
+     * @param map The internal map which columns are contributed from what
      *         iterator
      * @param flags The flags from which row to use.
      */
-    JoinTableIterator(final CloseableRowIterator itReference, 
-            final CloseableRowIterator itAppended, final int[] map, 
+    JoinTableIterator(final CloseableRowIterator itReference,
+            final CloseableRowIterator itAppended, final int[] map,
             final boolean[] flags) {
         m_itReference = itReference;
         m_itAppended = itAppended;
         m_map = map;
         m_flags = flags;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -90,7 +90,7 @@ class JoinTableIterator extends CloseableRowIterator {
     public boolean hasNext() {
         return m_itReference.hasNext();
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -98,33 +98,44 @@ class JoinTableIterator extends CloseableRowIterator {
     public DataRow next() {
         DataRow ref = m_itReference.next();
         DataRow app = m_itAppended.next();
-        DataCell[] cells = new DataCell[m_map.length];
+        return createOutputRow(ref, app, m_map, m_flags);
+    }
+
+    /** Assembles the output row. Used by {@link #next()}.
+     * @param ref the original input row.
+     * @param app the row with the new columns.
+     * @param map The map containing which column maps to which index
+     * @param flags which column from which row.
+     * @return the assembled output data (including data reshuffling). */
+    static final DataRow createOutputRow(final DataRow ref, final DataRow app,
+            final int[] map, final boolean[] flags) {
+        DataCell[] cells = new DataCell[map.length];
         int sanityCount = 0;
         for (int i = 0; i < cells.length; i++) {
-            if (m_flags[i]) {
-                cells[i] = getUnwrappedCell(ref, m_map[i]);
+            if (flags[i]) {
+                cells[i] = getUnwrappedCell(ref, map[i]);
             } else {
-                cells[i] = getUnwrappedCell(app, m_map[i]);
+                cells[i] = getUnwrappedCell(app, map[i]);
                 sanityCount++;
             }
         }
         if (sanityCount != app.getNumCells()) {
-            throw new IllegalStateException("Additional cells as read " 
-                    + "from file do not have the right count: " + sanityCount 
+            throw new IllegalStateException("Additional cells as read "
+                    + "from file do not have the right count: " + sanityCount
                     + " vs. " + app.getNumCells());
         }
         return new BlobSupportDataRow(ref.getKey(), cells);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void close() {
         m_itAppended.close();
         m_itReference.close();
     }
-    
+
     private static DataCell getUnwrappedCell(final DataRow row, final int i) {
-        return row instanceof BlobSupportDataRow 
+        return row instanceof BlobSupportDataRow
             ? ((BlobSupportDataRow)row).getRawCell(i) : row.getCell(i);
     }
 

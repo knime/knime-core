@@ -56,10 +56,10 @@ import java.util.Locale;
 
 import javax.swing.ImageIcon;
 
-import org.eclipse.core.runtime.Platform;
-import org.knime.core.internal.CorePlugin;
+import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.internal.KNIMEPath;
 import org.knime.core.util.ThreadPool;
+import org.osgi.framework.Bundle;
 
 /**
  * Class that hold static values about the KNIME platform. This includes,
@@ -261,12 +261,12 @@ public final class KNIMEConstants {
     static {
         BUILD_DATE = "Nightly-Build May 04, 2012";
         String versionString;
-        if (CorePlugin.getInstance() != null) {
-            versionString = CorePlugin.getInstance().getBundle().getHeaders()
-                .get("Bundle-Version").toString();
+        Bundle coreBundle = OSGIHelper.getBundle(KNIMEConstants.class);
+        if (coreBundle != null) {
+            versionString = coreBundle.getHeaders().get("Bundle-Version")
+                .toString();
         } else {
-            System.err.println(
-                    "Can't locate CorePlugin, not an OSGi framework?");
+            System.err.println("Can't locate CorePlugin, not an OSGi framework?");
             versionString = "1.0.0.000000";
         }
         VERSION = versionString;
@@ -377,7 +377,7 @@ public final class KNIMEConstants {
         }
 
         if ((System.getProperty(PROPERTY_MACOSX_DIALOG_WORKAROUND) == null)
-                && Platform.getOS().equals(Platform.OS_MACOSX)) {
+                && (System.getProperty("os.name").toLowerCase().indexOf("mac") >= 0)) {
             System.setProperty(PROPERTY_MACOSX_DIALOG_WORKAROUND, "true");
         }
     }

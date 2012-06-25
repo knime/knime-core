@@ -40,73 +40,41 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- */
-package org.knime.timeseries.node.diff;
-
-import org.eclipse.core.runtime.Plugin;
-import org.osgi.framework.BundleContext;
-
-/**
- * This is the eclipse bundle activator.
- * Note: KNIME node developers probably won't have to do anything in here, 
- * as this class is only needed by the eclipse platform/plugin mechanism.
- * If you want to move/rename this file, make sure to change the plugin.xml
- * file in the project root directory accordingly.
  *
- * @author KNIME GmbH
+ * History
+ *   Jun 12, 2012 (wiswedel): created
  */
-public class TimeDifferenceNodePlugin extends Plugin {
+package org.knime.core.node.streamable;
 
-    /** Make sure that this *always* matches the ID in plugin.xml. */
-    public static final String PLUGIN_ID = "org.knime.timeseries.node.diff";
+/** A port role describes the requirements for a node's in or output object.
+ * Base class only describes whether in- or out data is distributable
+ * (=partitionable).
+ *
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 2.6
+ */
+public class PortRole {
 
-    // The shared instance.
-    private static TimeDifferenceNodePlugin plugin;
+    private final boolean m_isDistributable;
 
     /**
-     * The constructor.
-     */
-    public TimeDifferenceNodePlugin() {
-        super();
-        plugin = this;
+     * @param isDistributable */
+    PortRole(final boolean isDistributable) {
+        m_isDistributable = isDistributable;
     }
 
-    /**
-     * This method is called upon plug-in activation.
-     * 
-     * @param context The OSGI bundle context
-     * @throws Exception If this plugin could not be started
-     */
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        super.start(context);
-
-    }
-
-    /**
-     * This method is called when the plug-in is stopped.
-     * 
-     * @param context The OSGI bundle context
-     * @throws Exception If this plugin could not be stopped
-     */
-    @Override
-    public void stop(final BundleContext context) throws Exception {
-        super.stop(context);
-        plugin = null;
-    }
-
-    /**
-     * Returns the shared instance.
-     * 
-     * @return Singleton instance of the Plugin
-     */
-    public static TimeDifferenceNodePlugin getDefault() {
-        return plugin;
+    /** Defines that the data an input port can be processed in a distributable
+     * (= parallelizable) fashion. If false, only one thread/process must
+     * process the data, for instance because there are dependencies between
+     * different row computations.
+     *
+     * @return the isDistributable */
+    public boolean isDistributable() {
+        return m_isDistributable;
     }
 
 }
-

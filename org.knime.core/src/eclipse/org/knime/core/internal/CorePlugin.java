@@ -55,9 +55,9 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URL;
 
-import org.eclipse.ecf.filetransfer.IFileTransfer;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.pathresolve.URIToFileResolve;
+import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
 import org.osgi.util.tracker.ServiceTracker;
 
@@ -66,8 +66,38 @@ import org.osgi.util.tracker.ServiceTracker;
  * set the workspace path as KNIME home dir in the KNIMEConstants utility class.
  * @author wiswedel, University of Konstanz
  */
-public class CorePlugin extends org.eclipse.core.runtime.Plugin {
+public class CorePlugin implements BundleActivator {
     private static CorePlugin instance;
+
+    private static class KNIMEPathInitializer {
+        public static void initialize() {
+            try {
+                URL workspaceURL =
+                   org.eclipse.core.runtime.Platform.getInstanceLocation().getURL();
+                if (workspaceURL.getProtocol().equalsIgnoreCase("file")) {
+                    // we can create our home only in local workspaces
+                    File workspaceDir = new File(workspaceURL.getPath());
+                    File metaDataFile = new File(workspaceDir, ".metadata");
+                    if (!metaDataFile.exists()) {
+                        metaDataFile.mkdir();
+                    }
+                    File knimeHomeDir = new File(metaDataFile, "knime");
+                    if (!knimeHomeDir.exists()) {
+                        knimeHomeDir.mkdir();
+                    }
+                    KNIMEPath.setKNIMEHomeDir(knimeHomeDir.getAbsoluteFile());
+                    KNIMEPath.setWorkspaceDir(workspaceDir.getAbsoluteFile());
+                }
+
+            } catch (Exception e) {
+                // the logger will use the "user.dir" as knime home, unfortunately.
+                NodeLogger.getLogger(KNIMEPathInitializer.class).warn(
+                        "Can't init knime home dir to workspace path.", e);
+            }
+
+        }
+
+    }
 
     private ServiceTracker m_serviceTracker;
 
@@ -77,33 +107,17 @@ public class CorePlugin extends org.eclipse.core.runtime.Plugin {
     @Override
     public void start(final org.osgi.framework.BundleContext context)
         throws Exception {
-        super.start(context);
 
         instance = this;
 
         try {
-            URL workspaceURL =
-               org.eclipse.core.runtime.Platform.getInstanceLocation().getURL();
-            if (workspaceURL.getProtocol().equalsIgnoreCase("file")) {
-                // we can create our home only in local workspaces
-                File workspaceDir = new File(workspaceURL.getPath());
-                File metaDataFile = new File(workspaceDir, ".metadata");
-                if (!metaDataFile.exists()) {
-                    metaDataFile.mkdir();
-                }
-                File knimeHomeDir = new File(metaDataFile, "knime");
-                if (!knimeHomeDir.exists()) {
-                    knimeHomeDir.mkdir();
-                }
-                KNIMEPath.setKNIMEHomeDir(knimeHomeDir.getAbsoluteFile());
-                KNIMEPath.setWorkspaceDir(workspaceDir.getAbsoluteFile());
-            }
-
-        } catch (Exception e) {
-            // the logger will use the "user.dir" as knime home, unfortunately.
-            NodeLogger.getLogger(getClass()).warn(
-                    "Can't init knime home dir to workspace path.", e);
+            Class.forName("org.eclipse.core.runtime.Platform");
+            KNIMEPathInitializer.initialize();
         }
+        catch (ClassNotFoundException e) {
+
+        }
+
         m_serviceTracker = new ServiceTracker(
                 context, URIToFileResolve.class.getName(), null);
         m_serviceTracker.open();
@@ -114,7 +128,11 @@ public class CorePlugin extends org.eclipse.core.runtime.Plugin {
          * extension point org.eclipse.ecf.filetransfer.urlStreamHandlerService
          * contained in the plugin which is necessary for registering the
          * "knime" URL protocol. */
-        IFileTransfer.class.getName();
+        try {
+            Class.forName("org.eclipse.ecf.filetransfer.IFileTransfer");
+        }
+        catch (ClassNotFoundException e) {
+        }
     }
 
     /** {@inheritDoc} */
@@ -122,7 +140,6 @@ public class CorePlugin extends org.eclipse.core.runtime.Plugin {
     public void stop(final BundleContext context) throws Exception {
         m_serviceTracker.close();
         instance = null;
-        super.stop(context);
     }
 
     /**

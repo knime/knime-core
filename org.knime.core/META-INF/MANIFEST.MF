@@ -48,6 +48,8 @@ Export-Package:
  org.knime.core.node.port.pmml.schemata,
  org.knime.core.node.port.viewproperty,
  org.knime.core.node.property.hilite,
+ org.knime.core.node.streamable,
+ org.knime.core.node.streamable.simple,
  org.knime.core.node.tableview,
  org.knime.core.node.util,
  org.knime.core.node.workflow,

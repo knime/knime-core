@@ -44,14 +44,12 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   15.06.2007 (cebron): created
  */
 package org.knime.base.node.preproc.caseconvert;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.Locale;
 import java.util.Set;
@@ -69,21 +67,18 @@ import org.knime.core.data.StringValue;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 
 /**
  * NodeModel for the CaseConverter Node.
- * 
+ *
  * @author cebron, University of Konstanz
  */
-public class CaseConvertNodeModel extends NodeModel {
+public class CaseConvertNodeModel extends SimpleStreamableFunctionNodeModel {
 
     /**
      * Key for the included columns in the NodeSettings.
@@ -105,29 +100,26 @@ public class CaseConvertNodeModel extends NodeModel {
      */
     private boolean m_uppercase;
 
-    
+
     /**
      * Constructor with one inport and one outport.
      */
     public CaseConvertNodeModel() {
-        super(1, 1);
         m_uppercase = true;
         m_inclCols = new String[]{};
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
+    protected ColumnRearranger createColumnRearranger(
+            final DataTableSpec inSpec) throws InvalidSettingsException {
         // find indices to work on.
         int[] indices = new int[m_inclCols.length];
         if (indices.length == 0) {
             setWarningMessage("No columns selected");
         }
         for (int i = 0; i < indices.length; i++) {
-            int colIndex = inSpecs[0].findColumnIndex(m_inclCols[i]);
+            int colIndex = inSpec.findColumnIndex(m_inclCols[i]);
             if (colIndex >= 0) {
                 indices[i] = colIndex;
             } else {
@@ -136,51 +128,10 @@ public class CaseConvertNodeModel extends NodeModel {
             }
         }
         ConverterFactory converterFac =
-                new ConverterFactory(indices, inSpecs[0]);
-        ColumnRearranger colre = new ColumnRearranger(inSpecs[0]);
+                new ConverterFactory(indices, inSpec);
+        ColumnRearranger colre = new ColumnRearranger(inSpec);
         colre.replace(converterFac, indices);
-        DataTableSpec newspec = colre.createSpec();
-        return new DataTableSpec[]{newspec};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
-        // find indices to work on.
-        DataTableSpec inspec = inData[0].getDataTableSpec();
-        if (m_inclCols.length == 0) {
-            // nothing to convert, let's return the input table.
-            setWarningMessage("No columns selected,"
-                    + " returning input DataTable.");
-            return new BufferedDataTable[]{inData[0]};
-        }
-        int[] indices = new int[m_inclCols.length];
-        for (int i = 0; i < indices.length; i++) {
-            int colIndex = inspec.findColumnIndex(m_inclCols[i]);
-            if (colIndex >= 0) {
-                indices[i] = colIndex;
-            } else {
-                throw new Exception("Column index for " + m_inclCols[i]
-                        + " not found.");
-            }
-        }
-        ConverterFactory converterFac = new ConverterFactory(indices, inspec);
-        ColumnRearranger colre = new ColumnRearranger(inspec);
-        colre.replace(converterFac, indices);
-
-        BufferedDataTable resultTable =
-                exec.createColumnRearrangeTable(inData[0], colre, exec);
-        return new BufferedDataTable[]{resultTable};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void reset() {
+        return colre;
     }
 
     /**
@@ -215,26 +166,8 @@ public class CaseConvertNodeModel extends NodeModel {
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
-            CanceledExecutionException {
-    }
-
-    /**
      * The CellFactory to produce the new converted cells.
-     * 
+     *
      * @author cebron, University of Konstanz
      */
     private class ConverterFactory implements CellFactory {
@@ -252,7 +185,7 @@ public class CaseConvertNodeModel extends NodeModel {
         private Locale m_locale;
 
         /**
-         * 
+         *
          * @param colindices the column indices to use.
          * @param spec the original DataTableSpec.
          */
@@ -263,6 +196,7 @@ public class CaseConvertNodeModel extends NodeModel {
         }
 
         /** {@inheritDoc} */
+        @Override
         public DataCell[] getCells(final DataRow row) {
             DataCell[] newcells = new DataCell[m_colindices.length];
             for (int i = 0; i < newcells.length; i++) {
@@ -289,6 +223,7 @@ public class CaseConvertNodeModel extends NodeModel {
         /**
          * {@inheritDoc}
          */
+        @Override
         public DataColumnSpec[] getColumnSpecs() {
             DataColumnSpec[] newcolspecs =
                     new DataColumnSpec[m_colindices.length];
@@ -298,7 +233,9 @@ public class CaseConvertNodeModel extends NodeModel {
                 Set<DataCell> newdomainvalues = new LinkedHashSet<DataCell>();
                 DataColumnSpecCreator colspeccreator =
                         new DataColumnSpecCreator(colspec);
-                if (domain.hasValues()) {
+                // can only persist domain if input is StringCell Type
+                if (domain.hasValues()
+                        && colspec.getType().equals(StringCell.TYPE)) {
                     for (DataCell dc : domain.getValues()) {
                         String newstring = null;
                         if (m_uppercase) {
@@ -317,6 +254,7 @@ public class CaseConvertNodeModel extends NodeModel {
                     domaincreator.setValues(newdomainvalues);
                     colspeccreator.setDomain(domaincreator.createDomain());
                 }
+                colspeccreator.setType(StringCell.TYPE);
                 newcolspecs[i] = colspeccreator.createSpec();
             }
             return newcolspecs;
@@ -325,6 +263,7 @@ public class CaseConvertNodeModel extends NodeModel {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void setProgress(final int curRowNr, final int rowCount,
                 final RowKey lastKey, final ExecutionMonitor exec) {
             exec.setProgress((double)curRowNr / (double)rowCount, "Converting");

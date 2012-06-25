@@ -59,12 +59,12 @@ import java.io.InputStream;
 import java.io.Writer;
 import java.net.InetAddress;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.HashMap;
-
-import javax.xml.parsers.FactoryConfigurationError;
 
 import org.apache.log4j.Appender;
 import org.apache.log4j.Level;
+import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.PropertyConfigurator;
@@ -72,9 +72,7 @@ import org.apache.log4j.WriterAppender;
 import org.apache.log4j.varia.LevelRangeFilter;
 import org.apache.log4j.varia.NullAppender;
 import org.apache.log4j.xml.DOMConfigurator;
-import org.eclipse.core.runtime.IProduct;
-import org.eclipse.core.runtime.Platform;
-import org.eclipse.equinox.internal.app.CommandLineArgs;
+import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LogfileAppender;
 import org.knime.core.util.User;
@@ -141,45 +139,12 @@ public final class NodeLogger {
      * <code>System.err</code>, and <i>knime.log</i> to it.
      */
     static {
-        assert (NodeLogger.class.getClassLoader().getResourceAsStream(
-                LATEST_LOG4J_CONFIG) != null) : "log4j-configuration for "
-                + "version " + KNIMEConstants.VERSION + " does not exist yet";
-        File knimeDir = new File(KNIMEConstants.getKNIMEHomeDir());
-        File log4j = new File(knimeDir, "log4j.xml");
-
-        File legacyFile = new File(knimeDir, "log4j-1.1.0.xml");
-        if (legacyFile.exists()) {
-            if (!legacyFile.renameTo(log4j)) {
-                System.err.println("There are two log4j configuration files"
-                        + " in your KNIME home directory ('"
-                        + knimeDir.getAbsolutePath()
-                        + " ') - or this directory is write-protected.");
-                System.err.println("The 'log4j.xml' is the one actually used."
-                        + " Merge changes you may have made"
-                        + " to 'log4j-1.1.0.xml' and remove"
-                        + " 'log4j-1.1.0.xml' to get rid of this message.");
+        if (!isLog4JConfigured()) {
+            try {
+                initLog4J();
+            } catch (IOException ex) {
+                ex.printStackTrace();
             }
-        }
-
-        try {
-            if (!log4j.exists() || checkPreviousLog4j(log4j)) {
-                copyCurrentLog4j(log4j);
-            }
-
-            final String file = System.getProperty("log4j.configuration");
-            if (file == null) {
-                DOMConfigurator.configure(log4j.toURI().toURL());
-            } else {
-                if (file.endsWith(".xml")) {
-                    DOMConfigurator.configure(file);
-                } else {
-                    PropertyConfigurator.configure(file);
-                }
-            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        } catch (FactoryConfigurationError ex) {
-            ex.printStackTrace();
         }
 
         // init root logger
@@ -202,6 +167,59 @@ public final class NodeLogger {
         }
 
         startMessage();
+    }
+
+    private static boolean isLog4JConfigured() {
+        Enumeration<?> appenders = LogManager.getRootLogger().getAllAppenders();
+        if (appenders.hasMoreElements()) {
+            return true;
+        }
+        else {
+            Enumeration<?> loggers = LogManager.getCurrentLoggers();
+            while (loggers.hasMoreElements()) {
+                Logger c = (Logger) loggers.nextElement();
+                if (c.getAllAppenders().hasMoreElements()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
+    private static void initLog4J() throws IOException {
+        final String file = System.getProperty("log4j.configuration");
+        if (file == null) {
+            assert (NodeLogger.class.getClassLoader().getResourceAsStream(
+                    LATEST_LOG4J_CONFIG) != null) : "log4j-configuration for "
+                    + "version " + KNIMEConstants.VERSION + " does not exist yet";
+            File knimeDir = new File(KNIMEConstants.getKNIMEHomeDir());
+            File log4j = new File(knimeDir, "log4j.xml");
+
+            File legacyFile = new File(knimeDir, "log4j-1.1.0.xml");
+            if (legacyFile.exists()) {
+                if (!legacyFile.renameTo(log4j)) {
+                    System.err.println("There are two log4j configuration files"
+                            + " in your KNIME home directory ('"
+                            + knimeDir.getAbsolutePath()
+                            + " ') - or this directory is write-protected.");
+                    System.err.println("The 'log4j.xml' is the one actually used."
+                            + " Merge changes you may have made"
+                            + " to 'log4j-1.1.0.xml' and remove"
+                            + " 'log4j-1.1.0.xml' to get rid of this message.");
+                }
+            }
+            if (!log4j.exists() || checkPreviousLog4j(log4j)) {
+                copyCurrentLog4j(log4j);
+            }
+            DOMConfigurator.configure(log4j.toURI().toURL());
+        } else {
+            if (file.endsWith(".xml")) {
+                DOMConfigurator.configure(file);
+            } else {
+                PropertyConfigurator.configure(file);
+            }
+        }
     }
 
     private static void copyCurrentLog4j(final File dest) throws IOException {
@@ -334,7 +352,7 @@ public final class NodeLogger {
         }
         l.info("# max mem=" + Runtime.getRuntime().maxMemory() / (1024 * 1024)
                 + "MB");
-        l.info("# application=" + getCurrentApplication());
+        l.info("# application=" + OSGIHelper.getApplicationName());
         l.info("#############################################################");
     }
 
@@ -733,26 +751,6 @@ public final class NodeLogger {
             return localMachine.getHostName();
         } catch (Exception uhe) {
             return "<unknown host>";
-        }
-    }
-
-    @SuppressWarnings("restriction")
-    private static String getCurrentApplication() {
-        IProduct product = Platform.getProduct();
-        if (product != null) {
-            return product.getApplication();
-        } else {
-            String[] args = CommandLineArgs.getAllArgs();
-            for (int i = 0; i < args.length; i++) {
-                if ("-application".equals(args[i])) {
-                    if (args.length > (i + 1)) {
-                        return args[i + 1];
-                    } else {
-                        return "<unknown>";
-                    }
-                }
-            }
-            return "<unknown>";
         }
     }
 }

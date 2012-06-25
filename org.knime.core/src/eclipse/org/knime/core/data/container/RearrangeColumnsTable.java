@@ -305,29 +305,24 @@ public final class RearrangeColumnsTable
         // appended/inserted columns; this vector is in most cases
         // considerably smaller than the vector includes
         Vector<SpecAndFactoryObject> newColumnFactoryList =
-            new Vector<SpecAndFactoryObject>();
-        int newColCount = 0;
+            createReducedList(includes);
         // with v2.5 we added the ability to process the input concurrently
         // this field has the minimum worker count for all used factories
         // (or negative for sequential processing)
         int workerCount = Integer.MAX_VALUE;
-        for (int i = 0; i < size; i++) {
-            SpecAndFactoryObject s = includes.get(i);
-            if (s.isNewColumn()) {
-                CellFactory factory = s.getFactory();
-                if (factory instanceof AbstractCellFactory) {
-                    AbstractCellFactory acf = (AbstractCellFactory)factory;
-                    workerCount =
-                        Math.min(workerCount, acf.getMaxParallelWorkers());
-                } else {
-                    // unknown factory - process sequentially
-                    workerCount = -1;
-                }
-                newColumnFactoryList.add(s);
-                newColSpecsList.add(s.getColSpec());
-                newColCount++;
+        for (SpecAndFactoryObject s : newColumnFactoryList) {
+            CellFactory factory = s.getFactory();
+            if (factory instanceof AbstractCellFactory) {
+                AbstractCellFactory acf = (AbstractCellFactory)factory;
+                workerCount =
+                    Math.min(workerCount, acf.getMaxParallelWorkers());
+            } else {
+                // unknown factory - process sequentially
+                workerCount = -1;
             }
+            newColSpecsList.add(s.getColSpec());
         }
+        final int newColCount = newColSpecsList.size();
         DataColumnSpec[] newColSpecs =
             newColSpecsList.toArray(new DataColumnSpec[newColSpecsList.size()]);
         ContainerTable appendTable;
@@ -378,8 +373,22 @@ public final class RearrangeColumnsTable
             }
         }
         DataTableSpec spec = new DataTableSpec(colSpecs);
+        finishProcessing(newColumnFactoryList);
         return new RearrangeColumnsTable(
                 table, includesIndex, isFromRefTable, spec, appendTable);
+    }
+
+    /** Calls {@link AbstractCellFactory#afterProcessing()} on all unique
+     * factories in the argument.
+     * @param newColumnFactoryList */
+    static void finishProcessing(
+            final Vector<SpecAndFactoryObject> newColumnFactoryList) {
+        for (CellFactory uniqueFactory
+                : getUniqueProducerFactories(newColumnFactoryList)) {
+            if (uniqueFactory instanceof AbstractCellFactory) {
+                ((AbstractCellFactory)uniqueFactory).afterProcessing();
+            }
+        }
     }
 
     /** Processes input sequentially in the caller thread. */
@@ -389,7 +398,7 @@ public final class RearrangeColumnsTable
             final DataContainer container)
     throws CanceledExecutionException {
         int finalRowCount = table.getRowCount();
-        final int factoryCount = countUniqueProducerFactories(reducedList);
+        final int factoryCount = getUniqueProducerFactories(reducedList).size();
         int r = 0;
         CellFactory facForProgress = null;
         final int newColCount = reducedList.size();
@@ -420,7 +429,7 @@ public final class RearrangeColumnsTable
             throws CanceledExecutionException {
         int finalRowCount = table.getRowCount();
         CellFactory facForProgress = null;
-        final int factoryCount = countUniqueProducerFactories(reducedList);
+        final int factoryCount = getUniqueProducerFactories(reducedList).size();
         final int newColCount = reducedList.size();
         int workers = Integer.MAX_VALUE;
         int queueSize = Integer.MAX_VALUE;
@@ -472,7 +481,7 @@ public final class RearrangeColumnsTable
      * @param factoryCount The number of different factories (early termination)
      * @return The output row.
      */
-    private static DataRow calcNewCellsForRow(final DataRow row,
+    static DataRow calcNewCellsForRow(final DataRow row,
             final Vector<SpecAndFactoryObject> reducedList,
             final int factoryCount) {
         final int newColCount = reducedList.size();
@@ -507,7 +516,7 @@ public final class RearrangeColumnsTable
      * @param facs To count in (length = number of newly created columns)
      * @return The number of unique factories (in most cases just 1)
      */
-    private static int countUniqueProducerFactories(
+    static Collection<CellFactory> getUniqueProducerFactories(
             final Collection<SpecAndFactoryObject> facs) {
         IdentityHashMap<CellFactory, Object> counter =
             new IdentityHashMap<CellFactory, Object>();
@@ -515,8 +524,27 @@ public final class RearrangeColumnsTable
             CellFactory factory = s.getFactory();
             counter.put(factory, null);
         }
-        return counter.size();
+        return counter.keySet();
     }
+
+    /** The list of SpecAndFactoryObject that produce new columns.
+     * @param includes All column representations
+     * @return The list of data producers.
+     */
+    static Vector<SpecAndFactoryObject> createReducedList(
+            final Vector<SpecAndFactoryObject> includes) {
+        Vector<SpecAndFactoryObject> newColumnFactoryList =
+            new Vector<SpecAndFactoryObject>();
+        final int size = includes.size();
+        for (int i = 0; i < size; i++) {
+            SpecAndFactoryObject s = includes.get(i);
+            if (s.isNewColumn()) {
+                newColumnFactoryList.add(s);
+            }
+        }
+        return newColumnFactoryList;
+    }
+
 
     /**
      * {@inheritDoc}

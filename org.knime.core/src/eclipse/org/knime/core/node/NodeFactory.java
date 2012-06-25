@@ -62,10 +62,10 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.transform.TransformerFactoryConfigurationError;
 
+import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 import org.osgi.framework.Bundle;
-import org.osgi.framework.FrameworkUtil;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -382,7 +382,7 @@ public abstract class NodeFactory<T extends NodeModel> {
             // TODO create substitute document?
             return;
         }
-        Bundle bundle = FrameworkUtil.getBundle(this.getClass());
+        Bundle bundle = OSGIHelper.getBundle(this.getClass());
         if (bundle != null) { // for running in non-osgi context
             Dictionary<String, String> headers = bundle.getHeaders();
 

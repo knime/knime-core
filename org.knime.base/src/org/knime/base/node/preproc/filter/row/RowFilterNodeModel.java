@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   29.06.2005 (ohl): created
  */
@@ -53,6 +53,8 @@ package org.knime.base.node.preproc.filter.row;
 import java.io.File;
 import java.io.IOException;
 
+import org.knime.base.node.preproc.filter.row.rowfilter.EndOfTableException;
+import org.knime.base.node.preproc.filter.row.rowfilter.IncludeFromNowOn;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowFilterFactory;
 import org.knime.core.data.DataRow;
@@ -67,6 +69,16 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.streamable.InputPortRole;
+import org.knime.core.node.streamable.OutputPortRole;
+import org.knime.core.node.streamable.PartitionInfo;
+import org.knime.core.node.streamable.PortInput;
+import org.knime.core.node.streamable.PortOutput;
+import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
+import org.knime.core.node.streamable.StreamableOperator;
+import org.knime.core.node.streamable.StreamableOperatorInternals;
 
 /**
  * Model of a node filtering rows. It keeps an instance of a row filter, which
@@ -77,7 +89,7 @@ import org.knime.core.node.NodeSettingsWO;
  * instance we would have to run to the end of the input table (always getting a
  * mismatch because the row number is out of the valid range) - which could
  * potentially take a while...
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class RowFilterNodeModel extends NodeModel {
@@ -157,6 +169,45 @@ public class RowFilterNodeModel extends NodeModel {
         return;
     }
 
+    private void execute(final RowInput inData, final RowOutput output,
+            final ExecutionContext exec) throws Exception {
+        // in case the node was configured and the workflow is closed
+        // (and saved), the row filter isn't configured upon reloading.
+        // here, we give it a chance to configure itself (e.g. find the column
+        // index)
+        m_rowFilter.configure(inData.getDataTableSpec());
+        exec.setMessage("Searching first matching row...");
+        DataRow row;
+        int index = 0;
+        boolean isAlwaysExcluded = false;
+        boolean isAlwaysIncluded = false;
+        while ((row = inData.poll()) != null) {
+            boolean matches;
+            if (isAlwaysExcluded) {
+                matches = false;
+            } else if (isAlwaysIncluded) {
+                matches = true;
+            } else {
+                try {
+                    matches = m_rowFilter.matches(row, index++);
+                } catch (EndOfTableException eot) {
+                    break;
+                } catch (IncludeFromNowOn ifn) {
+                    isAlwaysIncluded = true;
+                    matches = true;
+                }
+            }
+            exec.checkCanceled();
+            if (matches) {
+                exec.setMessage("Added row " + index
+                        + " (\"" + row.getKey() + "\")");
+                output.push(row);
+            }
+        }
+        inData.close();
+        output.close();
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -164,12 +215,12 @@ public class RowFilterNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         DataTable in = inData[0];
-        // in case the node was configured and the workflow is closed 
-        // (and saved), the row filter isn't configured upon reloading. 
+        // in case the node was configured and the workflow is closed
+        // (and saved), the row filter isn't configured upon reloading.
         // here, we give it a chance to configure itself (e.g. find the column
         // index)
         m_rowFilter.configure(in.getDataTableSpec());
-        BufferedDataContainer container = 
+        BufferedDataContainer container =
             exec.createDataContainer(in.getDataTableSpec());
         exec.setMessage("Searching first matching row...");
         try {
@@ -179,7 +230,7 @@ public class RowFilterNodeModel extends NodeModel {
                 DataRow row = it.next();
                 count++;
                 container.addRowToTable(row);
-                exec.setMessage("Added row " + count + " (\"" 
+                exec.setMessage("Added row " + count + " (\""
                         + row.getKey() + "\")");
             }
         } catch (RowFilterIterator.RuntimeCanceledExecutionException rce) {
@@ -188,6 +239,41 @@ public class RowFilterNodeModel extends NodeModel {
             container.close();
         }
         return new BufferedDataTable[]{container.getTable()};
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public InputPortRole[] getInputPortRoles() {
+        return new InputPortRole[] {InputPortRole.NONDISTRIBUTED_STREAMABLE};
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public OutputPortRole[] getOutputPortRoles() {
+        return new OutputPortRole[] {OutputPortRole.NONDISTRIBUTED};
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public StreamableOperator createStreamableOperator(
+            final PartitionInfo partitionInfo, final PortObjectSpec[] inSpecs)
+            throws InvalidSettingsException {
+        return new StreamableOperator() {
+
+            @Override
+            public StreamableOperatorInternals getInternals() {
+                return null;
+            }
+
+            @Override
+            public void execute(final PortInput[] inputs,
+                    final PortOutput[] outputs,
+                    final ExecutionContext ctx) throws Exception {
+                RowInput in = (RowInput)inputs[0];
+                RowOutput out = (RowOutput)outputs[0];
+                RowFilterNodeModel.this.execute(in, out, ctx);
+            }
+        };
     }
 
     /**

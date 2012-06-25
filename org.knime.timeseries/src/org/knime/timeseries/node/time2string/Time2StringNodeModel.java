@@ -50,8 +50,6 @@
  */
 package org.knime.timeseries.node.time2string;
 
-import java.io.File;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 
 import org.knime.core.data.DataCell;
@@ -65,17 +63,13 @@ import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.data.def.StringCell;
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 import org.knime.core.node.util.StringHistory;
 import org.knime.timeseries.node.stringtotimestamp.String2DateDialog;
 
@@ -86,7 +80,7 @@ import org.knime.timeseries.node.stringtotimestamp.String2DateDialog;
  *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
-public class Time2StringNodeModel extends NodeModel {
+public class Time2StringNodeModel extends SimpleStreamableFunctionNodeModel {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             Time2StringNodeModel.class);
@@ -107,23 +101,12 @@ public class Time2StringNodeModel extends NodeModel {
     private final SettingsModelString m_pattern = String2DateDialog
         .createFormatModel();
 
-    /**
-     * One in port for the input table containing a time column, and one out
-     * port with the time converted to string.
-     */
-    public Time2StringNodeModel() {
-        super(1, 1);
-    }
-
-    /**
-     *
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc}
+     * @since 2.6 */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
+    protected ColumnRearranger createColumnRearranger(
+            final DataTableSpec inSpec) throws InvalidSettingsException {
         // check if input has dateandtime column
-        DataTableSpec inSpec = inSpecs[0];
         if (!inSpec.containsCompatibleType(DateAndTimeValue.class)) {
             throw new InvalidSettingsException(
                     "Input table must contain at least timestamp column!");
@@ -147,13 +130,6 @@ public class Time2StringNodeModel extends NodeModel {
                 }
             }
         }
-        // create output spec
-        ColumnRearranger colRearranger = createColumnRearranger(inSpec);
-        return new DataTableSpec[] {colRearranger.createSpec()};
-    }
-
-    private ColumnRearranger createColumnRearranger(
-            final DataTableSpec inSpec) {
         ColumnRearranger rearranger = new ColumnRearranger(inSpec);
         // if replace -> use original column name
         final boolean replace = m_replaceCol.getBooleanValue();
@@ -171,22 +147,22 @@ public class Time2StringNodeModel extends NodeModel {
                 m_selectedCol.getStringValue());
         SingleCellFactory factory = new SingleCellFactory(
                 specCreator.createSpec()) {
-                    @Override
-                    public DataCell getCell(final DataRow row) {
-                        DataCell dc = row.getCell(colIdx);
-                        if (dc.isMissing()) {
-                            return DataType.getMissingCell();
-                        }
-                        if (dc.getType().isCompatible(DateAndTimeValue.class)) {
-                            DateAndTimeValue v = (DateAndTimeValue)dc;
-                            String result = dateFormat.format(
-                                    v.getUTCCalendarClone().getTime());
-                            return new StringCell(result);
-                        }
-                        LOGGER.error("Encountered unsupported data type: "
-                                + dc.getType() + " in row: " + row.getKey());
-                        return DataType.getMissingCell();
-                    }
+            @Override
+            public DataCell getCell(final DataRow row) {
+                DataCell dc = row.getCell(colIdx);
+                if (dc.isMissing()) {
+                    return DataType.getMissingCell();
+                }
+                if (dc.getType().isCompatible(DateAndTimeValue.class)) {
+                    DateAndTimeValue v = (DateAndTimeValue)dc;
+                    String result = dateFormat.format(
+                            v.getUTCCalendarClone().getTime());
+                    return new StringCell(result);
+                }
+                LOGGER.error("Encountered unsupported data type: "
+                        + dc.getType() + " in row: " + row.getKey());
+                return DataType.getMissingCell();
+            }
         };
         if (!replace) {
             rearranger.append(factory);
@@ -195,21 +171,6 @@ public class Time2StringNodeModel extends NodeModel {
         }
         return rearranger;
     }
-
-    /**
-     *
-     * {@inheritDoc}
-     */
-    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
-        ColumnRearranger rearranger = createColumnRearranger(
-                inData[0].getDataTableSpec());
-        BufferedDataTable out = exec.createColumnRearrangeTable(inData[0],
-                rearranger, exec);
-        return new BufferedDataTable[] {out};
-    }
-
 
     /**
      * {@inheritDoc}
@@ -285,26 +246,6 @@ public class Time2StringNodeModel extends NodeModel {
             throw new InvalidSettingsException("Pattern " + patternString
                     + " is invalid!");
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
-        // no internals
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
-        // no internals
     }
 
 }

@@ -60,6 +60,8 @@ import java.util.Vector;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.streamable.StreamableFunction;
+import org.knime.core.node.streamable.StreamableOperatorInternals;
 
 
 /**
@@ -140,7 +142,7 @@ import org.knime.core.data.DataTableSpec;
  *      org.knime.core.node.ExecutionMonitor)
  * @author Bernd Wiswedel, University of Konstanz
  */
-public final class ColumnRearranger {
+public class ColumnRearranger {
 
     private final Vector<SpecAndFactoryObject> m_includes;
     private final DataTableSpec m_originalSpec;
@@ -174,7 +176,7 @@ public final class ColumnRearranger {
      * columns) or the array contains duplicates.
      * @throws NullPointerException If the argument is <code>null</code>
      */
-    public void keepOnly(final int... colIndices) {
+    public final void keepOnly(final int... colIndices) {
         HashSet<Integer> hash = new HashSet<Integer>();
         final int currentSize = m_includes.size();
         for (int i : colIndices) {
@@ -208,7 +210,7 @@ public final class ColumnRearranger {
      * if the array contains duplicates.
      * @throws NullPointerException If the argument is <code>null</code>
      */
-    public void keepOnly(final String... colNames) {
+    public final void keepOnly(final String... colNames) {
         HashSet<String> found = new HashSet<String>(Arrays.asList(colNames));
         // check for null elements
         if (found.contains(null)) {
@@ -246,7 +248,7 @@ public final class ColumnRearranger {
      * columns) or the argument contains duplicates.
      * @throws NullPointerException If the argument is <code>null</code>.
      */
-    public void remove(final int... colIndices) {
+    public final void remove(final int... colIndices) {
         int[] copy = new int[colIndices.length];
         System.arraycopy(colIndices, 0, copy, 0, copy.length);
         Arrays.sort(copy);
@@ -267,7 +269,7 @@ public final class ColumnRearranger {
      * @param colNames The names of the columns to remove.
      * @throws NullPointerException If any element is null
      */
-    public void remove(final String... colNames) {
+    public final void remove(final String... colNames) {
         HashSet<String> found = new HashSet<String>(Arrays.asList(colNames));
         // check for null elements
         if (found.contains(null)) {
@@ -300,7 +302,7 @@ public final class ColumnRearranger {
      * or -1 if it is not contained.
      * @throws NullPointerException If the argument is <code>null</code>.
      */
-    public int indexOf(final String colName) {
+    public final int indexOf(final String colName) {
         if (colName == null) {
             throw new NullPointerException("Argument must not be null.");
         }
@@ -321,7 +323,7 @@ public final class ColumnRearranger {
      * @return the number of currently included columns
      * @since 2.6
      */
-    public int getColumnCount() {
+    public final int getColumnCount() {
         return m_includes.size();
     }
 
@@ -362,7 +364,7 @@ public final class ColumnRearranger {
      * @see #move(String, int)
      * @see #permute(String[])
      */
-    public void move(final int from, final int to) {
+    public final void move(final int from, final int to) {
         if (from < to) {
             SpecAndFactoryObject val = m_includes.get(from);
             m_includes.insertElementAt(val, to);
@@ -394,7 +396,7 @@ public final class ColumnRearranger {
      * @see #move(int, int)
      * @see #permute(String[])
      */
-    public void move(final String colName, final int to) {
+    public final void move(final String colName, final int to) {
         for (int i = 0; i < m_includes.size(); i++) {
             if (colName.equals(m_includes.get(i).getColSpec().getName())) {
                 move(i, to);
@@ -417,7 +419,7 @@ public final class ColumnRearranger {
      * @throws IllegalArgumentException If the array contains duplicates-
      * @throws IndexOutOfBoundsException If the indices are invalid.
      */
-    public void permute(final int[] colIndicesInOrder) {
+    public final void permute(final int[] colIndicesInOrder) {
         String[] orderedNames = new String[colIndicesInOrder.length];
         for (int i = 0; i < colIndicesInOrder.length; i++) {
             orderedNames[i] = m_includes.get(
@@ -444,7 +446,7 @@ public final class ColumnRearranger {
      * @throws IllegalArgumentException If the array contains duplicates or
      *          unknown columns.
      */
-    public void permute(final String[] colNamesInOrder) {
+    public final void permute(final String[] colNamesInOrder) {
         final HashMap<String, Integer> order = new HashMap<String, Integer>();
         for (int i = 0; i < colNamesInOrder.length; i++) {
             String name = colNamesInOrder[i];
@@ -493,7 +495,7 @@ public final class ColumnRearranger {
      * @throws IndexOutOfBoundsException If position is invalid.
      * @throws NullPointerException If <code>fac</code> is <code>null</code>.
      */
-    public void insertAt(final int position, final CellFactory fac) {
+    public final void insertAt(final int position, final CellFactory fac) {
         DataColumnSpec[] colSpecs = fac.getColumnSpecs();
         SpecAndFactoryObject[] ins = new SpecAndFactoryObject[colSpecs.length];
         for (int i = 0; i < ins.length; i++) {
@@ -510,7 +512,7 @@ public final class ColumnRearranger {
      * @param fac The factory from which we get the new columns.
      * @throws NullPointerException If <code>fac</code> is <code>null</code>.
      */
-    public void append(final CellFactory fac) {
+    public final void append(final CellFactory fac) {
         insertAt(m_includes.size(), fac);
     }
 
@@ -530,7 +532,7 @@ public final class ColumnRearranger {
      * @throws IllegalArgumentException If <code>colName</code> is not
      *          contained in the current set of columns.
      */
-    public void replace(final CellFactory newCol, final String colName) {
+    public final void replace(final CellFactory newCol, final String colName) {
         int index = indexOf(colName);
         if (index < 0) {
             throw new IllegalArgumentException("No such column: " + colName);
@@ -552,7 +554,7 @@ public final class ColumnRearranger {
      *          exactly as many columns as colIndex.length or the colIndex
      *          argument contains invalid entries.
      */
-    public void replace(final CellFactory fac, final int... colIndex) {
+    public final void replace(final CellFactory fac, final int... colIndex) {
         DataColumnSpec[] colSpecs = fac.getColumnSpecs();
         if (colSpecs.length != colIndex.length) {
             throw new IndexOutOfBoundsException(
@@ -587,13 +589,42 @@ public final class ColumnRearranger {
      * output spec of your node.
      * @return The table spec reflecting the current set of columns.
      */
-    public DataTableSpec createSpec() {
+    public final DataTableSpec createSpec() {
         final int size = m_includes.size();
         DataColumnSpec[] colSpecs = new DataColumnSpec[size];
         for (int i = 0; i < size; i++) {
             colSpecs[i] = m_includes.get(i).getColSpec();
         }
         return new DataTableSpec(colSpecs);
+    }
+
+    /** Creates and {@link StreamableFunction} that represents the row
+     * calculation.
+     *
+     * @return The function representing the calculation.
+     * @since 2.6
+     * @noreference Pending API.
+     */
+    public final StreamableFunction createStreamableFunction() {
+        return new ColumnRearrangerFunction(this);
+    }
+
+    /** Creates and {@link StreamableFunction} that represents the row
+     * calculation.
+     *
+     * <p><b>NOTE:</b> Pending API, don't use!
+     * @param emptyInternals An empty instance of a
+     * {@link StreamableOperatorInternals} that is filled by
+     * the client implementation and that gets returned by the function's
+     * {@link StreamableFunction#getInternals()} method after the table has been
+     * processed.
+     * @return The function representing the calculation.
+     * @since 2.6
+     * @noreference Pending API.
+     */
+    public final StreamableFunction createStreamableFunction(
+            final StreamableOperatorInternals emptyInternals) {
+        return new ColumnRearrangerFunction(this, emptyInternals);
     }
 
     /** Utility class that helps us with internal data structures. */
