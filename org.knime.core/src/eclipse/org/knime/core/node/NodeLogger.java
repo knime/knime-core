@@ -59,12 +59,10 @@ import java.io.InputStream;
 import java.io.Writer;
 import java.net.InetAddress;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.HashMap;
 
 import org.apache.log4j.Appender;
 import org.apache.log4j.Level;
-import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.PropertyConfigurator;
@@ -139,12 +137,10 @@ public final class NodeLogger {
      * <code>System.err</code>, and <i>knime.log</i> to it.
      */
     static {
-        if (!isLog4JConfigured()) {
-            try {
-                initLog4J();
-            } catch (IOException ex) {
-                ex.printStackTrace();
-            }
+        try {
+            initLog4J();
+        } catch (IOException ex) {
+            ex.printStackTrace();
         }
 
         // init root logger
@@ -167,23 +163,6 @@ public final class NodeLogger {
         }
 
         startMessage();
-    }
-
-    private static boolean isLog4JConfigured() {
-        Enumeration<?> appenders = LogManager.getRootLogger().getAllAppenders();
-        if (appenders.hasMoreElements()) {
-            return true;
-        }
-        else {
-            Enumeration<?> loggers = LogManager.getCurrentLoggers();
-            while (loggers.hasMoreElements()) {
-                Logger c = (Logger) loggers.nextElement();
-                if (c.getAllAppenders().hasMoreElements()) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
 
