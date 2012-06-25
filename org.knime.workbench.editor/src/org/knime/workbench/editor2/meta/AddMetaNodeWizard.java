@@ -60,11 +60,9 @@ import org.eclipse.jface.wizard.Wizard;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeUIInformation;
-import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.commands.AddNewMetaNodeCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
@@ -176,12 +174,6 @@ public class AddMetaNodeWizard extends Wizard {
 
     private void createMetaNodeFromPorts(final PortType[] inPorts,
             final PortType[] outPorts, final String name) {
-        WorkflowManager meta = m_wfEditor.getWorkflowManager()
-        .createAndAddSubWorkflow(inPorts, outPorts, name);
-        NodeContainer cont = m_wfEditor.getWorkflowManager().getNodeContainer(
-                meta.getID());
-        // create extra info and set it
-        NodeUIInformation info = new NodeUIInformation();
 
         Viewport viewPort = ((ScalableFreeformRootEditPart)m_wfEditor
                 .getViewer().getRootEditPart()).getZoomManager().getViewport();
@@ -218,9 +210,10 @@ public class AddMetaNodeWizard extends Wizard {
                                     .getBounds().height;
             }
         } while (ep instanceof NodeContainerEditPart);
-        // now position the node to the absolute position
-        info.setNodeLocation(location.x, location.y, -1, -1);
-        cont.setUIInformation(info);
+
+        AddNewMetaNodeCommand cmd =
+                new AddNewMetaNodeCommand(m_wfEditor.getWorkflowManager(), inPorts, outPorts, name, location);
+        m_wfEditor.getViewer().getEditDomain().getCommandStack().execute(cmd);
     }
 
     private void performCustomizedFinish() {

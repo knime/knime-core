@@ -93,7 +93,7 @@ import org.knime.workbench.editor2.model.WorkflowPortBar;
 public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
         implements NodeEditPart, WorkflowListener, ZoomListener {
 
-    private final int m_index;
+    private int m_index;
 
     private final PortType m_type;
 
@@ -125,6 +125,14 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
         m_isInPort = inPort;
     }
 
+    public void updateNumberOfPorts() {
+        if (isInPort()) {
+            ((AbstractPortFigure)getFigure()).setNumberOfPorts(getNodeContainer().getNrInPorts());
+        } else {
+            ((AbstractPortFigure)getFigure()).setNumberOfPorts(getNodeContainer().getNrOutPorts());
+        }
+    }
+
     /**
      *
      * @return true if it is an in port, false if it is an out port
@@ -146,6 +154,15 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
      */
     public int getIndex() {
         return m_index;
+    }
+
+    /**
+     * @param index the new position of the port.
+     */
+    public void setIndex(final int index) {
+        m_index = index;
+        AbstractPortFigure fig = (AbstractPortFigure)getFigure();
+        fig.setPortIdx(index);
     }
 
     /**
@@ -284,6 +301,9 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
             Display.getDefault().asyncExec(new Runnable() {
                 @Override
                 public void run() {
+                    if (!isActive()) {
+                        return;
+                    }
                     ConnectionContainer c = null;
 
                     if (event.getType().equals(

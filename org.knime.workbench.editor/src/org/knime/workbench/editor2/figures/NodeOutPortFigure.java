@@ -74,6 +74,7 @@ public class NodeOutPortFigure extends AbstractPortFigure {
 
     private boolean m_isInactive = false;
 
+    private NodePortLocator m_nodePortLocator;
     /**
      *
      * @param id The id of the port, needed to determine the position inside the
@@ -129,13 +130,39 @@ public class NodeOutPortFigure extends AbstractPortFigure {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setPortIdx(final int portIdx) {
+        if (m_nodePortLocator != null) {
+            m_nodePortLocator.setPortIndex(portIdx);
+        }
+        super.setPortIdx(portIdx);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setNumberOfPorts(final int numOfPorts) {
+        if (m_nodePortLocator != null) {
+            m_nodePortLocator.setNrPorts(numOfPorts);
+        }
+        super.setNumberOfPorts(numOfPorts);
+    }
+
+    /**
      * @return The <code>RelativeLocator</code> that places this figure on the
      *         right side (y offset corresponds to the number of the port).
      */
     @Override
     public Locator getLocator() {
-        return new NodePortLocator((NodeContainerFigure)getParent(), false,
-                getNrPorts(), getPortIndex(), getType(), isMetaNodePort());
+        if (m_nodePortLocator == null) {
+            m_nodePortLocator =
+                    new NodePortLocator((NodeContainerFigure)getParent(), false, getNrPorts(), getPortIndex(),
+                            getType(), isMetaNodePort());
+        }
+        return m_nodePortLocator;
     }
 
     public void setInactive(final boolean isInactive) {

@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   26.09.2007 (mb/bw): created
  */
@@ -53,7 +53,7 @@ package org.knime.core.node.workflow;
 import org.knime.core.node.port.PortType;
 
 /**
- * 
+ *
  * @author M. Berthold & B. Wiswedel, University of Konstanz
  */
 public final class WorkflowInPort extends NodeInPort {
@@ -66,22 +66,32 @@ public final class WorkflowInPort extends NodeInPort {
     private final NodeOutPortWrapper m_underlyingPortWrapper;
 
     /**
-     * 
+     *
      */
     WorkflowInPort(final int index, final PortType pType) {
         super(index, pType);
         m_underlyingPortWrapper = new NodeOutPortWrapper(index, pType);
     }
 
+
     void setUnderlyingPort(final NodeOutPort port) {
         m_underlyingPortWrapper.setUnderlyingPort(port);
     }
-    
+
     /**
      * @return the underlyingOutPort
      */
     public NodeOutPort getUnderlyingPort() {
         return m_underlyingPortWrapper;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setPortIndex(final int portIndex) {
+        m_underlyingPortWrapper.setPortIndex(portIndex);
+        super.setPortIndex(portIndex);
     }
 
 }

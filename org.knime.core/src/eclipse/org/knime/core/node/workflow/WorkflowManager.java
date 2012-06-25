@@ -1208,6 +1208,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 final int oldIndex = newPorts[i].getOldIndex();
                 if (oldIndex >= 0) {
                     newMNPorts[i] = subFlowMgr.getInPort(oldIndex);
+                    newMNPorts[i].setPortIndex(i);
                 } else {
                     newMNPorts[i] = new WorkflowInPort(i, newPorts[i].getType());
                 }
@@ -1273,6 +1274,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 final int oldIndex = newPorts[i].getOldIndex();
                 if (oldIndex >= 0) {
                     newMNPorts[i] = subFlowMgr.getOutPort(oldIndex);
+                    newMNPorts[i].setPortIndex(i);
                 } else {
                     newMNPorts[i] = new WorkflowOutPort(i, newPorts[i].getType());
                 }

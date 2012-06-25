@@ -1718,6 +1718,11 @@ public class WorkflowEditor extends GraphicalEditor implements
                                     false);
                         }
                     }
+                    break;
+                case CONNECTION_REMOVED:
+                case CONNECTION_ADDED:
+                    getViewer().getContents().refresh();
+                    break;
                 default: // no further actions, all handled in edit policies etc
                 }
                 markDirty();

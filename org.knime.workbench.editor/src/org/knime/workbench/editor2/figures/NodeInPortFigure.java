@@ -65,6 +65,8 @@ import org.knime.core.node.port.PortType;
  */
 public class NodeInPortFigure extends AbstractPortFigure {
 
+    private NodePortLocator m_nodePortLocator;
+
     /**
      *
      * @param type the type of the port
@@ -122,15 +124,40 @@ public class NodeInPortFigure extends AbstractPortFigure {
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setPortIdx(final int portIdx) {
+        if (m_nodePortLocator != null) {
+            m_nodePortLocator.setPortIndex(portIdx);
+        }
+        super.setPortIdx(portIdx);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setNumberOfPorts(final int numOfPorts) {
+        if (m_nodePortLocator != null) {
+            m_nodePortLocator.setNrPorts(numOfPorts);
+        }
+        super.setNumberOfPorts(numOfPorts);
+    }
+
+    /**
      * @return The <code>RelativeLocator</code> that places this figure on the
      *         left side (y offset corresponds to the number of the port).
      *         {@inheritDoc}
      */
     @Override
     public Locator getLocator() {
-        return new NodePortLocator(
-                (NodeContainerFigure)getParent(), true,
-                getNrPorts(), getPortIndex(), getType(), isMetaNodePort());
+        if (m_nodePortLocator == null) {
+            m_nodePortLocator =
+                    new NodePortLocator((NodeContainerFigure)getParent(), true, getNrPorts(), getPortIndex(),
+                            getType(), isMetaNodePort());
+        }
+        return m_nodePortLocator;
     }
 
 }

@@ -62,9 +62,9 @@ public abstract class PortLocator implements Locator {
 
     private final boolean m_isInport;
 
-    private final int m_maxPorts;
+    private int m_maxPorts;
 
-    private final int m_portIndex;
+    private int m_portIndex;
 
     private final boolean m_isMetaNodePort;
 
@@ -105,6 +105,13 @@ public abstract class PortLocator implements Locator {
     }
 
     /**
+     * @param numberOfPorts new number of ports of the node
+     */
+    public void setNrPorts(final int numberOfPorts) {
+        m_maxPorts = numberOfPorts;
+    }
+
+    /**
      *
      * @return port index
      */
@@ -112,6 +119,12 @@ public abstract class PortLocator implements Locator {
         return m_portIndex;
     }
 
+    /**
+     * @param idx the new index
+     */
+    public void setPortIndex(final int idx) {
+        m_portIndex = idx;
+    }
     /**
      *
      * @return true if in port, false if out port
@@ -130,6 +143,7 @@ public abstract class PortLocator implements Locator {
     /**
      * {@inheritDoc}
      */
+    @Override
     public abstract void relocate(IFigure target);
 
 }

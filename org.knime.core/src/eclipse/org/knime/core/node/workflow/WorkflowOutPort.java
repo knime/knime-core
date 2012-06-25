@@ -93,4 +93,13 @@ public class WorkflowOutPort extends NodeOutPortWrapper  {
         return super.getPortObject();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setPortIndex(final int portIndex) {
+        m_simulatedInPort.setPortIndex(portIndex);
+        super.setPortIndex(portIndex);
+    }
+
 }

@@ -155,7 +155,7 @@ public class NodeOutPortEditPart extends AbstractPortEditPart implements
     protected List<ConnectionContainer> getModelTargetConnections() {
         return EMPTY_LIST;
     }
-    
+
     private final AtomicBoolean m_updateInProgressFlag = new AtomicBoolean(false);
 
     /**
@@ -167,6 +167,9 @@ public class NodeOutPortEditPart extends AbstractPortEditPart implements
             SyncExecQueueDispatcher.asyncExec(new Runnable() {
                 @Override
                 public void run() {
+                    if (!isActive()) {
+                        return;
+                    }
                     m_updateInProgressFlag.set(false);
                     NodeOutPort outPort = (NodeOutPort)getModel();
                     NodeOutPortFigure fig = (NodeOutPortFigure)getFigure();

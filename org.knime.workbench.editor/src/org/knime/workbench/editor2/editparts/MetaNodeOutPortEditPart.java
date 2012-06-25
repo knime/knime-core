@@ -174,6 +174,9 @@ public class MetaNodeOutPortEditPart extends AbstractPortEditPart
         SyncExecQueueDispatcher.asyncExec(new Runnable() {
             @Override
             public void run() {
+                if (!isActive()) {
+                    return;
+                }
                 MetaNodeOutPortFigure fig = (MetaNodeOutPortFigure)getFigure();
                 fig.setState(state.getState());
                 rebuildTooltip();

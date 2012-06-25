@@ -97,13 +97,13 @@ public abstract class AbstractPortFigure extends Shape {
 
     private static Color COLOR_FLOWVAR_PORT = null;
 
-    private final int m_nrOfPorts;
+    private int m_nrOfPorts;
 
     private final PortType m_portType;
 
     private boolean m_isConnected;
 
-    private final int m_portIdx;
+    private int m_portIdx;
 
     private final boolean m_isMetaNodePort;
 
@@ -147,6 +147,12 @@ public abstract class AbstractPortFigure extends Shape {
     }
 
     /**
+     * @param numOfPorts new number of ports in the parent node
+     */
+    public void setNumberOfPorts(final int numOfPorts) {
+        m_nrOfPorts = numOfPorts;
+    }
+    /**
      *
      * @param isConnected the new value to set.
      */
@@ -163,6 +169,13 @@ public abstract class AbstractPortFigure extends Shape {
      */
     public int getPortIndex() {
         return m_portIdx;
+    }
+
+    /**
+     * @param portIdx the portIdx to set
+     */
+    public void setPortIdx(final int portIdx) {
+        m_portIdx = portIdx;
     }
 
     protected boolean isMetaNodePort() {

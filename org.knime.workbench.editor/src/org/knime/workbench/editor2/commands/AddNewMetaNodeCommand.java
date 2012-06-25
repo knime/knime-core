@@ -46,114 +46,101 @@
  * -------------------------------------------------------------------
  *
  * History
- *   22.01.2008 (Fabian Dill): created
+ *   21.06.2012 (Peter Ohl): created
  */
-package org.knime.workbench.editor2.figures;
+package org.knime.workbench.editor2.commands;
 
-import org.eclipse.draw2d.Locator;
-import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
-import org.eclipse.draw2d.geometry.PointList;
-import org.eclipse.draw2d.geometry.Rectangle;
-import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.node.workflow.WorkflowManager;
 
 /**
+ * GEF command for adding a new empty meta node (called from the new meta node wizard).
  *
- * @author Fabian Dill, University of Konstanz
+ * @author Peter Ohl, KNIME.com, Zurich, Switzerland
  */
-public class WorkflowOutPortFigure extends AbstractPortFigure {
+public class AddNewMetaNodeCommand extends AbstractKNIMECommand {
 
-    // private static final NodeLogger LOGGER = NodeLogger.getLogger(
-    // WorkflowOutPortFigure.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(AddNewMetaNodeCommand.class);
 
-    WorkflowPortLocator m_portLocator;
+    private PortType[] m_inPorts;
+
+    private PortType[] m_outPorts;
+
+    private String m_name;
+
+    private Point m_location;
+
+    // for undo
+    private NodeID m_metanodeID;
 
     /**
+     * Creates a new command.
      *
-     * @param type port type (data, model, etc)
-     * @param nrOfPorts total number of ports
-     * @param portIndex port index
-     * @param wfmName name of the subworkflow for tooltip
+     * @param workflowManager hostWFM
+     * @param inPorts
+     * @param outPorts
+     * @param name
+     * @param location
      */
-    public WorkflowOutPortFigure(final PortType type, final int nrOfPorts,
-            final int portIndex, final String wfmName) {
-        super(type, nrOfPorts, portIndex, false);
-        setToolTip(new NewToolTipFigure(wfmName + " out port: " + portIndex));
-    }
-
-    /**
-     *
-     * {@inheritDoc}
-     */
-    @Override
-    protected PointList createShapePoints(final Rectangle rect) {
-        Rectangle r = getBounds().getCopy();
-        if (getType().equals(BufferedDataTable.TYPE)) {
-            // triangle
-            PointList list = new PointList(3);
-            list.addPoint(r.x, r.y);
-            list.addPoint(r.x + r.width, r.y + (r.height / 2));
-            list.addPoint(r.x, r.y + r.height);
-            return list;
-        } else {
-            // square
-            PointList list = new PointList(4);
-            list.addPoint(new Point(r.x, r.y));
-            list.addPoint(new Point(r.x + r.width, r.y));
-            list.addPoint(new Point(r.x + r.width, r.y + r.height));
-            list.addPoint(new Point(r.x, r.y + r.height));
-            return list;
-        }
+    public AddNewMetaNodeCommand(final WorkflowManager workflowManager, final PortType[] inPorts,
+            final PortType[] outPorts, final String name, final Point location) {
+        super(workflowManager);
+        m_inPorts = inPorts;
+        m_outPorts = outPorts;
+        m_name = name;
+        m_location = location;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void setNumberOfPorts(final int numOfPorts) {
-        if (m_portLocator != null) {
-            m_portLocator.setNrPorts(numOfPorts);
+    public boolean canExecute() {
+        if (!super.canExecute()) {
+            return false;
         }
-        super.setNumberOfPorts(numOfPorts);
+        return (m_inPorts != null && m_outPorts != null && m_name != null && m_location != null);
     }
-    /**
-     * {@inheritDoc}
-     */
+
+    /** {@inheritDoc} */
     @Override
-    public void setPortIdx(final int portIdx) {
-        if (m_portLocator != null) {
-            m_portLocator.setPortIndex(portIdx);
-        }
-        super.setPortIdx(portIdx);
+    public void execute() {
+        m_metanodeID = getHostWFM().createAndAddSubWorkflow(m_inPorts, m_outPorts, m_name).getID();
+        // create extra info and set it
+        NodeContainer cont =getHostWFM().getNodeContainer(m_metanodeID);
+        NodeUIInformation info = new NodeUIInformation(m_location.x, m_location.y, -1, -1, true);
+//        if (WorkflowEditor.getActiveEditorSnapToGrid()) {
+//            info.setSnapToGrid(true);
+//        }
+        cont.setUIInformation(info);
     }
-    /**
-     *
-     * {@inheritDoc}
-     */
+
+    /** {@inheritDoc} */
     @Override
-    public Locator getLocator() {
-        if (m_portLocator == null) {
-            m_portLocator = new WorkflowPortLocator(getType(), getPortIndex(), false,
-                    getNrPorts());
-        }
-        return m_portLocator;
+    public boolean canUndo() {
+        return m_metanodeID != null && getHostWFM().canRemoveNode(m_metanodeID);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Dimension getPreferredSize(final int hint, final int hint2) {
-        return new Dimension(WF_PORT_SIZE, WF_PORT_SIZE);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Rectangle computePortShapeBounds(final Rectangle bounds) {
-        return bounds;
+    public void undo() {
+        try {
+            getHostWFM().removeNode(m_metanodeID);
+        } catch (Exception e) {
+            LOGGER.error("Undo failed! Removal of meta node " + m_metanodeID + " failed: " + e.getMessage(), e);
+            // prevent a redo from happening (and inserting yet another meta node).
+            m_name = null;
+            m_inPorts = null;
+            m_outPorts = null;
+            throw new RuntimeException(e);
+        }
     }
 
 }

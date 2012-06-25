@@ -64,6 +64,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.draw2d.ConnectionAnchor;
 import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.LayoutManager;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
@@ -853,12 +854,50 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                     case LockStatus:
                         checkMetaNodeLockIcon();
                         break;
+                    case MetaNodePorts:
+                        refreshChildren(); // account for new/removed ports
+                        updatePortIndex(); // set the (possibly changed) index in all ports
+                        updateNumberOfPorts();
+                        relayoutPorts();   // in case an index has changed
+                        break;
                     default:
                         // unknown, ignore
                     }
                 }
             }
         });
+    }
+
+    /**
+     * Updates the port index in all port editparts from the underlying port model.
+     */
+    private void updatePortIndex() {
+        for (Object ep : getChildren()) {
+            if (ep instanceof AbstractPortEditPart) {
+                Object model = ((EditPart)ep).getModel();
+                if (model instanceof NodePort) {
+                    ((AbstractPortEditPart)ep).setIndex(((NodePort)model).getPortIndex());
+                }
+            }
+        }
+    }
+
+    private void updateNumberOfPorts() {
+        for (Object ep : getChildren()) {
+            if (ep instanceof AbstractPortEditPart) {
+                ((AbstractPortEditPart)ep).updateNumberOfPorts();
+            }
+        }
+    }
+
+    private void relayoutPorts() {
+        IFigure nodeFig = getFigure();
+        LayoutManager layoutManager = nodeFig.getLayoutManager();
+        if (layoutManager != null) {
+            layoutManager.invalidate();
+            layoutManager.layout(figure);
+        }
+        nodeFig.repaint();
     }
 
     private void setJobManagerIcon(final URL iconURL) {
@@ -972,15 +1011,15 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                 }
             }
             if (fontSize != null) {
-            fig.setFontSize(fontSize);
-            Display.getCurrent().syncExec(new Runnable() {
-                @Override
-                public void run() {
+                fig.setFontSize(fontSize);
+                Display.getCurrent().syncExec(new Runnable() {
+                    @Override
+                    public void run() {
                         updateFigureFromUIinfo(getNodeContainer().getUIInformation());
-                    getRootEditPart().getFigure().invalidate();
-                    getRootEditPart().refreshVisuals();
-                }
-            });
+                        getRootEditPart().getFigure().invalidate();
+                        getRootEditPart().refreshVisuals();
+                    }
+                });
             }
             return;
         }

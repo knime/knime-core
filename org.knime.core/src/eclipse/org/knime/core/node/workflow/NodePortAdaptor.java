@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 20, 2008 (berthold): created
  */
@@ -53,13 +53,13 @@ package org.knime.core.node.workflow;
 import org.knime.core.node.port.PortType;
 
 /**
- * 
+ *
  * @author berthold, University of Konstanz
  */
 public class NodePortAdaptor implements NodePort {
     /** This ports ID assigned from the underlying node. */
-    private final int m_portIndex;
-    
+    private int m_portIndex;
+
     /** The type of this port. */
     private final PortType m_portType;
 
@@ -70,9 +70,9 @@ public class NodePortAdaptor implements NodePort {
      * Creates a new node port with an ID assigned from the underlying node. The
      * default port name is "Port [portID]" and can be changed via
      * <code>#setPortName(String)</code>.
-     * 
+     *
      * @param portID the port's id, greater or equal zero
-     * 
+     *
      * @see #setPortName(String)
      */
     public NodePortAdaptor(final int portID, final PortType pType) {
@@ -89,9 +89,16 @@ public class NodePortAdaptor implements NodePort {
     public final int getPortIndex() {
         return m_portIndex;
     }
-    
+
     /**
-     * @return The port type. 
+     * @param portIndex the new portIndex to set
+     */
+    public void setPortIndex(final int portIndex) {
+        m_portIndex = portIndex;
+    }
+
+    /**
+     * @return The port type.
      */
     public final PortType getPortType() {
         return m_portType;
@@ -107,7 +114,7 @@ public class NodePortAdaptor implements NodePort {
     /**
      * Sets a new name for this port. If null or an empty string is passed, the
      * default name will be generated: "Port [" + portID + "]".
-     * 
+     *
      * @param portName The new name for this port. If null is passed, the
      *            default name will be generated.
      */

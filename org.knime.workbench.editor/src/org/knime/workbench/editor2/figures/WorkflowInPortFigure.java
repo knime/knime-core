@@ -67,7 +67,7 @@ public class WorkflowInPortFigure extends AbstractPortFigure {
 //    private static final NodeLogger LOGGER = NodeLogger.getLogger(
 //            WorkflowInPortFigure.class);
 
-
+    WorkflowPortLocator m_portLocator;
 
     /**
      *
@@ -86,9 +86,34 @@ public class WorkflowInPortFigure extends AbstractPortFigure {
      * {@inheritDoc}
      */
     @Override
+    public void setPortIdx(final int portIdx) {
+        if (m_portLocator != null) {
+            m_portLocator.setPortIndex(portIdx);
+        }
+        super.setPortIdx(portIdx);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setNumberOfPorts(final int numOfPorts) {
+        if (m_portLocator != null) {
+            m_portLocator.setNrPorts(numOfPorts);
+        }
+        super.setNumberOfPorts(numOfPorts);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public Locator getLocator() {
-        return new WorkflowPortLocator(getType(), getPortIndex(),
-                true, getNrPorts());
+        if (m_portLocator == null) {
+            m_portLocator = new WorkflowPortLocator(getType(), getPortIndex(),
+                    true, getNrPorts());
+        }
+        return m_portLocator;
     }
 
 
