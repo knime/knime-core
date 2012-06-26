@@ -92,6 +92,7 @@ public class NodePortAdaptor implements NodePort {
 
     /**
      * @param portIndex the new portIndex to set
+     * @since 2.6
      */
     public void setPortIndex(final int portIndex) {
         m_portIndex = portIndex;
