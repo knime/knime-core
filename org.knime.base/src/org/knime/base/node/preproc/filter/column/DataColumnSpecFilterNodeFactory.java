@@ -1,5 +1,5 @@
-<!--
-========================================================================
+/*
+ * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
  *  University of Konstanz, Germany and
@@ -43,14 +43,50 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
-====================================================================
--->
-<body>
-Contains the filter column node which can be used the extract 
-certain columns from the input data table. Furthermore, this node's dialog has 
-to be used in order to make the column selection. 
-See <strong><code>DataColumnSpecFilterNodeFactory</code></strong> on how to 
-instantiate this node. For convince, the 
-<strong><code>DataColumnSpecFilterNodeDialogPane</code></strong> can be used 
-also with other nodes to perform a column selection.
-</body>
+ * --------------------------------------------------------------------- *
+ */
+package org.knime.base.node.preproc.filter.column;
+
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
+import org.knime.core.node.NodeDialogPane;
+
+/**
+ * The factory for the column filter node.
+ * 
+ * @author Thomas Gabriel, KNIME.com AG, Zurich
+ */
+public class DataColumnSpecFilterNodeFactory 
+        extends NodeFactory<DataColumnSpecFilterNodeModel> {
+
+    /** {@inheritDoc} */
+    @Override
+    public DataColumnSpecFilterNodeModel createNodeModel() {
+        return new DataColumnSpecFilterNodeModel();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int getNrNodeViews() {
+        return 0;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public NodeView<DataColumnSpecFilterNodeModel> createNodeView(final int i, 
+            final DataColumnSpecFilterNodeModel nodeModel) {
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean hasDialog() {
+        return true;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new DataColumnSpecFilterNodeDialogPane();
+    }
+}

@@ -373,11 +373,6 @@
             id="org.knime.base.node.mine.scorer.scorer.AccuracyScorerNodeFactory">
       </node>
       <node
-            category-path="/manipulation/column/column-filter"
-            factory-class="org.knime.base.node.preproc.filter.column.FilterColumnNodeFactory"
-            id="org.knime.base.node.preproc.filter.column.FilterColumnNodeFactory">
-      </node>
-      <node
             category-path="/manipulation/column/binning"
             factory-class="org.knime.base.node.preproc.binner.BinnerNodeFactory"
             id="org.knime.base.node.preproc.binner.BinnerNodeFactory"/>
@@ -1292,6 +1287,11 @@
             category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.colconvert.categorytonumber.CategoryToNumberApplyNodeFactory"
             id="org.knime.base.node.preproc.colconvert.categorytonumber.CategoryToNumberApplyNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/column/column-filter"
+            factory-class="org.knime.base.node.preproc.filter.column.DataColumnSpecFilterNodeFactory"
+            id="org.knime.base.node.preproc.filter.column.DataColumnSpecFilterNodeFactory">
       </node> 
       <!-- new ones -->
       

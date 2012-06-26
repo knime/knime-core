@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   09.01.2006(all): reviewed
  *   29.10.2006(tm, cs): reviewed
@@ -66,8 +66,8 @@ import javax.swing.JComponent;
 
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.data.property.ShapeFactory;
-import org.knime.core.data.property.SizeHandler;
 import org.knime.core.data.property.ShapeFactory.Shape;
+import org.knime.core.data.property.SizeHandler;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
@@ -82,13 +82,13 @@ import org.knime.core.node.workflow.DataTableSpecView;
 
 /**
  * <code>DataTableSpec</code>s specify the structure of a {@link DataTable}.
- * 
+ *
  * <p>
  * The spec specifies the characteristics i.e. column numbers, as well as column
  * types, names, and other column oriented information through a collection of
  * {@link DataColumnSpec} objects. The names of the {@link DataColumnSpec}s
  * must be unique identifiers within a <code>DataTableSpec</code>.
- * 
+ *
  * <p>
  * Once a <code>DataTableSpec</code> is initialized, it is immutable. That is,
  * if you want to add further information to a column (for instance, the
@@ -96,7 +96,7 @@ import org.knime.core.node.workflow.DataTableSpecView;
  * <code>DataTableSpec</code> carrying the new information. A spec can be
  * propagated from node to node via the ports so that succeeding nodes know
  * about the table structure even if no data table is currently available.
- * 
+ *
  * <p>
  * In addition, the table spec provides a single {@link SizeHandler},
  * {@link org.knime.core.data.property.ColorHandler} and/or
@@ -108,15 +108,15 @@ import org.knime.core.node.workflow.DataTableSpecView;
  * <br />
  * A <code>DataTableSpec</code> can also have a name which does not need to be
  * unique.
- * 
+ *
  * @see DataTable
  * @see DataColumnSpec
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public final class DataTableSpec
 implements PortObjectSpec, Iterable<DataColumnSpec> {
-    
+
     /** Key for column spec sub-configs. */
     private static final String CFG_COLUMN_SPEC = "column_spec_";
 
@@ -128,16 +128,16 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
 
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(DataTableSpec.class);
-    
+
     /** Method required by the interface {@link PortObjectSpec}. Not meant
      * for public use.
      * @return A new serializer responsible for loading/saving.
      */
-    public static PortObjectSpecSerializer<DataTableSpec> 
+    public static PortObjectSpecSerializer<DataTableSpec>
             getPortObjectSpecSerializer() {
         return new PortObjectSpecSerializer<DataTableSpec>() {
             private static final String FILENAME = "spec.xml";
-            
+
             /** {@inheritDoc} */
             @Override
             public DataTableSpec loadPortObjectSpec(
@@ -145,7 +145,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
                 throws IOException {
                 ZipEntry entry = in.getNextEntry();
                 if (!FILENAME.equals(entry.getName())) {
-                    throw new IOException("Expected '" + FILENAME 
+                    throw new IOException("Expected '" + FILENAME
                             + "' zip entry, got " + entry.getName());
                 }
                 ModelContentRO cnt = ModelContent.loadFromXML(in);
@@ -155,11 +155,11 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
                     throw new IOException(e.getMessage(), e);
                 }
             }
-            
+
             /** {@inheritDoc} */
             @Override
             public void savePortObjectSpec(final DataTableSpec spec,
-                    final PortObjectSpecZipOutputStream out) 
+                    final PortObjectSpecZipOutputStream out)
                 throws IOException {
                 ModelContent cnt = new ModelContent(FILENAME);
                 spec.save(cnt);
@@ -197,7 +197,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
             DataColumnSpec cspec = spec2.getColumnSpec(idx - l1);
             DataColumnSpecCreator cr = new DataColumnSpecCreator(cspec);
             // remove color handler from second spec, when also present in first
-            if (spec1.m_colorHandlerColIndex >= 0 
+            if (spec1.m_colorHandlerColIndex >= 0
                     && spec1.m_colorHandlerColIndex >= 0) {
                 LOGGER.warn("DataColumnSpec already contains a color "
                          + "handler, ignoring color handler from second spec.");
@@ -205,7 +205,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
                 cr.setColorHandler(null);
             }
             // remove size handler from second spec, when also present in first
-            if (spec1.m_sizeHandlerColIndex >= 0 
+            if (spec1.m_sizeHandlerColIndex >= 0
                     && spec1.m_sizeHandlerColIndex >= 0) {
                 LOGGER.warn("DataColumnSpec already contains a size "
                          + "handler, ignoring size handler from second spec.");
@@ -213,7 +213,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
                 cr.setSizeHandler(null);
             }
             // remove shape handler from second spec, when also present in first
-            if (spec1.m_shapeHandlerColIndex >= 0 
+            if (spec1.m_shapeHandlerColIndex >= 0
                     && spec1.m_shapeHandlerColIndex >= 0) {
                 LOGGER.warn("DataColumnSpec already contains a shape "
                          + "handler, ignoring shape handler from second spec.");
@@ -228,7 +228,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
     /**
      * Static helper method to create a {@link DataColumnSpec} array from the
      * given names and types.
-     * 
+     *
      * @param names an array of column names
      * @param types an array of column types
      * @throws NullPointerException if one of the arrays is <code>null</code>
@@ -270,7 +270,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
     /**
      * Reads all {@link DataColumnSpec} objects from the given {@link ConfigRO}
      * and returns a new <code>DataTableSpec</code> object containing them.
-     * 
+     *
      * @param config object to read column specs from
      * @return a new table spec object containing the just read columns
      * @throws InvalidSettingsException if the name, number of columns, or a
@@ -308,7 +308,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
 
     /** The index of the column holding the SizeHandler or -1 if not set. */
     private final int m_sizeHandlerColIndex;
-    
+
     /** Name used to create a new spec when no other name has been defined. */
     private static final String DFT_SPEC_NAME = "default";
 
@@ -323,7 +323,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
     /**
      * Creates a new <code>DataTableSpec</code>, which is built from an array
      * of {@link DataColumnSpec} elements.
-     * 
+     *
      * @param colSpecs an array containing information about all columns
      * @throws NullPointerException if the given column spec or one of its
      *             elements is <code>null</code>
@@ -338,9 +338,9 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
     /**
      * Constructor for a new <code>DataTableSpec</code> based on two existing
      * specifications that are to be concatenated. The new spec name is combined
-     * by both specs' names, though a concatenation of 
+     * by both specs' names, though a concatenation of
      * "default+default+...+default" is avoided.
-     * 
+     *
      * @param spec1 The first spec.
      * @param spec2 The second spec.
      * @throws NullPointerException If one of the given specs is
@@ -354,7 +354,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
 
     /**
      * Creates an empty <code>DataTableSpec</code> with no columns defined.
-     * 
+     *
      * @param name this spec's name
      */
     public DataTableSpec(final String name) {
@@ -364,7 +364,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
     /**
      * Creates a new <code>DataTableSpec</code>, which is built from an array
      * of {@link DataColumnSpec} elements.
-     * 
+     *
      * @param colSpecs an array containing information about all columns
      * @param name this spec's name, if <code>null</code> a default name is
      *            assigned
@@ -396,46 +396,46 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
                         + currentName.toString() + "\" at positions "
                         + duplicateValue + " and " + i + ".");
             }
-            
+
             // creator used to remove handlers
             DataColumnSpecCreator cr = new DataColumnSpecCreator(colSpecs[i]);
-            
+
             // check for multiple color handlers
             if (colSpecs[i].getColorHandler() != null) {
                 if (colorHdlIdx >= 0) {
                     LOGGER.warn("Found multiple color handler at columns "
-                            + "index " + colorHdlIdx + " and " 
+                            + "index " + colorHdlIdx + " and "
                             + i + ", removed second one.");
                     cr.setColorHandler(null);
                 } else {
                     colorHdlIdx = i;
                 }
             }
-            
+
             // check for multiple size handlers
             if (colSpecs[i].getSizeHandler() != null) {
                 if (sizeHdlIdx >= 0) {
                     LOGGER.warn("Found multiple color handler at columns "
-                            + "index " + colorHdlIdx + " and " 
+                            + "index " + colorHdlIdx + " and "
                             + i + ", removed second one.");
                     cr.setSizeHandler(null);
                 } else {
                     sizeHdlIdx = i;
                 }
             }
-            
+
             // check for multiple shape handlers
             if (colSpecs[i].getShapeHandler() != null) {
                 if (shapeHdlIdx >= 0) {
                     LOGGER.warn("Found multiple color handler at columns "
-                            + "index " + colorHdlIdx + " and " 
+                            + "index " + colorHdlIdx + " and "
                             + i + ", removed second one.");
                     cr.setShapeHandler(null);
                 } else {
                     shapeHdlIdx = i;
                 }
             }
-            
+
             m_columnSpecs[i] = cr.createSpec();
         }
         m_sizeHandlerColIndex  = sizeHdlIdx;
@@ -446,7 +446,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
     /**
      * Constructor for a new <code>DataTableSpec</code> based on two existing
      * specifications that are to be concatenated.
-     * 
+     *
      * @param name This spec's name.
      * @param spec1 The first spec.
      * @param spec2 The second spec.
@@ -464,7 +464,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
      * Creates a new <code>DataTableSpec</code> based on a list of names and
      * types. The constructor uses the {@link DataColumnSpec} but does not
      * create additional information (values, ...).
-     * 
+     *
      * @param name this spec's identifier, if <code>null</code> a default name
      *            will be used
      * @param names an array of names
@@ -484,7 +484,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
      * Creates a new <code>DataTableSpec</code> based on a list of names and
      * types. The constructor uses the {@link DataColumnSpec} but does not
      * create additional information (values, ...).
-     * 
+     *
      * @param names an array of names
      * @param types an array of types
      * @throws NullPointerException if names or types, or one of its elements is
@@ -501,7 +501,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
      * Checks if this spec contains a column with a type compatible to the given
      * {@link DataValue} class. This method returns <code>false</code> if the
      * argument is <code>null</code>.
-     * 
+     *
      * @param valueClass the class of the data value interface to check for
      * @return <code>true</code> if at least one column type in the spec is
      *         compatible to the provided value
@@ -522,7 +522,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
     /**
      * Checks if the given column name occurs in this spec. This method returns
      * <code>false</code> if the argument is <code>null</code>.
-     * 
+     *
      * @param columnName the column name to check
      * @return <code>true</code> if this spec contains the column name
      */
@@ -532,14 +532,14 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
 
     /**
      * Returns <code>true</code> if <code>spec</code> has the same column
-     * names and types. Two specs are equal if they have the same number of 
-     * columns and the column specs of the same columns are equal (that implies 
-     * that the order of the columns has to be the same). The domains, 
-     * properties, and handlers of the column specs are not included into the 
+     * names and types. Two specs are equal if they have the same number of
+     * columns and the column specs of the same columns are equal (that implies
+     * that the order of the columns has to be the same). The domains,
+     * properties, and handlers of the column specs are not included into the
      * comparison.
-     * 
+     *
      * @param spec the <code>DataTableSpec</code> to compare this with
-     * @return <code>true</code> if the two specs have the same column names, 
+     * @return <code>true</code> if the two specs have the same column names,
      *         and types, otherwise <code>false</code>
      */
     public boolean equalStructure(final DataTableSpec spec) {
@@ -563,20 +563,20 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
             }
         }
         // both are identical
-        return true;        
-    }     
-       
+        return true;
+    }
+
 
     /**
      * Checks if both {@link DataTableSpec}s are equal. In particular it checks
      * the name, indices of property handlers, and the equality of the contained
-     * column specs according to the {@link DataColumnSpec#equals(Object)} 
-     * method. This implies that both specs have to have the same number of 
+     * column specs according to the {@link DataColumnSpec#equals(Object)}
+     * method. This implies that both specs have to have the same number of
      * columns and the order of the columns has to be the same.
-     * 
+     *
      * @param obj the <code>DataTableSpec</code> to compare this with
      * @return <code>true</code> if the two specs are equal
-     * 
+     *
      * @see #equalStructure(DataTableSpec)
      * @see DataColumnSpec#equals(Object)
      */
@@ -612,12 +612,12 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         }
         return true;
     }
-    
+
     /**
      * Finds the column with the specified name in the TableSpec and returns its
      * index, or -1 if the name doesn't exist in the table. This method returns
      * -1 if the argument is <code>null</code>.
-     * 
+     *
      * @param columnName the name to search for
      * @return the index of the column with the specified name, or -1 if not
      *         found.
@@ -631,8 +631,22 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
     }
 
     /**
+     * Returns an array of strings retrieved by {@link DataColumnSpec#getName()}
+     * for all column specs with this spec.
+     * @return an array of column names
+     * @since 2.6
+     */
+    public final String[] getColumnNames() {
+        String[] names = new String[getNumColumns()];
+        for (int i = 0; i < names.length; i++) {
+            names[i] = getColumnSpec(i).getName();
+        }
+        return names;
+    }
+
+    /**
      * Returns column information of the column with the provided index.
-     * 
+     *
      * @param index the column index within the table
      * @return the column specification
      * @throws ArrayIndexOutOfBoundsException if the index is out of range
@@ -645,7 +659,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
      * Returns the {@link DataColumnSpec} of the column with the provided name.
      * This method returns <code>null</code> if the argument is
      * <code>null</code>.
-     * 
+     *
      * @param column the column name to find the spec for
      * @return the column specification or <code>null</code> if not available
      */
@@ -659,7 +673,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
 
     /**
      * Returns the name of this <code>DataTableSpec</code>.
-     * 
+     *
      * @return the name of this table spec
      */
     public String getName() {
@@ -668,7 +682,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
 
     /**
      * Returns the number of columns.
-     * 
+     *
      * @return the number of columns
      */
     public int getNumColumns() {
@@ -682,7 +696,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
      * this spec, which is associated with exactly one column. The color
      * therefore depends on the value of the corresponding cell of the given
      * row.
-     * 
+     *
      * @param row the row for which the color is requested
      * @return a color attr object holding the colors associate to that row
      */
@@ -701,7 +715,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
      * this spec, which is associated with exactly one column. The shape
      * therefore depends on the value of the corresponding cell of the given
      * row.
-     * 
+     *
      * @param row the row for which the shape is requested
      * @return the shape object associated with this row
      */
@@ -719,7 +733,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
      * is determined by the {@link SizeHandler} of this spec, which is
      * associated with exactly one column. The size therefore depends on the
      * value of the corresponding cell of the given row.
-     * 
+     *
      * @param row the row for which the size is requested
      * @return size in [0,1] or 0 if an error occurred (illegal cell, missing)
      * @deprecated use row size factor instead
@@ -734,13 +748,13 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
     }
 
     /**
-     * Return the size (as a scaling factor) that an object should have when 
-     * displaying information concerning this row (for instance in a 
+     * Return the size (as a scaling factor) that an object should have when
+     * displaying information concerning this row (for instance in a
      * scatterplot). The size
      * is determined by the {@link SizeHandler} of this spec, which is
      * associated with exactly one column. The size therefore depends on the
      * value of the corresponding cell of the given row.
-     * 
+     *
      * @param row the row for which the size is requested
      * @return size in [1, ) or 1 if an error occurred (illegal cell, missing)
      */
@@ -750,8 +764,8 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         }
         return m_columnSpecs[m_sizeHandlerColIndex].getSizeHandler()
             .getSizeFactor(row.getCell(m_sizeHandlerColIndex));
-    }    
-    
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -786,7 +800,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
     /**
      * Saves the table spec name and all {@link DataColumnSpec}s to the given
      * {@link ConfigWO} object.
-     * 
+     *
      * @param config the config object to save this table specs to
      */
     public void save(final ConfigWO config) {
@@ -797,41 +811,41 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
             m_columnSpecs[i].save(column);
         }
     }
-    
+
     /**
-     * This method merges two or more <code>DataTableSpec</code>s. 
+     * This method merges two or more <code>DataTableSpec</code>s.
      * If the <code>DataTableSpec</code>s have equal structure
      * (which is required if you call this method)
      * their domains, Color-, Shape and Size-Handlers are merged. That means:
      * <ul>
      * <li>If any of the columns has a color/shape/size handler attached, it
      * must be the same handler for the respective column in all tables.</li>
-     * <li>If columns have properties attached (defined through 
-     * {@link DataColumnSpec#getProperties()}), they will be merged, the 
-     * merged <code>DataColumnSpec</code> will contain the intersection of all 
+     * <li>If columns have properties attached (defined through
+     * {@link DataColumnSpec#getProperties()}), they will be merged, the
+     * merged <code>DataColumnSpec</code> will contain the intersection of all
      * properties (key and value must be the same).</li>
-     * <li>The {@link DataColumnSpec#getDomain() domains} will be updated, the 
+     * <li>The {@link DataColumnSpec#getDomain() domains} will be updated, the
      * possible values list will contain the union of all possible values and
-     * the min/max values will be set appropriately. 
+     * the min/max values will be set appropriately.
      * </ul>
-     * 
-     * <p>This factory method is used when two or more tables shall be 
+     *
+     * <p>This factory method is used when two or more tables shall be
      * (row-wise) concatenated, for instance in
      * {@link org.knime.core.node.ExecutionContext#createConcatenateTable(
-     * org.knime.core.node.ExecutionMonitor, 
-     * org.knime.core.node.BufferedDataTable[]) 
+     * org.knime.core.node.ExecutionMonitor,
+     * org.knime.core.node.BufferedDataTable[])
      * ExecutionContext#createConcatenateTable}.
-     * @param specs The DataTableSpecs to merge. 
+     * @param specs The DataTableSpecs to merge.
      * @return a DataTableSpec with merged domain information
      * from both input DataTableSpecs.
      * @throws IllegalArgumentException if the structures of the DataTableSpecs
-     * do not match, the array is empty, or the array or one of its elements is 
+     * do not match, the array is empty, or the array or one of its elements is
      * <code>null</code>.
      */
     public static DataTableSpec mergeDataTableSpecs(
             final DataTableSpec... specs) {
         if (specs == null || Arrays.asList(specs).contains(null)) {
-            throw new IllegalArgumentException("Argument array must not " 
+            throw new IllegalArgumentException("Argument array must not "
                     + "be null, nor contain null values.");
         }
         if (specs.length == 0) {
@@ -869,7 +883,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         }
         return new DataTableSpec(mergedcolspecs);
     }
-    
+
     /**
      * Returns a column name, which is not contained in specified
      * <code>DataTableSpec</code>. This method is used when the argument spec
@@ -877,15 +891,15 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
      * extended by additional columns. In order to ensure uniqueness of column
      * names, one can use this method to check if the argument string is
      * contained in the argument spec. If this is the case, this method will
-     * &quot;uniquify&quot; the argument string and append a 
+     * &quot;uniquify&quot; the argument string and append a
      * &quot;<i>(# i)</i>&quot; where <i>i</i> is a running index.
-     * 
+     *
      * @param spec The argument spec to check.
      * @param columnName The desired column name
      * @return <code>columnName</code> if it is not contained in the argument
      *         spec or <code>columnName</code> amended by some index
      *         otherwise.
-     * @throws NullPointerException 
+     * @throws NullPointerException
      *         If one of the arguments is <code>null</code>.
      */
     public static String getUniqueColumnName(final DataTableSpec spec,
@@ -901,7 +915,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         }
         return result;
     }
-    
+
     /** Creates concatenation of the two argument strings. This are names of
      * specs to be merged. It handles cases where one of the two argument is
      * just "default".
@@ -918,11 +932,11 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
             return n1 + "+" + n2;
         }
     }
-    
+
     /** Columns used to guess class column in the order they are specified. */
-    public static final String[] CLASS_COLUMN_NAMES = 
+    public static final String[] CLASS_COLUMN_NAMES =
         {"class", "target", "klasse", "ziel"};
-    
+
     /**
      * Guesses the column in the argument spec that likely contains the class
      * attribute. The guessing is based on column names, whereby names as
@@ -931,7 +945,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
      * <code>NominalValue</code> and also has possible values attached, if so
      * specified by the boolean argument; it returns <code>null</code> if
      * there are no such columns fulfilling these constraints.
-     * 
+     *
      * @param spec the argument spec
      * @param withValues with or without possible values
      * @return first hit in spec or null
@@ -945,20 +959,20 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
                     public int compare(final Integer i, final Integer j) {
                         return Double.compare(i, j);
                     }
-                    
+
                 });
         for (int i = spec.getNumColumns(); --i >= 0;) {
             DataColumnSpec cspec = spec.getColumnSpec(i);
             // NominalValue type check
             if (cspec.getType().isCompatible(NominalValue.class)) {
                 // has value check
-                if (!withValues 
+                if (!withValues
                         || (withValues && cspec.getDomain().hasValues())) {
                     String colName = cspec.getName();
                     for (int j = 0; j < CLASS_COLUMN_NAMES.length; j++) {
                         if (colName.toLowerCase().contains(
                                 CLASS_COLUMN_NAMES[j])) {
-                            // add only first appearance 
+                            // add only first appearance
                             if (!map.containsKey(j)) {
                                 map.put(j, colName);
                                 break;
@@ -975,10 +989,10 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         }
         return map.isEmpty() ? null : map.firstEntry().getValue();
     }
-    
+
     /**
      * The string summary of all column specs of this table spec.
-     * 
+     *
      * @return A string summary of all column specs.
      */
     @Override
@@ -993,11 +1007,11 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         buffer.append("]");
         return buffer.toString();
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public JComponent[] getViews() {
-        return new JComponent[] {new DataTableSpecView(this), 
+        return new JComponent[] {new DataTableSpecView(this),
                 new DataColumnPropertiesView(this)};
     }
 
