@@ -7446,19 +7446,36 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public <T> WorkflowManager findNextWaitingWorkflowManager(
             final Class<T> nodeModelClass) {
+        return findNextWaitingWorkflowManager(this, nodeModelClass);
+    }
+
+    /** 
+     * recursion for nested meta nodes
+     */
+    private <T> WorkflowManager findNextWaitingWorkflowManager(
+            final WorkflowManager parentWfm,
+            final Class<T> nodeModelClass) {
         synchronized (m_workflowMutex) {
-            Map<NodeID, T> nodes = this.findWaitingNodes(nodeModelClass);
+            Map<NodeID, T> nodes = parentWfm.findWaitingNodes(nodeModelClass);
             if (nodes.size() > 0) {
                 return this;
             }
             // search metanodes:
-            for (NodeID id : m_workflow.getNodeIDs()) {
-                NodeContainer nc = m_workflow.getNode(id);
+            Workflow workflow = parentWfm.getWorkflow();
+            for (NodeID id : workflow.getNodeIDs()) {
+                NodeContainer nc = workflow.getNode(id);
                 if (nc.isLocalWFM()) {
                     WorkflowManager wfm = (WorkflowManager)nc;
                     Map<NodeID, T> n2s = wfm.findWaitingNodes(nodeModelClass);
                     if (n2s.size() > 0) {
                         return wfm;
+                    } else {
+                        WorkflowManager nextWfm 
+                                = findNextWaitingWorkflowManager(wfm,
+                                nodeModelClass);
+                        if (nextWfm != null) {
+                            return nextWfm;
+                        }
                     }
                 }
             }
