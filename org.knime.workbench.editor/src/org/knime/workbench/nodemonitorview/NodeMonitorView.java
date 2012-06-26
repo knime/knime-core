@@ -64,8 +64,11 @@ import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.jface.viewers.ComboViewer;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.LocationEvent;
 import org.eclipse.swt.browser.LocationListener;
@@ -113,6 +116,9 @@ public class NodeMonitorView extends ViewPart
 
     private Text m_title;
     private Text m_state;
+    private Composite m_infoPanel;
+    private Label m_info;
+    private ComboViewer m_portIndex;
     private Table m_table;
 
     private IStructuredSelection m_lastSelection;
@@ -133,7 +139,6 @@ public class NodeMonitorView extends ViewPart
     /** {@inheritDoc} */
     @Override
     public void createPartControl(final Composite parent) {
-        getViewSite().getPage().addSelectionListener(this);
         // Toolbar
         IToolBarManager toolbarMGR
                     = getViewSite().getActionBars().getToolBarManager();
@@ -253,6 +258,33 @@ public class NodeMonitorView extends ViewPart
         m_state.setLayoutData(
                 new GridData(SWT.FILL, SWT.CENTER, false, false));
         m_state.setText("n/a.");
+        // Panel for currently displayed information (some information
+        // providers will add more elements to this):
+        m_infoPanel = new Composite(parent, SWT.NONE);
+        GridData infoGrid = new GridData(SWT.FILL, SWT.TOP, true, false);
+        infoGrid.horizontalSpan = 2;
+        m_infoPanel.setLayoutData(infoGrid);
+        GridLayoutFactory.swtDefaults().numColumns(3).applyTo(m_infoPanel);
+        m_info = new Label(m_infoPanel, SWT.NONE);
+        m_info.setLayoutData(
+                new GridData(SWT.LEFT, SWT.CENTER, false, false));
+        m_info.setText("n/a.                        ");
+        m_portIndex = new ComboViewer(m_infoPanel);
+        m_portIndex.add(new String[] {"port 0", "port 1", "port 2"});
+        m_portIndex.getCombo().setEnabled(false);
+        m_portIndex.addSelectionChangedListener(new ISelectionChangedListener() {
+            @Override
+            public void selectionChanged(SelectionChangedEvent event) {
+                ISelection sel = event.getSelection();
+                try {
+                    String s = sel.toString();
+                    int newIndex = Integer.parseInt(sel.toString().substring(5).replace(']', ' ').trim());
+                    updateDataTable(m_lastNode, newIndex);
+                } catch (NumberFormatException nfe) {
+                    // ignore.
+                }
+            }
+        });
         // Table:
         m_table = new Table(parent, SWT.MULTI | SWT.BORDER);
         m_table.setLinesVisible(true);
@@ -269,6 +301,7 @@ public class NodeMonitorView extends ViewPart
             m_table.getColumn(i).pack();
         }
         m_lastNode = null;
+        getViewSite().getPage().addSelectionListener(this);
     }
 
     /**
@@ -292,14 +325,15 @@ public class NodeMonitorView extends ViewPart
             return;
         }
         m_lastSelection = structSel;
-        // Nothing selected
         if (structSel.size() < 1) {
+            // Nothing selected
             m_title.setText("");
             m_state.setText("no node selected");
             m_table.removeAll();
             return;
         }
         if (structSel.size() > 1) {
+            // too many selected items
             m_title.setText("");
             m_state.setText("more than one element selected.");
             m_table.removeAll();
@@ -314,6 +348,7 @@ public class NodeMonitorView extends ViewPart
             NodeContainer nc = ((NodeContainerEditPart)sel).getNodeContainer();
             updateNodeContainerInfo(nc);
         } else {
+            // unsupported selection
             m_title.setText("");
             m_state.setText("no info for '"
                             + sel.getClass().getSimpleName() + "'.");
@@ -329,6 +364,7 @@ public class NodeMonitorView extends ViewPart
         if (nc == null) {
             return;
         }
+        m_portIndex.getCombo().setEnabled(false);
         assert Display.getCurrent().getThread() == Thread.currentThread();
         if ((m_lastNode != null) && (m_lastNode != nc)) {
             m_lastNode.removeNodeStateChangeListener(
@@ -340,7 +376,6 @@ public class NodeMonitorView extends ViewPart
         }
         m_title.setText(nc.getName() + "  (" + nc.getID() + ")");
         m_state.setText(nc.getState().toString());
-        m_table.removeAll();
         switch (m_choice) {
         case VARS:
             updateVariableTable(nc);
@@ -351,10 +386,20 @@ public class NodeMonitorView extends ViewPart
                             DISPLAYOPTIONS.ALLSETTINGS.equals(m_choice));
             break;
         case TABLE:
+            m_portIndex.getCombo().setEnabled(true);
+            int nrPorts = nc.getNrOutPorts();
+            if (nc instanceof SingleNodeContainer) {
+                // correct for (default - mostly invisible) Variable Port
+                nrPorts--;
+            }
+            String[] vals = new String[nrPorts];
+            for (int i = 0; i < nrPorts; i++) {
+                vals[i] = "Port " + i;
+            }
+            m_portIndex.getCombo().removeAll();
+            m_portIndex.getCombo().setItems(vals);
+            m_portIndex.getCombo().select(0);
             updateDataTable(nc, 0);
-        }
-        for (int i = 0; i < m_table.getColumnCount(); i++) {
-            m_table.getColumn(i).pack();
         }
     }
 
@@ -364,6 +409,7 @@ public class NodeMonitorView extends ViewPart
     private void updateVariableTable(final NodeContainer nc) {
         assert Display.getCurrent().getThread() == Thread.currentThread();
         // Initialize table
+        m_table.removeAll();
         for (TableColumn tc : m_table.getColumns()) {
             tc.dispose();
         }
@@ -379,9 +425,11 @@ public class NodeMonitorView extends ViewPart
             // for normal nodes port 0 is available (hidden variable OutPort!)
             fvs = nc.getOutPort(0).getFlowObjectStack()
                                .getAvailableFlowVariables().values();
+            m_info.setText("Node Variables");
         } else {
             // no output port on metanode - display workflow variables
             fvs = ((WorkflowManager)nc).getWorkflowVariables();
+            m_info.setText("Metanode Variables");
         }
         if (fvs != null) {
             // update content
@@ -391,6 +439,9 @@ public class NodeMonitorView extends ViewPart
                 item.setText(1, fv.getValueAsString());
             }
         }
+        for (int i = 0; i < m_table.getColumnCount(); i++) {
+            m_table.getColumn(i).pack();
+        }
     }
 
     /*
@@ -399,6 +450,7 @@ public class NodeMonitorView extends ViewPart
     private void updateSettingsTable(final NodeContainer nc,
                                      final boolean showAll) {
         assert Display.getCurrent().getThread() == Thread.currentThread();
+        m_info.setText("Node Configuration");
         // retrieve settings
         NodeSettings settings = new NodeSettings("");
         try {
@@ -407,6 +459,7 @@ public class NodeMonitorView extends ViewPart
             // never happens.
         }
         // and put them into the table
+        m_table.removeAll();
         for (TableColumn tc : m_table.getColumns()) {
             tc.dispose();
         }
@@ -452,6 +505,9 @@ public class NodeMonitorView extends ViewPart
                 item.setText(1, value != null ? value : "null");
             }
         }
+        for (int i = 0; i < m_table.getColumnCount(); i++) {
+            m_table.getColumn(i).pack();
+        }
     }
 
     /*
@@ -459,6 +515,8 @@ public class NodeMonitorView extends ViewPart
      */
     private void updateDataTable(final NodeContainer nc, final int port) {
         assert Display.getCurrent().getThread() == Thread.currentThread();
+        m_info.setText("Port Output");
+        m_table.removeAll();
         for (TableColumn tc : m_table.getColumns()) {
             tc.dispose();
         }
@@ -499,6 +557,9 @@ public class NodeMonitorView extends ViewPart
                 item.setText(i + 1, thisRow.getCell(i).toString());
             }
             rowIndex++;
+        }
+        for (int i = 0; i < m_table.getColumnCount(); i++) {
+            m_table.getColumn(i).pack();
         }
     }
 
