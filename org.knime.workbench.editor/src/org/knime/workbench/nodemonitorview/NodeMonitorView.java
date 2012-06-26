@@ -57,7 +57,9 @@ import java.util.Stack;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.jface.action.IAction;
+import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.util.IPropertyChangeListener;
@@ -114,7 +116,9 @@ public class NodeMonitorView extends ViewPart
     private Table m_table;
 
     private IStructuredSelection m_lastSelection;
+    private IStructuredSelection m_lastSelectionWhilePinned;
     private NodeContainer m_lastNode;
+    private boolean m_pinned = false;
 
     private enum DISPLAYOPTIONS { VARS, SETTINGS, ALLSETTINGS, TABLE };
     private DISPLAYOPTIONS m_choice = DISPLAYOPTIONS.VARS;
@@ -133,74 +137,100 @@ public class NodeMonitorView extends ViewPart
         // Toolbar
         IToolBarManager toolbarMGR
                     = getViewSite().getActionBars().getToolBarManager();
-        final RetargetAction actionFilter
-             = new RetargetAction("Vars", "Show Flow Variables",
-                                      IAction.AS_RADIO_BUTTON);
-        actionFilter.setImageDescriptor(ImageDescriptor.createFromFile(
-                this.getClass(), "icons/viewVars.png"));
-        actionFilter.setChecked(DISPLAYOPTIONS.VARS.equals(m_choice));
-        actionFilter.addPropertyChangeListener(new IPropertyChangeListener() {
+        // create button which allows to "pin" selection:
+        final RetargetAction pinButton
+             = new RetargetAction("PinView", "Pin view to selected node",
+                                      IAction.AS_CHECK_BOX);
+        pinButton.setImageDescriptor(ImageDescriptor.createFromFile(
+                this.getClass(), "icons/pin.png"));
+        pinButton.setChecked(m_pinned);
+        pinButton.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
             public void propertyChange(final PropertyChangeEvent event) {
-                if (actionFilter.isChecked()) {
-                    m_choice = DISPLAYOPTIONS.VARS;
-                    updateNodeContainerInfo(m_lastNode);
+                if (pinButton.isChecked()) {
+                    m_pinned = true;
+                    m_lastSelectionWhilePinned = m_lastSelection;
+                } else {
+                    m_pinned = false;
+                    selectionChanged(null, m_lastSelectionWhilePinned);
                 }
             }
         });
-        actionFilter.setEnabled(true);
-        toolbarMGR.add(actionFilter);
-        final RetargetAction actionFilter2
-             = new RetargetAction("Conf", "Show Node Configuration",
-                                      IAction.AS_RADIO_BUTTON);
-        actionFilter2.setImageDescriptor(ImageDescriptor.createFromFile(
-                this.getClass(), "icons/viewSettings.png"));
-        actionFilter2.setChecked(DISPLAYOPTIONS.SETTINGS.equals(m_choice));
-        actionFilter2.addPropertyChangeListener(new IPropertyChangeListener() {
+        pinButton.setEnabled(true);
+        toolbarMGR.add(pinButton);
+        toolbarMGR.add(new Separator());
+        // configure drop down menu
+//        ImageDescriptor ddicon = ImageDescriptor.createFromFile(
+//                this.getClass(), "icons/table.png");
+        IMenuManager dropDownMenu
+                          = getViewSite().getActionBars().getMenuManager();
+        // drop down menu entry for outport table:
+        final RetargetAction menuentrytable
+                = new RetargetAction("OutputTable", "Show Output Table",
+                                 IAction.AS_RADIO_BUTTON);
+        menuentrytable.setChecked(DISPLAYOPTIONS.TABLE.equals(m_choice));
+        menuentrytable.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
             public void propertyChange(final PropertyChangeEvent event) {
-                if (actionFilter2.isChecked()) {
-                    m_choice = DISPLAYOPTIONS.SETTINGS;
-                    updateNodeContainerInfo(m_lastNode);
-                }
-            }
-        });
-        actionFilter2.setEnabled(true);
-        toolbarMGR.add(actionFilter2);
-        final RetargetAction actionFilter3
-                  = new RetargetAction("Expert", "Show Entire Configuration",
-                                   IAction.AS_RADIO_BUTTON);
-        actionFilter3.setImageDescriptor(ImageDescriptor.createFromFile(
-                                   this.getClass(), "icons/viewAll.png"));
-        actionFilter3.setChecked(DISPLAYOPTIONS.ALLSETTINGS.equals(m_choice));
-        actionFilter3.addPropertyChangeListener(new IPropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent event) {
-                if (actionFilter3.isChecked()) {
-                    m_choice = DISPLAYOPTIONS.ALLSETTINGS;
-                    updateNodeContainerInfo(m_lastNode);
-                }
-            }
-        });
-        actionFilter3.setEnabled(true);
-        toolbarMGR.add(actionFilter3);
-        final RetargetAction actionFilter4
-               = new RetargetAction("Table", "Show Node Output Table (Port 0)",
-                                        IAction.AS_RADIO_BUTTON);
-        actionFilter4.setImageDescriptor(ImageDescriptor.createFromFile(
-                         this.getClass(), "icons/viewTable.png"));
-        actionFilter4.setChecked(DISPLAYOPTIONS.SETTINGS.equals(m_choice));
-        actionFilter4.addPropertyChangeListener(new IPropertyChangeListener() {
-            @Override
-            public void propertyChange(final PropertyChangeEvent event) {
-                if (actionFilter4.isChecked()) {
+                if (menuentrytable.isChecked()) {
                     m_choice = DISPLAYOPTIONS.TABLE;
                     updateNodeContainerInfo(m_lastNode);
                 }
             }
         });
-        actionFilter4.setEnabled(true);
-        toolbarMGR.add(actionFilter4);
+        menuentrytable.setEnabled(true);
+        dropDownMenu.add(menuentrytable);
+        // drop down menu entry for node variables:
+        final RetargetAction dropdownmenuvars
+                = new RetargetAction("NodeVariables", "Show Variables",
+                               IAction.AS_RADIO_BUTTON);
+        dropdownmenuvars.setChecked(DISPLAYOPTIONS.VARS.equals(m_choice));
+        dropdownmenuvars.addPropertyChangeListener(
+                new IPropertyChangeListener() {
+            @Override
+            public void propertyChange(final PropertyChangeEvent event) {
+                if (dropdownmenuvars.isChecked()) {
+                    m_choice = DISPLAYOPTIONS.VARS;
+                    updateNodeContainerInfo(m_lastNode);
+                }
+            }
+        });
+        dropdownmenuvars.setEnabled(true);
+        dropDownMenu.add(dropdownmenuvars);
+        // drop down menu entry for configuration/settings:
+        final RetargetAction menuentrysettings
+                = new RetargetAction("NodeConf", "Show Configuration",
+                            IAction.AS_RADIO_BUTTON);
+        menuentrysettings.setChecked(DISPLAYOPTIONS.SETTINGS.equals(m_choice));
+        menuentrysettings.addPropertyChangeListener(
+                new IPropertyChangeListener() {
+            @Override
+            public void propertyChange(final PropertyChangeEvent event) {
+                if (menuentrysettings.isChecked()) {
+                    m_choice = DISPLAYOPTIONS.SETTINGS;
+                    updateNodeContainerInfo(m_lastNode);
+                }
+            }
+        });
+        menuentrysettings.setEnabled(true);
+        dropDownMenu.add(menuentrysettings);
+        // drop down menu entry for configuration/settings:
+        final RetargetAction menuentryallsettings
+                = new RetargetAction("NodeConfAll", "Show Entire Configuration",
+                            IAction.AS_RADIO_BUTTON);
+        menuentryallsettings.setChecked(DISPLAYOPTIONS.ALLSETTINGS.equals(m_choice));
+        menuentryallsettings.addPropertyChangeListener(
+                new IPropertyChangeListener() {
+            @Override
+            public void propertyChange(final PropertyChangeEvent event) {
+                if (menuentryallsettings.isChecked()) {
+                    m_choice = DISPLAYOPTIONS.ALLSETTINGS;
+                    updateNodeContainerInfo(m_lastNode);
+                }
+            }
+        });
+        menuentryallsettings.setEnabled(true);
+        dropDownMenu.add(menuentryallsettings);
         // Content
         GridLayoutFactory.swtDefaults().numColumns(2).applyTo(parent);
         // Node Title:
@@ -253,6 +283,10 @@ public class NodeMonitorView extends ViewPart
             return;
         }
         IStructuredSelection structSel = (IStructuredSelection)selection;
+        if (m_pinned) {
+            m_lastSelectionWhilePinned = structSel;
+            return;
+        }
         if (structSel.equals(m_lastSelection)) {
             // selection hasn't changed - return.
             return;
@@ -340,11 +374,13 @@ public class NodeMonitorView extends ViewPart
         }
         // retrieve variables
         Collection<FlowVariable> fvs;
-        if (nc instanceof SingleNodeContainer) {
+        if ((nc instanceof SingleNodeContainer)
+                || nc.getNrOutPorts() > 0) {
             // for normal nodes port 0 is available (hidden variable OutPort!)
             fvs = nc.getOutPort(0).getFlowObjectStack()
                                .getAvailableFlowVariables().values();
         } else {
+            // no output port on metanode - display workflow variables
             fvs = ((WorkflowManager)nc).getWorkflowVariables();
         }
         if (fvs != null) {
