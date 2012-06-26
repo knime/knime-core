@@ -50,10 +50,17 @@
  */
 package org.knime.workbench.editor2.editparts;
 
+import org.eclipse.draw2d.IFigure;
+import org.eclipse.draw2d.LayoutManager;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.DragTracker;
+import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
+import org.eclipse.swt.widgets.Display;
+import org.knime.core.node.workflow.NodePort;
+import org.knime.core.node.workflow.NodePropertyChangedEvent;
+import org.knime.core.node.workflow.NodePropertyChangedListener;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
@@ -66,7 +73,27 @@ import org.knime.workbench.editor2.model.WorkflowPortBar;
  * @author Fabian Dill, University of Konstanz
  */
 public abstract class AbstractWorkflowPortBarEditPart
-    extends AbstractWorkflowEditPart implements ConnectableEditPart {
+    extends AbstractWorkflowEditPart implements ConnectableEditPart, NodePropertyChangedListener {
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void activate() {
+        super.activate();
+        // need to know about meta node port changes
+        getNodeContainer().addNodePropertyChangedListener(this);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void deactivate() {
+        super.deactivate();
+        getNodeContainer().removeNodePropertyChangedListener(this);
+    }
 
     /**
      *
@@ -86,6 +113,37 @@ public abstract class AbstractWorkflowPortBarEditPart
         super.refreshVisuals();
     }
 
+    /**
+     * Updates the port index in all port editparts from the underlying port model.
+     */
+    private void updatePortIndex() {
+        for (Object ep : getChildren()) {
+            if (ep instanceof AbstractPortEditPart) {
+                Object model = ((EditPart)ep).getModel();
+                if (model instanceof NodePort) {
+                    ((AbstractPortEditPart)ep).setIndex(((NodePort)model).getPortIndex());
+                }
+            }
+        }
+    }
+
+    private void updateNumberOfPorts() {
+        for (Object ep : getChildren()) {
+            if (ep instanceof AbstractPortEditPart) {
+                ((AbstractPortEditPart)ep).updateNumberOfPorts();
+            }
+        }
+    }
+
+    private void relayoutPorts() {
+        IFigure nodeFig = getFigure();
+        LayoutManager layoutManager = nodeFig.getLayoutManager();
+        if (layoutManager != null) {
+            layoutManager.invalidate();
+            layoutManager.layout(figure);
+        }
+        nodeFig.repaint();
+    }
 
     /**
      * {@inheritDoc}
@@ -116,6 +174,34 @@ public abstract class AbstractWorkflowPortBarEditPart
     @Override
     public WorkflowManager getNodeContainer() {
         return ((WorkflowPortBar)getModel()).getWorkflowManager();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void nodePropertyChanged(final NodePropertyChangedEvent e) {
+        Display.getDefault().asyncExec(new Runnable() {
+            /** {@inheritDoc} */
+            @Override
+            public void run() {
+                if (isActive()) {
+                    switch (e.getProperty()) {
+                    case JobManager:
+                    case Name:
+                    case TemplateConnection:
+                    case LockStatus:
+                        break;
+                    case MetaNodePorts:
+                        refreshChildren(); // account for new/removed ports
+                        updatePortIndex(); // set the (possibly changed) index in all ports
+                        updateNumberOfPorts();
+                        relayoutPorts();   // in case an index has changed
+                        break;
+                    default:
+                        // unknown, ignore
+                    }
+                }
+            }
+        });
     }
 
 }
