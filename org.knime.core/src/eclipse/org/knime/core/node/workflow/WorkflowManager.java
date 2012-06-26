@@ -7351,6 +7351,34 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 		}
     }
 
+    /** Get the node container associated with the argument id. Recurses into
+     * contained meta nodes to find the node if it's not directly contained
+     * in this workflow level.
+     *
+     * <p>Clients should generally use {@link #getNodeContainer(NodeID)} to
+     * access directly contained nodes.
+     *
+     * @param id the id of the node in question
+     * @return The node container to the node id (never null)
+     * @throws IllegalArgumentException If the node is not contained in
+     * this workflow.
+     * @since 2.6 */
+    public NodeContainer findNodeContainer(final NodeID id) {
+        synchronized (m_workflowMutex) {
+            final NodeID prefix = id.getPrefix();
+            if (prefix.equals(getID())) {
+                return getNodeContainer(id);
+            } else if (id.hasPrefix(getID())) {
+                WorkflowManager parent =
+                    (WorkflowManager)findNodeContainer(prefix);
+                return parent.getNodeContainer(id);
+            } else {
+                throw new IllegalArgumentException("NodeID " + id
+                        + " is not contained in workflow " + getNameWithID());
+            }
+        }
+    }
+
     /** Find all nodes of a certain type that are currently ready to
      * be executed (= node is configured, all predecessors are executed).
      * See {@link #findNodes(Class, boolean)}
