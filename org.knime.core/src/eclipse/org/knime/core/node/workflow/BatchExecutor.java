@@ -971,8 +971,22 @@ public final class BatchExecutor {
      */
     private static void applyWorkflowVariables(final WorkflowManager wfm,
             final boolean reset, final List<FlowVariable> wkfVars) {
-        HashSet<FlowVariable> unknown = new HashSet<FlowVariable>(wkfVars);
-        unknown.removeAll(wfm.getWorkflowVariables());
+
+        /** Check if the names of all passed flow variables are defined for the
+         * workflow. Only the name is used for the comparison (not the type) to
+         * be consistent with the addWorkflowVariables method in the workflow
+         * manager. */
+        HashSet<String> defined = new HashSet<String>();
+        for (FlowVariable defVar : wfm.getWorkflowVariables()) {
+            defined.add(defVar.getName());
+        }
+        HashSet<FlowVariable> unknown = new HashSet<FlowVariable>();
+        for (FlowVariable var : wkfVars) {
+            if (!defined.contains(var.getName())) {
+                unknown.add(var);
+            }
+        }
+
         if (!unknown.isEmpty()) {
             StringBuilder str = new StringBuilder("The workflow variable");
             str.append(unknown.size() == 1 ? " is" : "s are");
@@ -987,6 +1001,7 @@ public final class BatchExecutor {
             LOGGER.warn(str);
             System.out.println(str);
         }
+
         for (FlowVariable f : wkfVars) {
             LOGGER.debug("Setting workflow variable " + f);
         }
