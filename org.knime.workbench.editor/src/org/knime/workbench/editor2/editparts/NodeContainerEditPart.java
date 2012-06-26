@@ -859,6 +859,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                         updatePortIndex(); // set the (possibly changed) index in all ports
                         updateNumberOfPorts();
                         relayoutPorts();   // in case an index has changed
+                        refreshBounds(); // different port number could mean different bounds
                         break;
                     default:
                         // unknown, ignore

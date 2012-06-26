@@ -649,7 +649,42 @@ public class NodeContainerFigure extends RectangleFigure {
         }
         prefHeight += m_infoWarnErrorPanel.getPreferredSize().height;
         prefHeight += (compCount * NodeContainerLocator.GAP);
+        // make sure all ports fit in the figure (ports start below the label)
+        int minPortsHeight = m_headingContainer.getPreferredSize().height + getMinimumPortsHeight();
+        if (minPortsHeight > prefHeight) {
+            prefHeight = minPortsHeight;
+        }
         return new Dimension(prefWidth, prefHeight);
+    }
+
+    /**
+     * @return the minimum height required to display all (input or output) ports
+     */
+    private int getMinimumPortsHeight() {
+        int minH = 0;
+        NodeInPortFigure inPort = null;
+        NodeOutPortFigure outPort = null;
+        for (Object o : getChildren()) {
+            if ((inPort == null) && (o instanceof NodeInPortFigure)) {
+                inPort = (NodeInPortFigure)o;
+            }
+            if ((outPort == null) && (o instanceof NodeOutPortFigure)) {
+                outPort = (NodeOutPortFigure)o;
+            }
+        }
+        if (inPort != null) {
+            int minIn = ((NodePortLocator)inPort.getLocator()).getMinimumHeightForPorts();
+            if (minH < minIn) {
+                minH = minIn;
+            }
+        }
+        if (outPort != null) {
+            int minOut = ((NodePortLocator)outPort.getLocator()).getMinimumHeightForPorts();
+            if (minH < minOut) {
+                minH = minOut;
+            }
+        }
+        return minH;
     }
 
     /**

@@ -146,42 +146,15 @@ public class NodePortLocator extends PortLocator {
         Rectangle bounds = new Rectangle(x, y, width, height);
         fig.setBounds(bounds);
     }
-//
-//    private void relocateMultiPortFigure(final IFigure fig) {
-//        /*
-//         * Coordinates are relative to the symbol of the node figure!
-//         */
-//        Rectangle symbolBounds =
-//                m_parent.getSymbolFigure().getBounds().getCopy();
-//        Rectangle parentBounds = m_parent.getBounds().getCopy();
-//
-//        int height = AbstractPortFigure.NODE_PORT_SIZE;
-//        // try not to cover the node's symbol (that's used to move node)
-//        // we need like 5 pixels for the icon at a MetaNodeOutPortFigure
-//        int width = (parentBounds.width - symbolBounds.width) / 2 + 5;
-//        int x = 0;
-//        int position = getPortIndex();
-//        if (isMetaNodePort()) {
-//            position++; // meta nodes don't have implicit variable ports
-//        }
-//        int y = symbolBounds.y + (position * (height + 1));
-//        if (isInPort()) {
-//            x = parentBounds.x;
-//            if (isImplVariablePort()) {
-//                // move the mickey mouse ears to the center a bit
-//                x += 5;
-//            }
-//        } else {
-//            x = parentBounds.x + parentBounds.width - width;
-//            if (isImplVariablePort()) {
-//                // move the mickey mouse ears to the center a bit
-//                x -= 5;
-//            }
-//        }
-//        Rectangle bounds = new Rectangle(x, y, width, height);
-//        fig.setBounds(bounds);
-//
-//    }
+
+    /**
+     * @return the minimum size needed to display the ports this locator is responsible for.
+     */
+    public int getMinimumHeightForPorts() {
+        int numOfPorts = getNrPorts();
+        // this is inaccurate for port numbers < 3 - but the node is big enough to accommodate for 5 ports anyway.
+        return numOfPorts * (AbstractPortFigure.NODE_PORT_SIZE + 1);
+    }
 
     private boolean isImplVariablePort() {
         return (!isMetaNodePort() && (getPortIndex() == 0) && getType().equals(
