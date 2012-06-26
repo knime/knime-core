@@ -152,7 +152,9 @@ public class NodePortLocator extends PortLocator {
      */
     public int getMinimumHeightForPorts() {
         int numOfPorts = getNrPorts();
-        // this is inaccurate for port numbers < 3 - but the node is big enough to accommodate for 5 ports anyway.
+        if (isMetaNodePort()) {
+            numOfPorts++; // for the (not existing) flow variable port
+        }
         return numOfPorts * (AbstractPortFigure.NODE_PORT_SIZE + 1);
     }
 
