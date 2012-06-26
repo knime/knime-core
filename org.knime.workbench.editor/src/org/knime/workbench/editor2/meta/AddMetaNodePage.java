@@ -422,7 +422,7 @@ public class AddMetaNodePage extends WizardPage {
             label.setText("In Ports:");
             label.setLayoutData(new GridData(SWT.FILL, GridData.VERTICAL_ALIGN_CENTER, false, false));
             m_inPorts = new List(left,
-                    SWT.SINGLE | SWT.SCROLL_PAGE | SWT.BORDER);
+                    SWT.SINGLE | SWT.V_SCROLL | SWT.BORDER);
             m_inPorts.addSelectionListener(new SelectionListener() {
                 @Override
                 public void widgetSelected(final SelectionEvent e) {
@@ -496,7 +496,7 @@ public class AddMetaNodePage extends WizardPage {
             label.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING,
                     GridData.VERTICAL_ALIGN_CENTER, false, false));
             m_outPorts = new List(left,
-                    SWT.SINGLE | SWT.SCROLL_PAGE | SWT.BORDER);
+                    SWT.SINGLE | SWT.V_SCROLL | SWT.BORDER);
             m_outPorts.addSelectionListener(new SelectionListener() {
                 @Override
                 public void widgetSelected(final SelectionEvent e) {
