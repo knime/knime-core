@@ -274,10 +274,9 @@ public class NodeMonitorView extends ViewPart
         m_portIndex.getCombo().setEnabled(false);
         m_portIndex.addSelectionChangedListener(new ISelectionChangedListener() {
             @Override
-            public void selectionChanged(SelectionChangedEvent event) {
+            public void selectionChanged(final SelectionChangedEvent event) {
                 ISelection sel = event.getSelection();
                 try {
-                    String s = sel.toString();
                     int newIndex = Integer.parseInt(sel.toString().substring(5).replace(']', ' ').trim());
                     updateDataTable(m_lastNode, newIndex);
                 } catch (NumberFormatException nfe) {
