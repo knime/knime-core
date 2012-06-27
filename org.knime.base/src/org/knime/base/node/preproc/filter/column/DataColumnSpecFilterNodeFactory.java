@@ -55,6 +55,7 @@ import org.knime.core.node.NodeDialogPane;
  * The factory for the column filter node.
  * 
  * @author Thomas Gabriel, KNIME.com AG, Zurich
+ * @since 2.6
  */
 public class DataColumnSpecFilterNodeFactory 
         extends NodeFactory<DataColumnSpecFilterNodeModel> {
