@@ -95,6 +95,7 @@ public class WorkflowOutPort extends NodeOutPortWrapper  {
 
     /**
      * {@inheritDoc}
+     * @since 2.6
      */
     @Override
     public void setPortIndex(final int portIndex) {
