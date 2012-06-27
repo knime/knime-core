@@ -302,6 +302,15 @@ public class NodeMonitorView extends ViewPart
         m_lastNode = null;
         getViewSite().getPage().addSelectionListener(this);
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void dispose() {
+        getViewSite().getPage().removeSelectionListener(this);
+        super.dispose();
+    }
 
     /**
      * The method updating the content of the monitor.
