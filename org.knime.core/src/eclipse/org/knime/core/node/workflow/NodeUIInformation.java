@@ -189,6 +189,7 @@ public class NodeUIInformation implements UIInformation {
      * If true is passed, the node figure icon is centered (right after NodeContainerEditPart activation) onto the grid.
      * It is placed on the nearest grid point (rounded).
      * @param snapIt true causes node to be positioned on the closest grid point.
+     * @since 2.6
      */
     public void setSnapToGrid(final boolean snapIt) {
         m_roundToGrid = snapIt;
@@ -199,6 +200,7 @@ public class NodeUIInformation implements UIInformation {
      * closest grid position.
      *
      * @return true if set coordinates should be snapped to grid.
+     * @since 2.6
      */
     public boolean getSnapToGrid() {
         return m_roundToGrid;
@@ -209,6 +211,7 @@ public class NodeUIInformation implements UIInformation {
      * figure center under the cursor.
 
      * @param isDropLoc true, if coordinates set are the location of the node drop
+     * @since 2.6
      */
     public void setIsDropLocation(final boolean isDropLoc) {
         m_isDropLocation = isDropLoc;
@@ -218,6 +221,7 @@ public class NodeUIInformation implements UIInformation {
      * Return true, if the coordinates specify the location of the node drop and should be adjusted to place the node
      * figure center under the cursor.
      * @return true if coordinates specify the location of the node drop and should be adjusted
+     * @since 2.6
      */
     public boolean isDropLocation() {
         return m_isDropLocation;
