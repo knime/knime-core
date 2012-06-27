@@ -59,6 +59,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.draw2d.geometry.Point;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionID;
@@ -68,6 +69,7 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.UIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.ui.layout.Graph.Edge;
 import org.knime.workbench.ui.layout.Graph.Node;
 import org.knime.workbench.ui.layout.layeredlayout.SimpleLayeredLayouter;
@@ -139,11 +141,17 @@ public class LayoutManager {
      */
     public void doLayout(final Collection<NodeContainer> nodes) {
 
-        final double X_STRETCH = 100;
-        final int X_OFFSET = 0;
-        final double Y_STRETCH = 120;
-        final int Y_OFFSET = -0;
+        int X_STRETCH = 100;
+        int Y_STRETCH = 120;
 
+        if (WorkflowEditor.getActiveEditorSnapToGrid()) {
+            if (WorkflowEditor.getActiveEditorGridX() >= 70) {
+                X_STRETCH = WorkflowEditor.getActiveEditorGridX();
+            } else {
+                X_STRETCH = WorkflowEditor.getActiveEditorGridXOffset(X_STRETCH);
+            }
+            Y_STRETCH = WorkflowEditor.getActiveEditorGridYOffset(Y_STRETCH);
+        }
         // add all nodes that should be laid out to the graph
         Collection<NodeContainer> allNodes = nodes;
         if (allNodes == null || allNodes.size() <= 1) {
@@ -160,6 +168,11 @@ public class LayoutManager {
             NodeUIInformation ui = nc.getUIInformation();
             minX = (ui.getBounds()[0] < minX) ? ui.getBounds()[0] : minX;
             minY = (ui.getBounds()[1] < minY) ? ui.getBounds()[1] : minY;
+            if (WorkflowEditor.getActiveEditorSnapToGrid()) {
+                Point nextGridLocation = WorkflowEditor.getActiveEditorNextGridLocation(new Point(minX, minY));
+                minX = nextGridLocation.x;
+                minY = nextGridLocation.y;
+            }
         }
 
         // find all connections that connect from/to our nodes,
@@ -274,10 +287,12 @@ public class LayoutManager {
             anchorNodes.put(n, Boolean.TRUE);
         }
 
+        SimpleLayeredLayouter layouter = new SimpleLayeredLayouter(m_initPlacementSeed);
+        layouter.setBalanceBranchings(!WorkflowEditor.getActiveEditorSnapToGrid());
         if (anchorsExist) {
-            new SimpleLayeredLayouter(m_initPlacementSeed).doLayout(m_g, anchorNodes);
+            layouter.doLayout(m_g, anchorNodes);
         } else {
-            new SimpleLayeredLayouter(m_initPlacementSeed).doLayout(m_g, null);
+            layouter.doLayout(m_g, null);
         }
 
         // preserver the old stuff for undoers
@@ -303,12 +318,13 @@ public class LayoutManager {
                 NodeUIInformation nui = (NodeUIInformation)uiInfo;
                 int[] b = nui.getBounds();
                 int x = (int)Math.round((m_g.getX(gNode) - coordOffsetX)
-                        * X_STRETCH) + X_OFFSET + minX;
+                        * X_STRETCH) + minX;
                 int y = (int)Math.round((m_g.getY(gNode) - coordOffsetY)
-                        * Y_STRETCH) + Y_OFFSET + minY;
+                        * Y_STRETCH) + minY;
                 NodeUIInformation newCoord =
                         new NodeUIInformation(x, y, b[2], b[3],
                                 nui.hasAbsoluteCoordinates());
+                newCoord.setSnapToGrid(WorkflowEditor.getActiveEditorSnapToGrid());
                 LOGGER.debug("Node " + nc + " gets auto-layout coordinates "
                         + newCoord);
                 // save old coordinates for undo
@@ -347,13 +363,8 @@ public class LayoutManager {
                 int extraY = 24;
                 for (int i = 0; i < newBends.size(); i++) {
                     Point2D b = newBends.get(i);
-                    newUI.addBendpoint(
-                            (int)Math.round((b.getX() - coordOffsetX)
-                                    * X_STRETCH)
-                                    + X_OFFSET + extraX + minX,
-                            (int)Math.round((b.getY() - coordOffsetY)
-                                    * Y_STRETCH)
-                                    + Y_OFFSET + extraY + minY, i);
+                    newUI.addBendpoint((int)Math.round((b.getX() - coordOffsetX) * X_STRETCH) + extraX + minX,
+                            (int)Math.round((b.getY() - coordOffsetY) * Y_STRETCH) + extraY + minY, i);
                 }
             }
             conn.setUIInfo(newUI);

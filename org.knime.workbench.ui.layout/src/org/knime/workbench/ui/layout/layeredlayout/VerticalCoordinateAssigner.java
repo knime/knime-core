@@ -62,7 +62,7 @@ import org.knime.workbench.ui.layout.Graph.Node;
 /**
  * handles vertical assignment of coordinates within layers, see
  * "Brandes, Köpf: Fast and simple horizontal coordinate assignment (GD 2001)".
- * 
+ *
  * @author Martin Mader, University of Konstanz
  */
 public class VerticalCoordinateAssigner {
@@ -103,9 +103,11 @@ public class VerticalCoordinateAssigner {
 
     private HashMap<Node, Double> m_yRB = new HashMap<Graph.Node, Double>();
 
+    private boolean m_balanceBranching = true;
+
     /**
      * initializes data structures needed for vertical coordinate assignment.
-     * 
+     *
      * @param g the graph to work on
      * @param layers the layering information
      * @param dummyNodes list of dummy nodes
@@ -152,6 +154,15 @@ public class VerticalCoordinateAssigner {
     }
 
     /**
+     * @param balance true causes nodes connecting to two successor nodes being placed in the middle of these successor
+     *            nodes (causing placement on half grid cells). Default is true.
+     *
+     */
+    public void setBalanceBranchings(final boolean balance) {
+        m_balanceBranching = balance;
+    }
+
+    /**
      * runs vertical coordinate assignment as described in the article.
      */
     public void run() {
@@ -188,7 +199,7 @@ public class VerticalCoordinateAssigner {
 
     /**
      * stores current y-coordinates of each node in the graph to the given map.
-     * 
+     *
      * @param y
      */
     private void storeCoordinates(final HashMap<Node, Double> y) {
@@ -259,7 +270,7 @@ public class VerticalCoordinateAssigner {
     /**
      * returns the inner incoming segment of a given node, if such a segment
      * exists.
-     * 
+     *
      * @param node
      * @return
      */
@@ -409,7 +420,7 @@ public class VerticalCoordinateAssigner {
     /**
      * get either left or right neighbors of a node, sorted by their current
      * y-coordinate.
-     * 
+     *
      * @param n
      * @param left true if left neighbors should be returned, false otherwise
      * @return
@@ -457,7 +468,7 @@ public class VerticalCoordinateAssigner {
 
     /**
      * place block of root node v.
-     * 
+     *
      * @param v
      */
     private void placeBlock(final Node v) {
@@ -511,14 +522,18 @@ public class VerticalCoordinateAssigner {
             y[2] = m_yRT.get(n);
             y[3] = m_yRB.get(n);
             Arrays.sort(y);
-            m_y.put(n, (y[1] + y[2]) / 2);
+            if (m_balanceBranching) {
+                m_y.put(n, (y[1] + y[2]) / 2);
+            } else {
+                m_y.put(n, y[1]);
+            }
         }
 
     }
 
     /**
      * get maximal height difference of coordinates given in y.
-     * 
+     *
      * @param y
      * @return
      */

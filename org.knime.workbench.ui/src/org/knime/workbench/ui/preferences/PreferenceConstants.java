@@ -120,6 +120,8 @@ public interface PreferenceConstants {
     public static final String P_GRID_SNAP_TO = "knime.snaptogrid";
 
     /** Pref constant for grid size (number of pixels). */
-    public static final String P_GRID_SIZE = "knime.gridsize";
+    public static final String P_GRID_SIZE_X = "knime.gridsize.x";
+    public static final String P_GRID_SIZE_Y = "knime.gridsize.y";
+
 
 }

@@ -128,6 +128,7 @@ import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
 import org.knime.workbench.editor2.commands.CreateConnectionCommand;
 import org.knime.workbench.editor2.commands.ShiftConnectionCommand;
 import org.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
+import org.knime.workbench.editor2.editparts.snap.SnapIconToGrid;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 import org.knime.workbench.editor2.figures.ProgressFigure;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -522,20 +523,31 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     private void setBoundsFromUIinfo(final NodeUIInformation uiInfo) {
         NodeContainerFigure fig = (NodeContainerFigure)getFigure();
         int[] bounds = uiInfo.getBounds();
+        Point iconOffset = fig.getOffsetToRefPoint(uiInfo);
+        Point iconCenterOffset = SnapIconToGrid.getGridRefPointOffset(fig);
+        Point diff = new Point(iconCenterOffset.x - iconOffset.x, iconCenterOffset.y - iconOffset.y);
+        boolean newBounds = false;
+        if (uiInfo.isDropLocation()) {
+            bounds[0] -= diff.x;
+            bounds[1] -= diff.y;
+            newBounds = true; // apply these new values at the end of the method
+        }
         if (!uiInfo.hasAbsoluteCoordinates()) {
             // make it absolute coordinates taking scrolling into account
             Point p = new Point(bounds[0], bounds[1]);
             fig.translateToRelative(p);
             bounds[0] = p.x;
             bounds[1] = p.y;
-            NodeUIInformation newUI =
-                    new NodeUIInformation(bounds[0], bounds[1], bounds[2],
-                            bounds[3], true);
-            // don't trigger another event here, when updating ui info
-            m_uiListenerActive = false;
-            getNodeContainer().setUIInformation(newUI);
-            m_uiListenerActive = true;
-
+            newBounds = true; // apply these new values at the end of the method
+        }
+        if (uiInfo.getSnapToGrid()) {
+            // snap icon center to grid
+            Point iconCenterLoc = new Point(bounds[0] + diff.x, bounds[1] + diff.y);
+            iconCenterLoc = WorkflowEditor.getActiveEditorClosestGridLocation(iconCenterLoc);
+            // ui coordinates use the icon top left corner as reference
+            bounds[0] = iconCenterLoc.x - diff.x;
+            bounds[1] = iconCenterLoc.y - diff.y;
+            newBounds = true;
         }
         if (!uiInfo.isSymbolRelative()) {
             // ui info from an earlier version - x/y is top top left coordinates
@@ -545,12 +557,15 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             // don't trigger another entry into this method
             bounds[0] += xCorr;
             bounds[1] += yCorr;
+            newBounds = true;
+        }
+        if (newBounds) {
+            // don't trigger another event here, when updating ui info
             m_uiListenerActive = false;
-            getNodeContainer().setUIInformation(new NodeUIInformation(
-                    bounds[0], bounds[1], bounds[2], bounds[3], true));
+            getNodeContainer()
+                    .setUIInformation(new NodeUIInformation(bounds[0], bounds[1], bounds[2], bounds[3], true));
             m_uiListenerActive = true;
         }
-
         // since v2.5 we ignore any width and height and keep bounds minimal
         refreshBounds();
     }

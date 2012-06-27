@@ -68,8 +68,6 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * @author Christoph Sieb, University of Konstanz
  */
 public class PasteAction extends AbstractClipboardAction {
-//    private static final NodeLogger LOGGER =
-//            NodeLogger.getLogger(PasteAction.class);
 
     private static final int OFFSET = 120;
 
@@ -159,8 +157,15 @@ public class PasteAction extends AbstractClipboardAction {
                     final ClipboardObject clipObject) {
                 final int counter =
                     clipObject.incrementAndGetRetrievalCounter();
-                int newX = (OFFSET * counter);
-                int newY = (OFFSET * counter);
+                int offsetX = OFFSET;
+                int offsetY = OFFSET;
+                if (getEditor().getEditorSnapToGrid()) {
+                    // with grid
+                    offsetX = getEditor().getEditorGridXOffset(OFFSET);
+                    offsetY = getEditor().getEditorGridYOffset(OFFSET);
+                }
+                int newX = (offsetX * counter);
+                int newY = (offsetY * counter);
                 return new int[] {newX, newY};
             }
         };

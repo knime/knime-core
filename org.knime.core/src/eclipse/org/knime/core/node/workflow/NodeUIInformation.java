@@ -96,6 +96,20 @@ public class NodeUIInformation implements UIInformation {
      */
     private boolean m_symbolRelative = true;
 
+    /**
+     * Since v2.6.0 we support grid in the editor. The center of the node figure is snapped to the grid. The center
+     * coordinates are only available after node figure creation. This flag adjusts the initially set coordinates to
+     * snap the node figure to the grid. It should not be saved/loaded.
+     */
+    private boolean m_roundToGrid = false;
+
+    /**
+     * If true, the location will be corrected at editpart activation time (when the figure is available), so that the
+     * icon center (or what ever reference point is lined up with the grid) is placed at the coordinates (i.e. at the
+     * drop location, which is the cursor position). (Available since 2.6, not saved/loaded.)
+     */
+    private boolean m_isDropLocation = false;
+
     /** Creates new object, the bounds to be set are assumed to be absolute
      * (m_isInitialized is true). */
     public NodeUIInformation() {
@@ -165,9 +179,48 @@ public class NodeUIInformation implements UIInformation {
     /**
      * If false, the coordinates are loaded with an old workflow and are
      * relative to the top left corner of the node's figure.
+     * @return true if coordinates are relative to the figure's symbol (always the case since v2.3)
      */
     public boolean isSymbolRelative() {
         return m_symbolRelative;
+    }
+
+    /**
+     * If true is passed, the node figure icon is centered (right after NodeContainerEditPart activation) onto the grid.
+     * It is placed on the nearest grid point (rounded).
+     * @param snapIt true causes node to be positioned on the closest grid point.
+     */
+    public void setSnapToGrid(final boolean snapIt) {
+        m_roundToGrid = snapIt;
+    }
+
+    /**
+     * If set, the coordinates set should be changed right after edit part activation. They should be rounded to the
+     * closest grid position.
+     *
+     * @return true if set coordinates should be snapped to grid.
+     */
+    public boolean getSnapToGrid() {
+        return m_roundToGrid;
+    }
+
+    /**
+     * Set true, if the coordinates specify the location of the node drop and should be adjusted to place the node
+     * figure center under the cursor.
+
+     * @param isDropLoc true, if coordinates set are the location of the node drop
+     */
+    public void setIsDropLocation(final boolean isDropLoc) {
+        m_isDropLocation = isDropLoc;
+    }
+
+    /**
+     * Return true, if the coordinates specify the location of the node drop and should be adjusted to place the node
+     * figure center under the cursor.
+     * @return true if coordinates specify the location of the node drop and should be adjusted
+     */
+    public boolean isDropLocation() {
+        return m_isDropLocation;
     }
 
     /**

@@ -135,7 +135,10 @@ public class PasteActionContextMenu extends PasteAction {
 
                 int shiftx = x - smallestX;
                 int shifty = y - smallestY;
-
+                if (getEditor().getEditorSnapToGrid()) {
+                    shiftx = getEditor().getEditorGridXOffset(shiftx);
+                    shifty = getEditor().getEditorGridYOffset(shifty);
+                }
                 return new int[]{shiftx, shifty};
             }
         };

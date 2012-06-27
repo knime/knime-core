@@ -46,102 +46,74 @@
  * -------------------------------------------------------------------
  *
  * History
- *   21.06.2012 (Peter Ohl): created
+ *   13.06.2012 (ohl): created
  */
-package org.knime.workbench.editor2.commands;
+package org.knime.workbench.editor2.editparts.snap;
 
 import org.eclipse.draw2d.geometry.Point;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeID;
+import org.eclipse.draw2d.geometry.PrecisionRectangle;
+import org.eclipse.gef.EditPart;
+import org.eclipse.gef.EditPartViewer;
+import org.eclipse.gef.GraphicalEditPart;
+import org.eclipse.gef.Request;
+import org.eclipse.gef.SnapToGrid;
+import org.eclipse.gef.editparts.ZoomManager;
+import org.eclipse.gef.requests.ChangeBoundsRequest;
 import org.knime.core.node.workflow.NodeUIInformation;
-import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.editor2.figures.NodeContainerFigure;
 
 /**
- * GEF command for adding a new empty meta node (called from the new meta node wizard).
+ * Default grid size is defined in the preference initializer.
  *
- * @author Peter Ohl, KNIME.com, Zurich, Switzerland
+ * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
  */
-public class AddNewMetaNodeCommand extends AbstractKNIMECommand {
+public class SnapIconToGrid extends SnapToGrid {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(AddNewMetaNodeCommand.class);
-
-    private PortType[] m_inPorts;
-
-    private PortType[] m_outPorts;
-
-    private String m_name;
-
-    private Point m_location;
-
-    // for undo
-    private NodeID m_metanodeID;
+    private final GraphicalEditPart m_container;
 
     /**
-     * Creates a new command.
-     *
-     * @param workflowManager hostWFM
-     * @param inPorts
-     * @param outPorts
-     * @param name
-     * @param location
+     * @param cntr
      */
-    public AddNewMetaNodeCommand(final WorkflowManager workflowManager, final PortType[] inPorts,
-            final PortType[] outPorts, final String name, final Point location) {
-        super(workflowManager);
-        m_inPorts = inPorts;
-        m_outPorts = outPorts;
-        m_name = name;
-        m_location = location;
+    public SnapIconToGrid(final GraphicalEditPart cntr) {
+        super(cntr);
+        m_container = cntr;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean canExecute() {
-        if (!super.canExecute()) {
-            return false;
+    public int snapRectangle(final Request request, final int snapLocations, final PrecisionRectangle rect,
+            final PrecisionRectangle result) {
+        PrecisionRectangle r = rect;
+        if (request instanceof ChangeBoundsRequest) {
+            ChangeBoundsRequest changerequest = (ChangeBoundsRequest)request;
+            EditPart editPart = (EditPart)changerequest.getEditParts().get(0);
+            if (editPart instanceof NodeContainerEditPart) {
+                // adjust the rectangle to snap the center of the icon of the node
+                NodeContainerEditPart contPart = (NodeContainerEditPart)editPart;
+                EditPartViewer viewer = m_container.getViewer();
+                NodeContainerFigure fig = (NodeContainerFigure)contPart.getFigure();
+                Point iconOffset = getGridRefPointOffset(fig);
+                double zoomFactor = ((ZoomManager)(viewer.getProperty(ZoomManager.class.toString()))).getZoom();
+                iconOffset = iconOffset.getScaled(zoomFactor);
+                r = rect.getPreciseCopy();
+                r.translate(iconOffset);
+            }
         }
-        return (m_inPorts != null && m_outPorts != null && m_name != null && m_location != null);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void execute() {
-        m_metanodeID = getHostWFM().createAndAddSubWorkflow(m_inPorts, m_outPorts, m_name).getID();
-        // create extra info and set it
-        NodeContainer cont = getHostWFM().getNodeContainer(m_metanodeID);
-        NodeUIInformation info = new NodeUIInformation(m_location.x, m_location.y, -1, -1, true);
-        if (WorkflowEditor.getActiveEditorSnapToGrid()) {
-            info.setSnapToGrid(true);
-        }
-        cont.setUIInformation(info);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public boolean canUndo() {
-        return m_metanodeID != null && getHostWFM().canRemoveNode(m_metanodeID);
+        return super.snapRectangle(request, snapLocations, r, result);
     }
 
     /**
-     * {@inheritDoc}
+     * Returns the point in the figure that should be placed onto the grid points.
+     * @param nodeFig reference figure
+     * @return the point in the figure that should be placed onto the grid points
      */
-    @Override
-    public void undo() {
-        try {
-            getHostWFM().removeNode(m_metanodeID);
-        } catch (Exception e) {
-            LOGGER.error("Undo failed! Removal of meta node " + m_metanodeID + " failed: " + e.getMessage(), e);
-            // prevent a redo from happening (and inserting yet another meta node).
-            m_name = null;
-            m_inPorts = null;
-            m_outPorts = null;
-            throw new RuntimeException(e);
-        }
+    public static Point getGridRefPointOffset(final NodeContainerFigure nodeFig) {
+        Point iconOffset = nodeFig.getOffsetToRefPoint(new NodeUIInformation());
+        iconOffset.translate(nodeFig.getSymbolFigure().getPreferredSize().width / 2,
+                nodeFig.getSymbolFigure().getPreferredSize().height / 2 - 1);
+        return iconOffset;
     }
-
 }

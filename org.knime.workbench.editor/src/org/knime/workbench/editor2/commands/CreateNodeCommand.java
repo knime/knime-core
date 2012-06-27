@@ -77,6 +77,8 @@ public class CreateNodeCommand extends AbstractKNIMECommand {
 
     private final Point m_location;
 
+    private final boolean m_snapToGrid;
+
     private NodeContainer m_container;
 
     /**
@@ -87,10 +89,11 @@ public class CreateNodeCommand extends AbstractKNIMECommand {
      * @param location Initial visual location in the
      */
     public CreateNodeCommand(final WorkflowManager manager,
-            final NodeFactory<? extends NodeModel> factory, final Point location) {
+            final NodeFactory<? extends NodeModel> factory, final Point location, final boolean snapToGrid) {
         super(manager);
         m_factory = factory;
         m_location = location;
+        m_snapToGrid = snapToGrid;
     }
 
     /** We can execute, if all components were 'non-null' in the constructor.
@@ -122,6 +125,8 @@ public class CreateNodeCommand extends AbstractKNIMECommand {
         // create extra info and set it
         NodeUIInformation info = new NodeUIInformation(
                 m_location.x, m_location.y, -1, -1, false);
+        info.setSnapToGrid(m_snapToGrid);
+        info.setIsDropLocation(true);
         m_container.setUIInformation(info);
 
     }

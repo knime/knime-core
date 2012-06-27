@@ -77,6 +77,8 @@ public class CreateMetaNodeCommand extends AbstractKNIMECommand {
 
     private final Point m_location;
 
+    private final boolean m_snapToGrid;
+
     // for undo
     private WorkflowCopyContent m_copyContent;
 
@@ -86,12 +88,14 @@ public class CreateMetaNodeCommand extends AbstractKNIMECommand {
      * @param manager The workflow manager that should host the new node
      * @param persistor the paste content
      * @param location Initial visual location in the
+     * @param snapToGrid if node location should be rounded to closest grid location.
      */
     public CreateMetaNodeCommand(final WorkflowManager manager,
-            final WorkflowPersistor persistor, final Point location) {
+            final WorkflowPersistor persistor, final Point location, final boolean snapToGrid) {
         super(manager);
         m_persistor = persistor;
         m_location = location;
+        m_snapToGrid= snapToGrid;
     }
 
     /** We can execute, if all components were 'non-null' in the constructor.
@@ -115,6 +119,8 @@ public class CreateMetaNodeCommand extends AbstractKNIMECommand {
                 // create extra info and set it
                 NodeUIInformation info = new NodeUIInformation(
                         m_location.x, m_location.y, -1, -1, false);
+                info.setSnapToGrid(m_snapToGrid);
+                info.setIsDropLocation(true);
                 container.setUIInformation(info);
             }
         } catch (Throwable t) {

@@ -114,20 +114,21 @@ public class NewWorkflowContainerEditPolicy extends ContainerEditPolicy {
         WorkflowManager manager = workflowPart.getWorkflowManager();
 
         Object obj = request.getNewObject();
+        boolean snapToGrid = WorkflowEditor.getActiveEditorSnapToGrid();
         // create a new node
         if (obj instanceof NodeFactory) {
             NodeFactory<? extends NodeModel> factory
                 = (NodeFactory<? extends NodeModel>)obj;
-            return new CreateNodeCommand(manager, factory, location);
+            return new CreateNodeCommand(manager, factory, location, snapToGrid);
         } else if (obj instanceof AbstractExplorerFileStore) {
             AbstractExplorerFileStore fs = (AbstractExplorerFileStore)obj;
             if (AbstractExplorerFileStore.isWorkflowTemplate(fs)) {
-                return new CreateMetaNodeTemplateCommand(manager, fs, location);
+                return new CreateMetaNodeTemplateCommand(manager, fs, location, snapToGrid);
             }
         } else if (obj instanceof ReaderNodeSettings) {
             ReaderNodeSettings settings = (ReaderNodeSettings)obj;
             return new DropNodeCommand(manager, settings.getFactory(),
-                    new NodeCreationContext(settings.getUrl()), location);
+                    new NodeCreationContext(settings.getUrl()), location, snapToGrid);
         } else {
             LOGGER.error("Illegal drop object: " + obj);
         }

@@ -47,6 +47,8 @@ public class DropNodeCommand extends AbstractKNIMECommand {
 
     private final Point m_location;
 
+    private final boolean m_snapToGrid;
+
     private NodeContainer m_container;
 
     private final NodeCreationContext m_dropContext;
@@ -58,13 +60,15 @@ public class DropNodeCommand extends AbstractKNIMECommand {
      * @param factory The factory of the Node that should be added
      * @param context the file to be set as source for the new node.
      * @param location Initial visual location in the
+     * @param snapToGrid if location should be rounded to closest grid location
      */
     public DropNodeCommand(final WorkflowManager manager,
             final ContextAwareNodeFactory<NodeModel> factory,
-            final NodeCreationContext context, final Point location) {
+            final NodeCreationContext context, final Point location, final boolean snapToGrid) {
         super(manager);
         m_factory = factory;
         m_location = location;
+        m_snapToGrid = snapToGrid;
         m_dropContext = context;
     }
 
@@ -89,6 +93,8 @@ public class DropNodeCommand extends AbstractKNIMECommand {
             // create extra info and set it
             NodeUIInformation info =
                 new NodeUIInformation(m_location.x, m_location.y, -1, -1, true);
+            info.setSnapToGrid(m_snapToGrid);
+            info.setIsDropLocation(true);
             m_container.setUIInformation(info);
 
             // Open the dialog. Some times.

@@ -78,6 +78,7 @@ import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.OperationCanceledException;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.draw2d.FigureCanvas;
+import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Viewport;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Point;
@@ -1053,14 +1054,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                 new Boolean(true));
 
         // Grid properties
-        graphicalViewer.setProperty(SnapToGrid.PROPERTY_GRID_ENABLED,
-                new Boolean(false));
-        // Grid properties
-        graphicalViewer.setProperty(SnapToGrid.PROPERTY_GRID_SPACING,
-                new Dimension(6, 6));
-        // We keep grid visibility and enablement in sync
-        graphicalViewer.setProperty(SnapToGrid.PROPERTY_GRID_VISIBLE,
-                new Boolean(false));
+        updateGrid();
     }
 
     /** Sets background color according to edit mode (see
@@ -1490,6 +1484,9 @@ public class WorkflowEditor extends GraphicalEditor implements
             nodeLoc = getLocationRightOf(preNode);
             preID = preNode.getNodeContainer().getID();
         }
+        if (getEditorSnapToGrid()) {
+            nodeLoc = getClosestGridLocation(nodeLoc);
+        }
         Command newNodeCmd =
                 new CreateNewConnectedMetaNodeCommand(getViewer(), m_manager,
                         sourceManager, id, nodeLoc, preID);
@@ -1519,7 +1516,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         if (preNode == null) {
             nodeLoc = getViewportCenterLocation();
             // this command accepts/requires relative coordinates
-            newNodeCmd = new CreateNodeCommand(m_manager, nodeFactory, nodeLoc);
+            newNodeCmd = new CreateNodeCommand(m_manager, nodeFactory, nodeLoc, getEditorSnapToGrid());
         } else {
             nodeLoc = getLocationRightOf(preNode);
             newNodeCmd =
@@ -1578,10 +1575,12 @@ public class WorkflowEditor extends GraphicalEditor implements
         int relY = viewSize.height / 2;
         Point nodeLoc = new Point(relX, relY);
         // make sure we have a free spot
+        int stepX = getEditorSnapToGrid() ? getEditorGridXOffset(10) : 10;
+        int stepY = getEditorSnapToGrid() ? getEditorGridYOffset(10) : 10;
         while (isNodeAtRel(nodeLoc)) {
             // move it a bit
-            nodeLoc.x += 10;
-            nodeLoc.y += 10;
+            nodeLoc.x += stepX;
+            nodeLoc.y += stepY;
         }
         return nodeLoc;
 
@@ -1594,10 +1593,15 @@ public class WorkflowEditor extends GraphicalEditor implements
                 .getUIInformation();
         int xOffset = 100;
         int yOffset = 120;
-        // first try: right of reference node
-        Point loc = new Point(ui.getBounds()[0] + xOffset,
-                ui.getBounds()[1]);
+        // adjust offset to grid location
+        if (getEditorSnapToGrid()) {
+            // with grid enabled we use the grid size as offset (but at least a bit mire than the node width)
+        	xOffset = getEditorGridXOffset((int)(refNode.getFigure().getBounds().width * 1.1));
+        	yOffset = getEditorGridYOffset((int)(refNode.getFigure().getBounds().height * 1.1));
+        }
 
+        // first try: right of reference node
+        Point loc = new Point(ui.getBounds()[0] + xOffset, ui.getBounds()[1]);
         // make sure we have a free spot
         while (isNodeAtAbs(loc)) {
             // move it down a bit
@@ -1661,33 +1665,395 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
         return false;
     }
+    /*
+     * ---------- end of auto-placing and auto-connecting --------------
+     */
+
+    /*
+     * ------------- grid functions ----------------------------------------------------------
+     */
 
     private void updateGrid() {
-        IPreferenceStore prefStore =
-            KNIMEUIPlugin.getDefault().getPreferenceStore();
-        boolean snapToGrid =
-            prefStore.getBoolean(PreferenceConstants.P_GRID_SNAP_TO);
-        boolean showGrid =
-            prefStore.getBoolean(PreferenceConstants.P_GRID_SHOW);
-        int gridSize =
-            prefStore.getInt(PreferenceConstants.P_GRID_SIZE);
-        if (gridSize == 0) {
-            gridSize = prefStore.getDefaultInt(PreferenceConstants.P_GRID_SIZE);
-        }
+        /**
+         * This is used to init the viewer and to update on a property change event. Maybe we need to split this in
+         * an init and an update, in case we don't want to change all settings on an update (e.g. the view grid could
+         * be an editor instance specific setting with a default value in the pref page).
+         */
+        boolean snapToGrid = getPrefSnapToGrid();
+        boolean showGrid = getPrefIsGridVisible();
         GraphicalViewer graphicalViewer = getGraphicalViewer();
         graphicalViewer.setProperty(SnapToGeometry.PROPERTY_SNAP_ENABLED,
                 Boolean.valueOf(snapToGrid));
         graphicalViewer.setProperty(SnapToGrid.PROPERTY_GRID_ENABLED,
                 Boolean.valueOf(snapToGrid));
         graphicalViewer.setProperty(SnapToGrid.PROPERTY_GRID_SPACING,
-                new Dimension(gridSize, gridSize));
+                new Dimension(getPrefGridXSize(), getPrefGridYSize()));
         graphicalViewer.setProperty(SnapToGrid.PROPERTY_GRID_VISIBLE,
                 showGrid);
     }
 
-    /*
-     * ---------- end of auto-placing and auto-connecting --------------
+    /**
+     * Returns the grid horizontal spacing or the x value from the preference page, if the editor's property is not
+     * set.
+     *
+     * @return the editors grid, or the value from the pref page (if not set in the editor)
      */
+    public int getEditorGridX() {
+        Dimension grid = (Dimension)getViewer().getProperty(SnapToGrid.PROPERTY_GRID_SPACING);
+        if (grid != null) {
+            return grid.width;
+        }
+        return getPrefGridXSize();
+    }
+
+    /**
+     * Returns the grid vertical spacing or the y value from the preference page, if the editor's property is not
+     * set.
+     *
+     * @return the editors grid, or the value from the pref page (if not set in the editor)
+     */
+    public int getEditorGridY() {
+        Dimension grid = (Dimension)getViewer().getProperty(SnapToGrid.PROPERTY_GRID_SPACING);
+        if (grid != null) {
+            return grid.height;
+        }
+        return getPrefGridYSize();
+    }
+
+    /**
+     * Returns true, if the grid is visible in this editor (or the preference page value if the editor's property is not
+     * set).
+     *
+     * @return true, if the grid is visible in this editor
+     */
+    public boolean getEditorIsGridVisible() {
+        Boolean visi = (Boolean)getViewer().getProperty(SnapToGrid.PROPERTY_GRID_VISIBLE);
+        if (visi != null) {
+            return visi.booleanValue();
+        }
+        return getPrefIsGridVisible();
+    }
+
+    /**
+     * Returns true, if the grid is enabled in this editor (or the preference page value if the editor's property is not
+     * set).
+     *
+     * @return true, if snap to grid is enabled in this editor
+     */
+    public boolean getEditorSnapToGrid() {
+        Boolean snap = (Boolean)getViewer().getProperty(SnapToGrid.PROPERTY_GRID_ENABLED);
+        if (snap != null) {
+            return snap.booleanValue();
+        }
+        return getPrefSnapToGrid();
+    }
+
+    /**
+     * @return the value from the preference page for 'show grid' (each editor has its own property value which could be
+     *         different)
+     */
+    public static boolean getPrefIsGridVisible() {
+        IPreferenceStore prefStore = KNIMEUIPlugin.getDefault().getPreferenceStore();
+        return prefStore.getBoolean(PreferenceConstants.P_GRID_SHOW);
+    }
+
+    /**
+     * @return the value from the preference page for 'snap to grid' (each editor has its own property value which could
+     *         be different)
+     */
+    public static boolean getPrefSnapToGrid() {
+        IPreferenceStore prefStore = KNIMEUIPlugin.getDefault().getPreferenceStore();
+        return prefStore.getBoolean(PreferenceConstants.P_GRID_SNAP_TO);
+    }
+
+    /**
+     * @return the preference page value for the horizontal grid size (or the default value if zero or negative)
+     */
+    public static int getPrefGridXSize() {
+        IPreferenceStore prefStore = KNIMEUIPlugin.getDefault().getPreferenceStore();
+        int gridSize = prefStore.getInt(PreferenceConstants.P_GRID_SIZE_X);
+        if (gridSize <= 0) {
+            gridSize = prefStore.getDefaultInt(PreferenceConstants.P_GRID_SIZE_X);
+        }
+        return gridSize;
+    }
+
+    /**
+     * @return the preference page value for the vertical grid size (or the default value if zero or negative)
+     */
+    public static int getPrefGridYSize() {
+        IPreferenceStore prefStore = KNIMEUIPlugin.getDefault().getPreferenceStore();
+        int gridSize = prefStore.getInt(PreferenceConstants.P_GRID_SIZE_Y);
+        if (gridSize <= 0) {
+            gridSize = prefStore.getDefaultInt(PreferenceConstants.P_GRID_SIZE_Y);
+        }
+        return gridSize;
+    }
+
+    /**
+     * Adjusts the passed offset to the grid size. The result is a multiple of the grid X size equal to or larger than
+     * the passed value (disregards the snap to grid flag).
+     *
+     * @param xOffset to translate into a 'grid compatible' offset
+     * @return a multiple of the grid X size equal to or larger than the passed value
+     */
+    public int getEditorGridXOffset(final int xOffset) {
+        int gridSizeX = getEditorGridX();
+        if (gridSizeX > 1 && (xOffset % gridSizeX != 0)) {
+            return ((xOffset / gridSizeX) + 1) * gridSizeX;
+        }
+        return xOffset;
+    }
+
+    /**
+     * The result is a multiple of the grid Y size equal to or larger than the passed value (disregards the snap to grid
+     * flag).
+     *
+     * @param yOffset to translate into a 'grid compatible' offset
+     * @return a multiple of the grid Y size equal to or larger than the passed value
+     */
+    public int getEditorGridYOffset(final int yOffset) {
+        int gridSizeY = getEditorGridY();
+        if (gridSizeY > 1 && (yOffset % gridSizeY != 0)) {
+            return ((yOffset / gridSizeY) + 1) * gridSizeY;
+        }
+        return yOffset;
+    }
+
+    /**
+     * Returns the closest location that is located on the grid.
+     *
+     * @param gridContainer the pane with the grid containing the location
+     * @param loc reference point for the closest grid location, must be translated relative to the container
+     * @return closest grid point
+     */
+    public Point getClosestGridLocation(final Point loc) {
+        Point location = loc.getCopy();
+        IFigure gridContainer = ((WorkflowRootEditPart)getViewer().getRootEditPart().getContents()).getFigure();
+        // container coordinates could be negative
+        gridContainer.translateToRelative(location);
+        Point result = location.getCopy();
+        int locX = loc.x;
+        int gridX = getEditorGridX();
+        if (gridX > 1) {
+            // distance to the left grid line (or right, if locX is negative)
+            int leftGrid = (locX / gridX) * gridX;
+            if (Math.abs(locX - leftGrid) <= (gridX / 2)) {
+                result.x = leftGrid;
+            } else {
+                // location is closer to the next grid (right of the location, or left if x is negative)
+                result.x = leftGrid + (((int)Math.signum(locX)) * gridX);
+            }
+        }
+        int locY = loc.y;
+        int gridY = getEditorGridY();
+        if (gridY > 1) {
+            // distance to the next upper grid line (or lower line, if y is negative)
+            int upperGrid = (locY / gridY) * gridY;
+            if (Math.abs(locY - upperGrid) <= (gridY / 2)) {
+                // location is closer to the upper grid line (or lower line, if y is negative)
+                result.y = upperGrid;
+            } else {
+                // location is closer to the next lower grid
+                result.y = upperGrid + (((int)Math.signum(locY)) * gridY);
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Returns a point on the grid that has equal or larger coordinates than the passed location.
+     *
+     * @param gridContainer the pane with the grid containing the location
+     * @param loc the reference point for the next grid location
+     * @return next grid location (right of and lower than argument location or equal)
+     */
+    public final Point getNextGridLocation(final Point loc) {
+        Point location = loc.getCopy();
+        // container coordinates could be negative
+        IFigure gridContainer = ((WorkflowRootEditPart)getViewer().getRootEditPart().getContents()).getFigure();
+        gridContainer.translateToRelative(location);
+        Point result = location.getCopy();
+        int stepX = (loc.x >= 0) ? 1 : 0;
+        int gridX = getEditorGridX();
+        if (gridX > 1 && result.x % gridX != 0) {
+            result.x = ((loc.x / gridX) + stepX) * gridX;
+        }
+
+        int stepY = (loc.y >= 0) ? 1 : 0;
+        int gridY = getEditorGridY();
+        if (gridY > 1 && result.y % gridY != 0) {
+            result.y = ((loc.y / gridY) + stepY) * gridY;
+        }
+        return result;
+    }
+
+
+    /**
+     * Returns the vertical grid distance for the active workflow editor (or -1 if no workflow editor is active at the
+     * moment).
+     *
+     * @return the y grid size for the active workflow editor (or -1)
+     * @see #getEditorGridY()
+     */
+    public static int getActiveEditorGridY() {
+        IWorkbenchWindow activeWorkbenchWindow = Workbench.getInstance().getActiveWorkbenchWindow();
+        if (activeWorkbenchWindow == null) {
+            return -1;
+        }
+        IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
+        if (activePage == null) {
+            return -1;
+        }
+        IEditorPart activeEditor = activePage.getActiveEditor();
+        if (activeEditor instanceof WorkflowEditor) {
+            return ((WorkflowEditor)activeEditor).getEditorGridY();
+        }
+        return -1;
+    }
+
+    /**
+     * Returns the horizontal grid distance for the active workflow editor (or -1 if no workflow editor is active at the
+     * moment).
+     *
+     * @return the x grid size for the active workflow editor (or -1)
+     * @see #getEditorGridX()
+     */
+    public static int getActiveEditorGridX() {
+        IWorkbenchWindow activeWorkbenchWindow = Workbench.getInstance().getActiveWorkbenchWindow();
+        if (activeWorkbenchWindow == null) {
+            return -1;
+        }
+        IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
+        if (activePage == null) {
+            return -1;
+        }
+        IEditorPart activeEditor = activePage.getActiveEditor();
+        if (activeEditor instanceof WorkflowEditor) {
+            return ((WorkflowEditor)activeEditor).getEditorGridX();
+        }
+        return -1;
+    }
+
+    /**
+     * Returns true, if the active editor is a workflow editor and snap to grid is enabled. False otherwise.
+     * @return true, if the active editor is a workflow editor and snap to grid is enabled. False otherwise
+     * @see #getEditorSnapToGrid()
+     */
+    public static boolean getActiveEditorSnapToGrid() {
+        IWorkbenchWindow activeWorkbenchWindow = Workbench.getInstance().getActiveWorkbenchWindow();
+        if (activeWorkbenchWindow == null) {
+            return false;
+        }
+        IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
+        if (activePage == null) {
+            return false;
+        }
+        IEditorPart activeEditor = activePage.getActiveEditor();
+        if (activeEditor instanceof WorkflowEditor) {
+            return ((WorkflowEditor)activeEditor).getEditorSnapToGrid();
+        }
+        return false;
+    }
+
+    /**
+     * Returns the closest location on the grid of the active editor, or the argument if no workflow editor is active
+     * @param loc the ref point
+     * @return the closest location on the grid of the active editor, or the argument if no workflow editor is active
+     * @see #getClosestGridLocation(Point)
+     */
+    public static Point getActiveEditorClosestGridLocation(final Point loc) {
+        IWorkbenchWindow activeWorkbenchWindow = Workbench.getInstance().getActiveWorkbenchWindow();
+        if (activeWorkbenchWindow == null) {
+            return loc;
+        }
+        IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
+        if (activePage == null) {
+            return loc;
+        }
+        IEditorPart activeEditor = activePage.getActiveEditor();
+        if (activeEditor instanceof WorkflowEditor) {
+            return ((WorkflowEditor)activeEditor).getClosestGridLocation(loc);
+        }
+        return loc;
+    }
+
+    /**
+     * Returns grid location on the next lower right grid location in the active editor, or the argument, if no workflow
+     * editor is active.
+     *
+     * @param loc the ref point
+     * @return the next grid point if the active editor is a worflow editor
+     * @see #getNextGridLocation(Point)
+     */
+    public static Point getActiveEditorNextGridLocation(final Point loc) {
+        IWorkbenchWindow activeWorkbenchWindow = Workbench.getInstance().getActiveWorkbenchWindow();
+        if (activeWorkbenchWindow == null) {
+            return loc;
+        }
+        IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
+        if (activePage == null) {
+            return loc;
+        }
+        IEditorPart activeEditor = activePage.getActiveEditor();
+        if (activeEditor instanceof WorkflowEditor) {
+            return ((WorkflowEditor)activeEditor).getClosestGridLocation(loc);
+        }
+        return loc;
+    }
+
+    /**
+     * The result is a multiple of the grid Y size of the active editor equal to or larger than the passed value
+     * (disregards the snap to grid flag).
+     *
+     * @param yOffset to translate into a 'grid compatible' offset
+     * @return a multiple of the grid Y size equal to or larger than the passed value - or the argument, if no workflow
+     * editor is active
+     * @see #getEditorGridYOffset(int)
+     */
+    public static int getActiveEditorGridYOffset(final int yOffset) {
+        IWorkbenchWindow activeWorkbenchWindow = Workbench.getInstance().getActiveWorkbenchWindow();
+        if (activeWorkbenchWindow == null) {
+            return yOffset;
+        }
+        IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
+        if (activePage == null) {
+            return yOffset;
+        }
+        IEditorPart activeEditor = activePage.getActiveEditor();
+        if (activeEditor instanceof WorkflowEditor) {
+            return ((WorkflowEditor)activeEditor).getEditorGridYOffset(yOffset);
+        }
+        return yOffset;
+    }
+
+    /**
+     * The result is a multiple of the grid X size of the active editor equal to or larger than the passed value
+     * (disregards the snap to grid flag).
+     *
+     * @param xOffset to translate into a 'grid compatible' offset
+     * @return a multiple of the grid X size equal to or larger than the passed value - or the argument, if no workflow
+     * editor is active
+     * @see #getEditorGridXOffset(int)
+     */
+    public static int getActiveEditorGridXOffset(final int xOffset) {
+        IWorkbenchWindow activeWorkbenchWindow = Workbench.getInstance().getActiveWorkbenchWindow();
+        if (activeWorkbenchWindow == null) {
+            return xOffset;
+        }
+        IWorkbenchPage activePage = activeWorkbenchWindow.getActivePage();
+        if (activePage == null) {
+            return xOffset;
+        }
+        IEditorPart activeEditor = activePage.getActiveEditor();
+        if (activeEditor instanceof WorkflowEditor) {
+            return ((WorkflowEditor)activeEditor).getEditorGridXOffset(xOffset);
+        }
+        return xOffset;
+    }
+
+
+    /*----------------------------------------------------------------------------------------------------------*/
 
     /**
      * Listener callback, listens to workflow events and triggers UI updates.
@@ -1975,7 +2341,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         String prop = event.getProperty();
         if (PreferenceConstants.P_GRID_SNAP_TO.equals(prop)
                 || PreferenceConstants.P_GRID_SHOW.equals(prop)
-                || PreferenceConstants.P_GRID_SIZE.equals(prop)) {
+                || PreferenceConstants.P_GRID_SIZE_X.equals(prop)
+                || PreferenceConstants.P_GRID_SIZE_Y.equals(prop)) {
             updateGrid();
         }
     }

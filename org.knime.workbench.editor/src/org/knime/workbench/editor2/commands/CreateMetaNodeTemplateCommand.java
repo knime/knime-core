@@ -78,6 +78,8 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
 
     private final Point m_location;
 
+    private final boolean m_snapToGrid;
+
     private NodeContainer m_container;
 
 
@@ -87,13 +89,15 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
      * @param manager The workflow manager that should host the new node
      * @param templateFolder the directory underlying the template
      * @param location Initial visual location in the
+     * @param snapToGrid if node should be placed on closest grid location
      */
     public CreateMetaNodeTemplateCommand(final WorkflowManager manager,
             final AbstractExplorerFileStore templateFolder,
-            final Point location) {
+            final Point location, final boolean snapToGrid) {
         super(manager);
         m_templateKNIMEFolder = templateFolder;
         m_location = location;
+        m_snapToGrid = snapToGrid;
     }
 
     /** We can execute, if all components were 'non-null' in the constructor.
@@ -135,6 +139,8 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
             // create extra info and set it
             NodeUIInformation info = new NodeUIInformation(
                     m_location.x, m_location.y, -1, -1, true);
+            info.setSnapToGrid(m_snapToGrid);
+            info.setIsDropLocation(true);
             m_container.setUIInformation(info);
         } catch (Throwable t) {
             // if fails notify the user

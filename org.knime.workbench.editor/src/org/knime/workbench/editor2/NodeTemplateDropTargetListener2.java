@@ -137,19 +137,13 @@ public class NodeTemplateDropTargetListener2 implements
      * @return point converted to the editor coordinates
      */
     protected Point getDropLocation(final DropTargetEvent event) {
+        /* NB: don't break in this method - it ruins the cursor location! */
         event.x = event.display.getCursorLocation().x;
         event.y = event.display.getCursorLocation().y;
         Point p = new Point(m_viewer.getControl()
                     .toControl(event.x, event.y).x,
                     m_viewer.getControl()
                     .toControl(event.x, event.y).y);
-        LOGGER.debug("to control: " + p);
-        // subtract this amount in order to have the node more or less centered
-        // at the cursor location
-        // more or less because the nodes are still of different width depending
-        // on their name
-        p.x -= 18;
-        p.y -= 18;
         return p;
     }
 
@@ -191,7 +185,7 @@ public class NodeTemplateDropTargetListener2 implements
             request.setFactory(factory);
             m_viewer.getEditDomain().getCommandStack().execute(
                     new CreateNodeCommand(wfm, factory.getNewObject(),
-                            getDropLocation(event)));
+                            getDropLocation(event), WorkflowEditor.getActiveEditorSnapToGrid()));
             NodeUsageRegistry.addNode(template);
             // bugfix: 1500
             m_viewer.getControl().setFocus();
@@ -203,7 +197,8 @@ public class NodeTemplateDropTargetListener2 implements
             content.setNodeIDs(id);
             WorkflowPersistor copy = sourceManager.copy(content);
             m_viewer.getEditDomain().getCommandStack().execute(
-                new CreateMetaNodeCommand(wfm, copy, getDropLocation(event)));
+                new CreateMetaNodeCommand(wfm, copy, getDropLocation(event),
+                        WorkflowEditor.getActiveEditorSnapToGrid()));
         }
     }
 

@@ -65,7 +65,6 @@ import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.LayerConstants;
-import org.eclipse.gef.SnapToGrid;
 import org.eclipse.gef.SnapToGuides;
 import org.eclipse.gef.SnapToHelper;
 import org.eclipse.gef.commands.CommandStackListener;
@@ -89,6 +88,7 @@ import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.policy.NewWorkflowContainerEditPolicy;
 import org.knime.workbench.editor2.editparts.policy.NewWorkflowXYLayoutPolicy;
+import org.knime.workbench.editor2.editparts.snap.SnapIconToGrid;
 import org.knime.workbench.editor2.editparts.snap.SnapToPortGeometry;
 import org.knime.workbench.editor2.figures.ProgressToolTipHelper;
 import org.knime.workbench.editor2.figures.WorkflowFigure;
@@ -237,25 +237,22 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
     public Object getAdapter(final Class adapter) {
         if (adapter == SnapToHelper.class) {
             List<SnapToHelper> snapStrategies = new ArrayList<SnapToHelper>();
-            Boolean val =
+            Boolean ruler =
                     (Boolean)getViewer().getProperty(
                             RulerProvider.PROPERTY_RULER_VISIBILITY);
-            if (false || val != null && val.booleanValue()) {
+            if (ruler != null && ruler.booleanValue()) {
                 snapStrategies.add(new SnapToGuides(this));
             }
-            val =
+
+            Boolean snapToGrid =
                 (Boolean)getViewer().getProperty(
                         SnapToPortGeometry.PROPERTY_SNAP_ENABLED);
-            if (true || val != null && val.booleanValue()) {
-                snapStrategies.add(new SnapToPortGeometry(this));
-            }
-            val =
-                    (Boolean)getViewer().getProperty(
-                            SnapToGrid.PROPERTY_GRID_ENABLED);
-            if (false || val != null && val.booleanValue()) {
-                snapStrategies.add(new SnapToGrid(this));
-            }
-
+			if (snapToGrid != null && snapToGrid.booleanValue()) {
+				snapStrategies.add(new SnapIconToGrid(this));
+			} else {
+				// snap to ports
+				snapStrategies.add(new SnapToPortGeometry(this));
+			}
             if (snapStrategies.size() == 0) {
                 return null;
             }

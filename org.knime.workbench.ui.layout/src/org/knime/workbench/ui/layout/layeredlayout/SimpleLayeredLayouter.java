@@ -64,17 +64,19 @@ import org.knime.workbench.ui.layout.Graph.Node;
  * computes a layered layout for a directed acyclic graph. Following the
  * Sugijama framework, the algorithm processes 3 stages: layer assingment,
  * crossing minimization, and coordinate assignment.
- * 
+ *
  * Techniques involved are covered in
  * "Bastert, Matuszewski: Layered Drawings of Digraphs, LNCS 2025, pp87-120, 2001"
  * ; except for coordinate assignment that is covered in "Brandes, Köpf: Fast
  * and simple horizontal coordinate assignment, 2001".
- * 
+ *
  * @author Martin Mader, University of Konstanz
  */
 public class SimpleLayeredLayouter {
 
     private Random m_rnd;
+
+    private boolean m_balanceBranching = true;
 
     /**
      * constructor initializing an arbitrary random instance for shuffling
@@ -86,7 +88,7 @@ public class SimpleLayeredLayouter {
 
     /**
      * initializes the seed used for initially shuffling layers.
-     * 
+     *
      * @param seed the seed
      */
     public SimpleLayeredLayouter(final long seed) {
@@ -95,7 +97,7 @@ public class SimpleLayeredLayouter {
 
     /**
      * set the seed for the random number generator shuffling layers.
-     * 
+     *
      * @param seed the seed
      */
     public void setSeed(final long seed) {
@@ -103,11 +105,20 @@ public class SimpleLayeredLayouter {
     }
 
     /**
+     * @param balance true causes nodes connecting to two successor nodes being placed in the middle of these successor
+     *            nodes (causing placement on half grid cells). Default is true.
+     *
+     */
+    public void setBalanceBranchings(final boolean balance) {
+        m_balanceBranching = balance;
+    }
+
+    /**
      * computes an hierarchical layout of the given graph. If nodes are fixed by
      * means of the given map, they will end up on the first or last layer,
      * ordered by their original y-coordinate. Precondition: g must be a
      * directed acyclic graph!
-     * 
+     *
      * @param g the graph to perform layout on
      * @param fixedNodes node map containing true if the respective node should
      *            be fixed (only sources and sinks allowed)
@@ -232,6 +243,7 @@ public class SimpleLayeredLayouter {
         VerticalCoordinateAssigner vca =
                 new VerticalCoordinateAssigner(g, layers, dummyNodes,
                         dummyEdges);
+        vca.setBalanceBranchings(m_balanceBranching);
         vca.run();
 
         /*

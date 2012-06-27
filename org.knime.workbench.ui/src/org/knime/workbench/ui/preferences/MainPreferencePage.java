@@ -174,12 +174,20 @@ public class MainPreferencePage extends FieldEditorPreferencePage
         addField(new BooleanFieldEditor(PreferenceConstants.P_GRID_SNAP_TO,
                 "Snap to grid", parent));
 
-        IntegerFieldEditor gridSizeEditor = new IntegerFieldEditor(
-                PreferenceConstants.P_GRID_SIZE, "Grid size (in px)", parent);
-        gridSizeEditor.setValidRange(3, 100);
-        gridSizeEditor.setTextLimit(3);
-        gridSizeEditor.load();
-        addField(gridSizeEditor);
+        IntegerFieldEditor gridSizeXEditor = new IntegerFieldEditor(
+                PreferenceConstants.P_GRID_SIZE_X, "Horiz. grid size (in px)", parent);
+        gridSizeXEditor.setValidRange(3, 500);
+        gridSizeXEditor.setTextLimit(3);
+        gridSizeXEditor.load();
+        addField(gridSizeXEditor);
+
+        IntegerFieldEditor gridSizeYEditor = new IntegerFieldEditor(
+                PreferenceConstants.P_GRID_SIZE_Y, "Vertic. grid size (in px)", parent);
+        gridSizeYEditor.setValidRange(3, 500);
+        gridSizeYEditor.setTextLimit(3);
+        gridSizeYEditor.load();
+        addField(gridSizeYEditor);
+
 
         ComboFieldEditor updateMetaNodeLinkOnLoadEditor = new ComboFieldEditor(
                 PreferenceConstants.P_META_NODE_LINK_UPDATE_ON_LOAD,
