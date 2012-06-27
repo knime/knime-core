@@ -90,6 +90,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.util.ListModelFilterUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
+import org.knime.core.node.util.filter.DataColumnSpecFilterPanel;
 
 
 /** Copy of the column filter panel with additional enforce exclude/include
@@ -97,7 +98,9 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
  * to the public 
  * {@link org.knime.core.node.util.ColumnFilterPanel}.
  * @author Thomas Gabriel, KNIME.com AG, Zurich, Switzerland
+ * @deprecated use {@link DataColumnSpecFilterPanel}
  */
+@Deprecated
 class FilterColumnPanel extends JPanel {
     
     

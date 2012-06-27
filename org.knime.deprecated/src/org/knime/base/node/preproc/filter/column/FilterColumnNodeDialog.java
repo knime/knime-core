@@ -65,7 +65,9 @@ import org.knime.core.node.NotConfigurableException;
  * 
  * @author Christoph Sieb, University of Konstanz
  * @author Thomas Gabriel, University of Konstanz
+ * @deprecated use {@link DataColumnSpecFilterNodeDialogPane}
  */
+@Deprecated
 final class FilterColumnNodeDialog extends NodeDialogPane {
 
     /*

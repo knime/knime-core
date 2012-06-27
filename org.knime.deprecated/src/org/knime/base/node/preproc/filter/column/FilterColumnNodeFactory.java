@@ -57,7 +57,9 @@ import org.knime.core.node.NodeDialogPane;
  * @see org.knime.core.node.NodeFactory
  * 
  * @author Christoph Sieb, University of Konstanz
+ * @deprecated use {@link DataColumnSpecFilterNodeFactory}
  */
+@Deprecated
 public class FilterColumnNodeFactory 
         extends NodeFactory<FilterColumnNodeModel> {
 

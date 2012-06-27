@@ -71,7 +71,9 @@ import org.knime.core.node.NodeSettingsWO;
  * 
  * @author Christoph Sieb, University of Konstanz
  * @author Thomas Gabriel, University of Konstanz
+ * @deprecated use {@link DataColumnSpecFilterNodeModel}
  */
+@Deprecated
 final class FilterColumnNodeModel extends NodeModel {
 
     /**
