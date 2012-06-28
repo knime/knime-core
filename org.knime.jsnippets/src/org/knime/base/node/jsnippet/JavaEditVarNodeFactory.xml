@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./java_editvar.png" type="Manipulator">
-    <name>Java Edit Variable (Heiko)</name>
+    <name>Java Edit Variable</name>
     <shortDescription>Edit or add flow variables using java code.</shortDescription>
     <fullDescription>
         <intro>
