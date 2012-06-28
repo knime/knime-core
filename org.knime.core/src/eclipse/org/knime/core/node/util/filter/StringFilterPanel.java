@@ -49,33 +49,29 @@ package org.knime.core.node.util.filter;
 
 import javax.swing.ListCellRenderer;
 
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
 /**
- * A panel to filter {@link DataColumnSpec}s.
+ * A panel to filter {@link String}s.
  *
  * @author Thomas Gabriel, KNIME.com AG, Zurich
  * @since 2.6
  */
 @SuppressWarnings("serial")
-public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
-
-    private DataTableSpec m_spec;
+public class StringFilterPanel extends NameFilterPanel<String> {
 
     /**
-     * Create a new panel to filter {@link DataColumnSpec}s.
+     * Create a new panel to filter {@link String}s.
      */
-    public DataColumnSpecFilterPanel() {
+    public StringFilterPanel() {
         super();
     }
 
     /**
-     * Create a new panel to filter {@link DataColumnSpec}s.
+     * Create a new panel to filter {@link String}s.
      * @param showEnforceOption true, if the enforce option should be visible
      */
-    public DataColumnSpecFilterPanel(final boolean showEnforceOption) {
+    public StringFilterPanel(final boolean showEnforceOption) {
         super(showEnforceOption);
     }
 
@@ -87,28 +83,25 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
 
     /** {@inheritDoc} */
     @Override
-    protected DataColumnSpec getTforName(final String name) {
-        if (m_spec == null) {
-            return null;
-        }
-        return m_spec.getColumnSpec(name);
+    protected String getTforName(final String name) {
+        return name;
     }
 
     /** {@inheritDoc} */
     @Override
-    protected String getNameForT(final DataColumnSpec dcs) {
-        return dcs.getName();
+    protected String getNameForT(final String s) {
+        return s;
     }
 
     /**
      * Load configuration.
      * @param config the configuration to read to settings from.
-     * @param spec the {@link DataTableSpec} to validate the settings on
+     * @param names a list if {@link String} to validate the settings on
      */
+    @Override
     public void loadConfiguration(final NameFilterConfiguration config,
-            final DataTableSpec spec) {
-        m_spec = spec;
-        super.loadConfiguration(config, spec.getColumnNames());
+            final String[] names) {
+        super.loadConfiguration(config, names);
     }
 
 }

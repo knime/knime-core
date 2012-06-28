@@ -173,6 +173,17 @@ public abstract class NameFilterPanel<T> extends JPanel {
      * filter.
      */
     protected NameFilterPanel() {
+        this(true);
+    }
+
+    /**
+     * Creates a new filter column panel with three component which are the
+     * include list, button panel to shift elements between the two lists, and
+     * the exclude list. The include list then will contain all values to
+     * filter.
+     * @param showEnforceOption true, if the enforce option should be visible
+     */
+    protected NameFilterPanel(final boolean showEnforceOption) {
         super(new GridLayout(1, 1));
 
         // keeps buttons such add 'add', 'add all', 'remove', and 'remove all'
@@ -345,18 +356,20 @@ public abstract class NameFilterPanel<T> extends JPanel {
         buttonPan2.add(buttonPan);
 
         // add force incl/excl buttons
-        final ButtonGroup forceGroup = new ButtonGroup();
         m_enforceInclusion = new JRadioButton("Enforce inclusion");
-        m_enforceInclusion.setToolTipText(
-                "Force the set of included names to stay the same.");
-        forceGroup.add(m_enforceInclusion);
-        includePanel.add(m_enforceInclusion, BorderLayout.SOUTH);
         m_enforceExclusion = new JRadioButton("Enforce exclusion");
-        m_enforceExclusion.setToolTipText(
-                "Force the set of excluded names to stay the same.");
-        forceGroup.add(m_enforceExclusion);
-        m_enforceExclusion.doClick();
-        excludePanel.add(m_enforceExclusion, BorderLayout.SOUTH);
+        if (showEnforceOption) {
+            final ButtonGroup forceGroup = new ButtonGroup();
+            m_enforceInclusion.setToolTipText(
+                    "Force the set of included names to stay the same.");
+            forceGroup.add(m_enforceInclusion);
+            includePanel.add(m_enforceInclusion, BorderLayout.SOUTH);
+            m_enforceExclusion.setToolTipText(
+                    "Force the set of excluded names to stay the same.");
+            forceGroup.add(m_enforceExclusion);
+            m_enforceExclusion.doClick();
+            excludePanel.add(m_enforceExclusion, BorderLayout.SOUTH);
+        }
 
         // adds include, button, exclude component
         JPanel center = new JPanel();
@@ -546,14 +559,35 @@ public abstract class NameFilterPanel<T> extends JPanel {
      */
     public void loadConfiguration(final NameFilterConfiguration config,
             final String[] names) {
+        final List<String> ins = Arrays.asList(config.getIncludeList());
+        final List<String> exs = Arrays.asList(config.getExcludeList());
+        this.update(ins, exs, names);
+        switch (config.getEnforceOption()) {
+            case EnforceExclusion:
+                m_enforceExclusion.doClick();
+                break;
+            case EnforceInclusion:
+                m_enforceInclusion.doClick();
+                break;
+        }
+        repaint();
+   }
+
+    /**
+     * Update this panel with the given include, exclude lists and the array of
+     * all possible values.
+     * @param ins include list
+     * @param exs exclude list
+     * @param names all available names
+     */
+    public void update(final List<String> ins, final List<String> exs,
+            final String[] names) {
         // clear internal member
         m_order.clear();
         m_inclMdl.removeAllElements();
         m_exclMdl.removeAllElements();
         m_hideNames.clear();
 
-        final List<String> ins = Arrays.asList(config.getIncludeList());
-        final List<String> exs = Arrays.asList(config.getExcludeList());
         for (final String name : names) {
             final T t = getTforName(name);
             if (ins.contains(name)) {
@@ -562,15 +596,6 @@ public abstract class NameFilterPanel<T> extends JPanel {
                 m_exclMdl.addElement(t);
             }
             m_order.add(t);
-        }
-
-        switch (config.getEnforceOption()) {
-            case EnforceExclusion:
-                m_enforceExclusion.doClick();
-                break;
-            case EnforceInclusion:
-                m_enforceInclusion.doClick();
-                break;
         }
         repaint();
     }
