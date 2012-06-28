@@ -125,7 +125,8 @@ public class JavaSnippetCellFactory implements CellFactory {
                 Class<? extends AbstractJSnippet> jsnippetClass =
                     m_snippet.createSnippetClass();
                 m_jsnippet = jsnippetClass.newInstance();
-                // populate the flow variable repository in the snippet
+                // populate the fields in the m_jsnippet that are constant
+                // across the rows.
                 Field[] fs =
                     m_jsnippet.getClass().getSuperclass().getDeclaredFields();
                 for (Field field : fs) {
@@ -161,6 +162,10 @@ public class JavaSnippetCellFactory implements CellFactory {
                 if (field.getName() == "m_columns") {
                     field.setAccessible(true);
                     field.set(m_jsnippet, m_columns);
+                }
+                if (field.getName() == "m_inSpec") {
+                    field.setAccessible(true);
+                    field.set(m_jsnippet, m_spec);
                 }
                 if (field.getName() == JavaSnippet.ROWID) {
                     field.setAccessible(true);

@@ -202,12 +202,17 @@ public final class FileTemplateRepository extends TemplateRepository {
     @Override
     public boolean isRemoveable(final JSnippetTemplate template) {
         if (!m_readonly) {
-            Collection<JSnippetTemplate> templates =
-                m_templates.get(template.getMetaCategory());
-            return null != templates ? templates.contains(template) : false;
+            return isInRepository(template);
         } else {
             return false;
         }
+    }
+
+    /** Returns true when the given template is in this repository. */
+    private boolean isInRepository(final JSnippetTemplate template) {
+        Collection<JSnippetTemplate> templates =
+            m_templates.get(template.getMetaCategory());
+        return null != templates ? templates.contains(template) : false;
     }
 
     /**
@@ -301,8 +306,6 @@ public final class FileTemplateRepository extends TemplateRepository {
      */
     @Override
     public String getDisplayLocation(final JSnippetTemplate template) {
-        String name = template.getUUID() + ".xml";
-        File file = new File(m_folder, name);
-        return file.getPath();
+        return isInRepository(template) ? getFile(template).getPath() : null;
     }
 }

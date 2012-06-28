@@ -58,6 +58,8 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
@@ -105,6 +107,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
@@ -567,7 +570,19 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
     public void applyTemplate(final JSnippetTemplate template,
             final DataTableSpec spec,
             final Map<String, FlowVariable> flowVariables) {
-        m_settings = template.getSnippetSettings();
+        // save and read settings to decouple objects.
+        NodeSettings settings = new NodeSettings(template.getUUID());
+        template.getSnippetSettings().saveSettings(settings);
+        ByteArrayOutputStream os = new ByteArrayOutputStream();
+        try {
+            settings.saveToXML(os);
+            NodeSettingsRO settingsro = NodeSettings.loadFromXML(
+                    new ByteArrayInputStream(
+                            os.toString("UTF-8").getBytes("UTF-8")));
+            m_settings.loadSettings(settingsro);
+        } catch (Exception e) {
+            LOGGER.error("Cannot apply template.", e);
+        }
 
         m_colList.setSpec(spec);
         m_flowVarsList.setFlowVariables(flowVariables.values());

@@ -72,8 +72,6 @@ public class JavaSnippetSettings {
     private static final String OUT_VARS = "outVars";
     private static final String IN_COLS = "inCols";
     private static final String IN_VARS = "inVars";
-    private static final String INSERT_MISSING_AS_NULL =
-        "m_insertMissingAsNull";
     private static final String TEMPLATE_UUID = "templateUUID";
     private static final String VERSION = "version";
 
@@ -99,11 +97,6 @@ public class JavaSnippetSettings {
     /** The UUID of the blueprint for this setting. */
     private String m_templateUUID;
 
-    /** Represent missing cells as null in script. Default (false) is to
-     * return a missing cell without executing the script.
-     */
-    private boolean m_insertMissingAsNull;
-
     /** The version of the java snippet. */
     private String m_version;
 
@@ -120,7 +113,6 @@ public class JavaSnippetSettings {
         m_outVars = new OutVarList();
         m_inCols = new InColList();
         m_inVars = new InVarList();
-        m_insertMissingAsNull = false;
         m_version = JavaSnippet.VERSION_1_X;
         m_templateUUID = null;
     }
@@ -191,22 +183,6 @@ public class JavaSnippetSettings {
 
 
     /**
-     * @return the insertMissingAsNull
-     */
-    boolean getInsertMissingAsNull() {
-        return m_insertMissingAsNull;
-    }
-
-
-    /**
-     * @param insertMissingAsNull the insertMissingAsNull to set
-     */
-    void setInsertMissingAsNull(final boolean insertMissingAsNull) {
-        m_insertMissingAsNull = insertMissingAsNull;
-    }
-
-
-    /**
      * @return the version
      */
     String getVersion() {
@@ -270,7 +246,6 @@ public class JavaSnippetSettings {
         m_outVars.saveSettings(settings.addConfig(OUT_VARS));
         m_inCols.saveSettings(settings.addConfig(IN_COLS));
         m_inVars.saveSettings(settings.addConfig(IN_VARS));
-        settings.addBoolean(INSERT_MISSING_AS_NULL, m_insertMissingAsNull);
         settings.addString(VERSION, m_version);
         settings.addString(TEMPLATE_UUID, m_templateUUID);
     }
@@ -289,7 +264,6 @@ public class JavaSnippetSettings {
         m_outVars.loadSettings(settings.getConfig(OUT_VARS));
         m_inCols.loadSettings(settings.getConfig(IN_COLS));
         m_inVars.loadSettings(settings.getConfig(IN_VARS));
-        m_insertMissingAsNull = settings.getBoolean(INSERT_MISSING_AS_NULL);
         m_version = settings.getString(VERSION);
         m_templateUUID = settings.getString(TEMPLATE_UUID);
     }
@@ -308,8 +282,6 @@ public class JavaSnippetSettings {
             m_outVars.loadSettingsForDialog(settings.getConfig(OUT_VARS));
             m_inCols.loadSettingsForDialog(settings.getConfig(IN_COLS));
             m_inVars.loadSettingsForDialog(settings.getConfig(IN_VARS));
-            m_insertMissingAsNull = settings.getBoolean(INSERT_MISSING_AS_NULL,
-                    false);
             m_version = settings.getString(VERSION, JavaSnippet.VERSION_1_X);
             m_templateUUID = settings.getString(TEMPLATE_UUID, null);
         } catch (InvalidSettingsException e) {
