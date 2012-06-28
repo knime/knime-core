@@ -47,13 +47,6 @@
  */
 package org.knime.core.node.util;
 
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataColumnSpecCreator;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
-import org.knime.core.node.NotConfigurableException;
-
 import java.awt.Dimension;
 import java.awt.event.ActionListener;
 import java.awt.event.ItemListener;
@@ -69,6 +62,13 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.Border;
+
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
+import org.knime.core.node.NotConfigurableException;
 
 
 /**
@@ -366,6 +366,16 @@ public class ColumnSelectionPanel extends JPanel {
     }
 
     /**
+     * Returns the {@link DataTableSpec} used to
+     * {@link #update(DataTableSpec, String)} this component.
+     * @return the underlying spec
+     * @since 2.6
+     */
+    public DataTableSpec getDataTableSpec() {
+        return m_spec;
+    }
+
+    /**
      * @return <code>true</code> if the user has selected the RowID
      */
     public boolean rowIDSelected() {
@@ -447,7 +457,7 @@ public class ColumnSelectionPanel extends JPanel {
     public final int getSelectedIndex() {
         return m_chooser.getSelectedIndex();
     }
-    
+
     /** @return the number of selectable elements in the list. */
     public int getNrItemsInList() {
         return m_chooser.getModel().getSize();
