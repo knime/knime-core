@@ -104,6 +104,18 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/node/mine/knn/KnnNodeFactory.java" type="org.knime.base.node.mine.knn.KnnNodeFactory">
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="createNodeModel()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="createNodeView(int, KnnNodeModel)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/node/mine/mds/mdsprojection/MDSProjectionManager.java" type="org.knime.base.node.mine.mds.mdsprojection.MDSProjectionManager">
         <filter id="388161617">
             <message_arguments>
