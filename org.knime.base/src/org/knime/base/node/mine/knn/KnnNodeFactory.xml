@@ -32,6 +32,10 @@
             influence on the resulting class than the ones further away.
             (Still only k neighbors will be considered, however!)
         </option>
+        <option name="Output class probabilities">
+            If this option in enabled, an additional column, containing the
+            class probabilities, will be appended to the output table.
+        </option>
 	</fullDescription>
 	
 	<ports>

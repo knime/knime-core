@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   10.11.2006 (berthold): created
  */
@@ -52,15 +52,14 @@ package org.knime.base.node.mine.knn;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
  * This factory creates all necessary object for the kNN node.
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  */
-public class KnnNodeFactory extends NodeFactory {
+public class KnnNodeFactory extends NodeFactory<KnnNodeModel> {
     /**
      * {@inheritDoc}
      */
@@ -73,7 +72,7 @@ public class KnnNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public KnnNodeModel createNodeModel() {
         return new KnnNodeModel();
     }
 
@@ -81,8 +80,8 @@ public class KnnNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public NodeView<KnnNodeModel> createNodeView(final int viewIndex,
+            final KnnNodeModel nodeModel) {
         return null;
     }
 

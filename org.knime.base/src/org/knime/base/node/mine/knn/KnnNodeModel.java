@@ -67,8 +67,9 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.StringValue;
+import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
-import org.knime.core.data.container.SingleCellFactory;
+import org.knime.core.data.def.DoubleCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -79,6 +80,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.util.MutableDouble;
 import org.knime.core.util.MutableInteger;
+import org.knime.core.util.Pair;
 
 /**
  * This is the model for the k Nearest Neighbor node. In contrast to most
@@ -194,18 +196,12 @@ public class KnnNodeModel extends NodeModel {
         Map<Integer, Integer> secondIndex = new HashMap<Integer, Integer>();
         checkInputTables(inSpecs, featureColumns, secondIndex);
 
-        DataColumnSpec[] colSpecs =
-                new DataColumnSpec[inSpecs[1].getNumColumns() + 1];
-        for (int i = 0; i < colSpecs.length - 1; i++) {
-            colSpecs[i] = inSpecs[1].getColumnSpec(i);
-        }
-        DataColumnSpecCreator crea =
-                new DataColumnSpecCreator(inSpecs[0]
-                        .getColumnSpec(classColIndex));
-        crea.setName("Class [kNN]");
-        colSpecs[colSpecs.length - 1] = crea.createSpec();
+        ColumnRearranger crea =
+                createRearranger(inSpecs[1],
+                        inSpecs[1].getColumnSpec(classColIndex), null, null,
+                        null, -1);
 
-        return new DataTableSpec[]{new DataTableSpec(colSpecs)};
+        return new DataTableSpec[]{crea.createSpec()};
     }
 
     /**
@@ -276,8 +272,8 @@ public class KnnNodeModel extends NodeModel {
                 createRearranger(inSpec, classColumnSpec, featureColumns,
                         firstToSecond, tree, inData[1].getRowCount());
         BufferedDataTable out =
-                exec.createColumnRearrangeTable(inData[1], c, exec
-                        .createSubProgress(0.6));
+                exec.createColumnRearrangeTable(inData[1], c,
+                        exec.createSubProgress(0.6));
         return new BufferedDataTable[]{out};
     }
 
@@ -343,21 +339,27 @@ public class KnnNodeModel extends NodeModel {
         ColumnRearranger c = new ColumnRearranger(in);
         String newName = "Class [kNN]";
         while (in.containsName(newName)) {
-            newName += " ";
+            newName += "_dup";
         }
+
+        final DataColumnSpec[] colSpecs =
+                new DataColumnSpec[m_settings.outputClassProbabilities() ? 2
+                        : 1];
 
         DataColumnSpecCreator crea = new DataColumnSpecCreator(classColumnSpec);
         crea.setName(newName);
+        colSpecs[0] = crea.createSpec();
 
-        c.append(new SingleCellFactory(crea.createSpec()) {
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public DataCell getCell(final DataRow row) {
-                return classify(row, tree, featureColumns, firstToSecond);
+        if (m_settings.outputClassProbabilities()) {
+            newName = "Class probabilities [kNN]";
+            while (in.containsName(newName)) {
+                newName += "_dup";
             }
+            crea = new DataColumnSpecCreator(newName, DoubleCell.TYPE);
+            colSpecs[1] = crea.createSpec();
+        }
 
+        c.append(new CellFactory() {
             /**
              * {@inheritDoc}
              */
@@ -367,24 +369,42 @@ public class KnnNodeModel extends NodeModel {
                 exec.setProgress(curRowNr / maxRows, "Classifying row "
                         + lastKey);
             }
+
+            @Override
+            public DataCell[] getCells(final DataRow row) {
+                Pair<DataCell, Double> p =
+                        classify(row, tree, featureColumns, firstToSecond);
+                if (m_settings.outputClassProbabilities()) {
+                    return new DataCell[]{p.getFirst(),
+                            new DoubleCell(p.getSecond())};
+                } else {
+                    return new DataCell[]{p.getFirst()};
+                }
+            }
+
+            @Override
+            public DataColumnSpec[] getColumnSpecs() {
+                return colSpecs;
+            }
         });
         return c;
     }
 
-    private DataCell classify(final DataRow row, final KDTree<DataCell> tree,
-            final List<Integer> featureColumns,
+    private Pair<DataCell, Double> classify(final DataRow row,
+            final KDTree<DataCell> tree, final List<Integer> featureColumns,
             final Map<Integer, Integer> firstToSecond) {
         double[] features =
                 createQueryVector(row, featureColumns, firstToSecond);
         if (features == null) {
-            return DataType.getMissingCell();
+            return new Pair<DataCell, Double>(DataType.getMissingCell(),
+                    Double.NaN);
         }
 
         HashMap<DataCell, MutableDouble> classWeights =
                 new HashMap<DataCell, MutableDouble>();
         List<NearestNeighbour<DataCell>> nearestN =
-                tree.getKNearestNeighbours(features, Math.min(m_settings.k(),
-                        tree.size()));
+                tree.getKNearestNeighbours(features,
+                        Math.min(m_settings.k(), tree.size()));
 
         for (NearestNeighbour<DataCell> n : nearestN) {
             MutableDouble count = classWeights.get(n.getData());
@@ -400,6 +420,7 @@ public class KnnNodeModel extends NodeModel {
         }
 
         double winnerWeight = 0;
+        double weightSum = 0;
         DataCell winnerCell = DataType.getMissingCell();
         for (Map.Entry<DataCell, MutableDouble> e : classWeights.entrySet()) {
             double weight = e.getValue().doubleValue();
@@ -407,6 +428,7 @@ public class KnnNodeModel extends NodeModel {
                 winnerWeight = weight;
                 winnerCell = e.getKey();
             }
+            weightSum += weight;
         }
 
         // check if there are other classes with the same weight
@@ -420,7 +442,7 @@ public class KnnNodeModel extends NodeModel {
             }
         }
 
-        return winnerCell;
+        return new Pair<DataCell, Double>(winnerCell, winnerWeight / weightSum);
 
     }
 

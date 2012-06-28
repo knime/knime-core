@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   10.11.2006 (berthold): created
  */
@@ -72,7 +72,7 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
 
 /**
  * This class represens the dialog for the kNN node.
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  * @author Thorsten Meinl, University of Konstanz
  */
@@ -84,7 +84,9 @@ public class KnnNodeDialogPane extends NodeDialogPane {
             new JSpinner(new SpinnerNumberModel(1, 1, 1000, 1));
 
     private final JCheckBox m_weightByDistance = new JCheckBox();
-    
+
+    private final JCheckBox m_classProbabilities = new JCheckBox();
+
     private KnnSettings m_settings = new KnnSettings();
 
     /**
@@ -108,12 +110,18 @@ public class KnnNodeDialogPane extends NodeDialogPane {
         p.add(new JLabel("Number of neighbours to consider (k)   "), c);
         c.gridx = 1;
         p.add(m_k, c);
-        
+
         c.gridy++;
         c.gridx = 0;
         p.add(new JLabel("Weight neighbours by distance   "), c);
         c.gridx = 1;
         p.add(m_weightByDistance, c);
+
+        c.gridy++;
+        c.gridx = 0;
+        p.add(new JLabel("Output class probabilities   "), c);
+        c.gridx = 1;
+        p.add(m_classProbabilities, c);
 
         addTab("Standard settings", p);
     }
@@ -133,6 +141,7 @@ public class KnnNodeDialogPane extends NodeDialogPane {
         m_classColumn.update(specs[0], m_settings.classColumn());
         m_k.setValue(m_settings.k());
         m_weightByDistance.setSelected(m_settings.weightByDistance());
+        m_classProbabilities.setSelected(m_settings.outputClassProbabilities());
     }
 
     /**
@@ -144,6 +153,7 @@ public class KnnNodeDialogPane extends NodeDialogPane {
         m_settings.classColumn(m_classColumn.getSelectedColumn());
         m_settings.k(((Number)m_k.getValue()).intValue());
         m_settings.weightByDistance(m_weightByDistance.isSelected());
+        m_settings.outputClassProbabilities(m_classProbabilities.isSelected());
         m_settings.saveSettings(settings);
     }
 }

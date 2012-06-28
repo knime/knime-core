@@ -43,7 +43,7 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- *
  */
 package org.knime.base.node.mine.knn;
 
@@ -53,7 +53,7 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * This class stores the settings for the kNN node.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class KnnSettings {
@@ -62,34 +62,59 @@ public class KnnSettings {
     private int m_k = 3;
 
     private boolean m_weightByDistance;
-    
-    
+
+    private boolean m_classProbabilities;
+
     /**
-     * Returns if the nearest neighbours should be weighted by their distance
-     * to the query pattern.
-     * 
+     * Set if an additional column containing class probabilities should be
+     * appended to the output table.
+     *
+     * @param b <code>true</code> if class probabilities should be output,
+     *            <code>false</code> otherwise
+     * @since 2.6
+     */
+    public void outputClassProbabilities(final boolean b) {
+        m_classProbabilities = b;
+    }
+
+
+    /**
+     * Returns if an additional column containing class probabilities should be
+     * appended to the output table.
+     *
+     * @return <code>true</code> if class probabilities should be output,
+     *            <code>false</code> otherwise
+     * @since 2.6
+     */
+    public boolean outputClassProbabilities() {
+        return m_classProbabilities ;
+    }
+
+    /**
+     * Returns if the nearest neighbours should be weighted by their distance to
+     * the query pattern.
+     *
      * @return <code>true</code> if the neighbours should be weighted by their
-     * distance, <code>false</code> otherwise
+     *         distance, <code>false</code> otherwise
      */
     public boolean weightByDistance() {
         return m_weightByDistance;
     }
-    
-    
+
     /**
-     * Sets if the nearest neighbours should be weighted by their distance
-     * to the query pattern.
-     * 
+     * Sets if the nearest neighbours should be weighted by their distance to
+     * the query pattern.
+     *
      * @param b <code>true</code> if the neighbours should be weighted by their
-     * distance, <code>false</code> otherwise
+     *            distance, <code>false</code> otherwise
      */
     public void weightByDistance(final boolean b) {
         m_weightByDistance = b;
     }
-    
+
     /**
      * Returns the number of neighbours to consider.
-     * 
+     *
      * @return the number of neighbours
      */
     public int k() {
@@ -98,7 +123,7 @@ public class KnnSettings {
 
     /**
      * Sets the number of neighbours to consider.
-     * 
+     *
      * @param k the number of neighbours
      */
     public void k(final int k) {
@@ -107,7 +132,7 @@ public class KnnSettings {
 
     /**
      * Returns the name of the column with the class labels.
-     * 
+     *
      * @return the class column's name
      */
     public String classColumn() {
@@ -116,7 +141,7 @@ public class KnnSettings {
 
     /**
      * sets the name of the column with the class labels.
-     * 
+     *
      * @param classColumn the class column's name
      */
     public void classColumn(final String classColumn) {
@@ -125,18 +150,19 @@ public class KnnSettings {
 
     /**
      * Saves the settings into the given node settings object.
-     * 
+     *
      * @param settings a node settings object
      */
     public void saveSettings(final NodeSettingsWO settings) {
         settings.addString("classColumn", m_classColumn);
         settings.addInt("k", m_k);
         settings.addBoolean("weightByDistance", m_weightByDistance);
+        settings.addBoolean("outputClassProbabilities", m_classProbabilities);
     }
 
     /**
      * Loads the settings from the given node settings object.
-     * 
+     *
      * @param settings a node settings object
      * @throws InvalidSettingsException if some settings are missing or invalid
      */
@@ -145,5 +171,9 @@ public class KnnSettings {
         m_classColumn = settings.getString("classColumn");
         m_k = settings.getInt("k");
         m_weightByDistance = settings.getBoolean("weightByDistance");
+
+        /* since 2.6 */
+        m_classProbabilities = settings.getBoolean("outputClassProbabilities",
+                false);
     }
 }
