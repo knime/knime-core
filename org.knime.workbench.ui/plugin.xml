@@ -318,5 +318,22 @@
             id="org.knime.workbench.meta.editor.editor.WorkflowSetMetaInfoEditor">
       </editor>
    </extension>
+       <extension
+             point="org.eclipse.ui.actionSets">
+          <actionSet
+                id="org.knime.workbench.ui.global"
+                label="KNIME"
+                visible="true">
+             <action
+                   class="org.knime.workbench.ui.OpenLogfileAction"
+                   hoverIcon="icons/open_logfile.png"
+                   icon="icons/open_logfile.png"
+                   id="org.knime.workbench.ui.openLogfile"
+                   label="Open KNIME log"
+                   toolbarPath="Normal/knime"
+                   tooltip="Opens KNIME&apos;s log file in a text editor">
+             </action>
+          </actionSet>
+       </extension>
    
 </plugin>
