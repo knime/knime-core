@@ -174,7 +174,8 @@ public class EditorGridSettingsDialog extends Dialog {
         Label txt = new Label(header, SWT.NONE);
         txt.setBackground(white);
         txt.setText("Modify the settings for the grid in the active workflow editor \n"
-                + "(to change default settings for new workflow editors go to the preference page)");
+                + "(To change default settings for new workflow editors go to the preference page.\n"
+                + "Snap to grid behavior can be toggled by pressing 'Ctrl-#')");
         txt.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
         new Label(header, SWT.NONE);
         // 3rd row
