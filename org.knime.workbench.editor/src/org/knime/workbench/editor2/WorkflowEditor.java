@@ -150,6 +150,7 @@ import org.eclipse.ui.views.properties.PropertySheetPage;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.workflow.EditorUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
@@ -161,6 +162,7 @@ import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.UIInformation;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -467,6 +469,8 @@ public class WorkflowEditor extends GraphicalEditor implements
             ResourcesPlugin.getWorkspace().removeResourceChangeListener(this);
         }
         if (m_parentEditor != null && m_manager != null) {
+            // Store the editor settings with the meta node
+            saveEditorSettingsToWorkflowManager(); // doesn't persist settings to disk
             // bug fix 2051: Possible memory leak related to sub-flow editor.
             // meta node editors were still referenced by the EditorHistory
             IWorkbench workbench = PlatformUI.getWorkbench();
@@ -1045,7 +1049,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     /**
-     * Sets the snap functionality.
+     * Sets the snap functionality and zoomlevel
      */
     private void loadProperties() {
         // Snap to Geometry property
@@ -1053,8 +1057,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         graphicalViewer.setProperty(SnapToGeometry.PROPERTY_SNAP_ENABLED,
                 new Boolean(true));
 
-        // Grid properties
-        updateGrid();
+        if (getWorkflowManager() != null) {
+            applyEditorSettingsFromWorkflowManager();
+        }
     }
 
     /** Sets background color according to edit mode (see
@@ -1149,6 +1154,12 @@ public class WorkflowEditor extends GraphicalEditor implements
                 }
             });
             return;
+        }
+
+        // attach editor properties with the workflow manager - for all sub editors too
+        saveEditorSettingsToWorkflowManager();
+        for (IEditorPart subEditor : getSubEditors()) {
+            ((WorkflowEditor)subEditor).saveEditorSettingsToWorkflowManager();
         }
 
         // to be sure to mark dirty and inform the user about running nodes
@@ -1358,6 +1369,93 @@ public class WorkflowEditor extends GraphicalEditor implements
             workflowDirNewName = baseName + (++index);
         }
         return workflowDirNewName;
+    }
+
+    /**
+     * Stores the current editor settings with the workflow manager. In its NodeUIInfo object. Overrides any previously
+     * stored editor settings.
+     */
+    private void saveEditorSettingsToWorkflowManager() {
+
+        NodeUIInformation uiInfo = getWorkflowManager().getUIInformation();
+        if (uiInfo == null) {
+            uiInfo = new NodeUIInformation();
+        }
+        // overwriting any existing editor settings in the ui info
+        uiInfo.setEditorUIInformation(getCurrentEditorSettings());
+        getWorkflowManager().setUIInformation(uiInfo);
+    }
+
+    /**
+     * @return the current values of the settings (grid and zoomlevel) of this editor
+     */
+    public EditorUIInformation getCurrentEditorSettings() {
+        EditorUIInformation editorInfo = new EditorUIInformation();
+        editorInfo.setZoomLevel(getZoomfactor());
+        editorInfo.setSnapToGrid(getEditorSnapToGrid());
+        editorInfo.setShowGrid(getEditorIsGridVisible());
+        editorInfo.setGridX(getEditorGridX());
+        editorInfo.setGridY(getEditorGridY());
+        return editorInfo;
+    }
+
+    /**
+     * Applies the settings to the editor. Can't be null.
+     * @see #getCurrentEditorSettings()
+     * @see #getEditorSettingsDefault()
+     * @param settings to apply
+     */
+    public void applyEditorSettings(final EditorUIInformation settings) {
+        getViewer().setProperty(SnapToGrid.PROPERTY_GRID_ENABLED, Boolean.valueOf(settings.getSnapToGrid()));
+        getViewer().setProperty(SnapToGrid.PROPERTY_GRID_VISIBLE, Boolean.valueOf(settings.getShowGrid()));
+        getViewer().setProperty(SnapToGrid.PROPERTY_GRID_SPACING,
+                new Dimension(settings.getGridX(), settings.getGridY()));
+        setZoomfactor(settings.getZoomLevel());
+    }
+
+    private void applyEditorSettingsFromWorkflowManager() {
+        EditorUIInformation settings = null;
+        UIInformation uiInfo = getWorkflowManager().getUIInformation();
+        if (uiInfo == null) {
+            // this is an old workflow: don't show or enable grid
+            settings = getEditorSettingsDefault();
+            settings.setShowGrid(false);
+            settings.setSnapToGrid(false);
+            LOGGER.info("Workflow w/o editor settings.");
+        } else if (uiInfo instanceof NodeUIInformation) {
+            settings = ((NodeUIInformation)uiInfo).getEditorUIInformation();
+            if (settings == null) {
+                // if this is a meta node - derive settings from parent
+                if (m_fileResource == null && m_parentEditor != null) {
+                    m_parentEditor.saveEditorSettingsToWorkflowManager();
+                    settings = m_parentEditor.getCurrentEditorSettings();
+                    // don't derive zoom factor.
+                    if (settings != null) {
+                        settings.setZoomLevel(1.0);
+                    }
+                }
+                if (settings == null) {
+                    settings = getEditorSettingsDefault();
+                }
+            }
+        } else {
+            LOGGER.error("Unable to restore editor settings (unexpected settings object)");
+            return;
+        }
+        applyEditorSettings(settings);
+    }
+
+    /**
+     * @return an object with the default value (mostly from the preference page) for the editor settings
+     */
+    public EditorUIInformation getEditorSettingsDefault() {
+        EditorUIInformation result = new EditorUIInformation();
+        result.setSnapToGrid(getPrefSnapToGrid());
+        result.setShowGrid(getPrefIsGridVisible());
+        result.setGridX(getPrefGridXSize());
+        result.setGridY(getPrefGridYSize());
+        result.setZoomLevel(1.0);
+        return result;
     }
 
     /**
@@ -1641,10 +1739,22 @@ public class WorkflowEditor extends GraphicalEditor implements
 
 
     private double getZoomfactor() {
-        ZoomManager zoomManager =
-                (ZoomManager)(getViewer().getProperty(ZoomManager.class
-                        .toString()));
+        GraphicalViewer viewer = getViewer();
+        if (viewer == null) {
+            return 1.0;
+        }
+        ZoomManager zoomManager = (ZoomManager)(viewer.getProperty(ZoomManager.class.toString()));
+        if (zoomManager == null) {
+            return 1.0;
+        }
         return zoomManager.getZoom();
+    }
+
+    private void setZoomfactor(final double z) {
+        ZoomManager zoomManager =
+            (ZoomManager)(getViewer().getProperty(ZoomManager.class
+                    .toString()));
+        zoomManager.setZoom(z);
     }
 
     private boolean isNodeAtRel(final Point relativeLoc) {
@@ -1699,7 +1809,11 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @return the editors grid, or the value from the pref page (if not set in the editor)
      */
     public int getEditorGridX() {
-        Dimension grid = (Dimension)getViewer().getProperty(SnapToGrid.PROPERTY_GRID_SPACING);
+        GraphicalViewer viewer = getViewer();
+        if (viewer == null) {
+            return getPrefGridXSize();
+        }
+        Dimension grid = (Dimension)viewer.getProperty(SnapToGrid.PROPERTY_GRID_SPACING);
         if (grid != null) {
             return grid.width;
         }
@@ -1713,7 +1827,11 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @return the editors grid, or the value from the pref page (if not set in the editor)
      */
     public int getEditorGridY() {
-        Dimension grid = (Dimension)getViewer().getProperty(SnapToGrid.PROPERTY_GRID_SPACING);
+        GraphicalViewer viewer = getViewer();
+        if (viewer == null) {
+            return getPrefGridYSize();
+        }
+        Dimension grid = (Dimension)viewer.getProperty(SnapToGrid.PROPERTY_GRID_SPACING);
         if (grid != null) {
             return grid.height;
         }
@@ -1727,7 +1845,11 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @return true, if the grid is visible in this editor
      */
     public boolean getEditorIsGridVisible() {
-        Boolean visi = (Boolean)getViewer().getProperty(SnapToGrid.PROPERTY_GRID_VISIBLE);
+        GraphicalViewer viewer = getViewer();
+        if (viewer == null) {
+            return getPrefIsGridVisible();
+        }
+        Boolean visi = (Boolean)viewer.getProperty(SnapToGrid.PROPERTY_GRID_VISIBLE);
         if (visi != null) {
             return visi.booleanValue();
         }
@@ -1741,11 +1863,15 @@ public class WorkflowEditor extends GraphicalEditor implements
      * @return true, if snap to grid is enabled in this editor
      */
     public boolean getEditorSnapToGrid() {
-        Boolean snap = (Boolean)getViewer().getProperty(SnapToGrid.PROPERTY_GRID_ENABLED);
-        if (snap != null) {
-            return snap.booleanValue();
+        GraphicalViewer viewer = getViewer();
+        if (viewer == null) {
+            return getPrefSnapToGrid();
         }
-        return getPrefSnapToGrid();
+        Boolean snap = (Boolean)viewer.getProperty(SnapToGrid.PROPERTY_GRID_ENABLED);
+        if (snap == null) {
+            return getPrefSnapToGrid();
+        }
+        return snap.booleanValue();
     }
 
     /**
@@ -2338,13 +2464,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     /** {@inheritDoc} */
     @Override
     public void propertyChange(final PropertyChangeEvent event) {
-        String prop = event.getProperty();
-        if (PreferenceConstants.P_GRID_SNAP_TO.equals(prop)
-                || PreferenceConstants.P_GRID_SHOW.equals(prop)
-                || PreferenceConstants.P_GRID_SIZE_X.equals(prop)
-                || PreferenceConstants.P_GRID_SIZE_Y.equals(prop)) {
-            updateGrid();
-        }
+        // nothing in the properties would affect an open editor
     }
 
 

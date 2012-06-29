@@ -65,6 +65,7 @@ import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.LayerConstants;
+import org.eclipse.gef.SnapToGrid;
 import org.eclipse.gef.SnapToGuides;
 import org.eclipse.gef.SnapToHelper;
 import org.eclipse.gef.commands.CommandStackListener;
@@ -244,9 +245,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
                 snapStrategies.add(new SnapToGuides(this));
             }
 
-            Boolean snapToGrid =
-                (Boolean)getViewer().getProperty(
-                        SnapToPortGeometry.PROPERTY_SNAP_ENABLED);
+            Boolean snapToGrid = (Boolean)getViewer().getProperty(SnapToGrid.PROPERTY_GRID_ENABLED);
 			if (snapToGrid != null && snapToGrid.booleanValue()) {
 				snapStrategies.add(new SnapIconToGrid(this));
 			} else {

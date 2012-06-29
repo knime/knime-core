@@ -8,7 +8,11 @@
             description="Commands available for the workflow editor"
             name="KNIME Workflow Editor commands"
             id="knime.command.category"/>
-            
+      <command
+            categoryId="knime.command.category"
+            description="Opens the settings dialog for the grid of the workflow editor"
+            id="knime.commands.editor.gridSettings"
+            name="Grid Settings..."/>
       <command
             categoryId="knime.command.category"
             description="Opens the configuration dialog on the selected node"
@@ -122,6 +126,7 @@
                label="Resume Loop Execution"
                menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="Resume loop execution"/>
          <action
                class="org.knime.workbench.editor2.actions.delegates.PauseLoopExecutionEditorAction"
@@ -132,6 +137,7 @@
                label="Pause Execution"
                menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="Pause execution"/>
          <action
                class="org.knime.workbench.editor2.actions.delegates.StepLoopEditorAction"
@@ -142,6 +148,7 @@
                label="Step Loop Execution"
                menubarPath="org.knime.workbench.editor.menu/group1"
                style="push"
+               toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="Do one loop step"/>
          <action
                class="org.knime.workbench.editor2.actions.delegates.HideNodeNamesEditorAction"
@@ -283,6 +290,19 @@
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="Configure selected node"/>
+         <action
+               class="org.knime.workbench.editor2.actions.delegates.ChangeGridEditorAction"
+               definitionId="knime.commands.editor.gridSettings"
+               disabledIcon="icons/grid_16_bw.png"
+               icon="icons/grid_16.png"
+               id="org.knime.workbench.editor.actions.gridSettings"
+               label="Grid Settings..."
+               menubarPath="org.knime.workbench.editor.menu/group2"
+               style="push"
+               toolbarPath="org.knime.workbench.editor.menu/group2"
+               tooltip="Change workflow editor grid settings"/>
+               
+               
       </editorContribution>
    </extension>
    <extension point="org.eclipse.ui.bindings">
@@ -306,6 +326,11 @@
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="F6"/>
+      <key
+            commandId="knime.commands.editor.gridSettings"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="SHIFT+F11"/>
       <key
             commandId="knime.commands.openView"
             contextId="org.eclipse.ui.contexts.window"
