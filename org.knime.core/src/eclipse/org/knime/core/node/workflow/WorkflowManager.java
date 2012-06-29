@@ -4986,12 +4986,18 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             final boolean configureParent) {
         // ensure we always configured ALL successors if we configure the node
         assert (!configureMyself) || (ports == null);
-
-        // FIXME: actually consider port index!!
-
         // create list of properly ordered nodes (each one appears only once!)
-        LinkedHashMap<NodeID, Set<Integer>> nodes
-             = m_workflow.getBreadthFirstListOfNodeAndSuccessors(nodeId, false);
+        LinkedHashMap<NodeID, Set<Integer>> nodes;
+        if (ports != null) {
+            assert !configureMyself;
+            // only consider nodes attached to port:
+            nodes = m_workflow.getBreadthFirstListOfPortSuccessors(
+                    nodeId, ports, false);
+        } else {
+            // take all nodes
+            nodes = m_workflow.getBreadthFirstListOfNodeAndSuccessors(
+                    nodeId, false);
+        }
         // remember which ones we did configure to avoid useless configurations
         // (this list does not contain nodes where configure() didn't change
         // the specs/handlers/stacks.
@@ -7449,7 +7455,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return findNextWaitingWorkflowManager(this, nodeModelClass);
     }
 
-    /** 
+    /**
      * recursion for nested meta nodes
      */
     private <T> WorkflowManager findNextWaitingWorkflowManager(
@@ -7470,7 +7476,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     if (n2s.size() > 0) {
                         return wfm;
                     } else {
-                        WorkflowManager nextWfm 
+                        WorkflowManager nextWfm
                                 = findNextWaitingWorkflowManager(wfm,
                                 nodeModelClass);
                         if (nextWfm != null) {
