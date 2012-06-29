@@ -111,41 +111,38 @@ public class MainPreferencePage extends FieldEditorPreferencePage
                 }, parent);
         addField(m_consoleLogEditor);
 
+        addField(new HorizontalLineField(parent));
         addField(new BooleanFieldEditor(PreferenceConstants.P_CONFIRM_RESET,
                 "Confirm Node Reset", parent));
-
         addField(new BooleanFieldEditor(PreferenceConstants.P_CONFIRM_DELETE,
                 "Confirm Node/Connection Deletion", parent));
-
         addField(new BooleanFieldEditor(PreferenceConstants.P_CONFIRM_RECONNECT,
                 "Confirm reconnection of already connected nodes", parent));
-
         addField(new BooleanFieldEditor(
                 PreferenceConstants.P_CONFIRM_EXEC_NODES_NOT_SAVED,
                 "Confirm if executing nodes are not saved", parent));
-
         addField(new BooleanFieldEditor(
                 PreferenceConstants.P_CONFIRM_EXEC_NODES_DATA_AWARE_DIALOGS,
                 "Confirm execution of upstream nodes when data is "
                 + "needed for configuration", parent));
 
+        addField(new HorizontalLineField(parent));
         IntegerFieldEditor freqHistorySizeEditor = new IntegerFieldEditor(
                 PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE,
                 "Maximal size for most frequently used nodes", parent, 3);
         freqHistorySizeEditor.setValidRange(1, 50);
         freqHistorySizeEditor.setTextLimit(3);
         freqHistorySizeEditor.load();
-
         IntegerFieldEditor usedHistorySizeEditor = new IntegerFieldEditor(
                 PreferenceConstants.P_FAV_LAST_USED_SIZE,
                 "Maximal size for last used nodes", parent, 3);
         usedHistorySizeEditor.setValidRange(1, 50);
         usedHistorySizeEditor.setTextLimit(3);
         usedHistorySizeEditor.load();
-
         addField(usedHistorySizeEditor);
         addField(freqHistorySizeEditor);
 
+        addField(new HorizontalLineField(parent));
         m_emptyNodeLabel = new BooleanFieldEditor(
                 PreferenceConstants.P_SET_NODE_LABEL,
                 "Set node label prefix", parent) {
@@ -155,40 +152,37 @@ public class MainPreferencePage extends FieldEditorPreferencePage
                 m_nodeLabelPrefix.setEnabled(neu, parent);
             }
         };
-
         m_nodeLabelPrefix = new StringFieldEditor(
                 PreferenceConstants.P_DEFAULT_NODE_LABEL,
                 "Default node label (prefix): ", parent);
-
         addField(m_emptyNodeLabel);
         addField(m_nodeLabelPrefix);
-
         IntegerFieldEditor fontSizeEditor = new IntegerFieldEditor(
                 PreferenceConstants.P_NODE_LABEL_FONT_SIZE,
                 "Change node name and label font size", parent);
         addField(fontSizeEditor);
 
+        addField(new HorizontalLineField(parent));
+        addField(new LabelField(parent, "These grid preferences apply to new workflows only."));
         addField(new BooleanFieldEditor(PreferenceConstants.P_GRID_SHOW,
                 "Show grid", parent));
-
         addField(new BooleanFieldEditor(PreferenceConstants.P_GRID_SNAP_TO,
                 "Snap to grid", parent));
-
         IntegerFieldEditor gridSizeXEditor = new IntegerFieldEditor(
                 PreferenceConstants.P_GRID_SIZE_X, "Horiz. grid size (in px)", parent);
         gridSizeXEditor.setValidRange(3, 500);
         gridSizeXEditor.setTextLimit(3);
         gridSizeXEditor.load();
         addField(gridSizeXEditor);
-
         IntegerFieldEditor gridSizeYEditor = new IntegerFieldEditor(
                 PreferenceConstants.P_GRID_SIZE_Y, "Vertic. grid size (in px)", parent);
         gridSizeYEditor.setValidRange(3, 500);
         gridSizeYEditor.setTextLimit(3);
         gridSizeYEditor.load();
         addField(gridSizeYEditor);
-
-
+        addField(new LabelField(parent, "To change the grid settings of a workflow, use the 'Editor Grid Settings' "
+                + "toolbar button."));
+        addField(new HorizontalLineField(parent));
         ComboFieldEditor updateMetaNodeLinkOnLoadEditor = new ComboFieldEditor(
                 PreferenceConstants.P_META_NODE_LINK_UPDATE_ON_LOAD,
                 "Update meta node links when workflow loads",

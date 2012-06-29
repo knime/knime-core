@@ -121,7 +121,11 @@ public interface PreferenceConstants {
 
     /** Pref constant for grid size (number of pixels). */
     public static final String P_GRID_SIZE_X = "knime.gridsize.x";
+    /** Pref constant for grid size (number of pixels). */
     public static final String P_GRID_SIZE_Y = "knime.gridsize.y";
-
+    /** default grid distance */
+    public static final int P_GRID_DEFAULT_SIZE_X = 90;
+    /** default grid distance */
+    public static final int P_GRID_DEFAULT_SIZE_Y = 120;
 
 }

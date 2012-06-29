@@ -110,7 +110,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 
         store.setDefault(PreferenceConstants.P_GRID_SHOW, Boolean.FALSE);
         store.setDefault(PreferenceConstants.P_GRID_SNAP_TO, Boolean.FALSE);
-        store.setDefault(PreferenceConstants.P_GRID_SIZE_X, 90);
-        store.setDefault(PreferenceConstants.P_GRID_SIZE_Y, 120);
+        store.setDefault(PreferenceConstants.P_GRID_SIZE_X, PreferenceConstants.P_GRID_DEFAULT_SIZE_X);
+        store.setDefault(PreferenceConstants.P_GRID_SIZE_Y, PreferenceConstants.P_GRID_DEFAULT_SIZE_Y);
     }
 }
