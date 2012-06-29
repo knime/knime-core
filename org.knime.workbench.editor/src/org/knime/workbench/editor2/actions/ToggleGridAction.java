@@ -110,6 +110,9 @@ public class ToggleGridAction extends AbstractNodeAction {
      */
     @Override
     protected boolean calculateEnabled() {
+        if (getManager().isWriteProtected()) {
+            return false;
+        }
         return true;
     }
 

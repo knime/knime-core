@@ -112,6 +112,9 @@ public class ChangeGridAction extends AbstractNodeAction {
      */
     @Override
     protected boolean calculateEnabled() {
+        if (getManager().isWriteProtected()) {
+            return false;
+        }
         return true;
     }
 
