@@ -386,11 +386,11 @@ public final class NodeDescriptionConverter {
             if (o.getKey().equals(new Attributes.Name(REQUIRE))) {
                 if (!((String)o.getValue()).contains(HELP_JAR)) {
                     attrs.putValue(o.getKey().toString(), o.getValue() + ","
-                            + HELP_JAR);
+                            + HELP_JAR + ";resolution:=optional");
                 }
                 if (!((String)o.getValue()).contains(HELP_UI)) {
                     attrs.putValue(o.getKey().toString(), o.getValue() + ","
-                            + HELP_UI);
+                            + HELP_UI + ";resolution:=optional");
                 }
                 break;
             }
