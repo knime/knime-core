@@ -121,6 +121,8 @@
                label="Node"
                path="additions">
             <groupMarker name="group1"/>
+            <groupMarker name="group2">
+            </groupMarker>
          </menu>
          <action
                class="org.knime.workbench.editor2.actions.delegates.ResumeLoopEditorAction"
