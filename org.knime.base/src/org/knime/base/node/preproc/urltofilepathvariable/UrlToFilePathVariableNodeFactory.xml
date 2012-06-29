@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="urltofilepath.png" type="Manipulator">
+    <name>URL to File Path (Variable)</name>
+    <shortDescription>Converts URLs into file paths.
+    </shortDescription>
+    <fullDescription>
+        <intro>
+			Converts the url strings of the specified string flow variable 
+			into file path strings. Four string flow variables will be
+			set. The first contains the complete file path, the second the 
+			parent folder of the file, the third contains the file name 
+			(without extension), and the last contains the file extension.
+			<br/>
+			It can be specified whether the node will fail if an invalid url 
+			string occurs or a file location does not exist. If failing is 
+			switched off (default) empty strings will set as values for each 
+			output variable.
+		</intro>
+        <option name="Add prefix to variable identifiers">
+            If checked, the name of the specified input variable is used as
+            prefix for the names of the output variables.
+        </option>
+        <option name="Fail if URL has invalid syntax">
+            If checked, node will fail if an invalid url string occurs,
+            otherwise an empty string will be set as file path, parent folder, 
+            file name, and file extension variables.
+        </option>
+	    <option name="Fail if file does not exist">
+            If checked, node will fail if a file location does not exist,
+            otherwise an empty string will set as file path parent folder, file
+            name, and file extension variables.
+        </option>        
+	</fullDescription>
+		
+	<ports>
+        <inPort name="Flow variable containing URL string" index="0">
+            A string flow variable containing the url string to convert.
+        </inPort>
+        <outPort name="Flow variables containing converted strings" index="0">
+        	Four additional string flow variables containing the file path, 
+        	parent folder, the file name, and the file extension.
+        </outPort>
+	</ports>
+</knimeNode>

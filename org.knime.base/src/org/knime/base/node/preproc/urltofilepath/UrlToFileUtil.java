@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2012
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -40,67 +40,63 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  * 
  * History
- *   Nov 13, 2007 (schweize): created
+ *   17.05.2012 (kilian): created
  */
-package org.knime.base.node.preproc.colsort;
+package org.knime.base.node.preproc.urltofilepath;
 
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
-import org.knime.core.node.NodeDialogPane;
+import java.io.File;
 
 /**
- * 
- * @author schweize, University of Konstanz
+ * Utility class to extract parent folder, file name, and file extension from 
+ * file.
+ * @author Kilian Thiel, KNIME.com, Berlin, Germany
  */
-public class ColumnResorterNodeFactory 
-    extends NodeFactory<ColumnResorterNodeModel> {
+public final class UrlToFileUtil {
+    
+    private UrlToFileUtil() { /*empty*/ }
 
     /**
-     * {@inheritDoc}
+     * Extracts parent folder from file.
+     * @param f The file to extract parent folder from.
+     * @return The parent folder of file as string.
      */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new ColumnResorterNodeDialog();
+    public static String getParentFolder(final File f) {
+        return f.getParent();
     }
-
+    
     /**
-     * {@inheritDoc}
+     * Extracts file name from file.
+     * @param f The file to extract file name, without extension from.
+     * @return The file name without extension of file as string.
      */
-    @Override
-    public ColumnResorterNodeModel createNodeModel() {
-        return new ColumnResorterNodeModel();
+    public static String getFileName(final File f) {
+        String fileName = f.getName();
+        int i = fileName.lastIndexOf(".");
+        if (i >= 0) {
+            fileName = fileName.substring(0, i);
+        }
+        return fileName;
     }
-
+    
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<ColumnResorterNodeModel> createNodeView(
-            final int viewIndex, final ColumnResorterNodeModel nodeModel) {
-        return null;
+     * Extracts file extension from file.
+     * @param f The file to extract file extension from.
+     * @return The file extension of file as string.
+     */    
+    public static String getFileExtension(final File f) {
+        String extension = f.getName();
+        int i = extension.lastIndexOf(".");
+        if (i >= 0) {
+            extension = extension.substring(i + 1);
+        } else {
+            extension = "";
+        }
+        return extension;
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
-        // TODO Auto-generated method stub
-        return true;
-    }
-
 }

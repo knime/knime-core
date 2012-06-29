@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="variableloopend.png" type="LoopEnd">
+    <name>Variable Loop End</name>
+    <shortDescription>Node collecting variables created in a loop. 
+    </shortDescription>
+    <fullDescription>
+        <intro>
+			Node collecting variables created in a loop. This node closes a 
+			loop but does not aggregate data created in the loop but only 
+			variables. It can be used to close loops where all the magic 
+			happens in the loop itself and no aggregated output is needed. One 
+			instance could be a loop over a list of files, whereby each file 
+			is processed in one loop iteration (including writing one output 
+			file for each input). 
+		</intro>
+	</fullDescription>
+		
+	<ports>
+        <inPort name="Flow variables" index="0">
+            Flow variables to collect.
+        </inPort>
+        <outPort name="Data table of flow variables" index="0">
+        	Data table with during the loop collected variables.
+        </outPort>
+	</ports>
+</knimeNode>

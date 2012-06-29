@@ -924,11 +924,6 @@
             id="org.knime.base.node.io.pmml.write.PMMLWriterNodeFactory">
       </node>
       <node
-            category-path="manipulation/column/column-transform"
-            factory-class="org.knime.base.node.preproc.colsort.ColumnResorterNodeFactory"
-            id="org.knime.base.node.preproc.colsort.ColumnResorterNodeFactory">
-      </node>
-      <node
             category-path="/view"
             factory-class="org.knime.base.node.viz.liftchart.LiftChartNodeFactory"
             id="org.knime.base.node.viz.liftchart.LiftChartNodeFactory">
@@ -1293,6 +1288,60 @@
             factory-class="org.knime.base.node.preproc.filter.column.DataColumnSpecFilterNodeFactory"
             id="org.knime.base.node.preproc.filter.column.DataColumnSpecFilterNodeFactory">
       </node> 
+      <node
+            category-path="/misc"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.urltofilepath.UrlToFilePathNodeFactory"
+            id="org.knime.base.node.preproc.urltofilepath.UrlToFilePathNodeFactory">
+      </node>
+      <node
+            category-path="/misc"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.urltofilepathvariable.UrlToFilePathVariableNodeFactory"
+            id="org.knime.base.node.preproc.urltofilepathvariable.UrlToFilePathVariableNodeFactory">
+      </node>
+      <node
+            category-path="//manipulation/column/column-convert+replace"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.rounddouble.RoundDoubleNodeFactory"
+            id="org.knime.base.node.preproc.rounddouble.RoundDoubleNodeFactory">
+      </node>      
+      <node
+            category-path="/manipulation/column/column-transform"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.columnresorter.ColumnResorterNodeFactory"
+            id="org.knime.base.node.preproc.columnresorter.ColumnResorterNodeFactory">
+      </node>
+      <node
+            category-path="/misc"
+            expert-flag="false"
+            factory-class="org.knime.base.node.util.extracttabledimension.ExtractTableDimensionNodeFactory"
+            id="org.knime.base.node.util.extracttabledimension.ExtractTableDimensionNodeFactory">
+      </node>
+      <node
+            category-path="/misc"
+            expert-flag="false"
+            factory-class="org.knime.base.node.util.extracttablespec.ExtractTableSpecNodeFactory"
+            id="org.knime.base.node.util.extracttablespec.ExtractTableSpecNodeFactory">
+      </node>      
+      <node
+            category-path="/flowcontrol/variables"
+            expert-flag="false"
+            factory-class="org.knime.base.node.util.mergevariables.MergeVariablesNodeFactory"
+            id="org.knime.base.node.util.mergevariables.MergeVariablesNodeFactory">
+      </node>
+      <node
+            category-path="/flowcontrol/loopsupport"
+            expert-flag="false"
+            factory-class="org.knime.base.node.meta.looper.group.GroupLoopStartNodeFactory"
+            id="org.knime.base.node.meta.looper.group.GroupLoopStartNodeFactory">
+      </node>
+      <node
+            category-path="/flowcontrol/loopsupport"
+            expert-flag="false"
+            factory-class="org.knime.base.node.meta.looper.variableloopend.VariableLoopEndNodeFactory"
+            id="org.knime.base.node.meta.looper.variableloopend.VariableLoopEndNodeFactory">
+      </node>
       <!-- new ones -->
       
 

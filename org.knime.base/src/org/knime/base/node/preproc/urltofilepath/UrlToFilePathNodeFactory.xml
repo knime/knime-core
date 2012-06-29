@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="urltofilepath.png" type="Manipulator">
+    <name>URL to File Path</name>
+    <shortDescription>Converts URLs into file paths.
+    </shortDescription>
+    <fullDescription>
+        <intro>
+			Converts the url strings of the specified string column into file
+			path strings. Four columns will be appended on the input data 
+			table. One, containing the complete file paths, one containing the 
+			parent folder of the files, one containing the file names (without 
+			extensions), and one containing the file extensions.
+			<br/>
+			It can be specified whether the node will fail if an invalid url 
+			string occurs or a file location does not exist. If failing is 
+			switched off (default) missing values will be inserted as file
+			paths, parent folders, file names, as well as file extensions.
+		</intro>
+		<option name="Column containing URLs">
+			The column containing the url strings.
+		</option>
+        <option name="Fail if URL has invalid syntax">
+            If checked, node will fail if an invalid url string occurs,
+            otherwise a missing value will be inserted as file path, parent 
+            folder, file name, and file extension.
+        </option>
+	    <option name="Fail if file does not exist">
+            If checked, node will fail if a file location does not exist,
+            otherwise a missing value will be inserted as file path, parent 
+            folder, file name, and file extension.
+        </option>
+	</fullDescription>
+		
+	<ports>
+        <inPort name="Table containing URL strings" index="0">
+            The input table containing URL strings to convert.
+        </inPort>
+        <outPort name="Table containing converted strings" index="0">
+        	The output table with appended file paths, parent folders, file 
+        	names, and file extensions of converted urls.
+        </outPort>
+	</ports>
+</knimeNode>
