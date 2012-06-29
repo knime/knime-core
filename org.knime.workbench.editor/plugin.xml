@@ -343,12 +343,12 @@
             commandId="knime.commands.editor.gridSettings"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="CTRL+#"/>
+            sequence="CTRL+SHIFT+#"/>
       <key
             commandId="knime.commands.editor.toggleGrid"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="#"/>            
+            sequence="CTRL+#"/>            
       <key
             commandId="knime.commands.openView"
             contextId="org.eclipse.ui.contexts.window"
