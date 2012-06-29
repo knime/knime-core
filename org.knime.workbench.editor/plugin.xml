@@ -20,6 +20,26 @@
             name="Toggle Snap to Grid"/>
       <command
             categoryId="knime.command.category"
+            description="Moves the selected nodes up"
+            id="knime.commands.editor.moveNodesUp"
+            name="Move Nodes Up"/>
+      <command
+            categoryId="knime.command.category"
+            description="Moves the selected nodes down"
+            id="knime.commands.editor.moveNodesDown"
+            name="Move Nodes Down"/>
+      <command
+            categoryId="knime.command.category"
+            description="Moves the selected nodes to the left"
+            id="knime.commands.editor.moveNodesLeft"
+            name="Move Nodes Left"/>
+      <command
+            categoryId="knime.command.category"
+            description="Moves the selected nodes to the right"
+            id="knime.commands.editor.moveNodesRight"
+            name="Move Nodes Right"/>
+      <command
+            categoryId="knime.command.category"
             description="Opens the configuration dialog on the selected node"
             id="knime.commands.openDialog"
             name="Configure..."/>
@@ -317,7 +337,42 @@
                label="Toggle Snap to Grid"
                style="push"
                tooltip="Toggle snap to grid behavior of workflow editor"/>
-               
+         <action
+               class="org.knime.workbench.editor2.actions.delegates.MoveNodeUpEditorAction"
+               definitionId="knime.commands.editor.moveNodesUp"
+               disabledIcon="icons/move_dis.png"
+               icon="icons/move.png"
+               id="org.knime.workbench.editor.actions.moveNodeUp"
+               label="Move Nodes Up"
+               style="push"
+               tooltip="Move the selected nodes up"/>
+         <action
+               class="org.knime.workbench.editor2.actions.delegates.MoveNodeDownEditorAction"
+               definitionId="knime.commands.editor.moveNodesDown"
+               disabledIcon="icons/move_dis.png"
+               icon="icons/move.png"
+               id="org.knime.workbench.editor.actions.moveNodeDown"
+               label="Move Nodes Down"
+               style="push"
+               tooltip="Move the selected nodes down"/>
+         <action
+               class="org.knime.workbench.editor2.actions.delegates.MoveNodeLeftEditorAction"
+               definitionId="knime.commands.editor.moveNodesLeft"
+               disabledIcon="icons/move_dis.png"
+               icon="icons/move.png"
+               id="org.knime.workbench.editor.actions.moveNodeLeft"
+               label="Move Nodes Left"
+               style="push"
+               tooltip="Move the selected nodes to the left"/>
+         <action
+               class="org.knime.workbench.editor2.actions.delegates.MoveNodeRightEditorAction"
+               definitionId="knime.commands.editor.moveNodesRight"
+               disabledIcon="icons/move_dis.png"
+               icon="icons/move.png"
+               id="org.knime.workbench.editor.actions.moveNodeRight"
+               label="Move Nodes Right"
+               style="push"
+               tooltip="Move the selected nodes to the right"/>
       </editorContribution>
    </extension>
    <extension point="org.eclipse.ui.bindings">
@@ -411,6 +466,27 @@
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="ALT+CTRL+F8"/>  
+      <key
+            commandId="knime.commands.editor.moveNodesUp"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="SHIFT+CTRL+ARROW_UP"/> 
+      <key
+            commandId="knime.commands.editor.moveNodesDown"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="SHIFT+CTRL+ARROW_DOWN"/>  
+      <key
+            commandId="knime.commands.editor.moveNodesLeft"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="SHIFT+CTRL+ARROW_LEFT"/> 
+      <key
+            commandId="knime.commands.editor.moveNodesRight"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="SHIFT+CTRL+ARROW_RIGHT"/> 
+            
    </extension>
     <extension
          id="modelProvider"
