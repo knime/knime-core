@@ -15,6 +15,11 @@
             name="Grid Settings..."/>
       <command
             categoryId="knime.command.category"
+            description="Toggles the snap to grid behavior of the workflow editor"
+            id="knime.commands.editor.toggleGrid"
+            name="Toggle Snap to Grid"/>
+      <command
+            categoryId="knime.command.category"
             description="Opens the configuration dialog on the selected node"
             id="knime.commands.openDialog"
             name="Configure..."/>
@@ -301,7 +306,15 @@
                style="push"
                toolbarPath="org.knime.workbench.editor.menu/group2"
                tooltip="Change workflow editor grid settings"/>
-               
+         <action
+               class="org.knime.workbench.editor2.actions.delegates.ToggleGridEditorAction"
+               definitionId="knime.commands.editor.toggleGrid"
+               disabledIcon="icons/grid_16_bw.png"
+               icon="icons/grid_16.png"
+               id="org.knime.workbench.editor.actions.toggleGrid"
+               label="Toggle Snap to Grid"
+               style="push"
+               tooltip="Toggle snap to grid behavior of workflow editor"/>
                
       </editorContribution>
    </extension>
@@ -330,7 +343,12 @@
             commandId="knime.commands.editor.gridSettings"
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-            sequence="SHIFT+F11"/>
+            sequence="CTRL+#"/>
+      <key
+            commandId="knime.commands.editor.toggleGrid"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="#"/>            
       <key
             commandId="knime.commands.openView"
             contextId="org.eclipse.ui.contexts.window"
