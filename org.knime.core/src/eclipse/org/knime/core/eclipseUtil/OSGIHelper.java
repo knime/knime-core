@@ -91,6 +91,24 @@ public final class OSGIHelper {
         }
     }
 
+    /**
+     * Returns the resolved bundle with the specified symbolic name that has the
+     * highest version. If no resolved bundles are installed that have the
+     * specified symbolic name, or if this is not an Eclipse instance then
+     * <code>null</code> is returned.
+     *
+     * @param symbolicName the symbolic name of the bundle to be returned.
+     * @return the bundle that has the specified symbolic name with the highest
+     *         version, or <tt>null</tt> if no bundle is found.
+     */
+    public static Bundle getBundle(final String symbolicName) {
+        if (hasEclipsePlatform()) {
+            return Platform.getBundle(symbolicName);
+        } else {
+            return null;
+        }
+    }
+
     private static boolean hasOSGIFramework() {
         try {
             Class.forName("org.osgi.framework.FrameworkUtil");
