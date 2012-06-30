@@ -51,6 +51,7 @@ import javax.swing.ListCellRenderer;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValue;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
 /**
@@ -77,6 +78,42 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
      */
     public DataColumnSpecFilterPanel(final boolean showEnforceOption) {
         super(showEnforceOption);
+    }
+
+    /**
+     * Create a new panel to filter {@link DataColumnSpec}s. The given
+     * {@link DataValue}s specify the type of the columns which are shown
+     * and can be included or excluded.
+     * @param filterValueClasses The {@link DataValue} of the columns to show.
+     */
+    public DataColumnSpecFilterPanel(
+            final Class<? extends DataValue>... filterValueClasses) {
+        super(true, new DataTypeColumnFilter(filterValueClasses));
+    }
+
+    /**
+     * Create a new panel to filter {@link DataColumnSpec}s. The given
+     * {@link DataValue}s specify the type of the columns which are shown
+     * and can be included or excluded.
+     * @param showEnforceOption true, if the enforce option should be visible
+     * @param filterValueClasses The {@link DataValue} of the columns to show.
+     */
+    public DataColumnSpecFilterPanel(final boolean showEnforceOption,
+            final Class<? extends DataValue>... filterValueClasses) {
+        super(showEnforceOption, new DataTypeColumnFilter(filterValueClasses));
+    }
+
+    /**
+     * Create a new panel to filter {@link DataColumnSpec}s. The given
+     * filter handles which columns are shown and can be included or excluded
+     * and which not, based on the underlying type data type of the column.
+     * @param showEnforceOption true, if the enforce option should be visible
+     * @param filter The filter specifying which columns are shown and which
+     * not.
+     */
+    public DataColumnSpecFilterPanel(final boolean showEnforceOption,
+            final DataTypeColumnFilter filter) {
+        super(showEnforceOption, filter);
     }
 
     /** {@inheritDoc} */

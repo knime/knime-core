@@ -166,6 +166,9 @@ public abstract class NameFilterPanel<T> extends JPanel {
     private static final Border EXCLUDE_BORDER =
         BorderFactory.createLineBorder(new Color(240, 0, 0), 2);
 
+    /** The filter used to filter out/in valid column types. */
+    private NameFilter<T> m_filter;
+
     /**
      * Creates a new filter column panel with three component which are the
      * include list, button panel to shift elements between the two lists, and
@@ -173,7 +176,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
      * filter.
      */
     protected NameFilterPanel() {
-        this(true);
+        this(true, null);
     }
 
     /**
@@ -184,7 +187,25 @@ public abstract class NameFilterPanel<T> extends JPanel {
      * @param showEnforceOption true, if the enforce option should be visible
      */
     protected NameFilterPanel(final boolean showEnforceOption) {
+        this(showEnforceOption, null);
+    }
+
+    /**
+     * Creates a new filter column panel with three component which are the
+     * include list, button panel to shift elements between the two lists, and
+     * the exclude list. The include list then will contain all values to
+     * filter. Additionally a {@link NameFilter} can be specified, based on
+     * which the shown items are shown or not. The filter can be <code>null
+     * </code>, in which case it is simply not used at all.
+     * @param showEnforceOption true, if the enforce option should be visible
+     * @param filter A filter that specifies which items are shown in the
+     * panel (and thus are possible to include or exclude) and which are not
+     * shown.
+     */
+    protected NameFilterPanel(final boolean showEnforceOption,
+            final NameFilter<T> filter) {
         super(new GridLayout(1, 1));
+        m_filter = filter;
 
         // keeps buttons such add 'add', 'add all', 'remove', and 'remove all'
         final JPanel buttonPan = new JPanel();
@@ -590,6 +611,15 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
         for (final String name : names) {
             final T t = getTforName(name);
+
+            // continue if filter is set and current item t is filtered out
+            if (m_filter != null) {
+                if (!m_filter.includeT(t)) {
+                    continue;
+                }
+            }
+
+            // if item is not filtered out, add it to include or exclude list
             if (ins.contains(name)) {
                 m_inclMdl.addElement(t);
             } else if (exs.contains(name)) {
@@ -748,6 +778,50 @@ public abstract class NameFilterPanel<T> extends JPanel {
      */
     public void setAddButtonText(final String text) {
         m_addButton.setText(text);
+    }
+
+    /**
+     * Sets the internal used {@link NameFilter} and calls
+     * the {@link #update(List, List, String[])} method to update the
+     * panel.
+     *
+     * @param filter the new {@link NameFilter} to use
+     */
+    public void setNameFilter(final NameFilter<T> filter) {
+        m_filter = filter;
+
+        List<String> inclList = new ArrayList<String>(getIncludedNamesAsSet());
+        List<String> exclList = new ArrayList<String>(getExcludedNamesAsSet());
+        String[] allNames = new String[inclList.size() + exclList.size()];
+        for (int i = 0; i < allNames.length; i++) {
+            allNames[i] = inclList.get(i);
+        }
+    }
+
+    /**
+     * Returns a set of the names of all included items.
+     * @return a set of the names of all included items.
+     */
+    public Set<String> getIncludedNamesAsSet() {
+        Set<T> inclList = getIncludeList();
+        Set<String> inclNames = new HashSet<String>(inclList.size());
+        for (T t : inclList) {
+            inclNames.add(getNameForT(t));
+        }
+        return inclNames;
+    }
+
+    /**
+     * Returns a set of the names of all excluded items.
+     * @return a set of the names of all excluded items.
+     */
+    public Set<String> getExcludedNamesAsSet() {
+        Set<T> exclList = getExcludeList();
+        Set<String> exclNames = new HashSet<String>(exclList.size());
+        for (T t : exclList) {
+            exclNames.add(getNameForT(t));
+        }
+        return exclNames;
     }
 }
 
