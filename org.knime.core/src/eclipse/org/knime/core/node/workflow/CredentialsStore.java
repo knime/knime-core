@@ -107,7 +107,8 @@ public final class CredentialsStore implements Observer {
      * @param client The client accessing the credential (used to keep lookup
      * history and (possibly in future versions) to implement access
      * restrictions
-     * @return The credentials for this name
+     * @return The credentials for this name (either in this store or any
+     * parent store).
      * @throws IllegalArgumentException If the identifier is unknown
      */
     public synchronized Credentials get(final String name,
@@ -122,11 +123,18 @@ public final class CredentialsStore implements Observer {
      * identifier under which this credentials are store (see
      * {@link Credentials#getName()}).
      * @param name The name to lookup
-     * @return The credentials for this name
+     * @return The credentials for this name (either in this store or the
+     * parent store).
      * @throws IllegalArgumentException If the identifier is unknown
      */
     public synchronized Credentials get(final String name) {
         Credentials c = m_credentials.get(name);
+        WorkflowManager parent = m_manager.getParent();
+        while (c == null && parent != WorkflowManager.ROOT) {
+            CredentialsStore parentStore = parent.getCredentialsStore();
+            c = parentStore.m_credentials.get(name);
+            parent = parent.getParent();
+        }
         if (c == null) {
             throw new IllegalArgumentException("No credentials stored to "
                     + "name \"" + name + "\"");
@@ -135,18 +143,18 @@ public final class CredentialsStore implements Observer {
     }
 
     /**
-     * Checks, if a {@link CredentialsStore} is contained in this store under
-     * the given name.
+     * Checks, if a {@link CredentialsStore} is contained in this store
+     * or the parent store under the given name.
      * @param name credential's name to check
      * @return true, if a credentials exists, otherwise false
      */
     public synchronized boolean contains(final String name) {
-        return m_credentials.containsKey(name);
+        return listNames().contains(name);
     }
 
     /**
      * Update the {@link Credentials} with the names from the given
-     * crendentials list. Only the login and password are updated.
+     * credentials list. Only the login and password are updated.
      * @param credentialsList the list of credentials to change
      * @return true, if there were changes in any of the fields
      * @throws IllegalArgumentException If the identifier is unknown
@@ -162,8 +170,9 @@ public final class CredentialsStore implements Observer {
     }
 
     /** Get iterable for credentials. Used internally (load/save). Caller
-     * must not modify the list!
+     * must not modify the list! Does not include parent store items.
      * @return The credentials in this store.
+     * @noreference This method is not intended to be referenced by clients.
      */
     public Iterable<Credentials> getCredentials() {
         return Collections.unmodifiableCollection(m_credentials.values());
@@ -175,6 +184,14 @@ public final class CredentialsStore implements Observer {
     public synchronized void clearClient(final NodeContainer nc) {
         for (Credentials c : m_credentials.values()) {
             c.removeClient(nc);
+        }
+        WorkflowManager parent = m_manager.getParent();
+        while (parent != WorkflowManager.ROOT) {
+            CredentialsStore parentStore = parent.getCredentialsStore();
+            for (Credentials c : parentStore.m_credentials.values()) {
+                c.removeClient(nc);
+            }
+            parent = parent.getParent();
         }
     }
 
@@ -219,13 +236,25 @@ public final class CredentialsStore implements Observer {
         m_manager.setDirty();
     }
 
-    /** Get a list with identifiers of the available credential variables.#
+    /** Get a list with identifiers of the available credential variables.
      * Each element in the returned list is a valid argument for the
-     * {@link #get(String, NodeContainer)} and {@link #remove(String)} method.
+     * {@link #get(String, NodeContainer)} method.
      * @return A collection of valid identifiers.
      */
     public synchronized Collection<String> listNames() {
-        return new ArrayList<String>(m_credentials.keySet());
+        ArrayList<String> result = new ArrayList<String>();
+        result.addAll(m_credentials.keySet());
+        WorkflowManager parent = m_manager.getParent();
+        while (parent != WorkflowManager.ROOT) {
+            CredentialsStore parentStore = parent.getCredentialsStore();
+            for (String s : parentStore.m_credentials.keySet()) {
+                if (!result.contains(s)) {
+                    result.add(s);
+                }
+            }
+            parent = parent.getParent();
+        }
+        return result;
     }
 
     /** {@inheritDoc} */
