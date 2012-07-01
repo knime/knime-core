@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   01.02.2006 (mb): created
  */
@@ -63,27 +63,32 @@ import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 
 /**
- * A <code>SizeModel</code> computing sizes of objects (rows) based on the 
+ * A <code>SizeModel</code> computing sizes of objects (rows) based on the
  * <code>double</code> value of <code>DataCell</code>.
- * 
+ *
  * @author M. Berthold, University of Konstanz
  */
 public class SizeModelDouble implements SizeModel {
     /**
      * Supported mapping methods.
-     * 
+     *
      */
     public enum Mapping {
-        
+
         /** Linear mapping: (v - min / max - min). */
         LINEAR {
             /**
-             * 
+             *
              * {@inheritDoc}
              */
             @Override
-            double getMappedSize(final double d, final double min, 
+            double getMappedSize(final double d, final double min,
                     final double max, final double factor) {
+                if (min == max) {
+                    //This might happen if a column contains only one value.
+                    //Prevent division by zero return the factor instead of NaN.
+                    return factor;
+                }
                 return (((d - min) / (max - min)) * (factor - 1)) + 1;
             }
         },
@@ -91,13 +96,18 @@ public class SizeModelDouble implements SizeModel {
         */
         SQUARE_ROOT {
             /**
-             * 
+             *
              * {@inheritDoc}
              */
             @Override
-            double getMappedSize(final double d, final double min, 
+            double getMappedSize(final double d, final double min,
                     final double max, final double factor) {
-                return (((Math.sqrt(d) - Math.sqrt(min)) 
+                if (min == max) {
+                    //This might happen if a column contains only one value.
+                    //Prevent division by zero return the factor instead of NaN.
+                    return factor;
+                }
+                return (((Math.sqrt(d) - Math.sqrt(min))
                         / (Math.sqrt(max) - Math.sqrt(min)))
                         * (factor - 1)) + 1;
             }
@@ -105,32 +115,42 @@ public class SizeModelDouble implements SizeModel {
         /** Logarithmic mapping: (ln(v) - ln(min) / ln(max) - ln(min)). */
         LOGARITHMIC {
             /**
-             * 
+             *
              * {@inheritDoc}
              */
             @Override
-            double getMappedSize(final double d, final double min, 
+            double getMappedSize(final double d, final double min,
                     final double max, final double factor) {
-                return (((Math.log(d) - Math.log(min)) 
-                        / (Math.log(max) - Math.log(min))) 
+                if (min == max) {
+                    //This might happen if a column contains only one value.
+                    //Prevent division by zero return the factor instead of NaN.
+                    return factor;
+                }
+                return (((Math.log(d) - Math.log(min))
+                        / (Math.log(max) - Math.log(min)))
                         * (factor - 1)) + 1;
             }
         },
         /** Exponential mapping: (pow(v) - pow(min) / pow(max) - pow(min)).*/
         EXPONENTIAL {
             /**
-             * 
+             *
              * {@inheritDoc}
              */
             @Override
-            double getMappedSize(final double d, final double min, 
+            double getMappedSize(final double d, final double min,
                     final double max, final double factor) {
+                if (min == max) {
+                    //This might happen if a column contains only one value.
+                    //Prevent division by zero return the factor instead of NaN.
+                    return factor;
+                }
                 return (((Math.pow(d, 2) - Math.pow(min, 2))
                         / (Math.pow(max, 2) - Math.pow(min, 2)))
                         * (factor - 1)) + 1;
             }
         };
-        
+
         /**
          * Returns the mapped size according to the referring mapping method.
          * @param d the domain value to be mapped
@@ -139,7 +159,7 @@ public class SizeModelDouble implements SizeModel {
          * @param factor the scaling factor
          * @return the mapped value
          */
-        abstract double getMappedSize(final double d, final double min, 
+        abstract double getMappedSize(final double d, final double min,
                 final double max, final double factor);
 
         private static final List<String> VALUES;
@@ -151,29 +171,29 @@ public class SizeModelDouble implements SizeModel {
             VALUES.add(EXPONENTIAL.name());
         }
         /**
-         * 
+         *
          * @return all fields as an unmodifiable list of strings
          */
         public static List<String> getStringValues() {
             return Collections.unmodifiableList(VALUES);
         }
     }
-    
-    
+
+
     /** Minimum range value of domain. */
     private final double m_min;
-    
+
     /** Maximum range value of domain. */
     private final double m_max;
 
     private final double m_factor;
-    
+
     private final Mapping m_mapping;
-    
-    
+
+
     /**
      * Create new SizeHandler based on double values and a given interval.
-     * 
+     *
      * @param min minimum of domain
      * @param max maximum of domain
      * @throws IllegalArgumentException If min &lt; max
@@ -188,17 +208,17 @@ public class SizeModelDouble implements SizeModel {
         m_factor = 2;
         m_mapping = Mapping.LINEAR;
     }
-    
+
     /**
-     * Creates a new SizeHandler based on an interval defined by min and max 
-     * and a magnification factor which defines the range onto the interval is 
+     * Creates a new SizeHandler based on an interval defined by min and max
+     * and a magnification factor which defines the range onto the interval is
      * mapped. Uses linear mapping.
-     *   
+     *
      * @param min minimum of the domain
      * @param max maximum of the domain
      * @param factor scaling factor for the mapping
      */
-    public SizeModelDouble(final double min, final double max, 
+    public SizeModelDouble(final double min, final double max,
             final double factor) {
         assert min < max;
         m_min = min;
@@ -206,35 +226,35 @@ public class SizeModelDouble implements SizeModel {
         m_factor = factor;
         m_mapping = Mapping.LINEAR;
     }
-    
+
     /**
-     * Creates a new SizeHandler based on an interval defined by min and max 
-     * and a magnification factor which defines the range onto the interval is 
+     * Creates a new SizeHandler based on an interval defined by min and max
+     * and a magnification factor which defines the range onto the interval is
      * mapped. Uses the provided mapping method.
-     *   
+     *
      * @param min minimum of the domain
      * @param max maximum of the domain
      * @param factor scaling factor for the mapping
-     * @param mapping the mapping method to use (linear, square root, 
+     * @param mapping the mapping method to use (linear, square root,
      *      logarithmic)
      */
-    public SizeModelDouble(final double min, final double max, 
+    public SizeModelDouble(final double min, final double max,
             final double factor, final Mapping mapping) {
         assert min < max;
         m_min = min;
         m_max = max;
         m_factor = factor;
         m_mapping = mapping;
-    }    
-    
-    
+    }
+
+
     /**
      * Compute size based on actual value of this cell and the range
      * which was defined during construction.
-     * 
+     *
      * @param dc value to be used for size computation.
      * @return size in percent or -1 if cell type invalid or out of range
-     * 
+     *
      * @deprecated use {@link #getSizeFactor(DataCell)} instead.
      * @see SizeHandler#getSize(DataCell)
      */
@@ -252,15 +272,15 @@ public class SizeModelDouble implements SizeModel {
         }
         return SizeHandler.DEFAULT_SIZE;       // incomptible type
     }
-    
+
     /**
-     * Computes the size based on the actual value of the provided cell, the 
-     * interval, the scaling factor and the mapping method. Factor will be 
-     * larger or equal to one and with no maximum value. Indicates the scaling 
-     * factor. The largest value should be displayed <code>n</code> times 
+     * Computes the size based on the actual value of the provided cell, the
+     * interval, the scaling factor and the mapping method. Factor will be
+     * larger or equal to one and with no maximum value. Indicates the scaling
+     * factor. The largest value should be displayed <code>n</code> times
      * larger.
-     * 
-     * 
+     *
+     *
      * {@inheritDoc}
      */
     public double getSizeFactor(final DataCell dc) {
@@ -277,7 +297,7 @@ public class SizeModelDouble implements SizeModel {
         return SizeHandler.DEFAULT_SIZE_FACTOR; // incompatible type
     }
 
-    
+
     /** @return minimum double value. */
     public double getMinValue() {
         return m_min;
@@ -287,17 +307,17 @@ public class SizeModelDouble implements SizeModel {
     public double getMaxValue() {
         return m_max;
     }
-    
+
     /**
-     * 
+     *
      * @return the scaling factor
      */
     public double getFactor() {
         return m_factor;
     }
-    
+
     /**
-     * 
+     *
      * @return the mapping method
      */
     public Mapping getMappingMethod() {
@@ -308,7 +328,7 @@ public class SizeModelDouble implements SizeModel {
     private static final String CFG_MAX = "max";
     private static final String CFG_FACTOR = "factor";
     private static final String CFG_MAPPING = "mapping";
-    
+
     /**
      * Saves min and max ranges to the given <code>Config</code>.
      * @param config To write bounds into.
@@ -322,7 +342,7 @@ public class SizeModelDouble implements SizeModel {
         config.addDouble(CFG_FACTOR, m_factor);
         config.addString(CFG_MAPPING, m_mapping.name());
     }
-    
+
     /**
      * Reads the size settings and return a new <code>SizeModelDouble</code>.
      * @param config Read min and max bound from.
@@ -330,7 +350,7 @@ public class SizeModelDouble implements SizeModel {
      * @throws InvalidSettingsException If the bounds could not be read.
      * @throws NullPointerException If the <i>config</i> is <code>null</code>.
      */
-    public static SizeModelDouble load(final ConfigRO config) 
+    public static SizeModelDouble load(final ConfigRO config)
             throws InvalidSettingsException {
         double min = config.getDouble(CFG_MIN);
         double max = config.getDouble(CFG_MAX);
@@ -338,7 +358,7 @@ public class SizeModelDouble implements SizeModel {
         String mapping = config.getString(CFG_MAPPING, Mapping.LINEAR.name());
         return new SizeModelDouble(min, max, factor, Mapping.valueOf(mapping));
     }
-    
+
     /**
      * @return String representation containing SizeModel type and min/max
      *         boundaries.
@@ -346,10 +366,10 @@ public class SizeModelDouble implements SizeModel {
     @Override
     public String toString() {
         NumberFormat nf = NumberFormat.getInstance();
-        return "DoubleRange SizeModel (factor=" + nf.format(m_factor) 
+        return "DoubleRange SizeModel (factor=" + nf.format(m_factor)
             + ", method=" + m_mapping.name() + ")";
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -367,7 +387,7 @@ public class SizeModelDouble implements SizeModel {
             && Double.compare(m_min, model.m_min) == 0
             && Double.compare(m_max, model.m_max) == 0;
     }
-    
+
     /**
      * {@inheritDoc}
      */
