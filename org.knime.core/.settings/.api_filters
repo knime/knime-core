@@ -3880,6 +3880,15 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/filestore/FileStoreCell.java" type="org.knime.core.data.filestore.FileStoreCell">
+        <filter id="643846161">
+            <message_arguments>
+                <message_argument value="FileStoreHandlerRepository"/>
+                <message_argument value="FileStoreCell"/>
+                <message_argument value="retrieveFileStoreHandlerFrom(FileStoreHandlerRepository)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/BufferedDataContainer.java" type="org.knime.core.node.BufferedDataContainer">
         <filter id="338792546">
             <message_arguments>
@@ -3978,6 +3987,12 @@
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.PasteWorkflowContentPersistor"/>
                 <message_argument value="org.knime.core_2.6.0"/>
+            </message_arguments>
+        </filter>
+        <filter id="305426566">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.PasteWorkflowContentPersistor"/>
+                <message_argument value="org.knime.base_2.5.4"/>
             </message_arguments>
         </filter>
     </resource>

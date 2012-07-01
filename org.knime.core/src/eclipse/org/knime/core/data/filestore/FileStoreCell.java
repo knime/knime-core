@@ -98,6 +98,7 @@ public abstract class FileStoreCell extends DataCell {
         // TODO, really release
     }
 
+    /** @noreference This method is not intended to be referenced by clients. */
     public void retrieveFileStoreHandlerFrom(
             final FileStoreHandlerRepository fileStoreHandlerRepository) {
         UUID id = m_fileStoreKey.getStoreUUID();
