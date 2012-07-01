@@ -77,7 +77,7 @@ import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
  * it throws exceptions when any of the load routines are called.
  * @author Bernd Wiswedel, University of Konstanz
  */
-final class PasteWorkflowContentPersistor implements WorkflowPersistor {
+public class PasteWorkflowContentPersistor implements WorkflowPersistor {
 
     private final Set<ConnectionContainerTemplate> m_connectionSet;
     private final Set<ConnectionContainerTemplate> m_additionalConnectionSet;
@@ -125,7 +125,8 @@ final class PasteWorkflowContentPersistor implements WorkflowPersistor {
         return null;
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * @since 2.6 */
     @Override
     public FileStoreHandlerRepository getFileStoreHandlerRepository() {
         throwUnsupportedOperationException();

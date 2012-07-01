@@ -3969,30 +3969,10 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/ObsoleteMetaNodeWorkflowPersistorVersion1xx.java" type="org.knime.core.node.workflow.ObsoleteMetaNodeWorkflowPersistorVersion1xx">
-        <filter id="305365105">
+        <filter id="338722907">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.ObsoleteMetaNodeWorkflowPersistorVersion1xx"/>
-                <message_argument value="org.knime.core_2.6.0"/>
-            </message_arguments>
-        </filter>
-        <filter id="305426566">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.ObsoleteMetaNodeWorkflowPersistorVersion1xx"/>
-                <message_argument value="org.knime.base_2.5.4"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/PasteWorkflowContentPersistor.java" type="org.knime.core.node.workflow.PasteWorkflowContentPersistor">
-        <filter id="305365105">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.PasteWorkflowContentPersistor"/>
-                <message_argument value="org.knime.core_2.6.0"/>
-            </message_arguments>
-        </filter>
-        <filter id="305426566">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.PasteWorkflowContentPersistor"/>
-                <message_argument value="org.knime.base_2.5.4"/>
+                <message_argument value="ObsoleteMetaNodeWorkflowPersistorVersion1xx(HashMap&lt;Integer,ContainerTable&gt;, ReferencedFile, WorkflowLoadHelper, WorkflowPersistorVersion200.LoadVersion)"/>
             </message_arguments>
         </filter>
     </resource>

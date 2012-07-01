@@ -75,7 +75,7 @@ import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
  *
  * @author wiswedel, University of Konstanz
  */
-class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
+public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
         WorkflowPersistorVersion1xx {
 
     private enum MetaNodeType {
