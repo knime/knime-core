@@ -58,6 +58,7 @@ Export-Package:
  org.knime.core.node.workflow.virtual,
  org.knime.core.quickform,
  org.knime.core.quickform.in,
+ org.knime.core.quickform.out,
  org.knime.core.util,
  org.knime.core.util.pathresolve,
  org.knime.core.util.tokenizer,
