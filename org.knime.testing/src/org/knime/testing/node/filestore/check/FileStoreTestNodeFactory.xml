@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Other">
+	<name>Test FileStore Column</name>
+	
+	<shortDescription>
+	Verifies the content of the column that was created in the "Create File Store Column" node.
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>
+			<p>
+			Verifies the content of the column that was created in the "Create File Store Column" node.
+			</p>
+		</intro>
+	</fullDescription>
+	
+	<ports>
+	</ports>	
+</knimeNode>

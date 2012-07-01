@@ -57,6 +57,19 @@
             expert-flag="false"
             factory-class="org.knime.testing.node.config.TestConfigNodeFactory"
             id="org.knime.testing.node.config.TestConfigNodeFactory">
+      </node>
+      <node
+            category-path="/testing"
+            expert-flag="false"
+            factory-class="org.knime.testing.node.filestore.create.FileStoreCreateNodeFactory"
+            id="org.knime.testing.node.filestore.create.FileStoreCreateNodeFactory">
+      </node>
+      <node
+            after="org.knime.testing.node.config.TestConfigNodeFactory"
+            category-path="/testing"
+            expert-flag="false"
+            factory-class="org.knime.testing.node.filestore.check.FileStoreTestNodeFactory"
+            id="org.knime.testing.node.filestore.check.FileStoreTestNodeFactory">
       </node>     
    </extension>
    <extension
