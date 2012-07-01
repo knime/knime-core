@@ -59,6 +59,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
@@ -87,6 +88,12 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
+    public boolean isProject() {
+        throw new IllegalStateException("not to be called");
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public Set<ConnectionContainerTemplate> getConnectionSet() {
         return Collections.emptySet();
     }
@@ -105,6 +112,12 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
+    public FileStoreHandlerRepository getFileStoreHandlerRepository() {
+        throw new IllegalStateException("no filestore repository for root wfm");
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public WorkflowPortTemplate[] getInPortTemplates() {
         throw new IllegalStateException("no imports on root wfm");
     }
@@ -112,7 +125,7 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
     /** {@inheritDoc} */
     @Override
     public UIInformation getInPortsBarUIInfo() {
-        return null;
+        throw new IllegalStateException("no ui information on root wfm");
     }
 
     /** {@inheritDoc} */
@@ -180,7 +193,13 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
     /** {@inheritDoc} */
     @Override
     public UIInformation getOutPortsBarUIInfo() {
-        return null;
+        throw new IllegalStateException("no ui information on root wfm");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public EditorUIInformation getEditorUIInformation() {
+        throw new IllegalStateException("no editor information on root wfm");
     }
 
     /** {@inheritDoc} */

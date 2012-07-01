@@ -64,6 +64,7 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
+import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -302,6 +303,7 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
             CellClassInfo type = m_buffer.getTypeForChar(identifier);
             Class<? extends DataCell> cellClass = type.getCellClass();
             boolean isBlob = BlobDataCell.class.isAssignableFrom(cellClass);
+            final DataCell result;
             if (isBlob) {
                 BlobAddress address = inStream.readBlobAddress();
                 Buffer blobBuffer = m_buffer;
@@ -314,18 +316,24 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
                     }
                     blobBuffer = cnTbl.getBuffer();
                 }
-                return new BlobWrapperDataCell(blobBuffer, address, type);
-            }
-            if (isSerialized) {
+                result = new BlobWrapperDataCell(blobBuffer, address, type);
+            } else if (isSerialized) {
                 ClassLoader cellLoader = cellClass.getClassLoader();
                 inStream.setCurrentClassLoader(cellLoader);
-                return inStream.readDataCellPerJavaSerialization();
+                result = inStream.readDataCellPerJavaSerialization();
             } else {
                 DataCellSerializer<? extends DataCell> serializer =
                     type.getSerializer();
                 assert serializer != null;
-                return inStream.readDataCellPerKNIMESerializer(serializer);
+                result = inStream.readDataCellPerKNIMESerializer(serializer);
             }
+
+            if (result instanceof FileStoreCell) {
+                FileStoreCell fsCell = (FileStoreCell)result;
+                fsCell.retrieveFileStoreHandlerFrom(
+                        m_buffer.getFileStoreHandlerRepository());
+            }
+            return result;
         }
 
         /**

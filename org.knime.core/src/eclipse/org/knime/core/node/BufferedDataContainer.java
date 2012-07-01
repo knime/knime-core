@@ -55,6 +55,7 @@ import java.util.Map;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
+import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 
@@ -136,7 +137,8 @@ public class BufferedDataContainer extends DataContainer {
             final Node node, final MemoryPolicy policy,
             final boolean forceCopyOfBlobs, final int maxCellsInMemory,
             final Map<Integer, ContainerTable> globalTableRepository,
-            final Map<Integer, ContainerTable> localTableRepository) {
+            final Map<Integer, ContainerTable> localTableRepository,
+            final FileStoreHandlerRepository fileStoreHandlerRepository) {
         // force synchronous IO when the node is a loop end:
         // rows containing blobs need to be written instantly as their owning
         // buffer is discarded in the next loop iteration, see bug 2935
@@ -146,6 +148,7 @@ public class BufferedDataContainer extends DataContainer {
         m_node = node;
         m_globalTableRepository = globalTableRepository;
         m_localTableRepository = localTableRepository;
+        super.setFileStoreHandlerRepository(fileStoreHandlerRepository);
         super.setForceCopyOfBlobs(forceCopyOfBlobs);
     }
 
@@ -205,21 +208,24 @@ public class BufferedDataContainer extends DataContainer {
     }
 
     /**
-     * Just delegates to {@link DataContainer#readFromZipDelayed(
-     * ReferencedFile, DataTableSpec, int, Map)}
+     * Just delegates to {@link DataContainer#readFromZipDelayed(ReferencedFile,
+     * DataTableSpec, int, Map, FileStoreHandlerRepository)}
      * This method is available in this class to enable other classes in this
      * package to use it.
      * @param zipFileRef Delegated.
      * @param spec Delegated.
      * @param bufID Delegated.
      * @param bufferRep Delegated.
-     * @return {@link DataContainer#readFromZipDelayed(
-     *      ReferencedFile, DataTableSpec, int, Map)}
+     * @param fileStoreHandlerRepository Delegated.
+     * @return {@link DataContainer#readFromZipDelayed(ReferencedFile,
+     * DataTableSpec, int, Map, FileStoreHandlerRepository)}
+     * @noreference This method is not intended to be referenced by clients.
      */
     protected static ContainerTable readFromZipDelayed(
             final ReferencedFile zipFileRef, final DataTableSpec spec,
-            final int bufID, final Map<Integer, ContainerTable> bufferRep) {
-        return DataContainer.readFromZipDelayed(
-                zipFileRef, spec, bufID, bufferRep);
+            final int bufID, final Map<Integer, ContainerTable> bufferRep,
+            final FileStoreHandlerRepository fileStoreHandlerRepository) {
+        return DataContainer.readFromZipDelayed(zipFileRef, spec,
+                bufID, bufferRep, fileStoreHandlerRepository);
     }
 }

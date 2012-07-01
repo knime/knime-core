@@ -61,6 +61,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
@@ -78,14 +79,17 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     private final WorkflowPortTemplate[] m_inportTemplates;
     private final UIInformation m_outportUIInfo;
     private final WorkflowPortTemplate[] m_outportTemplates;
+    private final EditorUIInformation m_editorUIInformation;
     private final String m_name;
     private final WorkflowCipher m_workflowCipher;
     private final MetaNodeTemplateInformation m_templateInformation;
     private final CopyNodeContainerMetaPersistor m_metaPersistor;
     private final HashMap<Integer, ContainerTable> m_tableRep;
+    private final FileStoreHandlerRepository m_fileStoreHandlerRepository;
     private final List<FlowVariable> m_workflowVariables;
     private final List<Credentials> m_credentials;
     private final List<WorkflowAnnotation> m_workflowAnnotations;
+    private final boolean m_isProject;
 
     /** Create copy persistor.
      * @param original To copy from
@@ -100,12 +104,14 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     @SuppressWarnings("unchecked")
     CopyWorkflowPersistor(final WorkflowManager original,
             final HashMap<Integer, ContainerTable> tableRep,
+            final FileStoreHandlerRepository fileStoreHandlerRepository,
             final boolean preserveDeletableFlags,
             final boolean isUndoableDeleteCommand) {
         m_inportUIInfo = original.getInPortsBarUIInfo() != null
             ? original.getInPortsBarUIInfo().clone() : null;
         m_outportUIInfo = original.getOutPortsBarUIInfo() != null
             ? original.getOutPortsBarUIInfo().clone() : null;
+        m_isProject = original.isProject();
         m_inportTemplates = new WorkflowPortTemplate[original.getNrInPorts()];
         m_outportTemplates = new WorkflowPortTemplate[original.getNrOutPorts()];
         for (int i = 0; i < m_inportTemplates.length; i++) {
@@ -118,21 +124,27 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
             m_outportTemplates[i] =
                 new WorkflowPortTemplate(i, in.getPortType());
         }
+        m_editorUIInformation = original.getEditorUIInformation() != null
+            ? original.getEditorUIInformation().clone() : null;
         m_name = original.getNameField();
         m_workflowCipher = original.getWorkflowCipher().clone();
         m_templateInformation = original.getTemplateInformation().clone();
         m_metaPersistor = new CopyNodeContainerMetaPersistor(
                 original, preserveDeletableFlags, isUndoableDeleteCommand);
-        if (m_outportTemplates.length == 0 && m_inportTemplates.length == 0) {
+        if (m_isProject) {
+            assert m_outportTemplates.length == 0
+                    && m_inportTemplates.length == 0;
             m_tableRep = new HashMap<Integer, ContainerTable>();
+            m_fileStoreHandlerRepository = new FileStoreHandlerRepository();
         } else {
-            m_tableRep = tableRep;
+            m_fileStoreHandlerRepository = null;
+            m_tableRep = null;
         }
         m_ncs = new LinkedHashMap<Integer, NodeContainerPersistor>();
         m_cons = new LinkedHashSet<ConnectionContainerTemplate>();
         for (NodeContainer nc : original.getNodeContainers()) {
             m_ncs.put(nc.getID().getIndex(), nc.getCopyPersistor(
-                    m_tableRep, true, isUndoableDeleteCommand));
+                    m_tableRep, null, true, isUndoableDeleteCommand));
         }
 
         for (ConnectionContainer cc : original.getConnectionContainers()) {
@@ -154,6 +166,12 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
+    public boolean isProject() {
+        return m_isProject;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public Set<ConnectionContainerTemplate> getConnectionSet() {
         return m_cons;
     }
@@ -168,6 +186,13 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     @Override
     public HashMap<Integer, ContainerTable> getGlobalTableRepository() {
         return m_tableRep;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public FileStoreHandlerRepository getFileStoreHandlerRepository() {
+        assert isProject() : "only to be called on projects";
+        return m_fileStoreHandlerRepository;
     }
 
     /** {@inheritDoc} */
@@ -234,6 +259,12 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     @Override
     public WorkflowPortTemplate[] getOutPortTemplates() {
         return m_outportTemplates;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public EditorUIInformation getEditorUIInformation() {
+        return m_editorUIInformation;
     }
 
     /** {@inheritDoc} */

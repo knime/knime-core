@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   Sep 18, 2007 (wiswedel): created
  */
@@ -57,20 +57,17 @@ import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSetti
 
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
 interface SingleNodeContainerPersistor extends NodeContainerPersistor {
-    
+
     /** Name of the settings file in a node's directory. */
     static final String SETTINGS_FILE_NAME = "settings.xml";
-    
-    /** Key for the factory class name, used to load nodes. */
-    static final String KEY_FACTORY_NAME = "factory";
 
     Node getNode();
-    
+
     SingleNodeContainerSettings getSNCSettings();
-    
+
     List<FlowObject> getFlowObjects();
 }

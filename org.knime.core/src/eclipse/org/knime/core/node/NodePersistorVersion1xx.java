@@ -62,6 +62,9 @@ import java.util.Map;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.filestore.internal.EmptyFileStoreHandler;
+import org.knime.core.data.filestore.internal.FileStoreHandler;
+import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -76,6 +79,12 @@ import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
+/**
+ *
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ */
 public class NodePersistorVersion1xx implements NodePersistor {
 
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
@@ -103,6 +112,8 @@ public class NodePersistorVersion1xx implements NodePersistor {
     private String[] m_portObjectSummaries;
 
     private BufferedDataTable[] m_internalHeldTables;
+
+    private FileStoreHandler m_fileStoreHandler;
 
     private boolean m_needsResetAfterLoad;
 
@@ -150,17 +161,17 @@ public class NodePersistorVersion1xx implements NodePersistor {
         return m_loadVersion;
     }
 
-    protected boolean loadIsExecuted(final NodeSettingsRO settings)
+    boolean loadIsExecuted(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return settings.getBoolean(CFG_ISEXECUTED);
     }
 
-    protected boolean loadHasContent(final NodeSettingsRO settings)
+    boolean loadHasContent(final NodeSettingsRO settings)
     throws InvalidSettingsException {
         return settings.getBoolean(CFG_ISEXECUTED);
     }
 
-    protected boolean loadIsInactive(final NodeSettingsRO settings)
+    boolean loadIsInactive(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         return false;
     }
@@ -170,12 +181,12 @@ public class NodePersistorVersion1xx implements NodePersistor {
      * @return null
      * @throws InvalidSettingsException Not actually thrown
      */
-    protected String loadWarningMessage(final NodeSettingsRO settings)
+    String loadWarningMessage(final NodeSettingsRO settings)
     throws InvalidSettingsException {
         return null;
     }
 
-    protected boolean loadIsConfigured(final NodeSettingsRO settings)
+    boolean loadIsConfigured(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return settings.getBoolean(CFG_ISCONFIGURED);
     }
@@ -190,15 +201,20 @@ public class NodePersistorVersion1xx implements NodePersistor {
      * @return Internal directory.
      * @throws InvalidSettingsException If that fails for any reason.
      */
-    protected ReferencedFile loadNodeInternDirectory(final NodeSettingsRO settings,
+    ReferencedFile loadNodeInternDirectory(final NodeSettingsRO settings,
             final ReferencedFile nodeDir) throws InvalidSettingsException {
         return getNodeInternDirectory(nodeDir);
     }
 
-    protected void loadPorts(final Node node,
+    /**
+     * @noreference
+     * @nooverride
+     */
+    void loadPorts(final Node node,
             final ExecutionMonitor execMon, final NodeSettingsRO settings,
             final Map<Integer, BufferedDataTable> loadTblRep,
-            final HashMap<Integer, ContainerTable> tblRep)
+            final HashMap<Integer, ContainerTable> tblRep,
+            final FileStoreHandlerRepository fileStoreHandlerRepository)
             throws IOException, InvalidSettingsException,
             CanceledExecutionException {
         // skip flow variables port (introduced in v2.2)
@@ -220,7 +236,8 @@ public class NodePersistorVersion1xx implements NodePersistor {
                 PortObject object;
                 if (isDataPort) {
                     object = loadBufferedDataTable(node, settings, execPort,
-                            loadTblRep, oldIndex, tblRep);
+                            loadTblRep, oldIndex, tblRep,
+                            fileStoreHandlerRepository);
                 } else {
                     throw new IOException("Can't restore model ports of "
                             + "old 1.x workflows. Execute node again.");
@@ -257,23 +274,36 @@ public class NodePersistorVersion1xx implements NodePersistor {
      * @param settings Ignored.
      * @param loadTblRep Ignored.
      * @param tblRep Ignored.
+     * @param fileStoreHandlerRepository Ignored
      * @throws IOException Not actually thrown.
      * @throws InvalidSettingsException Not actually thrown.
      * @throws CanceledExecutionException Not actually thrown.
+     * @noreference
+     * @nooverride
      */
-    protected void loadInternalHeldTables(final Node node,
+    void loadInternalHeldTables(final Node node,
             final ExecutionMonitor execMon,
             final NodeSettingsRO settings,
             final Map<Integer, BufferedDataTable> loadTblRep,
-            final HashMap<Integer, ContainerTable> tblRep)
+            final HashMap<Integer, ContainerTable> tblRep,
+            final FileStoreHandlerRepository fileStoreHandlerRepository)
     throws IOException, InvalidSettingsException, CanceledExecutionException {
         // sub class hook
+    }
+
+    FileStoreHandler loadFileStoreHandler(
+            final Node node, final ExecutionMonitor execMon,
+            final NodeSettingsRO settings,
+            final FileStoreHandlerRepository fileStoreHandlerRepository)
+    throws InvalidSettingsException {
+        return EmptyFileStoreHandler.create(fileStoreHandlerRepository);
     }
 
     private BufferedDataTable loadBufferedDataTable(final Node node,
             final NodeSettingsRO settings, final ExecutionMonitor execMon,
             final Map<Integer, BufferedDataTable> loadTblRep, final int index,
-            final HashMap<Integer, ContainerTable> tblRep)
+            final HashMap<Integer, ContainerTable> tblRep,
+            final FileStoreHandlerRepository fileStoreHandlerRepository)
             throws InvalidSettingsException, IOException,
             CanceledExecutionException {
         // in 1.1.x and before the settings.xml contained the location
@@ -308,8 +338,9 @@ public class NodePersistorVersion1xx implements NodePersistor {
             ReferencedFile dirRef = new ReferencedFile(dataDirRef, dataName);
             BufferedDataTable t = BufferedDataTable.loadFromFile(
                     dirRef, portSettings, execSubData, loadTblRep,
-                    // we didn't have blobs in 1.1.x
-                    new HashMap<Integer, ContainerTable>());
+                    // no blobs or file stores in 1.1.x
+                    new HashMap<Integer, ContainerTable>(),
+                    new FileStoreHandlerRepository());
             t.setOwnerRecursively(node);
             return t;
         } else {
@@ -329,7 +360,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
             }
             BufferedDataTable t = BufferedDataTable.loadFromFile(dirRef,
                 /* ignored in 1.2.0+ */
-                null, execMon, loadTblRep, tblRep);
+                null, execMon, loadTblRep, tblRep, fileStoreHandlerRepository);
             t.setOwnerRecursively(node);
             return t;
         }
@@ -396,12 +427,12 @@ public class NodePersistorVersion1xx implements NodePersistor {
     /**
      * @return the singleNodeContainerPersistor
      */
-    protected SingleNodeContainerPersistorVersion1xx
+    SingleNodeContainerPersistorVersion1xx
         getSingleNodeContainerPersistor() {
         return m_sncPersistor;
     }
 
-    protected WorkflowLoadHelper getLoadHelper() {
+    WorkflowLoadHelper getLoadHelper() {
         return m_sncPersistor.getLoadHelper();
     }
 
@@ -469,19 +500,24 @@ public class NodePersistorVersion1xx implements NodePersistor {
      * @param exec For progress/cancelation
      * @param loadTblRep The table repository used during load
      * @param tblRep The table repository for blob handling
+     * @param fileStoreHandlerRepository  ...
      * @param loadResult where to add errors to
      * @throws IOException If files can't be read
      * @throws CanceledExecutionException If canceled
+     * @noreference This method is not intended to be referenced by clients.
+     * @nooverride
      */
     public void load(final Node node, final ReferencedFile configFileRef,
             final WorkflowPersistor parentPersistor,
             final ExecutionMonitor exec,
             final Map<Integer, BufferedDataTable> loadTblRep,
             final HashMap<Integer, ContainerTable> tblRep,
+            final FileStoreHandlerRepository fileStoreHandlerRepository,
             final LoadResult loadResult)
             throws IOException, CanceledExecutionException {
         ExecutionMonitor settingsExec = exec.createSilentSubProgress(0.1);
-        ExecutionMonitor loadExec = exec.createSilentSubProgress(0.7);
+        ExecutionMonitor loadExec = exec.createSilentSubProgress(0.6);
+        ExecutionMonitor loadFileStoreExec = exec.createSilentSubProgress(0.1);
         ExecutionMonitor loadIntTblsExec = exec.createSilentSubProgress(0.1);
         ExecutionMonitor createExec = exec.createSilentSubProgress(0.1);
         exec.setMessage("settings");
@@ -577,11 +613,36 @@ public class NodePersistorVersion1xx implements NodePersistor {
             }
         }
         settingsExec.setProgress(1.0);
-        exec.setMessage("ports");
         WorkflowLoadHelper loadHelper = getLoadHelper();
+
+        loadIntTblsExec.setProgress(1.0);
         try {
             if (!loadHelper.isTemplateFlow()) {
-                loadPorts(node, loadExec, settings, loadTblRep, tblRep);
+                m_fileStoreHandler = loadFileStoreHandler(node,
+                        loadFileStoreExec, settings, fileStoreHandlerRepository);
+            }
+        } catch (Exception e) {
+            if (!(e instanceof InvalidSettingsException)
+                    && !(e instanceof IOException)) {
+                getLogger().error("Unexpected \"" + e.getClass().getSimpleName()
+                        + "\" encountered");
+            }
+            String err = "Unable to load file store handler for node \""
+                + node.getName() + "\": " + e.getMessage();
+            loadResult.addError(err, true);
+            if (mustWarnOnDataLoadError()) {
+                getLogger().warn(err, e);
+            } else {
+                getLogger().debug(err);
+            }
+            setNeedsResetAfterLoad();
+        }
+        loadFileStoreExec.setProgress(1.0);
+        exec.setMessage("ports");
+        try {
+            if (!loadHelper.isTemplateFlow()) {
+                loadPorts(node, loadExec, settings, loadTblRep,
+                        tblRep, fileStoreHandlerRepository);
             }
         } catch (Exception e) {
             if (!(e instanceof InvalidSettingsException)
@@ -603,7 +664,8 @@ public class NodePersistorVersion1xx implements NodePersistor {
         try {
             if (!loadHelper.isTemplateFlow()) {
                 loadInternalHeldTables(
-                        node, loadIntTblsExec, settings, loadTblRep, tblRep);
+                        node, loadIntTblsExec, settings, loadTblRep, tblRep,
+                        fileStoreHandlerRepository);
             }
         } catch (Exception e) {
             if (!(e instanceof InvalidSettingsException)
@@ -621,9 +683,6 @@ public class NodePersistorVersion1xx implements NodePersistor {
             }
             setNeedsResetAfterLoad();
         }
-        loadIntTblsExec.setProgress(1.0);
-        exec.setMessage("creating instance");
-
         exec.setMessage("Loading settings into node instance");
         node.load(this, createExec, loadResult);
         String status;
@@ -695,7 +754,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
      * @param idx The outport index.
      * @param portObject the portObjects to set
      */
-    public void setPortObject(final int idx, final PortObject portObject) {
+    void setPortObject(final int idx, final PortObject portObject) {
         checkPortIndexOnSet(idx);
         m_portObjects[idx] = portObject;
     }
@@ -724,7 +783,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
      * @param idx The outport index.
      * @param portObjectSpec the portObjects to set
      */
-    public void setPortObjectSpec(
+    void setPortObjectSpec(
             final int idx, final PortObjectSpec portObjectSpec) {
         checkPortIndexOnSet(idx);
         m_portObjectSpecs[idx] = portObjectSpec;
@@ -743,7 +802,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
      * @param idx port for which to set summary
      * @param portObjectSummary the portObjectSummary to set
      */
-    public void setPortObjectSummary(final int idx,
+    void setPortObjectSummary(final int idx,
             final String portObjectSummary) {
         checkPortIndexOnSet(idx);
         m_portObjectSummaries[idx] = portObjectSummary;
@@ -758,9 +817,15 @@ public class NodePersistorVersion1xx implements NodePersistor {
     /**
      * @param internalHeldTables the internalHeldTables to set
      */
-    public void setInternalHeldTables(
+    void setInternalHeldTables(
             final BufferedDataTable[] internalHeldTables) {
         m_internalHeldTables = internalHeldTables;
     }
 
+    /** {@inheritDoc}
+     * @since 2.6 */
+    @Override
+    public FileStoreHandler getFileStoreHandler() {
+        return m_fileStoreHandler;
+    }
 }

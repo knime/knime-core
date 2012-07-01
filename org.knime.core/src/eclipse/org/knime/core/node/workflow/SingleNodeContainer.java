@@ -62,6 +62,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.filestore.internal.FileStoreHandler;
+import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
@@ -113,6 +115,10 @@ public final class SingleNodeContainer extends NodeContainer {
 
     /** underlying node. */
     private final Node m_node;
+
+    /** The file store handler that is assigned when the node is executing or
+     * executed. Otherwise it's null. */
+    private FileStoreHandler m_fileStoreHandler;
 
     private SingleNodeContainerSettings m_settings =
         new SingleNodeContainerSettings();
@@ -845,6 +851,7 @@ public final class SingleNodeContainer extends NodeContainer {
     public NodeContainerExecutionStatus performExecuteNode(
             final PortObject[] inObjects) {
         ExecutionContext ec = createExecutionContext();
+        m_node.initFileStoreHandler(getParent().getFileStoreHandlerRepository());
         boolean success;
         try {
             ec.checkCanceled();
@@ -1388,6 +1395,7 @@ public final class SingleNodeContainer extends NodeContainer {
     @Override
     protected NodeContainerPersistor getCopyPersistor(
             final HashMap<Integer, ContainerTable> tableRep,
+            final FileStoreHandlerRepository fileStoreHandlerRepository,
             final boolean preserveDeletableFlags,
             final boolean isUndoableDeleteCommand) {
         return new CopySingleNodeContainerPersistor(this,

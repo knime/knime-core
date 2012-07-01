@@ -44,12 +44,13 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Jan 8, 2009 (wiswedel): created
  */
 package org.knime.core.node.workflow.execresult;
 
+import org.knime.core.data.filestore.internal.FileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeContentPersistor;
@@ -57,11 +58,11 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
 public class NodeExecutionResult implements NodeContentPersistor {
-    
+
     private BufferedDataTable[] m_internalHeldTables;
     private ReferencedFile m_nodeInternDir;
     private PortObject[] m_portObjects;
@@ -122,7 +123,7 @@ public class NodeExecutionResult implements NodeContentPersistor {
     public void setNeedsResetAfterLoad() {
         m_needsResetAfterLoad = true;
     }
-    
+
     /**
      * @param internalHeldTables the internalHeldTables to set
      */
@@ -130,14 +131,14 @@ public class NodeExecutionResult implements NodeContentPersistor {
             final BufferedDataTable[] internalHeldTables) {
         m_internalHeldTables = internalHeldTables;
     }
-    
+
     /**
      * @param nodeInternDir the referencedFile to set
      */
     public void setNodeInternDir(final ReferencedFile nodeInternDir) {
         m_nodeInternDir = nodeInternDir;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean hasContent() {
@@ -163,6 +164,13 @@ public class NodeExecutionResult implements NodeContentPersistor {
      */
     public void setPortObjectSpecs(final PortObjectSpec[] portObjectSpecs) {
         m_portObjectSpecs = portObjectSpecs;
+    }
+
+    /** {@inheritDoc}
+     * @since 2.6*/
+    @Override
+    public FileStoreHandler getFileStoreHandler() {
+        return null;
     }
 
 }

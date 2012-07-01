@@ -63,6 +63,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
@@ -70,6 +71,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
+import org.knime.core.node.NodeAndBundleInformation;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
@@ -81,11 +83,14 @@ import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.WorkflowPersistor.NodeFactoryUnknownException;
 import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
 /**
  *
  * @author wiswedel, University of Konstanz
+ * @noextend This class is not intended to be subclassed by clients.
+ * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public class SingleNodeContainerPersistorVersion1xx
     implements SingleNodeContainerPersistor {
@@ -223,7 +228,7 @@ public class SingleNodeContainerPersistorVersion1xx
         return new SingleNodeContainer(wm, id, this);
     }
 
-    protected NodePersistorVersion1xx createNodePersistor() {
+    NodePersistorVersion1xx createNodePersistor() {
         return new NodePersistorVersion1xx(this, null);
     }
 
@@ -251,9 +256,9 @@ public class SingleNodeContainerPersistorVersion1xx
             setDirtyAfterLoad();
             throw ioe;
         }
-        String nodeFactoryClassName;
+        NodeAndBundleInformation nodeInfo;
         try {
-            nodeFactoryClassName = loadNodeFactoryClassName(
+            nodeInfo = loadNodeFactoryInfo(
                     parentSettings, settings);
         } catch (InvalidSettingsException e) {
             if (settingsFile.getName().equals(
@@ -268,19 +273,18 @@ public class SingleNodeContainerPersistorVersion1xx
         NodeFactory<NodeModel> nodeFactory;
 
         try {
-            nodeFactory = loadNodeFactory(nodeFactoryClassName);
+            nodeFactory = loadNodeFactory(nodeInfo.getFactoryClass());
         } catch (Throwable e) {
-            error =  "Unable to load factory class \""
-                + nodeFactoryClassName + "\"";
+            error = nodeInfo.getErrorMessageWhenNodeIsMissing();
             setDirtyAfterLoad();
-            throw new InvalidSettingsException(error, e);
+            throw new NodeFactoryUnknownException(error, e);
         }
 
         try {
             loadAdditionalFactorySettings(nodeFactory, settings);
         } catch (Throwable e) {
             error =  "Unable to load additional factory settings for \""
-                + nodeFactoryClassName + "\"";
+                + nodeInfo + "\"";
             setDirtyAfterLoad();
             throw new InvalidSettingsException(error, e);
         }
@@ -320,10 +324,15 @@ public class SingleNodeContainerPersistorVersion1xx
             translateToFailPolicy(m_metaPersistor.getState());
         NodePersistorVersion1xx nodePersistor = createNodePersistor();
         try {
+            WorkflowPersistorVersion1xx wfmPersistor =
+                getWorkflowManagerPersistor();
             HashMap<Integer, ContainerTable> globalTableRepository =
-                getWorkflowManagerPersistor().getGlobalTableRepository();
+                wfmPersistor.getGlobalTableRepository();
+            FileStoreHandlerRepository fileStoreHandlerRepository =
+                wfmPersistor.getFileStoreHandlerRepository();
             nodePersistor.load(m_node, nodeFile, m_parentPersistor,
-                    exec, tblRep, globalTableRepository, result);
+                    exec, tblRep, globalTableRepository,
+                    fileStoreHandlerRepository, result);
         } catch (final Exception e) {
             String error = "Error loading node content: " + e.getMessage();
             getLogger().warn(error, e);
@@ -364,25 +373,24 @@ public class SingleNodeContainerPersistorVersion1xx
      * @param parentSettings settings of outer workflow (old style workflows
      *        have it in there)
      * @param settings settings of this node, ignored in this implementation
-     * @return Name of factory
+     * @return Factory information.
      * @throws InvalidSettingsException If that fails for any reason.
      */
-    protected String loadNodeFactoryClassName(
+    NodeAndBundleInformation loadNodeFactoryInfo(
             final NodeSettingsRO parentSettings, final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        String factoryName = parentSettings.getString(KEY_FACTORY_NAME);
+        String factoryName = parentSettings.getString("factory");
 
         // This is a hack to load old J48 Nodes Model from pre-2.0 workflows
         if ("org.knime.ext.weka.j48_2.WEKAJ48NodeFactory2".equals(factoryName)
                 || "org.knime.ext.weka.j48.WEKAJ48NodeFactory".equals(factoryName)) {
-            return "org.knime.ext.weka.knimeJ48.KnimeJ48NodeFactory";
-        } else {
-            return factoryName;
+            factoryName = "org.knime.ext.weka.knimeJ48.KnimeJ48NodeFactory";
         }
+        return new NodeAndBundleInformation(factoryName, null, null, null, null);
     }
 
     @SuppressWarnings("unchecked")
-    protected NodeFactory<NodeModel> loadNodeFactory(
+    final NodeFactory<NodeModel> loadNodeFactory(
             final String factoryClassName) throws InvalidSettingsException,
             InstantiationException, IllegalAccessException,
             ClassNotFoundException {
@@ -426,7 +434,7 @@ public class SingleNodeContainerPersistorVersion1xx
      * @throws InvalidSettingsException ..
      * @noreference This method is not intended to be referenced by clients.
      */
-    protected void loadAdditionalFactorySettings(final NodeFactory factory,
+    void loadAdditionalFactorySettings(final NodeFactory factory,
             final NodeSettingsRO settings) throws InvalidSettingsException {
         // overwritten in subclass
     }
@@ -436,7 +444,7 @@ public class SingleNodeContainerPersistorVersion1xx
      * @return "settings.xml"
      * @throws InvalidSettingsException If that fails for any reason.
      */
-    protected String loadNodeFile(final NodeSettingsRO settings)
+    String loadNodeFile(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         return SETTINGS_FILE_NAME;
     }
@@ -448,7 +456,7 @@ public class SingleNodeContainerPersistorVersion1xx
      * @return node config
      * @throws InvalidSettingsException if that fails for any reason.
      */
-    protected SingleNodeContainerSettings loadSNCSettings(
+    SingleNodeContainerSettings loadSNCSettings(
             final NodeSettingsRO settings,
             final NodePersistorVersion1xx nodePersistor)
         throws InvalidSettingsException {
@@ -489,12 +497,12 @@ public class SingleNodeContainerPersistorVersion1xx
      * @return an empty list.
      * @throws InvalidSettingsException if that fails for any reason.
      */
-    protected List<FlowObject> loadFlowObjects(
+    List<FlowObject> loadFlowObjects(
             final NodeSettingsRO settings) throws InvalidSettingsException {
         return Collections.emptyList();
     }
 
-    protected boolean shouldFixModelPortOrder() {
+    boolean shouldFixModelPortOrder() {
         return true;
     }
 

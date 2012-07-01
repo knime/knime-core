@@ -76,10 +76,12 @@ import org.knime.core.data.container.BlobSupportDataRow;
 import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.ConcatenateTable;
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.container.JoinedTable;
 import org.knime.core.data.container.RearrangeColumnsTable;
 import org.knime.core.data.container.TableSpecReplacerTable;
 import org.knime.core.data.container.WrappedTable;
+import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
@@ -545,6 +547,7 @@ public final class BufferedDataTable implements DataTable, PortObject {
      * @param exec The exec mon for progress/cancel
      * @param tblRep The table repository
      * @param bufferRep The buffer repository (needed for blobs).
+     * @param fileStoreHandlerRepository ...
      * @return The table as written by save.
      * @throws IOException If reading fails.
      * @throws CanceledExecutionException If canceled.
@@ -553,7 +556,8 @@ public final class BufferedDataTable implements DataTable, PortObject {
     static BufferedDataTable loadFromFile(final ReferencedFile dirRef,
             final NodeSettingsRO settings, final ExecutionMonitor exec,
             final Map<Integer, BufferedDataTable> tblRep,
-            final HashMap<Integer, ContainerTable> bufferRep)
+            final HashMap<Integer, ContainerTable> bufferRep,
+            final FileStoreHandlerRepository fileStoreHandlerRepository)
             throws IOException, CanceledExecutionException,
             InvalidSettingsException {
         File dir = dirRef.getFile();
@@ -602,11 +606,11 @@ public final class BufferedDataTable implements DataTable, PortObject {
             ContainerTable fromContainer;
             if (isVersion11x) {
                 fromContainer =
-                    BufferedDataContainer.readFromZip(fileRef.getFile());
+                    DataContainer.readFromZip(fileRef.getFile());
             } else {
                 fromContainer =
-                    BufferedDataContainer.readFromZipDelayed(
-                            fileRef, spec, id, bufferRep);
+                    BufferedDataContainer.readFromZipDelayed(fileRef, spec,
+                            id, bufferRep, fileStoreHandlerRepository);
             }
             t = new BufferedDataTable(fromContainer, id);
         } else {
@@ -627,12 +631,13 @@ public final class BufferedDataTable implements DataTable, PortObject {
                 }
                 ReferencedFile referenceDirRef =
                     new ReferencedFile(dirRef, reference);
-                loadFromFile(referenceDirRef, s, exec, tblRep, bufferRep);
+                loadFromFile(referenceDirRef, s, exec, tblRep, bufferRep,
+                        fileStoreHandlerRepository);
             }
             if (tableType.equals(TABLE_TYPE_REARRANGE_COLUMN)) {
                 t = new BufferedDataTable(
-                        new RearrangeColumnsTable(
-                                fileRef, s, tblRep, spec, id, bufferRep));
+                        new RearrangeColumnsTable(fileRef, s, tblRep, spec,
+                                id, bufferRep, fileStoreHandlerRepository));
             } else if (tableType.equals(TABLE_TYPE_JOINED)) {
                 JoinedTable jt = JoinedTable.load(s, spec, tblRep);
                 t = new BufferedDataTable(jt);

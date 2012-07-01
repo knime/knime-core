@@ -40,43 +40,60 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
  * History
- *   Oct 20, 2008 (wiswedel): created
+ *   Jun 29, 2012 (wiswedel): created
  */
-package org.knime.core.node;
+package org.knime.core.data.filestore.internal;
 
-import org.knime.core.data.filestore.internal.FileStoreHandler;
-import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.data.filestore.FileStore;
 
 /**
  *
- * @author wiswedel, University of Konstanz
- * @noextend This interface is not intended to be extended by clients.
- * @noimplement This interface is not intended to be implemented by clients.
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @since 2.6
  */
-public interface NodeContentPersistor {
+public final class EmptyFileStoreHandler implements FileStoreHandler {
 
-    boolean needsResetAfterLoad();
-    /** Indicate an error and that this node should better be reset after load.
-     */
-    void setNeedsResetAfterLoad();
-    boolean mustWarnOnDataLoadError();
+    private final FileStoreHandlerRepository m_fileStoreHandlerRepository;
 
-    boolean hasContent();
-    ReferencedFile getNodeInternDirectory();
-    PortObjectSpec getPortObjectSpec(final int outportIndex);
-    PortObject getPortObject(final int outportIndex);
-    String getPortObjectSummary(final int outportIndex);
-    BufferedDataTable[] getInternalHeldTables();
-    /** @since 2.6 */
-    FileStoreHandler getFileStoreHandler();
-    String getWarningMessage();
+    /**
+     * @param fileStoreHandlerRepository */
+    private EmptyFileStoreHandler(
+            final FileStoreHandlerRepository fileStoreHandlerRepository) {
+        m_fileStoreHandlerRepository = fileStoreHandlerRepository;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public FileStoreHandlerRepository getFileStoreHandlerRepository() {
+        return m_fileStoreHandlerRepository;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void clearAndDispose() {
+        // no op
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public FileStore getFileStore(final FileStoreKey key) {
+        return m_fileStoreHandlerRepository.getHandler(
+                key.getStoreUUID()).getFileStore(key);
+    }
+
+    /**
+     *  */
+    public static EmptyFileStoreHandler create(
+            final FileStoreHandlerRepository fileStoreHandlerRepository) {
+        return new EmptyFileStoreHandler(fileStoreHandlerRepository);
+    }
+
 
 }

@@ -90,6 +90,7 @@ import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.internal.ReferencedFile;
@@ -320,6 +321,13 @@ public class DataContainer implements RowAppender {
 
     /** Local repository map, created lazily. */
     private Map<Integer, ContainerTable> m_localMap;
+
+    /** A file store handler repository. It's lazy initialized in this class.
+     * The buffered data container overwrites the
+     * {@link #getFileStoreHandlerRepository()} method to return the workflow
+     * global repository. A plain data container will copy file store cells.
+     */
+    private FileStoreHandlerRepository m_fileStoreHandlerRepository;
 
     /** Whether to force a copy of any added blob.
      * See {@link #setForceCopyOfBlobs(boolean)} for details. */
@@ -672,7 +680,7 @@ public class DataContainer implements RowAppender {
         if (m_buffer == null) {
             m_buffer = m_bufferCreator.createBuffer(m_maxRowsInMemory,
                     createInternalBufferID(), getGlobalTableRepository(),
-                    getLocalTableRepository());
+                    getLocalTableRepository(), getFileStoreHandlerRepository());
         }
         if (!m_isSynchronousWrite) {
             try {
@@ -816,8 +824,10 @@ public class DataContainer implements RowAppender {
                 getGlobalTableRepository();
             Map<Integer, ContainerTable> localTableRep =
                 getLocalTableRepository();
-            m_buffer = m_bufferCreator.createBuffer(
-                    m_maxRowsInMemory, bufID, globalTableRep, localTableRep);
+            FileStoreHandlerRepository fileStoreHandlerRepository =
+                getFileStoreHandlerRepository();
+            m_buffer = m_bufferCreator.createBuffer(m_maxRowsInMemory, bufID,
+                    globalTableRep, localTableRep, fileStoreHandlerRepository);
             if (m_buffer == null) {
                 throw new NullPointerException(
                         "Implementation error, must not return a null buffer.");
@@ -899,6 +909,35 @@ public class DataContainer implements RowAppender {
             m_globalMap = new HashMap<Integer, ContainerTable>();
         }
         return m_globalMap;
+    }
+
+    /**
+     * @return The file store handler for this container (either initialized
+     * lazy or previously set by the node).
+     * @since 2.6
+     * @nooverride
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    protected FileStoreHandlerRepository getFileStoreHandlerRepository() {
+        if (m_fileStoreHandlerRepository == null) {
+            m_fileStoreHandlerRepository = new FileStoreHandlerRepository();
+        }
+        return m_fileStoreHandlerRepository;
+    }
+
+    /** @param repository the fileStoreHandlerRepository to set
+     * @nooverride
+     * @noreference This method is not intended to be referenced by clients. */
+    protected final void setFileStoreHandlerRepository(
+            final FileStoreHandlerRepository repository) {
+        if (m_fileStoreHandlerRepository != null) {
+            throw new IllegalStateException("File store "
+                    + "repository already assigned");
+        }
+        if (repository == null) {
+            throw new NullPointerException("Argument must not be null.");
+        }
+        m_fileStoreHandlerRepository = repository;
     }
 
     /**
@@ -1088,7 +1127,8 @@ public class DataContainer implements RowAppender {
             e = exec.createSubProgress(0.8);
             buf = new Buffer(0, -1,
                     new HashMap<Integer, ContainerTable>(),
-                    new HashMap<Integer, ContainerTable>());
+                    new HashMap<Integer, ContainerTable>(),
+                    new FileStoreHandlerRepository());
             int rowCount = 0;
             for (DataRow row : table) {
                 rowCount++;
@@ -1142,7 +1182,8 @@ public class DataContainer implements RowAppender {
     throws IOException {
         // mimic the behavior of readFromZip(ReferencedFile)
         CopyOnAccessTask coa = new CopyOnAccessTask(/*File*/null, null, -1,
-                new HashMap<Integer, ContainerTable>(), new BufferCreator());
+                new HashMap<Integer, ContainerTable>(),
+                null, new BufferCreator());
         // executing the createBuffer() method will start the copying process
         Buffer buffer = coa.createBuffer(in);
         return new ContainerTable(buffer);
@@ -1174,7 +1215,7 @@ public class DataContainer implements RowAppender {
         // bufferID = -1: all blobs are contained in buffer, no fancy
         // reference handling to other buffer objects
         CopyOnAccessTask coa = new CopyOnAccessTask(zipFileRef, null, -1,
-                new HashMap<Integer, ContainerTable>(), creator);
+                new HashMap<Integer, ContainerTable>(), null, creator);
         // executing the createBuffer() method will start the copying process
         Buffer buffer = coa.createBuffer();
         return new ContainerTable(buffer);
@@ -1187,14 +1228,17 @@ public class DataContainer implements RowAppender {
      * @param spec The DTS for the table.
      * @param bufferID The buffer's id used for blob (de)serialization
      * @param bufferRep Repository of buffers for blob (de)serialization.
+     * @param fileStoreHandlerRepository Workflow global file store repository.
      * @return Table contained in <code>zipFile</code>.
+     * @noreference This method is not intended to be referenced by clients.
      */
     protected static ContainerTable readFromZipDelayed(
             final ReferencedFile zipFile,
             final DataTableSpec spec, final int bufferID,
-            final Map<Integer, ContainerTable> bufferRep) {
-        CopyOnAccessTask t = new CopyOnAccessTask(
-                zipFile, spec, bufferID, bufferRep, new BufferCreator());
+            final Map<Integer, ContainerTable> bufferRep,
+            final FileStoreHandlerRepository fileStoreHandlerRepository) {
+        CopyOnAccessTask t = new CopyOnAccessTask(zipFile, spec, bufferID,
+                bufferRep, fileStoreHandlerRepository, new BufferCreator());
         return readFromZipDelayed(t, spec);
     }
 
@@ -1316,14 +1360,17 @@ public class DataContainer implements RowAppender {
          * @param metaIn Input stream containing meta information.
          * @param bufID The buffer's id used for blob (de)serialization
          * @param tblRep Table repository for blob (de)serialization.
+         * @param fileStoreHandlerRepository ...
          * @return A buffer instance.
          * @throws IOException If parsing fails.
          */
         Buffer createBuffer(final File binFile, final File blobDir,
                 final DataTableSpec spec, final InputStream metaIn,
-                final int bufID, final Map<Integer, ContainerTable> tblRep)
+                final int bufID, final Map<Integer, ContainerTable> tblRep,
+                final FileStoreHandlerRepository fileStoreHandlerRepository)
             throws IOException {
-            return new Buffer(binFile, blobDir, spec, metaIn, bufID, tblRep);
+            return new Buffer(binFile, blobDir, spec, metaIn, bufID, tblRep,
+                    fileStoreHandlerRepository);
         }
 
         /** Creates buffer for writing (adding of rows).
@@ -1331,13 +1378,15 @@ public class DataContainer implements RowAppender {
          * @param bufferID The buffer's id used for blob (de)serialization.
          * @param globalTableRep Table repository for blob (de)serialization.
          * @param localTableRep Table repository for blob (de)serialization.
+         * @param fileStoreHandlerRepository ...
          * @return A newly created buffer.
          */
         Buffer createBuffer(final int rowsInMemory, final int bufferID,
                 final Map<Integer, ContainerTable> globalTableRep,
-                final Map<Integer, ContainerTable> localTableRep) {
-            return new Buffer(
-                    rowsInMemory, bufferID, globalTableRep, localTableRep);
+                final Map<Integer, ContainerTable> localTableRep,
+                final FileStoreHandlerRepository fileStoreHandlerRepository) {
+            return new Buffer(rowsInMemory, bufferID, globalTableRep,
+                    localTableRep, fileStoreHandlerRepository);
         }
 
     }

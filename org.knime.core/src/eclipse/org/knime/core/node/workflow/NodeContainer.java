@@ -58,6 +58,7 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
@@ -93,6 +94,7 @@ import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
  * such as coordinates on a workflow layout.
  *
  * @author M. Berthold/B. Wiswedel, University of Konstanz
+ * @noextend This class is not intended to be subclassed by clients.
  */
 public abstract class NodeContainer implements NodeProgressListener {
 
@@ -1261,6 +1263,7 @@ public abstract class NodeContainer implements NodeProgressListener {
 
     /** Get a new persistor that is used to copy this node (copy&paste action).
      * @param tableRep Table repository of the destination.
+     * @param fileStoreHandlerRepository file store handler of destination
      * @param preserveDeletableFlags Whether the "isdeleteable" annotation
      * should be copied also (false when individual nodes are copied
      * but true when an entire meta node is copied).
@@ -1271,6 +1274,7 @@ public abstract class NodeContainer implements NodeProgressListener {
      * @return A new persistor for copying. */
     protected abstract NodeContainerPersistor getCopyPersistor(
             final HashMap<Integer, ContainerTable> tableRep,
+            FileStoreHandlerRepository fileStoreHandlerRepository,
             final boolean preserveDeletableFlags,
             final boolean isUndoableDeleteCommand);
 

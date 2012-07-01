@@ -40,43 +40,46 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
  * History
- *   Oct 20, 2008 (wiswedel): created
+ *   Feb 21, 2012 (wiswedel): created
  */
-package org.knime.core.node;
+package org.knime.core.data.filestore.internal;
 
-import org.knime.core.data.filestore.internal.FileStoreHandler;
-import org.knime.core.internal.ReferencedFile;
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.port.PortObjectSpec;
+import java.io.File;
+
+import org.knime.core.util.DuplicateChecker;
 
 /**
- *
- * @author wiswedel, University of Konstanz
- * @noextend This interface is not intended to be extended by clients.
- * @noimplement This interface is not intended to be implemented by clients.
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 2.6
  */
-public interface NodeContentPersistor {
+public class FileOrganizer {
 
-    boolean needsResetAfterLoad();
-    /** Indicate an error and that this node should better be reset after load.
-     */
-    void setNeedsResetAfterLoad();
-    boolean mustWarnOnDataLoadError();
+    private final File m_parentFolder;
+    private DuplicateChecker m_duplicateChecker;
+    private int m_fileIndex;
 
-    boolean hasContent();
-    ReferencedFile getNodeInternDirectory();
-    PortObjectSpec getPortObjectSpec(final int outportIndex);
-    PortObject getPortObject(final int outportIndex);
-    String getPortObjectSummary(final int outportIndex);
-    BufferedDataTable[] getInternalHeldTables();
-    /** @since 2.6 */
-    FileStoreHandler getFileStoreHandler();
-    String getWarningMessage();
+    /**
+     * @param parentFolder */
+    public FileOrganizer(final File parentFolder) {
+        if (parentFolder == null) {
+            throw new NullPointerException("Argument must not be null.");
+        }
+        if (!parentFolder.isDirectory()) {
+            throw new IllegalArgumentException("Path \""
+                    + parentFolder.getAbsolutePath() + "\" does not denote "
+                    + " an existing directory.");
+        }
+        if (!parentFolder.canWrite()) {
+            throw new IllegalArgumentException("Folder \""
+                    + parentFolder.getAbsolutePath() + "\" can't be written.");
+        }
+        m_parentFolder = parentFolder;
+    }
 
 }

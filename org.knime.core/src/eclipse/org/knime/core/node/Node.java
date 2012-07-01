@@ -71,6 +71,9 @@ import javax.swing.UIManager;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainerException;
+import org.knime.core.data.filestore.internal.DefaultFileStoreHandler;
+import org.knime.core.data.filestore.internal.FileStoreHandler;
+import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
@@ -204,6 +207,10 @@ public final class Node implements NodeModelWarningListener {
      * the view).
      */
     private final Set<ContainerTable> m_localTempTables;
+
+    /** File store handler that is non null during and after execution.
+     * Set null on reset. */
+    private FileStoreHandler m_fileStoreHandler;
 
     // lock that prevents a possible deadlock if a node is currently configuring
     // (e.g. because inportHasNodeModelContent has been called)
@@ -433,11 +440,13 @@ public final class Node implements NodeModelWarningListener {
      * @param loader To load from.
      * @param exec For progress.
      * @param loadResult to add errors and warnings to (if any)
+     * @noreference This method is not intended to be referenced by clients.
      */
     public void loadDataAndInternals(final NodeContentPersistor loader,
             final ExecutionMonitor exec, final LoadResult loadResult) {
         boolean hasContent = loader.hasContent();
         m_model.setHasContent(hasContent);
+        m_fileStoreHandler = loader.getFileStoreHandler();
         for (int i = 0; i < getNrOutPorts(); i++) {
             PortObjectSpec spec = loader.getPortObjectSpec(i);
             if (checkPortObjectSpecClass(spec, i)) {
@@ -786,6 +795,7 @@ public final class Node implements NodeModelWarningListener {
      * @return <code>true</code> if execution was successful otherwise
      *         <code>false</code>.
      * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
+     * @noreference This method is not intended to be referenced by clients.
      */
     public boolean execute(final PortObject[] rawData,
             final ExecutionContext exec) {
@@ -1070,6 +1080,28 @@ public final class Node implements NodeModelWarningListener {
         return true;
     }
 
+    /**
+     *
+     * @param repository workflow global file store repository
+     * @since 2.6
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public void initFileStoreHandler(
+            final FileStoreHandlerRepository repository) {
+        m_fileStoreHandler =
+            DefaultFileStoreHandler.createNewHandler(this, repository);
+    }
+
+    /**
+     * @return the file store handler for the current execution. Throws
+     * exception when no file store handler is set (i.e. not set because node
+     * is reset or executing with 3rd party executor).
+     * @since 2.6
+     * @noreference This method is not intended to be referenced by clients.  */
+    FileStoreHandler getFileStoreHandler() {
+        return m_fileStoreHandler;
+    }
+
     /** Copies the PortObject so that the copy can be given to the node model
      * implementation (and potentially modified). The copy is carried out by
      * means of the respective serializer (via streams).
@@ -1219,6 +1251,10 @@ public final class Node implements NodeModelWarningListener {
      */
     public void reset() {
         m_logger.debug("reset");
+        if (m_fileStoreHandler != null) {
+            m_fileStoreHandler.clearAndDispose();
+            m_fileStoreHandler = null;
+        }
         clearLoopContext();
         setPauseLoopExecution(false);
         m_model.resetModel();
@@ -1411,6 +1447,10 @@ public final class Node implements NodeModelWarningListener {
                     + " during cleanup of node: " + t.getMessage(), t);
         }
         cleanOutPorts(false);
+        if (m_fileStoreHandler != null) {
+            m_fileStoreHandler.clearAndDispose();
+            m_fileStoreHandler = null;
+        }
     }
 
     /** Used before configure, to apply the variable mask to the nodesettings,
@@ -1927,12 +1967,17 @@ public final class Node implements NodeModelWarningListener {
      * flow variable ports!
      *
      * @return the <code>NodeFactory</code> that constructed this node.
-     * @deprecated don't use the factory directly - all calls should be
-     *             delegated through this class (the node).
+     * @noreference This method is not intended to be referenced by clients.
      */
-    @Deprecated
     public NodeFactory<NodeModel> getFactory() {
         return m_factory;
+    }
+
+    /** @return non-null meta bundle and node information to this instance.
+     * @since 2.6
+     * @noreference This method is not intended to be referenced by clients. */
+    public NodeAndBundleInformation getNodeAndBundleInformation() {
+        return new NodeAndBundleInformation(this);
     }
 
     /** @return the underlying node model. */
@@ -2183,4 +2228,5 @@ public final class Node implements NodeModelWarningListener {
             }
         }
     }
+
 }

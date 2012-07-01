@@ -99,23 +99,18 @@ public class EditorUIInformation implements UIInformation {
      */
     @Override
     public void load(final NodeSettingsRO config, final LoadVersion loadVersion) throws InvalidSettingsException {
-        try {
-            m_snapToGrid = config.getBoolean(KEY_SNAP_GRID);
-            m_showGrid = config.getBoolean(KEY_SHOW_GRID);
-            m_gridX = config.getInt(KEY_X_GRID);
-            m_gridY = config.getInt(KEY_Y_GRID);
-        } catch (InvalidSettingsException ise) {
-            LOGGER.error("Unable to restore workflow editor grid settings.", ise);
+        if (loadVersion.ordinal() < LoadVersion.V260.ordinal()) {
             m_snapToGrid = false;
             m_showGrid = false;
             m_gridX = -1;
             m_gridY = -1;
-        }
-        try {
-            m_zoomLevel = config.getDouble(KEY_ZOOM);
-        } catch (InvalidSettingsException ise) {
-            LOGGER.error("Unable to restore workflow editor zoom level.", ise);
             m_zoomLevel = 1.0;
+        } else {
+            m_snapToGrid = config.getBoolean(KEY_SNAP_GRID);
+            m_showGrid = config.getBoolean(KEY_SHOW_GRID);
+            m_gridX = config.getInt(KEY_X_GRID);
+            m_gridY = config.getInt(KEY_Y_GRID);
+            m_zoomLevel = config.getDouble(KEY_ZOOM);
         }
     }
 

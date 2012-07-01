@@ -71,6 +71,7 @@ import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ColumnRearranger.SpecAndFactoryObject;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
@@ -92,6 +93,7 @@ import org.knime.core.util.MultiThreadWorker;
  * that is provided in the NodeModel's execute method. See
  * {@link ColumnRearranger} for more details on how to use them.
  * @author Bernd Wiswedel, University of Konstanz
+ * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public final class RearrangeColumnsTable
     implements DataTable, KnowsRowCountTable {
@@ -162,14 +164,17 @@ public final class RearrangeColumnsTable
      * KNIME 1.1.x or before.
      * @param tableID buffer ID of underlying buffer.
      * @param bufferRep Repository of buffers for blob (de)serialization.
+     * @param fileStoreHandlerRepository ...
      * @throws IOException If reading the fails.
      * @throws InvalidSettingsException If the settings are invalid.
+     * @noreference
      */
     public RearrangeColumnsTable(final ReferencedFile f,
             final NodeSettingsRO settings,
             final Map<Integer, BufferedDataTable> tblRep,
             final DataTableSpec spec, final int tableID,
-            final HashMap<Integer, ContainerTable> bufferRep)
+            final HashMap<Integer, ContainerTable> bufferRep,
+            final FileStoreHandlerRepository fileStoreHandlerRepository)
         throws IOException, InvalidSettingsException {
         NodeSettingsRO subSettings =
             settings.getNodeSettings(CFG_INTERNAL_META);
@@ -213,7 +218,7 @@ public final class RearrangeColumnsTable
                 DataTableSpec appendSpec = new DataTableSpec(appendColSpecs);
                 CopyOnAccessTask noKeyBufferOnAccessTask = new CopyOnAccessTask(
                         f, appendSpec, tableID, bufferRep,
-                        new NoKeyBufferCreator());
+                        fileStoreHandlerRepository, new NoKeyBufferCreator());
                 m_appendTable = DataContainer.readFromZipDelayed(
                         noKeyBufferOnAccessTask, appendSpec);
             }
@@ -625,25 +630,25 @@ public final class RearrangeColumnsTable
     private static class NoKeyBufferCreator
         extends DataContainer.BufferCreator {
 
-        /** @see DataContainer.BufferCreator#createBuffer(int, int, Map, Map) */
+        /** {@inheritDoc} */
         @Override
         Buffer createBuffer(final int rowsInMemory, final int bufferID,
                 final Map<Integer, ContainerTable> globalTableRep,
-                final Map<Integer, ContainerTable> localTableRep) {
-            return new NoKeyBuffer(
-                    rowsInMemory, bufferID, globalTableRep, localTableRep);
+                final Map<Integer, ContainerTable> localTableRep,
+                final FileStoreHandlerRepository fileStoreHandlerRepository) {
+            return new NoKeyBuffer(rowsInMemory, bufferID, globalTableRep,
+                    localTableRep, fileStoreHandlerRepository);
         }
 
-        /** @see DataContainer.BufferCreator#createBuffer(
-         *       File, File, DataTableSpec, InputStream, int, Map)
-        */
+        /** {@inheritDoc} */
         @Override
         Buffer createBuffer(final File binFile, final File blobDir,
                 final DataTableSpec spec, final InputStream metaIn,
-                final int bufID, final Map<Integer, ContainerTable> tblRep)
+                final int bufID, final Map<Integer, ContainerTable> tblRep,
+                final FileStoreHandlerRepository fileStoreHandlerRepository)
             throws IOException {
-            return new NoKeyBuffer(
-                    binFile, blobDir, spec, metaIn, bufID, tblRep);
+            return new NoKeyBuffer(binFile, blobDir, spec,
+                    metaIn, bufID, tblRep, fileStoreHandlerRepository);
         }
     }
 

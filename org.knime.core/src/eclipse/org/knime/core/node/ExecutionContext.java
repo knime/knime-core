@@ -48,6 +48,7 @@
  */
 package org.knime.core.node;
 
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.util.HashMap;
 import java.util.concurrent.Callable;
@@ -64,10 +65,15 @@ import org.knime.core.data.container.JoinedTable;
 import org.knime.core.data.container.RearrangeColumnsTable;
 import org.knime.core.data.container.TableSpecReplacerTable;
 import org.knime.core.data.container.WrappedTable;
+import org.knime.core.data.filestore.FileStore;
+import org.knime.core.data.filestore.FileStoreCell;
+import org.knime.core.data.filestore.internal.DefaultFileStoreHandler;
+import org.knime.core.data.filestore.internal.FileStoreHandler;
 import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.util.KNIMEJob;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
+import org.knime.core.util.DuplicateKeyException;
 
 /**
  * An <code>ExecutionContext</code> provides storage capacities during a
@@ -178,6 +184,39 @@ public class ExecutionContext extends ExecutionMonitor {
         m_globalTableRepository = tableRepository;
         m_localTableRepository = localTableRepository;
     }
+
+    /** Creates a FileStore handle during execution that can be used to
+     * instantiate a {@link FileStoreCell} and fill a table.
+     * @param relativePath Name of the file/directory. The file object will
+     * not be created. The name must not start with a '.' and it must not be
+     * a nested directory (though clients can create sub directories in the
+     * file represented by the returned file store object).
+     * @return a new file store object
+     * @throws IOException if the name is invalid (e.g. starts with a dot)
+     * @throws DuplicateKeyException If the name was already used in a previous
+     * indication.
+     * @since 2.6
+     * @noreference Pending API. Feel free to use the method but keep in mind
+     * that it might change in a future version of KNIME.
+     */
+    public FileStore createFileStore(final String relativePath)
+        throws IOException {
+        return getAndCastFileStoreHandler().createFileStore(relativePath);
+    }
+
+    private DefaultFileStoreHandler getAndCastFileStoreHandler() {
+        FileStoreHandler fileStoreHandler = m_node.getFileStoreHandler();
+        if (fileStoreHandler == null) {
+            throw new IllegalStateException("Node " + m_node.getName()
+                    + " was not configured with file store handler");
+        }
+        if (!(fileStoreHandler instanceof DefaultFileStoreHandler)) {
+            throw new IllegalStateException("File store handler not "
+                    + "initialized: " + fileStoreHandler);
+        }
+        return (DefaultFileStoreHandler)fileStoreHandler;
+    }
+
 
     /**
      * Caches the table argument and returns a reference to a BufferedDataTable
@@ -308,7 +347,8 @@ public class ExecutionContext extends ExecutionMonitor {
         boolean forceCopyOfBlobs = LoopRole.END.equals(m_node.getLoopRole());
         return new BufferedDataContainer(spec, initDomain, m_node,
                 m_memoryPolicy, forceCopyOfBlobs, maxCellsInMemory,
-                m_globalTableRepository, m_localTableRepository);
+                m_globalTableRepository, m_localTableRepository,
+                m_node.getFileStoreHandler().getFileStoreHandlerRepository());
     }
 
     /**

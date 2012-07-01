@@ -85,6 +85,8 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.filestore.internal.FileStoreHandler;
+import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.internal.CorePlugin;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
@@ -206,6 +208,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     private WorkflowOutPort[] m_outPorts;
     private UIInformation m_outPortsBarUIInfo;
 
+    /** editor specific settings are stored with the workflow.
+     * @since 2.6 */
+    private EditorUIInformation m_editorInfo = null;
+
+
     /** Vector holding workflow specific variables. */
     private Vector<FlowVariable> m_workflowVariables;
 
@@ -216,6 +223,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** for internal usage, holding output table references. */
     private final HashMap<Integer, ContainerTable> m_globalTableRepository;
+
+    /** The repository of all active {@link FileStoreHandler}. It inherits
+     * from the parent if this wfm is a meta node. */
+    private final FileStoreHandlerRepository m_fileStoreHandlerRepository;
 
     /** Password store. This object is associated with each meta-node
      * (contained meta nodes have their own password store). */
@@ -261,7 +272,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * This workflow holds the top level projects. */
     public static final WorkflowManager ROOT =
         new WorkflowManager(null, NodeID.ROOTID,
-                new PortType[0], new PortType[0]);
+                new PortType[0], new PortType[0], true);
 
     ///////////////////////
     // Constructors
@@ -271,7 +282,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * a new ID, and the number and type of in/outports as specified.
      */
     private WorkflowManager(final WorkflowManager parent, final NodeID id,
-            final PortType[] inTypes, final PortType[] outTypes) {
+            final PortType[] inTypes, final PortType[] outTypes,
+            final boolean isProject) {
         super(parent, id);
         m_workflow = new Workflow(id);
         m_inPorts = new WorkflowInPort[inTypes.length];
@@ -282,17 +294,19 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         for (int i = 0; i < outTypes.length; i++) {
             m_outPorts[i] = new WorkflowOutPort(i, outTypes[i]);
         }
-        if (m_inPorts.length == 0 && m_outPorts.length == 0) {
-            // this workflow is not connected to parent via any ports
-            // (it is likely a project)
+        boolean noPorts = m_inPorts.length == 0 && m_outPorts.length == 0;
+        assert !isProject || noPorts; // projects must not have ports
+        if (isProject) {
             // we can start a new table repository since there can not
-            // be any dependencies...
+            // be any dependencies to parent
             m_globalTableRepository = new HashMap<Integer, ContainerTable>();
+            m_fileStoreHandlerRepository = new FileStoreHandlerRepository();
             // ...and we do not need to synchronize across unconnected workflows
             m_workflowMutex = new Object();
         } else {
             // otherwise we may have incoming and/or outgoing dependencies...
             m_globalTableRepository = parent.m_globalTableRepository;
+            m_fileStoreHandlerRepository = parent.m_fileStoreHandlerRepository;
             // ...synchronize across border
             m_workflowMutex = parent.m_workflowMutex;
         }
@@ -318,8 +332,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         + "been locked by the load routines");
             }
         }
+        boolean isProject = persistor.isProject();
         m_workflow = new Workflow(id);
         m_name = persistor.getName();
+        m_editorInfo = persistor.getEditorUIInformation();
         m_templateInformation = persistor.getTemplateInformation();
         m_loadVersion = persistor.getLoadVersion();
         m_workflowVariables =
@@ -335,6 +351,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     t.getPortIndex(), t.getPortType());
             m_inPorts[i].setPortName(t.getPortName());
         }
+        m_inPortsBarUIInfo = persistor.getInPortsBarUIInfo();
+
         WorkflowPortTemplate[] outPortTemplates =
             persistor.getOutPortTemplates();
         m_outPorts = new WorkflowOutPort[outPortTemplates.length];
@@ -344,9 +362,21 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     t.getPortIndex(), t.getPortType());
             m_outPorts[i].setPortName(t.getPortName());
         }
-        m_workflowMutex = m_inPorts.length == 0
-            && m_outPorts.length == 0 ? new Object() : parent.m_workflowMutex;
-        m_globalTableRepository = persistor.getGlobalTableRepository();
+        m_outPortsBarUIInfo = persistor.getOutPortsBarUIInfo();
+
+        boolean noPorts = m_inPorts.length == 0 && m_outPorts.length == 0;
+        assert !isProject || noPorts; // projects must not have ports
+
+        if (isProject) {
+            m_workflowMutex = new Object();
+            m_globalTableRepository = persistor.getGlobalTableRepository();
+            m_fileStoreHandlerRepository =
+                persistor.getFileStoreHandlerRepository();
+        } else {
+            m_workflowMutex = parent.m_workflowMutex;
+            m_globalTableRepository = parent.m_globalTableRepository;
+            m_fileStoreHandlerRepository = parent.m_fileStoreHandlerRepository;
+        }
         m_wfmListeners = new CopyOnWriteArrayList<WorkflowListener>();
         LOGGER.debug("Created subworkflow " + this.getID());
     }
@@ -369,7 +399,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public WorkflowManager createAndAddProject(final String name) {
         WorkflowManager wfm = createAndAddSubWorkflow(new PortType[0],
-                new PortType[0], name);
+                new PortType[0], name, true);
         LOGGER.debug("Created project " + ((NodeContainer)wfm).getID());
         return wfm;
     }
@@ -475,7 +505,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param nodeID id of node to be removed
      */
     public void removeNode(final NodeID nodeID) {
-
         NodeContainer nc;
         synchronized (m_workflowMutex) {
             // if node does not exist, simply return
@@ -522,15 +551,34 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public WorkflowManager createAndAddSubWorkflow(final PortType[] inPorts,
             final PortType[] outPorts, final String name) {
-        if (this == ROOT && (inPorts.length != 0 || outPorts.length != 0)) {
-            throw new IllegalStateException("Can't create sub workflow on "
-                + "root workflow manager, use createProject() instead");
+        return createAndAddSubWorkflow(inPorts, outPorts, name, false);
+    }
+
+    /** Adds new empty meta node to this WFM. */
+    private WorkflowManager createAndAddSubWorkflow(final PortType[] inPorts,
+            final PortType[] outPorts, final String name,
+            final boolean isNewProject) {
+        final boolean hasPorts = inPorts.length != 0 || outPorts.length != 0;
+        if (this == ROOT) {
+            if (hasPorts) {
+                throw new IllegalStateException(
+                        "Can't create sub workflow on root workflow manager, "
+                        + "use createAndAddProject() instead");
+            }
+            if (!isNewProject) {
+                throw new IllegalStateException("Children of ROOT workflow "
+                        + "manager must have 'isProject' flag set");
+            }
+        }
+        if (isNewProject && hasPorts) {
+            throw new IllegalStateException("Projects must not have ports");
         }
         NodeID newID;
         WorkflowManager wfm;
         synchronized (m_workflowMutex) {
             newID = m_workflow.createUniqueID();
-            wfm = new WorkflowManager(this, newID, inPorts, outPorts);
+            wfm = new WorkflowManager(this, newID, inPorts,
+                    outPorts, isNewProject);
             if (name != null) {
                 wfm.m_name = name;
             }
@@ -539,6 +587,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         setDirty();
         return wfm;
+    }
+
+    /** Returns true if this workflow manager is a project (which usually means
+     * that the parent is {@link #ROOT}). It returns false if this workflow
+     * is only a meta node in another meta node or project.
+     * @return This property.
+     * @since 2.6 */
+    public boolean isProject() {
+        return this == ROOT || m_workflowMutex != getParent().m_workflowMutex;
     }
 
     /** Creates new meta node from a persistor instance.
@@ -4428,6 +4485,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return m_globalTableRepository;
     }
 
+    /** @return the fileStoreHandlerRepository for this meta node or project. */
+    FileStoreHandlerRepository getFileStoreHandlerRepository() {
+        return m_fileStoreHandlerRepository;
+    }
+
     /**
      * Check if any internal nodes have changed state which might mean that
      * this WFM also needs to change its state...
@@ -5776,9 +5838,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     @Override
     protected NodeContainerPersistor getCopyPersistor(
             final HashMap<Integer, ContainerTable> tableRep,
+            final FileStoreHandlerRepository fileStoreHandlerRepository,
             final boolean preserveDeletableFlags,
             final boolean isUndoableDeleteCommand) {
         return new CopyWorkflowPersistor(this, tableRep,
+                fileStoreHandlerRepository,
                 preserveDeletableFlags, isUndoableDeleteCommand);
     }
 
@@ -5844,7 +5908,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 // throws exception if not present in workflow
                 NodeContainer cont = getNodeContainer(nodeIDs[i]);
                 loaderMap.put(cont.getID().getIndex(), cont.getCopyPersistor(
-                      m_globalTableRepository, false, isUndoableDeleteCommand));
+                      m_globalTableRepository, m_fileStoreHandlerRepository, 
+                      false, isUndoableDeleteCommand));
                 for (ConnectionContainer out
                         : m_workflow.getConnectionsBySource(nodeIDs[i])) {
                     if (idsHashed.contains(out.getDest())) {
@@ -5996,6 +6061,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
+    /** Create persistor for a workflow or template.
+     * @noreference Clients should only be required to load projects using
+     * {@link #loadProject(File, ExecutionMonitor, WorkflowLoadHelper)}
+     */
     public static WorkflowPersistorVersion1xx createLoadPersistor(
             final File directory, final WorkflowLoadHelper loadHelper)
             throws IOException, UnsupportedWorkflowVersionException {
@@ -6015,8 +6084,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     + directory.getAbsolutePath() + "\"");
         }
 
-        WorkflowLoadHelper lh = loadHelper != null
-        ? loadHelper : WorkflowLoadHelper.INSTANCE;
         NodeSettingsRO settings =
             NodeSettings.loadFromXML(new BufferedInputStream(
                     new FileInputStream(workflowknime)));
@@ -6032,16 +6099,19 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         } else {
             versionString = "0.9.0";
         }
-
+        boolean isProject = !loadHelper.isTemplateFlow();
         WorkflowPersistorVersion1xx persistor;
         // TODO only create new hash map if workflow is a project?
         HashMap<Integer, ContainerTable> tableRep =
             new HashMap<Integer, ContainerTable>();
+        FileStoreHandlerRepository fileStoreHandlerRepository =
+            new FileStoreHandlerRepository();
         LoadVersion version;
         if ((version = WorkflowPersistorVersion200.canReadVersionV200(
                 versionString)) != null) {
-            persistor = new WorkflowPersistorVersion200(
-                    tableRep, workflowknimeRef, lh, version);
+            persistor = new WorkflowPersistorVersion200(tableRep,
+                    fileStoreHandlerRepository, workflowknimeRef, loadHelper,
+                    version, isProject);
         } else if ((version = WorkflowPersistorVersion1xx.canReadVersionV1X0(
                 versionString)) != null) {
             LOGGER.warn("The current KNIME version (" + KNIMEConstants.VERSION
@@ -6051,8 +6121,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     + " might not be possible to load all data"
                     + " or some nodes can't be configured."
                     + " Please re-configure and/or re-execute these nodes.");
-            persistor = new WorkflowPersistorVersion1xx(
-                    tableRep, workflowknimeRef, lh, version);
+            persistor = new WorkflowPersistorVersion1xx(tableRep,
+                    fileStoreHandlerRepository, workflowknimeRef,
+                    loadHelper, version, isProject);
         } else {
             StringBuilder versionDetails = new StringBuilder(versionString);
             String createdBy = settings.getString(CFG_CREATED_BY, null);
@@ -6061,15 +6132,16 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 versionDetails.append(createdBy).append(")");
             }
             String v = versionDetails.toString();
-            switch (lh.getUnknownKNIMEVersionLoadPolicy(v)) {
+            switch (loadHelper.getUnknownKNIMEVersionLoadPolicy(v)) {
             case Abort:
                 throw new UnsupportedWorkflowVersionException(
                         "Unable to load workflow, version string \"" + v
                         + "\" is unknown");
             default:
                 version = WorkflowPersistorVersion200.VERSION_LATEST;
-                persistor = new WorkflowPersistorVersion200(
-                        tableRep, workflowknimeRef, lh, version);
+                persistor = new WorkflowPersistorVersion200(tableRep,
+                        fileStoreHandlerRepository,
+                        workflowknimeRef, loadHelper, version, isProject);
             }
         }
         return persistor;
@@ -6104,8 +6176,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             InvalidSettingsException, CanceledExecutionException,
             UnsupportedWorkflowVersionException, LockFailedException {
         ReferencedFile rootFile = new ReferencedFile(directory);
-        boolean isTemplate =
-                    (loadHelper != null && loadHelper.isTemplateFlow());
+        boolean isTemplate = loadHelper.isTemplateFlow();
         if (!isTemplate) {
             // don't lock read-only templates (as we don't have r/o locks yet)
             if (!rootFile.fileLockRootForVM()) {
@@ -6281,8 +6352,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             persistorMap.put(id, p);
         }
 
-        m_inPortsBarUIInfo = persistor.getInPortsBarUIInfo();
-        m_outPortsBarUIInfo = persistor.getOutPortsBarUIInfo();
         postLoad(persistorMap, tblRep, persistor.mustWarnOnDataLoadError(),
                 exec, loadResult, preserveNodeMessage);
         // set dirty if this wm should be reset (for instance when the state
@@ -6964,6 +7033,27 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     @Override
     public String getNodeViewName(final int i) {
         throw new IndexOutOfBoundsException("WFM don't have views.");
+    }
+
+    /**
+     * Stores the editor specific settings. Stores a reference to the object. Does not create a copy.
+     * @param editorInfo the settings to store
+     * @since 2.6
+     */
+    public void setEditorUIInformation(final EditorUIInformation editorInfo) {
+        if (!ConvenienceMethods.areEqual(editorInfo, m_editorInfo)) {
+            m_editorInfo = editorInfo;
+            setDirty();
+        }
+    }
+
+    /**
+     * Returns the editor specific settings. Returns a reference to the object. Does not create a copy.
+     * @return the editor settings currently stored
+     * @since 2.6
+     */
+    public EditorUIInformation getEditorUIInformation() {
+        return m_editorInfo;
     }
 
     /** {@inheritDoc} */

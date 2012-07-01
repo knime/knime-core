@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Jul 12, 2006 (wiswedel): created
  */
@@ -58,30 +58,31 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.node.NodeLogger;
 
 
 /**
  * Buffer implementation that does not write the row keys. Used to write
- * data if only few columns have changed. This buffer writes the changed 
+ * data if only few columns have changed. This buffer writes the changed
  * columns.
- * <p>This class is used to save the data of the new columns in a 
+ * <p>This class is used to save the data of the new columns in a
  * {@link RearrangeColumnsTable}.
  * @author Bernd Wiswedel, University of Konstanz
  */
 class NoKeyBuffer extends Buffer {
-    
-    private static final NodeLogger LOGGER = 
+
+    private static final NodeLogger LOGGER =
         NodeLogger.getLogger(NoKeyBuffer.class);
-    
+
     /** Current version string. */
     private static final String VERSION = "noRowKeyContainer_8";
-    
+
     /** The version number corresponding to VERSION. */
     private static final int IVERSION = 8;
-    
+
     private static final HashMap<String, Integer> COMPATIBILITY_MAP;
-    
+
     static {
         // see Buffer static block for details
         COMPATIBILITY_MAP = new HashMap<String, Integer>();
@@ -94,19 +95,22 @@ class NoKeyBuffer extends Buffer {
         COMPATIBILITY_MAP.put("noRowKeyContainer_7", 7);
         COMPATIBILITY_MAP.put(VERSION, IVERSION);
     }
-    
+
     /** Creates new buffer for writing.
      * @param maxRowsInMemory Passed on to super.
      * @param bufferID Passed on to super.
      * @param tblRep Passed on to super.
      * @param localTblRep Passed on to super.
+     * @param fileStoreHandlerRepository passed on to super.
      */
-    NoKeyBuffer(final int maxRowsInMemory, 
+    NoKeyBuffer(final int maxRowsInMemory,
             final int bufferID, final Map<Integer, ContainerTable> tblRep,
-            final Map<Integer, ContainerTable> localTblRep) {
-        super(maxRowsInMemory, bufferID, tblRep, localTblRep);
+            final Map<Integer, ContainerTable> localTblRep,
+            final FileStoreHandlerRepository fileStoreHandlerRepository) {
+        super(maxRowsInMemory, bufferID, tblRep, localTblRep,
+                fileStoreHandlerRepository);
     }
-    
+
     /** Creates new buffer for reading.
      * @param binFile Passed on to super.
      * @param blobDir Passed on to super.
@@ -114,15 +118,18 @@ class NoKeyBuffer extends Buffer {
      * @param metaIn Passed on to super.
      * @param bufferID Passed on to super.
      * @param tblRep Passed on to super.
+     * @param fileStoreHandlerRepository Passed to super class.
      * @throws IOException Passed on from super.
      */
-    NoKeyBuffer(final File binFile, final File blobDir, 
-            final DataTableSpec spec, final InputStream metaIn, 
-            final int bufferID, final Map<Integer, ContainerTable> tblRep) 
+    NoKeyBuffer(final File binFile, final File blobDir,
+            final DataTableSpec spec, final InputStream metaIn,
+            final int bufferID, final Map<Integer, ContainerTable> tblRep,
+            final FileStoreHandlerRepository fileStoreHandlerRepository)
             throws IOException {
-        super(binFile, blobDir, spec, metaIn, bufferID, tblRep);
+        super(binFile, blobDir, spec, metaIn, bufferID, tblRep,
+                fileStoreHandlerRepository);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public String getVersion() {
@@ -142,19 +149,19 @@ class NoKeyBuffer extends Buffer {
         }
         return iVersion;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     boolean shouldSkipRowKey() {
         return true;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     @SuppressWarnings("unchecked")
     Buffer createLocalCloneForWriting() {
-        return new NoKeyBuffer(0, getBufferID(), 
-                getGlobalRepository(), Collections.EMPTY_MAP);
+        return new NoKeyBuffer(0, getBufferID(), getGlobalRepository(),
+                Collections.EMPTY_MAP, getFileStoreHandlerRepository());
     }
-    
+
 }

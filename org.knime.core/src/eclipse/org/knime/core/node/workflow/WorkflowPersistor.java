@@ -59,7 +59,9 @@ import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
@@ -96,6 +98,10 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
 
     LoadVersion getLoadVersion();
 
+    /** @return if the persistor represent a workflow project.
+     * @since 2.6 */
+    boolean isProject();
+
     /** The map of node ID suffix to persistor.
      * @return The persistor map. */
     Map<Integer, NodeContainerPersistor> getNodeLoaderMap();
@@ -114,6 +120,11 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
     Set<ConnectionContainerTemplate> getAdditionalConnectionSet();
 
     HashMap<Integer, ContainerTable> getGlobalTableRepository();
+
+    /** The repository of file store handlers.
+     * @return
+     * @since 2.6*/
+    FileStoreHandlerRepository getFileStoreHandlerRepository();
 
     String getName();
 
@@ -155,6 +166,10 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
      * @return the ui info or null if not set.
      */
     public UIInformation getOutPortsBarUIInfo();
+
+    /** @return editor UI infos.
+     * @since 2.6  */
+    public EditorUIInformation getEditorUIInformation();
 
     /** @return the shouldFailOnLoadDataError */
     public boolean mustWarnOnDataLoadError();
@@ -599,8 +614,28 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
             m_undoPersistor = undoPersistor;
         }
 
+    }
 
+    /** Thrown when node factory is not available. Error message is descriptive.
+     * @since 2.6
+     */
+    @SuppressWarnings("serial")
+    static final class NodeFactoryUnknownException
+        extends InvalidSettingsException {
 
+        /**
+         * @param message
+         * @param cause */
+        NodeFactoryUnknownException(final String message,
+                final Throwable cause) {
+            super(message, cause);
+        }
+
+        /**
+         * @param message */
+        NodeFactoryUnknownException(final String message) {
+            super(message);
+        }
 
     }
 

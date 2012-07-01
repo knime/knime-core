@@ -60,9 +60,11 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeAndBundleInformation;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -73,7 +75,7 @@ import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
  *
  * @author wiswedel, University of Konstanz
  */
-public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
+class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
         WorkflowPersistorVersion1xx {
 
     private enum MetaNodeType {
@@ -105,12 +107,14 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
 
     private MetaNodeType m_metaNodeType = MetaNodeType.ORDINARY;
 
-    public ObsoleteMetaNodeWorkflowPersistorVersion1xx(
+    ObsoleteMetaNodeWorkflowPersistorVersion1xx(
             final HashMap<Integer, ContainerTable> globalRep,
+            final FileStoreHandlerRepository fileStoreHandlerRepository,
             final ReferencedFile workflowKNIMEFile,
             final WorkflowLoadHelper loadHelper,
             final LoadVersion version) {
-        super(globalRep, workflowKNIMEFile, loadHelper, version);
+        super(globalRep, fileStoreHandlerRepository,
+                workflowKNIMEFile, loadHelper, version, false);
     }
 
     /** {@inheritDoc} */
@@ -428,21 +432,23 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
 
         /** {@inheritDoc} */
         @Override
-        protected String loadNodeFactoryClassName(
+        NodeAndBundleInformation loadNodeFactoryInfo(
                 final NodeSettingsRO parentSettings,
                 final NodeSettingsRO settings) throws InvalidSettingsException {
-            String f = super.loadNodeFactoryClassName(parentSettings, settings);
+            NodeAndBundleInformation f = super.loadNodeFactoryInfo(parentSettings, settings);
             switch (m_metaNodeType) {
             case LOOPER:
                 String in = "org.knime.core.node.meta.DataInputNodeFactory";
                 String out = "org.knime.core.node.meta.DataOutputNodeFactory";
-                if (in.equals(f)) {
-                    f = "org.knime.base.node.meta.looper."
-                        + "ForLoopHeadNodeFactory";
+                String newClass = f.getFactoryClass();
+                if (in.equals(newClass)) {
+                    newClass =
+                        "org.knime.base.node.meta.looper.ForLoopHeadNodeFactory";
                 } else if (out.equals(f)) {
-                    f = "org.knime.base.node.meta.looper."
-                        + "ForLoopTailNodeFactory";
+                    newClass =
+                        "org.knime.base.node.meta.looper.ForLoopTailNodeFactory";
                 }
+                f = new NodeAndBundleInformation(newClass, null, null, null, null);
                 break;
             case CROSSVALIDATION:
                 // the x-partitioner and aggregator node have the same name

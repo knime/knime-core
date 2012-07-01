@@ -162,7 +162,6 @@ import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.workflow.SingleNodeContainer;
-import org.knime.core.node.workflow.UIInformation;
 import org.knime.core.node.workflow.WorkflowEvent;
 import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -1376,14 +1375,8 @@ public class WorkflowEditor extends GraphicalEditor implements
      * stored editor settings.
      */
     private void saveEditorSettingsToWorkflowManager() {
-
-        NodeUIInformation uiInfo = getWorkflowManager().getUIInformation();
-        if (uiInfo == null) {
-            uiInfo = new NodeUIInformation();
-        }
         // overwriting any existing editor settings in the ui info
-        uiInfo.setEditorUIInformation(getCurrentEditorSettings());
-        getWorkflowManager().setUIInformation(uiInfo);
+        getWorkflowManager().setEditorUIInformation(getCurrentEditorSettings());
     }
 
     /**
@@ -1414,33 +1407,26 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     private void applyEditorSettingsFromWorkflowManager() {
-        EditorUIInformation settings = null;
-        UIInformation uiInfo = getWorkflowManager().getUIInformation();
-        if (uiInfo == null) {
-            // this is an old workflow: don't show or enable grid
-            settings = getEditorSettingsDefault();
-            settings.setShowGrid(false);
-            settings.setSnapToGrid(false);
-            LOGGER.info("Workflow w/o editor settings.");
-        } else if (uiInfo instanceof NodeUIInformation) {
-            settings = ((NodeUIInformation)uiInfo).getEditorUIInformation();
-            if (settings == null) {
-                // if this is a meta node - derive settings from parent
-                if (m_fileResource == null && m_parentEditor != null) {
-                    m_parentEditor.saveEditorSettingsToWorkflowManager();
-                    settings = m_parentEditor.getCurrentEditorSettings();
-                    // don't derive zoom factor.
-                    if (settings != null) {
-                        settings.setZoomLevel(1.0);
-                    }
+        final WorkflowManager wfm = getWorkflowManager();
+        EditorUIInformation settings = wfm.getEditorUIInformation();
+        if (settings == null) {
+            // if this is a meta node - derive settings from parent
+            if (m_fileResource == null && m_parentEditor != null) {
+                m_parentEditor.saveEditorSettingsToWorkflowManager();
+                settings = m_parentEditor.getCurrentEditorSettings();
+                // don't derive zoom factor.
+                if (settings != null) {
+                    settings.setZoomLevel(1.0);
                 }
                 if (settings == null) {
                     settings = getEditorSettingsDefault();
                 }
+            } else {
+                // this is an old workflow: don't show or enable grid
+                settings = getEditorSettingsDefault();
+                settings.setShowGrid(false);
+                settings.setSnapToGrid(false);
             }
-        } else {
-            LOGGER.error("Unable to restore editor settings (unexpected settings object)");
-            return;
         }
         applyEditorSettings(settings);
     }

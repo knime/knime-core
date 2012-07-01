@@ -61,8 +61,13 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.filestore.internal.DefaultFileStoreHandler;
+import org.knime.core.data.filestore.internal.EmptyFileStoreHandler;
+import org.knime.core.data.filestore.internal.FileStoreHandler;
+import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObject.PortObjectSerializer;
@@ -84,6 +89,8 @@ import org.knime.core.util.FileUtil;
 /**
  *
  * @author wiswedel, University of Konstanz
+ * @noinstantiate
+ * @noextend
  */
 public class NodePersistorVersion200 extends NodePersistorVersion1xx {
 
@@ -164,8 +171,9 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             FileUtil.deleteRecursively(nodeInternDir);
         }
         ExecutionMonitor internalMon = execMon.createSilentSubProgress(0.2);
-        ExecutionMonitor portMon = execMon.createSilentSubProgress(0.6);
+        ExecutionMonitor portMon = execMon.createSilentSubProgress(0.5);
         ExecutionMonitor intTblsMon = execMon.createSilentSubProgress(0.1);
+        ExecutionMonitor fileStoreMon = execMon.createSilentSubProgress(0.1);
         execMon.setMessage("Internals");
         boolean isSaveInternals = isSaveData;
         if (isSaveInternals) {
@@ -177,11 +185,14 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             saveNodeInternDirectory(node, nodeInternDir, settings, internalMon);
         }
         internalMon.setProgress(1.0);
+        execMon.setMessage("File Store Objects");
+        saveFileStoreObjects(node, nodeDirRef, settings, fileStoreMon, isSaveData);
+        fileStoreMon.setProgress(1.0);
         execMon.setMessage("Ports");
         savePorts(node, nodeDirRef, settings, portMon, isSaveData);
         portMon.setProgress(1.0);
         execMon.setMessage("Internal Tables");
-        saveInternalHeldTables(node, nodeDirRef, settings, portMon, isSaveData);
+        saveInternalHeldTables(node, nodeDirRef, settings, internalMon, isSaveData);
         intTblsMon.setProgress(1.0);
         // file name has already correct ending
         OutputStream os = new FileOutputStream(nodeFile.getFile());
@@ -367,6 +378,40 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         }
     }
 
+    /**
+     * @param node
+     * @param nodeDirRef
+     * @param settings
+     * @param fileStoreMon
+     * @param isSaveData
+     * @throws IOException */
+    static void saveFileStoreObjects(final Node node,
+            final ReferencedFile nodeDirRef, final NodeSettings settings,
+            final ExecutionMonitor fileStoreMon, final boolean isSaveData)
+        throws IOException {
+        NodeSettingsWO fsSettings = settings.addNodeSettings("filestores");
+        FileStoreHandler fileStoreHandler = node.getFileStoreHandler();
+        String uuidS;
+        String dirNameInFlow;
+        if (isSaveData && fileStoreHandler instanceof DefaultFileStoreHandler) {
+            final DefaultFileStoreHandler defFileStoreHandler =
+                (DefaultFileStoreHandler)fileStoreHandler;
+            File baseDir = defFileStoreHandler.getBaseDir();
+            dirNameInFlow = baseDir == null ? null : "filestore";
+            if (dirNameInFlow != null) {
+                File saveLocation = new File(
+                        nodeDirRef.getFile(), dirNameInFlow);
+                FileUtil.copyDir(baseDir, saveLocation);
+            }
+            uuidS = defFileStoreHandler.getStoreUUID().toString();
+        } else {
+            uuidS = null;
+            dirNameInFlow = null;
+        }
+        fsSettings.addString("file_store_location", dirNameInFlow);
+        fsSettings.addString("file_store_id", uuidS);
+    }
+
     private static void saveBufferedDataTable(final BufferedDataTable table,
             final File directory, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
@@ -439,14 +484,14 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
 
     /** {@inheritDoc} */
     @Override
-    protected boolean loadHasContent(final NodeSettingsRO settings)
+    boolean loadHasContent(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return settings.getBoolean("hasContent");
     }
 
     /** {@inheritDoc} */
     @Override
-    protected boolean loadIsInactive(final NodeSettingsRO settings)
+    boolean loadIsInactive(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         if (getLoadVersion().ordinal() >= LoadVersion.V230.ordinal()) {
             return settings.getBoolean("isInactive", false);
@@ -457,18 +502,19 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
 
     /** {@inheritDoc} */
     @Override
-    protected boolean loadIsConfigured(final NodeSettingsRO settings)
+    boolean loadIsConfigured(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return false;
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void loadInternalHeldTables(final Node node, final ExecutionMonitor execMon,
+    void loadInternalHeldTables(final Node node, final ExecutionMonitor execMon,
             final NodeSettingsRO settings,
             final Map<Integer, BufferedDataTable> loadTblRep,
-            final HashMap<Integer, ContainerTable> tblRep) throws IOException,
-            InvalidSettingsException, CanceledExecutionException {
+            final HashMap<Integer, ContainerTable> tblRep,
+            final FileStoreHandlerRepository fileStoreHandlerRepository)
+    throws IOException, InvalidSettingsException, CanceledExecutionException {
         if (!settings.containsKey("internalTables")) {
             return;
         }
@@ -499,8 +545,9 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                     throw new IOException("Can not read table directory "
                             + portDir.getAbsolutePath());
                 }
-                BufferedDataTable t = loadBufferedDataTable(
-                        portDirRef, subProgress, loadTblRep, tblRep);
+                BufferedDataTable t = loadBufferedDataTable(portDirRef,
+                        subProgress, loadTblRep, tblRep,
+                        fileStoreHandlerRepository);
                 result[index] = t;
             }
             subProgress.setProgress(1.0);
@@ -510,11 +557,37 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
 
     /** {@inheritDoc} */
     @Override
-    protected void loadPorts(final Node node, final ExecutionMonitor exec,
+    FileStoreHandler loadFileStoreHandler(final Node node,
+            final ExecutionMonitor execMon, final NodeSettingsRO settings,
+            final FileStoreHandlerRepository fileStoreHandlerRepository)
+    throws InvalidSettingsException {
+        if (getLoadVersion().ordinal() < LoadVersion.V260.ordinal()) {
+            return super.loadFileStoreHandler(node, execMon,
+                    settings, fileStoreHandlerRepository);
+        }
+        NodeSettingsRO fsSettings = settings.getNodeSettings("filestores");
+        String dirNameInFlow = fsSettings.getString("file_store_location");
+        if (dirNameInFlow == null) {
+            return EmptyFileStoreHandler.create(fileStoreHandlerRepository);
+        } else {
+            String uuidS = fsSettings.getString("file_store_id");
+            UUID uuid = UUID.fromString(uuidS);
+            ReferencedFile subDirFile =
+                new ReferencedFile(getNodeDirectory(), dirNameInFlow);
+            FileStoreHandler fsh = DefaultFileStoreHandler.restore(node, uuid,
+                    fileStoreHandlerRepository, subDirFile.getFile());
+            return fsh;
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    void loadPorts(final Node node, final ExecutionMonitor exec,
             final NodeSettingsRO settings,
             final Map<Integer, BufferedDataTable> loadTblRep,
-            final HashMap<Integer, ContainerTable> tblRep) throws IOException,
-            InvalidSettingsException, CanceledExecutionException {
+            final HashMap<Integer, ContainerTable> tblRep,
+            final FileStoreHandlerRepository fileStoreHandlerRepository)
+    throws IOException, InvalidSettingsException, CanceledExecutionException {
         final int nrOutPorts = node.getNrOutPorts();
         if (nrOutPorts == 1) {
             // only the mandatory flow variable port
@@ -538,13 +611,13 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                         new ReferencedFile(getNodeDirectory(), portDirN);
                 subProgress.setMessage("Port " + index);
                 loadPort(node, portDir, singlePortSetting, subProgress, index,
-                        loadTblRep, tblRep);
+                        loadTblRep, tblRep, fileStoreHandlerRepository);
             }
             subProgress.setProgress(1.0);
         }
     }
 
-    protected int loadPortIndex(final NodeSettingsRO singlePortSetting)
+    int loadPortIndex(final NodeSettingsRO singlePortSetting)
         throws InvalidSettingsException {
         int index = singlePortSetting.getInt("index");
         // KNIME v2.1 and before had no optional flow variable input port
@@ -555,12 +628,13 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         return index;
     }
 
-    protected void loadPort(final Node node, final ReferencedFile portDir,
+    void loadPort(final Node node, final ReferencedFile portDir,
             final NodeSettingsRO settings, final ExecutionMonitor exec,
             final int portIdx,
             final Map<Integer, BufferedDataTable> loadTblRep,
-            final HashMap<Integer, ContainerTable> tblRep) throws IOException,
-            InvalidSettingsException, CanceledExecutionException {
+            final HashMap<Integer, ContainerTable> tblRep,
+            final FileStoreHandlerRepository fileStoreHandlerRepository)
+    throws IOException, InvalidSettingsException, CanceledExecutionException {
         String specClass = settings.getString("port_spec_class");
         String objectClass = settings.getString("port_object_class");
 
@@ -604,8 +678,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                         + "\"");
             }
             if (objectClass != null) {
-                object = loadBufferedDataTable(
-                        portDir, exec, loadTblRep, tblRep);
+                object = loadBufferedDataTable(portDir, exec,
+                        loadTblRep, tblRep, fileStoreHandlerRepository);
                 ((BufferedDataTable)object).setOwnerRecursively(node);
                 spec = ((BufferedDataTable)object).getDataTableSpec();
             } else if (specClass != null) {
@@ -675,7 +749,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                     // for adequate port types (handled above)
                     // we leave the code here for future versions..
                     object = loadBufferedDataTable(objectFileRef, exec,
-                                    loadTblRep, tblRep);
+                            loadTblRep, tblRep, fileStoreHandlerRepository);
                     ((BufferedDataTable)object).setOwnerRecursively(node);
                 } else {
                     File objectFile = objectFileRef.getFile();
@@ -729,11 +803,12 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
     private BufferedDataTable loadBufferedDataTable(
             final ReferencedFile objectDir, final ExecutionMonitor exec,
             final Map<Integer, BufferedDataTable> loadTblRep,
-            final HashMap<Integer, ContainerTable> tblRep)
+            final HashMap<Integer, ContainerTable> tblRep,
+            final FileStoreHandlerRepository fileStoreHandlerRepository)
             throws CanceledExecutionException, IOException,
             InvalidSettingsException {
         return BufferedDataTable.loadFromFile(objectDir, /* ignored in 1.2+ */
-        null, exec, loadTblRep, tblRep);
+        null, exec, loadTblRep, tblRep, fileStoreHandlerRepository);
     }
 
 }

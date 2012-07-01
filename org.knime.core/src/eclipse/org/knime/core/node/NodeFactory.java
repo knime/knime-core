@@ -398,6 +398,8 @@ public abstract class NodeFactory<T extends NodeModel> {
         }
     }
 
+
+
     /**
      * Reads the icon tag from the xml and returns the icon. If not available or
      * the icon is not readable, an default icon is returned. This method is

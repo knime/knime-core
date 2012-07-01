@@ -17,6 +17,7 @@ Export-Package:
  org.knime.core.data.container,
  org.knime.core.data.date,
  org.knime.core.data.def,
+ org.knime.core.data.filestore,
  org.knime.core.data.icon,
  org.knime.core.data.image,
  org.knime.core.data.image.png,

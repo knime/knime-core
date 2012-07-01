@@ -64,6 +64,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -88,6 +89,9 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
 
     /** Key for workflow variables. */
     private static final String CFG_WKF_VARIABLES = "workflow_variables";
+
+    /** key used to store the editor specific settings (since 2.6). */
+    private static final String CFG_EDITOR_INFO = "workflow_editor_settings";
 
     /** Key for workflow template information. */
     private static final String CFG_TEMPLATE_INFO =
@@ -118,7 +122,11 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         /** Version 2.4.x, introduces meta node templates. */
         V240("2.4.0"),
         /** Version 2.5.x, lockable meta nodes, node-relative annotations. */
-        V250("2.5.0");
+        V250("2.5.0"),
+        /** Version 2.6.x, file store objects, grid information, node vendor
+         * & plugin information.
+         * @since 2.6  */
+        V260("2.6.0");
 
         private final String m_versionString;
 
@@ -144,7 +152,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             return null;
         }
     }
-    static final LoadVersion VERSION_LATEST = LoadVersion.V250;
+    static final LoadVersion VERSION_LATEST = LoadVersion.V260;
 
     static LoadVersion canReadVersionV200(final String versionString) {
         return LoadVersion.get(versionString);
@@ -152,18 +160,22 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
 
     /** Create persistor for load.
      * @param tableRep Table repository
+     * @param fileStoreHandlerRepository ...
      * @param workflowKNIMEFile workflow.knime or template.knime file
      * @param loadHelper As required by meta persistor.
      * @param version Version must pass {@link #canReadVersionV200(String)}.
+     * @param isProject Whether workflow to load is a project or a meta node.
      * @throws IllegalStateException If version string is unsupported.
      */
     WorkflowPersistorVersion200(final HashMap<Integer, ContainerTable> tableRep,
+            final FileStoreHandlerRepository fileStoreHandlerRepository,
             final ReferencedFile workflowKNIMEFile,
             final WorkflowLoadHelper loadHelper,
-            final LoadVersion version) {
-        super(tableRep, new NodeContainerMetaPersistorVersion200(
-                workflowKNIMEFile, loadHelper, version), version);
-        }
+            final LoadVersion version, final boolean isProject) {
+        super(tableRep, fileStoreHandlerRepository,
+                new NodeContainerMetaPersistorVersion200(
+                workflowKNIMEFile, loadHelper, version), version, isProject);
+    }
 
     /** @return version that is saved, {@value #VERSION_LATEST}. */
     protected static LoadVersion getSaveVersion() {
@@ -437,6 +449,21 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
 
     /** {@inheritDoc} */
     @Override
+    EditorUIInformation loadEditorUIInformation(final NodeSettingsRO settings)
+        throws InvalidSettingsException {
+        final LoadVersion loadVersion = getLoadVersion();
+        if (loadVersion.ordinal() < LoadVersion.V260.ordinal()
+                || !settings.containsKey(CFG_EDITOR_INFO)) {
+            return new EditorUIInformation();
+        }
+        NodeSettingsRO editorCfg = settings.getNodeSettings(CFG_EDITOR_INFO);
+        EditorUIInformation editorInfo = new EditorUIInformation();
+        editorInfo.load(editorCfg, loadVersion);
+        return editorInfo;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     protected boolean loadIfMustWarnOnDataLoadError(final File workflowDir) {
         return new File(workflowDir, SAVED_WITH_DATA_FILE).isFile();
     }
@@ -463,7 +490,8 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     protected WorkflowPersistorVersion200 createWorkflowPersistorLoad(
             final ReferencedFile wfmFile) {
         return new WorkflowPersistorVersion200(getGlobalTableRepository(),
-                wfmFile, getLoadHelper(), getLoadVersion());
+                getFileStoreHandlerRepository(),
+                wfmFile, getLoadHelper(), getLoadVersion(), false);
     }
 
     /** {@inheritDoc} */
@@ -570,6 +598,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
                     saveOutPortSetting(outPortsSettsEnum, i);
                 saveOutPort(singlePort, wm, i);
             }
+            saveEditorUIInformation(wm, settings);
 
             if (wm.getParent().isEncrypted()) {
                 fName = fName.concat(".encryped");
@@ -631,6 +660,19 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         default:
             NodeSettingsWO s = settings.addNodeSettings(CFG_TEMPLATE_INFO);
             mnti.save(s);
+        }
+    }
+
+    /**
+     * @param settings
+     * @since 2.6 */
+    static void saveEditorUIInformation(final WorkflowManager wfm,
+            final NodeSettings settings) {
+        EditorUIInformation editorInfo = wfm.getEditorUIInformation();
+        if (editorInfo != null) {
+            NodeSettingsWO editorCfg =
+                settings.addNodeSettings(CFG_EDITOR_INFO);
+            editorInfo.save(editorCfg);
         }
     }
 

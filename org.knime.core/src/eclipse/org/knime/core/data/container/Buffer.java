@@ -91,6 +91,7 @@ import org.knime.core.data.collection.BlobSupportDataCellIterator;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
 import org.knime.core.data.container.BufferFromFileIteratorVersion20.DataCellStreamReader;
+import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
@@ -351,6 +352,11 @@ class Buffer implements KNIMEStreamConstants {
      * executed. It is only important while writing to this buffer. */
     private Map<Integer, ContainerTable> m_localRepository;
 
+    /** Used while reading file store cells. When used in a BufferedDataTable
+     * this is the workflow global repository, otherwise a repository with at
+     * most one handler. */
+    private final FileStoreHandlerRepository m_fileStoreHandlerRepository;
+
     /** Number of open file input streams on m_binFile. */
     private AtomicInteger m_nrOpenInputStreams = new AtomicInteger();
 
@@ -432,10 +438,12 @@ class Buffer implements KNIMEStreamConstants {
      * @param globalRep Table repository for blob (de)serialization (read only).
      * @param localRep Local table repository for blob (de)serialization.
      * @param bufferID The id of this buffer used for blob (de)serialization.
+     * @param fileStoreHandlerRepository ...
      */
     Buffer(final int maxRowsInMemory, final int bufferID,
             final Map<Integer, ContainerTable> globalRep,
-            final Map<Integer, ContainerTable> localRep) {
+            final Map<Integer, ContainerTable> localRep,
+            final FileStoreHandlerRepository fileStoreHandlerRepository) {
         assert (maxRowsInMemory >= 0);
         m_maxRowsInMem = maxRowsInMemory;
         m_list = new ArrayList<BlobSupportDataRow>();
@@ -444,6 +452,7 @@ class Buffer implements KNIMEStreamConstants {
         m_bufferID = bufferID;
         m_globalRepository = globalRep;
         m_localRepository = localRep;
+        m_fileStoreHandlerRepository = fileStoreHandlerRepository;
     }
 
     /** Creates new buffer for <strong>reading</strong>. The
@@ -457,11 +466,14 @@ class Buffer implements KNIMEStreamConstants {
      * meta information (e.g. which byte encodes which DataCell).
      * @param bufferID The id of this buffer used for blob (de)serialization.
      * @param tblRep Table repository for blob (de)serialization.
+     * @param fileStoreHandlerRepository ...
      * @throws IOException If the header (the spec information) can't be read.
      */
     Buffer(final File binFile, final File blobDir, final DataTableSpec spec,
             final InputStream metaIn, final int bufferID,
-            final Map<Integer, ContainerTable> tblRep) throws IOException {
+            final Map<Integer, ContainerTable> tblRep,
+            final FileStoreHandlerRepository fileStoreHandlerRepository)
+            throws IOException {
         // just check if data is present!
         if (binFile == null || !binFile.canRead() || !binFile.isFile()) {
             throw new IOException("Unable to read from file: " + binFile);
@@ -471,6 +483,7 @@ class Buffer implements KNIMEStreamConstants {
         m_blobDir = blobDir;
         m_bufferID = bufferID;
         m_globalRepository = tblRep;
+        m_fileStoreHandlerRepository = fileStoreHandlerRepository;
         m_openIteratorSet = new WeakHashMap<FromFileIterator, Object>();
         if (metaIn == null) {
             throw new IOException("No meta information given (null)");
@@ -1087,8 +1100,13 @@ class Buffer implements KNIMEStreamConstants {
      * instantiated with. Used for blob reading/writing.
      * @return (Workflow-) global table repository.
      */
-    Map<Integer, ContainerTable> getGlobalRepository() {
+    final Map<Integer, ContainerTable> getGlobalRepository() {
         return m_globalRepository;
+    }
+
+    /** @return the fileStoreHandlerRepository */
+    final FileStoreHandlerRepository getFileStoreHandlerRepository() {
+        return m_fileStoreHandlerRepository;
     }
 
     /** Get reference to the local table repository that this buffer was
@@ -1096,7 +1114,7 @@ class Buffer implements KNIMEStreamConstants {
      * may be null.
      * @return (Workflow-) global table repository.
      */
-    Map<Integer, ContainerTable> getLocalRepository() {
+    final Map<Integer, ContainerTable> getLocalRepository() {
         return m_localRepository;
     }
 
@@ -1487,7 +1505,8 @@ class Buffer implements KNIMEStreamConstants {
     @SuppressWarnings("unchecked")
     Buffer createLocalCloneForWriting() {
         return new Buffer(0, getBufferID(),
-                getGlobalRepository(), Collections.EMPTY_MAP);
+                getGlobalRepository(), Collections.EMPTY_MAP,
+                getFileStoreHandlerRepository());
     }
 
     /**

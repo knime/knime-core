@@ -75,9 +75,6 @@ public class NodeUIInformation implements UIInformation {
     /** The key under which the bounds are registered. * */
     private static final String KEY_BOUNDS = "extrainfo.node.bounds";
 
-    /** key used to store the editor specific settings (since 2.6) */
-    private static final String KEY_EDITOR_INFO = "workflow.editor.settings";
-
     private int[] m_bounds = new int[]{0, 0, -1, -1};
 
     /** Set to true if the bounds are absolute (correct in the context of the
@@ -113,12 +110,6 @@ public class NodeUIInformation implements UIInformation {
      */
     private boolean m_isDropLocation = false;
 
-    /**
-     * Since 2.6 editor specific settings are stored with the workflow.
-     */
-    private EditorUIInformation m_editorInfo = null;
-
-
     /** Creates new object, the bounds to be set are assumed to be absolute
      * (m_isInitialized is true). */
     public NodeUIInformation() {
@@ -147,10 +138,6 @@ public class NodeUIInformation implements UIInformation {
     @Override
     public void save(final NodeSettingsWO config) {
         config.addIntArray(KEY_BOUNDS, m_bounds);
-        if (m_editorInfo != null) {
-            NodeSettingsWO editorCfg = config.addNodeSettings(KEY_EDITOR_INFO);
-            m_editorInfo.save(editorCfg);
-        }
     }
 
     /**
@@ -159,36 +146,10 @@ public class NodeUIInformation implements UIInformation {
     @Override
     public void load(final NodeSettingsRO conf, final LoadVersion loadVersion)
         throws InvalidSettingsException {
+        final int loadOrdinal = loadVersion.ordinal();
         m_bounds = conf.getIntArray(KEY_BOUNDS);
-        if (loadVersion == null) {
-            m_symbolRelative = false;
-        } else {
-            m_symbolRelative =
-                loadVersion.ordinal() >= LoadVersion.V230.ordinal();
-        }
-        if (conf.containsKey(KEY_EDITOR_INFO)) {
-            NodeSettingsRO editorCfg = conf.getNodeSettings(KEY_EDITOR_INFO);
-            m_editorInfo = new EditorUIInformation();
-            m_editorInfo.load(editorCfg, loadVersion);
-        }
-    }
+        m_symbolRelative = loadOrdinal >= LoadVersion.V230.ordinal();
 
-    /**
-     * Stores the editor specific settings. Stores a reference to the object. Does not create a copy.
-     * @param editorInfo the settings to store
-     * @since 2.6
-     */
-    public void setEditorUIInformation(final EditorUIInformation editorInfo) {
-        m_editorInfo = editorInfo;
-    }
-
-    /**
-     * Returns the editor specific settings. Returns a reference to the object. Does not create a copy.
-     * @return the editor settings currently stored
-     * @since 2.6
-     */
-    public EditorUIInformation getEditorUIInformation() {
-        return m_editorInfo;
     }
 
     /**

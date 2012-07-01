@@ -61,6 +61,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.data.container.ContainerTable;
+import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -76,7 +77,7 @@ import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
  * it throws exceptions when any of the load routines are called.
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class PasteWorkflowContentPersistor implements WorkflowPersistor {
+final class PasteWorkflowContentPersistor implements WorkflowPersistor {
 
     private final Set<ConnectionContainerTemplate> m_connectionSet;
     private final Set<ConnectionContainerTemplate> m_additionalConnectionSet;
@@ -120,19 +121,37 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
     /** {@inheritDoc} */
     @Override
     public HashMap<Integer, ContainerTable> getGlobalTableRepository() {
-        return new HashMap<Integer, ContainerTable>();
+        throwUnsupportedOperationException();
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public FileStoreHandlerRepository getFileStoreHandlerRepository() {
+        throwUnsupportedOperationException();
+        return null;
     }
 
     /** {@inheritDoc} */
     @Override
     public WorkflowPortTemplate[] getInPortTemplates() {
-        return new WorkflowPortTemplate[0];
+        throwUnsupportedOperationException();
+        return null;
     }
 
     /** {@inheritDoc} */
     @Override
     public UIInformation getInPortsBarUIInfo() {
+        throwUnsupportedOperationException();
         return null;
+    }
+
+    /** {@inheritDoc}
+     * @since 2.6 */
+    @Override
+    public boolean isProject() {
+        throwUnsupportedOperationException();
+        return false;
     }
 
     /** {@inheritDoc} */
@@ -172,12 +191,22 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
     /** {@inheritDoc} */
     @Override
     public WorkflowPortTemplate[] getOutPortTemplates() {
-        return new WorkflowPortTemplate[0];
+        throwUnsupportedOperationException();
+        return null;
     }
 
     /** {@inheritDoc} */
     @Override
     public UIInformation getOutPortsBarUIInfo() {
+        throwUnsupportedOperationException();
+        return null;
+    }
+
+    /** {@inheritDoc}
+     * @since 2.6 */
+    @Override
+    public EditorUIInformation getEditorUIInformation() {
+        throwUnsupportedOperationException();
         return null;
     }
 

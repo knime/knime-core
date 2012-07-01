@@ -65,9 +65,9 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
+import org.knime.core.node.NodeAndBundleInformation;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodePersistorVersion1xx;
 import org.knime.core.node.NodePersistorVersion200;
 import org.knime.core.node.NodeSettings;
@@ -83,6 +83,8 @@ import org.knime.core.util.FileUtil;
 /**
  *
  * @author wiswedel, University of Konstanz
+ * @noinstantiate This class is not intended to be instantiated by clients.
+ * @noextend This class is not intended to be subclassed by clients.
  */
 public class SingleNodeContainerPersistorVersion200 extends
         SingleNodeContainerPersistorVersion1xx {
@@ -108,20 +110,20 @@ public class SingleNodeContainerPersistorVersion200 extends
 
     /** {@inheritDoc} */
     @Override
-    protected NodePersistorVersion200 createNodePersistor() {
+    NodePersistorVersion200 createNodePersistor() {
         return new NodePersistorVersion200(this, getLoadVersion());
     }
 
     /** {@inheritDoc} */
     @Override
-    protected String loadNodeFactoryClassName(final NodeSettingsRO parentSettings,
+    NodeAndBundleInformation loadNodeFactoryInfo(final NodeSettingsRO parentSettings,
             final NodeSettingsRO settings) throws InvalidSettingsException {
-        return settings.getString(KEY_FACTORY_NAME);
+        return NodeAndBundleInformation.load(settings, getLoadVersion());
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void loadAdditionalFactorySettings(final NodeFactory factory,
+    void loadAdditionalFactorySettings(final NodeFactory factory,
             final NodeSettingsRO settings) throws InvalidSettingsException {
         // added in v2.6 (during hittisau 2012) without changing the version
         // number (current load version is V250("2.5.0"))
@@ -132,14 +134,14 @@ public class SingleNodeContainerPersistorVersion200 extends
     }
 
     @Override
-    protected String loadNodeFile(final NodeSettingsRO settings)
+    String loadNodeFile(final NodeSettingsRO settings)
         throws InvalidSettingsException {
         return settings.getString("node_file");
     }
 
     /** {@inheritDoc} */
     @Override
-    protected SingleNodeContainerSettings loadSNCSettings(
+    SingleNodeContainerSettings loadSNCSettings(
             final NodeSettingsRO settings,
             final NodePersistorVersion1xx nodePersistor)
     throws InvalidSettingsException {
@@ -174,7 +176,7 @@ public class SingleNodeContainerPersistorVersion200 extends
 
     /** {@inheritDoc} */
     @Override
-    protected List<FlowObject> loadFlowObjects(
+    List<FlowObject> loadFlowObjects(
             final NodeSettingsRO settings)
         throws InvalidSettingsException {
         List<FlowObject> result = new ArrayList<FlowObject>();
@@ -208,7 +210,7 @@ public class SingleNodeContainerPersistorVersion200 extends
 
     /** {@inheritDoc} */
     @Override
-    protected boolean shouldFixModelPortOrder() {
+    boolean shouldFixModelPortOrder() {
         return false;
     }
 
@@ -302,11 +304,12 @@ public class SingleNodeContainerPersistorVersion200 extends
      */
     protected static void saveNodeFactory(final NodeSettingsWO settings,
             final SingleNodeContainer nc) {
-        final NodeFactory<NodeModel> factory = nc.getNode().getFactory();
-        String cl = factory.getClass().getName();
-        settings.addString(KEY_FACTORY_NAME, cl);
+        final Node node = nc.getNode();
+        NodeAndBundleInformation nodeInfo = node.getNodeAndBundleInformation();
+        nodeInfo.save(settings);
+
         NodeSettingsWO subSets = settings.addNodeSettings("factory_settings");
-        factory.saveAdditionalFactorySettings(subSets);
+        node.getFactory().saveAdditionalFactorySettings(subSets);
     }
 
     protected static ReferencedFile saveNodeFileName(

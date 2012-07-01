@@ -44,12 +44,13 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Aug 13, 2009 (wiswedel): created
  */
 package org.knime.core.node;
 
+import org.knime.core.data.filestore.internal.FileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -58,13 +59,13 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 /**
  * A persistor cloning a node's settings. It does not retain port objects or
  * node internals. Used by copy&paste and undo.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class CopyNodePersistor implements NodePersistor {
-    
+
     private final NodeSettingsRO m_settings;
-    
+
     /** Create a new persistor.
      * @param original The node to copy.
      */
@@ -73,7 +74,7 @@ public class CopyNodePersistor implements NodePersistor {
         original.saveSettingsTo(settings);
         m_settings = settings;
     }
-    
+
     /** Apply the settings to the new node.
      * @param node the node just created.
      */
@@ -177,6 +178,13 @@ public class CopyNodePersistor implements NodePersistor {
     /** {@inheritDoc} */
     @Override
     public void setNeedsResetAfterLoad() {
+    }
+
+    /** {@inheritDoc}
+     * @since 2.6*/
+    @Override
+    public FileStoreHandler getFileStoreHandler() {
+        return null;
     }
 
 }
