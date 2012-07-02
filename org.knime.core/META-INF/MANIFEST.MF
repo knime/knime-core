@@ -54,6 +54,7 @@ Export-Package:
  org.knime.core.node.tableview,
  org.knime.core.node.util,
  org.knime.core.node.util.filter,
+ org.knime.core.node.util.filter.column,
  org.knime.core.node.workflow,
  org.knime.core.node.workflow.execresult,
  org.knime.core.node.workflow.virtual,

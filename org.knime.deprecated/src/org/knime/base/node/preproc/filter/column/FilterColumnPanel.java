@@ -90,7 +90,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.util.ListModelFilterUtils;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
-import org.knime.core.node.util.filter.DataColumnSpecFilterPanel;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
 
 
 /** Copy of the column filter panel with additional enforce exclude/include

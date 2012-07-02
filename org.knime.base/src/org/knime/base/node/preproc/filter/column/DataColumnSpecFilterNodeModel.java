@@ -61,14 +61,14 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.util.filter.NameFilterConfiguration;
-import org.knime.core.node.util.filter.NameFilterConfiguration.NameFilter;
+import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 
 /**
  * The model for the column filter which extracts certain columns from the input
  * {@link org.knime.core.data.DataTable} using a list of columns to
  * exclude.
- * 
+ *
  * @author Thomas Gabriel, KNIME.com AG, Zurich
  * @since 2.6
  */
@@ -76,8 +76,8 @@ final class DataColumnSpecFilterNodeModel extends NodeModel {
 
     /** Config key for this column filter. */
     static final String CFG_KEY_FILTER = "column-filter";
-    
-    private NameFilterConfiguration m_conf;
+
+    private DataColumnSpecFilterConfiguration m_conf;
 
     /** Creates a new filter model with one and in- and output. */
     DataColumnSpecFilterNodeModel() {
@@ -121,10 +121,10 @@ final class DataColumnSpecFilterNodeModel extends NodeModel {
     /**
      * Excludes a number of columns from the input spec and generates a new
      * output spec.
-     * 
+     *
      * @param inSpecs the input table spec
      * @return outSpecs the output table spec with some excluded columns
-     * 
+     *
      * @throws InvalidSettingsException if the selected column is not available
      *             in the table spec.
      */
@@ -140,20 +140,19 @@ final class DataColumnSpecFilterNodeModel extends NodeModel {
      * Throws an InvalidSettingsException if columns are specified that don't
      * exist in the input table spec.
      */
-    private ColumnRearranger createColumnRearranger(final DataTableSpec spec)
-            throws InvalidSettingsException {
-        final NameFilterConfiguration conf;
+    private ColumnRearranger createColumnRearranger(final DataTableSpec spec) {
+        final DataColumnSpecFilterConfiguration conf;
         if (m_conf == null) {
             // auto-guess
-            conf = new NameFilterConfiguration(CFG_KEY_FILTER);
+            conf = new DataColumnSpecFilterConfiguration(CFG_KEY_FILTER);
         } else {
             conf = m_conf;
         }
-        final NameFilter filter = conf.createFilter(spec.getColumnNames());
-        
-        final String[] unknowns = filter.getUnknownColumns();
+        final FilterResult filter = conf.applyTo(spec);
+
+        final String[] unknowns = filter.getUnknowns();
         if (unknowns.length > 0) {
-            setWarningMessage("Some columns are not available: " 
+            setWarningMessage("Some columns are not available: "
                     + Arrays.toString(unknowns));
         }
 
@@ -177,20 +176,20 @@ final class DataColumnSpecFilterNodeModel extends NodeModel {
     /**
      * Writes number of filtered columns, and the names as
      * {@link org.knime.core.data.DataCell} to the given settings.
-     * 
+     *
      * @param settings the object to save the settings into
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         if (m_conf == null) {
-            m_conf = new NameFilterConfiguration(CFG_KEY_FILTER);
+            m_conf = new DataColumnSpecFilterConfiguration(CFG_KEY_FILTER);
         }
         m_conf.saveConfiguration(settings);
     }
 
     /**
      * Reads the filtered columns.
-     * 
+     *
      * @param settings to read from
      * @throws InvalidSettingsException if the settings does not contain the
      *             size or a particular column key
@@ -198,8 +197,8 @@ final class DataColumnSpecFilterNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        NameFilterConfiguration conf = 
-            new NameFilterConfiguration(CFG_KEY_FILTER);
+        DataColumnSpecFilterConfiguration conf =
+            new DataColumnSpecFilterConfiguration(CFG_KEY_FILTER);
         conf.loadConfigurationInModel(settings);
         m_conf = conf;
     }
@@ -208,8 +207,8 @@ final class DataColumnSpecFilterNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        NameFilterConfiguration conf = 
-            new NameFilterConfiguration(CFG_KEY_FILTER);
+        DataColumnSpecFilterConfiguration conf =
+            new DataColumnSpecFilterConfiguration(CFG_KEY_FILTER);
         conf.loadConfigurationInModel(settings);
     }
 }

@@ -50,6 +50,8 @@
  */
 package org.knime.core.node.util.filter;
 
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
+
 /** Used to (pre-)filter items in a filter configuration. Mostly used
  * as data column type filter in a {@link DataColumnSpecFilterConfiguration}.
  *

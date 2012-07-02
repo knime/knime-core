@@ -53,13 +53,13 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.util.filter.DataColumnSpecFilterPanel;
-import org.knime.core.node.util.filter.NameFilterConfiguration;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
 
 /**
  * This is the dialog for the column filter. The user can specify which columns
  * should be excluded in the output table.
- * 
+ *
  * @author Thomas Gabriel, KNIME.com AG, Zurich
  * @since 2.6
  */
@@ -79,7 +79,7 @@ final class DataColumnSpecFilterNodeDialogPane extends NodeDialogPane {
     /**
      * Calls the update method of the underlying filter panel using the input
      * data table spec from this {@link FilterColumnNodeModel}.
-     * 
+     *
      * @param settings the node settings to read from
      * @param specs the input specs
      * @throws NotConfigurableException if no columns are available for
@@ -94,22 +94,22 @@ final class DataColumnSpecFilterNodeDialogPane extends NodeDialogPane {
                     + "selection.");
         }
 
-        NameFilterConfiguration config = new NameFilterConfiguration(
+        DataColumnSpecFilterConfiguration config = new DataColumnSpecFilterConfiguration(
                     DataColumnSpecFilterNodeModel.CFG_KEY_FILTER);
-        config.loadConfigurationInDialog(settings, specs[0].getColumnNames());
+        config.loadConfigurationInDialog(settings, specs[0]);
         m_filterPanel.loadConfiguration(config, specs[0]);
     }
 
     /**
      * Sets the list of columns to exclude inside the underlying
-     * {@link FilterColumnNodeModel} retrieving them from the filter panel.
+     * {@link DataColumnSpecFilterNodeModel} retrieving them from the filter panel.
      * @param settings the node settings to write into
      * @throws InvalidSettingsException if one of the settings is not valid
      */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) 
+    protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
-        NameFilterConfiguration config = new NameFilterConfiguration(
+        DataColumnSpecFilterConfiguration config = new DataColumnSpecFilterConfiguration(
                     DataColumnSpecFilterNodeModel.CFG_KEY_FILTER);
         m_filterPanel.saveConfiguration(config);
         config.saveConfiguration(settings);
