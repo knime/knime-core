@@ -46,57 +46,45 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   Jun 29, 2012 (wiswedel): created
+ *   Jul 2, 2012 (wiswedel): created
  */
 package org.knime.core.data.filestore.internal;
 
-import org.knime.core.data.filestore.FileStore;
+import java.util.UUID;
 
-/**
+/** Fallback repository that is used when the node is run outside the workflow manager,
+ * for instance in the testing environment or using a 3rd party executor.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @noinstantiate This class is not intended to be instantiated by clients.
- * @since 2.6
  */
-public final class EmptyFileStoreHandler implements FileStoreHandler {
+public final class IsolatedFileStoreHandlerRepository extends FileStoreHandlerRepository {
 
-    private final FileStoreHandlerRepository m_fileStoreHandlerRepository;
-
-    /**
-     * @param fileStoreHandlerRepository */
-    private EmptyFileStoreHandler(
-            final FileStoreHandlerRepository fileStoreHandlerRepository) {
-        if (fileStoreHandlerRepository == null) {
-            throw new NullPointerException("Argument must not be null.");
-        }
-        m_fileStoreHandlerRepository = fileStoreHandlerRepository;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public FileStoreHandlerRepository getFileStoreHandlerRepository() {
-        return m_fileStoreHandlerRepository;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void clearAndDispose() {
-        // no op
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public FileStore getFileStore(final FileStoreKey key) {
-        return m_fileStoreHandlerRepository.getHandler(
-                key.getStoreUUID()).getFileStore(key);
-    }
+    private final String m_nameForDebug;
+    private FileStoreHandler m_fileStoreHandler;
 
     /**
      *  */
-    public static EmptyFileStoreHandler create(
-            final FileStoreHandlerRepository fileStoreHandlerRepository) {
-        return new EmptyFileStoreHandler(fileStoreHandlerRepository);
+    public IsolatedFileStoreHandlerRepository(final String nameForDebug) {
+        m_nameForDebug = nameForDebug;
     }
 
+    /** @param fileStoreHandler the fileStoreHandler to set */
+    public void setFileStoreHandler(final FileStoreHandler fileStoreHandler) {
+        m_fileStoreHandler = fileStoreHandler;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public FileStoreHandler getHandler(final UUID storeHandlerUUID) {
+        if (!(m_fileStoreHandler instanceof DefaultFileStoreHandler)) {
+            throw new IllegalStateException("no file stores in repository to \"" + m_nameForDebug + "\"");
+        }
+        DefaultFileStoreHandler defFileStoreHandler = (DefaultFileStoreHandler)m_fileStoreHandler;
+        if (!defFileStoreHandler.getStoreUUID().equals(storeHandlerUUID)) {
+            throw new IllegalStateException("Unknown file store id \"" + storeHandlerUUID + "\"; only \""
+                    + defFileStoreHandler.getStoreUUID() + "\" is valid in repository to \"" + m_nameForDebug + "\"");
+        }
+        return defFileStoreHandler;
+    }
 
 }

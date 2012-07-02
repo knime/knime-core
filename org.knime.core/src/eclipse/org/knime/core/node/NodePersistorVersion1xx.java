@@ -65,6 +65,7 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.EmptyFileStoreHandler;
 import org.knime.core.data.filestore.internal.FileStoreHandler;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -294,7 +295,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
     FileStoreHandler loadFileStoreHandler(
             final Node node, final ExecutionMonitor execMon,
             final NodeSettingsRO settings,
-            final FileStoreHandlerRepository fileStoreHandlerRepository)
+            final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository)
     throws InvalidSettingsException {
         return EmptyFileStoreHandler.create(fileStoreHandlerRepository);
     }
@@ -340,7 +341,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
                     dirRef, portSettings, execSubData, loadTblRep,
                     // no blobs or file stores in 1.1.x
                     new HashMap<Integer, ContainerTable>(),
-                    new FileStoreHandlerRepository());
+                    new WorkflowFileStoreHandlerRepository());
             t.setOwnerRecursively(node);
             return t;
         } else {
@@ -512,7 +513,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
             final ExecutionMonitor exec,
             final Map<Integer, BufferedDataTable> loadTblRep,
             final HashMap<Integer, ContainerTable> tblRep,
-            final FileStoreHandlerRepository fileStoreHandlerRepository,
+            final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository,
             final LoadResult loadResult)
             throws IOException, CanceledExecutionException {
         ExecutionMonitor settingsExec = exec.createSilentSubProgress(0.1);

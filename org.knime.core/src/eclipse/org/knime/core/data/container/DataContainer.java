@@ -91,6 +91,7 @@ import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.IsolatedFileStoreHandlerRepository;
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.internal.ReferencedFile;
@@ -920,9 +921,14 @@ public class DataContainer implements RowAppender {
      */
     protected FileStoreHandlerRepository getFileStoreHandlerRepository() {
         if (m_fileStoreHandlerRepository == null) {
-            m_fileStoreHandlerRepository = new FileStoreHandlerRepository();
+            m_fileStoreHandlerRepository = createIsolatedFileStoreHandler();
         }
         return m_fileStoreHandlerRepository;
+    }
+
+    /** @return new file store handler for non buffered tables. */
+    private static IsolatedFileStoreHandlerRepository createIsolatedFileStoreHandler() {
+        return new IsolatedFileStoreHandlerRepository("<isolated data container>");
     }
 
     /** @param repository the fileStoreHandlerRepository to set
@@ -1125,10 +1131,8 @@ public class DataContainer implements RowAppender {
         } else {
             exec.setMessage("Archiving table");
             e = exec.createSubProgress(0.8);
-            buf = new Buffer(0, -1,
-                    new HashMap<Integer, ContainerTable>(),
-                    new HashMap<Integer, ContainerTable>(),
-                    new FileStoreHandlerRepository());
+            buf = new Buffer(0, -1, new HashMap<Integer, ContainerTable>(),
+                    new HashMap<Integer, ContainerTable>(), createIsolatedFileStoreHandler());
             int rowCount = 0;
             for (DataRow row : table) {
                 rowCount++;

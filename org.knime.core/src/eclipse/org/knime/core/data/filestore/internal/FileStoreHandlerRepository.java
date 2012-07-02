@@ -46,74 +46,31 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   Jun 26, 2012 (wiswedel): created
+ *   Jul 2, 2012 (wiswedel): created
  */
 package org.knime.core.data.filestore.internal;
 
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
-import org.knime.core.node.NodeLogger;
-
-/**
+/** Lookup for file store handlers. A workflow (manager) has a {@link WorkflowFileStoreHandlerRepository} as
+ * member that is passed to nodes and tables to lookup file stores.
+ * If run outside the usual execution mode, we use a {@link IsolatedFileStoreHandlerRepository},
+ * which most of the times only throws exceptions when asked for a file store.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @since 2.6
  */
-public final class FileStoreHandlerRepository {
-
-    private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(FileStoreHandler.class);
-
-    private final ConcurrentHashMap<UUID, DefaultFileStoreHandler> m_handlerMap;
+public abstract class FileStoreHandlerRepository {
 
     /**
      *  */
-    public FileStoreHandlerRepository() {
-        m_handlerMap = new ConcurrentHashMap<UUID, DefaultFileStoreHandler>();
+    FileStoreHandlerRepository() {
+        super();
     }
 
-    void addFileStoreHandler(final DefaultFileStoreHandler handler) {
-        m_handlerMap.put(handler.getStoreUUID(), handler);
-    }
-
-    void removeFileStoreHandler(final DefaultFileStoreHandler handler) {
-        FileStoreHandler old = m_handlerMap.remove(handler.getStoreUUID());
-        if (old == null) {
-            throw new IllegalArgumentException(
-                    "No such file store hander: " + handler);
-        }
-    }
-
-    /** Get handler to id, never null.
-     * @param storeHandlerUUID the store id
-     * @return the handler.
-     * @throws IllegalStateException If store is not registered. */
-    public FileStoreHandler getHandler(final UUID storeHandlerUUID) {
-        FileStoreHandler h = m_handlerMap.get(storeHandlerUUID);
-        if (h == null) {
-            final String s =
-                "Unknown file store handler to UUID " + storeHandlerUUID;
-            LOGGER.error(s);
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Valid file store handlers are:");
-                LOGGER.debug("--------- Start --------------");
-                for (FileStoreHandler fsh : m_handlerMap.values()) {
-                    LOGGER.debug("  " + fsh);
-                }
-                LOGGER.debug("--------- End ----------------");
-            }
-            throw new IllegalStateException(s);
-        }
-        return h;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String toString() {
-        return "File store handler repository ("
-            + m_handlerMap.size() + " handler(s))";
-    }
-
+    /** Get handler to ID (which is part of a saved data stream). Throws exception when ID
+     * is unknown, returns never <code>null</code>.
+     * @param storeHandlerUUID The handler ID.
+     * @return The handler for the id, never null. */
+    public abstract FileStoreHandler getHandler(final UUID storeHandlerUUID);
 
 }

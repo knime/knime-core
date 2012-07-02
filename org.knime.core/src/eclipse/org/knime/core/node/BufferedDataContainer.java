@@ -209,7 +209,7 @@ public class BufferedDataContainer extends DataContainer {
 
     /**
      * Just delegates to {@link DataContainer#readFromZipDelayed(ReferencedFile,
-     * DataTableSpec, int, Map, FileStoreHandlerRepository)}
+     * DataTableSpec, int, Map, WorkflowFileStoreHandlerRepository)}
      * This method is available in this class to enable other classes in this
      * package to use it.
      * @param zipFileRef Delegated.
@@ -218,7 +218,7 @@ public class BufferedDataContainer extends DataContainer {
      * @param bufferRep Delegated.
      * @param fileStoreHandlerRepository Delegated.
      * @return {@link DataContainer#readFromZipDelayed(ReferencedFile,
-     * DataTableSpec, int, Map, FileStoreHandlerRepository)}
+     * DataTableSpec, int, Map, WorkflowFileStoreHandlerRepository)}
      * @noreference This method is not intended to be referenced by clients.
      */
     protected static ContainerTable readFromZipDelayed(

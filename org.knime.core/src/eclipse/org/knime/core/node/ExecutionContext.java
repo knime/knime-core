@@ -68,7 +68,9 @@ import org.knime.core.data.container.WrappedTable;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.internal.DefaultFileStoreHandler;
+import org.knime.core.data.filestore.internal.EmptyFileStoreHandler;
 import org.knime.core.data.filestore.internal.FileStoreHandler;
+import org.knime.core.data.filestore.internal.IsolatedFileStoreHandlerRepository;
 import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.util.KNIMEJob;
@@ -120,10 +122,13 @@ import org.knime.core.util.DuplicateKeyException;
  */
 public class ExecutionContext extends ExecutionMonitor {
 
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(ExecutionContext.class);
+
     private final Node m_node;
     private final MemoryPolicy m_memoryPolicy;
     private final HashMap<Integer, ContainerTable> m_globalTableRepository;
     private final HashMap<Integer, ContainerTable> m_localTableRepository;
+    private final FileStoreHandler m_fileStoreHandler;
 
     /** Creates new object based on a progress monitor and a node as parent
      * of any created buffered data table.
@@ -157,7 +162,7 @@ public class ExecutionContext extends ExecutionMonitor {
             final MemoryPolicy policy,
             final HashMap<Integer, ContainerTable> tableRepository) {
         this(progMon, node, policy, tableRepository,
-                new HashMap<Integer, ContainerTable>());
+                new HashMap<Integer, ContainerTable>(), node.getFileStoreHandler());
     }
 
     /** Creates execution context with all required arguments. It's used
@@ -170,11 +175,13 @@ public class ExecutionContext extends ExecutionMonitor {
      * @param localTableRepository execution context local table. This argument
      * is non-null only if this is a sub execution context (inheriting table
      * repository from parent).
+     * @param the file store handler (often retrieved from the node but maybe null)
      */
     private ExecutionContext(final NodeProgressMonitor progMon, final Node node,
             final MemoryPolicy policy,
             final HashMap<Integer, ContainerTable> tableRepository,
-            final HashMap<Integer, ContainerTable> localTableRepository) {
+            final HashMap<Integer, ContainerTable> localTableRepository,
+            final FileStoreHandler fileStoreHandler) {
         super(progMon);
         if (node == null || tableRepository == null) {
             throw new NullPointerException("Argument must not be null.");
@@ -183,6 +190,15 @@ public class ExecutionContext extends ExecutionMonitor {
         m_memoryPolicy = policy;
         m_globalTableRepository = tableRepository;
         m_localTableRepository = localTableRepository;
+        if (fileStoreHandler == null) {
+            LOGGER.debug("No file store handler set on \"" + node.getName()
+                    + "\" (possibly running in 3rd party executor)");
+            IsolatedFileStoreHandlerRepository repo =
+                new IsolatedFileStoreHandlerRepository("node \"" + node.getName() + "\"");
+            m_fileStoreHandler = EmptyFileStoreHandler.create(repo);
+        } else {
+            m_fileStoreHandler = fileStoreHandler;
+        }
     }
 
     /** Creates a FileStore handle during execution that can be used to
@@ -201,22 +217,13 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     public FileStore createFileStore(final String relativePath)
         throws IOException {
-        return getAndCastFileStoreHandler().createFileStore(relativePath);
-    }
-
-    private DefaultFileStoreHandler getAndCastFileStoreHandler() {
-        FileStoreHandler fileStoreHandler = m_node.getFileStoreHandler();
-        if (fileStoreHandler == null) {
-            throw new IllegalStateException("Node " + m_node.getName()
-                    + " was not configured with file store handler");
-        }
+        FileStoreHandler fileStoreHandler = m_fileStoreHandler;
         if (!(fileStoreHandler instanceof DefaultFileStoreHandler)) {
-            throw new IllegalStateException("File store handler not "
-                    + "initialized: " + fileStoreHandler);
+            throw new IllegalStateException("File store handler does not "
+                    + "permit defintion of file stores");
         }
-        return (DefaultFileStoreHandler)fileStoreHandler;
+        return ((DefaultFileStoreHandler)fileStoreHandler).createFileStore(relativePath);
     }
-
 
     /**
      * Caches the table argument and returns a reference to a BufferedDataTable
@@ -348,7 +355,7 @@ public class ExecutionContext extends ExecutionMonitor {
         return new BufferedDataContainer(spec, initDomain, m_node,
                 m_memoryPolicy, forceCopyOfBlobs, maxCellsInMemory,
                 m_globalTableRepository, m_localTableRepository,
-                m_node.getFileStoreHandler().getFileStoreHandlerRepository());
+                m_fileStoreHandler.getFileStoreHandlerRepository());
     }
 
     /**
@@ -556,7 +563,8 @@ public class ExecutionContext extends ExecutionMonitor {
     public ExecutionContext createSubExecutionContext(final double maxProg) {
         NodeProgressMonitor subProgress = createSubProgressMonitor(maxProg);
         return new ExecutionContext(subProgress, m_node, m_memoryPolicy,
-                m_globalTableRepository, m_localTableRepository);
+                m_globalTableRepository, m_localTableRepository,
+                m_fileStoreHandler);
     }
 
     /**
@@ -578,7 +586,8 @@ public class ExecutionContext extends ExecutionMonitor {
         NodeProgressMonitor subProgress =
             createSilentSubProgressMonitor(maxProg);
         return new ExecutionContext(subProgress, m_node, m_memoryPolicy,
-                m_globalTableRepository, m_localTableRepository);
+                m_globalTableRepository, m_localTableRepository,
+                m_fileStoreHandler);
     }
 
     /**

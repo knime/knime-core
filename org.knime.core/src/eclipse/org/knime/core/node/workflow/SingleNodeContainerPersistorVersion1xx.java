@@ -63,7 +63,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
@@ -258,8 +258,7 @@ public class SingleNodeContainerPersistorVersion1xx
         }
         NodeAndBundleInformation nodeInfo;
         try {
-            nodeInfo = loadNodeFactoryInfo(
-                    parentSettings, settings);
+            nodeInfo = loadNodeFactoryInfo(parentSettings, settings);
         } catch (InvalidSettingsException e) {
             if (settingsFile.getName().equals(
                     WorkflowPersistor.WORKFLOW_FILE)) {
@@ -328,7 +327,7 @@ public class SingleNodeContainerPersistorVersion1xx
                 getWorkflowManagerPersistor();
             HashMap<Integer, ContainerTable> globalTableRepository =
                 wfmPersistor.getGlobalTableRepository();
-            FileStoreHandlerRepository fileStoreHandlerRepository =
+            WorkflowFileStoreHandlerRepository fileStoreHandlerRepository =
                 wfmPersistor.getFileStoreHandlerRepository();
             nodePersistor.load(m_node, nodeFile, m_parentPersistor,
                     exec, tblRep, globalTableRepository,

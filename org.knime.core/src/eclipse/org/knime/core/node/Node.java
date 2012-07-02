@@ -73,7 +73,7 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainerException;
 import org.knime.core.data.filestore.internal.DefaultFileStoreHandler;
 import org.knime.core.data.filestore.internal.FileStoreHandler;
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
@@ -1087,7 +1087,7 @@ public final class Node implements NodeModelWarningListener {
      * @noreference This method is not intended to be referenced by clients.
      */
     public void initFileStoreHandler(
-            final FileStoreHandlerRepository repository) {
+            final WorkflowFileStoreHandlerRepository repository) {
         m_fileStoreHandler =
             DefaultFileStoreHandler.createNewHandler(this, repository);
     }

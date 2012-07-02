@@ -68,6 +68,7 @@ import org.knime.core.data.filestore.internal.DefaultFileStoreHandler;
 import org.knime.core.data.filestore.internal.EmptyFileStoreHandler;
 import org.knime.core.data.filestore.internal.FileStoreHandler;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObject.PortObjectSerializer;
@@ -559,7 +560,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
     @Override
     FileStoreHandler loadFileStoreHandler(final Node node,
             final ExecutionMonitor execMon, final NodeSettingsRO settings,
-            final FileStoreHandlerRepository fileStoreHandlerRepository)
+            final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository)
     throws InvalidSettingsException {
         if (getLoadVersion().ordinal() < LoadVersion.V260.ordinal()) {
             return super.loadFileStoreHandler(node, execMon,

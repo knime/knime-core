@@ -73,7 +73,7 @@ public class DefaultFileStoreHandler implements FileStoreHandler {
     private File m_baseDirInWorkflowFolder;
     private File m_baseDir;
     private DuplicateChecker m_duplicateChecker;
-    private FileStoreHandlerRepository m_fileStoreHandlerRepository;
+    private WorkflowFileStoreHandlerRepository m_fileStoreHandlerRepository;
     private int m_nextIndex = 0;
 
     /**
@@ -95,7 +95,7 @@ public class DefaultFileStoreHandler implements FileStoreHandler {
         m_baseDir = baseDir;
     }
 
-    void setFileStoreHandlerRepository(final FileStoreHandlerRepository repo) {
+    void setFileStoreHandlerRepository(final WorkflowFileStoreHandlerRepository repo) {
         m_fileStoreHandlerRepository = repo;
     }
 
@@ -127,19 +127,18 @@ public class DefaultFileStoreHandler implements FileStoreHandler {
 
     /** {@inheritDoc} */
     @Override
-    public synchronized FileStore getFileStore(final FileStoreKey key) {
+    public FileStore getFileStore(final FileStoreKey key) {
         FileStoreHandler ownerHandler;
         if (key.getStoreUUID().equals(m_storeUUID)) {
             ownerHandler = this;
         } else {
-            final FileStoreHandlerRepository repo =
+            final WorkflowFileStoreHandlerRepository repo =
                 m_fileStoreHandlerRepository;
-            if (repo != null) {
-                ownerHandler = repo.getHandler(m_storeUUID);
-            } else {
+            if (repo == null) {
                 throw new IllegalStateException(
                         "No file store handler repository set");
             }
+            ownerHandler = repo.getHandler(m_storeUUID);
         }
         if (!(ownerHandler instanceof DefaultFileStoreHandler)) {
             throw new IllegalStateException(String.format(
@@ -250,7 +249,7 @@ public class DefaultFileStoreHandler implements FileStoreHandler {
     }
 
     public static final FileStoreHandler createNewHandler(final Node node,
-            final FileStoreHandlerRepository fileStoreHandlerRepository) {
+            final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository) {
         DefaultFileStoreHandler result = new DefaultFileStoreHandler(node, UUID.randomUUID());
         fileStoreHandlerRepository.addFileStoreHandler(result);
         result.setFileStoreHandlerRepository(fileStoreHandlerRepository);
@@ -260,7 +259,7 @@ public class DefaultFileStoreHandler implements FileStoreHandler {
 
     public static final FileStoreHandler restore(final Node node,
             final UUID uuid,
-            final FileStoreHandlerRepository fileStoreHandlerRepository,
+            final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository,
             final File inWorkflowDirectory) {
         DefaultFileStoreHandler fileStoreHandler = new DefaultFileStoreHandler(node, uuid);
         fileStoreHandlerRepository.addFileStoreHandler(fileStoreHandler);

@@ -46,56 +46,80 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   Jun 29, 2012 (wiswedel): created
+ *   Jun 26, 2012 (wiswedel): created
  */
 package org.knime.core.data.filestore.internal;
 
-import org.knime.core.data.filestore.FileStore;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
-/**
+import org.knime.core.node.NodeLogger;
+
+/** File store handler associated with a workflow. It's a map of
+ * store UUIDs to file store handlers. Each file store handler corresponds
+ * to a node.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @noinstantiate This class is not intended to be instantiated by clients.
  * @since 2.6
  */
-public final class EmptyFileStoreHandler implements FileStoreHandler {
+public final class WorkflowFileStoreHandlerRepository extends FileStoreHandlerRepository {
 
-    private final FileStoreHandlerRepository m_fileStoreHandlerRepository;
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(WorkflowFileStoreHandlerRepository.class);
 
-    /**
-     * @param fileStoreHandlerRepository */
-    private EmptyFileStoreHandler(
-            final FileStoreHandlerRepository fileStoreHandlerRepository) {
-        if (fileStoreHandlerRepository == null) {
-            throw new NullPointerException("Argument must not be null.");
-        }
-        m_fileStoreHandlerRepository = fileStoreHandlerRepository;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public FileStoreHandlerRepository getFileStoreHandlerRepository() {
-        return m_fileStoreHandlerRepository;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void clearAndDispose() {
-        // no op
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public FileStore getFileStore(final FileStoreKey key) {
-        return m_fileStoreHandlerRepository.getHandler(
-                key.getStoreUUID()).getFileStore(key);
-    }
+    private final ConcurrentHashMap<UUID, DefaultFileStoreHandler> m_handlerMap;
 
     /**
      *  */
-    public static EmptyFileStoreHandler create(
-            final FileStoreHandlerRepository fileStoreHandlerRepository) {
-        return new EmptyFileStoreHandler(fileStoreHandlerRepository);
+    public WorkflowFileStoreHandlerRepository() {
+        m_handlerMap = new ConcurrentHashMap<UUID, DefaultFileStoreHandler>();
+    }
+
+    void addFileStoreHandler(final DefaultFileStoreHandler handler) {
+        m_handlerMap.put(handler.getStoreUUID(), handler);
+    }
+
+    void removeFileStoreHandler(final DefaultFileStoreHandler handler) {
+        FileStoreHandler old = m_handlerMap.remove(handler.getStoreUUID());
+        if (old == null) {
+            throw new IllegalArgumentException(
+                    "No such file store hander: " + handler);
+        }
+    }
+
+    /** Get handler to id, never null.
+     * @param storeHandlerUUID the store id
+     * @return the handler.
+     * @throws IllegalStateException If store is not registered. */
+    @Override
+    public FileStoreHandler getHandler(final UUID storeHandlerUUID) {
+        FileStoreHandler h = m_handlerMap.get(storeHandlerUUID);
+        if (h == null) {
+            final String s =
+                "Unknown file store handler to UUID " + storeHandlerUUID;
+            LOGGER.error(s);
+            printValidFileStoreHandlersToLogDebug();
+            throw new IllegalStateException(s);
+        }
+        return h;
+    }
+
+    private void printValidFileStoreHandlersToLogDebug() {
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Valid file store handlers are:");
+            LOGGER.debug("--------- Start --------------");
+            for (FileStoreHandler fsh : m_handlerMap.values()) {
+                LOGGER.debug("  " + fsh);
+            }
+            LOGGER.debug("--------- End ----------------");
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return "File store handler repository ("
+            + m_handlerMap.size() + " handler(s))";
     }
 
 

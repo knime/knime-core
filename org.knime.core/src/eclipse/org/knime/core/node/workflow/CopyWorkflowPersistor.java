@@ -62,6 +62,7 @@ import java.util.Set;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
@@ -85,7 +86,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     private final MetaNodeTemplateInformation m_templateInformation;
     private final CopyNodeContainerMetaPersistor m_metaPersistor;
     private final HashMap<Integer, ContainerTable> m_tableRep;
-    private final FileStoreHandlerRepository m_fileStoreHandlerRepository;
+    private final WorkflowFileStoreHandlerRepository m_fileStoreHandlerRepository;
     private final List<FlowVariable> m_workflowVariables;
     private final List<Credentials> m_credentials;
     private final List<WorkflowAnnotation> m_workflowAnnotations;
@@ -135,7 +136,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
             assert m_outportTemplates.length == 0
                     && m_inportTemplates.length == 0;
             m_tableRep = new HashMap<Integer, ContainerTable>();
-            m_fileStoreHandlerRepository = new FileStoreHandlerRepository();
+            m_fileStoreHandlerRepository = new WorkflowFileStoreHandlerRepository();
         } else {
             m_fileStoreHandlerRepository = null;
             m_tableRep = null;
@@ -190,7 +191,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public FileStoreHandlerRepository getFileStoreHandlerRepository() {
+    public WorkflowFileStoreHandlerRepository getFileStoreHandlerRepository() {
         assert isProject() : "only to be called on projects";
         return m_fileStoreHandlerRepository;
     }

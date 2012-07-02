@@ -850,8 +850,8 @@ public final class SingleNodeContainer extends NodeContainer {
      */
     public NodeContainerExecutionStatus performExecuteNode(
             final PortObject[] inObjects) {
-        ExecutionContext ec = createExecutionContext();
         m_node.initFileStoreHandler(getParent().getFileStoreHandlerRepository());
+        ExecutionContext ec = createExecutionContext();
         boolean success;
         try {
             ec.checkCanceled();

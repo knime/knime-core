@@ -64,7 +64,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -168,7 +168,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
      * @throws IllegalStateException If version string is unsupported.
      */
     WorkflowPersistorVersion200(final HashMap<Integer, ContainerTable> tableRep,
-            final FileStoreHandlerRepository fileStoreHandlerRepository,
+            final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository,
             final ReferencedFile workflowKNIMEFile,
             final WorkflowLoadHelper loadHelper,
             final LoadVersion version, final boolean isProject) {

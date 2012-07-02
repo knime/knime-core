@@ -87,6 +87,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.FileStoreHandler;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.CorePlugin;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
@@ -226,7 +227,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** The repository of all active {@link FileStoreHandler}. It inherits
      * from the parent if this wfm is a meta node. */
-    private final FileStoreHandlerRepository m_fileStoreHandlerRepository;
+    private final WorkflowFileStoreHandlerRepository m_fileStoreHandlerRepository;
 
     /** Password store. This object is associated with each meta-node
      * (contained meta nodes have their own password store). */
@@ -300,7 +301,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // we can start a new table repository since there can not
             // be any dependencies to parent
             m_globalTableRepository = new HashMap<Integer, ContainerTable>();
-            m_fileStoreHandlerRepository = new FileStoreHandlerRepository();
+            m_fileStoreHandlerRepository = new WorkflowFileStoreHandlerRepository();
             // ...and we do not need to synchronize across unconnected workflows
             m_workflowMutex = new Object();
         } else {
@@ -4486,7 +4487,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /** @return the fileStoreHandlerRepository for this meta node or project. */
-    FileStoreHandlerRepository getFileStoreHandlerRepository() {
+    WorkflowFileStoreHandlerRepository getFileStoreHandlerRepository() {
         return m_fileStoreHandlerRepository;
     }
 
@@ -6104,8 +6105,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // TODO only create new hash map if workflow is a project?
         HashMap<Integer, ContainerTable> tableRep =
             new HashMap<Integer, ContainerTable>();
-        FileStoreHandlerRepository fileStoreHandlerRepository =
-            new FileStoreHandlerRepository();
+        WorkflowFileStoreHandlerRepository fileStoreHandlerRepository =
+            new WorkflowFileStoreHandlerRepository();
         LoadVersion version;
         if ((version = WorkflowPersistorVersion200.canReadVersionV200(
                 versionString)) != null) {

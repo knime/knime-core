@@ -67,7 +67,7 @@ import java.util.Stack;
 import java.util.TreeMap;
 
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -103,7 +103,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     private final HashSet<ConnectionContainerTemplate> m_connectionSet;
     private final NodeContainerMetaPersistorVersion1xx m_metaPersistor;
     private final HashMap<Integer, ContainerTable> m_globalTableRepository;
-    private final FileStoreHandlerRepository m_fileStoreRepository;
+    private final WorkflowFileStoreHandlerRepository m_fileStoreRepository;
 
     private WorkflowPortTemplate[] m_inPortTemplates;
     private WorkflowPortTemplate[] m_outPortTemplates;
@@ -148,7 +148,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
      */
     WorkflowPersistorVersion1xx(
             final HashMap<Integer, ContainerTable> tableRep,
-            final FileStoreHandlerRepository fileStoreHandlerRepository,
+            final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository,
             final ReferencedFile workflowKNIMEFile,
             final WorkflowLoadHelper loadHelper,
             final LoadVersion version,
@@ -163,7 +163,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
      * derivates. */
     WorkflowPersistorVersion1xx(
             final HashMap<Integer, ContainerTable> tableRep,
-            final FileStoreHandlerRepository fileStoreHandlerRepository,
+            final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository,
             final NodeContainerMetaPersistorVersion1xx metaPersistor,
             final LoadVersion version, final boolean isProject) {
         assert version != null;
@@ -245,7 +245,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
     /** {@inheritDoc}
      * @since 2.6 */
     @Override
-    public FileStoreHandlerRepository getFileStoreHandlerRepository() {
+    public WorkflowFileStoreHandlerRepository getFileStoreHandlerRepository() {
         return m_fileStoreRepository;
     }
 

@@ -60,7 +60,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.InvalidSettingsException;
@@ -109,7 +109,7 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
 
     ObsoleteMetaNodeWorkflowPersistorVersion1xx(
             final HashMap<Integer, ContainerTable> globalRep,
-            final FileStoreHandlerRepository fileStoreHandlerRepository,
+            final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository,
             final ReferencedFile workflowKNIMEFile,
             final WorkflowLoadHelper loadHelper,
             final LoadVersion version) {

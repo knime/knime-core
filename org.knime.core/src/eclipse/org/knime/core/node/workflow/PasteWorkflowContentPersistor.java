@@ -61,7 +61,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -128,7 +128,7 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
     /** {@inheritDoc}
      * @since 2.6 */
     @Override
-    public FileStoreHandlerRepository getFileStoreHandlerRepository() {
+    public WorkflowFileStoreHandlerRepository getFileStoreHandlerRepository() {
         throwUnsupportedOperationException();
         return null;
     }
