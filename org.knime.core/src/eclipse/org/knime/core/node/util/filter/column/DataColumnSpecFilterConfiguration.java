@@ -57,7 +57,6 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.node.util.filter.NameFilterConfiguration;
-import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 
 /** Represents a column filtering. Classes of this object are used as member in
  * the NodeModel and as underlying model to a {@link DataColumnSpecFilterPanel}.
@@ -124,5 +123,16 @@ public final class DataColumnSpecFilterConfiguration
     @Override
     public DataColumnSpecFilterConfiguration clone() {
         return (DataColumnSpecFilterConfiguration)super.clone();
+    }
+
+    /** Guess default settings on the argument spec. If the flag is
+     * set all appropriate columns will be put into the include list,
+     * otherwise they are put into the exclude list.
+     * @param spec To load from.
+     * @param includeByDefault See above. */
+    public void loadDefaults(final DataTableSpec spec,
+            final boolean includeByDefault) {
+        String[] names = toFilteredStringArray(spec);
+        super.loadDefaults(names, includeByDefault);
     }
 }

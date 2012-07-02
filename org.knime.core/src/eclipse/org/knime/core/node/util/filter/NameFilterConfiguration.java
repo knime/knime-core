@@ -407,7 +407,22 @@ public class NameFilterConfiguration implements Cloneable {
 
         m_includeList = incls.toArray(new String[incls.size()]);
         m_excludeList = excls.toArray(new String[excls.size()]);
+    }
 
+    /** Sets default names, used in auto-configure of a node when no settings
+     * are available.
+     * @param names The input names
+     * @param includeByDefault If true, all elements will be put into the include list and the "enforce exclusion"
+     * will be set. Otherwise all elements are put into the exclude list and the "enforce inclusion" is set. */
+    protected void loadDefaults(final String[] names, final boolean includeByDefault) {
+        String[] copy = Arrays.copyOf(names, names.length);
+        if (includeByDefault) {
+            m_includeList = copy;
+            setEnforceOption(EnforceOption.EnforceExclusion);
+        } else {
+            m_excludeList = copy;
+            setEnforceOption(EnforceOption.EnforceInclusion);
+        }
     }
 
     /** {@inheritDoc} */
