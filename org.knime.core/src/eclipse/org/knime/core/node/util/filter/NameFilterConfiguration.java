@@ -423,4 +423,52 @@ public class NameFilterConfiguration implements Cloneable {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((m_configRootName == null) ? 0 : m_configRootName.hashCode());
+        result = prime * result + ((m_enforceOption == null) ? 0 : m_enforceOption.hashCode());
+        result = prime * result + Arrays.hashCode(m_excludeList);
+        result = prime * result + Arrays.hashCode(m_includeList);
+        return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        NameFilterConfiguration other = (NameFilterConfiguration)obj;
+        if (m_configRootName == null) {
+            if (other.m_configRootName != null) {
+                return false;
+            }
+        } else if (!m_configRootName.equals(other.m_configRootName)) {
+            return false;
+        }
+        if (m_enforceOption != other.m_enforceOption) {
+            return false;
+        }
+        if (!Arrays.equals(m_excludeList, other.m_excludeList)) {
+            return false;
+        }
+        if (!Arrays.equals(m_includeList, other.m_includeList)) {
+            return false;
+        }
+        return true;
+    }
+
 }
