@@ -246,7 +246,6 @@ public final class KNIMEConstants {
     */
    public static final String PROPERTY_URL_TIMEOUT = "knime.url.timeout";
 
-
     /**
      * Java property which allows to skip automatic Log4J configuration when
      * KNIME starts. The value should be <code>true</code> or <code>false</code>
@@ -256,6 +255,14 @@ public final class KNIMEConstants {
      */
    public static final String PROPERTY_DISABLE_LOG4J_CONFIG =
        "knime.log4j.config.disabled";
+
+   /**
+    * Java property for doing all dialog operations automatically in the
+    * AWT event dispatch thread.
+    *
+    * @since 2.6
+    */
+   public static final String PROPERTY_DIALOG_IN_EDT = "knime.core.dialog.edt";
 
     /** KNIME home directory. */
     private static File knimeHomeDir;

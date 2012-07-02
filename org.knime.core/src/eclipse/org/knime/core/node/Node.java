@@ -65,6 +65,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.UIManager;
 
@@ -94,6 +95,7 @@ import org.knime.core.node.port.inactive.InactiveBranchPortObject;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
+import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.FlowLoopContext;
 import org.knime.core.node.workflow.FlowObjectStack;
@@ -149,6 +151,9 @@ public final class Node implements NodeModelWarningListener {
     /** The sub settings entry containing the flow variable settings. These
      * settings are not available in the derived node model. */
     public static final String CFG_VARIABLES = "variables";
+
+    static final boolean DIALOG_IN_EDT =
+        Boolean.getBoolean(KNIMEConstants.PROPERTY_DIALOG_IN_EDT);
 
     /** The node's name. */
     private String m_name;
@@ -1278,7 +1283,8 @@ public final class Node implements NodeModelWarningListener {
      * of the internally held tables (loop start nodes implements the
      * {@link BufferedDataTableHolder} interface). This can only be true
      * between two loop iterations.
-     * @noreference This method is not intended to be referenced by clients. */
+     * @noreference This method is not intended to be referenced by clients.
+     */
     public void cleanOutPorts(final boolean isLoopRestart) {
         if (isLoopRestart) { // just as an assertion
             FlowObjectStack inStack = getFlowObjectStack();
@@ -1809,7 +1815,31 @@ public final class Node implements NodeModelWarningListener {
         if (m_dialogPane == null) {
             if (hasDialog()) {
                 if (m_factory.hasDialog()) {
-                    m_dialogPane = m_factory.createNodeDialogPane();
+                    final AtomicReference<Throwable> exRef =
+                        new AtomicReference<Throwable>();
+                    Runnable r = new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                m_dialogPane = m_factory.createNodeDialogPane();
+                            } catch (Throwable ex) {
+                                exRef.set(ex);
+                            }
+                        }
+                    };
+
+                    if (DIALOG_IN_EDT) {
+                        ViewUtils.invokeAndWaitInEDT(r);
+                    } else {
+                        r.run();
+                    }
+                    if (exRef.get() instanceof Error) {
+                        throw (Error)exRef.get();
+                    } else if (exRef.get() instanceof RuntimeException) {
+                        throw (RuntimeException) exRef.get();
+                    } else {
+                    	// not possible since createNodeDialogPane does not throw Exceptions
+                    }
                 } else {
                     m_dialogPane = new EmptyNodeDialogPane();
                 }
@@ -2093,7 +2123,7 @@ public final class Node implements NodeModelWarningListener {
         m_model.setPauseLoopExecution(ple);
     }
 
-    public static enum LoopRole { BEGIN, END, NONE };
+    public static enum LoopRole { BEGIN, END, NONE }
 
     public final LoopRole getLoopRole() {
         if (m_model instanceof LoopStartNode) {

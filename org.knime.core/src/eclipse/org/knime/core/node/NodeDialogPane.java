@@ -70,6 +70,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
@@ -352,7 +353,7 @@ public abstract class NodeDialogPane {
      * If loadSettingsFrom throws this exception.
      * @see #loadSettingsFrom(NodeSettingsRO, PortObjectSpec[])
      */
-    void internalLoadSettingsFrom(final NodeSettingsRO settings,
+    final void internalLoadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs, final PortObject[] data,
             final FlowObjectStack foStack,
             final CredentialsProvider credentialsProvider,
@@ -376,13 +377,32 @@ public abstract class NodeDialogPane {
         if (modelSettings == null) {
             modelSettings = new NodeSettings("empty");
         }
-        try {
-            callDerivedLoadSettingsFrom(modelSettings, specs, data);
-        } catch (NotConfigurableException nce) {
-            throw nce;
-        } catch (Throwable e) {
-            m_logger.error("Error loading model settings", e);
+
+
+        final AtomicReference<Throwable> exRef = new AtomicReference<Throwable>();
+        final NodeSettings ms = modelSettings;
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    callDerivedLoadSettingsFrom(ms, specs, data);
+                } catch (Throwable ex) {
+                    exRef.set(ex);
+                }
+            }
+        };
+        if (Node.DIALOG_IN_EDT) {
+            ViewUtils.invokeAndWaitInEDT(r);
+        } else {
+            r.run();
         }
+
+        if (exRef.get() instanceof NotConfigurableException) {
+            throw (NotConfigurableException)exRef.get();
+        } else if (exRef.get() != null) {
+            m_logger.error("Error loading model settings", exRef.get());
+        }
+
         // add the flow variables tab
         addFlowVariablesTab();
         m_flowVariablesModelChanged = false;
@@ -612,26 +632,48 @@ public abstract class NodeDialogPane {
      */
     public final void finishEditingAndSaveSettingsTo(
             final NodeSettingsWO settings) throws InvalidSettingsException {
-        commitComponentsRecursively(getPanel());
+        final AtomicReference<Throwable> exRef = new AtomicReference<Throwable>();
+        Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                commitComponentsRecursively(getPanel());
 
-        /* Workaround that makes sure that the last modified Swing component
-         * looses focus and that its values are stored (Bug 1949). Otherwise
-         * the last changed values might get lost if a user simply clicks on
-         * the ok or apply button without changing the focus first. */
-        JTabbedPane pane = m_pane;
-        int index = pane.getTabCount() - 1;
-        if (index > 0) {
-            if (TAB_NAME_VARIABLES.equals(pane.getTitleAt(index))) {
-                LOGGER.coding("Configuration dialog tab order has"
-                        + " changed. The assumption that the flow variables tab"
-                        + " is not the last tab was violated.");
+                /* Workaround that makes sure that the last modified Swing component
+                 * looses focus and that its values are stored (Bug 1949). Otherwise
+                 * the last changed values might get lost if a user simply clicks on
+                 * the ok or apply button without changing the focus first. */
+                JTabbedPane pane = m_pane;
+                int index = pane.getTabCount() - 1;
+                if (index > 0) {
+                    if (TAB_NAME_VARIABLES.equals(pane.getTitleAt(index))) {
+                        LOGGER.coding("Configuration dialog tab order has"
+                                + " changed. The assumption that the flow variables tab"
+                                + " is not the last tab was violated.");
+                    }
+                    int prevIndex = pane.getSelectedIndex();
+                    pane.setSelectedIndex(index);
+                    pane.setSelectedIndex(prevIndex);
+                }
+
+                try {
+                    internalSaveSettingsTo(settings);
+                } catch (Throwable ex) {
+                    exRef.set(ex);
+                }
             }
-            int prevIndex = pane.getSelectedIndex();
-            pane.setSelectedIndex(index);
-            pane.setSelectedIndex(prevIndex);
+        };
+        if (Node.DIALOG_IN_EDT) {
+            ViewUtils.invokeAndWaitInEDT(r);
+        } else {
+            r.run();
         }
-
-        internalSaveSettingsTo(settings);
+        if (exRef.get() instanceof InvalidSettingsException) {
+            throw (InvalidSettingsException) exRef.get();
+        } else if (exRef.get() instanceof RuntimeException) {
+            throw (RuntimeException) exRef.get();
+        } else if (exRef.get() instanceof Error) {
+            throw (Error) exRef.get();
+        }
     }
 
 
@@ -1338,7 +1380,7 @@ public abstract class NodeDialogPane {
                             m_tree.repaint();
                         }
                     });
-                };
+                }
             });
         }
 
