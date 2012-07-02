@@ -54,7 +54,7 @@ package org.knime.core.node.util.filter;
  * This interface is used in the {@link NameFilterPanel
  * #update(java.util.List, java.util.List, String[])}
  * to filter all given names / items.
- * @param <T> the instance T this object is parametrized on.
+ * @param <T> the instance T this object is parameterized on.
  * @author Kilian Thiel, KNIME.com AG, Zurich
  * @since 2.6
  */
