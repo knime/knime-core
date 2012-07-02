@@ -469,7 +469,9 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
         if (m_parentEditor != null && m_manager != null) {
             // Store the editor settings with the meta node
-            saveEditorSettingsToWorkflowManager(); // doesn't persist settings to disk
+            if (getWorkflowManager().isDirty()) {
+                saveEditorSettingsToWorkflowManager(); // doesn't persist settings to disk
+            }
             // bug fix 2051: Possible memory leak related to sub-flow editor.
             // meta node editors were still referenced by the EditorHistory
             IWorkbench workbench = PlatformUI.getWorkbench();
@@ -1157,9 +1159,6 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // attach editor properties with the workflow manager - for all sub editors too
         saveEditorSettingsToWorkflowManager();
-        for (IEditorPart subEditor : getSubEditors()) {
-            ((WorkflowEditor)subEditor).saveEditorSettingsToWorkflowManager();
-        }
 
         // to be sure to mark dirty and inform the user about running nodes
         // we ask for the state BEFORE saving
@@ -1393,7 +1392,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     /**
-     * Applies the settings to the editor. Can't be null.
+     * Applies the settings to the editor. Can't be null. Settings are not stored in the workflow manager.
      * @see #getCurrentEditorSettings()
      * @see #getEditorSettingsDefault()
      * @param settings to apply
@@ -1409,10 +1408,9 @@ public class WorkflowEditor extends GraphicalEditor implements
     private void applyEditorSettingsFromWorkflowManager() {
         final WorkflowManager wfm = getWorkflowManager();
         EditorUIInformation settings = wfm.getEditorUIInformation();
-        if (settings == null) {
+        if (settings == null || settings.getGridX() == -1) {
             // if this is a meta node - derive settings from parent
             if (m_fileResource == null && m_parentEditor != null) {
-                m_parentEditor.saveEditorSettingsToWorkflowManager();
                 settings = m_parentEditor.getCurrentEditorSettings();
                 // don't derive zoom factor.
                 if (settings != null) {

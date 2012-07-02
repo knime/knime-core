@@ -129,6 +129,7 @@ public class ChangeGridAction extends AbstractNodeAction {
         if (dlg.open() == Window.OK) {
             getEditor().markDirty();
             getEditor().applyEditorSettings(dlg.getSettings());
+            getEditor().getWorkflowManager().setEditorUIInformation(dlg.getSettings());
         }
     }
 }
