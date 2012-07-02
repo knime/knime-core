@@ -35,6 +35,7 @@ import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
 /**
  *
  * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
+ * @since 2.6
  */
 public class DialogComponentColumnFilter2 extends DialogComponent {
 

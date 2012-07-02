@@ -65,6 +65,7 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 2.6
  */
 public final class SettingsModelColumnFilter2 extends SettingsModel {
 
