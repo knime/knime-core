@@ -61,10 +61,15 @@ import org.knime.core.node.NodeSettingsWO;
  * takes care on additional/missing names using the enforce inclusion/exclusion
  * option.
  *
+ * <p>This class may contain additional functionality in future versions, e.g.
+ * filters based on string expressions. Clients should not rely on the
+ * enforce in/exclusion flags but only use the standard load/save routines and
+ * the {@link #applyTo(String[])} method.
+ *
  * @author Thomas Gabriel, KNIME.com AG, Zurich
  * @since 2.6
  */
-public class NameFilterConfiguration {
+public class NameFilterConfiguration implements Cloneable {
 
     private String[] m_includeList = new String[0];
     private String[] m_excludeList = new String[0];
@@ -111,27 +116,24 @@ public class NameFilterConfiguration {
         }
     }
 
-    /**
-     * Creates a new String instance.
-     */
-    public class NameFilter {
+    /** The result when a filtering is applied to an array of elements. */
+    public static class FilterResult {
         private String[] m_incls;
         private String[] m_excls;
         private String[] m_unknowns;
         /**
-         * A new {@link DataColumnSpecFilter}.
          * @param incls list of included columns
          * @param excls list of excluded columns
          * @param unknows list of unknown columns
          */
-        NameFilter(final List<String> incls, final List<String> excls,
+        protected FilterResult(final List<String> incls, final List<String> excls,
                 final List<String> unknows) {
             m_incls = incls.toArray(new String[incls.size()]);
             m_excls = excls.toArray(new String[excls.size()]);
             m_unknowns = unknows.toArray(new String[unknows.size()]);
         }
-        /** @return a list of unknown names; used to print warning message. */
-        public String[] getUnknownColumns() {
+        /** @return a list of unknown names; used to print a warning message. */
+        public String[] getUnknowns() {
             return m_unknowns;
         }
         /** @return an array of included names. */
@@ -164,18 +166,21 @@ public class NameFilterConfiguration {
 
     private final String m_configRootName;
 
-    /** Hide empty constructor. */
-    @SuppressWarnings("unused")
-    private NameFilterConfiguration() {
-        this("default");
-    }
-
     /**
      * Creates a new name filter configuration with the given settings name.
      * @param configRootName the config name to used to store the settings
+     * @throws IllegalArgumentException If config name is null or empty
      */
     public NameFilterConfiguration(final String configRootName) {
+        if (configRootName == null || configRootName.length() == 0) {
+            throw new IllegalArgumentException("Config name must not be null or empty.");
+        }
         m_configRootName = configRootName;
+    }
+
+    /** @return the configRootName */
+    public final String getConfigRootName() {
+        return m_configRootName;
     }
 
     /**
@@ -185,7 +190,7 @@ public class NameFilterConfiguration {
      * @param names the names to validate the current configuration on
      * @return a new name filter
      */
-    public NameFilter createFilter(final String[] names) {
+    protected FilterResult applyTo(final String[] names) {
 
         final EnforceOption enforceOption = getEnforceOption();
         final List<String> nameList = Arrays.asList(names);
@@ -240,7 +245,7 @@ public class NameFilterConfiguration {
                 exclCols.add(ex);
             }
         }
-        return new NameFilter(incls, excls, unknowns);
+        return new FilterResult(incls, excls, unknowns);
     }
 
     /**
@@ -333,7 +338,7 @@ public class NameFilterConfiguration {
       * @param settings to load from.
       * @param names all names available for filtering
       */
-    public void loadConfigurationInDialog(final NodeSettingsRO settings,
+    protected void loadConfigurationInDialog(final NodeSettingsRO settings,
             final String[] names) {
         NodeSettingsRO subSettings;
         try {
@@ -403,6 +408,19 @@ public class NameFilterConfiguration {
         m_includeList = incls.toArray(new String[incls.size()]);
         m_excludeList = excls.toArray(new String[excls.size()]);
 
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected NameFilterConfiguration clone() {
+        try {
+            NameFilterConfiguration clone = (NameFilterConfiguration)super.clone();
+            clone.m_excludeList = Arrays.copyOf(m_excludeList, m_excludeList.length);
+            clone.m_includeList = Arrays.copyOf(m_includeList, m_includeList.length);
+            return clone;
+        } catch (CloneNotSupportedException e) {
+            throw new IllegalStateException("Object not clonable although it implements java.lang.Clonable", e);
+        }
     }
 
 }

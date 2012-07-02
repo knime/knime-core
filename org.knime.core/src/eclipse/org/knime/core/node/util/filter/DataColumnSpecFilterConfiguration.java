@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2012
+ *  Copyright (C) 2003 - 2011
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -46,72 +46,80 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   29.06.2012 (kilian): created
+ *   Jul 2, 2012 (wiswedel): created
  */
 package org.knime.core.node.util.filter;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.ArrayList;
 
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataValue;
-import org.knime.core.node.util.ColumnFilterPanel;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.NodeSettingsRO;
 
-/**
- * Class that filters all columns based on a given set of compatible
- * <code>DataValue</code> classes.
+/** Represents a column filtering. Classes of this object are used as member in
+ * the NodeModel and as underlying model to a {@link DataColumnSpecFilterPanel}.
  *
- * @author Kilian Thiel, KNIME.com AG, Zurich
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @since 2.6
  */
-public class DataTypeColumnFilter implements InputFilter<DataColumnSpec> {
+public final class DataColumnSpecFilterConfiguration
+    extends NameFilterConfiguration {
 
-    /**
-     * Show only columns of types that are compatible to one of theses
-     * classes.
-     */
-    private final Class<? extends DataValue>[] m_filterClasses;
+    private final InputFilter<DataColumnSpec> m_filter;
 
-    /**
-     * Creates a new value class filter.
-     * @param filterValueClasses all classes that are compatible with
-     *        the type allowed in {@link #include(DataColumnSpec)}
-     */
-    public DataTypeColumnFilter(
-            final Class<? extends DataValue>... filterValueClasses) {
-        if (filterValueClasses == null || filterValueClasses.length == 0) {
-            throw new NullPointerException("Classes must not be null");
-        }
-        final List<Class<? extends DataValue>> list = Arrays
-                .asList(filterValueClasses);
-        if (list.contains(null)) {
-            throw new NullPointerException("List of value classes must not "
-                    + "contain null elements.");
-        }
-        m_filterClasses = filterValueClasses;
+    /** New instance with hard coded root name.
+     * @param configRootName Non null name that is used as identifier when
+     * saved to a NodeSettings object during save (and load). */
+    public DataColumnSpecFilterConfiguration(final String configRootName) {
+        this(configRootName, null);
     }
 
-    /**
-     * Checks if the given column type is included in the list of allowed
-     * types. If the list is empty, all types are valid.
-     * @param cspec {@link ColumnFilterPanel} checked
-     * @return true, if given column should be visible in column filter
+    /** New instance with hard coded root name.
+     * @param configRootName Non null name that is used as identifier when
+     * saved to a NodeSettings object during save (and load).
+     * @param filter A (type) filter applied to the input spec. */
+    public DataColumnSpecFilterConfiguration(final String configRootName,
+            final InputFilter<DataColumnSpec> filter) {
+        super(configRootName);
+        m_filter = filter;
+    }
+
+    /** Loads the configuration in the dialog (no exception thrown)
+     * and maps it to the input spec.
+     * @param settings The settings to load from.
+     * @param spec The non-null spec.
      */
-    @Override
-    public final boolean include(final DataColumnSpec cspec) {
-        for (final Class<? extends DataValue> cl : m_filterClasses) {
-            if (cspec.getType().isCompatible(cl)) {
-                return true;
+    public void loadConfigurationInDialog(final NodeSettingsRO settings,
+            final DataTableSpec spec) {
+        String[] names = toFilteredStringArray(spec);
+        super.loadConfigurationInDialog(settings, names);
+    }
+
+    private String[] toFilteredStringArray(final DataTableSpec spec) {
+        ArrayList<String> acceptedInNames = new ArrayList<String>();
+        for (DataColumnSpec col : spec) {
+            if (m_filter == null || m_filter.include(col)) {
+                String name = col.getName();
+                acceptedInNames.add(name);
             }
         }
-        return false;
+        return acceptedInNames.toArray(new String[acceptedInNames.size()]);
     }
 
-    /**
-     * {@inheritDoc}
+    /** Applies the settings to the input spec and returns an
+     * object representing the included, excluded and unknown
+     * names.
+     * @param spec The input spec.
+     * @return The filter result object.
      */
+    public FilterResult applyTo(final DataTableSpec spec) {
+        String[] names = toFilteredStringArray(spec);
+        return super.applyTo(names);
+    }
+
+    /** {@inheritDoc} */
     @Override
-    public String allFilteredMsg() {
-        return "No columns compatible with the specific column types.";
+    public DataColumnSpecFilterConfiguration clone() {
+        return (DataColumnSpecFilterConfiguration)super.clone();
     }
 }

@@ -167,7 +167,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         BorderFactory.createLineBorder(new Color(240, 0, 0), 2);
 
     /** The filter used to filter out/in valid column types. */
-    private NameFilter<T> m_filter;
+    private InputFilter<T> m_filter;
 
     /**
      * Creates a new filter column panel with three component which are the
@@ -194,7 +194,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
      * Creates a new filter column panel with three component which are the
      * include list, button panel to shift elements between the two lists, and
      * the exclude list. The include list then will contain all values to
-     * filter. Additionally a {@link NameFilter} can be specified, based on
+     * filter. Additionally a {@link InputFilter} can be specified, based on
      * which the shown items are shown or not. The filter can be <code>null
      * </code>, in which case it is simply not used at all.
      * @param showEnforceOption true, if the enforce option should be visible
@@ -203,7 +203,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
      * shown.
      */
     protected NameFilterPanel(final boolean showEnforceOption,
-            final NameFilter<T> filter) {
+            final InputFilter<T> filter) {
         super(new GridLayout(1, 1));
         m_filter = filter;
 
@@ -600,6 +600,8 @@ public abstract class NameFilterPanel<T> extends JPanel {
      * @param ins include list
      * @param exs exclude list
      * @param names all available names
+     * @noreference This method is not intended to be referenced by clients.
+     * @nooverride This method is not intended to be re-implemented or extended by clients.
      */
     public void update(final List<String> ins, final List<String> exs,
             final String[] names) {
@@ -614,7 +616,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
 
             // continue if filter is set and current item t is filtered out
             if (m_filter != null) {
-                if (!m_filter.includeT(t)) {
+                if (!m_filter.include(t)) {
                     continue;
                 }
             }
@@ -781,13 +783,13 @@ public abstract class NameFilterPanel<T> extends JPanel {
     }
 
     /**
-     * Sets the internal used {@link NameFilter} and calls
+     * Sets the internal used {@link InputFilter} and calls
      * the {@link #update(List, List, String[])} method to update the
      * panel.
      *
-     * @param filter the new {@link NameFilter} to use
+     * @param filter the new {@link InputFilter} to use
      */
-    public void setNameFilter(final NameFilter<T> filter) {
+    public void setNameFilter(final InputFilter<T> filter) {
         m_filter = filter;
 
         List<String> inclList = new ArrayList<String>(getIncludedNamesAsSet());

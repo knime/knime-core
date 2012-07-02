@@ -142,7 +142,8 @@ public class DataColumnSpecFilterPanel extends NameFilterPanel<DataColumnSpec> {
      * @param config the configuration to read to settings from.
      * @param spec the {@link DataTableSpec} to validate the settings on
      */
-    public void loadConfiguration(final NameFilterConfiguration config,
+    public void loadConfiguration(
+            final DataColumnSpecFilterConfiguration config,
             final DataTableSpec spec) {
         m_spec = spec;
         super.loadConfiguration(config, spec.getColumnNames());

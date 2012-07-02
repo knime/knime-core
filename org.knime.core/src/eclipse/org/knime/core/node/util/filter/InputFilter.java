@@ -50,15 +50,14 @@
  */
 package org.knime.core.node.util.filter;
 
-/**
- * This interface is used in the {@link NameFilterPanel
- * #update(java.util.List, java.util.List, String[])}
- * to filter all given names / items.
+/** Used to (pre-)filter items in a filter configuration. Mostly used
+ * as data column type filter in a {@link DataColumnSpecFilterConfiguration}.
+ *
  * @param <T> the instance T this object is parameterized on.
  * @author Kilian Thiel, KNIME.com AG, Zurich
  * @since 2.6
  */
-public interface NameFilter<T> {
+public interface InputFilter<T> {
 
     /**
      * Checks if the given name should be included or not.
@@ -67,7 +66,7 @@ public interface NameFilter<T> {
      * @return <code>true</code> if the name should be included, otherwise
      * <code>false</code>.
      */
-    public boolean includeT(final T name);
+    public boolean include(final T name);
 
     /**
      * @return the message to display if all names are filtered.
