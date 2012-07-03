@@ -116,6 +116,15 @@ public final class SettingsModelColumnFilter2 extends SettingsModel {
         return m_filterConfiguration.getConfigRootName();
     }
 
+    /** Loads a default configuration by putting all appropriate columns
+     * into the include list. Can be used during auto-configuration.
+     * (that is, during NodeModel#configure() when no settings model has
+     * been instantiated yet).
+     * @param spec The spec to derive the default settings from. */
+    public void loadDefaults(final DataTableSpec spec) {
+        m_filterConfiguration.loadDefaults(spec, true);
+    }
+
     /**
      * @return
      */
