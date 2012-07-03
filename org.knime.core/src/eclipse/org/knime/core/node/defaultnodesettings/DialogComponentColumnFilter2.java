@@ -46,11 +46,22 @@ public class DialogComponentColumnFilter2 extends DialogComponent {
      * @param inPortIdx
      */
     public DialogComponentColumnFilter2(final SettingsModelColumnFilter2 model, final int inPortIdx) {
+        this(model, inPortIdx, false);
+    }
+
+    /**
+     * @param model
+     * @param inPortIdx
+     * @param showSelectionListsOnly if true, the panel shows no additional options like search box,
+     * force-include-option, etc.
+     */
+    public DialogComponentColumnFilter2(final SettingsModelColumnFilter2 model, final int inPortIdx,
+            final boolean showSelectionListsOnly) {
         super(model);
         m_inPortIdx = inPortIdx;
         // the model needs the port index in the loadSettingsFrom method
         model.setInputPortIndex(inPortIdx);
-        m_colFilterPanel = new DataColumnSpecFilterPanel(model.getColumnFilter());
+        m_colFilterPanel = new DataColumnSpecFilterPanel(showSelectionListsOnly, model.getColumnFilter());
         getComponentPanel().add(m_colFilterPanel);
         m_colFilterPanel.addChangeListener(new ChangeListener() {
             @Override
@@ -65,8 +76,8 @@ public class DialogComponentColumnFilter2 extends DialogComponent {
             }
         });
         updateModel();
-    }
 
+    }
     /**
      * {@inheritDoc}
      */
