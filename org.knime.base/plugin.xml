@@ -739,8 +739,8 @@
             id="org.knime.base.node.preproc.correlation.pmcc.PMCCFilterNodeFactory"/>
       <node
             category-path="/manipulation/column/column-filter"
-            factory-class="org.knime.base.node.preproc.lowvarfilter.LowVarFilterNodeFactory"
-            id="org.knime.base.node.preproc.lowvarfilter.LowVarFilterNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.lowvarfilter2.LowVarFilter2NodeFactory"
+            id="org.knime.base.node.preproc.lowvarfilter2.LowVarFilter2NodeFactory"/>
       <node
             category-path="/mining/mds"
             factory-class="org.knime.base.node.mine.mds.MDSNodeFactory"

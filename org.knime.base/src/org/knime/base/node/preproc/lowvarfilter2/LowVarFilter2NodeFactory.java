@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,11 +44,11 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   25.02.2007 (wiswedel): created
  */
-package org.knime.base.node.preproc.lowvarfilter;
+package org.knime.base.node.preproc.lowvarfilter2;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
@@ -58,15 +58,16 @@ import org.knime.core.node.NodeView;
 /**
  * Factory for low variance node.
  * @author Bernd Wiswedel, University of Konstanz
+ * @since 2.6
  */
-public class LowVarFilterNodeFactory extends NodeFactory {
+public class LowVarFilter2NodeFactory extends NodeFactory {
 
     /**
      * {@inheritDoc}
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new LowVarFilterNodeDialogPane();
+        return new LowVarFilter2NodeDialogPane();
     }
 
     /**
@@ -74,7 +75,7 @@ public class LowVarFilterNodeFactory extends NodeFactory {
      */
     @Override
     public NodeModel createNodeModel() {
-        return new LowVarFilterNodeModel();
+        return new LowVarFilter2NodeModel();
     }
 
     /**

@@ -48,13 +48,12 @@
  * History
  *   25.02.2007 (wiswedel): created
  */
-package org.knime.base.node.preproc.lowvarfilter;
+package org.knime.base.node.preproc.lowvarfilter2;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -70,20 +69,28 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnFilterPanel;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
+import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
 
 /**
  * Dialog for low variance filter node. Shows a double value chooser and a 
  * filter panel.
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class LowVarFilterNodeDialogPane extends NodeDialogPane {
+public class LowVarFilter2NodeDialogPane extends NodeDialogPane {
     
     private final JSpinner m_varianceSpinner;
-    private final ColumnFilterPanel m_colFilterPanel;
+    
+    /**
+     * Using {@link DataColumnSpecFilterPanel} instead of deprecated
+     * {@link ColumnFilterPanel}.
+     */
+    private final DataColumnSpecFilterPanel m_colFilterPanel;
 
     /** Inits GUI. */
     @SuppressWarnings("unchecked")
-    public LowVarFilterNodeDialogPane() {
+    public LowVarFilter2NodeDialogPane() {
         m_varianceSpinner = new JSpinner(new SpinnerNumberModel(
                 0.0, 0.0, Double.POSITIVE_INFINITY, 0.1));
         m_varianceSpinner.setEditor(new JSpinner.NumberEditor(m_varianceSpinner,
@@ -91,7 +98,7 @@ public class LowVarFilterNodeDialogPane extends NodeDialogPane {
         JSpinner.DefaultEditor editor =
             (JSpinner.DefaultEditor)m_varianceSpinner.getEditor();
         editor.getTextField().setColumns(10);
-        m_colFilterPanel = new ColumnFilterPanel(DoubleValue.class);
+        m_colFilterPanel = new DataColumnSpecFilterPanel(DoubleValue.class);
         JPanel p = new JPanel(new BorderLayout());
         JPanel northPanel = new JPanel(new FlowLayout());
         northPanel.add(new JLabel("Variance Upper Bound"));
@@ -105,6 +112,12 @@ public class LowVarFilterNodeDialogPane extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings, 
             final DataTableSpec[] specs) throws NotConfigurableException {
+        final DataTableSpec spec = specs[0];
+        if (spec == null || spec.getNumColumns() == 0) {
+            throw new NotConfigurableException("No columns available for "
+                    + "selection.");
+        }
+        
         List<String> defIncludes = new ArrayList<String>();
         for (DataColumnSpec s : specs[0]) {
             if (s.getType().isCompatible(DoubleValue.class)) {
@@ -112,12 +125,12 @@ public class LowVarFilterNodeDialogPane extends NodeDialogPane {
             }
         }
         double threshold = settings.getDouble(
-                LowVarFilterNodeModel.CFG_KEY_MAX_VARIANCE, 0.0);
-        String[] includes = settings.getStringArray(
-                LowVarFilterNodeModel.CFG_KEY_COL_FILTER, 
-                defIncludes.toArray(new String[defIncludes.size()]));
+                LowVarFilter2NodeModel.CFG_KEY_MAX_VARIANCE, 0.0);
         m_varianceSpinner.setValue(threshold);
-        m_colFilterPanel.update(specs[0], false, includes);
+
+        DataColumnSpecFilterConfiguration config = createColFilterConf();
+        config.loadConfigurationInDialog(settings, spec);
+        m_colFilterPanel.loadConfiguration(config, spec);
     }
     
     /** {@inheritDoc} */
@@ -125,11 +138,22 @@ public class LowVarFilterNodeDialogPane extends NodeDialogPane {
     protected void saveSettingsTo(final NodeSettingsWO settings) 
         throws InvalidSettingsException {
         double threshold = ((Number)m_varianceSpinner.getValue()).doubleValue();
-        Set<String> includes = m_colFilterPanel.getIncludedColumnSet();
-        settings.addStringArray(LowVarFilterNodeModel.CFG_KEY_COL_FILTER, 
-                includes.toArray(new String[includes.size()]));
         settings.addDouble(
-                LowVarFilterNodeModel.CFG_KEY_MAX_VARIANCE, threshold);
+                LowVarFilter2NodeModel.CFG_KEY_MAX_VARIANCE, threshold);
+        
+        DataColumnSpecFilterConfiguration config = createColFilterConf();
+        m_colFilterPanel.saveConfiguration(config);
+        config.saveConfiguration(settings);
     }
 
+    /**
+     * @return creates and returns configuration instance for column filter 
+     * panel.
+     */
+    @SuppressWarnings("unchecked")
+    private DataColumnSpecFilterConfiguration createColFilterConf() {
+        return new DataColumnSpecFilterConfiguration(
+                LowVarFilter2NodeModel.CFG_KEY_COL_FILTER,
+                new DataTypeColumnFilter(DoubleValue.class));
+    }
 }
