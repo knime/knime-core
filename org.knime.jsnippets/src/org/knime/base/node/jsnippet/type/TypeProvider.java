@@ -72,6 +72,7 @@ import org.knime.base.node.jsnippet.type.data.JavaToStringCell;
 import org.knime.base.node.jsnippet.type.data.JavaToXMLCell;
 import org.knime.base.node.jsnippet.type.data.LongValueToJava;
 import org.knime.base.node.jsnippet.type.data.StringValueToJava;
+import org.knime.base.node.jsnippet.type.data.ToStringToJava;
 import org.knime.base.node.jsnippet.type.data.XMLValueToJava;
 import org.knime.base.node.jsnippet.type.flowvar.DoubleFlowVarToJava;
 import org.knime.base.node.jsnippet.type.flowvar.IntFlowVarToJava;
@@ -112,6 +113,7 @@ public final class TypeProvider {
     private Map<DataType, JavaToDataCell> m_javaToListCell;
 
     private Map<Type, TypeConverter> m_flowVarConverter;
+    private ToStringToJava m_toStringToJava;
 
     /** Prevent creation of class instances. */
     private TypeProvider() {
@@ -177,6 +179,10 @@ public final class TypeProvider {
         m_flowVarConverter.put(Type.DOUBLE, new DoubleFlowVarToJava());
         m_flowVarConverter.put(Type.INTEGER, new IntFlowVarToJava());
         m_flowVarConverter.put(Type.STRING, new StringFlowVarToJava());
+
+        // default converter using toString() when no special converter for
+        // a data cell can be found
+        m_toStringToJava = new ToStringToJava();
 
     }
 
@@ -265,9 +271,7 @@ public final class TypeProvider {
             m_collDataValueToJava.put(type, listCellToJava);
             return type.isCollectionType() ? listCellToJava : cellToJava;
         } else {
-            throw new TypeException("The data type "
-                    + type
-                    + " is not supported.");
+            return m_toStringToJava;
         }
     }
 
