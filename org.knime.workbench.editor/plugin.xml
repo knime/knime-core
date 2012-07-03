@@ -38,6 +38,16 @@
             description="Moves the selected nodes to the right"
             id="knime.commands.editor.moveNodesRight"
             name="Move Nodes Right"/>
+     <command
+            categoryId="knime.command.category"
+            description="Brings the selected annotation to front"
+            id="knime.commands.editor.bringToFront"
+            name="Bring to Front"/>
+     <command
+            categoryId="knime.command.category"
+            description="Sends the selected annotation to the back"
+            id="knime.commands.editor.sendToBack"
+            name="Send to Back"/>
       <command
             categoryId="knime.command.category"
             description="Opens the configuration dialog on the selected node"
@@ -373,6 +383,26 @@
                label="Move Nodes Right"
                style="push"
                tooltip="Move the selected nodes to the right"/>
+         <action
+               class="org.knime.workbench.editor2.actions.delegates.BringAnnotationToFrontEditorAction"
+               definitionId="knime.commands.editor.bringToFront"
+               disabledIcon="icons/move_dis.png"
+               icon="icons/move.png"
+               id="org.knime.workbench.editor.actions.bringToFront"
+               label="Bring to Front"
+               style="push"
+               tooltip="Bring the selected annotation to the front"/>     
+         <action
+               class="org.knime.workbench.editor2.actions.delegates.SendAnnotationToBackEditorAction"
+               definitionId="knime.commands.editor.sendToBack"
+               disabledIcon="icons/move_dis.png"
+               icon="icons/move.png"
+               id="org.knime.workbench.editor.actions.sendToBack"
+               label="Send to Back"
+               style="push"
+               tooltip="Send the selected annotation to the back"/>     
+               
+               
       </editorContribution>
    </extension>
    <extension point="org.eclipse.ui.bindings">
@@ -486,6 +516,16 @@
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="SHIFT+CTRL+ARROW_RIGHT"/> 
+      <key
+            commandId="knime.commands.editor.bringToFront"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="SHIFT+CTRL+PAGE_UP"/> 
+      <key
+            commandId="knime.commands.editor.sendToBack"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="SHIFT+CTRL+PAGE_DOWN"/> 
             
    </extension>
     <extension

@@ -5909,7 +5909,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 // throws exception if not present in workflow
                 NodeContainer cont = getNodeContainer(nodeIDs[i]);
                 loaderMap.put(cont.getID().getIndex(), cont.getCopyPersistor(
-                      m_globalTableRepository, m_fileStoreHandlerRepository, 
+                      m_globalTableRepository, m_fileStoreHandlerRepository,
                       false, isUndoableDeleteCommand));
                 for (ConnectionContainer out
                         : m_workflow.getConnectionsBySource(nodeIDs[i])) {
@@ -7359,6 +7359,32 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         notifyWorkflowListeners(new WorkflowEvent(
                 WorkflowEvent.Type.ANNOTATION_REMOVED, null, annotation, null));
         setDirty();
+    }
+
+    /**
+     * Resorts the internal array to move the specified annotation to the last index.
+     * @param annotation to bring to front
+     */
+    public void bringAnnotationToFront(final WorkflowAnnotation annotation) {
+        if (!m_annotations.remove(annotation)) {
+            throw new IllegalArgumentException("Annotation \"" + annotation
+                    + "\" does not exists - can't be moved to front");
+        }
+        m_annotations.add(annotation);
+        annotation.fireChangeEvent(); // triggers workflow dirty
+    }
+
+    /**
+     * Resorts the internal array to move the specified annotation to the first index.
+     * @param annotation to bring to front
+     */
+    public void sendAnnotationToBack(final WorkflowAnnotation annotation) {
+        if (!m_annotations.remove(annotation)) {
+            throw new IllegalArgumentException("Annotation \"" + annotation
+                    + "\" does not exists - can't be moved to front");
+        }
+        m_annotations.insertElementAt(annotation, 0);
+        annotation.fireChangeEvent(); // triggers workflow dirty
     }
 
     /** Listener to annotations, etc; sets content dirty.
