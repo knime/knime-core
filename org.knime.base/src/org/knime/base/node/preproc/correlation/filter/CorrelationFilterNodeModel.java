@@ -48,7 +48,7 @@
  * History
  *   18.02.2007 (wiswedel): created
  */
-package org.knime.base.node.preproc.correlation.pmcc;
+package org.knime.base.node.preproc.correlation.filter;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,6 +56,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 
+import org.knime.base.node.preproc.correlation.PMCCPortObjectAndSpec;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
@@ -77,7 +78,7 @@ import org.knime.core.node.port.PortType;
  * 
  * @author wiswedel, University of Konstanz
  */
-public class PMCCFilterNodeModel extends NodeModel {
+public class CorrelationFilterNodeModel extends NodeModel {
     
     /** Config key for threshold. */
     static final String CFG_THRESHOLD = "correlation_threshold";
@@ -85,7 +86,7 @@ public class PMCCFilterNodeModel extends NodeModel {
     private double m_threshold = 1.0;
     
     /** Empty constructor, 2 ins, 1 out. */
-    public PMCCFilterNodeModel() {
+    public CorrelationFilterNodeModel() {
         super(new PortType[]{PMCCPortObjectAndSpec.TYPE, 
                 BufferedDataTable.TYPE},
                 new PortType[]{BufferedDataTable.TYPE});

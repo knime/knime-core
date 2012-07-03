@@ -48,7 +48,7 @@
  * History
  *   18.02.2007 (wiswedel): created
  */
-package org.knime.base.node.preproc.correlation.pmcc;
+package org.knime.base.node.preproc.correlation;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -157,12 +157,12 @@ public final class PMCCPortObjectAndSpec implements PortObject, PortObjectSpec {
 
     /** Values smaller than this are considered to be 0, used to avoid
      * round-off errors. */
-    static final double ROUND_ERROR_OK = 1e-8;
+    public static final double ROUND_ERROR_OK = 1e-8;
 
     /** Creates new object, whereby no correlation values are available.
      * @param includes The columns being analyzed.
      */
-    PMCCPortObjectAndSpec(final String[] includes) {
+    public PMCCPortObjectAndSpec(final String[] includes) {
         if (includes == null || Arrays.asList(includes).contains(null)) {
             throw new NullPointerException("Arg must not be null or "
                     + "contain null elements");
@@ -177,7 +177,7 @@ public final class PMCCPortObjectAndSpec implements PortObject, PortObjectSpec {
      * @throws InvalidSettingsException If cor-values don't match the columns
      * or are out of range.
      */
-    PMCCPortObjectAndSpec(final String[] includes, final HalfDoubleMatrix cors)
+    public PMCCPortObjectAndSpec(final String[] includes, final HalfDoubleMatrix cors)
         throws InvalidSettingsException {
         final int l = includes.length;
         if (cors.getRowCount() != l) {
@@ -232,7 +232,7 @@ public final class PMCCPortObjectAndSpec implements PortObject, PortObjectSpec {
     }
 
     /** @return If correlation values are available. */
-    boolean hasData() {
+    public boolean hasData() {
         return m_correlations != null;
     }
 
@@ -242,7 +242,7 @@ public final class PMCCPortObjectAndSpec implements PortObject, PortObjectSpec {
      * @param threshold The threshold, in [0, 1]
      * @return The set of string suggested as "survivors"
      */
-    String[] getReducedSet(final double threshold) {
+    public String[] getReducedSet(final double threshold) {
         if (!hasData()) {
             throw new IllegalStateException("No data available");
         }
@@ -318,7 +318,7 @@ public final class PMCCPortObjectAndSpec implements PortObject, PortObjectSpec {
      * @return The correlation table
      * @throws CanceledExecutionException If canceled.
      */
-    BufferedDataTable createCorrelationMatrix(final ExecutionContext con)
+    public BufferedDataTable createCorrelationMatrix(final ExecutionContext con)
         throws CanceledExecutionException {
         BufferedDataContainer cont =
             con.createDataContainer(createOutSpec(m_colNames));
@@ -363,7 +363,7 @@ public final class PMCCPortObjectAndSpec implements PortObject, PortObjectSpec {
      * @param names the column names being analyzed.
      * @return The new output spec.
      */
-    static DataTableSpec createOutSpec(final String[] names) {
+    public static DataTableSpec createOutSpec(final String[] names) {
         DataColumnSpec[] colSpecs = new DataColumnSpec[names.length];
         for (int i = 0; i < colSpecs.length; i++) {
             DataColumnSpecCreator c =

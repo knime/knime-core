@@ -48,11 +48,12 @@
  * History
  *   Feb 17, 2007 (wiswedel): created
  */
-package org.knime.base.node.preproc.correlation.pmcc;
+package org.knime.base.node.preproc.correlation.compute;
 
 import java.io.File;
 import java.io.IOException;
 
+import org.knime.base.node.preproc.correlation.PMCCPortObjectAndSpec;
 import org.knime.base.util.HalfDoubleMatrix;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
@@ -80,11 +81,11 @@ import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
  *
  * @author wiswedel, University of Konstanz
  */
-final class PMCCNodeModel extends NodeModel
+final class CorrelationComputeNodeModel extends NodeModel
     implements BufferedDataTableHolder {
 
     private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(PMCCNodeModel.class);
+        NodeLogger.getLogger(CorrelationComputeNodeModel.class);
 
     private final SettingsModelColumnFilter2 m_columnFilterModel;
     private final SettingsModelIntegerBounded m_maxPossValueCountModel;
@@ -95,7 +96,7 @@ final class PMCCNodeModel extends NodeModel
 
     /** One input, one output.
      */
-    PMCCNodeModel() {
+    CorrelationComputeNodeModel() {
         super(new PortType[]{BufferedDataTable.TYPE},
                 new PortType[]{BufferedDataTable.TYPE,
                 PMCCPortObjectAndSpec.TYPE});
@@ -122,7 +123,7 @@ final class PMCCNodeModel extends NodeModel
         double progStep1 = 0.48;
         double progStep2 = 0.48;
         double progFinish = 1.0 - progStep1 - progStep2;
-        PMCCCalculator calculator = new PMCCCalculator(filteredTableSpec,
+        CorrelationComputer calculator = new CorrelationComputer(filteredTableSpec,
                 m_maxPossValueCountModel.getIntValue());
         exec.setMessage("Calculating table statistics");
         ExecutionContext execStep1 = exec.createSubExecutionContext(progStep1);

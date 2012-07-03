@@ -1,4 +1,4 @@
-/*
+/* 
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,35 +44,61 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- *
+ * 
  * History
  *   Feb 17, 2007 (wiswedel): created
  */
-package org.knime.base.node.preproc.correlation.pmcc;
+package org.knime.base.node.preproc.correlation.compute;
 
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
-import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
-import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
-import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
- * Dialog for correlation node. Shows only a column filter.
+ * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class PMCCNodeDialogPane extends DefaultNodeSettingsPane {
+public class CorrelationComputeNodeFactory extends NodeFactory<CorrelationComputeNodeModel> {
 
-    /** Inits dialog, adds only a column filter. */
-    public PMCCNodeDialogPane() {
-        SettingsModelColumnFilter2 fS = PMCCNodeModel.createColumnFilterModel();
-        DialogComponentColumnFilter2 cF =
-            new DialogComponentColumnFilter2(fS, 0);
-        addDialogComponent(cF);
-
-        SettingsModelIntegerBounded sI =
-            PMCCNodeModel.createNewPossValueCounterModel();
-        DialogComponentNumberEdit cI =
-            new DialogComponentNumberEdit(sI, "Possible Values Count");
-        addDialogComponent(cI);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new CorrelationComputeNodeDialogPane();
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public CorrelationComputeNodeModel createNodeModel() {
+        return new CorrelationComputeNodeModel();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView<CorrelationComputeNodeModel> createNodeView(
+            final int viewIndex, final CorrelationComputeNodeModel nodeModel) {
+        return new CorrelationComputeNodeView(nodeModel);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected int getNrNodeViews() {
+        return 1;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean hasDialog() {
+        return true;
+    }
+
 }

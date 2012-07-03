@@ -451,7 +451,7 @@
             category-path="/statistics"
             factory-class="org.knime.base.node.viz.statistics.Statistics2NodeFactory"
             id="org.knime.base.node.viz.statistics.Statistics2NodeFactory"
-            after="org.knime.base.node.preproc.correlation.pmcc.PMCCFilterNodeFactory"/>
+            after="org.knime.base.node.preproc.correlation.filter.CorrelationFilterNodeFactory"/>
       <node
             category-path="/statistics"
             factory-class="org.knime.base.node.viz.crosstable.CrosstabNodeFactory"
@@ -730,13 +730,13 @@
             id="org.knime.base.node.bayes.mine.naivebayes.learner.NaiveBayesLearnerNodeFactory"/>
       <node
             category-path="/statistics"
-            factory-class="org.knime.base.node.preproc.correlation.pmcc.PMCCNodeFactory"
-            id="org.knime.base.node.preproc.correlation.pmcc.PMCCNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.correlation.compute.CorrelationComputeNodeFactory"
+            id="org.knime.base.node.preproc.correlation.compute.CorrelationComputeNodeFactory"/>
       <node
-            after="org.knime.base.node.preproc.correlation.pmcc.PMCCNodeFactory"
+            after="org.knime.base.node.preproc.correlation.compute.CorrelationComputeNodeFactory"
             category-path="/statistics"
-            factory-class="org.knime.base.node.preproc.correlation.pmcc.PMCCFilterNodeFactory"
-            id="org.knime.base.node.preproc.correlation.pmcc.PMCCFilterNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.correlation.filter.CorrelationFilterNodeFactory"
+            id="org.knime.base.node.preproc.correlation.filter.CorrelationFilterNodeFactory"/>
       <node
             category-path="/manipulation/column/column-filter"
             factory-class="org.knime.base.node.preproc.lowvarfilter2.LowVarFilter2NodeFactory"

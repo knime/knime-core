@@ -48,7 +48,7 @@
  * History
  *   Apr 1, 2007 (wiswedel): created
  */
-package org.knime.base.node.preproc.correlation.pmcc;
+package org.knime.base.node.preproc.correlation.compute;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -106,7 +106,7 @@ import org.knime.core.node.tableview.TableView;
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class PMCCNodeView extends NodeView<PMCCNodeModel> {
+public class CorrelationComputeNodeView extends NodeView<CorrelationComputeNodeModel> {
 
     private final TableView m_tableView;
     private String m_currentRendererID = ColorRender.DESCRIPTION;
@@ -114,7 +114,7 @@ public class PMCCNodeView extends NodeView<PMCCNodeModel> {
     /** Inits GUI.
      * @param model The underlying model.
      */
-    public PMCCNodeView(final PMCCNodeModel model) {
+    public CorrelationComputeNodeView(final CorrelationComputeNodeModel model) {
         super(model);
         m_tableView = new TableView(new MyTableContentView());
         m_tableView.setColumnHeaderResizingAllowed(true);

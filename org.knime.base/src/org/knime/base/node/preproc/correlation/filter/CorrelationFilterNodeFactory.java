@@ -48,7 +48,7 @@
  * History
  *   18.02.2007 (wiswedel): created
  */
-package org.knime.base.node.preproc.correlation.pmcc;
+package org.knime.base.node.preproc.correlation.filter;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
@@ -58,31 +58,31 @@ import org.knime.core.node.NodeView;
  * 
  * @author wiswedel, University of Konstanz
  */
-public class PMCCFilterNodeFactory 
-extends NodeFactory<PMCCFilterNodeModel> {
+public class CorrelationFilterNodeFactory 
+extends NodeFactory<CorrelationFilterNodeModel> {
 
     /**
      * {@inheritDoc}
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new PMCCFilterNodeDialogPane();
+        return new CorrelationFilterNodeDialogPane();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public PMCCFilterNodeModel createNodeModel() {
-        return new PMCCFilterNodeModel();
+    public CorrelationFilterNodeModel createNodeModel() {
+        return new CorrelationFilterNodeModel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeView<PMCCFilterNodeModel> createNodeView(
-            final int viewIndex, final PMCCFilterNodeModel nodeModel) {
+    public NodeView<CorrelationFilterNodeModel> createNodeView(
+            final int viewIndex, final CorrelationFilterNodeModel nodeModel) {
         throw new IndexOutOfBoundsException("no views available."); 
     }
 

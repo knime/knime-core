@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,61 +44,35 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 17, 2007 (wiswedel): created
  */
-package org.knime.base.node.preproc.correlation.pmcc;
+package org.knime.base.node.preproc.correlation.compute;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
+import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
+import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
+import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 
 /**
- * 
+ * Dialog for correlation node. Shows only a column filter.
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class PMCCNodeFactory extends NodeFactory<PMCCNodeModel> {
+public class CorrelationComputeNodeDialogPane extends DefaultNodeSettingsPane {
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new PMCCNodeDialogPane();
+    /** Inits dialog, adds only a column filter. */
+    public CorrelationComputeNodeDialogPane() {
+        SettingsModelColumnFilter2 fS = CorrelationComputeNodeModel.createColumnFilterModel();
+        DialogComponentColumnFilter2 cF =
+            new DialogComponentColumnFilter2(fS, 0);
+        addDialogComponent(cF);
+
+        SettingsModelIntegerBounded sI =
+            CorrelationComputeNodeModel.createNewPossValueCounterModel();
+        DialogComponentNumberEdit cI =
+            new DialogComponentNumberEdit(sI, "Possible Values Count");
+        addDialogComponent(cI);
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public PMCCNodeModel createNodeModel() {
-        return new PMCCNodeModel();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<PMCCNodeModel> createNodeView(
-            final int viewIndex, final PMCCNodeModel nodeModel) {
-        return new PMCCNodeView(nodeModel);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected int getNrNodeViews() {
-        return 1;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected boolean hasDialog() {
-        return true;
-    }
-
 }

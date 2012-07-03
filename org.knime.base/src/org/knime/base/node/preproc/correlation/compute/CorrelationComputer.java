@@ -48,7 +48,7 @@
  * History
  *   May 31, 2012 (wiswedel): created
  */
-package org.knime.base.node.preproc.correlation.pmcc;
+package org.knime.base.node.preproc.correlation.compute;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -58,6 +58,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.knime.base.node.preproc.correlation.PMCCPortObjectAndSpec;
 import org.knime.base.util.HalfDoubleMatrix;
 import org.knime.base.util.HalfIntMatrix;
 import org.knime.core.data.DataCell;
@@ -80,7 +81,7 @@ import org.knime.core.util.Pair;
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-final class PMCCCalculator {
+final class CorrelationComputer {
 
     private final DataTableSpec m_tableSpec;
     /** indices of numeric columns. */
@@ -121,7 +122,7 @@ final class PMCCCalculator {
     /** Inits fields.
      * @param filteredSpec ...
      * @param maxPossibleValues ... */
-    PMCCCalculator(final DataTableSpec filteredSpec,
+    CorrelationComputer(final DataTableSpec filteredSpec,
             final int maxPossibleValues) {
         m_tableSpec = filteredSpec;
         int colCount = filteredSpec.getNumColumns();

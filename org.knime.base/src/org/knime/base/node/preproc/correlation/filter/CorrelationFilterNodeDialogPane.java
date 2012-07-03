@@ -48,7 +48,7 @@
  * History
  *   18.02.2007 (wiswedel): created
  */
-package org.knime.base.node.preproc.correlation.pmcc;
+package org.knime.base.node.preproc.correlation.filter;
 
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
@@ -82,6 +82,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.text.NumberFormatter;
 
+import org.knime.base.node.preproc.correlation.PMCCPortObjectAndSpec;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
@@ -98,7 +99,7 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class PMCCFilterNodeDialogPane extends NodeDialogPane {
+public class CorrelationFilterNodeDialogPane extends NodeDialogPane {
     
     private static final NumberFormat FORMAT = new DecimalFormat("#.#######");
     
@@ -116,7 +117,7 @@ public class PMCCFilterNodeDialogPane extends NodeDialogPane {
     private PMCCPortObjectAndSpec m_model;
 
     /** Creates GUI. */
-    public PMCCFilterNodeDialogPane() {
+    public CorrelationFilterNodeDialogPane() {
         m_list = new JList(new DefaultListModel());
         m_list.setCellRenderer(new DataColumnSpecListCellRenderer());
         m_list.setPrototypeCellValue("################");
@@ -308,7 +309,7 @@ public class PMCCFilterNodeDialogPane extends NodeDialogPane {
         // check if all columns in the model are also present in the spec
         HashSet<String> allColsInModel = new HashSet<String>(
                 Arrays.asList(m_model.getColNames()));
-        double d = settings.getDouble(PMCCFilterNodeModel.CFG_THRESHOLD, 1.0);
+        double d = settings.getDouble(CorrelationFilterNodeModel.CFG_THRESHOLD, 1.0);
         m_textField.setValue(d);
         DefaultListModel m = (DefaultListModel)m_list.getModel();
         m.removeAllElements();
@@ -355,7 +356,7 @@ public class PMCCFilterNodeDialogPane extends NodeDialogPane {
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         double val = ((Number)m_textField.getValue()).doubleValue();
-        settings.addDouble(PMCCFilterNodeModel.CFG_THRESHOLD, val);
+        settings.addDouble(CorrelationFilterNodeModel.CFG_THRESHOLD, val);
     }
 
 }
