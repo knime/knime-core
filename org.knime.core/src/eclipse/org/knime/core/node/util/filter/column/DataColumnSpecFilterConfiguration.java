@@ -135,4 +135,12 @@ public final class DataColumnSpecFilterConfiguration
         String[] names = toFilteredStringArray(spec);
         super.loadDefaults(names, includeByDefault);
     }
+
+    /**
+     * Returns the filter used by this configuration.
+     * @return a reference to the filter. Don't modify.
+     */
+    public InputFilter<DataColumnSpec> getFilter() {
+        return m_filter;
+    }
 }

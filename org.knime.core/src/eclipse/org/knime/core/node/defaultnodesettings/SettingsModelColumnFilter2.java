@@ -50,19 +50,21 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.util.filter.InputFilter;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
+import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
 
 /**
+ * Settings model for the column filter component {@link DialogComponentColumnFilter2}. It provides methods to
+ * apply the settings to a current table spec.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @since 2.6
@@ -71,28 +73,35 @@ public final class SettingsModelColumnFilter2 extends SettingsModel {
 
     private DataColumnSpecFilterConfiguration m_filterConfiguration;
 
-    private final int m_inputPortIndex;
+    private int m_inputPortIndex = -1;
 
-    public SettingsModelColumnFilter2(final String configName, final int inPortIdx) {
-        this(configName, null, inPortIdx);
+    /**
+     * Accepts columns of all type.
+     * @param configName
+     */
+    @SuppressWarnings("unchecked")
+    public SettingsModelColumnFilter2(final String configName) {
+        this(configName, new Class[]{DataValue.class});
     }
 
-    public SettingsModelColumnFilter2(final String configName,
-            final InputFilter<DataColumnSpec> filter, final int inPortIdx) {
-        this(new DataColumnSpecFilterConfiguration(configName, filter), inPortIdx);
+    /**
+     * Accepts only columns of the specified type(s).
+     * @param configName
+     * @param allowedTypes
+     */
+    public SettingsModelColumnFilter2(final String configName, final Class<? extends DataValue>... allowedTypes) {
+        this(new DataColumnSpecFilterConfiguration(configName, new DataTypeColumnFilter(allowedTypes)));
     }
 
-    private SettingsModelColumnFilter2(final DataColumnSpecFilterConfiguration filterConfig, final int inPortIdx) {
-        m_filterConfiguration = filterConfig;
-        m_inputPortIndex = inPortIdx;
+    private SettingsModelColumnFilter2(final DataColumnSpecFilterConfiguration filterConf) {
+        m_filterConfiguration = filterConf;
     }
 
     /** {@inheritDoc} */
     @Override
     protected SettingsModelColumnFilter2 createClone() {
         DataColumnSpecFilterConfiguration cloneConfig = m_filterConfiguration.clone();
-        return new SettingsModelColumnFilter2(cloneConfig, m_inputPortIndex);
-
+        return new SettingsModelColumnFilter2(cloneConfig);
     }
 
     /** {@inheritDoc} */
@@ -108,30 +117,49 @@ public final class SettingsModelColumnFilter2 extends SettingsModel {
     }
 
     /**
-     * @return the port index this model keeps the filtered columns for
+     * @return
      */
-    public int getInputPortIndex() {
-        return m_inputPortIndex;
+    protected DataColumnSpecFilterConfiguration getFilterConfiguration() {
+        return m_filterConfiguration.clone();
     }
 
     /**
      * @return
      */
-    public DataColumnSpecFilterConfiguration getFilterConfiguration() {
-        return m_filterConfiguration.clone();
+    protected DataTypeColumnFilter getColumnFilter() {
+        return (DataTypeColumnFilter)m_filterConfiguration.getFilter();
+    }
+
+    /**
+     * Set the input port before {@link #loadSettingsForDialog(NodeSettingsRO, PortObjectSpec[])} is called. Because
+     * the load method is fixed and final, the associated component must forward the port index into this model.
+     * @param inPort port the associated component works with.
+     */
+    void setInputPortIndex(final int inPort) {
+        m_inputPortIndex = inPort;
     }
 
     /**
      * @param conf
      */
-    public void setFilterConfiguration(final DataColumnSpecFilterConfiguration conf) {
+    protected void setFilterConfiguration(final DataColumnSpecFilterConfiguration conf) {
         m_filterConfiguration = conf.clone();
     }
+
+    /**
+     * @param inSpec
+     * @return the filter result of the configuration applied to the specified spec
+     */
+    public FilterResult applyTo(final DataTableSpec inSpec) {
+        return m_filterConfiguration.applyTo(inSpec);
+    }
+
 
     /** {@inheritDoc} */
     @Override
     protected void loadSettingsForDialog(final NodeSettingsRO settings, final PortObjectSpec[] specs)
             throws NotConfigurableException {
+        assert m_inputPortIndex >= 0; // must be set by associated the component
         if (m_inputPortIndex >= specs.length) {
             String msg = "Specified port index is out of bounds";
             NodeLogger.getLogger(SettingsModelColumnFilter2.class).coding(msg);
@@ -162,10 +190,6 @@ public final class SettingsModelColumnFilter2 extends SettingsModel {
     @Override
     protected void saveSettingsForModel(final NodeSettingsWO settings) {
         m_filterConfiguration.saveConfiguration(settings);
-    }
-
-    public FilterResult applyTo(final DataTableSpec spec) {
-        return m_filterConfiguration.applyTo(spec);
     }
 
     /** {@inheritDoc} */

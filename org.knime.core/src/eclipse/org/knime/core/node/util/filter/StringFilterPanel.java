@@ -69,10 +69,11 @@ public class StringFilterPanel extends NameFilterPanel<String> {
 
     /**
      * Create a new panel to filter {@link String}s.
-     * @param showEnforceOption true, if the enforce option should be visible
+     * @param showSelectionListsOnly if true, the panel shows no additional options like
+     * search box, force-include-option, etc.
      */
-    public StringFilterPanel(final boolean showEnforceOption) {
-        super(showEnforceOption);
+    public StringFilterPanel(final boolean showSelectionListsOnly) {
+        super(showSelectionListsOnly);
     }
 
     /** {@inheritDoc} */

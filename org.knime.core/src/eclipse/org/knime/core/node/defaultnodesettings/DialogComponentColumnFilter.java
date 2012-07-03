@@ -51,6 +51,12 @@
  */
 package org.knime.core.node.defaultnodesettings;
 
+import java.util.LinkedHashSet;
+import java.util.Set;
+
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -60,19 +66,15 @@ import org.knime.core.node.util.ColumnFilter;
 import org.knime.core.node.util.ColumnFilterPanel;
 import org.knime.core.node.util.DataValueColumnFilter;
 
-import java.util.LinkedHashSet;
-import java.util.Set;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
 /**
  * Provides a component for column filtering. This component for the default
  * dialog allows to enter a list of columns to include from the set of available
  * columns.
  *
  * @author M. Berthold, University of Konstanz
+ * @deprecated use {@link DialogComponentColumnFilter2} instead
  */
+@Deprecated
 public class DialogComponentColumnFilter extends DialogComponent {
 
     /** Index of the port to take the table (spec) from. */

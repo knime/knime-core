@@ -170,24 +170,22 @@ public abstract class NameFilterPanel<T> extends JPanel {
     private InputFilter<T> m_filter;
 
     /**
-     * Creates a new filter column panel with three component which are the
-     * include list, button panel to shift elements between the two lists, and
-     * the exclude list. The include list then will contain all values to
-     * filter.
+     * Creates a panel allowing the user to select elements.
      */
     protected NameFilterPanel() {
-        this(true, null);
+        this(false, null);
     }
 
     /**
-     * Creates a new filter column panel with three component which are the
+     * Creates a new filter  panel with three component which are the
      * include list, button panel to shift elements between the two lists, and
      * the exclude list. The include list then will contain all values to
      * filter.
-     * @param showEnforceOption true, if the enforce option should be visible
+     * @param showSelectionListsOnly if set, the component shows only the basic
+     * include/exclude selection panel - no additional search boxes, force-include-options, etc.
      */
-    protected NameFilterPanel(final boolean showEnforceOption) {
-        this(showEnforceOption, null);
+    protected NameFilterPanel(final boolean showSelectionListsOnly) {
+        this(showSelectionListsOnly, null);
     }
 
     /**
@@ -197,12 +195,13 @@ public abstract class NameFilterPanel<T> extends JPanel {
      * filter. Additionally a {@link InputFilter} can be specified, based on
      * which the shown items are shown or not. The filter can be <code>null
      * </code>, in which case it is simply not used at all.
-     * @param showEnforceOption true, if the enforce option should be visible
+     * @param showSelectionListsOnly if set, the component shows only the basic
+     * include/exclude selection panel - no additional search boxes, force-include-options, etc.
      * @param filter A filter that specifies which items are shown in the
      * panel (and thus are possible to include or exclude) and which are not
      * shown.
      */
-    protected NameFilterPanel(final boolean showEnforceOption,
+    protected NameFilterPanel(final boolean showSelectionListsOnly,
             final InputFilter<T> filter) {
         super(new GridLayout(1, 1));
         m_filter = filter;
@@ -379,7 +378,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
         // add force incl/excl buttons
         m_enforceInclusion = new JRadioButton("Enforce inclusion");
         m_enforceExclusion = new JRadioButton("Enforce exclusion");
-        if (showEnforceOption) {
+        if (!showSelectionListsOnly) {
             final ButtonGroup forceGroup = new ButtonGroup();
             m_enforceInclusion.setToolTipText(
                     "Force the set of included names to stay the same.");

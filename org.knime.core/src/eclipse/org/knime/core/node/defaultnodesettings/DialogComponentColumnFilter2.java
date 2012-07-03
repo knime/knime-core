@@ -24,13 +24,11 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
-import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
 
 /**
  *
@@ -41,34 +39,18 @@ public class DialogComponentColumnFilter2 extends DialogComponent {
 
     private final DataColumnSpecFilterPanel m_colFilterPanel;
 
-    /**
-     * @param model
-     * @param showKeepAllBox
-     */
-    @SuppressWarnings("unchecked")
-    public DialogComponentColumnFilter2(final SettingsModelColumnFilter2 model, final boolean showKeepAllBox) {
-        this(model, showKeepAllBox, DataValue.class);
-    }
+    private final int m_inPortIdx;
 
     /**
      * @param model
-     * @param showKeepAllBox
-     * @param allowedTypes
+     * @param inPortIdx
      */
-    public DialogComponentColumnFilter2(final SettingsModelColumnFilter2 model, final boolean showKeepAllBox,
-            final Class<? extends DataValue>... allowedTypes) {
-        this(model, showKeepAllBox, new DataTypeColumnFilter(allowedTypes));
-    }
-
-    /**
-     * @param model
-     * @param showKeepAllBox
-     * @param filter
-     */
-    public DialogComponentColumnFilter2(final SettingsModelColumnFilter2 model, final boolean showKeepAllBox,
-            final DataTypeColumnFilter filter) {
+    public DialogComponentColumnFilter2(final SettingsModelColumnFilter2 model, final int inPortIdx) {
         super(model);
-        m_colFilterPanel = new DataColumnSpecFilterPanel(showKeepAllBox, filter);
+        m_inPortIdx = inPortIdx;
+        // the model needs the port index in the loadSettingsFrom method
+        model.setInputPortIndex(inPortIdx);
+        m_colFilterPanel = new DataColumnSpecFilterPanel(model.getColumnFilter());
         getComponentPanel().add(m_colFilterPanel);
         m_colFilterPanel.addChangeListener(new ChangeListener() {
             @Override
@@ -97,8 +79,7 @@ public class DialogComponentColumnFilter2 extends DialogComponent {
         m_colFilterPanel.saveConfiguration(panelConfig);
         if (!modelConfiguration.equals(panelConfig)) {
             // only update if out of sync
-            m_colFilterPanel.loadConfiguration(modelConfiguration,
-                    (DataTableSpec)getLastTableSpec(model.getInputPortIndex()));
+            m_colFilterPanel.loadConfiguration(modelConfiguration, (DataTableSpec)getLastTableSpec(m_inPortIdx));
         }
 
         m_colFilterPanel.setEnabled(model.isEnabled());
@@ -109,6 +90,7 @@ public class DialogComponentColumnFilter2 extends DialogComponent {
         m_colFilterPanel.saveConfiguration(panelConf);
         ((SettingsModelColumnFilter2)getModel()).setFilterConfiguration(panelConf);
     }
+
 
     /**
      * {@inheritDoc}
