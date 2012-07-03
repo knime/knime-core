@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,18 +44,16 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 17, 2007 (wiswedel): created
  */
 package org.knime.base.node.preproc.correlation.pmcc;
 
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.NominalValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumberEdit;
-import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
+import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 
 /**
@@ -65,17 +63,16 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 public class PMCCNodeDialogPane extends DefaultNodeSettingsPane {
 
     /** Inits dialog, adds only a column filter. */
-    @SuppressWarnings("unchecked")
     public PMCCNodeDialogPane() {
-        SettingsModelFilterString fS = PMCCNodeModel.createNewSettingsObject();
-        DialogComponentColumnFilter cF = new DialogComponentColumnFilter(
-                fS, 0, DoubleValue.class, NominalValue.class);
+        SettingsModelColumnFilter2 fS = PMCCNodeModel.createColumnFilterModel();
+        DialogComponentColumnFilter2 cF =
+            new DialogComponentColumnFilter2(fS, 0);
         addDialogComponent(cF);
-        
-        SettingsModelIntegerBounded sI = 
+
+        SettingsModelIntegerBounded sI =
             PMCCNodeModel.createNewPossValueCounterModel();
-        DialogComponentNumberEdit cI = 
-            new DialogComponentNumberEdit(sI, "Possible Values Count"); 
+        DialogComponentNumberEdit cI =
+            new DialogComponentNumberEdit(sI, "Possible Values Count");
         addDialogComponent(cI);
     }
 }
