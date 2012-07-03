@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   03.05.2012 (kilian): created
  */
@@ -56,134 +56,131 @@ import javax.swing.event.ChangeListener;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
+import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * Creates the dialog of the round double node and provides static methods
- * which create the necessary settings models. 
- * 
+ * which create the necessary settings models.
+ *
  * @author Kilian Thiel, KNIME.com, Berlin, Germany
  */
 class RoundDoubleNodeDialog extends DefaultNodeSettingsPane {
 
     /**
      * Creates and returns the settings model, storing the selected columns.
-     * 
+     *
      * @return The settings model with the selected columns.
      */
-    static final SettingsModelFilterString getFilterDoubleColModel() {
-        return new SettingsModelFilterString(
-                RoundDoubleConfigKeys.COLUMN_NAMES);
+    @SuppressWarnings("unchecked")
+    static final SettingsModelColumnFilter2 getFilterDoubleColModel() {
+        return new SettingsModelColumnFilter2(RoundDoubleConfigKeys.COLUMN_NAMES, new Class[]{DoubleValue.class});
     }
-    
+
     /**
      * Creates and returns the settings model, storing the precision number.
-     * 
+     *
      * @return The settings model with the precision number.
      */
     static final SettingsModelIntegerBounded getNumberPrecisionModel() {
         return new SettingsModelIntegerBounded(
-                RoundDoubleConfigKeys.PRECISION_NUMBER, 
-                RoundDoubleNodeModel.DEF_PRECISION, 
+                RoundDoubleConfigKeys.PRECISION_NUMBER,
+                RoundDoubleNodeModel.DEF_PRECISION,
                 RoundDoubleNodeModel.MIN_PRECISION,
                 RoundDoubleNodeModel.MAX_PRECISION);
     }
-    
+
     /**
      * Creates and returns the settings model, storing the "append column" flag.
-     * 
+     *
      * @return The settings model with the "append column" flag.
      */
     static final SettingsModelBoolean getAppendColumnModel() {
-        return new SettingsModelBoolean(RoundDoubleConfigKeys.APPEND_COLUMNS, 
+        return new SettingsModelBoolean(RoundDoubleConfigKeys.APPEND_COLUMNS,
                 RoundDoubleNodeModel.DEF_APPEND_COLUMNS);
     }
 
     /**
      * Creates and returns the settings model, storing the column suffix.
-     * 
+     *
      * @return The settings model with the column suffix.
      */
     static final SettingsModelString getColumnSuffixModel() {
         return new SettingsModelString(RoundDoubleConfigKeys.COLUMN_SUFFIX,
                 RoundDoubleNodeModel.DEF_COLUMN_SUFFIX);
     }
-    
+
     /**
      * Creates and returns the settings model, storing the rounding mode.
-     * 
+     *
      * @return The settings model with the rounding mode.
      */
     static final SettingsModelString getRoundingModelStringModel() {
         return new SettingsModelString(RoundDoubleConfigKeys.ROUNDING_MODE,
                 RoundDoubleNodeModel.DEF_ROUNDING_MODE);
     }
-    
+
     /**
-     * Creates and returns the settings model, storing the "output as string" 
+     * Creates and returns the settings model, storing the "output as string"
      * flag.
-     * 
+     *
      * @return The settings model with the "output as string" flag.
      */
     static final SettingsModelBoolean getOutputAsStringModel() {
-        return new SettingsModelBoolean(RoundDoubleConfigKeys.OUTPUT_AS_STRING, 
+        return new SettingsModelBoolean(RoundDoubleConfigKeys.OUTPUT_AS_STRING,
                 RoundDoubleNodeModel.DEF_OUTPUT_AS_STRING);
     }
-    
+
     private SettingsModelString m_suffixModel;
     private SettingsModelBoolean m_appendColumnModel;
-    
+
     /**
-     * Creates new instance of <code>RoundDoubleNodeDialog</code>. 
+     * Creates new instance of <code>RoundDoubleNodeDialog</code>.
      */
-    @SuppressWarnings("unchecked")
     public RoundDoubleNodeDialog() {
-        
         // COLUMN SELECTION
         createNewGroup("Column selection");
-        addDialogComponent(new DialogComponentColumnFilter(
-                getFilterDoubleColModel(), 0, false, DoubleValue.class));
+        addDialogComponent(new DialogComponentColumnFilter2(getFilterDoubleColModel(), 0));
         closeCurrentGroup();
-        
+
         // COLUMN SETTINGS
         createNewGroup("Column settings");
         setHorizontalPlacement(true);
         m_appendColumnModel = getAppendColumnModel();
         m_suffixModel = getColumnSuffixModel();
-        
+
         m_appendColumnModel.addChangeListener(new AppendColumnChanceListener());
-        addDialogComponent(new DialogComponentBoolean(m_appendColumnModel, 
+        addDialogComponent(new DialogComponentBoolean(m_appendColumnModel,
         "Append rounded values as additional columns"));
-        
-        addDialogComponent(new DialogComponentString(m_suffixModel, 
+
+        addDialogComponent(new DialogComponentString(m_suffixModel,
                 "Column suffix"));
-        
-        addDialogComponent(new DialogComponentBoolean(getOutputAsStringModel(), 
+
+        addDialogComponent(new DialogComponentBoolean(getOutputAsStringModel(),
                 "Format as string"));
-        
+
         setHorizontalPlacement(false);
         closeCurrentGroup();
-        
+
         // ROUNDING SETTINGS
         createNewGroup("Rounding settings");
         setHorizontalPlacement(true);
-        addDialogComponent(new DialogComponentNumber(getNumberPrecisionModel(), 
+        addDialogComponent(new DialogComponentNumber(getNumberPrecisionModel(),
                 "Decimal place", 1));
-        
+
         addDialogComponent(new DialogComponentStringSelection(
-                getRoundingModelStringModel(), "Rounding mode", 
+                getRoundingModelStringModel(), "Rounding mode",
                 RoundDoubleNodeModel.ROUNDING_MODES));
         setHorizontalPlacement(false);
         closeCurrentGroup();
     }
-    
+
     private class AppendColumnChanceListener implements ChangeListener {
         /**
          * {@inheritDoc}
