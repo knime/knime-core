@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<?pde version="3.5"?>
+
 <product name="KNIME Desktop Product" uid="org.knime.product.desktop" id="org.knime.product.KNIME_PRODUCT" application="org.knime.product.KNIME_APPLICATION" version="2.6.0.qualifier" useFeatures="true" includeLaunchers="true">
 
    <aboutInfo>
@@ -27,8 +29,8 @@ All other trademarks are the property of their respective owners.
    </configIni>
 
    <launcherArgs>
-      <vmArgs>-Xmx512m
--XX:MaxPermSize=192m
+      <vmArgs>-Xmx1024m
+-XX:MaxPermSize=256m
 -server
 -Dsun.java2d.d3d=false
 -Dosgi.classloader.lock=classname
