@@ -7364,6 +7364,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /**
      * Resorts the internal array to move the specified annotation to the last index.
      * @param annotation to bring to front
+     * @since 2.6
      */
     public void bringAnnotationToFront(final WorkflowAnnotation annotation) {
         if (!m_annotations.remove(annotation)) {
@@ -7377,6 +7378,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /**
      * Resorts the internal array to move the specified annotation to the first index.
      * @param annotation to bring to front
+     * @since 2.6
      */
     public void sendAnnotationToBack(final WorkflowAnnotation annotation) {
         if (!m_annotations.remove(annotation)) {
