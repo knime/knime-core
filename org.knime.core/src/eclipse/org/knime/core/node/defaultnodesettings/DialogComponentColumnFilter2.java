@@ -73,24 +73,25 @@ public class DialogComponentColumnFilter2 extends DialogComponent {
     @Override
     protected void updateComponent() {
         SettingsModelColumnFilter2 model = (SettingsModelColumnFilter2)getModel();
-        DataColumnSpecFilterConfiguration modelConfiguration = model.getFilterConfiguration();
+        DataColumnSpecFilterConfiguration modelConfig = model.getFilterConfiguration();
         DataColumnSpecFilterConfiguration panelConfig =
-                new DataColumnSpecFilterConfiguration(modelConfiguration.getConfigRootName());
+                new DataColumnSpecFilterConfiguration(modelConfig.getConfigRootName(), modelConfig.getFilter());
         m_colFilterPanel.saveConfiguration(panelConfig);
-        if (!modelConfiguration.equals(panelConfig)) {
+        if (!modelConfig.equals(panelConfig)) {
             // only update if out of sync
-            m_colFilterPanel.loadConfiguration(modelConfiguration, (DataTableSpec)getLastTableSpec(m_inPortIdx));
+            m_colFilterPanel.loadConfiguration(modelConfig, (DataTableSpec)getLastTableSpec(m_inPortIdx));
         }
 
         m_colFilterPanel.setEnabled(model.isEnabled());
     }
 
     private void updateModel() {
-        DataColumnSpecFilterConfiguration panelConf = new DataColumnSpecFilterConfiguration(getModel().getConfigName());
+        SettingsModelColumnFilter2 model = (SettingsModelColumnFilter2)getModel();
+        DataColumnSpecFilterConfiguration panelConf =
+                new DataColumnSpecFilterConfiguration(model.getConfigName(), model.getFilterConfiguration().getFilter());
         m_colFilterPanel.saveConfiguration(panelConf);
-        ((SettingsModelColumnFilter2)getModel()).setFilterConfiguration(panelConf);
+        model.setFilterConfiguration(panelConf);
     }
-
 
     /**
      * {@inheritDoc}
