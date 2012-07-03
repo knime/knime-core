@@ -56,6 +56,7 @@ import java.util.Map;
 
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import javax.swing.table.TableModel;
 
 import org.knime.base.node.jsnippet.JavaSnippet;
 import org.knime.base.node.jsnippet.JavaSnippetFields;
@@ -194,6 +195,11 @@ public class JSnippetFieldsController {
             // try to add a row for the colSpec
             boolean success = m_inFieldsTable.addRow(colSpec);
             if (success) {
+                TableModel tableModel = m_inFieldsTable.getTable().getModel();
+                m_inFieldsTable.firePropertyChange(
+                        InFieldsTable.PROP_FIELD_ADDED,
+                        tableModel.getRowCount() - 1 ,
+                        tableModel.getRowCount());
                 // return java field name
                 return (String)model.getValueAt(model.getRowCount() - 1,
                         Column.JAVA_FIELD);
@@ -243,6 +249,11 @@ public class JSnippetFieldsController {
             // try to add a row for the flow variable
             boolean success = m_inFieldsTable.addRow(v);
             if (success) {
+                TableModel tableModel = m_inFieldsTable.getTable().getModel();
+                m_inFieldsTable.firePropertyChange(
+                        InFieldsTable.PROP_FIELD_ADDED,
+                        tableModel.getRowCount() - 1 ,
+                        tableModel.getRowCount());
                 // return java field name
                 return (String)model.getValueAt(model.getRowCount() - 1,
                         Column.JAVA_FIELD);
