@@ -120,21 +120,35 @@ public class NameFilterConfiguration implements Cloneable {
     public static class FilterResult {
         private String[] m_incls;
         private String[] m_excls;
-        private String[] m_unknowns;
+        private String[] m_removedFromIncludes;
+        private String[] m_removedFromExcludes;
         /**
-         * @param incls list of included columns
-         * @param excls list of excluded columns
-         * @param unknows list of unknown columns
+         * @param incls list of included elements
+         * @param excls list of excluded elements
+         * @param removedFromIncludes see {@link #getRemovedFromIncludes()}
+         * @param removedFromExcludes see {@link #getRemovedFromExcludes()}
          */
         protected FilterResult(final List<String> incls, final List<String> excls,
-                final List<String> unknows) {
+                final List<String> removedFromIncludes,
+                final List<String> removedFromExcludes) {
             m_incls = incls.toArray(new String[incls.size()]);
             m_excls = excls.toArray(new String[excls.size()]);
-            m_unknowns = unknows.toArray(new String[unknows.size()]);
+            m_removedFromIncludes = removedFromIncludes.toArray(
+                    new String[removedFromIncludes.size()]);
+            m_removedFromExcludes = removedFromExcludes.toArray(
+                    new String[removedFromExcludes.size()]);
         }
-        /** @return a list of unknown names; used to print a warning message. */
-        public String[] getUnknowns() {
-            return m_unknowns;
+        /** @return a list of names that were specifically included in the dialog
+         * but which are no longer available in the list of actual values. Only used
+         * in warning messages. */
+        public String[] getRemovedFromIncludes() {
+            return m_removedFromIncludes;
+        }
+        /** @return a list of names that were specifically excluded in the dialog
+         * but which are no longer available in the list of actual values. Only used
+         * in warning messages. */
+        public String[] getRemovedFromExcludes() {
+            return m_removedFromExcludes;
         }
         /** @return an array of included names. */
         public String[] getIncludes() {
@@ -203,14 +217,15 @@ public class NameFilterConfiguration implements Cloneable {
             if (!incls.contains(name) && !excls.contains(name)) {
                 switch (enforceOption) {
                     case EnforceInclusion:
-                        incls.add(name);
+                        excls.add(name);
                         break;
                     case EnforceExclusion:
-                        excls.add(name);
+                        incls.add(name);
                         break;
                 }
             }
             if (incls.contains(name) && excls.contains(name)) {
+                // weird case, non-disjoint sets
                 switch (enforceOption) {
                     case EnforceInclusion:
                         excls.remove(name);
@@ -222,30 +237,26 @@ public class NameFilterConfiguration implements Cloneable {
             }
         }
 
-        final List<String> unknowns = new ArrayList<String>();
-        final List<String> inclCols = new ArrayList<String>();
-        final List<String> exclCols = new ArrayList<String>();
+        final List<String> removedFromIncludes = new ArrayList<String>();
+        final List<String> removedFromExcludes = new ArrayList<String>();
 
         for (Iterator<String> it = incls.iterator(); it.hasNext();) {
             String in = it.next();
             if (!nameList.contains(in)) {
-                unknowns.add(in);
+                removedFromIncludes.add(in);
                 it.remove();
-            } else {
-                inclCols.add(in);
             }
         }
 
         for (Iterator<String> it = excls.iterator(); it.hasNext();) {
             String ex = it.next();
             if (!nameList.contains(ex)) {
-                unknowns.add(ex);
+                removedFromExcludes.add(ex);
                 it.remove();
-            } else {
-                exclCols.add(ex);
             }
         }
-        return new FilterResult(incls, excls, unknowns);
+        return new FilterResult(incls, excls,
+                removedFromIncludes, removedFromExcludes);
     }
 
     /**
@@ -355,65 +366,26 @@ public class NameFilterConfiguration implements Cloneable {
                 m_enforceOption = EnforceOption.parse(
                         subSettings.getString(KEY_ENFORCE_OPTION));
             } catch (InvalidSettingsException ise) {
-                m_enforceOption = EnforceOption.EnforceInclusion;
+                m_enforceOption = EnforceOption.EnforceExclusion;
             }
         } catch (InvalidSettingsException ise) {
             m_includeList = new String[0];
             m_excludeList = new String[0];
-            m_enforceOption = EnforceOption.EnforceInclusion;
+            m_enforceOption = EnforceOption.EnforceExclusion;
         }
 
-        final List<String> list = Arrays.asList(names);
-        final List<String> incls = new ArrayList<String>(
-                Arrays.asList(m_includeList));
-        for (Iterator<String> it = incls.iterator(); it.hasNext();) {
-            final String in = it.next();
-            if (!list.contains(in)) {
-                it.remove();
-            }
-        }
-        final List<String> excls = new ArrayList<String>(
-                Arrays.asList(m_excludeList));
-        for (Iterator<String> it = excls.iterator(); it.hasNext();) {
-            final String ex = it.next();
-            if (!list.contains(ex)) {
-                it.remove();
-            }
-        }
+        FilterResult applyTo = applyTo(names);
+        m_includeList = applyTo.getIncludes();
+        m_excludeList = applyTo.getExcludes();
 
-        for (int i = 0; i < names.length; i++) {
-            final String name = names[i];
-            if (!incls.contains(name) && !excls.contains(name)) {
-                switch (m_enforceOption) {
-                    case EnforceInclusion:
-                        incls.add(name);
-                        break;
-                    case EnforceExclusion:
-                        excls.add(name);
-                        break;
-                }
-            }
-            if (incls.contains(name) && excls.contains(name)) {
-                switch (m_enforceOption) {
-                    case EnforceInclusion:
-                        excls.remove(name);
-                        break;
-                    case EnforceExclusion:
-                        incls.remove(name);
-                        break;
-                }
-            }
-        }
-
-        m_includeList = incls.toArray(new String[incls.size()]);
-        m_excludeList = excls.toArray(new String[excls.size()]);
     }
 
     /** Sets default names, used in auto-configure of a node when no settings
      * are available.
      * @param names The input names
-     * @param includeByDefault If true, all elements will be put into the include list and the "enforce exclusion"
-     * will be set. Otherwise all elements are put into the exclude list and the "enforce inclusion" is set. */
+     * @param includeByDefault If <code>true</code>, all elements will be put into the include list and the
+     * "enforce exclusion" will be set. Otherwise all elements are put into the exclude list and the
+     * "enforce inclusion" is set. If in doubt, pass <code>true</code> here. */
     protected void loadDefaults(final String[] names, final boolean includeByDefault) {
         String[] copy = Arrays.copyOf(names, names.length);
         if (includeByDefault) {

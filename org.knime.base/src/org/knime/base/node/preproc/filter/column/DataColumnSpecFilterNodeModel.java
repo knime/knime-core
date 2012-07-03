@@ -49,7 +49,6 @@ package org.knime.base.node.preproc.filter.column;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
@@ -150,12 +149,6 @@ final class DataColumnSpecFilterNodeModel extends NodeModel {
         }
         final FilterResult filter = conf.applyTo(spec);
 
-        final String[] unknowns = filter.getUnknowns();
-        if (unknowns.length > 0) {
-            setWarningMessage("Some columns are not available: "
-                    + Arrays.toString(unknowns));
-        }
-
         final String[] incls = filter.getIncludes();
         final String[] excls = filter.getExcludes();
         if (incls.length == 0) {
@@ -167,6 +160,24 @@ final class DataColumnSpecFilterNodeModel extends NodeModel {
                 setWarningMessage("All columns retained.");
             }
         }
+
+        final String[] unknowns = filter.getRemovedFromIncludes();
+        if (unknowns.length > 0) {
+            StringBuilder b = new StringBuilder(
+                    "Some of the included columns are no longer available: ");
+            int maxToReport = 3;
+            for (int i = 0; i < unknowns.length; i++) {
+                b.append(i > 0 ? ", " : "");
+                if (i < maxToReport) {
+                    b.append("\"").append(unknowns[i]).append("\"");
+                } else {
+                    b.append("...<").append(unknowns.length - maxToReport).append(" more>");
+                    break;
+                }
+            }
+            setWarningMessage(b.toString());
+        }
+
 
         final ColumnRearranger c = new ColumnRearranger(spec);
         c.keepOnly(incls);

@@ -204,7 +204,7 @@ class RoundDoubleNodeModel extends NodeModel {
             throw new InvalidSettingsException("There are no columns containing double values in the input table!");
         }
         // check if all included columns are available in the spec
-        String[] unknownCols = filteredCols.getUnknowns();
+        String[] unknownCols = filteredCols.getRemovedFromIncludes();
         if (unknownCols.length == 1) {
             setWarningMessage("Column \"" + unknownCols[0] + "\" is not available.");
         } else if (unknownCols.length > 1) {
