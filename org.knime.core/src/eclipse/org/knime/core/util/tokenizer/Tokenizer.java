@@ -968,7 +968,7 @@ public class Tokenizer {
             if (nextChar == LF) {
                 // read a LF within quotes: that is illegal!
                 throw new TokenizerException("New line in quoted string"
-                         + " (or closing quote missing).");
+                         + " (or closing quote missing). In line " + (getLineNumber() - 1) + ".");
             }
             if ((nextChar == escChar) && quote.hasEscapeChar()) {
                 nextChar = translateEscChar(nextChar);
