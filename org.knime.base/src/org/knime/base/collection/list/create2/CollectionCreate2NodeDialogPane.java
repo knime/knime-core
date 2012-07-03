@@ -44,52 +44,64 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Aug 11, 2008 (wiswedel): created
  */
-package org.knime.base.collection.list.create;
+package org.knime.base.collection.list.create2;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponent;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
+import org.knime.core.node.defaultnodesettings.DialogComponentString;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
-public class CollectionCreateNodeFactory 
-    extends NodeFactory<CollectionCreateNodeModel> {
+public class CollectionCreate2NodeDialogPane extends DefaultNodeSettingsPane {
 
-    /** {@inheritDoc} */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new CollectionCreateNodeDialogPane();
+    /**
+     *
+     */
+    public CollectionCreate2NodeDialogPane() {
+        SettingsModelColumnFilter2 m =
+                CollectionCreate2NodeModel.createSettingsModel();
+        DialogComponent dc = new DialogComponentColumnFilter2(m, 0);
+        addDialogComponent(dc);
+
+        createNewGroup("Collection type");
+        SettingsModelBoolean t =
+                CollectionCreate2NodeModel.createSettingsModelSetOrList();
+        DialogComponentBoolean type =
+                new DialogComponentBoolean(t,
+                        "Create a collection of type 'set' "
+                        + "(doesn't store duplicate values)");
+        addDialogComponent(type);
+
+        SettingsModelBoolean ignoreMissingModel =
+            CollectionCreate2NodeModel.createSettingsModelIgnoreMissing();
+        DialogComponentBoolean ignoreMissing = new DialogComponentBoolean(
+                ignoreMissingModel, "ignore missing values");
+        addDialogComponent(ignoreMissing);
+
+        closeCurrentGroup();
+
+        createNewGroup("Output table structure");
+        SettingsModelBoolean remCols =
+            CollectionCreate2NodeModel.createSettingsModelRemoveCols();
+        DialogComponentBoolean remove =
+            new DialogComponentBoolean(remCols,
+                    "Remove aggregated columns from table");
+        addDialogComponent(remove);
+        SettingsModelString colName =
+            CollectionCreate2NodeModel.createSettingsModelColumnName();
+        DialogComponentString col = new DialogComponentString(colName,
+                "Enter the name of the new column:", true, 25);
+        addDialogComponent(col);
     }
-
-    /** {@inheritDoc} */
-    @Override
-    public CollectionCreateNodeModel createNodeModel() {
-        return new CollectionCreateNodeModel();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public NodeView<CollectionCreateNodeModel> createNodeView(
-            final int index, final CollectionCreateNodeModel model) {
-        return null;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected boolean hasDialog() {
-        return true;
-    }
-
 }

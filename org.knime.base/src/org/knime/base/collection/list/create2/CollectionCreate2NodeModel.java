@@ -48,10 +48,12 @@
  * History
  *   Feb 1, 2008 (wiswedel): created
  */
-package org.knime.base.collection.list.create;
+package org.knime.base.collection.list.create2;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.knime.core.data.DataCell;
@@ -75,16 +77,17 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
+import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 
 /**
  *
  * @author wiswedel, University of Konstanz
  */
-public class CollectionCreateNodeModel extends NodeModel {
+public class CollectionCreate2NodeModel extends NodeModel {
 
-    private SettingsModelFilterString m_includeModel;
+    private SettingsModelColumnFilter2 m_includeModel;
 
     // if true, a SetCell is created, otherwise a ListCell
     private final SettingsModelBoolean m_createSet;
@@ -93,15 +96,18 @@ public class CollectionCreateNodeModel extends NodeModel {
 
     private final SettingsModelString m_newColName;
 
+    private final SettingsModelBoolean m_ignoreMissing;
+
     /**
      *
      */
-    public CollectionCreateNodeModel() {
+    public CollectionCreate2NodeModel() {
         super(1, 1);
         m_includeModel = createSettingsModel();
         m_createSet = createSettingsModelSetOrList();
         m_removeCols = createSettingsModelRemoveCols();
         m_newColName = createSettingsModelColumnName();
+        m_ignoreMissing = createSettingsModelIgnoreMissing();
     }
 
     /** {@inheritDoc} */
@@ -131,7 +137,9 @@ public class CollectionCreateNodeModel extends NodeModel {
 
     private ColumnRearranger createColumnRearranger(final DataTableSpec in)
             throws InvalidSettingsException {
-        List<String> includes = m_includeModel.getIncludeList();
+        FilterResult filterResult = m_includeModel.applyTo(in);
+        List<String> includes = Arrays.asList(filterResult.getIncludes());
+
         if (includes == null || includes.isEmpty()) {
             throw new InvalidSettingsException("Select columns to aggregate");
         }
@@ -161,11 +169,28 @@ public class CollectionCreateNodeModel extends NodeModel {
             /** {@inheritDoc} */
             @Override
             public DataCell getCell(final DataRow row) {
+                int[] validColIndices = colIndices;
+
+                // filter out columns indices with missing values
+                // iff ignore missing value is switched on
+                if (m_ignoreMissing.getBooleanValue()) {
+                    List<Integer> vCI = new ArrayList<Integer>();
+                    for (int i = 0; i < row.getNumCells(); i++) {
+                        if (!row.getCell(i).isMissing()) {
+                            vCI.add(i);
+                        }
+                    }
+                    validColIndices = buildIntArray(vCI);
+                }
+
+                // create collection cells from row
+                // based on given column indices
                 if (m_createSet.getBooleanValue()) {
-                    return CollectionCellFactory.createSetCell(row, colIndices);
+                    return CollectionCellFactory.createSetCell(
+                            row, validColIndices);
                 } else {
                     return CollectionCellFactory.createListCell(
-                            row, colIndices);
+                            row, validColIndices);
                 }
             }
         };
@@ -176,6 +201,22 @@ public class CollectionCreateNodeModel extends NodeModel {
         rearranger.append(appendFactory);
         return rearranger;
     }
+
+    /**
+     * Creates an int array from an int list.
+     * @param integers The int list to create int array out of.
+     * @return an int array created form an int list.
+     * @since 2.6
+     */
+    private int[] buildIntArray(final List<Integer> integers) {
+        int[] ints = new int[integers.size()];
+        int i = 0;
+        for (Integer n : integers) {
+            ints[i++] = n;
+        }
+        return ints;
+    }
+
 
     /** {@inheritDoc} */
     @Override
@@ -193,6 +234,12 @@ public class CollectionCreateNodeModel extends NodeModel {
         m_createSet.loadSettingsFrom(settings);
         m_removeCols.loadSettingsFrom(settings);
         m_newColName.loadSettingsFrom(settings);
+
+        try {
+            m_ignoreMissing.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException e) {
+            // just catch for the sake of downwards compatibility
+        }
     }
 
     /** {@inheritDoc} */
@@ -216,6 +263,7 @@ public class CollectionCreateNodeModel extends NodeModel {
         m_createSet.saveSettingsTo(settings);
         m_removeCols.saveSettingsTo(settings);
         m_newColName.saveSettingsTo(settings);
+        m_ignoreMissing.saveSettingsTo(settings);
     }
 
     /** {@inheritDoc} */
@@ -226,6 +274,12 @@ public class CollectionCreateNodeModel extends NodeModel {
         m_createSet.validateSettings(settings);
         m_removeCols.validateSettings(settings);
         m_newColName.validateSettings(settings);
+
+        try {
+            m_ignoreMissing.validateSettings(settings);
+        } catch (InvalidSettingsException e) {
+            // just catch for the sake of downwards compatibility
+        }
     }
 
     /**
@@ -233,8 +287,8 @@ public class CollectionCreateNodeModel extends NodeModel {
      *
      * @return a new settings object.
      */
-    static SettingsModelFilterString createSettingsModel() {
-        return new SettingsModelFilterString("includes");
+    static SettingsModelColumnFilter2 createSettingsModel() {
+        return new SettingsModelColumnFilter2("includes");
     }
 
     /**
@@ -262,5 +316,15 @@ public class CollectionCreateNodeModel extends NodeModel {
      */
     static SettingsModelString createSettingsModelColumnName() {
         return new SettingsModelString("newColName", "AggregatedValues");
+    }
+
+    /**
+     * Creates settings model holding the "ignore missing values" flag.
+     *
+     * @return a new settings model instance
+     * @since 2.6
+     */
+    static final SettingsModelBoolean createSettingsModelIgnoreMissing() {
+        return new SettingsModelBoolean("ignoreMissingValue", false);
     }
 }

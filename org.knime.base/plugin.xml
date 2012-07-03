@@ -897,11 +897,11 @@
       </node>
        <node
              category-path="/manipulation/column/column-split+combine"
-             factory-class="org.knime.base.collection.list.create.CollectionCreateNodeFactory"
-             id="org.knime.base.collection.list.create.CollectionCreateNodeFactory">
+             factory-class="org.knime.base.collection.list.create2.CollectionCreate2NodeFactory"
+             id="org.knime.base.collection.list.create2.CollectionCreate2NodeFactory">
        </node>
        <node
-             after="org.knime.base.collection.list.create.CollectionCreateNodeFactory"
+             after="org.knime.base.collection.list.create2.CollectionCreate2NodeFactory"
              category-path="/manipulation/column/column-split+combine"
              factory-class="org.knime.base.collection.list.split.CollectionSplitNodeFactory"
              id="org.knime.base.collection.list.split.CollectionSplitNodeFactory">

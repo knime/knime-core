@@ -15,6 +15,21 @@
 		  in the "Split Collection Column" node. 
 		</intro>
 		<option name="Column Filter">Select the columns to be aggregated.</option>
+       <option name="Create a collection of type 'set' (doesn't store duplicate values)">
+         If checked, a collection column of type set is created. Set collections
+         contain only distinct values, duplicates are deleted.
+       </option>
+        <option name="ignore missing values">
+          If checked, missing values are ignored, i.e. not stored in collection
+          cells.
+        </option>      
+
+        <option name="Remove aggregated columns from table">
+          If checked, aggregated columns are removed from out put table.
+        </option>
+        <option name="Enter the name of the new column">
+          Specifies the name of the new column containing the collection cells.
+        </option>
 	</fullDescription>
 	
 	<ports>
