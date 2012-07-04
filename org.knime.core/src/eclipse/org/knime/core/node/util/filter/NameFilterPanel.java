@@ -805,7 +805,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
      */
     public Set<String> getIncludedNamesAsSet() {
         Set<T> inclList = getIncludeList();
-        Set<String> inclNames = new HashSet<String>(inclList.size());
+        Set<String> inclNames = new LinkedHashSet<String>(inclList.size());
         for (T t : inclList) {
             inclNames.add(getNameForT(t));
         }
@@ -818,7 +818,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
      */
     public Set<String> getExcludedNamesAsSet() {
         Set<T> exclList = getExcludeList();
-        Set<String> exclNames = new HashSet<String>(exclList.size());
+        Set<String> exclNames = new LinkedHashSet<String>(exclList.size());
         for (T t : exclList) {
             exclNames.add(getNameForT(t));
         }
