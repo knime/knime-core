@@ -190,7 +190,7 @@ final class CorrelationComputeNodeModel extends NodeModel
             m_columnFilterModel.loadDefaults(in);
             includes = m_columnFilterModel.applyTo(in).getIncludes();
             setWarningMessage("Auto configuration: Using all suitable "
-                    + "columns (in total " + includes + ")");
+                    + "columns (in total " + includes.length + ")");
         }
         if (includes.length == 0) {
             throw new InvalidSettingsException("No columns selected");
