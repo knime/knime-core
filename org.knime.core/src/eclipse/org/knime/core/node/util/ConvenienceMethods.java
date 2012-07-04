@@ -50,6 +50,8 @@
  */
 package org.knime.core.node.util;
 
+import java.util.List;
+
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -141,6 +143,36 @@ public final class ConvenienceMethods {
             }
         }
         return size;
+    }
+
+    /** Get string summary from argument collection for printing in warning messages.
+     * Here are some examples with maxToPrint = 3: <br/>
+     * [foo, bar, foobar, barfoo, barfuss] -> "foo", "bar", "foobar", ... &lt;1 more>
+     * [foo, bar] -> "foo", "bar"
+     *
+     * @param objs The non null array to summarize
+     * @param maxToPrint length to print, rest will be cut.
+     * @return Such a short string summary.
+     * @since 2.6 */
+    public static String getShortStringFrom(final List<?> objs, final int maxToPrint) {
+        StringBuilder b = new StringBuilder();
+        int l = 0;
+        for (Object o : objs) {
+            if (l > 0) {
+                b.append(", ");
+            }
+            if (l < maxToPrint) {
+                b.append("\"");
+                b.append(o == null ? "<null>" : o);
+                b.append("\"");
+            } else {
+                b.append(" ... <").append(objs.size() - maxToPrint).append(" more>");
+                break;
+            }
+            l++;
+        }
+        return b.toString();
+
     }
 
 }
