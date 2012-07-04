@@ -186,14 +186,20 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             saveNodeInternDirectory(node, nodeInternDir, settings, internalMon);
         }
         internalMon.setProgress(1.0);
+        /* A hash set of all tables that originate from the corresponding node
+         * (owner ID of the table equals NodeID), which have already been saved.
+         * It is used to avoid multiple saves of the same table, e.g. when one
+         * table is returned in multiple outputs or if an output table is used
+         * as "internal" held table. See bug 2117. */
+        final Set<Integer> savedTableIDs = new HashSet<Integer>();
         execMon.setMessage("File Store Objects");
         saveFileStoreObjects(node, nodeDirRef, settings, fileStoreMon, isSaveData);
         fileStoreMon.setProgress(1.0);
         execMon.setMessage("Ports");
-        savePorts(node, nodeDirRef, settings, portMon, isSaveData);
+        savePorts(node, nodeDirRef, settings, savedTableIDs, portMon, isSaveData);
         portMon.setProgress(1.0);
         execMon.setMessage("Internal Tables");
-        saveInternalHeldTables(node, nodeDirRef, settings, internalMon, isSaveData);
+        saveInternalHeldTables(node, nodeDirRef, settings, savedTableIDs, internalMon, isSaveData);
         intTblsMon.setProgress(1.0);
         // file name has already correct ending
         OutputStream os = new FileOutputStream(nodeFile.getFile());
@@ -204,9 +210,9 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         execMon.setProgress(1.0);
     }
 
-    protected static void savePorts(final Node node, final ReferencedFile nodeDirRef,
-            final NodeSettingsWO settings, final ExecutionMonitor exec,
-            final boolean saveData) throws IOException,
+    private static void savePorts(final Node node, final ReferencedFile nodeDirRef,
+            final NodeSettingsWO settings, final Set<Integer> savedTableIDs,
+            final ExecutionMonitor exec, final boolean saveData) throws IOException,
             CanceledExecutionException {
         if (node.getNrOutPorts() == 0) {
             return;
@@ -237,8 +243,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                     throw new IOException("Can not write port directory "
                             + portDir.getAbsolutePath());
                 }
-                savePort(node, portDir, singlePortSetting, subProgress, i,
-                        saveData);
+                savePort(node, portDir, singlePortSetting, savedTableIDs,
+                        subProgress, i, saveData);
             } else {
                 portDirName = null;
             }
@@ -247,9 +253,10 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         }
     }
 
-    protected static void saveInternalHeldTables(final Node node,
+    private static void saveInternalHeldTables(final Node node,
             final ReferencedFile nodeDirRef, final NodeSettingsWO settings,
-            final ExecutionMonitor exec, final boolean saveData)
+            final Set<Integer> savedTableIDs, final ExecutionMonitor exec,
+            final boolean saveData)
             throws IOException, CanceledExecutionException {
         BufferedDataTable[] internalTbls = node.getInternalHeldTables();
         if (internalTbls == null || !saveData) {
@@ -284,7 +291,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                     throw new IOException("Can not write table directory "
                             + portDir.getAbsolutePath());
                 }
-                t.save(portDir, exec);
+                saveBufferedDataTable(t, savedTableIDs, portDir, exec);
             } else {
                 tblDirName = null;
             }
@@ -293,10 +300,10 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         }
     }
 
-    protected static void savePort(final Node node, final File portDir,
-            final NodeSettingsWO settings, final ExecutionMonitor exec,
-            final int portIdx, final boolean saveData) throws IOException,
-            CanceledExecutionException {
+    private static void savePort(final Node node, final File portDir,
+            final NodeSettingsWO settings, final Set<Integer> savedTableIDs,
+            final ExecutionMonitor exec, final int portIdx,
+            final boolean saveData) throws IOException, CanceledExecutionException {
         PortObjectSpec spec = node.getOutputSpec(portIdx);
         settings.addString("port_spec_class", spec != null ? spec.getClass()
                 .getName() : null);
@@ -317,7 +324,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                     + object.getClass().getSimpleName();
             // executed and instructed to save data
             if (saveData && object != null) {
-                ((BufferedDataTable)object).save(portDir, exec);
+                saveBufferedDataTable((BufferedDataTable)object,
+                        savedTableIDs, portDir, exec);
             }
         } else {
             exec.setMessage("Saving specification");
@@ -359,8 +367,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                 // object is BDT, but port type is not BDT.TYPE - still though..
                 if (object instanceof BufferedDataTable) {
                     objectPath = objectDirName;
-                    saveBufferedDataTable((BufferedDataTable)object, objectDir,
-                            exec);
+                    saveBufferedDataTable((BufferedDataTable)object,
+                            savedTableIDs, objectDir, exec);
                 } else {
                     String objectFileName = "portobject.zip";
                     objectPath = objectDirName + "/" + objectFileName;
@@ -386,7 +394,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
      * @param fileStoreMon
      * @param isSaveData
      * @throws IOException */
-    static void saveFileStoreObjects(final Node node,
+    private static void saveFileStoreObjects(final Node node,
             final ReferencedFile nodeDirRef, final NodeSettings settings,
             final ExecutionMonitor fileStoreMon, final boolean isSaveData)
         throws IOException {
@@ -414,22 +422,22 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
     }
 
     private static void saveBufferedDataTable(final BufferedDataTable table,
-            final File directory, final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
-        table.save(directory, exec);
+            final Set<Integer> savedTableIDs, final File directory,
+            final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
+        table.save(directory, savedTableIDs, exec);
     }
 
-    protected static void saveHasContent(final Node node, final NodeSettingsWO settings) {
+    private static void saveHasContent(final Node node, final NodeSettingsWO settings) {
         boolean hasContent = node.hasContent();
         settings.addBoolean("hasContent", hasContent);
     }
 
-    protected static void saveIsInactive(final Node node, final NodeSettingsWO settings) {
+    private static void saveIsInactive(final Node node, final NodeSettingsWO settings) {
         boolean isInactive = node.isInactive();
         settings.addBoolean("isInactive", isInactive);
     }
 
-    protected static void saveWarningMessage(
+    private static void saveWarningMessage(
             final Node node, final NodeSettingsWO settings) {
         String warnMessage = node.getWarningMessageFromModel();
         if (warnMessage != null) {
@@ -444,13 +452,13 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
      * @param exec exec mon.
      * @throws CanceledExecutionException If canceled.
      */
-    protected static void saveNodeInternDirectory(final Node node,
+    static void saveNodeInternDirectory(final Node node,
             final File nodeInternDir, final NodeSettingsWO settings,
             final ExecutionMonitor exec) throws CanceledExecutionException {
         node.saveInternals(nodeInternDir, exec);
     }
 
-    protected static void saveCustomName(final Node node, final NodeSettingsWO settings) {
+    static void saveCustomName(final Node node, final NodeSettingsWO settings) {
         settings.addString(CFG_NAME, node.getName());
     }
 

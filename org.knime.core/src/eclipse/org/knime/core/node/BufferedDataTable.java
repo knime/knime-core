@@ -61,6 +61,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.swing.JComponent;
@@ -429,6 +430,11 @@ public final class BufferedDataTable implements DataTable, PortObject {
     private static final String TABLE_TYPE_WRAPPED = "wrapped_table";
     private static final String TABLE_TYPE_CONCATENATE = "concatenate_table";
     private static final String TABLE_TYPE_JOINED = "joined_table";
+    /** The table is referenced multiple times in a node, e.g. provided at
+     * different outputs (possibly wrapped) or it is used as output-port table
+     * and as internally held table. See bug 2117.
+     * @since 2.6 */
+    private static final String TABLE_TYPE_REFERENCE_IN_SAME_NODE = "reference_from_same_node_table";
     private static final String TABLE_TYPE_EXTENSION = "extension_table";
     private static final String TABLE_SUB_DIR = "reference";
     private static final String TABLE_FILE = "data.zip";
@@ -441,16 +447,23 @@ public final class BufferedDataTable implements DataTable, PortObject {
      * this node is responsible for it (i.e. this node created the reference
      * table).
      * @param dir The directory to write to.
+     * @param savedTableIDs Ids of tables that were previously saved, used to identify
+     * tables that are referenced by the same nodes multiple times.
      * @param exec The progress monitor for cancellation.
      * @throws IOException If writing fails.
      * @throws CanceledExecutionException If canceled.
      */
-    void save(final File dir, final ExecutionMonitor exec)
+    void save(final File dir, final Set<Integer> savedTableIDs, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
         NodeSettings s = new NodeSettings(CFG_TABLE_META);
-        s.addInt(CFG_TABLE_ID, getBufferedTableId());
-        if (m_delegate instanceof ContainerTable) {
+        Integer bufferedTableID = getBufferedTableId();
+        s.addInt(CFG_TABLE_ID, bufferedTableID);
+        File outFile = new File(dir, TABLE_FILE);
+        if (!savedTableIDs.add(bufferedTableID)) {
+            s.addString(CFG_TABLE_TYPE, TABLE_TYPE_REFERENCE_IN_SAME_NODE);
+        } else if (m_delegate instanceof ContainerTable) {
             s.addString(CFG_TABLE_TYPE, TABLE_TYPE_CONTAINER);
+            m_delegate.saveToFile(outFile, s, exec);
         } else {
             if (m_delegate instanceof RearrangeColumnsTable) {
                 s.addString(CFG_TABLE_TYPE, TABLE_TYPE_REARRANGE_COLUMN);
@@ -469,7 +482,8 @@ public final class BufferedDataTable implements DataTable, PortObject {
             BufferedDataTable[] references = m_delegate.getReferenceTables();
             ArrayList<String> referenceDirs = new ArrayList<String>();
             for (BufferedDataTable reference : references) {
-                if (reference.getOwner() == getOwner()) {
+                if (reference.getOwner() == getOwner()
+                        && !savedTableIDs.contains(reference.getBufferedTableId())) {
                     int index = referenceDirs.size();
                     String dirName = TABLE_SUB_DIR + "_" + index;
                     File subDir = new File(dir, dirName);
@@ -479,15 +493,14 @@ public final class BufferedDataTable implements DataTable, PortObject {
                                 + subDir.getAbsolutePath());
                     }
                     referenceDirs.add(dirName);
-                    reference.save(subDir, exec);
+                    reference.save(subDir, savedTableIDs, exec);
                 }
             }
             s.addStringArray(CFG_TABLE_REFERENCE,
                     referenceDirs.toArray(new String[referenceDirs.size()]));
+            m_delegate.saveToFile(outFile, s, exec);
         }
-        File outFile = new File(dir, TABLE_FILE);
-        m_delegate.saveToFile(outFile, s, exec);
-        // only write the data file to the spec if it has been created
+        // only write the data file to the settings if it has been created
         if (outFile.exists()) {
             s.addString(CFG_TABLE_FILE_NAME, TABLE_FILE);
         } else {
@@ -602,7 +615,14 @@ public final class BufferedDataTable implements DataTable, PortObject {
         }
         String tableType = s.getString(CFG_TABLE_TYPE);
         BufferedDataTable t;
-        if (tableType.equals(TABLE_TYPE_CONTAINER)) {
+        if (tableType.equals(TABLE_TYPE_REFERENCE_IN_SAME_NODE)) {
+            t = tblRep.get(id);
+            if (t == null) {
+                throw new InvalidSettingsException("Table reference with ID "
+                        + id + " not found in load map");
+            }
+            return t;
+        } else if (tableType.equals(TABLE_TYPE_CONTAINER)) {
             ContainerTable fromContainer;
             if (isVersion11x) {
                 fromContainer =
