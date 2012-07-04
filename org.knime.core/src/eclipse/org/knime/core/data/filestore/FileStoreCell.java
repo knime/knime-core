@@ -59,6 +59,7 @@ import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.filestore.internal.FileStoreHandler;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.FileStoreKey;
+import org.knime.core.node.NodeLogger;
 
 /**
  *
@@ -66,6 +67,8 @@ import org.knime.core.data.filestore.internal.FileStoreKey;
  * @since 2.6
  */
 public abstract class FileStoreCell extends DataCell {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(FileStoreCell.class);
 
     private final FileStoreKey m_fileStoreKey;
     private FileStoreHandler m_fileStoreHandler;
@@ -103,6 +106,17 @@ public abstract class FileStoreCell extends DataCell {
             final FileStoreHandlerRepository fileStoreHandlerRepository) {
         UUID id = m_fileStoreKey.getStoreUUID();
         m_fileStoreHandler = fileStoreHandlerRepository.getHandler(id);
+        try {
+            postConstruct();
+        } catch (Exception e) {
+            LOGGER.error(getClass().getSimpleName() + " must not throw exception in post construct", e);
+        }
+    }
+
+    /** Called after the cell is deserialized from a stream. Clients
+     * can now access the file. */
+    protected void postConstruct() {
+        // no op.
     }
 
     /** {@inheritDoc} */
