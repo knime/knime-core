@@ -46,71 +46,64 @@
  * --------------------------------------------------------------------- *
  *
  */
-package org.knime.base.node.preproc.unpivot;
+package org.knime.base.node.preproc.unpivot2;
 
-import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
-import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
-import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  *
  * @author Thomas Gabriel, University of Konstanz
  */
-public class UnpivotNodeDialogPane extends DefaultNodeSettingsPane {
+public class Unpivot2NodeFactory extends NodeFactory<Unpivot2NodeModel> {
 
     /**
-     * Create new unpivoting node dialog.
+     * Default constructor.
      */
-    public UnpivotNodeDialogPane() {
-        createNewGroup(" Value columns ");
-        addDialogComponent(new DialogComponentColumnFilter(
-                createColumnFilterValueColumns(), 0, false));
-        final DialogComponentBoolean missComponent = new DialogComponentBoolean(
-            createMissingValueModel(), "Skip rows containing missing cells");
-        missComponent.setToolTipText("Skip rows containing missing values "
-            + "in selected value column(s).");
-        addDialogComponent(missComponent);
-        createNewGroup(" Retained columns ");
-        addDialogComponent(new DialogComponentColumnFilter(
-                createColumnFilterOrderColumns(), 0, false));
-        createNewGroup(" Options ");
-        addDialogComponent(new DialogComponentBoolean(
-                createHiLiteModel(), "Enable hiliting"));
-
+    public Unpivot2NodeFactory() {
+        super();
     }
 
     /**
-     * Return settings model for retained output columns.
-     * @return settings model for retained columns
+     * {@inheritDoc}
      */
-    static SettingsModelFilterString createColumnFilterOrderColumns() {
-        return new SettingsModelFilterString("order_columns");
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new Unpivot2NodeDialogPane();
     }
 
     /**
-     * Return settings model for value columns.
-     * @return settings model for retained columns
+     * {@inheritDoc}
      */
-    static SettingsModelFilterString createColumnFilterValueColumns() {
-        return new SettingsModelFilterString("value_columns");
+    @Override
+    public Unpivot2NodeModel createNodeModel() {
+        return new Unpivot2NodeModel();
     }
 
     /**
-     * Create model to enable/disable hiliting.
-     * @return settings model for hiliting
+     * {@inheritDoc}
      */
-    static SettingsModelBoolean createHiLiteModel() {
-        return new SettingsModelBoolean("enable-hiliting", false);
+    @Override
+    public NodeView<Unpivot2NodeModel> createNodeView(
+            final int viewIndex, final Unpivot2NodeModel nodeModel) {
+        return null;
     }
 
     /**
-     * Create model to ignore missing values.
-     * @return settings model for missing value handling
+     * {@inheritDoc}
      */
-    static SettingsModelBoolean createMissingValueModel() {
-        return new SettingsModelBoolean("missing-values", false);
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
     }
-    
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean hasDialog() {
+        return true;
+    }
+
 }

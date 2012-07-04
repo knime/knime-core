@@ -1080,8 +1080,8 @@
       <node
             after="org.knime.base.node.preproc.pivot.PivotNodeFactory"
             category-path="/manipulation/row/row-transform"
-            factory-class="org.knime.base.node.preproc.unpivot.UnpivotNodeFactory"
-            id="org.knime.base.node.preproc.unpivot.UnpivotNodeFactory">
+            factory-class="org.knime.base.node.preproc.unpivot2.Unpivot2NodeFactory"
+            id="org.knime.base.node.preproc.unpivot2.Unpivot2NodeFactory">
       </node>
 
       <node

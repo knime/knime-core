@@ -46,15 +46,15 @@
  * --------------------------------------------------------------------- *
  *
  */
-package org.knime.base.node.preproc.unpivot;
+package org.knime.base.node.preproc.unpivot2;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -81,10 +81,12 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
+import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
+import org.knime.core.node.util.ConvenienceMethods;
+import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 
 /**
  * Unpivoting node model which performs the UNPIVOTing operation based on
@@ -92,19 +94,19 @@ import org.knime.core.node.property.hilite.HiLiteTranslator;
  *
  * @author Thomas Gabriel, University of Konstanz
  */
-public class UnpivotNodeModel extends NodeModel {
+final class Unpivot2NodeModel extends NodeModel {
 
-    private final SettingsModelFilterString m_orderColumns =
-        UnpivotNodeDialogPane.createColumnFilterOrderColumns();
+    private final SettingsModelColumnFilter2 m_retainedColumns =
+        Unpivot2NodeDialogPane.createColumnFilterRetainedColumns();
 
-    private final SettingsModelFilterString m_valueColumns =
-        UnpivotNodeDialogPane.createColumnFilterValueColumns();
+    private final SettingsModelColumnFilter2 m_valueColumns =
+        Unpivot2NodeDialogPane.createColumnFilterValueColumns();
 
     private final SettingsModelBoolean m_enableHilite =
-        UnpivotNodeDialogPane.createHiLiteModel();
-    
+        Unpivot2NodeDialogPane.createHiLiteModel();
+
     private final SettingsModelBoolean m_missingValues =
-        UnpivotNodeDialogPane.createMissingValueModel();
+        Unpivot2NodeDialogPane.createMissingValueModel();
 
     private HiLiteTranslator m_trans = null;
     private final HiLiteHandler m_hilite = new HiLiteHandler();
@@ -116,7 +118,7 @@ public class UnpivotNodeModel extends NodeModel {
     /**
      * Constructor that creates one data in- and one data out-port.
      */
-    public UnpivotNodeModel() {
+    Unpivot2NodeModel() {
         super(1, 1);
     }
 
@@ -126,39 +128,29 @@ public class UnpivotNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        List<String> valueColumns = m_valueColumns.getIncludeList();
-        if (valueColumns.isEmpty()) {
-            throw new InvalidSettingsException(
-                    "No column 'value' defined for unpivoting operation.");
-        }
-        for (int i = 0; i < valueColumns.size(); i++) {
-            if (!inSpecs[0].containsName(valueColumns.get(i))) {
-                throw new InvalidSettingsException(
-                        "Some columns ('values') are not in input, "
-                        + "node needs to be re-configured...");
-            }
-        }
-        List<String> orderColumns = m_orderColumns.getIncludeList();
-        for (int i = 0; i < orderColumns.size(); i++) {
-            if (!inSpecs[0].containsName(orderColumns.get(i))) {
-                throw new InvalidSettingsException(
-                        "Some columns ('orders') are not in input, "
-                        + "node needs to be re-configured...");
-            }
-        }
         return new DataTableSpec[]{createOutSpec(inSpecs[0])};
     }
 
-    private DataTableSpec createOutSpec(final DataTableSpec spec) {
-        List<String> valueColumns = m_valueColumns.getIncludeList();
-        List<String> orderColumns = m_orderColumns.getIncludeList();
-        DataColumnSpec[] outSpecs = new DataColumnSpec[orderColumns.size() + 3];
-        for (int i = 0; i < orderColumns.size(); i++) {
-            outSpecs[i + 3] = spec.getColumnSpec(orderColumns.get(i));
+    private DataTableSpec createOutSpec(final DataTableSpec spec) throws InvalidSettingsException {
+        final FilterResult valueFilterResult = m_valueColumns.applyTo(spec);
+        String[] valueColumns = valueFilterResult.getIncludes();
+        if (valueColumns.length == 0) {
+            throw new InvalidSettingsException(
+            "No column 'value' defined for unpivoting operation.");
+        }
+        final String[] unknowns = valueFilterResult.getRemovedFromIncludes();
+        if (unknowns.length  > 0) {
+            setWarningMessage("Some selected value column(s) are no longer available: "
+                    + ConvenienceMethods.getShortStringFrom(Arrays.asList(unknowns), 3));
+        }
+        String[] retainedColumns = m_retainedColumns.applyTo(spec).getIncludes();
+        DataColumnSpec[] outSpecs = new DataColumnSpec[retainedColumns.length + 3];
+        for (int i = 0; i < retainedColumns.length; i++) {
+            outSpecs[i + 3] = spec.getColumnSpec(retainedColumns[i]);
         }
         DataType type = null;
-        for (int i = 0; i < valueColumns.size(); i++) {
-            DataType ctype = spec.getColumnSpec(valueColumns.get(i)).getType();
+        for (int i = 0; i < valueColumns.length; i++) {
+            DataType ctype = spec.getColumnSpec(valueColumns[i]).getType();
             if (type == null) {
                 type = ctype;
             } else {
@@ -195,25 +187,30 @@ public class UnpivotNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         DataTableSpec inSpec = inData[0].getSpec();
-        List<String> orderColumns = m_orderColumns.getIncludeList();
-        List<String> valueColumns = m_valueColumns.getIncludeList();
-        int[] orderColumnIdx = new int[orderColumns.size()];
-        for (int i = 0; i < orderColumnIdx.length; i++) {
-            orderColumnIdx[i] = inSpec.findColumnIndex(orderColumns.get(i));
+        String[] retainedColumns = m_retainedColumns.applyTo(inSpec).getIncludes();
+        String[] valueColumns = m_valueColumns.applyTo(inSpec).getIncludes();
+        int[] valueColumnIndices = new int[valueColumns.length];
+        for (int i = 0; i < valueColumnIndices.length; i++) {
+            valueColumnIndices[i] = inSpec.findColumnIndex(valueColumns[i]);
         }
-        final double newRowCnt = inData[0].getRowCount() * valueColumns.size();
+        int[] orderColumnIdx = new int[retainedColumns.length];
+        for (int i = 0; i < orderColumnIdx.length; i++) {
+            orderColumnIdx[i] = inSpec.findColumnIndex(retainedColumns[i]);
+        }
+        final double newRowCnt = inData[0].getRowCount() * valueColumns.length;
         final boolean enableHilite = m_enableHilite.getBooleanValue();
         LinkedHashMap<RowKey, Set<RowKey>> map =
             new LinkedHashMap<RowKey, Set<RowKey>>();
         DataTableSpec outSpec = createOutSpec(inSpec);
         BufferedDataContainer buf = exec.createDataContainer(outSpec);
+        final boolean skipMissings = m_missingValues.getBooleanValue();
         for (DataRow row : inData[0]) {
             LinkedHashSet<RowKey> set = new LinkedHashSet<RowKey>();
             FilterColumnRow crow = new FilterColumnRow(row, orderColumnIdx);
-            for (int i = 0; i < valueColumns.size(); i++) {
-                String colName = valueColumns.get(i);
-                DataCell acell = row.getCell(inSpec.findColumnIndex(colName));
-                if (acell.isMissing() && m_missingValues.getBooleanValue()) {
+            for (int i = 0; i < valueColumns.length; i++) {
+                String colName = valueColumns[i];
+                DataCell acell = row.getCell(valueColumnIndices[i]);
+                if (acell.isMissing() && skipMissings) {
                     // skip rows containing missing cells (in Value column(s))
                     continue;
                 }
@@ -315,7 +312,7 @@ public class UnpivotNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_orderColumns.loadSettingsFrom(settings);
+        m_retainedColumns.loadSettingsFrom(settings);
         m_valueColumns.loadSettingsFrom(settings);
         m_enableHilite.loadSettingsFrom(settings);
         try {
@@ -330,7 +327,7 @@ public class UnpivotNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_orderColumns.saveSettingsTo(settings);
+        m_retainedColumns.saveSettingsTo(settings);
         m_valueColumns.saveSettingsTo(settings);
         m_enableHilite.saveSettingsTo(settings);
         m_missingValues.saveSettingsTo(settings);
@@ -342,7 +339,7 @@ public class UnpivotNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_orderColumns.validateSettings(settings);
+        m_retainedColumns.validateSettings(settings);
         m_valueColumns.validateSettings(settings);
         m_enableHilite.validateSettings(settings);
     }
