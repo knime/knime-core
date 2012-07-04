@@ -128,6 +128,23 @@ public class DialogComponentColumnFilter2 extends DialogComponent {
     protected void setEnabledComponents(final boolean enabled) {
         m_colFilterPanel.setEnabled(enabled);
     }
+    /**
+     * Sets the title of the include panel.
+     *
+     * @param title the new title
+     */
+    public void setIncludeTitle(final String title) {
+        m_colFilterPanel.setIncludeTitle(title);
+    }
+
+    /**
+     * Sets the title of the exclude panel.
+     *
+     * @param title the new title
+     */
+    public void setExcludeTitle(final String title) {
+        m_colFilterPanel.setExcludeTitle(title);
+    }
 
     /**
      * {@inheritDoc}
