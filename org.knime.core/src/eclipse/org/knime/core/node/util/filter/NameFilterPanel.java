@@ -166,7 +166,7 @@ public abstract class NameFilterPanel<T> extends JPanel {
     private static final Border EXCLUDE_BORDER =
         BorderFactory.createLineBorder(new Color(240, 0, 0), 2);
 
-    /** The filter used to filter out/in valid column types. */
+    /** The filter used to filter out/in valid elements. */
     private InputFilter<T> m_filter;
 
     /**
