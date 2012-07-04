@@ -53,7 +53,7 @@ package org.knime.base.node.preproc.correlation.compute;
 import java.io.File;
 import java.io.IOException;
 
-import org.knime.base.node.preproc.correlation.PMCCPortObjectAndSpec;
+import org.knime.base.node.preproc.correlation.pmcc.PMCCPortObjectAndSpec;
 import org.knime.base.util.HalfDoubleMatrix;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
