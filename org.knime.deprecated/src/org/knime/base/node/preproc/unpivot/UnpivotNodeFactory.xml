@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd" >
-<knimeNode icon="unpivot.png" type="Manipulator">
+<knimeNode icon="unpivot.png" type="Manipulator" deprecated="true">
     <name>Unpivoting</name>
     <shortDescription>      
       This node rotates the selected columns from the input table to rows and duplicates
