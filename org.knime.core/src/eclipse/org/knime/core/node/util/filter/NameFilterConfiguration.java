@@ -68,6 +68,7 @@ import org.knime.core.node.NodeSettingsWO;
  *
  * @author Thomas Gabriel, KNIME.com AG, Zurich
  * @since 2.6
+ * @noextend This class is not intended to be subclassed by clients. Pending API.
  */
 public class NameFilterConfiguration implements Cloneable {
 

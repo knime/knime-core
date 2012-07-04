@@ -65,7 +65,7 @@ import org.knime.core.node.util.filter.InputFilter;
  * @author Kilian Thiel, KNIME.com AG, Zurich
  * @since 2.6
  */
-public class DataTypeColumnFilter implements InputFilter<DataColumnSpec> {
+public final class DataTypeColumnFilter extends InputFilter<DataColumnSpec> {
 
     /**
      * Show only columns of types that are compatible to one of theses
@@ -108,11 +108,4 @@ public class DataTypeColumnFilter implements InputFilter<DataColumnSpec> {
         return false;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String allFilteredMsg() {
-        return "No columns compatible with the specific column types.";
-    }
 }

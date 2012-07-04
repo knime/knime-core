@@ -72,9 +72,7 @@ import org.knime.core.node.util.DataValueColumnFilter;
  * columns.
  *
  * @author M. Berthold, University of Konstanz
- * @deprecated use {@link DialogComponentColumnFilter2} instead
  */
-@Deprecated
 public class DialogComponentColumnFilter extends DialogComponent {
 
     /** Index of the port to take the table (spec) from. */

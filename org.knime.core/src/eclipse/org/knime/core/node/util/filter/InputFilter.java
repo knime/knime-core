@@ -55,11 +55,13 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 /** Used to (pre-)filter items in a filter configuration. Mostly used
  * as data column type filter in a {@link DataColumnSpecFilterConfiguration}.
  *
+ *
  * @param <T> the instance T this object is parameterized on.
  * @author Kilian Thiel, KNIME.com AG, Zurich
  * @since 2.6
+ * @noextend This class is not intended to be subclassed by clients. Pending API.
  */
-public interface InputFilter<T> {
+public abstract class InputFilter<T> {
 
     /**
      * Checks if the given name should be included or not.
@@ -68,10 +70,6 @@ public interface InputFilter<T> {
      * @return <code>true</code> if the name should be included, otherwise
      * <code>false</code>.
      */
-    public boolean include(final T name);
+    public abstract boolean include(final T name);
 
-    /**
-     * @return the message to display if all names are filtered.
-     */
-    public String allFilteredMsg();
 }
