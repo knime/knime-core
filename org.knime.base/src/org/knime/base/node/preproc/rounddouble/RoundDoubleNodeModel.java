@@ -156,7 +156,7 @@ class RoundDoubleNodeModel extends NodeModel {
     public RoundDoubleNodeModel() {
         super(1, 1);
         m_appendColumnsModel.addChangeListener(
-                new AppendColumnChanceListener());
+                new AppendColumnChangeListener());
     }
 
     /**
@@ -412,7 +412,7 @@ class RoundDoubleNodeModel extends NodeModel {
         // Nothing to do ...
     }
 
-    private class AppendColumnChanceListener implements ChangeListener {
+    private class AppendColumnChangeListener implements ChangeListener {
         /**
          * {@inheritDoc}
          */
