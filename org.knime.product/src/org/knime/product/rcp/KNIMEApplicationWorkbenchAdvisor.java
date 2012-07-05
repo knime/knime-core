@@ -124,7 +124,11 @@ public class KNIMEApplicationWorkbenchAdvisor extends WorkbenchAdvisor {
         IProxyService.class.getName();
 
         // show a tips&tricks dialog only if the intro page is not shown
-        if (PlatformUI.getWorkbench().getIntroManager().getIntro() == null) {
+        // and if KNIME is not started from within Eclipse
+        String installLocation = Platform.getInstallLocation().getURL().toString();
+        String configurationLocation = Platform.getConfigurationLocation().getURL().toString();
+        if ((PlatformUI.getWorkbench().getIntroManager().getIntro() == null)
+                && configurationLocation.contains(installLocation)) {
             // try to open T&T in a separate thread because if DNS resolution
             // does not work properly this blocks KNIME startup
             Thread t = new Thread(new Runnable() {
