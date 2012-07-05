@@ -152,7 +152,10 @@ public final class SettingsModelColumnFilter2 extends SettingsModel {
      * @param conf
      */
     protected void setFilterConfiguration(final DataColumnSpecFilterConfiguration conf) {
-        m_filterConfiguration = conf.clone();
+        if (!conf.equals(m_filterConfiguration)) {
+            m_filterConfiguration = conf.clone();
+            notifyChangeListeners();
+        }
     }
 
     /**
@@ -174,7 +177,11 @@ public final class SettingsModelColumnFilter2 extends SettingsModel {
             NodeLogger.getLogger(SettingsModelColumnFilter2.class).coding(msg);
             throw new NotConfigurableException(msg);
         }
+        DataColumnSpecFilterConfiguration clone = m_filterConfiguration.clone();
         m_filterConfiguration.loadConfigurationInDialog(settings, (DataTableSpec)specs[m_inputPortIndex]);
+        if (!clone.equals(m_filterConfiguration)) {
+            notifyChangeListeners();
+        }
     }
 
     /** {@inheritDoc} */
@@ -192,7 +199,12 @@ public final class SettingsModelColumnFilter2 extends SettingsModel {
     /** {@inheritDoc} */
     @Override
     protected void loadSettingsForModel(final NodeSettingsRO settings) throws InvalidSettingsException {
+        DataColumnSpecFilterConfiguration clone = m_filterConfiguration.clone();
         m_filterConfiguration.loadConfigurationInModel(settings);
+        if (!clone.equals(m_filterConfiguration)) {
+            notifyChangeListeners();
+        }
+
     }
 
     /** {@inheritDoc} */
