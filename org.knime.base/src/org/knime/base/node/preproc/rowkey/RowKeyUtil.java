@@ -48,7 +48,7 @@
  * History
  *    03.11.2006 (Tobias Koetter): created
  */
-package org.knime.base.node.preproc.rowkey2;
+package org.knime.base.node.preproc.rowkey;
 
 import org.knime.base.data.append.column.AppendedColumnTable;
 
@@ -84,8 +84,8 @@ import java.util.Set;
  * to replace the row key by the values of another column.
  *
  * @author Tobias Koetter, University of Konstanz
- * @since 2.6
  */
+@Deprecated
 public class RowKeyUtil {
     private static final NodeLogger LOGGER = NodeLogger
         .getLogger(RowKeyUtil.class);
@@ -242,8 +242,7 @@ public class RowKeyUtil {
                             m_duplicatesCounter++;
                         }
                         StringBuilder uniqueKey = new StringBuilder(key);
-                        final MutableInteger index =
-                            vals.get(uniqueKey.toString());
+                        final MutableInteger index = vals.get(uniqueKey.toString());
                         while (vals.containsKey(uniqueKey.toString())) {
                             index.inc();
                             uniqueKey = new StringBuilder(key);
@@ -259,7 +258,7 @@ public class RowKeyUtil {
                 }
                 newKeyVal = new RowKey(key);
             } else {
-                newKeyVal = RowKey.createRowKey(rowCounter - 1);
+                newKeyVal = RowKey.createRowKey(rowCounter);
             }
 
             final DefaultRow newRow = new DefaultRow(newKeyVal, cells);

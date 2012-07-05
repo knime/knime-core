@@ -47,7 +47,9 @@
  *
  * History 05.11.2006 (Tobias Koetter): created
  */
-package org.knime.base.node.preproc.rowkey2;
+package org.knime.base.node.preproc.rowkey;
+import org.knime.base.node.preproc.rowkey2.RowKeyNodeDialog2;
+
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
@@ -58,8 +60,8 @@ import org.knime.core.node.NodeView;
  * with the values of the current row key.
  *
  * @author Tobias Koetter
- * @since 2.6
  */
+@Deprecated
 public class RowKeyNodeFactory extends NodeFactory<RowKeyNodeModel> {
 
     /**
@@ -100,7 +102,7 @@ public class RowKeyNodeFactory extends NodeFactory<RowKeyNodeModel> {
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new RowKeyNodeDialog();
+        return new RowKeyNodeDialog2();
     }
 
 

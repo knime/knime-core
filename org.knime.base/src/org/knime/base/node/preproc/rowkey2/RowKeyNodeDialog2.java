@@ -75,7 +75,7 @@ import javax.swing.event.ChangeListener;
  * @author Tobias Koetter
  * @since 2.6
  */
-public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
+public class RowKeyNodeDialog2 extends DefaultNodeSettingsPane {
 
     /**The label of the replace row key group section.*/
     private static final String REPLACE_ROW_KEY_GROUP_LABEL =
@@ -101,7 +101,7 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
     /**The tool tip of the replace missing value check box.*/
     private static final String HANDLEMISSING_VALUES_TOOLTIP =
         "Replaces missing values with '"
-        + RowKeyUtil.MISSING_VALUE_REPLACEMENT + "'.";
+        + RowKeyUtil2.MISSING_VALUE_REPLACEMENT + "'.";
 
     /**The label of the enable hilite values check box.*/
     private static final String ENABLE_HILITE_LABEL =
@@ -152,31 +152,31 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
      * New dialog for configuring the the row key node.
      */
     @SuppressWarnings("unchecked")
-    public RowKeyNodeDialog() {
+    public RowKeyNodeDialog2() {
         super();
         m_replaceKey = new SettingsModelBoolean(
-                RowKeyNodeModel.REPLACE_ROWKEY, true);
+                RowKeyNodeModel2.REPLACE_ROWKEY, true);
         m_newRowKeyColumn = new SettingsModelString(
-                RowKeyNodeModel.SELECTED_NEW_ROWKEY_COL, (String)null);
+                RowKeyNodeModel2.SELECTED_NEW_ROWKEY_COL, (String)null);
         m_newRowKeyColumn.setEnabled(m_replaceKey.getBooleanValue());
         final boolean enableReplaceOptions = enableReplaceOptions();
         m_removeRowKeyCol = new SettingsModelBoolean(
-                RowKeyNodeModel.REMOVE_ROW_KEY_COLUM, false);
+                RowKeyNodeModel2.REMOVE_ROW_KEY_COLUM, false);
         m_removeRowKeyCol.setEnabled(enableReplaceOptions);
         m_ensureUniqueness = new SettingsModelBoolean(
-                RowKeyNodeModel.ENSURE_UNIQUNESS, false);
+                RowKeyNodeModel2.ENSURE_UNIQUNESS, false);
         m_ensureUniqueness.setEnabled(enableReplaceOptions);
         m_handleMissingVals = new SettingsModelBoolean(
-                RowKeyNodeModel.HANDLE_MISSING_VALS, false);
+                RowKeyNodeModel2.HANDLE_MISSING_VALS, false);
         m_handleMissingVals.setEnabled(enableReplaceOptions);
         m_enableHilite = new SettingsModelBoolean(
-                RowKeyNodeModel.CFG_ENABLE_HILITE, false);
+                RowKeyNodeModel2.CFG_ENABLE_HILITE, false);
         m_enableHilite.setEnabled(enableReplaceOptions);
 
         m_appendRowKey = new SettingsModelBoolean(
-                RowKeyNodeModel.APPEND_ROWKEY_COLUMN, false);
+                RowKeyNodeModel2.APPEND_ROWKEY_COLUMN, false);
         m_newColumnName = new SettingsModelString(
-                RowKeyNodeModel.NEW_COL_NAME_4_ROWKEY_VALS, "");
+                RowKeyNodeModel2.NEW_COL_NAME_4_ROWKEY_VALS, "");
         m_newColumnName.setEnabled(m_appendRowKey.getBooleanValue());
 
         m_replaceKey.addChangeListener(new ChangeListener() {
@@ -212,7 +212,7 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
 
         final DialogComponent newRowKeyCol =
             new DialogComponentColumnNameSelection(m_newRowKeyColumn,
-                    NEW_ROW_KEY_COLUMN_LABEL, RowKeyNodeModel.DATA_IN_PORT,
+                    NEW_ROW_KEY_COLUMN_LABEL, RowKeyNodeModel2.DATA_IN_PORT,
                     false, true, DataValue.class);
         newRowKeyCol.setToolTipText("Select <none> to generate a new row key");
         addDialogComponent(newRowKeyCol);
@@ -281,7 +281,7 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
             throws InvalidSettingsException {
         super.saveAdditionalSettingsTo(settings);
         if (m_tableSpec != null) {
-            RowKeyNodeModel.validateInput(m_tableSpec,
+            RowKeyNodeModel2.validateInput(m_tableSpec,
                     m_appendRowKey.getBooleanValue(),
                     m_newColumnName.getStringValue(),
                     m_replaceKey.getBooleanValue(),

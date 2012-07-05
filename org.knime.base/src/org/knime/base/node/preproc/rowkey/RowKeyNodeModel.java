@@ -47,9 +47,10 @@
  *
  * History 05.11.2006 (Tobias Koetter): created
  */
-package org.knime.base.node.preproc.rowkey2;
+package org.knime.base.node.preproc.rowkey;
 
 import org.knime.base.data.append.column.AppendedColumnTable;
+import org.knime.base.node.preproc.rowkey2.RowKeyUtil2;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -86,8 +87,8 @@ import javax.swing.event.ChangeListener;
  * with the values of the current row key.
  *
  * @author Tobias Koetter, University of Konstanz
- * @since 2.6
  */
+@Deprecated
 public class RowKeyNodeModel extends NodeModel {
 
     // our logger instance
@@ -201,7 +202,7 @@ public class RowKeyNodeModel extends NodeModel {
 
         m_appendRowKey = new SettingsModelBoolean(APPEND_ROWKEY_COLUMN, false);
         m_newColumnName = new SettingsModelString(NEW_COL_NAME_4_ROWKEY_VALS,
-                "");
+                (String)null);
         m_newColumnName.setEnabled(m_appendRowKey.getBooleanValue());
 
         m_replaceKey.addChangeListener(new ChangeListener() {
@@ -276,7 +277,7 @@ public class RowKeyNodeModel extends NodeModel {
                 final String newColName = m_newColumnName.getStringValue();
                 newColSpec = createAppendRowKeyColSpec(newColName);
             }
-            final RowKeyUtil util = new RowKeyUtil();
+            final RowKeyUtil2 util = new RowKeyUtil2();
             outData = util.changeRowKey(data, exec,
                     m_newRowKeyColumn.getStringValue(),
                     m_appendRowKey.getBooleanValue(), newColSpec,
@@ -312,7 +313,7 @@ public class RowKeyNodeModel extends NodeModel {
             //contains the rowkey as value
             final DataTableSpec tableSpec = data.getDataTableSpec();
             final String newColumnName = m_newColumnName.getStringValue();
-            final ColumnRearranger c = RowKeyUtil.createColumnRearranger(
+            final ColumnRearranger c = RowKeyUtil2.createColumnRearranger(
                     tableSpec, newColumnName, StringCell.TYPE);
             outData =
                 exec.createColumnRearrangeTable(data, c, exec);
@@ -442,7 +443,7 @@ public class RowKeyNodeModel extends NodeModel {
                 setWarningMessage(
                         "No row key column selected generate a new one");
             } else if (m_removeRowKeyCol.getBooleanValue()) {
-                spec = RowKeyUtil.createTableSpec(spec, selRowKey);
+                spec = RowKeyUtil2.createTableSpec(spec, selRowKey);
             }
         }
         if (m_appendRowKey.getBooleanValue()) {

@@ -677,9 +677,9 @@
          factory-class="org.knime.base.node.preproc.discretization.caim2.modelapply.Discretization2ApplyNodeFactory"
          id="org.knime.base.node.preproc.discretization.caim.modelapply.DiscretizationApplyNodeFactory"/>
     <node
-         factory-class="org.knime.base.node.preproc.rowkey.RowKeyNodeFactory"
+         factory-class="org.knime.base.node.preproc.rowkey2.RowKeyNodeFactory2"
          category-path="/manipulation/row/row-other"
-         id="org.knime.base.node.preproc.rowkey.RowKeyNodeFactory"/>
+         id="org.knime.base.node.preproc.rowkey2.RowKeyNodeFactory2"/>
       <node
             category-path="/mining/miscClass"
             factory-class="org.knime.base.node.mine.knn.KnnNodeFactory"
