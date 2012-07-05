@@ -12,7 +12,7 @@
 		<intro>		
 		<p>This node can be used to replace the RowID of the input data with 
 		the values of another column (by converting the values to a string) or
-		a generated row id of the format: Row1, Row2. 
+		a generated row id of the format: Row0, Row1, Row2, ... 
 		The user has additional options to ensure uniqueness and to handle 
 		missing values.</p>
 		<p>
@@ -30,7 +30,7 @@
 	    </option>
 		<option name="New RowID column: ">
 			The column to replace the current RowID. If none is selected a
-			row id is generated with the format: Row1, Row2, ...
+			row id is generated with the format: Row0, Row1, Row2, ...
 	    </option>
 		<option name="Ensure uniqueness">
 			If checked the node ensures uniqueness by appending a counter (x) 

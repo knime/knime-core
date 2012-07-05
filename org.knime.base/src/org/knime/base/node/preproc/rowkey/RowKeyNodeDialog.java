@@ -49,9 +49,6 @@
  */
 package org.knime.base.node.preproc.rowkey;
 
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -66,6 +63,9 @@ import org.knime.core.node.defaultnodesettings.DialogComponentString;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 
 /**
  * The node dialog of the row key manipulation node. The node allows the user
@@ -73,6 +73,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * with the values of the current row key.
  *
  * @author Tobias Koetter
+ * @since 2.6
  */
 public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
 
@@ -175,7 +176,7 @@ public class RowKeyNodeDialog extends DefaultNodeSettingsPane {
         m_appendRowKey = new SettingsModelBoolean(
                 RowKeyNodeModel.APPEND_ROWKEY_COLUMN, false);
         m_newColumnName = new SettingsModelString(
-                RowKeyNodeModel.NEW_COL_NAME_4_ROWKEY_VALS, (String)null);
+                RowKeyNodeModel.NEW_COL_NAME_4_ROWKEY_VALS, "");
         m_newColumnName.setEnabled(m_appendRowKey.getBooleanValue());
 
         m_replaceKey.addChangeListener(new ChangeListener() {

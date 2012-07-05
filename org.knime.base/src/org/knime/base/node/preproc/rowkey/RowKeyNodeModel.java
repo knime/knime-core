@@ -49,15 +49,8 @@
  */
 package org.knime.base.node.preproc.rowkey;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
 import org.knime.base.data.append.column.AppendedColumnTable;
+
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -79,12 +72,21 @@ import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 /**
  * The node model of the row key manipulation node. The node allows the user
  * to replace the row key with another column and/or to append a new column
  * with the values of the current row key.
  *
  * @author Tobias Koetter, University of Konstanz
+ * @since 2.6
  */
 public class RowKeyNodeModel extends NodeModel {
 
@@ -199,7 +201,7 @@ public class RowKeyNodeModel extends NodeModel {
 
         m_appendRowKey = new SettingsModelBoolean(APPEND_ROWKEY_COLUMN, false);
         m_newColumnName = new SettingsModelString(NEW_COL_NAME_4_ROWKEY_VALS,
-                (String)null);
+                "");
         m_newColumnName.setEnabled(m_appendRowKey.getBooleanValue());
 
         m_replaceKey.addChangeListener(new ChangeListener() {

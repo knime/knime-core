@@ -50,6 +50,8 @@
  */
 package org.knime.base.node.preproc.rowkey;
 
+import org.knime.base.data.append.column.AppendedColumnTable;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -69,8 +71,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.MutableInteger;
 
-import org.knime.base.data.append.column.AppendedColumnTable;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -84,6 +84,7 @@ import java.util.Set;
  * to replace the row key by the values of another column.
  *
  * @author Tobias Koetter, University of Konstanz
+ * @since 2.6
  */
 public class RowKeyUtil {
     private static final NodeLogger LOGGER = NodeLogger
@@ -241,7 +242,8 @@ public class RowKeyUtil {
                             m_duplicatesCounter++;
                         }
                         StringBuilder uniqueKey = new StringBuilder(key);
-                        final MutableInteger index = vals.get(uniqueKey.toString());
+                        final MutableInteger index =
+                            vals.get(uniqueKey.toString());
                         while (vals.containsKey(uniqueKey.toString())) {
                             index.inc();
                             uniqueKey = new StringBuilder(key);
@@ -254,10 +256,10 @@ public class RowKeyUtil {
                     //put the current key which is new into the values map
                     final MutableInteger index = new MutableInteger(0);
                     vals.put(key, index);
-                } 
+                }
                 newKeyVal = new RowKey(key);
             } else {
-                newKeyVal = RowKey.createRowKey(rowCounter);
+                newKeyVal = RowKey.createRowKey(rowCounter - 1);
             }
 
             final DefaultRow newRow = new DefaultRow(newKeyVal, cells);

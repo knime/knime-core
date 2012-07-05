@@ -58,6 +58,7 @@ import org.knime.core.node.NodeView;
  * with the values of the current row key.
  *
  * @author Tobias Koetter
+ * @since 2.6
  */
 public class RowKeyNodeFactory extends NodeFactory<RowKeyNodeModel> {
 
