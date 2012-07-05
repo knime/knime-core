@@ -57,7 +57,7 @@ import java.util.List;
 import org.knime.base.node.jsnippet.expression.TypeException;
 import org.knime.base.node.jsnippet.type.data.DataValueToJava;
 import org.knime.core.data.DataCell;
-import org.knime.core.data.collection.ListCell;
+import org.knime.core.data.collection.CollectionDataValue;
 
 
 /**
@@ -117,7 +117,7 @@ public class ListCellToJava extends DataValueToJava {
             throws TypeException {
         if (isCompatibleTo(cell, c)) {
             List values = new ArrayList();
-            for (DataCell element : ((ListCell)cell)) {
+            for (DataCell element : ((CollectionDataValue)cell)) {
                 values.add(m_elementToJava.getValue(element,
                         c.getComponentType()));
             }
