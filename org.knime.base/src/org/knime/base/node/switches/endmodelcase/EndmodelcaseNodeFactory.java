@@ -57,7 +57,8 @@ import org.knime.core.node.NodeView;
 /**
  * @author M. Berthold, University of Konstanz
  */
-public class EndmodelcaseNodeFactory extends NodeFactory<EndmodelcaseNodeModel> {
+public class EndmodelcaseNodeFactory 
+        extends NodeFactory<EndmodelcaseNodeModel> {
 
     /**
      * Create factory, that instantiates nodes.

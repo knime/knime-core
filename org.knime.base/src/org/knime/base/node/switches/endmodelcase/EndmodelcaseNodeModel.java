@@ -111,7 +111,7 @@ public class EndmodelcaseNodeModel extends NodeModel
                     if (activeI >= 0) {
                         // but we already found one before!
                         throw new InvalidSettingsException("More than one"
-                        		+ " active branch not supported!.");
+                                + " active branch not supported!.");
                     }
                     activeI = i;
                 }
@@ -121,7 +121,7 @@ public class EndmodelcaseNodeModel extends NodeModel
         if (activeI < 0) {
             throw new InvalidSettingsException("No active branch found!");
         }
-        return new PortObjectSpec[]{ inSpecs[activeI] };
+        return new PortObjectSpec[]{inSpecs[activeI]};
     }
 
     /**
@@ -150,7 +150,7 @@ public class EndmodelcaseNodeModel extends NodeModel
         if (activeI < 0) {
             throw new InvalidSettingsException("No active branch found!");
         }
-        return new PortObject[]{ inData[activeI] };
+        return new PortObject[]{inData[activeI]};
     }
 
     /**
