@@ -63,6 +63,7 @@ import javax.xml.parsers.ParserConfigurationException;
 
 import org.knime.core.data.xml.XMLCellFactory;
 import org.knime.core.data.xml.XMLValue;
+import org.knime.core.node.NodeLogger;
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.Document;
 import org.w3c.dom.NamedNodeMap;
@@ -93,6 +94,13 @@ class XMLDOMCellReader implements XMLCellReader {
         PARSER_FAC.setValidating(false);
         PARSER_FAC.setNamespaceAware(true);
         PARSER_FAC.setXIncludeAware(true);
+        try {
+            PARSER_FAC.setFeature("http://apache.org/xml/features/allow-java-encodings", true);
+        } catch (ParserConfigurationException ex) {
+            NodeLogger.getLogger(XMLDOMCellReader.class).warn(
+                    "Could not enable usage of Java encodings in XML parser: "
+                    + ex.getMessage(), ex);
+        }
     }
 
     /**
