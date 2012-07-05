@@ -47,7 +47,7 @@
  *
  * History 03.11.2006 (Tobias Koetter): created
  */
-package org.knime.base.node.preproc.rowkey;
+package org.knime.base.node.preproc.rowkey2;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;

@@ -47,7 +47,7 @@
  *
  * History 05.11.2006 (Tobias Koetter): created
  */
-package org.knime.base.node.preproc.rowkey;
+package org.knime.base.node.preproc.rowkey2;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;

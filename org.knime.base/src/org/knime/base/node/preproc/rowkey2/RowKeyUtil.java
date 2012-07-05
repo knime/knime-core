@@ -48,7 +48,7 @@
  * History
  *    03.11.2006 (Tobias Koetter): created
  */
-package org.knime.base.node.preproc.rowkey;
+package org.knime.base.node.preproc.rowkey2;
 
 import org.knime.base.data.append.column.AppendedColumnTable;
 
