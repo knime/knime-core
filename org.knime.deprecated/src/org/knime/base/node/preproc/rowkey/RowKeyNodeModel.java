@@ -50,7 +50,6 @@
 package org.knime.base.node.preproc.rowkey;
 
 import org.knime.base.data.append.column.AppendedColumnTable;
-import org.knime.base.node.preproc.rowkey2.RowKeyUtil2;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -278,7 +277,7 @@ public class RowKeyNodeModel extends NodeModel {
                 final String newColName = m_newColumnName.getStringValue();
                 newColSpec = createAppendRowKeyColSpec(newColName);
             }
-            final RowKeyUtil2 util = new RowKeyUtil2();
+            final RowKeyUtil util = new RowKeyUtil();
             outData = util.changeRowKey(data, exec,
                     m_newRowKeyColumn.getStringValue(),
                     m_appendRowKey.getBooleanValue(), newColSpec,
@@ -314,7 +313,7 @@ public class RowKeyNodeModel extends NodeModel {
             //contains the rowkey as value
             final DataTableSpec tableSpec = data.getDataTableSpec();
             final String newColumnName = m_newColumnName.getStringValue();
-            final ColumnRearranger c = RowKeyUtil2.createColumnRearranger(
+            final ColumnRearranger c = RowKeyUtil.createColumnRearranger(
                     tableSpec, newColumnName, StringCell.TYPE);
             outData =
                 exec.createColumnRearrangeTable(data, c, exec);
@@ -444,7 +443,7 @@ public class RowKeyNodeModel extends NodeModel {
                 setWarningMessage(
                         "No row key column selected generate a new one");
             } else if (m_removeRowKeyCol.getBooleanValue()) {
-                spec = RowKeyUtil2.createTableSpec(spec, selRowKey);
+                spec = RowKeyUtil.createTableSpec(spec, selRowKey);
             }
         }
         if (m_appendRowKey.getBooleanValue()) {
