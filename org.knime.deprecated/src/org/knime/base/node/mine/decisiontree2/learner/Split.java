@@ -57,6 +57,7 @@ package org.knime.base.node.mine.decisiontree2.learner;
  *
  * @author Christoph Sieb, University of Konstanz
  */
+@Deprecated
 public abstract class Split {
 
     private InMemoryTable m_table;

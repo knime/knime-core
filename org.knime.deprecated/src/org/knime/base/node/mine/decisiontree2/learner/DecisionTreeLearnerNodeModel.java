@@ -110,6 +110,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
  *
  * @see DecisionTreeLearnerNodeFactory
  */
+@Deprecated
 public class DecisionTreeLearnerNodeModel extends NodeModel {
 
     private static final NodeLogger LOGGER =

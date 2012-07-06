@@ -60,6 +60,7 @@ import java.util.List;
  *
  * @author Christoph Sieb, University of Konstanz
  */
+@Deprecated
 public class SplitFinder {
     private int m_splitAttributeIndex;
 

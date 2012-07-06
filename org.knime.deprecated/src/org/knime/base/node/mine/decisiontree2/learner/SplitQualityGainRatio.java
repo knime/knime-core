@@ -55,6 +55,7 @@ package org.knime.base.node.mine.decisiontree2.learner;
  *
  * @author Christoph Sieb, University of Konstanz
  */
+@Deprecated
 public class SplitQualityGainRatio extends SplitQualityMeasure {
 
     private static final double LOG2_DIVISOR = Math.log(2.0);

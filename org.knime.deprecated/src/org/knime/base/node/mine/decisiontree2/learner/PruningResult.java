@@ -58,6 +58,7 @@ import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
  *
  * @author Christoph Sieb, University of Konstanz
  */
+@Deprecated
 public class PruningResult {
 
     private double m_qualityValue;

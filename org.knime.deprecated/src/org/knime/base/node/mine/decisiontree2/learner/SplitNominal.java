@@ -57,6 +57,7 @@ import org.knime.core.data.DataCell;
  *
  * @author Christoph Sieb, University of Konstanz
  */
+@Deprecated
 public abstract class SplitNominal extends Split {
 
     /**

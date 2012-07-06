@@ -69,6 +69,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  *
  * @author Christoph Sieb, University of Konstanz
  */
+@Deprecated
 public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
 
     /**

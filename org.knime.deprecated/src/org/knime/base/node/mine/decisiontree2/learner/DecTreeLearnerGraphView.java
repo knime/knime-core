@@ -97,6 +97,7 @@ import org.knime.core.node.property.hilite.KeyEvent;
  *
  * @author Heiko HOfer
  */
+@Deprecated
 final class DecTreeLearnerGraphView extends
         NodeView<DecisionTreeLearnerNodeModel> implements HiLiteListener {
     /** The node logger for this class. */

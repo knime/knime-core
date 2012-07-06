@@ -73,6 +73,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  *
  * @author mb, University of Konstanz
  */
+@Deprecated
 public class DecTreeNodeView extends NodeView<DecisionTreeLearnerNodeModel> {
 
     private JTree m_jTree;

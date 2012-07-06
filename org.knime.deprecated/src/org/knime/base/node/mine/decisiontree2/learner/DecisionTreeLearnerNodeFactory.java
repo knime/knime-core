@@ -56,6 +56,7 @@ import org.knime.core.node.NodeView;
  *
  * @author Christoph Sieb, University of Konstanz
  */
+@Deprecated
 public class DecisionTreeLearnerNodeFactory
         extends NodeFactory<DecisionTreeLearnerNodeModel> {
 

@@ -59,6 +59,7 @@ import java.util.List;
  *
  * @author Christoph Sieb, University of Konstanz
  */
+@Deprecated
 public class SplitNominalBinary extends SplitNominal {
 
     /** index for left partition of a binary nominal split. */

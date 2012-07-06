@@ -60,6 +60,7 @@ import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplit;
  *
  * @author Christoph Sieb, University of Konstanz
  */
+@Deprecated
 public final class Pruner {
 
     private Pruner() {

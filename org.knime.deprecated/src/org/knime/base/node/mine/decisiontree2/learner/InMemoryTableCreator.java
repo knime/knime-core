@@ -69,6 +69,7 @@ import org.knime.core.node.ExecutionContext;
  *
  * @author Christoph Sieb, University of Konstanz
  */
+@Deprecated
 public class InMemoryTableCreator {
 
     private final BufferedDataTable m_table;

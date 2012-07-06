@@ -57,6 +57,7 @@ import java.util.Iterator;
  *
  * @author Christoph Sieb, University of Konstanz
  */
+@Deprecated
 public class SplitContinuous extends Split {
 
     private static final int BELOW_INDEX = 0;

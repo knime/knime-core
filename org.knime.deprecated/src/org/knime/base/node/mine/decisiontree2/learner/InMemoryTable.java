@@ -63,6 +63,7 @@ import org.knime.core.data.DataCell;
  *
  * @author Christoph Sieb, University of Konstanz
  */
+@Deprecated
 public class InMemoryTable implements Iterable<DataRowWeighted> {
 
     /**

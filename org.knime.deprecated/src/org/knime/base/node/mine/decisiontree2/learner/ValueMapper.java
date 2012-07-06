@@ -59,6 +59,7 @@ import java.util.HashMap;
  * @author Christoph Sieb, University of Konstanz
  * @param <S> the type to map to an integer
  */
+@Deprecated
 public class ValueMapper<S> {
 
     /**
