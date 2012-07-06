@@ -147,7 +147,7 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
 
     /**
      * Craetes a new panel for column content filter settings.
-     *
+     * @param parentPane the underlying dialog pane
      * @param tSpec table spec containing column specs to select from
      * @throws NotConfigurableException it tspec is <code>null</code> or emtpy
      */
@@ -326,8 +326,12 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
         m_radios.add(m_useMissValue);
         /* the bound edit fields */
         m_lowerLabel = new JLabel("lower bound:");
+        m_lowerLabel.setToolTipText(
+                "Smallest value of the range to be filtered.");
         m_lowerBound = new JTextField();
         m_upperLabel = new JLabel("upper bound:");
+        m_upperLabel.setToolTipText(
+                "Largest value of the range to be filtered.");
         m_upperBound = new JTextField();
         m_lowerBound.getDocument().addDocumentListener(new DocumentListener() {
             @Override
