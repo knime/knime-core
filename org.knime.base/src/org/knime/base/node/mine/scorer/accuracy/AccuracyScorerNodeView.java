@@ -182,6 +182,7 @@ final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
             m_accuracy.setToolTipText(null);
             // m_precision.setText(" n/a ");
             m_tableView.setModel(new DefaultTableModel());
+            m_cellHilited = new boolean[0][0];
             return;
         }
 
@@ -425,6 +426,10 @@ final class AccuracyScorerNodeView extends NodeView<AccuracyScorerNodeModel>
     }
 
     private void updateHilitedCells() {
+        // fix: don't update hilite when the model is not executed
+        if (getNodeModel().getScorerCount() == null) {
+            return;
+        }
         if (getNodeModel().getInHiLiteHandler(0) != null) {
             Set<RowKey> hilitedKeys = getNodeModel().getInHiLiteHandler(0)
                     .getHiLitKeys();
