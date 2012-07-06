@@ -44,64 +44,82 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
+ *
+ * History
+ *   31.07.2007 (sieb): created
  */
-package org.knime.base.node.mine.decisiontree2.learner;
-
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+package org.knime.base.node.mine.decisiontree2.learner2;
 
 /**
- * The Factory for the {@link DecisionTreeLearnerNodeModel} algorithm.
+ * A data row represented as a double array. Nominal values must be mapped to be
+ * used. The class value is also a mapped int value.
  *
  * @author Christoph Sieb, University of Konstanz
+ * @since 2.6
  */
-public class DecisionTreeLearnerNodeFactory
-        extends NodeFactory<DecisionTreeLearnerNodeModel> {
+public class ClassValueDataRow {
 
     /**
-     * {@inheritDoc}
+     * Holds the attribute values as doubles.
      */
-    @Override
-    public DecisionTreeLearnerNodeModel createNodeModel() {
-        return new DecisionTreeLearnerNodeModel();
+    private double[] m_attributeValues;
+
+    /**
+     * Holds the class value as int.
+     */
+    private int m_classValue;
+
+    /**
+     * Constructs a data row.
+     *
+     * @param attributeValues the attribute values (nominal values are mapped
+     *            doubles)
+     * @param classValue the nominal class value mapped to an integer
+     */
+    public ClassValueDataRow(final double[] attributeValues, final int classValue) {
+        m_attributeValues = attributeValues;
+        m_classValue = classValue;
+    }
+
+    /**
+     * Returns the class value.
+     *
+     * @return the class value
+     */
+    public int getClassValue() {
+        return m_classValue;
+    }
+
+    /**
+     * Returns the attribute value for the given index.
+     *
+     * @param index the column index for which to return the double value
+     *
+     * @return the attribute value for the given index
+     */
+    public double getValue(final int index) {
+        return m_attributeValues[index];
+    }
+
+    /**
+     * Returns the number of attribute values, excluding the class value.
+     *
+     * @return the number of attribute values, excluding the class value
+     */
+    public int getNumAttributes() {
+        return m_attributeValues.length;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public int getNrNodeViews() {
-        return 2;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<DecisionTreeLearnerNodeModel> createNodeView(
-                final int i, final DecisionTreeLearnerNodeModel nodeModel) {
-        if (i == 0) {
-            return new DecTreeLearnerGraphView(nodeModel);
-        } else {
-            return new DecTreeNodeView(nodeModel);
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (double value : m_attributeValues) {
+            sb.append(value).append(";");
         }
-    }
-
-    /**
-     * @return <b>true</b>.
-     * @see org.knime.core.node.NodeFactory#hasDialog()
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new DecisionTreeLearnerNodeDialog();
+        sb.append(m_classValue);
+        return sb.toString();
     }
 }

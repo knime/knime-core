@@ -45,7 +45,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
-package org.knime.base.node.mine.decisiontree2.learner;
+package org.knime.base.node.mine.decisiontree2.learner2;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -72,6 +72,8 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * view.
  *
  * @author mb, University of Konstanz
+ * 
+ * @since 2.6
  */
 public class DecTreeNodeView extends NodeView<DecisionTreeLearnerNodeModel> {
 

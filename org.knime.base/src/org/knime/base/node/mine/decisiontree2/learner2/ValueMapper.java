@@ -48,7 +48,7 @@
  * History
  *   31.07.2007 (sieb): created
  */
-package org.knime.base.node.mine.decisiontree2.learner;
+package org.knime.base.node.mine.decisiontree2.learner2;
 
 import java.util.HashMap;
 
@@ -58,6 +58,8 @@ import java.util.HashMap;
  *
  * @author Christoph Sieb, University of Konstanz
  * @param <S> the type to map to an integer
+ * 
+ * @since 2.6
  */
 public class ValueMapper<S> {
 

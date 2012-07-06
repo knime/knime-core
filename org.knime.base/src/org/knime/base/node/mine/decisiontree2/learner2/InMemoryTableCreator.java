@@ -48,7 +48,7 @@
  * History
  *   31.07.2007 (sieb): created
  */
-package org.knime.base.node.mine.decisiontree2.learner;
+package org.knime.base.node.mine.decisiontree2.learner2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -68,6 +68,8 @@ import org.knime.core.node.ExecutionContext;
  * attribute).
  *
  * @author Christoph Sieb, University of Konstanz
+ * 
+ * @since 2.6
  */
 public class InMemoryTableCreator {
 

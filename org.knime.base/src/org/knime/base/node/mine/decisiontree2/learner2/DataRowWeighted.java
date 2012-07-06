@@ -46,42 +46,101 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   01.08.2007 (sieb): created
+ *   31.07.2007 (sieb): created
  */
-package org.knime.base.node.mine.decisiontree2.learner;
-
-import org.knime.core.data.DataCell;
+package org.knime.base.node.mine.decisiontree2.learner2;
 
 /**
- * Super class for all nominal split variants.
+ * A data row represented as a double array. Nominal values must be mapped to be
+ * used. The class value is also a mapped int value.
  *
  * @author Christoph Sieb, University of Konstanz
+ * @since 2.6
  */
-public abstract class SplitNominal extends Split {
+public class DataRowWeighted {
+    /**
+     * Holds the underlying {@link ClassValueDataRow}.
+     */
+    private final ClassValueDataRow m_dataRow;
 
     /**
-     * Constructs the best split for the given attribute list and the class
-     * distribution. The results can be retrieved from getter methods. This is a
-     * nominal split.
-     *
-     * @param table the table for which to create the split
-     * @param attributeIndex the index specifying the attribute for which to
-     *            calculate the split
-     * @param splitQualityMeasure the quality measure to determine the best
-     *            split (e.g. gini or gain ratio)
+     * Holds the weight for this {@link ClassValueDataRow}.
      */
-    public SplitNominal(final InMemoryTable table, final int attributeIndex,
-            final SplitQualityMeasure splitQualityMeasure) {
-        super(table, attributeIndex, splitQualityMeasure);
+    private final double m_weight;
+
+    /**
+     * Constructs a weighted data row.
+     *
+     * @param dataRow the underlying {@link ClassValueDataRow}
+     * @param weight the weight for this {@link DataRowWeighted}
+     */
+    public DataRowWeighted(final ClassValueDataRow dataRow, final double weight) {
+        m_dataRow = dataRow;
+        m_weight = weight;
     }
 
     /**
-     * Returns the possible values of this splits attribute. Those values are
-     * used for the split criteria.
+     * Constructs a weighted data row from another one and sets the weight to
+     * the given value.
      *
-     * @return the possible values of this splits attribute
+     * @param dataRow the other {@link DataRowWeighted}
+     * @param weight the weight for this {@link DataRowWeighted}
      */
-    public DataCell[] getSplitValues() {
-        return getTable().getNominalValuesInMappingOrder(getAttributeIndex());
+    public DataRowWeighted(final DataRowWeighted dataRow, final double weight) {
+        m_dataRow = dataRow.m_dataRow;
+        m_weight = weight;
+    }
+
+    /**
+     * Returns the class value.
+     *
+     * @return the class value
+     */
+    public int getClassValue() {
+        return m_dataRow.getClassValue();
+    }
+
+    /**
+     * Returns the attribute value for the given index.
+     *
+     * @param index the column index for which to return the double value
+     *
+     * @return the attribute value for the given index
+     */
+    public double getValue(final int index) {
+        return m_dataRow.getValue(index);
+    }
+
+    /**
+     * Returns the number of attribute values, excluding the class value.
+     *
+     * @return the number of attribute values, excluding the class value
+     */
+    public int getNumAttributes() {
+        return m_dataRow.getNumAttributes();
+    }
+
+    /**
+     * Return the weight of this data row.
+     *
+     * @return the weight of this data row
+     */
+    public double getWeight() {
+        return m_weight;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[<");
+        sb.append(m_dataRow.toString());
+        sb.append("><weight:");
+        sb.append(m_weight);
+        sb.append(">]");
+
+        return sb.toString();
     }
 }

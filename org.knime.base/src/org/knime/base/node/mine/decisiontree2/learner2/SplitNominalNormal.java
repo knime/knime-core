@@ -48,7 +48,7 @@
  * History
  *   02.08.2007 (sieb): created
  */
-package org.knime.base.node.mine.decisiontree2.learner;
+package org.knime.base.node.mine.decisiontree2.learner2;
 
 /**
  * This class determines the best split for a nominal attribute. The split is
@@ -56,6 +56,8 @@ package org.knime.base.node.mine.decisiontree2.learner;
  * branching degree of the tree.
  *
  * @author Christoph Sieb, University of Konstanz
+ * 
+ * @since 2.6
  */
 public class SplitNominalNormal extends SplitNominal {
 

@@ -48,7 +48,7 @@
  * History
  *   22.02.2007 (sieb): created
  */
-package org.knime.base.node.mine.decisiontree2.learner;
+package org.knime.base.node.mine.decisiontree2.learner2;
 
 
 /**
@@ -56,6 +56,8 @@ package org.knime.base.node.mine.decisiontree2.learner;
  * distribution.
  *
  * @author Christoph Sieb, University of Konstanz
+ * 
+ * @since 2.6
  */
 public abstract class Split {
 

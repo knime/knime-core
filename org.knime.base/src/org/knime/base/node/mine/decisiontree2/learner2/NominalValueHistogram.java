@@ -48,7 +48,7 @@
  * History
  *   02.08.2007 (sieb): created
  */
-package org.knime.base.node.mine.decisiontree2.learner;
+package org.knime.base.node.mine.decisiontree2.learner2;
 
 /**
  * Represents a count histogram for nominal values. It counts the class values
@@ -57,6 +57,8 @@ package org.knime.base.node.mine.decisiontree2.learner;
  * nominal subset splits.
  *
  * @author Christoph Sieb, University of Konstanz
+ * 
+ * @since 2.6
  */
 public class NominalValueHistogram {
 

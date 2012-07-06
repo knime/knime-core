@@ -83,7 +83,7 @@ import org.dmg.pmml40.TreeModelDocument;
 import org.dmg.pmml40.TreeModelDocument.TreeModel;
 import org.dmg.pmml40.TreeModelDocument.TreeModel.SplitCharacteristic;
 import org.dmg.pmml40.TrueDocument;
-import org.knime.base.node.mine.decisiontree2.learner.SplitNominalBinary;
+import org.knime.base.node.mine.decisiontree2.learner2.SplitNominalBinary;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeLeaf;

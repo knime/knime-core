@@ -48,7 +48,7 @@
  * History
  *   31.07.2007 (sieb): created
  */
-package org.knime.base.node.mine.decisiontree2.learner;
+package org.knime.base.node.mine.decisiontree2.learner2;
 
 import java.util.Arrays;
 import java.util.Iterator;
@@ -62,6 +62,8 @@ import org.knime.core.data.DataCell;
  * values and possible values of nominal attributes.
  *
  * @author Christoph Sieb, University of Konstanz
+ * 
+ * @since 2.6
  */
 public class InMemoryTable implements Iterable<DataRowWeighted> {
 

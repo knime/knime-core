@@ -48,13 +48,15 @@
  * History
  *   03.08.2007 (sieb): created
  */
-package org.knime.base.node.mine.decisiontree2.learner;
+package org.knime.base.node.mine.decisiontree2.learner2;
 
 
 /**
  * Partitions a table according to a given split.
  *
  * @author Christoph Sieb, University of Konstanz
+ * 
+ * @since 2.6
  */
 public class Partitioner {
 

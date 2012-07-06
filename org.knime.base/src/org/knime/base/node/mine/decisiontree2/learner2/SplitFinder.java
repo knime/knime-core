@@ -48,7 +48,7 @@
  * History
  *   01.08.2007 (sieb): created
  */
-package org.knime.base.node.mine.decisiontree2.learner;
+package org.knime.base.node.mine.decisiontree2.learner2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -59,6 +59,8 @@ import java.util.List;
  * retrieved via getter methdods.
  *
  * @author Christoph Sieb, University of Konstanz
+ * 
+ * @since 2.6
  */
 public class SplitFinder {
     private int m_splitAttributeIndex;

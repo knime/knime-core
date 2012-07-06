@@ -48,7 +48,7 @@
  * History
  *   22.02.2007 (sieb): created
  */
-package org.knime.base.node.mine.decisiontree2.learner;
+package org.knime.base.node.mine.decisiontree2.learner2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,6 +58,8 @@ import java.util.List;
  * split consists of subsets for both partitions.
  *
  * @author Christoph Sieb, University of Konstanz
+ * 
+ * @since 2.6
  */
 public class SplitNominalBinary extends SplitNominal {
 

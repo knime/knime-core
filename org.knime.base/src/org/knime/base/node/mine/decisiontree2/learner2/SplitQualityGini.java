@@ -48,7 +48,7 @@
  * History
  *   19.03.2007 (sieb): created
  */
-package org.knime.base.node.mine.decisiontree2.learner;
+package org.knime.base.node.mine.decisiontree2.learner2;
 
 /**
  * Implements the gini index split quality measure. This gini index is
@@ -56,6 +56,8 @@ package org.knime.base.node.mine.decisiontree2.learner;
  * larger than another gini index (same as for gain ratio).
  *
  * @author Christoph Sieb, University of Konstanz
+ * 
+ * @since 2.6
  */
 public class SplitQualityGini extends SplitQualityMeasure {
 

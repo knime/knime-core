@@ -48,7 +48,7 @@
  * History
  *   22.02.2007 (sieb): created
  */
-package org.knime.base.node.mine.decisiontree2.learner;
+package org.knime.base.node.mine.decisiontree2.learner2;
 
 import java.util.Iterator;
 
@@ -56,6 +56,8 @@ import java.util.Iterator;
  * This class determines the best split for a numeric attribute.
  *
  * @author Christoph Sieb, University of Konstanz
+ * 
+ * @since 2.6
  */
 public class SplitContinuous extends Split {
 

@@ -48,7 +48,7 @@
  * History
  *   25.10.2006 (sieb): created
  */
-package org.knime.base.node.mine.decisiontree2.learner;
+package org.knime.base.node.mine.decisiontree2.learner2;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -68,6 +68,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * Dialog for a decision tree learner node.
  *
  * @author Christoph Sieb, University of Konstanz
+ * @since 2.6
  */
 public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
 

@@ -46,79 +46,56 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   31.07.2007 (sieb): created
+ *   12.03.2007 (sieb): created
  */
-package org.knime.base.node.mine.decisiontree2.learner;
+package org.knime.base.node.mine.decisiontree2.learner2;
+
+import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 
 /**
- * A data row represented as a double array. Nominal values must be mapped to be
- * used. The class value is also a mapped int value.
+ * A pruning result is the possibly new node and a quality value (e.g.
+ * description length, estimated error) of this node.
  *
  * @author Christoph Sieb, University of Konstanz
+ * 
+ * @since 2.6
  */
-public class ClassValueDataRow {
+public class PruningResult {
+
+    private double m_qualityValue;
+
+    private DecisionTreeNode m_node;
 
     /**
-     * Holds the attribute values as doubles.
-     */
-    private double[] m_attributeValues;
-
-    /**
-     * Holds the class value as int.
-     */
-    private int m_classValue;
-
-    /**
-     * Constructs a data row.
+     * Creates a pruning result from a node and its quality value (e.g.
+     * description length, estimated error).
      *
-     * @param attributeValues the attribute values (nominal values are mapped
-     *            doubles)
-     * @param classValue the nominal class value mapped to an integer
+     * @param qualityValue the quality value (e.g. description length, estimated
+     *            error) of the node
+     *
+     * @param node the node of the pruning result
      */
-    public ClassValueDataRow(final double[] attributeValues, final int classValue) {
-        m_attributeValues = attributeValues;
-        m_classValue = classValue;
+    public PruningResult(final double qualityValue,
+            final DecisionTreeNode node) {
+        m_qualityValue = qualityValue;
+        m_node = node;
     }
 
     /**
-     * Returns the class value.
+     * Returns the quality value for this node.
      *
-     * @return the class value
+     * @return the quality value length for this node
      */
-    public int getClassValue() {
-        return m_classValue;
+    public double getQualityValue() {
+        return m_qualityValue;
     }
 
     /**
-     * Returns the attribute value for the given index.
+     * Returns the decision tree of this pruning result.
      *
-     * @param index the column index for which to return the double value
-     *
-     * @return the attribute value for the given index
+     * @return the decision tree of this pruning result
      */
-    public double getValue(final int index) {
-        return m_attributeValues[index];
-    }
-
-    /**
-     * Returns the number of attribute values, excluding the class value.
-     *
-     * @return the number of attribute values, excluding the class value
-     */
-    public int getNumAttributes() {
-        return m_attributeValues.length;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        for (double value : m_attributeValues) {
-            sb.append(value).append(";");
-        }
-        sb.append(m_classValue);
-        return sb.toString();
+    public DecisionTreeNode getNode() {
+        return m_node;
     }
 }

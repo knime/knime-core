@@ -59,7 +59,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.knime.base.data.util.DataCellStringMapper;
-import org.knime.base.node.mine.decisiontree2.learner.SplitNominalBinary;
+import org.knime.base.node.mine.decisiontree2.learner2.SplitNominalBinary;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;

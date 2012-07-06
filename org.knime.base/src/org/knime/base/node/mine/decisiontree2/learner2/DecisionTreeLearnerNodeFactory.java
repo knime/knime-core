@@ -44,46 +44,65 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- *
- * History
- *   01.08.2007 (sieb): created
  */
-package org.knime.base.node.mine.decisiontree2.learner;
+package org.knime.base.node.mine.decisiontree2.learner2;
+
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
- * Implements an atomic double (i.e. synchronized double).
+ * The Factory for the {@link DecisionTreeLearnerNodeModel} algorithm.
  *
  * @author Christoph Sieb, University of Konstanz
+ * @since 2.6
  */
-public class AtomicDouble {
-    private double m_value;
+public class DecisionTreeLearnerNodeFactory
+        extends NodeFactory<DecisionTreeLearnerNodeModel> {
 
     /**
-     * Creates an atomic double with the given value.
-     *
-     * @param value the initial value to set
+     * {@inheritDoc}
      */
-    public AtomicDouble(final double value) {
-        m_value = value;
+    @Override
+    public DecisionTreeLearnerNodeModel createNodeModel() {
+        return new DecisionTreeLearnerNodeModel();
     }
 
     /**
-     * Returns the value.
-     *
-     * @return the value
+     * {@inheritDoc}
      */
-    public synchronized double getValue() {
-        return m_value;
+    @Override
+    public int getNrNodeViews() {
+        return 2;
     }
 
     /**
-     * Increments this double by the given increment.
-     *
-     * @param incrementValue the value to add to the double
-     * @return the value after incrementing
+     * {@inheritDoc}
      */
-    public synchronized double incrementAndGet(final double incrementValue) {
-        m_value += incrementValue;
-        return m_value;
+    @Override
+    public NodeView<DecisionTreeLearnerNodeModel> createNodeView(
+                final int i, final DecisionTreeLearnerNodeModel nodeModel) {
+        if (i == 0) {
+            return new DecTreeLearnerGraphView(nodeModel);
+        } else {
+            return new DecTreeNodeView(nodeModel);
+        }
+    }
+
+    /**
+     * @return <b>true</b>.
+     * @see org.knime.core.node.NodeFactory#hasDialog()
+     */
+    @Override
+    public boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new DecisionTreeLearnerNodeDialog();
     }
 }

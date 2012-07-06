@@ -48,7 +48,7 @@
  * History
  *   12.03.2007 (sieb): created
  */
-package org.knime.base.node.mine.decisiontree2.learner;
+package org.knime.base.node.mine.decisiontree2.learner2;
 
 import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
@@ -59,6 +59,8 @@ import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplit;
  * Class implementing pruning schemes.
  *
  * @author Christoph Sieb, University of Konstanz
+ * 
+ * @since 2.6
  */
 public final class Pruner {
 

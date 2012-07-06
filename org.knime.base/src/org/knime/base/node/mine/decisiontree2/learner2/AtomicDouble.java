@@ -46,54 +46,45 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   12.03.2007 (sieb): created
+ *   01.08.2007 (sieb): created
  */
-package org.knime.base.node.mine.decisiontree2.learner;
-
-import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
+package org.knime.base.node.mine.decisiontree2.learner2;
 
 /**
- * A pruning result is the possibly new node and a quality value (e.g.
- * description length, estimated error) of this node.
+ * Implements an atomic double (i.e. synchronized double).
  *
  * @author Christoph Sieb, University of Konstanz
+ * @since 2.6
  */
-public class PruningResult {
-
-    private double m_qualityValue;
-
-    private DecisionTreeNode m_node;
+public class AtomicDouble {
+    private double m_value;
 
     /**
-     * Creates a pruning result from a node and its quality value (e.g.
-     * description length, estimated error).
+     * Creates an atomic double with the given value.
      *
-     * @param qualityValue the quality value (e.g. description length, estimated
-     *            error) of the node
-     *
-     * @param node the node of the pruning result
+     * @param value the initial value to set
      */
-    public PruningResult(final double qualityValue,
-            final DecisionTreeNode node) {
-        m_qualityValue = qualityValue;
-        m_node = node;
+    public AtomicDouble(final double value) {
+        m_value = value;
     }
 
     /**
-     * Returns the quality value for this node.
+     * Returns the value.
      *
-     * @return the quality value length for this node
+     * @return the value
      */
-    public double getQualityValue() {
-        return m_qualityValue;
+    public synchronized double getValue() {
+        return m_value;
     }
 
     /**
-     * Returns the decision tree of this pruning result.
+     * Increments this double by the given increment.
      *
-     * @return the decision tree of this pruning result
+     * @param incrementValue the value to add to the double
+     * @return the value after incrementing
      */
-    public DecisionTreeNode getNode() {
-        return m_node;
+    public synchronized double incrementAndGet(final double incrementValue) {
+        m_value += incrementValue;
+        return m_value;
     }
 }

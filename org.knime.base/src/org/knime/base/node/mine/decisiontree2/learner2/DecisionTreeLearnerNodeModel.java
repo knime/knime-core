@@ -45,7 +45,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  */
-package org.knime.base.node.mine.decisiontree2.learner;
+package org.knime.base.node.mine.decisiontree2.learner2;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -109,6 +109,8 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
  * @author Christoph Sieb, University of Konstanz
  *
  * @see DecisionTreeLearnerNodeFactory
+ * 
+ * @since 2.6
  */
 public class DecisionTreeLearnerNodeModel extends NodeModel {
 

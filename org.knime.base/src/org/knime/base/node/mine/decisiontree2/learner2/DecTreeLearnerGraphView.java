@@ -48,7 +48,7 @@
  * History
  *   28.07.2010 (hofer): created
  */
-package org.knime.base.node.mine.decisiontree2.learner;
+package org.knime.base.node.mine.decisiontree2.learner2;
 
 import java.awt.Color;
 import java.awt.Container;
@@ -99,6 +99,8 @@ import org.knime.core.node.property.hilite.KeyEvent;
  * The graph view displayed the view of the Decision Tree to Image node.
  *
  * @author Heiko HOfer
+ * 
+ * @since 2.6
  */
 final class DecTreeLearnerGraphView extends
         NodeView<DecisionTreeLearnerNodeModel> implements HiLiteListener {
