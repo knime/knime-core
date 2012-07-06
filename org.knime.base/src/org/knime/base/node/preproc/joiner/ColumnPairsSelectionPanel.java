@@ -72,13 +72,22 @@ import javax.swing.JPanel;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
 /**
- * A Component used to define a list of column pairs.
+ * A Component used to define a list of column pairs. It is designed to select
+ * column pairs (inlcuding row key column) from two tables. By overriding
+ * initComboBox(...) the list of possible selections can be pruned, e.g. by
+ * just a certain data type.
+ * If pairs should be selectable from a single table call updateData providing
+ * the same spec for the left and the right column.
  *
  * @author Heiko Hofer
  */
 public class ColumnPairsSelectionPanel extends JPanel {
+    /** Name of the row key column in the dialog. */
+    static final String ROW_KEY_COL_NAME = "Row ID";
+
     private static final long serialVersionUID = 1L;
 
     private DataTableSpec[] m_specs;
@@ -128,8 +137,7 @@ public class ColumnPairsSelectionPanel extends JPanel {
     /**
      * Updates the component with the given data.
      * leftSelected[i] and rightSelected[i] are a pair of columns out of
-     * specs[0] and specs[1], respectively. If not, they will be replaced by
-     * Joiner2Settings.ROW_KEY_COL_NAME.
+     * specs[0] and specs[1], respectively.
      *
      * UI-Controls are provided to change, add or remove pairs of columns.
      *
@@ -156,8 +164,6 @@ public class ColumnPairsSelectionPanel extends JPanel {
     /**
      * Returns an array with elements of type DataColumnSpec or String. If
      * an element is of type it is one column spec of specs[0] (see updataData).
-     * If an element is of type string it is equal to
-     * Joiner2Settings.ROW_KEY_COL_NAME.
      *
      * @return the selected columns of the left table
      */
@@ -172,8 +178,6 @@ public class ColumnPairsSelectionPanel extends JPanel {
     /**
      * Returns an array with elements of type DataColumnSpec or String. If
      * an element is of type it is one column spec of specs[1] (see updataData).
-     * If an element is of type string it is equal to
-     * Joiner2Settings.ROW_KEY_COL_NAME.
      *
      * @return the selected columns of the right table
      */
@@ -197,13 +201,19 @@ public class ColumnPairsSelectionPanel extends JPanel {
     }
 
 
-    private void initComboBox(final DataTableSpec spec,
+    /**
+     * Initialize a combo box and set the selected index.
+     * @param spec the spec of the underlying table
+     * @param comboBox the combo box to initialize
+     * @param selected the value that should be selected
+     */
+    protected void initComboBox(final DataTableSpec spec,
             final JComboBox comboBox,
             final String selected) {
         DefaultComboBoxModel comboBoxModel =
             (DefaultComboBoxModel)comboBox.getModel();
         comboBoxModel.removeAllElements();
-        comboBoxModel.addElement(Joiner2Settings.ROW_KEY_COL_NAME);
+        comboBoxModel.addElement(ROW_KEY_COL_NAME);
         comboBox.setSelectedIndex(0);
         for (DataColumnSpec colSpec : spec) {
             comboBoxModel.addElement(colSpec);
@@ -219,11 +229,13 @@ public class ColumnPairsSelectionPanel extends JPanel {
             final String rightSelected) {
         m_leftComboBoxes.add(index, new JComboBox());
         m_leftComboBoxes.get(index).setModel(new DefaultComboBoxModel());
-        m_leftComboBoxes.get(index).setRenderer(new ColumnSpecListRenderer());
+        m_leftComboBoxes.get(index).setRenderer(
+                new DataColumnSpecListCellRenderer());
         initComboBox(m_specs[0], m_leftComboBoxes.get(index), leftSelected);
         m_rightComboBoxes.add(index, new JComboBox());
         m_rightComboBoxes.get(index).setModel(new DefaultComboBoxModel());
-        m_rightComboBoxes.get(index).setRenderer(new ColumnSpecListRenderer());
+        m_rightComboBoxes.get(index).setRenderer(
+                new DataColumnSpecListCellRenderer());
         initComboBox(m_specs[1], m_rightComboBoxes.get(index), rightSelected);
         JButton addButton = new JButton("+");
         addButton.setToolTipText("Add row preceding this.");
@@ -347,7 +359,22 @@ public class ColumnPairsSelectionPanel extends JPanel {
      * @return a component for the header view of a scroll pane.
      */
     public Component getHeaderView() {
-        return new ColumnHeaderView();
+        return getHeaderView("Left Table", "Right Table");
+    }
+
+
+
+    /**
+     * Returns a component which is intended to be used as the header view of
+     * a scroll pane.
+     *
+     * @param labelLeft the label of the left column
+     * @param labelRight the label of the right column
+     * @return a component for the header view of a scroll pane.
+     */
+    public Component getHeaderView(final String labelLeft,
+            final String labelRight) {
+        return new ColumnHeaderView(labelLeft, labelRight);
     }
 
     /**
@@ -359,11 +386,15 @@ public class ColumnPairsSelectionPanel extends JPanel {
     private class ColumnHeaderView extends JPanel {
         private static final long serialVersionUID = 1L;
 
-        private JLabel m_leftHeader = new JLabel("Left Table");
-        private JLabel m_rightHeader = new JLabel("Right Table");
+        private JLabel m_leftHeader;
+        private JLabel m_rightHeader;
 
-        public ColumnHeaderView() {
+
+        public ColumnHeaderView(final String leftLabel,
+                final String rightLabel) {
             super(null);
+            m_leftHeader = new JLabel(leftLabel);
+            m_rightHeader = new JLabel(rightLabel);
             add(m_leftHeader);
             add(m_rightHeader);
         }
@@ -390,4 +421,5 @@ public class ColumnPairsSelectionPanel extends JPanel {
             super.paintComponent(g);
         }
     }
+
 }

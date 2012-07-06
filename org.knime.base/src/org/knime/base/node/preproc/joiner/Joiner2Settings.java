@@ -135,8 +135,7 @@ public class Joiner2Settings {
         MatchAny;
     }
 
-    /** Name of the row key column in the dialog. */
-    static final String ROW_KEY_COL_NAME = "Row ID";
+
     /** Internally used row key identifier. */
     static final String ROW_KEY_IDENTIFIER = "$RowID$";
 
