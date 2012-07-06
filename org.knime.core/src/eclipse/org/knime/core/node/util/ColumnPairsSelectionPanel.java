@@ -48,7 +48,7 @@
  * History
  *   18.11.2009 (Heiko Hofer): created
  */
-package org.knime.base.node.preproc.joiner;
+package org.knime.core.node.util;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -72,17 +72,17 @@ import javax.swing.JPanel;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
 /**
  * A Component used to define a list of column pairs. It is designed to select
- * column pairs (inlcuding row key column) from two tables. By overriding
+ * column pairs (including row key column) from two tables. By overriding
  * initComboBox(...) the list of possible selections can be pruned, e.g. by
  * just a certain data type.
  * If pairs should be selectable from a single table call updateData providing
  * the same spec for the left and the right column.
  *
  * @author Heiko Hofer
+ * @since 2.6
  */
 public class ColumnPairsSelectionPanel extends JPanel {
     /** Name of the row key column in the dialog. */

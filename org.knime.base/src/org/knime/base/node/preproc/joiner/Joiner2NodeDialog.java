@@ -83,6 +83,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnFilterPanel;
+import org.knime.core.node.util.ColumnPairsSelectionPanel;
 
 /**
  * This is the dialog for the joiner node.
