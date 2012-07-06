@@ -108,14 +108,14 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
  *
  * @author Christoph Sieb, University of Konstanz
  *
- * @see DecisionTreeLearnerNodeFactory
+ * @see DecisionTreeLearnerNodeFactory2
  * 
  * @since 2.6
  */
-public class DecisionTreeLearnerNodeModel extends NodeModel {
+public class DecisionTreeLearnerNodeModel2 extends NodeModel {
 
     private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(DecisionTreeLearnerNodeModel.class);
+            NodeLogger.getLogger(DecisionTreeLearnerNodeModel2.class);
 
     private static final String SAVE_INTERNALS_FILE_NAME = "TreeInternals.zip";
 
@@ -293,7 +293,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      * The column which contains the classification Information.
      */
     private final SettingsModelString m_classifyColumn =
-        DecisionTreeLearnerNodeDialog.createSettingsClassColumn();
+        DecisionTreeLearnerNodeDialog2.createSettingsClassColumn();
 
 //     /**
 //      * The pruning confidence threshold.
@@ -305,19 +305,19 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      * The pruning method used for pruning.
      */
     private final SettingsModelString m_pruningMethod =
-        DecisionTreeLearnerNodeDialog.createSettingsPruningMethod();
+        DecisionTreeLearnerNodeDialog2.createSettingsPruningMethod();
 
     /**
      * The quality measure to determine the split point.
      */
     private final SettingsModelString m_splitQualityMeasureType =
-        DecisionTreeLearnerNodeDialog.createSettingsQualityMeasure();
+        DecisionTreeLearnerNodeDialog2.createSettingsQualityMeasure();
 
     /**
      * The number of records stored for the view.
      */
     private final SettingsModelIntegerBounded m_numberRecordsStoredForView =
-            DecisionTreeLearnerNodeDialog.createSettingsNumberRecordsForView();
+            DecisionTreeLearnerNodeDialog2.createSettingsNumberRecordsForView();
 
     /**
      * The number of attributes of the input data table.
@@ -339,20 +339,20 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
     private double m_alloverRowCount;
 
     private final SettingsModelIntegerBounded m_minNumberRecordsPerNode =
-        DecisionTreeLearnerNodeDialog.createSettingsMinNumRecords();
+        DecisionTreeLearnerNodeDialog2.createSettingsMinNumRecords();
 
     private final SettingsModelBoolean m_averageSplitpoint =
-        DecisionTreeLearnerNodeDialog.createSettingsSplitPoint();
+        DecisionTreeLearnerNodeDialog2.createSettingsSplitPoint();
 
     private final SettingsModelBoolean m_binaryNominalSplitMode =
-            DecisionTreeLearnerNodeDialog.createSettingsBinaryNominalSplit();
+            DecisionTreeLearnerNodeDialog2.createSettingsBinaryNominalSplit();
 
     private final SettingsModelBoolean m_skipColumns =
-            DecisionTreeLearnerNodeDialog
+            DecisionTreeLearnerNodeDialog2
             .createSettingsSkipNominalColumnsWithoutDomain();
 
     private final SettingsModelBoolean m_filterNominalValuesFromParent =
-            DecisionTreeLearnerNodeDialog.
+            DecisionTreeLearnerNodeDialog2.
             createSettingsFilterNominalValuesFromParent(
                     m_binaryNominalSplitMode);
 
@@ -365,10 +365,10 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      */
     private final SettingsModelIntegerBounded
            m_maxNumNominalsForCompleteComputation =
-           DecisionTreeLearnerNodeDialog.createSettingsBinaryMaxNominalValues();
+           DecisionTreeLearnerNodeDialog2.createSettingsBinaryMaxNominalValues();
 
     private final SettingsModelIntegerBounded m_parallelProcessing =
-            DecisionTreeLearnerNodeDialog.createSettingsNumProcessors();
+            DecisionTreeLearnerNodeDialog2.createSettingsNumProcessors();
 
     /**
      * The decision tree model to be induced by the execute method.
@@ -379,7 +379,7 @@ public class DecisionTreeLearnerNodeModel extends NodeModel {
      * Inits a new Decision Tree model with one data in- and one model output
      * port. In addition it has an optional model input.
      */
-    public DecisionTreeLearnerNodeModel() {
+    public DecisionTreeLearnerNodeModel2() {
         super(new PortType[]{BufferedDataTable.TYPE,
                 new PortType(PMMLPortObject.class, true)},
                 new PortType[]{PMMLPortObject.TYPE});

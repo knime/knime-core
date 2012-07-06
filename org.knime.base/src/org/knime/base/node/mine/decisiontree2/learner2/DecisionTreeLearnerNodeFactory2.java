@@ -52,20 +52,20 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * The Factory for the {@link DecisionTreeLearnerNodeModel} algorithm.
+ * The Factory for the {@link DecisionTreeLearnerNodeModel2} algorithm.
  *
  * @author Christoph Sieb, University of Konstanz
  * @since 2.6
  */
-public class DecisionTreeLearnerNodeFactory
-        extends NodeFactory<DecisionTreeLearnerNodeModel> {
+public class DecisionTreeLearnerNodeFactory2
+        extends NodeFactory<DecisionTreeLearnerNodeModel2> {
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public DecisionTreeLearnerNodeModel createNodeModel() {
-        return new DecisionTreeLearnerNodeModel();
+    public DecisionTreeLearnerNodeModel2 createNodeModel() {
+        return new DecisionTreeLearnerNodeModel2();
     }
 
     /**
@@ -80,12 +80,12 @@ public class DecisionTreeLearnerNodeFactory
      * {@inheritDoc}
      */
     @Override
-    public NodeView<DecisionTreeLearnerNodeModel> createNodeView(
-                final int i, final DecisionTreeLearnerNodeModel nodeModel) {
+    public NodeView<DecisionTreeLearnerNodeModel2> createNodeView(
+                final int i, final DecisionTreeLearnerNodeModel2 nodeModel) {
         if (i == 0) {
-            return new DecTreeLearnerGraphView(nodeModel);
+            return new DecTreeLearnerGraphView2(nodeModel);
         } else {
-            return new DecTreeNodeView(nodeModel);
+            return new DecTreeNodeView2(nodeModel);
         }
     }
 
@@ -103,6 +103,6 @@ public class DecisionTreeLearnerNodeFactory
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
-        return new DecisionTreeLearnerNodeDialog();
+        return new DecisionTreeLearnerNodeDialog2();
     }
 }

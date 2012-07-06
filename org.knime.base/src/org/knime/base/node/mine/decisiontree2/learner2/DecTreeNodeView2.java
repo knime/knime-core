@@ -75,7 +75,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * 
  * @since 2.6
  */
-public class DecTreeNodeView extends NodeView<DecisionTreeLearnerNodeModel> {
+public class DecTreeNodeView2 extends NodeView<DecisionTreeLearnerNodeModel2> {
 
     private JTree m_jTree;
 
@@ -88,7 +88,7 @@ public class DecTreeNodeView extends NodeView<DecisionTreeLearnerNodeModel> {
      *
      * @param model the underlying NodeModel
      */
-    public DecTreeNodeView(final DecisionTreeLearnerNodeModel model) {
+    public DecTreeNodeView2(final DecisionTreeLearnerNodeModel2 model) {
         super(model);
 //        assert (model instanceof DecisionTreeLearnerNodeModel);
         m_jTree = new JTree();
@@ -101,7 +101,7 @@ public class DecTreeNodeView extends NodeView<DecisionTreeLearnerNodeModel> {
         setComponent(treeView);
         // retrieve HiLiteHandler from Input port
         m_hiLiteHdl = ((model)
-                .getInHiLiteHandler(DecisionTreeLearnerNodeModel.DATA_INPORT));
+                .getInHiLiteHandler(DecisionTreeLearnerNodeModel2.DATA_INPORT));
         // and add menu entries for HiLite-ing
         m_hiLiteMenu = this.createHiLiteMenu();
         this.getJMenuBar().add(m_hiLiteMenu);
@@ -114,7 +114,7 @@ public class DecTreeNodeView extends NodeView<DecisionTreeLearnerNodeModel> {
     @Override
     protected void modelChanged() {
         NodeModel model = this.getNodeModel();
-        DecisionTree dt = ((DecisionTreeLearnerNodeModel)model).
+        DecisionTree dt = ((DecisionTreeLearnerNodeModel2)model).
                                 getDecisionTree();
         if (dt != null) {
             // set new model
@@ -125,8 +125,8 @@ public class DecTreeNodeView extends NodeView<DecisionTreeLearnerNodeModel> {
             // preferred size should be used instead)
             m_jTree.setRowHeight(0);
             // retrieve HiLiteHandler from Input port
-            m_hiLiteHdl = (((DecisionTreeLearnerNodeModel)model)
-                    .getInHiLiteHandler(DecisionTreeLearnerNodeModel.
+            m_hiLiteHdl = (((DecisionTreeLearnerNodeModel2)model)
+                    .getInHiLiteHandler(DecisionTreeLearnerNodeModel2.
                             DATA_INPORT));
             // and adjust menu entries for HiLite-ing
             m_hiLiteMenu.setEnabled(m_hiLiteHdl != null);

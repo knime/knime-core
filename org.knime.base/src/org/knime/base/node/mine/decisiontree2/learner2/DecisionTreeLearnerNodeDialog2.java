@@ -70,32 +70,32 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * @author Christoph Sieb, University of Konstanz
  * @since 2.6
  */
-public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
+public class DecisionTreeLearnerNodeDialog2 extends DefaultNodeSettingsPane {
 
     /**
      * Constructor: create NodeDialog with one column selectors and two other
      * properties.
      */
-    public DecisionTreeLearnerNodeDialog() {
+    public DecisionTreeLearnerNodeDialog2() {
         createNewGroup("General");
         // class column selection
         this.addDialogComponent(new DialogComponentColumnNameSelection(
                 createSettingsClassColumn(),
-                "Class column", DecisionTreeLearnerNodeModel.DATA_INPORT,
+                "Class column", DecisionTreeLearnerNodeModel2.DATA_INPORT,
                 NominalValue.class));
 
         // quality measure
         String[] qualityMethods =
-                {DecisionTreeLearnerNodeModel.SPLIT_QUALITY_GAIN_RATIO,
-                        DecisionTreeLearnerNodeModel.SPLIT_QUALITY_GINI};
+                {DecisionTreeLearnerNodeModel2.SPLIT_QUALITY_GAIN_RATIO,
+                        DecisionTreeLearnerNodeModel2.SPLIT_QUALITY_GINI};
         this.addDialogComponent(new DialogComponentStringSelection(
                 createSettingsQualityMeasure(),
                         "Quality measure", qualityMethods));
 
         // pruning method
         String[] methods =
-                {DecisionTreeLearnerNodeModel.PRUNING_NO,
-                 DecisionTreeLearnerNodeModel.PRUNING_MDL};
+                {DecisionTreeLearnerNodeModel2.PRUNING_NO,
+                 DecisionTreeLearnerNodeModel2.PRUNING_MDL};
                  // DecisionTreeLearnerNodeModel.PRUNING_ESTIMATED_ERROR};
         this.addDialogComponent(new DialogComponentStringSelection(
                 createSettingsPruningMethod(),
@@ -169,7 +169,7 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
      */
     static SettingsModelString createSettingsClassColumn() {
         return new SettingsModelString(
-                    DecisionTreeLearnerNodeModel.KEY_CLASSIFYCOLUMN, null);
+                    DecisionTreeLearnerNodeModel2.KEY_CLASSIFYCOLUMN, null);
     }
 
     /**
@@ -177,8 +177,8 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
      */
     static SettingsModelString createSettingsQualityMeasure() {
         return new SettingsModelString(
-                DecisionTreeLearnerNodeModel.KEY_SPLIT_QUALITY_MEASURE,
-                DecisionTreeLearnerNodeModel.DEFAULT_SPLIT_QUALITY_MEASURE);
+                DecisionTreeLearnerNodeModel2.KEY_SPLIT_QUALITY_MEASURE,
+                DecisionTreeLearnerNodeModel2.DEFAULT_SPLIT_QUALITY_MEASURE);
     }
 
     /**
@@ -186,8 +186,8 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
      */
     static SettingsModelString createSettingsPruningMethod() {
         return new SettingsModelString(
-                    DecisionTreeLearnerNodeModel.KEY_PRUNING_METHOD,
-                    DecisionTreeLearnerNodeModel.DEFAULT_PRUNING_METHOD);
+                    DecisionTreeLearnerNodeModel2.KEY_PRUNING_METHOD,
+                    DecisionTreeLearnerNodeModel2.DEFAULT_PRUNING_METHOD);
     }
 
     /**
@@ -195,8 +195,8 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
      */
     static SettingsModelDoubleBounded createSettingsConfidenceValue() {
         return new SettingsModelDoubleBounded(
-          DecisionTreeLearnerNodeModel.KEY_PRUNING_CONFIDENCE_THRESHOLD,
-          DecisionTreeLearnerNodeModel.DEFAULT_PRUNING_CONFIDENCE_THRESHOLD,
+          DecisionTreeLearnerNodeModel2.KEY_PRUNING_CONFIDENCE_THRESHOLD,
+          DecisionTreeLearnerNodeModel2.DEFAULT_PRUNING_CONFIDENCE_THRESHOLD,
           0.0, 1.0);
     }
 
@@ -207,8 +207,8 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
         // min number records for a node also used for determine whether a
         // partition is useful both are closely related
         return new SettingsModelIntegerBounded(
-                DecisionTreeLearnerNodeModel.KEY_MIN_NUMBER_RECORDS_PER_NODE,
-                DecisionTreeLearnerNodeModel.DEFAULT_MIN_NUM_RECORDS_PER_NODE,
+                DecisionTreeLearnerNodeModel2.KEY_MIN_NUMBER_RECORDS_PER_NODE,
+                DecisionTreeLearnerNodeModel2.DEFAULT_MIN_NUM_RECORDS_PER_NODE,
                 1, Integer.MAX_VALUE);
     }
 
@@ -217,8 +217,8 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
      */
     static SettingsModelIntegerBounded createSettingsNumberRecordsForView() {
         return new SettingsModelIntegerBounded(
-               DecisionTreeLearnerNodeModel.KEY_NUMBER_VIEW_RECORDS,
-               DecisionTreeLearnerNodeModel.DEFAULT_NUMBER_RECORDS_FOR_VIEW,
+               DecisionTreeLearnerNodeModel2.KEY_NUMBER_VIEW_RECORDS,
+               DecisionTreeLearnerNodeModel2.DEFAULT_NUMBER_RECORDS_FOR_VIEW,
                0, Integer.MAX_VALUE);
     }
 
@@ -228,8 +228,8 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
      */
     static SettingsModelBoolean createSettingsSplitPoint() {
         return new SettingsModelBoolean(
-                    DecisionTreeLearnerNodeModel.KEY_SPLIT_AVERAGE,
-                    DecisionTreeLearnerNodeModel.DEFAULT_SPLIT_AVERAGE);
+                    DecisionTreeLearnerNodeModel2.KEY_SPLIT_AVERAGE,
+                    DecisionTreeLearnerNodeModel2.DEFAULT_SPLIT_AVERAGE);
     }
 
     /**
@@ -237,8 +237,8 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
      */
     static SettingsModelBoolean createSettingsBinaryNominalSplit() {
         return new SettingsModelBoolean(
-            DecisionTreeLearnerNodeModel.KEY_BINARY_NOMINAL_SPLIT_MODE,
-            DecisionTreeLearnerNodeModel.DEFAULT_BINARY_NOMINAL_SPLIT_MODE);
+            DecisionTreeLearnerNodeModel2.KEY_BINARY_NOMINAL_SPLIT_MODE,
+            DecisionTreeLearnerNodeModel2.DEFAULT_BINARY_NOMINAL_SPLIT_MODE);
     }
 
     /**
@@ -247,8 +247,8 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
     static SettingsModelBoolean
             createSettingsSkipNominalColumnsWithoutDomain() {
         SettingsModelBoolean setting = new SettingsModelBoolean(
-                DecisionTreeLearnerNodeModel.KEY_SKIP_COLUMNS,
-                DecisionTreeLearnerNodeModel.DEFAULT_BINARY_NOMINAL_SPLIT_MODE);
+                DecisionTreeLearnerNodeModel2.KEY_SKIP_COLUMNS,
+                DecisionTreeLearnerNodeModel2.DEFAULT_BINARY_NOMINAL_SPLIT_MODE);
         setting.setBooleanValue(true);
         return setting;
     }
@@ -259,11 +259,11 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
      */
     static SettingsModelIntegerBounded createSettingsBinaryMaxNominalValues() {
         SettingsModelIntegerBounded model = new SettingsModelIntegerBounded(
-                DecisionTreeLearnerNodeModel.KEY_BINARY_MAX_NUM_NOMINAL_VALUES,
-                DecisionTreeLearnerNodeModel
+                DecisionTreeLearnerNodeModel2.KEY_BINARY_MAX_NUM_NOMINAL_VALUES,
+                DecisionTreeLearnerNodeModel2
                     .DEFAULT_MAX_BIN_NOMINAL_SPLIT_COMPUTATION,
                 1, Integer.MAX_VALUE);
-        model.setEnabled(DecisionTreeLearnerNodeModel
+        model.setEnabled(DecisionTreeLearnerNodeModel2
                 .DEFAULT_BINARY_NOMINAL_SPLIT_MODE);
         return model;
     }
@@ -272,12 +272,12 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
      * @param skipNominalColumnsWithoutDomainModel model to listen to for
      * enablement (only enable if binary nominal splits)
      * @return model representing {@link
-     * DecisionTreeLearnerNodeModel#KEY_FILTER_NOMINAL_VALUES_FROM_PARENT}
+     * DecisionTreeLearnerNodeModel2#KEY_FILTER_NOMINAL_VALUES_FROM_PARENT}
      */
     static SettingsModelBoolean createSettingsFilterNominalValuesFromParent(
             final SettingsModelBoolean skipNominalColumnsWithoutDomainModel) {
         final SettingsModelBoolean model = new SettingsModelBoolean(
-            DecisionTreeLearnerNodeModel.KEY_FILTER_NOMINAL_VALUES_FROM_PARENT,
+            DecisionTreeLearnerNodeModel2.KEY_FILTER_NOMINAL_VALUES_FROM_PARENT,
             false);
         skipNominalColumnsWithoutDomainModel.addChangeListener(
                 new ChangeListener() {
@@ -295,8 +295,8 @@ public class DecisionTreeLearnerNodeDialog extends DefaultNodeSettingsPane {
      */
     static SettingsModelIntegerBounded createSettingsNumProcessors() {
         return new SettingsModelIntegerBounded(
-                    DecisionTreeLearnerNodeModel.KEY_NUM_PROCESSORS,
-                    DecisionTreeLearnerNodeModel.DEFAULT_NUM_PROCESSORS, 1,
+                    DecisionTreeLearnerNodeModel2.KEY_NUM_PROCESSORS,
+                    DecisionTreeLearnerNodeModel2.DEFAULT_NUM_PROCESSORS, 1,
                     Integer.MAX_VALUE);
     }
 }

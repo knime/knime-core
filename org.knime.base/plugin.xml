@@ -704,8 +704,8 @@
       </node>
       <node
             category-path="/mining/dtree"
-            factory-class="org.knime.base.node.mine.decisiontree2.learner2.DecisionTreeLearnerNodeFactory"
-            id="org.knime.base.node.mine.decisiontree2.learner2.DecisionTreeLearnerNodeFactory">
+            factory-class="org.knime.base.node.mine.decisiontree2.learner2.DecisionTreeLearnerNodeFactory2"
+            id="org.knime.base.node.mine.decisiontree2.learner2.DecisionTreeLearnerNodeFactory2">
       </node>
       <node
             category-path="/manipulation/row/row-transform"

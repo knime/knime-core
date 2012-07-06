@@ -176,7 +176,7 @@ public class InMemoryTableCreator {
             if (counter % 100 == 0) {
                 exec.checkCanceled();
                 // check the memory size
-                DecisionTreeLearnerNodeModel.checkMemory();
+                DecisionTreeLearnerNodeModel2.checkMemory();
                 exec.setProgress(counter / numRows, "Processing row no. "
                                 + (int)counter + " of " + numRows);
             }
