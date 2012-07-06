@@ -73,6 +73,7 @@ import javax.swing.event.ChangeListener;
  * with the values of the current row key.
  *
  * @author Tobias Koetter
+ * @since 2.6
  */
 @Deprecated
 public class RowKeyNodeDialog extends DefaultNodeSettingsPane {

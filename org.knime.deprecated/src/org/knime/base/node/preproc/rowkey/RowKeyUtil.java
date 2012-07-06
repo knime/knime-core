@@ -84,6 +84,7 @@ import java.util.Set;
  * to replace the row key by the values of another column.
  *
  * @author Tobias Koetter, University of Konstanz
+ * @since 2.6
  */
 @Deprecated
 public class RowKeyUtil {

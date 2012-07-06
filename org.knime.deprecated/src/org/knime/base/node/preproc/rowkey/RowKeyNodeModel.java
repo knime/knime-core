@@ -87,6 +87,7 @@ import javax.swing.event.ChangeListener;
  * with the values of the current row key.
  *
  * @author Tobias Koetter, University of Konstanz
+ * @since 2.6
  */
 @Deprecated
 public class RowKeyNodeModel extends NodeModel {
