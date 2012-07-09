@@ -103,19 +103,17 @@ public abstract class FileStoreCell extends DataCell {
 
     /** @noreference This method is not intended to be referenced by clients. */
     public void retrieveFileStoreHandlerFrom(
-            final FileStoreHandlerRepository fileStoreHandlerRepository) {
+            final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException {
         UUID id = m_fileStoreKey.getStoreUUID();
         m_fileStoreHandler = fileStoreHandlerRepository.getHandler(id);
-        try {
-            postConstruct();
-        } catch (Exception e) {
-            LOGGER.error(getClass().getSimpleName() + " must not throw exception in post construct", e);
-        }
+        postConstruct();
     }
 
     /** Called after the cell is deserialized from a stream. Clients
-     * can now access the file. */
-    protected void postConstruct() {
+     * can now access the file.
+     * @throws IOException If thrown, the cell will be replaced by a missing value in the data stream and
+     * an error will be reported to the log.  */
+    protected void postConstruct() throws IOException {
         // no op.
     }
 

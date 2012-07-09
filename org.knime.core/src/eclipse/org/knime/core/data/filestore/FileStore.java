@@ -92,9 +92,9 @@ public final class FileStore {
     }
 
     public File getFile() throws IOException {
-        File baseDir = m_fileStoreHandler.getBaseDir();
+        File parentDir = m_fileStoreHandler.getParentDir(m_key.getIndex(), false);
         String relativePath = m_key.getName();
-        return new File(baseDir, relativePath);
+        return new File(parentDir, relativePath);
     }
 
 
