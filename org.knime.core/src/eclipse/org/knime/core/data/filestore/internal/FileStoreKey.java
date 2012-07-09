@@ -87,7 +87,7 @@ public final class FileStoreKey {
     }
 
     /** @return the index */
-    int getIndex() {
+    public int getIndex() {
         return m_index;
     }
 

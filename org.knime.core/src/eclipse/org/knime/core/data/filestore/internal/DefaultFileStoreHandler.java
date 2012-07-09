@@ -56,6 +56,7 @@ import java.util.UUID;
 
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.node.Node;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.util.DuplicateChecker;
 import org.knime.core.util.DuplicateKeyException;
 import org.knime.core.util.FileUtil;
@@ -67,6 +68,17 @@ import org.knime.core.util.FileUtil;
  * @since 2.6
  */
 public class DefaultFileStoreHandler implements FileStoreHandler {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(DefaultFileStoreHandler.class);
+
+    /** File organization of file stores. There are {@value #FOLDER_LEVEL} levels of sub folders in the temp dir,
+     * each folder contains {@value #FILES_PER_FOLDER} sub folders or files (in the leaf folders). A file store
+     * file is then located in, e.g. &lt;filestore_dir>/000/000/000/file1.bin */
+    public static final int FILES_PER_FOLDER = 1000;
+    /** See {@link #FILES_PER_FOLDER}. */
+    public static final int FOLDER_LEVEL = 2;
+
+    private static int MAX_NR_FILES = (int)Math.pow(FILES_PER_FOLDER, FOLDER_LEVEL + 1);
 
     private final Node m_node;
     private final UUID m_storeUUID;
@@ -108,11 +120,19 @@ public class DefaultFileStoreHandler implements FileStoreHandler {
     /** {@inheritDoc} */
     @Override
     public void clearAndDispose() {
-        if (m_baseDir != null) {
-            FileUtil.deleteRecursively(m_baseDir);
-        }
         m_fileStoreHandlerRepository.removeFileStoreHandler(this);
         m_fileStoreHandlerRepository = null;
+        if (m_baseDir != null) {
+            StringBuilder b = new StringBuilder("Disposing file store \"");
+            b.append(toString()).append("\"");
+            if (FileUtil.deleteRecursively(m_baseDir)) {
+                b.append(" - folder successfully deleted");
+                LOGGER.debug(b.toString());
+            } else {
+                b.append(" - folder not or only partially deleted");
+                LOGGER.warn(b.toString());
+            }
+        }
     }
 
     /** @return the baseDir */
@@ -156,9 +176,8 @@ public class DefaultFileStoreHandler implements FileStoreHandler {
         }
     }
 
-    private FileStore getFileStoreInternal(final FileStoreKey key)
+    private synchronized FileStore getFileStoreInternal(final FileStoreKey key)
         throws IOException {
-        assert Thread.holdsLock(this);
         assert key.getStoreUUID().equals(getStoreUUID());
         if (getBaseDir() == null && m_baseDirInWorkflowFolder == null) {
             throw new IllegalStateException(
@@ -167,6 +186,8 @@ public class DefaultFileStoreHandler implements FileStoreHandler {
         if (m_baseDirInWorkflowFolder != null) {
             assert m_baseDir == null;
             ensureInitBaseDirectory();
+            LOGGER.debug(String.format("Restoring file store directory \"%s\" from \"%s\"",
+                    toString(), m_baseDirInWorkflowFolder));
             File source = m_baseDirInWorkflowFolder;
             m_baseDirInWorkflowFolder = null;
             FileUtil.copyDir(source, m_baseDir);
@@ -212,11 +233,34 @@ public class DefaultFileStoreHandler implements FileStoreHandler {
                     + " while checking for duplicate names", e);
         }
         ensureInitBaseDirectory();
+        if (m_nextIndex > MAX_NR_FILES) {
+            throw new IOException("Maximum number of files stores reached: " + MAX_NR_FILES);
+        }
         FileStoreKey key = new FileStoreKey(m_storeUUID, m_nextIndex, name);
+        getParentDir(m_nextIndex, true);
         m_nextIndex++;
         FileStore fs = new FileStore(this, key);
         return fs;
     }
+
+    public File getParentDir(final int indexArg, final boolean create) {
+        int index = indexArg / FILES_PER_FOLDER; // bottom most dir also contains many files
+        File parentDir = m_baseDir;
+        String[] subFolderNames = new String[FOLDER_LEVEL];
+        for (int level = 0; level < FOLDER_LEVEL; level++) {
+            int modulo = index % FILES_PER_FOLDER;
+            subFolderNames[FOLDER_LEVEL - level - 1] = String.format("%03d", modulo);
+            index = index / FILES_PER_FOLDER;
+        }
+        for (int level = 0; level < FOLDER_LEVEL; level++) {
+            parentDir = new File(parentDir, subFolderNames[level]);
+        }
+        if (!parentDir.isDirectory()) {
+            parentDir.mkdirs();
+        }
+        return parentDir;
+    }
+
 
     private void ensureInitBaseDirectory() throws IOException {
         assert Thread.holdsLock(this);
@@ -230,6 +274,7 @@ public class DefaultFileStoreHandler implements FileStoreHandler {
             baseDirName.append(nodeName);
             baseDirName.append("-").append(getStoreUUID().toString());
             m_baseDir = FileUtil.createTempDir(baseDirName.toString());
+            LOGGER.debug("Assigning temp directory to file store \"" + toString() + "\"");
         }
     }
 
