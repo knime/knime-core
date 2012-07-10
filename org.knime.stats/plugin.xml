@@ -12,14 +12,19 @@
    <extension
          point="org.knime.workbench.repository.nodes">
         <node
+              category-path="/statistics/hypothesis-testing"
               factory-class="org.knime.base.node.stats.testing.ttest.OneSampleTTestNodeFactory"
               id="org.knime.base.node.stats.testing.ttest.OneSampleTTestNodeFactory">
         </node>
         <node
+              after="org.knime.base.node.stats.testing.ttest.OneSampleTTestNodeFactory"
+              category-path="/statistics/hypothesis-testing"
               factory-class="org.knime.base.node.stats.testing.ttest.TwoSampleTTestNodeFactory"
               id="org.knime.base.node.stats.testing.ttest.TwoSampleTTestNodeFactory">
         </node>        
         <node
+              after="org.knime.base.node.stats.testing.ttest.TwoSampleTTestNodeFactory"
+              category-path="/statistics/hypothesis-testing"
               factory-class="org.knime.base.node.stats.testing.ttest.PairedTTestNodeFactory"
               id="org.knime.base.node.stats.testing.ttest.PairedTTestNodeFactory">
         </node>             
