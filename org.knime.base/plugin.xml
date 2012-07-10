@@ -420,8 +420,8 @@
             id="org.knime.base.node.preproc.joiner.Joiner2NodeFactory"/>
       <node
             category-path="/manipulation/column/column-split+combine"
-            factory-class="org.knime.base.node.preproc.split.SplitNodeFactory"
-            id="org.knime.base.node.preproc.split.SplitNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.split2.SplitNodeFactory2"
+            id="org.knime.base.node.preproc.split2.SplitNodeFactory2"/>
       <node
             after="org.knime.base.node.io.csvwriter.CSVWriterNodeFactory"
             factory-class="org.knime.base.node.io.arffwriter.ARFFWriterNodeFactory"

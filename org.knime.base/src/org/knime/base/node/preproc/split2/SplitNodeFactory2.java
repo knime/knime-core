@@ -1,5 +1,5 @@
-<!--
-========================================================================
+/* 
+ * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
  *  University of Konstanz, Germany and
@@ -43,12 +43,60 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
-====================================================================
--->
-<body>
-	<p>
-		Node that splits an input table into two output table. The split
-		is done column-wise, i.e. the user specifies which columns he
-		wants in the first table, the remainder goes into the second table.
-	</p>
-</body>
+ * -------------------------------------------------------------------
+ *
+ */
+package org.knime.base.node.preproc.split2;
+
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
+
+/**
+ * Factory for node that splits one input table into two table, each containing
+ * only a subset of the columns.
+ * 
+ * @author Bernd Wiswedel, University of Konstanz
+ */
+public class SplitNodeFactory2 extends NodeFactory<SplitNodeModel2> {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public SplitNodeModel2 createNodeModel() {
+        return new SplitNodeModel2();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int getNrNodeViews() {
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView<SplitNodeModel2> createNodeView(final int viewIndex,
+            final SplitNodeModel2 nodeModel) {
+        throw new IndexOutOfBoundsException();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new SplitNodeDialog2();
+    }
+}

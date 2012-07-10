@@ -48,10 +48,12 @@
  * History
  *   06.09.2005 (bernd): created
  */
-package org.knime.base.node.preproc.split;
+package org.knime.base.node.preproc.split2;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
@@ -63,7 +65,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-
+import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 
 /**
  * NodeModel with one input, two outputs. It splits the in table (column-based)
@@ -71,64 +74,53 @@ import org.knime.core.node.NodeSettingsWO;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class SplitNodeModel extends NodeModel {
-    /** DataCell Array of column names that build the top table. */
-    public static final String CFG_TOP = "top";
+public class SplitNodeModel2 extends NodeModel {
+    
+    private DataColumnSpecFilterConfiguration m_conf;
+    
+    /** Config key for the filter column settings. */
+    public static final String CFG_FILTERCOLS = "Filter Column Settings";
 
-    /** DataCell Array of column names that build the bottom table. */
-    public static final String CFG_BOTTOM = "bottom";
-
-    private String[] m_top;
-
-    private String[] m_bottom;
-
-    /**
-     * Split node model with one data in-port and two data out-ports.
-     */
-    public SplitNodeModel() {
+    /** Split node model with one data in-port and two data out-ports.  */
+    public SplitNodeModel2() {
         super(1, 2);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        if (m_top != null) {
-            settings.addStringArray(CFG_TOP, m_top);
+        if (m_conf == null) {
+            m_conf = createColFilterConf();
         }
-        if (m_bottom != null) {
-            settings.addStringArray(CFG_BOTTOM, m_bottom);
-        }
+        m_conf.saveConfiguration(settings);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        settings.getStringArray(CFG_TOP);
-        settings.getStringArray(CFG_BOTTOM);
+        DataColumnSpecFilterConfiguration conf = createColFilterConf();
+        conf.loadConfigurationInModel(settings);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_top = settings.getStringArray(CFG_TOP);
-        m_bottom = settings.getStringArray(CFG_BOTTOM);
+        DataColumnSpecFilterConfiguration conf = createColFilterConf();
+        conf.loadConfigurationInModel(settings);
+        m_conf = conf;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws CanceledExecutionException,
             Exception {
+        if (m_conf == null) {
+            m_conf = createColFilterConf();
+        }
+        
         BufferedDataTable in = inData[0];
         DataTableSpec inSpec = in.getDataTableSpec();
         ColumnRearranger[] a = createColumnRearrangers(inSpec);
@@ -139,59 +131,54 @@ public class SplitNodeModel extends NodeModel {
         return outs;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected void reset() {
+        // no op
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-
+        // no op
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-
+        // no op
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         DataTableSpec in = inSpecs[0];
-        if (m_top == null || m_bottom == null) {
-            m_top = new String[in.getNumColumns()];
-            for (int i = 0; i < in.getNumColumns(); i++) {
-                m_top[i] = in.getColumnSpec(i).getName();
-            }
-            m_bottom = new String[0];
+        
+        if (m_conf == null) {
+            m_conf = createColFilterConf();
+            m_conf.loadDefaults(in, false);
             setWarningMessage("No settings available, "
-                    + "passing all columns to top output port.");
-        }
-        for (int i = 0; i < m_top.length; i++) {
-            if (!in.containsName(m_top[i])) {
+                    + "passing all columns to top output port.");            
+        }        
+        final FilterResult filter = m_conf.applyTo(in);
+        String[] top = filter.getExcludes();
+        String[] bottom = filter.getIncludes();
+        
+        for (int i = 0; i < top.length; i++) {
+            if (!in.containsName(top[i])) {
                 throw new InvalidSettingsException("No such column: "
-                        + m_top[i]);
+                        + top[i]);
             }
         }
-        for (int i = 0; i < m_bottom.length; i++) {
-            if (!in.containsName(m_bottom[i])) {
+        for (int i = 0; i < bottom.length; i++) {
+            if (!in.containsName(bottom[i])) {
                 throw new InvalidSettingsException("No such column: "
-                        + m_bottom[i]);
+                        + bottom[i]);
             }
         }
         ColumnRearranger[] a = createColumnRearrangers(in);
@@ -199,10 +186,65 @@ public class SplitNodeModel extends NodeModel {
     }
 
     private ColumnRearranger[] createColumnRearrangers(final DataTableSpec s) {
+        // apply spec to settings to retrieve filter instance
+        final FilterResult filter = m_conf.applyTo(s);
+        final StringBuilder warn = new StringBuilder();
+        int maxToReport = 3;
+        final String[] unknownsIncl = filter.getRemovedFromIncludes();
+        final String[] unknownsExcl = filter.getRemovedFromExcludes();
+        final ArrayList<String> unknowns = new ArrayList<String>();
+        unknowns.addAll(Arrays.asList(unknownsIncl));
+        unknowns.addAll(Arrays.asList(unknownsExcl));
+        if (unknowns.size() > 0) {
+            warn.append("Some columns are no longer available: ");
+            for (int i = 0; i < unknowns.size(); i++) {
+                warn.append(i > 0 ? ", " : "");
+                if (i < maxToReport) {
+                    warn.append("\"").append(unknowns.get(i)).append("\"");
+                } else {
+                    warn.append("...<").append(unknowns.size() - maxToReport).append(" more>");
+                    break;
+                }
+            }
+        }        
+        final String[] incls = filter.getIncludes();
+        final String[] excls = filter.getExcludes();
+        if (incls.length == 0) {
+            if (excls.length > 0) {
+                if (warn.length() == 0) {
+                    warn.append("All columns in top partition.");
+                } else {
+                    warn.append("; all columns in top partition.");
+                }
+            }
+        } else {
+            if (excls.length == 0) {
+                if (warn.length() == 0) {
+                    warn.append("All columns in bottom partition.");
+                } else {
+                    warn.append("; all columns in bottom partition.");
+                }
+            }
+        }
+        
+        // set warn message, if there is one
+        if (warn.length() > 0) {
+            setWarningMessage(warn.toString());
+        }
+        
         ColumnRearranger topArrange = new ColumnRearranger(s);
-        topArrange.keepOnly(m_top);
+        topArrange.keepOnly(filter.getExcludes());
         ColumnRearranger bottomArrange = new ColumnRearranger(s);
-        bottomArrange.keepOnly(m_bottom);
+        bottomArrange.keepOnly(filter.getIncludes());
         return new ColumnRearranger[]{topArrange, bottomArrange};
     }
+    
+    /**
+     * @return creates and returns configuration instance for column filter 
+     * panel.
+     */
+    private DataColumnSpecFilterConfiguration createColFilterConf() {
+        return new DataColumnSpecFilterConfiguration(
+                SplitNodeModel2.CFG_FILTERCOLS);
+    }     
 }

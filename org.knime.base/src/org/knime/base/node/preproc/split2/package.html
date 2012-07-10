@@ -1,5 +1,5 @@
-/* 
- * ------------------------------------------------------------------------
+<!--
+========================================================================
  *
  *  Copyright (C) 2003 - 2011
  *  University of Konstanz, Germany and
@@ -43,61 +43,12 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
- *
- */
-package org.knime.base.node.preproc.split;
-
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
-
-/**
- * Factory for node that splits one input table into two table, each containing
- * only a subset of the columns.
- * 
- * @author Bernd Wiswedel, University of Konstanz
- */
-public class SplitNodeFactory extends NodeFactory {
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeModel createNodeModel() {
-        return new SplitNodeModel();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getNrNodeViews() {
-        return 0;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
-        throw new IndexOutOfBoundsException();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasDialog() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new SplitNodeDialog();
-    }
-}
+====================================================================
+-->
+<body>
+	<p>
+		Node that splits an input table into two output table. The split
+		is done column-wise, i.e. the user specifies which columns he/she
+		wants in the first table, the remainder goes into the second table.
+	</p>
+</body>
