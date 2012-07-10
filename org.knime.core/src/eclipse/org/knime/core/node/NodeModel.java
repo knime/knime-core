@@ -1641,12 +1641,11 @@ public abstract class NodeModel {
 
     /**
      * Factory method to create a merge operator that combines results created
-     * in different {@link StreamableOperator} objects. This method is only
-     * called when the input is distributable. It must be overwritten if the
-     * output is non-distributable (as it needs to prepare the final output that
-     * is then published by the
+     * in different {@link StreamableOperator} objects. This method must be
+     * overwritten if the input is distributable but the output is not
+     * (as it needs to prepare the final output that is then published by the
      * {@link #finishStreamableExecution(StreamableOperatorInternals, ExecutionContext, PortOutput[])}
-     * method. It may be overwritten if the output is distributable but some
+     * method). It may be overwritten if the output is distributable but some
      * work needs to be done after all operators have finished (e.g. setting
      * some internals or warning message).
      *
