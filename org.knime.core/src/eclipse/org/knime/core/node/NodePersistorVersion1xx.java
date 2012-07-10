@@ -616,7 +616,6 @@ public class NodePersistorVersion1xx implements NodePersistor {
         settingsExec.setProgress(1.0);
         WorkflowLoadHelper loadHelper = getLoadHelper();
 
-        loadIntTblsExec.setProgress(1.0);
         try {
             if (!loadHelper.isTemplateFlow()) {
                 m_fileStoreHandler = loadFileStoreHandler(node,
@@ -684,6 +683,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
             }
             setNeedsResetAfterLoad();
         }
+        loadIntTblsExec.setProgress(1.0);
         exec.setMessage("Loading settings into node instance");
         node.load(this, createExec, loadResult);
         String status;

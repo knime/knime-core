@@ -192,15 +192,17 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
          * table is returned in multiple outputs or if an output table is used
          * as "internal" held table. See bug 2117. */
         final Set<Integer> savedTableIDs = new HashSet<Integer>();
-        execMon.setMessage("File Store Objects");
-        saveFileStoreObjects(node, nodeDirRef, settings, fileStoreMon, isSaveData);
-        fileStoreMon.setProgress(1.0);
         execMon.setMessage("Ports");
         savePorts(node, nodeDirRef, settings, savedTableIDs, portMon, isSaveData);
         portMon.setProgress(1.0);
         execMon.setMessage("Internal Tables");
         saveInternalHeldTables(node, nodeDirRef, settings, savedTableIDs, internalMon, isSaveData);
         intTblsMon.setProgress(1.0);
+        // save them last as now all tables have been saved (all cells ran through persistor) and all
+        // FileStore#getFile() have been called and saved
+        execMon.setMessage("File Store Objects");
+        saveFileStoreObjects(node, nodeDirRef, settings, fileStoreMon, isSaveData);
+        fileStoreMon.setProgress(1.0);
         // file name has already correct ending
         OutputStream os = new FileOutputStream(nodeFile.getFile());
         if (snc.getParent().isEncrypted()) {
