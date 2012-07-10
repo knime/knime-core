@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./twosample_ttest.png" type="Manipulator">
+    <name>Independent groups t-test</name>
+    
+    <shortDescription>
+        This test is designed to compare the means of observations in the same column between two groups.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>Computes statistics for the two sample t-test. It is designed to compare the means of observations in the same column between two groups.
+        </intro>
+        
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Data Table">The Input</inPort>
+        <outPort index="0" name="Two-Sample T-Test">Statistics for the two sample t-test.</outPort>
+        <outPort index="1" name="Levene-Test">Statistics for the Levene-Test.</outPort>
+        <outPort index="2" name="Descriptive Statistics">Descriptive statistics of the input.</outPort>
+    </ports>
+    <views>
+        <view name="Test statistics" index="0">
+            Tables with descriptive statistics of the input columns
+             and test statistics of the independent samples t-test.
+        </view>
+    </views>       
+</knimeNode>

@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="./onesample_ttest.png" type="Manipulator">
+    <name>Single sample t-test</name>
+    
+    <shortDescription>
+        The single sample t-test tests the null hypothesis that the population mean is equal to a given number.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>Computes statistics for the single sample t-test. The single sample t-test tests the null hypothesis that the population mean is equal to a given number.
+        </intro>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Data Table">The Input</inPort>
+        <outPort index="0" name="Descriptive Statistics">Descriptive statistics of the input.</outPort>
+        <outPort index="1" name="One-Sample T-Test">Statistics for the one sample t-test.</outPort>
+    </ports>  
+    <views>
+        <view name="Test statistics" index="0">
+            Tables with descriptive statistics of the input columns
+             and test statistics of the single sample t-test.
+        </view>
+    </views>   
+</knimeNode>
