@@ -8,7 +8,7 @@
 <config key="Snippet">
 <entry key="scriptImports" type="xstring" value="// Your custom imports:%%00010"/>
 <entry key="scriptFields" type="xstring" value="// Your custom variables:%%00010"/>
-<entry key="scriptBody" type="xstring" value="// Enter your code here:%%00010%%00010// The field out_lineTotal is defined below in the table &quot;Output&quot;.%%00010out_lineTotal = 0.0;%%00010%%00010// iterate over columns%%00010for (int i = 0; i &lt; getColumnCount(); i++) {%%00010%%00009// if type is numeric %%00010%%00009if (isType(i, Double) &amp;&amp; !isMissing(i)) {%%00010%%00009%%00009// add cell's value to the total%%00010%%00009%%00009out_lineTotal += getCell(i, Double);%%00010%%00009}%%00010}%%00010"/>
+<entry key="scriptBody" type="xstring" value="// Enter your code here:%%00010%%00010// The field out_lineTotal is defined below in the table &quot;Output&quot;.%%00010out_lineTotal = 0.0;%%00010%%00010// iterate over columns%%00010for (int i = 0; i &lt; getColumnCount(); i++) {%%00010%%00009// if type is numeric %%00010%%00009if (isType(i, tDouble) &amp;&amp; !isMissing(i)) {%%00010%%00009%%00009// add cell's value to the total%%00010%%00009%%00009out_lineTotal += getCell(i, tDouble);%%00010%%00009}%%00010}%%00010"/>
 <config key="jarFiles">
 <entry key="array-size" type="xint" value="0"/>
 </config>

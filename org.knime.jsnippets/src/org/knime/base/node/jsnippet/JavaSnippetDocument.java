@@ -89,7 +89,7 @@ public class JavaSnippetDocument extends GuardedDocument {
                     GUARDED_BODY_START, getLength());
             bodyStart.setText("// expression start\n"
                     + "  public void snippet() "
-                    + "throws TypeException, ColumnException {\n");
+                    + "throws TypeException, ColumnException, Abort {\n");
             insertString(getLength(), " \n", null);
 
             GuardedSection bodyEnd = addGuardedFooterSection(

@@ -265,7 +265,9 @@ public class JavaSnippetSettings {
         m_inCols.loadSettings(settings.getConfig(IN_COLS));
         m_inVars.loadSettings(settings.getConfig(IN_VARS));
         m_version = settings.getString(VERSION);
-        m_templateUUID = settings.getString(TEMPLATE_UUID);
+        if (settings.containsKey(TEMPLATE_UUID)) {
+            m_templateUUID = settings.getString(TEMPLATE_UUID);
+        }
     }
 
 

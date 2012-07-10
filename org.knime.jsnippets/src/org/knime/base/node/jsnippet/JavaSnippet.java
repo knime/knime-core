@@ -87,6 +87,7 @@ import org.knime.base.node.jsnippet.JavaField.InVar;
 import org.knime.base.node.jsnippet.JavaField.OutCol;
 import org.knime.base.node.jsnippet.JavaField.OutVar;
 import org.knime.base.node.jsnippet.JavaFieldList.OutColList;
+import org.knime.base.node.jsnippet.expression.Abort;
 import org.knime.base.node.jsnippet.expression.AbstractJSnippet;
 import org.knime.base.node.jsnippet.expression.Cell;
 import org.knime.base.node.jsnippet.expression.ColumnException;
@@ -100,6 +101,7 @@ import org.knime.base.node.jsnippet.type.data.DataValueToJava;
 import org.knime.base.node.jsnippet.ui.JSnippetParser;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.CellFactory;
@@ -328,14 +330,12 @@ public final class JavaSnippet {
 
             Collection<Object> classes = new ArrayList<Object>();
             classes.add(AbstractJSnippet.class);
+            classes.add(Abort.class);
             classes.add(Cell.class);
             classes.add(ColumnException.class);
             classes.add(FlowVariableException.class);
             classes.add(Type.class);
             classes.add(TypeException.class);
-
-
-
 
             // create tree structure for classes
             DefaultMutableTreeNode root = createTree(classes);
@@ -597,6 +597,7 @@ public final class JavaSnippet {
     protected String[] getSystemImports() {
         String pkg = "org.knime.base.node.jsnippet.expression";
         return new String[] {AbstractJSnippet.class.getName()
+                , Abort.class.getName()
                 , Cell.class.getName()
                 , ColumnException.class.getName()
                 , TypeException.class.getName()
@@ -753,9 +754,23 @@ public final class JavaSnippet {
             final FlowVariableRepository flowVariableRepository,
             final ExecutionContext exec) throws CanceledExecutionException,
             InvalidSettingsException  {
-        return exec.createColumnRearrangeTable(table,
-                createRearranger(table.getDataTableSpec(),
-                        flowVariableRepository, table.getRowCount()), exec);
+        OutColList outFields = m_fields.getOutColFields();
+        if (outFields.size() > 0) {
+            ColumnRearranger rearranger = createRearranger(
+                    table.getDataTableSpec(),
+                    flowVariableRepository, table.getRowCount());
+
+            return exec.createColumnRearrangeTable(table,
+                    rearranger, exec);
+        } else {
+            CellFactory factory = new JavaSnippetCellFactory(this,
+                    table.getDataTableSpec(),
+                    flowVariableRepository, table.getRowCount());
+            for (DataRow row : table) {
+                factory.getCells(row);
+            }
+            return table;
+        }
     }
 
     /**

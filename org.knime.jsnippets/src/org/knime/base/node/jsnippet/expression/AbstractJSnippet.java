@@ -255,6 +255,7 @@ public abstract class AbstractJSnippet {
      * @throws TypeException if a type mismatch with columns or flow variables
      * occurs
      * @throws ColumnException if an expected column does not exist
+     * @throws Abort if node execution should be stopped
      */
-    public abstract void snippet() throws TypeException, ColumnException;
+    public abstract void snippet() throws TypeException, ColumnException, Abort;
 }

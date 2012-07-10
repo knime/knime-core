@@ -45,86 +45,42 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
  *
- * History
- *   12.12.2011 (hofer): created
  */
 package org.knime.base.node.jsnippet.expression;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
-
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-
-import org.w3c.dom.Document;
-
-/**
- * Types for the java snippet.
+/** Declared exception in the evaluate method of a snippet to abort the entire
+ * execution.
  *
- * @author Heiko Hofer
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public final class Type {
-    /** the string type. */
-    public static final String tString = "";
+@SuppressWarnings("serial")
+public class Abort extends Exception {
 
-    /** the integer type. */
-    public static final Integer tInt = 0;
-
-    /** the double type. */
-    public static final Double tDouble = 0.0;
-
-    /** the long type. */
-    public static final Long tLong = 0l;
-
-    /** the boolean type. */
-    public static final Boolean tBoolean = false;
-
-    /** the java.util.Date type. */
-    public static final Date tDate = new Date(0);
-
-    /** the java.util.Calendar type. */
-    public static final Calendar tCalendar = new GregorianCalendar();
-
-    /** the DOM type. */
-    public static Document tXML = null;
-    static {
-        try {
-            tXML = DocumentBuilderFactory.newInstance().
-                         newDocumentBuilder().newDocument();
-        } catch (ParserConfigurationException e) {
-            // should never be reached
-        }
+    /** Empty abort. */
+    public Abort() {
+        super();
     }
 
-    private Type() {
-        // utility classes do not need to be instantiated.
-    }
-
-    /**
-     * Get the identifier associated with the given type.
-     * @param type the type
-     * @return the identifier associated with the given type
+    /** Abort with all details.
+     * @param message The message
+     * @param cause The cause
      */
-    @SuppressWarnings("rawtypes")
-    public static String getIdentifierFor(final Class type) {
-        if (type.equals(String.class)) {
-            return "tString";
-        } else if (type.equals(Integer.class)) {
-            return "tInt";
-        } else if (type.equals(Double.class)) {
-            return "tDouble";
-        } else if (type.equals(Long.class)) {
-            return "tBoolean";
-        } else if (type.equals(Boolean.class)) {
-            return "tString";
-        } else if (type.equals(Date.class)) {
-            return "tDate";
-        } else if (type.equals(Calendar.class)) {
-            return "tCalendar";
-        } else if (type.equals(Document.class)) {
-            return "tXML";
-        }
-        throw new TypeException("Unknown type: " + type.getName());
+    public Abort(final String message, final Throwable cause) {
+        super(message, cause);
     }
+
+    /** Abort with message.
+     * @param message The message
+     */
+    public Abort(final String message) {
+        super(message);
+    }
+
+    /** Abort with cause.
+     * @param cause The cause.
+     */
+    public Abort(final Throwable cause) {
+        super(cause);
+    }
+
 }

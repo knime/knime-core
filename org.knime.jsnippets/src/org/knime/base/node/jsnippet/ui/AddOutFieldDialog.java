@@ -200,6 +200,10 @@ public final class AddOutFieldDialog extends JDialog {
         c.gridwidth = 1;
         c.weightx = 0;
 
+        m_replace = new JRadioButton("Replace:");
+        m_replace.setSelected(true);
+        m_append = new JRadioButton("Append:");
+
         m_fieldType = new JComboBox();
         m_fieldType.addItem(FieldType.Column);
         m_fieldType.addItem(FieldType.FlowVariable);
@@ -235,8 +239,7 @@ public final class AddOutFieldDialog extends JDialog {
             m_fieldType.setSelectedIndex(1);
         }
 
-        m_replace = new JRadioButton("Replace:");
-        m_replace.setSelected(true);
+
         m_replace.addActionListener(new ActionListener() {
 
             @Override
@@ -258,7 +261,7 @@ public final class AddOutFieldDialog extends JDialog {
         c.gridx = 0;
         c.insets = leftInsets;
 
-        m_append = new JRadioButton("Append:");
+
         m_append.addActionListener(new ActionListener() {
 
             @Override
@@ -329,6 +332,16 @@ public final class AddOutFieldDialog extends JDialog {
                 }
             }
             m_replacedKnimeName.setRenderer(new FlowVariableListCellRenderer());
+        }
+        if (m_replacedKnimeName.getItemCount() <= 0) {
+            m_replacedKnimeName.setEnabled(false);
+            m_knimeName.setEnabled(true);
+            m_replace.setEnabled(false);
+            m_replace.setSelected(false);
+            m_append.setSelected(true);
+        } else {
+            m_replacedKnimeName.setEnabled(true);
+            m_replace.setEnabled(true);
         }
     }
 

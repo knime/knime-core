@@ -11,6 +11,14 @@
               to add or modify variables. The variables available
               at the input are listed on the left.
             </p>
+            <p>It is also possible to use external java libraries (that is, 
+            libraries that are not part of java boot classpath). In order to 
+            include such external jar or zip files, add their location in the 
+            "Additional Libraries" tab using the control buttons.</p>
+            <p>You can define reusable templates with the "Create templates..." 
+            button. Templates are stored in the
+            users workspace by default and can be accessed via the "Templates"
+            tab.</p>            
         </intro>
         <option name="Flow Variable List">
           The list contains the flow variables that are currently available at
@@ -24,15 +32,19 @@
           second way is to use the method <i>getFlowVariable(name, type)</i> 
           where <i>name</i> is the name of the flow variable, respectively. 
           You can use the following values for the <i>type</i> parameter. <br/>          
-          <i>String</i> : String <br/>
-          <i>Int</i>  : Integer <br/>
-          <i>Double</i> : Double <br/>
+          <i>tString</i> : String <br/>
+          <i>tInt</i>  : Integer <br/>
+          <i>tDouble</i> : Double <br/>
 
           <p>You can hit <i>ctrl+space</i> to get an auto completion box with all
           available classes, methods and fields. When you select a class and hit
           <i>enter</i> a import statement will be generated if missing.</p>    
-          <p>Note, that the snippet allows to define custom global variables and
+          <p>Note, that the snippet allows defining custom global variables and
           custom imports.</p>
+          <p>Exceptions in the snippet are caught by the framework and will 
+          cause the execution to fail. If you want to stop execution, please use an 
+          exception of class <tt>Abort</tt>. It gives the user a nice
+          error message.</p>          
         </option>
         <option name="Input">
           Define system input fields for the snippet text area. Every field 

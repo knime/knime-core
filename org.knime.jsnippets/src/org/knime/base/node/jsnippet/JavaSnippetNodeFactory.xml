@@ -14,6 +14,14 @@
             to the output.</p>
             <p>Note, that this node allows to add or modify flow variables
             in the same manner.</p>
+            <p>It is also possible to use external java libraries (that is, 
+            libraries that are not part of java boot classpath). In order to 
+            include such external jar or zip files, add their location in the 
+            "Additional Libraries" tab using the control buttons.</p>
+            <p>You can define reusable templates with the "Create templates..." 
+            button. Templates are stored in the
+            users workspace by default and can be accessed via the "Templates"
+            tab.</p>
         </intro>
         <option name="Column List">
           The list contains the columns that are available in the input table.
@@ -34,14 +42,14 @@
           <i>getFlowVariable(name, type)</i> where <i>name</i> is the name of
           the input column or the flow variable, respectively. You can use
           the following values for the <i>type</i> parameter. <br/>          
-          <i>String</i> : String (f)<br/>
-          <i>Int</i>  : Integer (f)<br/>
-          <i>Double</i> : Double (f)<br/>
-          <i>Long</i> : Long<br/>
-          <i>Boolean</i> : Boolean<br/>
-          <i>Date</i> : java.util.Date<br/>
-          <i>Calendar</i> : java.util.Calendar<br/>
-          <i>XML</i> : org.w3c.document<br/>
+          <i>tString</i> : String (f)<br/>
+          <i>tInt</i>  : Integer (f)<br/>
+          <i>tDouble</i> : Double (f)<br/>
+          <i>tLong</i> : Long<br/>
+          <i>tBoolean</i> : Boolean<br/>
+          <i>tDate</i> : java.util.Date<br/>
+          <i>tCalendar</i> : java.util.Calendar<br/>
+          <i>tXML</i> : org.w3c.document<br/>
           (f) These Types can be used for flow variables.
           
           <br/>
@@ -59,7 +67,13 @@
           available classes, methods and fields. When you select a class and hit
           <i>enter</i> a import statement will be generated if missing.</p>          
           <p>Note, that the snippet allows to define custom global variables and
-          custom imports.</p>  
+          custom imports.</p>
+          
+          <p>Exceptions in the snippet are caught by the framework and will 
+          result in missing values for all output columns for the row being processed unless there are
+          flow variables defined by the snippet (in which case the execution will always fail). 
+          You can force the node to fail execution by throwing an exception of class 
+          <tt>Abort</tt>.</p>
         </option>
         <option name="Input">
           Define system input fields for the snippet text area. Every field will 
