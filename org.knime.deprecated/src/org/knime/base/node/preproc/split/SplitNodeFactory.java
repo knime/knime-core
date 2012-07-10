@@ -59,6 +59,7 @@ import org.knime.core.node.NodeView;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
+@Deprecated
 public class SplitNodeFactory extends NodeFactory {
     /**
      * {@inheritDoc}

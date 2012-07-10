@@ -71,6 +71,7 @@ import org.knime.core.node.NodeSettingsWO;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
+@Deprecated
 public class SplitNodeModel extends NodeModel {
     /** DataCell Array of column names that build the top table. */
     public static final String CFG_TOP = "top";

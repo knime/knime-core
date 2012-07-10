@@ -62,6 +62,7 @@ import org.knime.core.node.util.ColumnFilterPanel;
  * 
  * @author Bernd Wiswedel, University of Konstanz
  */
+@Deprecated
 public class SplitNodeDialog extends NodeDialogPane {
     private final ColumnFilterPanel m_filterPanel;
 
