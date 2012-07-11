@@ -859,4 +859,10 @@ propagated with or for interoperation with KNIME.
          install-size="0"
          version="0.0.0"/>
 
+   <plugin
+         id="org.knime.stats"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"/>
+
 </feature>
