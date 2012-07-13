@@ -391,7 +391,9 @@ public final class Expression {
      */
     private static synchronized void ensureTempClassPathExists()
         throws IOException {
-        if (tempClassPath == null) {
+        // the temp directory may get deleted under Linux if it has not been
+        // access for some time, see bug #3319
+        if ((tempClassPath == null) || !tempClassPath.isDirectory()) {
             File tempClassPathDir = FileUtil.createTempDir("knime_javasnippet");
             tempClassPathDir.deleteOnExit();
             for (Class<?> cl : REQUIRED_COMPILATION_UNITS) {
