@@ -50,6 +50,7 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.gef.commands.CompoundCommand;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -58,6 +59,7 @@ import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.ChangeNodeBoundsCommand;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
+import org.knime.workbench.editor2.editparts.snap.SnapIconToGrid;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 
 /**
@@ -145,16 +147,32 @@ public class MoveNodeDownAction extends AbstractNodeAction {
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
         // should be initialized from the pref page
         int offset = STEP;
-        if (getEditor().getEditorSnapToGrid()) {
-            offset = getEditor().getEditorGridYOffset(offset);
-        }
         CompoundCommand cc = new CompoundCommand();
         NodeContainerEditPart[] selectedNodes = getSelectedParts(NodeContainerEditPart.class);
         for (NodeContainerEditPart ep : selectedNodes) {
             NodeContainer nc = ep.getNodeContainer();
-            Rectangle newBounds = ep.getFigure().getBounds().getCopy();
-            newBounds.y += offset;
-            ChangeNodeBoundsCommand cmd = new ChangeNodeBoundsCommand(nc, (NodeContainerFigure)ep.getFigure(), newBounds);
+            NodeContainerFigure figure = (NodeContainerFigure)ep.getFigure();
+            Rectangle bounds = figure.getBounds().getCopy();
+
+            if (!getEditor().getEditorSnapToGrid()) {
+                bounds.y += offset;
+            } else {
+                // adjust offset to grid
+                offset = getEditor().getEditorGridYOffset(offset);
+
+                Point iconOffset = SnapIconToGrid.getGridRefPointOffset(figure);
+                Point refLoc = new Point(figure.getBounds().x, figure.getBounds().y);
+                refLoc.translate(iconOffset);
+                Point gridLoc = getEditor().getNextGridLocation(refLoc);
+                if (gridLoc.y == refLoc.y) {
+                    // node already on the grid
+                    bounds.y += offset;
+                } else {
+                    // place node on next grid line
+                    bounds.y = gridLoc.y - iconOffset.y;
+                }
+            }
+            ChangeNodeBoundsCommand cmd = new ChangeNodeBoundsCommand(nc, figure, bounds);
             cc.add(cmd);
         }
         getCommandStack().execute(cc);

@@ -1940,7 +1940,6 @@ public class WorkflowEditor extends GraphicalEditor implements
     public Point getClosestGridLocation(final Point loc) {
         Point location = loc.getCopy();
         IFigure gridContainer = ((WorkflowRootEditPart)getViewer().getRootEditPart().getContents()).getFigure();
-        // container coordinates could be negative
         gridContainer.translateToRelative(location);
         Point result = location.getCopy();
         int locX = loc.x;
@@ -1974,15 +1973,11 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Returns a point on the grid that has equal or larger coordinates than the passed location.
      *
-     * @param gridContainer the pane with the grid containing the location
      * @param loc the reference point for the next grid location
      * @return next grid location (right of and lower than argument location or equal)
      */
     public final Point getNextGridLocation(final Point loc) {
         Point location = loc.getCopy();
-        // container coordinates could be negative
-        IFigure gridContainer = ((WorkflowRootEditPart)getViewer().getRootEditPart().getContents()).getFigure();
-        gridContainer.translateToRelative(location);
         Point result = location.getCopy();
         int stepX = (loc.x >= 0) ? 1 : 0;
         int gridX = getEditorGridX();
@@ -1998,6 +1993,30 @@ public class WorkflowEditor extends GraphicalEditor implements
         return result;
     }
 
+    /**
+     * Returns a point on the grid that has equal or smaller coordinates than the passed location.
+     *
+     * @param loc the reference point for the next grid location. Coordinates must be relative to the viewer contents
+     *            (cursor/drop locations must be translated).
+     * @return previous grid location (left of and upper than argument location or equal)
+     */
+    public final Point getPrevGridLocation(final Point loc) {
+        Point location = loc.getCopy();
+        // container coordinates could be negative
+        Point result = location.getCopy();
+        int stepX = (location.x >= 0) ? 0 : -1;
+        int gridX = getEditorGridX();
+        if (gridX > 1 && result.x % gridX != 0) {
+            result.x = ((location.x / gridX) + stepX) * gridX;
+        }
+
+        int stepY = (location.y >= 0) ? 0 : -1;
+        int gridY = getEditorGridY();
+        if (gridY > 1 && result.y % gridY != 0) {
+            result.y = ((location.y / gridY) + stepY) * gridY;
+        }
+        return result;
+    }
 
     /**
      * Returns the vertical grid distance for the active workflow editor (or -1 if no workflow editor is active at the
