@@ -208,6 +208,9 @@ public class PMMLCompoundPredicate extends PMMLPredicate {
                         "Split attribute cannot be access "
                                 + "before predicate is initialized.");
             } else {
+                if (m_predicates.isEmpty()) {
+                    return "";
+                }
                 /*
                  * Compare the split attributes of all contained predicates. If
                  * they are all the same return the common attribute, otherwise
@@ -293,7 +296,8 @@ public class PMMLCompoundPredicate extends PMMLPredicate {
     public void saveToPredParams(final Config conf) {
         conf.addString(PMMLPredicate.TYPE_KEY, NAME);
         conf.addString(PMMLPredicate.OPERATOR_KEY, m_op.toString());
-        conf.addString(PMMLPredicate.ATTRIBUTE_KEY, getSplitAttribute());
+        String splitAttribute = getSplitAttribute();
+        conf.addString(PMMLPredicate.ATTRIBUTE_KEY, splitAttribute);
         conf.addInt(NUM_PREDICATES, m_predicates.size());
         int i = 0;
         for (PMMLPredicate pred : m_predicates) {
