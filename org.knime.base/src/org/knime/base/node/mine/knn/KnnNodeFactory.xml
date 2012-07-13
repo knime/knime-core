@@ -33,7 +33,7 @@
             (Still only k neighbors will be considered, however!)
         </option>
         <option name="Output class probabilities">
-            If this option in enabled, an additional column, containing the
+            If this option in enabled, additional columns, containing the
             class probabilities, will be appended to the output table.
         </option>
 	</fullDescription>
