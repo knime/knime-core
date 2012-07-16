@@ -97,7 +97,7 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
         this.getSite().setSelectionProvider(m_viewer);
         Transfer[] transfers = new Transfer[]{
                 LocalSelectionTransfer.getTransfer()};
-        m_viewer.addDragSupport(DND.DROP_COPY, transfers,
+        m_viewer.addDragSupport(DND.DROP_COPY | DND.DROP_MOVE, transfers,
                 new FavoriteNodesDragSource(this));
         m_viewer.addDropSupport(DND.DROP_COPY, transfers,
                 new FavoriteNodesDropTarget(this));
