@@ -250,7 +250,7 @@ public class TipsAndTricksDialog extends Dialog {
 
         RGB bgColor = new RGB(255,255,255);
 
-        String content = null;
+        String content = "";
         try {
             HttpURLConnection conn =
                     (HttpURLConnection)TIPS_AND_TRICKS_URL.openConnection();
