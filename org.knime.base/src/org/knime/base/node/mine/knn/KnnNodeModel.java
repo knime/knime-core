@@ -417,6 +417,7 @@ public class KnnNodeModel extends NodeModel {
             for (int i = 0; i < 1 + allClassValues.length; i++) {
                 output.add(DataType.getMissingCell());
             }
+            return output;
         }
 
         HashMap<DataCell, MutableDouble> classWeights =
