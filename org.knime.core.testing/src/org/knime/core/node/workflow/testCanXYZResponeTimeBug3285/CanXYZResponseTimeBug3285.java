@@ -105,6 +105,25 @@ public class CanXYZResponseTimeBug3285 extends WorkflowTestCase {
         assertTrue(String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS), time <= MAX_TIME_MS);
     }
 
+    public void testShutdownAfterExecute() throws Exception {
+        executeAllAndWait();
+        checkState(m_dataGen1, State.EXECUTED);
+        checkState(m_tableView98, State.EXECUTED);
+        long time = System.currentTimeMillis();
+        WorkflowManager m = getManager();
+        m.shutdown();
+        time = System.currentTimeMillis() - time;
+        assertTrue(String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS), time <= MAX_TIME_MS);
+    }
+
+    public void testShutdownBeforeExecute() throws Exception {
+        long time = System.currentTimeMillis();
+        WorkflowManager m = getManager();
+        m.shutdown();
+        time = System.currentTimeMillis() - time;
+        assertTrue(String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS), time <= MAX_TIME_MS);
+    }
+
     public void testCanXYZWhileStartIsExecuting() throws Exception {
         deleteConnection(m_firstSplitter2, 1);
         WorkflowManager m = getManager();
