@@ -337,7 +337,10 @@ public class MultipleURLList extends JScrollPane {
     public List<String> getSelectedURLs() {
         List<String> urls = new ArrayList<String>();
 
-        for (MyFilePanel fp : m_filePanels) {
+        // it may happen that swing events which lead to a modification of
+        // m_filePanels arrive during the loop and subsequently cause
+        // ConcurrentModificationExceptions; therefore the list is copied
+        for (MyFilePanel fp : new ArrayList<MyFilePanel>(m_filePanels)) {
             if (fp.getSelectedFile().length() > 0) {
                 URL u = null;
                 String encUrl = fp.getSelectedFile();
