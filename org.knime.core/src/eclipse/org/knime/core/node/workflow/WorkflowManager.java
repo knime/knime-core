@@ -1623,15 +1623,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             default:
                 // ignore all other states (but touch successors)
             }
-            for (ConnectionContainer cc
-                    : m_workflow.getConnectionsBySource(id)) {
-                NodeID succId = cc.getDest();
-                if (succId.equals(this.getID())) {
-                    // unmark successors of this metanode
-                    getParent().disableNodeForExecution(this.getID());
-                } else {
-                    // handle normal node
-                    disableNodeForExecution(succId);
+            if (hasSuccessorInProgress(id)) {
+                for (ConnectionContainer cc
+                        : m_workflow.getConnectionsBySource(id)) {
+                    NodeID succId = cc.getDest();
+                    if (succId.equals(this.getID())) {
+                        // unmark successors of this metanode
+                        getParent().disableNodeForExecution(this.getID());
+                    } else {
+                        // handle normal node
+                        disableNodeForExecution(succId);
+                    }
                 }
             }
         } else { // WFM
