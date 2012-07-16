@@ -187,8 +187,8 @@ public class PMMLWriterNodeModel extends NodeModel {
                     + "Please enter a valid file name.");
         }
         File f = new File(fileName);
-        if ((f.exists() && !f.canWrite())
-                || (!f.exists() && !f.getParentFile().canWrite())) {
+        File parent = f.getParentFile();
+        if (f.isDirectory() || parent == null || !parent.exists()) {
             throw new InvalidSettingsException("File name \"" + fileName
                     + "\" is not valid. Please enter a valid file name.");
         }
