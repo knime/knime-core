@@ -133,9 +133,7 @@ public class DatabaseConnectionSettings {
         return timeout;
     }
 
-    /**
-     * DriverManager fetch size to chunk specified number of rows.
-     */
+    /** {@link DriverManager} fetch size to chunk specified number of rows while reading from database. */
     public static final Integer FETCH_SIZE = initFetchSize();
     private static Integer initFetchSize() {
         String fsize = System.getProperty(
@@ -151,6 +149,30 @@ public class DatabaseConnectionSettings {
             }
         }
         return null;
+    }
+
+    /** Properties defines the number of rows written in on chunk into the database.
+     * @since 2.6 */
+    public static final int BATCH_WRITE_SIZE = initBatchWriteSize();
+    private static int initBatchWriteSize() {
+        String bsize = System.getProperty(KNIMEConstants.PROPERTY_DATABASE_BATCH_WRITE_SIZE);
+        if (bsize != null) {
+            try {
+                final int batchsize = Integer.parseInt(bsize);
+                if (batchsize > 0) {
+                    LOGGER.info("Database batch write size: " + batchsize + " rows.");
+                    return batchsize;
+                } else {
+                    LOGGER.warn("Database property knime.database.batch_write_size=" + batchsize
+                            + " can't be smaller than 1, using 1 as default.");
+                }
+            } catch (NumberFormatException nfe) {
+                LOGGER.warn("Database batch write size not valid '" + bsize
+                        + "', using 1 as default.");
+            }
+        }
+        // default batch write size
+        return 1;
     }
 
     private String m_driver;
@@ -440,18 +462,20 @@ public class DatabaseConnectionSettings {
         String driver = settings.getString("driver");
         String database = settings.getString("database");
 
-        String user;
+        String user = "";
         String password = null;
         String credName = null;
         boolean useCredential = settings.containsKey("credential_name");
         if (useCredential) {
             credName = settings.getString("credential_name");
-            ICredentials cred = cp.get(credName);
-            user = cred.getLogin();
-            password = cred.getPassword();
-            if (password == null) {
-                LOGGER.warn("Credentials/Password has not been set, "
-                    + "using empty password.");
+            if (cp != null) {
+                ICredentials cred = cp.get(credName);
+                user = cred.getLogin();
+                password = cred.getPassword();
+                if (password == null) {
+                    LOGGER.warn("Credentials/Password has not been set, "
+                        + "using empty password.");
+                }
             }
         } else {
             // user and password

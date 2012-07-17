@@ -271,6 +271,11 @@ public final class DatabaseWriterConnection {
             int errorCnt = 0;
             int allErrors = 0;
 
+            // number of rows written to the database in one chunk/batch
+            final int batchSize = DatabaseConnectionSettings.BATCH_WRITE_SIZE;
+            // count number of rows added to current batch
+            int curBatchSize = 0;
+
             // create table meta data with empty column information
             final String query = "INSERT INTO "
                 + table + " VALUES " + wildcard.toString();
@@ -281,7 +286,7 @@ public final class DatabaseWriterConnection {
                 for (RowIterator it = data.iterator(); it.hasNext(); cnt++) {
                     exec.checkCanceled();
                     exec.setProgress(1.0 * cnt / rowCount, "Row " + "#" + cnt);
-                    DataRow row = it.next();
+                    final DataRow row = it.next();
                     for (int i = 0; i < mapping.length; i++) {
                         int dbIdx = i + 1;
                         if (mapping[i] < 0) {
@@ -341,19 +346,45 @@ public final class DatabaseWriterConnection {
                             }
                         }
                     }
-                    try {
-                        stmt.execute();
-                    } catch (Throwable t) {
-                        allErrors++;
-                        if (errorCnt > -1) {
-                            String errorMsg = "Error in row #" + cnt + ": "
-                                + row.getKey() + ", " + t.getMessage();
-                            exec.setMessage(errorMsg);
-                            if (errorCnt++ < 10) {
-                                LOGGER.warn(errorMsg);
-                            } else {
-                                errorCnt = -1;
-                                LOGGER.warn(errorMsg + " - more errors...", t);
+                    // if batch mode
+                    if (batchSize > 1) {
+                        // a new row will be added
+                        stmt.addBatch();
+                    }
+                    curBatchSize++;
+                    // if batch size equals number of row in batch or input table at end
+                    if ((curBatchSize == batchSize) || !it.hasNext()) {
+                        curBatchSize = 0;
+                        try {
+                            // write batch
+                            if (batchSize > 1) {
+                                stmt.executeBatch();
+                            } else { // or write single row
+                                stmt.execute();
+                            }
+                        } catch (Throwable t) {
+                            allErrors++;
+                            if (errorCnt > -1) {
+                                final String errorMsg;
+                                if (batchSize > 1) {
+                                    errorMsg = "Error while adding rows #" + (cnt - batchSize) + " - #" + cnt
+                                        + ", reason: " + t.getMessage();
+                                } else {
+                                    errorMsg = "Error while adding row #" + cnt + " (" + row.getKey() + "), reason: "
+                                        + t.getMessage();
+                                }
+                                exec.setMessage(errorMsg);
+                                if (errorCnt++ < 10) {
+                                    LOGGER.warn(errorMsg);
+                                } else {
+                                    errorCnt = -1;
+                                    LOGGER.warn(errorMsg + " - more errors...", t);
+                                }
+                            }
+                        } finally {
+                            // clear batch if in batch mode
+                            if (batchSize > 1) {
+                                stmt.clearBatch();
                             }
                         }
                     }
