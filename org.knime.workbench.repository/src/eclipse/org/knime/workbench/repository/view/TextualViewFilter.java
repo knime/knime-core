@@ -41,7 +41,7 @@ public abstract class TextualViewFilter extends ViewerFilter {
             final Object element) {
 
         // this means that the filter has been cleared
-        if ((m_query == null) || (m_query.equals(""))) {
+        if (!hasNonEmptyQuery()) {
             return true;
         }
         // call helper method
@@ -79,5 +79,16 @@ public abstract class TextualViewFilter extends ViewerFilter {
      */
     public void setQueryString(final String query) {
         m_query = query.toUpperCase();
+    }
+
+    /**
+     * Returns is this filter has a non-empty query, i.e. if item should be
+     * filtered out.
+     *
+     * @return <code>true</code> if a non-empty query exists, <code>false</code>
+     *         otherwise
+     */
+    public boolean hasNonEmptyQuery() {
+        return (m_query != null) && (m_query.length() > 0);
     }
 }
