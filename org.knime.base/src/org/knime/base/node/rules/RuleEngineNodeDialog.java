@@ -685,6 +685,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
                         + e.getMessage());
             }
         }
+        m_lastUsedTextfield = null;
     }
 
     /**
