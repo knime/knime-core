@@ -50,16 +50,20 @@
  */
 package org.knime.workbench.editor2.editparts.snap;
 
+import java.util.List;
+
+import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.draw2d.geometry.PrecisionRectangle;
 import org.eclipse.gef.EditPart;
-import org.eclipse.gef.EditPartViewer;
 import org.eclipse.gef.GraphicalEditPart;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.SnapToGrid;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.requests.ChangeBoundsRequest;
+import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 
@@ -88,21 +92,68 @@ public class SnapIconToGrid extends SnapToGrid {
             final PrecisionRectangle result) {
         PrecisionRectangle r = rect;
         if (request instanceof ChangeBoundsRequest) {
-            ChangeBoundsRequest changerequest = (ChangeBoundsRequest)request;
-            EditPart editPart = (EditPart)changerequest.getEditParts().get(0);
-            if (editPart instanceof NodeContainerEditPart) {
+            EditPart refPart = getReferencePart(((ChangeBoundsRequest)request).getEditParts(),
+                    ((ChangeBoundsRequest)request).getLocation(), ((ChangeBoundsRequest)request).getMoveDelta());
+            if (refPart instanceof NodeContainerEditPart) {
                 // adjust the rectangle to snap the center of the icon of the node
-                NodeContainerEditPart contPart = (NodeContainerEditPart)editPart;
-                EditPartViewer viewer = m_container.getViewer();
+                NodeContainerEditPart contPart = (NodeContainerEditPart)refPart;
                 NodeContainerFigure fig = (NodeContainerFigure)contPart.getFigure();
-                Point iconOffset = getGridRefPointOffset(fig);
-                double zoomFactor = ((ZoomManager)(viewer.getProperty(ZoomManager.class.toString()))).getZoom();
-                iconOffset = iconOffset.getScaled(zoomFactor);
+                Point iconOffset = getIconOffset(fig);
                 r = rect.getPreciseCopy();
                 r.translate(iconOffset);
+            } else if (refPart instanceof NodeAnnotationEditPart) {
+                // the rect is the annotation outline - adjust it to snap the center of the corresponding node icon
+                NodeAnnotationEditPart annoPart = (NodeAnnotationEditPart)refPart;
+                IFigure annoFig = annoPart.getFigure();
+                NodeAnnotation anno = (NodeAnnotation)annoPart.getModel();
+                NodeContainerEditPart nodePart =
+                        (NodeContainerEditPart)m_container.getViewer().getEditPartRegistry()
+                                .get(anno.getNodeContainer());
+                NodeContainerFigure nodeFig = (NodeContainerFigure)nodePart.getFigure();
+                Point iconOffset = getIconOffset(nodeFig);
+                int xOff = nodeFig.getBounds().x - annoFig.getBounds().x;
+                xOff += iconOffset.x;
+                int yOff = iconOffset.y - nodeFig.getBounds().height;
+                r = rect.getPreciseCopy();
+                r.translate(new Point(xOff, yOff));
             }
         }
         return super.snapRectangle(request, snapLocations, r, result);
+    }
+
+    private Point getIconOffset(final NodeContainerFigure nodeFigure) {
+        Point iconOffset = getGridRefPointOffset(nodeFigure);
+        double zoomFactor = ((ZoomManager)(m_container.getViewer().getProperty(ZoomManager.class.toString()))).getZoom();
+        iconOffset = iconOffset.getScaled(zoomFactor);
+        return iconOffset;
+    }
+
+    /**
+     * Returns the part the request started on (the part that was dragged to move all selected nodes)
+     * @param parts
+     * @param mouseLoc
+     * @param moveDelta
+     * @return
+     */
+    private EditPart getReferencePart(@SuppressWarnings("rawtypes") final List parts, final Point mouseLoc,
+            final Point moveDelta) {
+        int i = 0;
+        Point loc = mouseLoc.getCopy().translate(moveDelta.getCopy().negate());
+        makeRelative(m_container.getContentPane(), loc);
+        while (i < parts.size()) {
+            GraphicalEditPart result = (GraphicalEditPart)parts.get(i);
+            if (result.getFigure().containsPoint(loc)) {
+                return result;
+            }
+            if (result instanceof NodeContainerEditPart) {
+                NodeAnnotationEditPart annoPart = ((NodeContainerEditPart)result).getNodeAnnotationEditPart();
+                if (annoPart.getFigure().containsPoint(loc)) {
+                    return annoPart;
+                }
+            }
+            i++;
+        }
+        return null;
     }
 
     /**
