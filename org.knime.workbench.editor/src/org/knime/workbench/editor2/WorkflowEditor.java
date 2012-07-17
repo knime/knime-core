@@ -1160,6 +1160,14 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         // attach editor properties with the workflow manager - for all sub editors too
         saveEditorSettingsToWorkflowManager();
+        /* TODO: EditorSettings should be saved on all child editors too. But this triggers them dirty. And they stay
+         * dirty even after save (and setting them clean!). The dirty flag is a mess. Needs to be cleaned up!
+         * And after that, we may not inherit the zoom level (in meta nodes) from the parent anymore
+         * (see #applyEditorSettingsFromWorkflowManager).
+         * for (IEditorPart subEditor : getSubEditors()) {
+         *   ((WorkflowEditor)subEditor).saveEditorSettingsToWorkflowManager();
+         * }
+         */
 
         // to be sure to mark dirty and inform the user about running nodes
         // we ask for the state BEFORE saving
@@ -1413,10 +1421,6 @@ public class WorkflowEditor extends GraphicalEditor implements
             // if this is a meta node - derive settings from parent
             if (m_fileResource == null && m_parentEditor != null) {
                 settings = m_parentEditor.getCurrentEditorSettings();
-                // don't derive zoom factor.
-                if (settings != null) {
-                    settings.setZoomLevel(1.0);
-                }
                 if (settings == null) {
                     settings = getEditorSettingsDefault();
                 }
