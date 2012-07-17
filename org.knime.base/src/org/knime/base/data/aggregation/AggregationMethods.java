@@ -48,14 +48,6 @@
 
 package org.knime.base.data.aggregation;
 
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.collection.CollectionDataValue;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
-
 import org.knime.base.data.aggregation.booleancell.FalseCountOperator;
 import org.knime.base.data.aggregation.booleancell.TrueCountOperator;
 import org.knime.base.data.aggregation.collection.AndElementCountOperator;
@@ -92,6 +84,14 @@ import org.knime.base.data.aggregation.numerical.RangeOperator;
 import org.knime.base.data.aggregation.numerical.StdDeviationOperator;
 import org.knime.base.data.aggregation.numerical.SumOperator;
 import org.knime.base.data.aggregation.numerical.VarianceOperator;
+
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.collection.CollectionDataValue;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -536,7 +536,7 @@ public final class AggregationMethods {
     /**
      * @param type the {@link DataType} to check
      * @return the aggregation methods that are compatible
-     * with the given {@link DataType} group by the supported data type
+     * with the given {@link DataType} grouped by the supported data type
      */
     public static Map<Class<? extends DataValue>, List<AggregationMethod>>
         getCompatibleMethodGroups(final DataType type) {
@@ -544,6 +544,55 @@ public final class AggregationMethods {
         final Map<Class<? extends DataValue>, List<AggregationMethod>>
             methodGroups = groupMethodsByType(methods);
         return methodGroups;
+    }
+
+    /**
+     * @param type the {@link DataType} to check
+     * @return the aggregation methods that are compatible
+     * with the given {@link DataType} grouped by the supported data type
+     * @since 2.6
+     */
+    public static List<Entry<String, List<AggregationMethod>>>
+        getCompatibleMethodGroupList(final DataType type) {
+        final Map<Class<? extends DataValue>, List<AggregationMethod>>
+        methodGroups = AggregationMethods.getCompatibleMethodGroups(type);
+        final Set<Entry<Class<? extends DataValue>, List<AggregationMethod>>>
+            methodSet = methodGroups.entrySet();
+        final List<String> labels = new ArrayList<String>(methodSet.size());
+        final Map<String, List<AggregationMethod>> labelSet =
+            new HashMap<String, List<AggregationMethod>>(methodSet.size());
+        for (final Entry<Class<? extends DataValue>, List<AggregationMethod>>
+            entry : methodSet) {
+            final String label =
+                getUserTypeLabel(entry.getKey());
+            labels.add(label);
+            labelSet.put(label, entry.getValue());
+        }
+        Collections.sort(labels);
+        final List<Entry<String, List<AggregationMethod>>> list =
+            new ArrayList<Entry<String, List<AggregationMethod>>>(
+                    methodSet.size());
+        for (final String label : labels) {
+            final List<AggregationMethod> methods = labelSet.get(label);
+            final Entry<String, List<AggregationMethod>> entry =
+                new Map.Entry<String, List<AggregationMethod>>() {
+                    @Override
+                    public String getKey() {
+                        return label;
+                    }
+                    @Override
+                    public List<AggregationMethod> getValue() {
+                        return methods;
+                    }
+                    @Override
+                    public List<AggregationMethod> setValue(
+                            final List<AggregationMethod> value) {
+                        return methods;
+                    }
+            };
+            list.add(entry);
+        }
+        return list;
     }
 
     /**
@@ -555,8 +604,7 @@ public final class AggregationMethods {
     public static Collection<Class<? extends DataValue>> getSupportedTypes() {
         final Set<Class<? extends DataValue>> supportedTypes =
             new HashSet<Class<? extends DataValue>>();
-        for (final AggregationOperator operator
-                : instance.getOperators()) {
+        for (final AggregationOperator operator : instance.getOperators()) {
             supportedTypes.add(operator.getSupportedType());
         }
         return supportedTypes;
@@ -633,7 +681,26 @@ public final class AggregationMethods {
         if (methods.size() > 0) {
             return methods.get(0);
         }
-        return new FirstOperator(new GlobalSettings(),
+        return new FirstOperator(GlobalSettings.DEFAULT,
+                new OperatorColumnSettings(false, null));
+    }
+
+    /**
+     * @param dataValueClass the {@link DataValue} class to get the default
+     * method for
+     * @return the default {@link AggregationMethod} for the given
+     * {@link DataValue} class
+     */
+    public static AggregationMethod getDefaultMethod(
+            final Class<? extends DataValue> dataValueClass) {
+        final Map<Class<? extends DataValue>, List<AggregationMethod>> methods =
+                groupMethodsByType(getAvailableMethods());
+        final List<AggregationMethod> compatibleMethods =
+            methods.get(dataValueClass);
+        if (compatibleMethods.size() > 0) {
+            return compatibleMethods.get(0);
+        }
+        return new FirstOperator(GlobalSettings.DEFAULT,
                 new OperatorColumnSettings(false, null));
     }
 

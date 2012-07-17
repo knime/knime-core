@@ -103,7 +103,6 @@ public interface AggregationMethod extends Comparable<AggregationMethod> {
      */
     boolean isCompatible(DataColumnSpec origColSpec);
 
-
     /**
      * Creates a new instance of this operator and returns it.
      * A new instance must be created for each column.

@@ -44,84 +44,57 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
+ *
+ * History
+ *    27.08.2008 (Tobias Koetter): created
  */
 
 package org.knime.base.data.aggregation.dialogutil;
 
+import org.knime.base.data.aggregation.NamedAggregationOperator;
+
 import java.awt.Component;
 
-import javax.swing.JCheckBox;
+import javax.swing.DefaultCellEditor;
 import javax.swing.JTable;
-import javax.swing.SwingConstants;
-import javax.swing.UIManager;
-import javax.swing.border.Border;
-import javax.swing.border.EmptyBorder;
-import javax.swing.plaf.UIResource;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableModel;
+import javax.swing.JTextField;
+import javax.swing.tree.DefaultTreeCellEditor;
 
 
 /**
- * Include missing cell table cell renderer that contains most
- * of the code from the {JTable$BooleanRenderer} class.
+ * Extends the {@link DefaultTreeCellEditor} class to allow changing of the
+ * method name.
+ *
  * @author Tobias Koetter, University of Konstanz
+ * @since 2.6
  */
-public class IncludeMissingCellRenderer extends JCheckBox
-implements TableCellRenderer, UIResource {
-    private static final long serialVersionUID = 4646190851811197484L;
-    private static final Border NO_FOCUS_BORDER =
-        new EmptyBorder(1, 1, 1, 1);
-    private final TableModel m_model;
+public class NamedAggregationMethodNameTableCellEditor
+    extends DefaultCellEditor {
 
-    /**Constructor for class IncludeMissingCellRenderer.
-     * @param tableModel the table model with the values that should
-     * be rendered
+    private static final long serialVersionUID = 1;
+
+    /**Constructor for class AggregationMethodTableCellEditor.
      */
-    public IncludeMissingCellRenderer(final TableModel tableModel) {
-        super();
-        setHorizontalAlignment(SwingConstants.CENTER);
-            setBorderPainted(true);
-        if (tableModel == null) {
-            throw new NullPointerException(
-                    "Table model must not be null");
-        }
-        m_model = tableModel;
+    public NamedAggregationMethodNameTableCellEditor() {
+        super(new JTextField());
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Component getTableCellRendererComponent(final JTable table,
-            final Object value, final boolean isSelected,
-            final boolean hasFocus, final int row, final int column) {
-        if (isSelected) {
-            setForeground(table.getSelectionForeground());
-            super.setBackground(table.getSelectionBackground());
+    public Component getTableCellEditorComponent(final JTable table,
+            final Object value, final boolean isSelected, final int row,
+            final int column) {
+        String val;
+        if (value instanceof NamedAggregationOperator) {
+            final NamedAggregationOperator method =
+                (NamedAggregationOperator)value;
+            val = method.getName();
         } else {
-            setForeground(table.getForeground());
-            setBackground(table.getBackground());
+            val = value.toString();
         }
-        setSelected((value != null && ((Boolean)value).booleanValue()));
-
-        if (hasFocus) {
-            setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
-        } else {
-            setBorder(NO_FOCUS_BORDER);
-        }
-        setEnabled(m_model.isCellEditable(row, column));
-        return this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getToolTipText() {
-        final String superText = super.getToolTipText();
-        if (superText != null) {
-            return superText;
-        }
-        return "Tick to include missing cells";
+        return super.getTableCellEditorComponent(table, val,
+                isSelected, row, column);
     }
 }

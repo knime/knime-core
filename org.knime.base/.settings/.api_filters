@@ -540,6 +540,13 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/data/aggregation/dialogutil/AggregationColumnTableModel.java" type="org.knime.base.data.aggregation.dialogutil.AggregationColumnTableModel">
+        <filter id="338849923">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.dialogutil.AggregationColumnTableModel"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/node/mine/knn/KnnNodeFactory.java" type="org.knime.base.node.mine.knn.KnnNodeFactory">
         <filter id="1143996420">
             <message_arguments>

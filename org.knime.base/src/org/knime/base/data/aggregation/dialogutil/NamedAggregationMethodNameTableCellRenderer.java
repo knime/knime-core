@@ -44,49 +44,31 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
+ * History
+ * 27.08.2008 (Tobias Koetter): created
  */
-
 package org.knime.base.data.aggregation.dialogutil;
 
-import java.awt.Component;
+import org.knime.base.data.aggregation.NamedAggregationOperator;
 
-import javax.swing.JCheckBox;
+import java.awt.Component;
+import java.awt.event.MouseEvent;
+
 import javax.swing.JTable;
-import javax.swing.SwingConstants;
-import javax.swing.UIManager;
-import javax.swing.border.Border;
-import javax.swing.border.EmptyBorder;
-import javax.swing.plaf.UIResource;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableModel;
+import javax.swing.table.DefaultTableCellRenderer;
 
 
 /**
- * Include missing cell table cell renderer that contains most
- * of the code from the {JTable$BooleanRenderer} class.
+ * Table cell renderer that checks if the value being renderer is of type
+ * <code>AggregationMethod</code> if so it will renderer the name of the method.
+ * If not, the passed value's toString() method is used for rendering.
+ *
  * @author Tobias Koetter, University of Konstanz
+ * @since 2.6
  */
-public class IncludeMissingCellRenderer extends JCheckBox
-implements TableCellRenderer, UIResource {
-    private static final long serialVersionUID = 4646190851811197484L;
-    private static final Border NO_FOCUS_BORDER =
-        new EmptyBorder(1, 1, 1, 1);
-    private final TableModel m_model;
-
-    /**Constructor for class IncludeMissingCellRenderer.
-     * @param tableModel the table model with the values that should
-     * be rendered
-     */
-    public IncludeMissingCellRenderer(final TableModel tableModel) {
-        super();
-        setHorizontalAlignment(SwingConstants.CENTER);
-            setBorderPainted(true);
-        if (tableModel == null) {
-            throw new NullPointerException(
-                    "Table model must not be null");
-        }
-        m_model = tableModel;
-    }
+public class NamedAggregationMethodNameTableCellRenderer
+    extends DefaultTableCellRenderer {
+  private static final long serialVersionUID = 1;
 
     /**
      * {@inheritDoc}
@@ -95,21 +77,13 @@ implements TableCellRenderer, UIResource {
     public Component getTableCellRendererComponent(final JTable table,
             final Object value, final boolean isSelected,
             final boolean hasFocus, final int row, final int column) {
-        if (isSelected) {
-            setForeground(table.getSelectionForeground());
-            super.setBackground(table.getSelectionBackground());
-        } else {
-            setForeground(table.getForeground());
-            setBackground(table.getBackground());
+        final Component c =
+            super.getTableCellRendererComponent(table, value, isSelected,
+                hasFocus, row, column);
+        assert (c == this);
+        if (value instanceof NamedAggregationOperator) {
+            setText(((NamedAggregationOperator)value).getName());
         }
-        setSelected((value != null && ((Boolean)value).booleanValue()));
-
-        if (hasFocus) {
-            setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
-        } else {
-            setBorder(NO_FOCUS_BORDER);
-        }
-        setEnabled(m_model.isCellEditable(row, column));
         return this;
     }
 
@@ -118,10 +92,15 @@ implements TableCellRenderer, UIResource {
      */
     @Override
     public String getToolTipText() {
-        final String superText = super.getToolTipText();
-        if (superText != null) {
-            return superText;
-        }
-        return "Tick to include missing cells";
+        return "Double click to change name. "
+            + "Right mouse click for context menu.";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getToolTipText(final MouseEvent event) {
+        return getToolTipText();
     }
 }

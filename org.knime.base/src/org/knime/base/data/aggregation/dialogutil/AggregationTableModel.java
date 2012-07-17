@@ -48,80 +48,55 @@
 
 package org.knime.base.data.aggregation.dialogutil;
 
-import java.awt.Component;
+import org.knime.base.data.aggregation.AggregationMethodDecorator;
 
-import javax.swing.JCheckBox;
-import javax.swing.JTable;
-import javax.swing.SwingConstants;
-import javax.swing.UIManager;
-import javax.swing.border.Border;
-import javax.swing.border.EmptyBorder;
-import javax.swing.plaf.UIResource;
-import javax.swing.table.TableCellRenderer;
+import java.util.List;
+
 import javax.swing.table.TableModel;
 
 
 /**
- * Include missing cell table cell renderer that contains most
- * of the code from the {JTable$BooleanRenderer} class.
+ * {@link TableModel} that allows the displaying and editing of
+ * {@link AggregationMethodDecorator}s.
+ *
  * @author Tobias Koetter, University of Konstanz
+ * @param <O> the {@link AggregationMethodDecorator} implementation this
+ * {@link TableModel} operates with
+ * @since 2.6
  */
-public class IncludeMissingCellRenderer extends JCheckBox
-implements TableCellRenderer, UIResource {
-    private static final long serialVersionUID = 4646190851811197484L;
-    private static final Border NO_FOCUS_BORDER =
-        new EmptyBorder(1, 1, 1, 1);
-    private final TableModel m_model;
-
-    /**Constructor for class IncludeMissingCellRenderer.
-     * @param tableModel the table model with the values that should
-     * be rendered
-     */
-    public IncludeMissingCellRenderer(final TableModel tableModel) {
-        super();
-        setHorizontalAlignment(SwingConstants.CENTER);
-            setBorderPainted(true);
-        if (tableModel == null) {
-            throw new NullPointerException(
-                    "Table model must not be null");
-        }
-        m_model = tableModel;
-    }
+public interface AggregationTableModel<O extends AggregationMethodDecorator>
+    extends TableModel {
 
     /**
-     * {@inheritDoc}
+     * Removes all entries from the table.
      */
-    @Override
-    public Component getTableCellRendererComponent(final JTable table,
-            final Object value, final boolean isSelected,
-            final boolean hasFocus, final int row, final int column) {
-        if (isSelected) {
-            setForeground(table.getSelectionForeground());
-            super.setBackground(table.getSelectionBackground());
-        } else {
-            setForeground(table.getForeground());
-            setBackground(table.getBackground());
-        }
-        setSelected((value != null && ((Boolean)value).booleanValue()));
-
-        if (hasFocus) {
-            setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
-        } else {
-            setBorder(NO_FOCUS_BORDER);
-        }
-        setEnabled(m_model.isCellEditable(row, column));
-        return this;
-    }
+    public void removeAll();
 
     /**
-     * {@inheritDoc}
+     * @param idxs the row indices to remove
      */
-    @Override
-    public String getToolTipText() {
-        final String superText = super.getToolTipText();
-        if (superText != null) {
-            return superText;
-        }
-        return "Tick to include missing cells";
-    }
+    public void remove(int... idxs);
+
+    /**
+     * @param operator the {@link AggregationMethodDecorator}s to add
+     */
+    public void add(O... operator);
+
+    /**
+     * @param idxs the row indices to toggle the missing cell option for
+     */
+    public void toggleMissingCellOption(int[] idxs);
+
+    /**
+     * This method is used to initialize the {@link TableModel} with the
+     * initial selected {@link AggregationMethodDecorator}s.
+     * @param operators initial selected {@link AggregationMethodDecorator}s
+     */
+    public void initialize(final List<O> operators);
+
+    /**
+     * @return the index of the missing cell option column or -1 if the table
+     * does not contain such a column
+     */
+    public int getMissingCellOptionColIdx();
 }

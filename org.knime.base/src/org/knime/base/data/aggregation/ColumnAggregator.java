@@ -66,17 +66,25 @@ import java.util.List;
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class ColumnAggregator {
+public class ColumnAggregator extends AggregationMethodDecorator {
+
     private static final String CNFG_AGGR_COL_SECTION = "aggregationColumn";
     private static final String CNFG_COL_NAMES = "columnNames";
     private static final String CNFG_COL_TYPES = "columnTypes";
-    private static final String CNFG_AGGR_METHODS = "aggregationMethod";
-    private static final String CNFG_INCL_MISSING_VALS = "inclMissingVals";
 
     private final DataColumnSpec m_origColSpec;
-    private final AggregationMethod m_operatorTemplate;
     private AggregationOperator m_operator;
-    private boolean m_inclMissingVals;
+
+
+    /**Constructor for class ColumnAggregator.
+     * @param origColSpec the {@link DataColumnSpec} of the original column
+     * @param method the {@link AggregationMethod} to use for the given column
+     * @since 2.6
+     */
+    public ColumnAggregator(final DataColumnSpec origColSpec,
+            final AggregationMethod method) {
+        this(origColSpec, method, method.inclMissingCells());
+    }
 
     /**Constructor for class ColumnAggregator.
      * @param origColSpec the {@link DataColumnSpec} of the original column
@@ -86,19 +94,18 @@ public class ColumnAggregator {
      */
     public ColumnAggregator(final DataColumnSpec origColSpec,
             final AggregationMethod method, final boolean inclMissingCells) {
+        super(method, inclMissingCells);
         if (origColSpec == null) {
             throw new NullPointerException("colSpec must not be null");
         }
         if (method == null) {
             throw new NullPointerException("method must not be null");
         }
-        m_operatorTemplate = method;
-        if (!m_operatorTemplate.isCompatible(origColSpec)) {
+        if (!method.isCompatible(origColSpec)) {
             throw new IllegalArgumentException("Aggregation method '"
-                    + m_operatorTemplate.getLabel() + "' not valid for column '"
+                    + method.getLabel() + "' not valid for column '"
                     + origColSpec.getName() + "'");
         }
-        m_inclMissingVals = inclMissingCells;
         m_origColSpec = origColSpec;
     }
 
@@ -107,8 +114,8 @@ public class ColumnAggregator {
      */
     @Override
     public ColumnAggregator clone() {
-        return new ColumnAggregator(m_origColSpec, m_operatorTemplate,
-                m_inclMissingVals);
+        return new ColumnAggregator(m_origColSpec, getMethodTemplate(),
+                inclMissingCells());
     }
 
     /**
@@ -141,37 +148,6 @@ public class ColumnAggregator {
     }
 
     /**
-     * @return the {@link AggregationMethods} to use
-     */
-    public AggregationMethod getMethodTemplate() {
-        return m_operatorTemplate;
-    }
-
-    /**
-     * @return <code>true</code> if the operator supports the alteration of
-     * the missing value option
-     */
-    public boolean supportsMissingValueOption() {
-        return m_operatorTemplate.supportsMissingValueOption();
-    }
-
-    /**
-     * @return <code>true</code> if missing cells should be
-     * considered during aggregation
-     */
-    public boolean inclMissingCells() {
-        return m_inclMissingVals;
-    }
-
-    /**
-     * @param inclMissingCells <code>true</code> if missing cells should be
-     * considered during aggregation
-     */
-    public void setinclMissingCells(final boolean inclMissingCells) {
-        m_inclMissingVals = inclMissingCells;
-    }
-
-    /**
      * Creates only ones an {@link AggregationOperator} that is always
      * returned by this method.
      * In order to remove the created {@link AggregationOperator} call the
@@ -184,8 +160,8 @@ public class ColumnAggregator {
             final GlobalSettings globalSettings) {
         if (m_operator == null) {
             final OperatorColumnSettings opColSettings =
-                new OperatorColumnSettings(m_inclMissingVals, m_origColSpec);
-            m_operator = m_operatorTemplate.createOperator(
+                new OperatorColumnSettings(inclMissingCells(), m_origColSpec);
+            m_operator = getMethodTemplate().createOperator(
                     globalSettings, opColSettings);
         }
         return m_operator;
@@ -217,8 +193,7 @@ public class ColumnAggregator {
      */
     @Override
     public String toString() {
-        return getOriginalColName() + "->" + getMethodTemplate().getLabel()
-            + "->incl. missing:" + m_inclMissingVals;
+        return getOriginalColName() + "->" + super.toString();
     }
 
     /**
@@ -293,6 +268,17 @@ public class ColumnAggregator {
         cnfg.addDataTypeArray(CNFG_COL_TYPES, types);
         cnfg.addStringArray(CNFG_AGGR_METHODS, aggrMethods);
         cnfg.addBooleanArray(CNFG_INCL_MISSING_VALS, inclMissingVals);
+    }
+
+    /**
+     * Use {@link #setInclMissingCells(boolean)} instead.
+     *
+     * @param inclMissingCells the inclMissingCells to set
+     * see {@link #setInclMissingCells(boolean)}
+     */
+    @Deprecated
+    public void setinclMissingCells(final boolean inclMissingCells) {
+        super.setInclMissingCells(inclMissingCells);
     }
 
 }

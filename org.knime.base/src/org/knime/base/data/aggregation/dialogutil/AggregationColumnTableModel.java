@@ -51,16 +51,14 @@
 
 package org.knime.base.data.aggregation.dialogutil;
 
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataValue;
-
 import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.ColumnAggregator;
 
-import java.util.ArrayList;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataValue;
+
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -75,137 +73,17 @@ import javax.swing.table.DefaultTableModel;
  *
  * @author Tobias Koetter, University of Konstanz
  */
-public class AggregationColumnTableModel extends DefaultTableModel {
+public class AggregationColumnTableModel
+    extends AbstractAggregationTableModel<ColumnAggregator> {
 
+    /**Constructor for class AggregationColumnTableModel.
+     */
+    public AggregationColumnTableModel() {
+        super(new String[] {"Column", "Aggregation (click to change)"},
+                new Class<?>[] {DataColumnSpec.class, AggregationMethod.class},
+                true);
+    }
     private static final long serialVersionUID = 7331177164907480373L;
-
-    private final List<ColumnAggregator> m_cols =
-        new ArrayList<ColumnAggregator>();
-
-    /**
-     * Initializes the column aggregator table with the given
-     * {@link ColumnAggregator}s.
-     * @param colAggrs the {@link List} of {@link ColumnAggregator}s
-     */
-    protected void initialize(final List<ColumnAggregator> colAggrs) {
-        m_cols.clear();
-        m_cols.addAll(colAggrs);
-    }
-
-    /**
-     * @param specs the {@link DataColumnSpec}s of the columns to add
-     */
-    protected void addColumn(final DataColumnSpec... specs) {
-        if (specs == null || specs.length < 1) {
-            return;
-        }
-        for (final DataColumnSpec spec : specs) {
-            final AggregationMethod defaultMethod =
-                AggregationMethods.getDefaultMethod(spec);
-            m_cols.add(new ColumnAggregator(spec,
-                    defaultMethod, defaultMethod.inclMissingCells()));
-        }
-        fireTableDataChanged();
-    }
-
-    /**
-     * @param idxs the indices of the columns to remove
-     */
-    protected void removeColumn(final int... idxs) {
-        if (idxs == null || idxs.length < 1) {
-            return;
-        }
-        final Collection<ColumnAggregator> aggr =
-            new LinkedList<ColumnAggregator>();
-        for (final int idx : idxs) {
-            aggr.add(m_cols.get(idx));
-        }
-        m_cols.removeAll(aggr);
-        fireTableDataChanged();
-    }
-
-    /**
-     * @param colNames the names of the columns to remove
-     */
-    protected void removeColumns(final Collection<String> colNames) {
-        if (colNames == null || colNames.isEmpty()) {
-            return;
-        }
-        final Set<String> colNameSet = new HashSet<String>(colNames);
-        final Collection<ColumnAggregator> colAggr2Remove =
-            new LinkedList<ColumnAggregator>();
-        for (final ColumnAggregator colAggr : m_cols) {
-            if (colNameSet.contains(colAggr.getOriginalColName())) {
-                colAggr2Remove.add(colAggr);
-            }
-        }
-        m_cols.removeAll(colAggr2Remove);
-        fireTableDataChanged();
-    }
-
-    /**
-     * Removes all aggregation column.
-     */
-    protected void removeAll() {
-        m_cols.clear();
-        fireTableDataChanged();
-    }
-
-    /**
-     * @param selectedRows the index of the rows to change the aggregation
-     * method
-     * @param method the aggregation method to use
-     */
-    protected void setAggregationMethod(final int[] selectedRows,
-            final AggregationMethod method) {
-        if (selectedRows == null) {
-            return;
-        }
-        for (final int i : selectedRows) {
-            if (i < 0) {
-                continue;
-            }
-            updateMethod(i, method);
-        }
-        fireTableDataChanged();
-    }
-
-    /**
-     * Toggles the include missing cell option of all selected rows if they
-     * support it.
-     * @param selectedRows the index of the rows to change the aggregation
-     * method
-     */
-    public void toggleMissingCellOption(final int[] selectedRows) {
-        if (selectedRows == null) {
-            return;
-        }
-        for (final int i : selectedRows) {
-            if (i < 0) {
-                continue;
-            }
-            final ColumnAggregator aggregator = getColumnAggregator(i);
-            if (aggregator.supportsMissingValueOption()) {
-                aggregator.setinclMissingCells(
-                        !aggregator.inclMissingCells());
-            }
-        }
-        fireTableDataChanged();
-    }
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getColumnName(final int columnIdx) {
-        switch (columnIdx) {
-            case 0:
-                return "Column";
-            case 1:
-                return "Aggregation (click to change)";
-            default:
-                return "missing";
-        }
-    }
 
     /**
      * @param type the type to check for compatibility
@@ -215,7 +93,7 @@ public class AggregationColumnTableModel extends DefaultTableModel {
     public Collection<Integer> getCompatibleRowIdxs(
             final Class<? extends DataValue> type) {
         final Collection<Integer> result = new LinkedList<Integer>();
-        for (int i = 0, length = m_cols.size(); i < length; i++) {
+        for (int i = 0, length = getRowCount(); i < length; i++) {
             if (isCompatible(i, type)) {
                 result.add(Integer.valueOf(i));
             }
@@ -230,7 +108,7 @@ public class AggregationColumnTableModel extends DefaultTableModel {
      */
     public boolean isCompatible(final int row,
             final Class<? extends DataValue> type) {
-        final ColumnAggregator colAggr = getColumnAggregator(row);
+        final ColumnAggregator colAggr = getRow(row);
         return colAggr.isCompatible(type);
     }
 
@@ -238,78 +116,52 @@ public class AggregationColumnTableModel extends DefaultTableModel {
      * {@inheritDoc}
      */
     @Override
-    public void setValueAt(final Object aValue, final int row,
+    public void setValue(final Object aValue, final int row,
             final int columnIdx) {
         if (aValue == null) {
             return;
         }
         if (aValue instanceof AggregationMethod) {
+            assert columnIdx == 1;
             final AggregationMethod newMethod =
                 (AggregationMethod)aValue;
-            assert columnIdx == 1;
             updateMethod(row, newMethod);
         }
-        if (aValue instanceof Boolean) {
-            final Boolean inclMissing = (Boolean) aValue;
-            assert columnIdx == 2;
-            updateInclMissing(row, inclMissing.booleanValue());
+    }
+
+    /**
+     * @param selectedRows the rows to update
+     * @param method the {@link AggregationMethod} to use
+     */
+    protected void setAggregationMethod(final int[] selectedRows,
+            final AggregationMethod method) {
+        for (final int row : selectedRows) {
+            updateMethod(row, method);
         }
     }
 
     /**
-     * @param row row index to change the method for
-     * @param inclMissingVals <code>true</code> if missing cells should be
-     * considered during aggregation
-     */
-    private void updateInclMissing(final int row,
-            final boolean inclMissingVals) {
-        final ColumnAggregator colAggr = getColumnAggregator(row);
-        colAggr.setinclMissingCells(inclMissingVals);
-    }
-
-    /**
-     * @param row row index to change the method for
-     * @param method the new aggregation method
+     * @param row the row to update
+     * @param method the {@link AggregationMethod} to use
      */
     private void updateMethod(final int row, final AggregationMethod method) {
-        final ColumnAggregator colAggr = getColumnAggregator(row);
-        m_cols.set(row, new ColumnAggregator(
-                colAggr.getOriginalColSpec(), method,
-                method.inclMissingCells()));
-        fireTableCellUpdated(row, 2);
-    }
-
-    /**
-     * @param row the index of the row
-     * @return the aggregator for the row with the given index
-     */
-    public ColumnAggregator getColumnAggregator(final int row) {
-        if (row < 0 || m_cols.size() <= row) {
-            throw new IllegalArgumentException("Invalid row index: " + row);
+        final ColumnAggregator old = getRow(row);
+        if (old.getMethodTemplate().equals(method)) {
+            //check if the method has changed
+            return;
         }
-        final ColumnAggregator colAggr = m_cols.get(row);
-        return colAggr;
-    }
-
-
-    /**
-     * @return the {@link ColumnAggregator} {@link List}
-     */
-    public List<ColumnAggregator> getColumnAggregators() {
-        return Collections.unmodifiableList(m_cols);
+        updateRow(row, new ColumnAggregator(old.getOriginalColSpec(),
+                method, old.inclMissingCells()));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean isCellEditable(final int row, final int columnIdx) {
+    protected boolean isEditable(final int row, final int columnIdx) {
         switch (columnIdx) {
             case 1:
                 return true;
-            case 2:
-                final ColumnAggregator aggregator = getColumnAggregator(row);
-                return aggregator.supportsMissingValueOption();
             default:
                 return false;
         }
@@ -319,46 +171,81 @@ public class AggregationColumnTableModel extends DefaultTableModel {
      * {@inheritDoc}
      */
     @Override
-    public int getRowCount() {
-        if (m_cols == null) {
-            return 0;
-        }
-        return m_cols.size();
-    }
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int getColumnCount() {
-        return 3;
-    }
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Class<?> getColumnClass(final int columnIndex) {
+    protected Object getValueAtRow(final int row, final int columnIndex) {
+        final ColumnAggregator columnAggregator = getRow(row);
         switch (columnIndex) {
+        case 0:
+            return columnAggregator.getOriginalColSpec();
         case 1:
-            return AggregationMethod.class;
-        case 2:
-            return Boolean.class;
+            return columnAggregator.getMethodTemplate();
+
         default:
-            return DataColumnSpec.class;
+            break;
         }
+        return null;
     }
+
+
     /**
-     * {@inheritDoc}
+     * @param row the index of the row
+     * @return the aggregator for the row with the given index
+     * @see #getRow(int)
      */
-    @Override
-    public Object getValueAt(final int row, final int columnIndex) {
-        switch (columnIndex) {
-        case 1:
-            return getColumnAggregator(row).getMethodTemplate();
-        case 2:
-            return Boolean.valueOf(
-                    getColumnAggregator(row).inclMissingCells());
-        default:
-            return getColumnAggregator(row).getOriginalColSpec();
+    @Deprecated
+    public ColumnAggregator getColumnAggregator(final int row) {
+        return getRow(row);
+    }
+
+    /**
+     * @param colNames the names of the columns to remove
+     */
+    @Deprecated
+    protected void removeColumns(final Collection<String> colNames) {
+        if (colNames == null || colNames.isEmpty()) {
+            return;
+        }
+        final Set<String> colNameSet = new HashSet<String>(colNames);
+        final Collection<ColumnAggregator> colAggr2Remove =
+            new LinkedList<ColumnAggregator>();
+        for (final ColumnAggregator colAggr : getRows()) {
+            if (colNameSet.contains(colAggr.getOriginalColName())) {
+                colAggr2Remove.add(colAggr);
+            }
+        }
+        remove(colAggr2Remove);
+    }
+
+    /**
+     * @param idxs the indices of the columns to remove
+     * @see AggregationColumnTableModel#remove(int...)
+     */
+    @Deprecated
+    protected void removeColumn(final int... idxs) {
+        remove(idxs);
+    }
+
+    /**
+     * @return the {@link ColumnAggregator} {@link List}
+     * @see #getRows()
+     */
+    @Deprecated
+    public List<ColumnAggregator> getColumnAggregators() {
+        return getRows();
+    }
+
+    /**
+     * @param specs the {@link DataColumnSpec}s of the columns to add
+     * @see #add(ColumnAggregator...)
+     */
+    @Deprecated
+    protected void addColumn(final DataColumnSpec... specs) {
+        if (specs == null || specs.length < 1) {
+            return;
+        }
+        for (final DataColumnSpec spec : specs) {
+            final AggregationMethod defaultMethod =
+                AggregationMethods.getDefaultMethod(spec);
+            add(new ColumnAggregator(spec, defaultMethod));
         }
     }
 }

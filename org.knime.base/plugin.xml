@@ -1342,6 +1342,12 @@
             factory-class="org.knime.base.node.meta.looper.variableloopend.VariableLoopEndNodeFactory"
             id="org.knime.base.node.meta.looper.variableloopend.VariableLoopEndNodeFactory">
       </node>
+      <node
+            category-path="/manipulation/column/column-split+combine"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.columnaggregator.ColumnAggregatorNodeFactory"
+            id="org.knime.base.node.preproc.columnaggregator.ColumnAggregatorNodeFactory">
+      </node>
       <!-- new ones -->
       
 

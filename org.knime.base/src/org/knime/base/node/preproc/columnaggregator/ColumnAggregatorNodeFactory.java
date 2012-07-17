@@ -46,82 +46,59 @@
  * -------------------------------------------------------------------
  */
 
-package org.knime.base.data.aggregation.dialogutil;
+package org.knime.base.node.preproc.columnaggregator;
 
-import java.awt.Component;
-
-import javax.swing.JCheckBox;
-import javax.swing.JTable;
-import javax.swing.SwingConstants;
-import javax.swing.UIManager;
-import javax.swing.border.Border;
-import javax.swing.border.EmptyBorder;
-import javax.swing.plaf.UIResource;
-import javax.swing.table.TableCellRenderer;
-import javax.swing.table.TableModel;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 
 /**
- * Include missing cell table cell renderer that contains most
- * of the code from the {JTable$BooleanRenderer} class.
+ * {@link NodeFactory} implementation of the column aggregator.
+ *
  * @author Tobias Koetter, University of Konstanz
  */
-public class IncludeMissingCellRenderer extends JCheckBox
-implements TableCellRenderer, UIResource {
-    private static final long serialVersionUID = 4646190851811197484L;
-    private static final Border NO_FOCUS_BORDER =
-        new EmptyBorder(1, 1, 1, 1);
-    private final TableModel m_model;
+public class ColumnAggregatorNodeFactory
+    extends NodeFactory<ColumnAggregatorNodeModel> {
 
-    /**Constructor for class IncludeMissingCellRenderer.
-     * @param tableModel the table model with the values that should
-     * be rendered
+    /**
+     * {@inheritDoc}
      */
-    public IncludeMissingCellRenderer(final TableModel tableModel) {
-        super();
-        setHorizontalAlignment(SwingConstants.CENTER);
-            setBorderPainted(true);
-        if (tableModel == null) {
-            throw new NullPointerException(
-                    "Table model must not be null");
-        }
-        m_model = tableModel;
+    @Override
+    public ColumnAggregatorNodeModel createNodeModel() {
+        return new ColumnAggregatorNodeModel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Component getTableCellRendererComponent(final JTable table,
-            final Object value, final boolean isSelected,
-            final boolean hasFocus, final int row, final int column) {
-        if (isSelected) {
-            setForeground(table.getSelectionForeground());
-            super.setBackground(table.getSelectionBackground());
-        } else {
-            setForeground(table.getForeground());
-            setBackground(table.getBackground());
-        }
-        setSelected((value != null && ((Boolean)value).booleanValue()));
-
-        if (hasFocus) {
-            setBorder(UIManager.getBorder("Table.focusCellHighlightBorder"));
-        } else {
-            setBorder(NO_FOCUS_BORDER);
-        }
-        setEnabled(m_model.isCellEditable(row, column));
-        return this;
+    protected int getNrNodeViews() {
+        return 0;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public String getToolTipText() {
-        final String superText = super.getToolTipText();
-        if (superText != null) {
-            return superText;
-        }
-        return "Tick to include missing cells";
+    public NodeView<ColumnAggregatorNodeModel> createNodeView(
+            final int viewIndex, final ColumnAggregatorNodeModel nodeModel) {
+        return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new ColumnAggregatorNodeDialog();
     }
 }
