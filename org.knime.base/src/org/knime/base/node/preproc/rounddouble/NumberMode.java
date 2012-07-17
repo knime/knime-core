@@ -46,50 +46,74 @@
  * ------------------------------------------------------------------------
  * 
  * History
- *   03.05.2012 (kilian): created
+ *   14.07.2012 (kilian): created
  */
 package org.knime.base.node.preproc.rounddouble;
 
-/**
- * 
- * @author Kilian Thiel, KNIME.com, Berlin, Germany
- */
-final class RoundDoubleConfigKeys {
+import java.util.ArrayList;
+import java.util.List;
 
-    private RoundDoubleConfigKeys() { /* empty constructor */ }
+
+
+/**
+ * Number mode for round double node.
+ * 
+ * @author Kilian Thiel, KNIME.com AG, Zurich
+ */
+public enum NumberMode {
+
+    /**
+     * rounding to decimal places.
+     */
+    DECIMAL_PLACES("Decimal places"),
+
+    /**
+     * rounding to significant figures.
+     */
+    SIGNIFICANT_FIGURES("Significant figures");
+
+    private String m_description;
+
+    /**
+     * Constructor.
+     * 
+     * @param description The modes description.
+     */
+    private NumberMode(final String description) {
+        m_description = description;
+    }
+
+    /**
+     * Returns the number mode value for the given description. If there exists
+     * no mode for description an <code>IllegalArgumentException</code> is 
+     * thrown.
+     * @param description The description to get the number mode value for.
+     * @return Number mode value for given description
+     */
+    public static NumberMode valueByDescription(final String description) {
+        for (NumberMode mode : values()) {
+            if (mode.description().equals(description)) {
+                return mode;
+            }
+        }
+        throw new IllegalArgumentException("argument out of range");
+    }
     
     /**
-     * The configuration key for the selected column names.
+     * @return The description of the mode.
      */
-    static final String COLUMN_NAMES = "StringColNames";
+    public String description() {
+        return m_description;
+    }
     
     /**
-     * The configuration key for the specified precision number.
+     * @return An array of all descriptions.
      */
-    static final String PRECISION_NUMBER = "PrecisionNumer";
-    
-    /**
-     * The configuration key for the specified column appending.
-     */
-    static final String APPEND_COLUMNS = "AppendColumns";
-    
-    /**
-     * The configuration key for the specified column suffix.
-     */
-    static final String COLUMN_SUFFIX = "ColumnSuffix";
-    
-    /**
-     * The configuration key for the specified rounding mode.
-     */
-    static final String ROUNDING_MODE = "RoundingMode";
-    
-    /**
-     * The configuration key for the output as string settings.
-     */
-    static final String OUTPUT_AS_STRING = "OutputAsString";
-    
-    /**
-     * The configuration key for the specified number mode.
-     */
-    static final String NUMBER_MODE = "NumberMode";
+    public static String[] getDescriptions() {
+        List<String> descList = new ArrayList<String>();
+        for (NumberMode mode : values()) {
+            descList.add(mode.description());
+        }
+        return descList.toArray(new String[]{});
+    }
 }

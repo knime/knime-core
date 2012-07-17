@@ -118,7 +118,13 @@ class RoundDoubleNodeModel extends NodeModel {
      * Default rounding mode.
      */
     public static final String DEF_ROUNDING_MODE =
-        RoundingMode.HALF_EVEN.name();
+        RoundingMode.HALF_UP.name();
+    
+    /**
+     * Default number mode.
+     */
+    public static final String DEF_NUMBER_MODE = 
+        NumberMode.DECIMAL_PLACES.name();
 
     /**
      * Possible rounding modes.
@@ -126,6 +132,11 @@ class RoundDoubleNodeModel extends NodeModel {
     public static final String[] ROUNDING_MODES = new String[] {"UP", "DOWN",
         "CEILING", "FLOOR", "HALF_UP", "HALF_DOWN", "HALF_EVEN"};
 
+    /**
+     * Possible number modes.
+     */
+    public static final String[] NUMBER_MODES = NumberMode.getDescriptions();
+    
     /**
      * The default value of the "output as string" setting.
      */
@@ -149,6 +160,9 @@ class RoundDoubleNodeModel extends NodeModel {
 
     private SettingsModelBoolean m_outputAsString =
         RoundDoubleNodeDialog.getOutputAsStringModel();
+    
+    private SettingsModelString m_numberModeModel = 
+        RoundDoubleNodeDialog.getNumberModeStringModel();
 
     /**
      * Creates new instance of <code>RoundDoubleNodeModel</code>.
@@ -219,6 +233,8 @@ class RoundDoubleNodeModel extends NodeModel {
         boolean append = m_appendColumnsModel.getBooleanValue();
         RoundingMode roundingMode = RoundingMode.valueOf(
                 m_roundingModeModel.getStringValue());
+        NumberMode numberMode = NumberMode.valueByDescription(
+                m_numberModeModel.getStringValue());
         boolean outputAsString = m_outputAsString.getBooleanValue();
         String colSuffix = m_columnSuffixModel.getStringValue();
 
@@ -233,7 +249,8 @@ class RoundDoubleNodeModel extends NodeModel {
         // Pass all necessary parameters to the cell factory, which rounds
         // the values and creates new cells to replace or append.
         RoundDoubleCellFactory cellFac = new RoundDoubleCellFactory(precision,
-                roundingMode, outputAsString, includedColIndices, newColsSpecs);
+                numberMode, roundingMode, outputAsString, includedColIndices, 
+                newColsSpecs);
 
         // replace or append columns
         if (append) {
@@ -247,8 +264,7 @@ class RoundDoubleNodeModel extends NodeModel {
 
     private static final DataColumnSpec[] getNewColSpecs(final boolean append,
             final String colSuffix, final boolean outputAsString,
-            final String[] colNamesToRound, final DataTableSpec origInSpec)
-    {
+            final String[] colNamesToRound, final DataTableSpec origInSpec) {
         DataColumnSpec[] appColumnSpecs =
             new DataColumnSpec[colNamesToRound.length];
         int i = 0;
@@ -314,6 +330,7 @@ class RoundDoubleNodeModel extends NodeModel {
         m_columnSuffixModel.saveSettingsTo(settings);
         m_roundingModeModel.saveSettingsTo(settings);
         m_outputAsString.saveSettingsTo(settings);
+        m_numberModeModel.saveSettingsTo(settings);
     }
 
     /**
@@ -328,6 +345,7 @@ class RoundDoubleNodeModel extends NodeModel {
         m_columnSuffixModel.validateSettings(settings);
         m_roundingModeModel.validateSettings(settings);
         m_outputAsString.validateSettings(settings);
+        m_numberModeModel.validateSettings(settings);
 
         // additional sanity checks
         StringBuffer errMsgBuffer = new StringBuffer();
@@ -361,7 +379,16 @@ class RoundDoubleNodeModel extends NodeModel {
         } catch (Exception e) {
             errMsgBuffer.append("Specified round mode is not valid!\n");
             err = true;
-
+        }
+        // number mode string needs to be a valid number mode
+        String numberModeString = ((SettingsModelString)m_numberModeModel
+                .createCloneWithValidatedValue(settings)).getStringValue();
+        try {
+            NumberMode.valueByDescription(numberModeString);
+        } catch (Exception e) {
+            errMsgBuffer.append("Specified number mode is not valid!\n");
+            err = true;
+            
         // throw exception when at least one settings is invalid
         } finally {
             if (err) {
@@ -382,6 +409,7 @@ class RoundDoubleNodeModel extends NodeModel {
         m_columnSuffixModel.loadSettingsFrom(settings);
         m_roundingModeModel.loadSettingsFrom(settings);
         m_outputAsString.loadSettingsFrom(settings);
+        m_numberModeModel.loadSettingsFrom(settings);
     }
 
     /**

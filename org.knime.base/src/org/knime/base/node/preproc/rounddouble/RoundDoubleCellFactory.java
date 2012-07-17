@@ -73,6 +73,8 @@ class RoundDoubleCellFactory extends AbstractCellFactory {
     
     private RoundingMode m_roundingMode;
     
+    private NumberMode m_numberMode;    
+    
     private boolean m_outputAsString;
     
     private int[] m_colIndexToRound;
@@ -83,6 +85,8 @@ class RoundDoubleCellFactory extends AbstractCellFactory {
      * precision.
      * 
      * @param precision The decimal place to round to.
+     * @param numberMode The mode of the precision to round to (decimal place,
+     * significant figures).
      * @param roundingMode The mode to round the double values. 
      * additional column or if the old values will be replaced.
      * @param outputAsString Specifies whether rounded values will be 
@@ -92,8 +96,9 @@ class RoundDoubleCellFactory extends AbstractCellFactory {
      * @param newColSpecs The specs of the new columns (replaced or appended).
      */
     public RoundDoubleCellFactory(final int precision, 
-            final RoundingMode roundingMode, final boolean outputAsString, 
-            final int[] colIndexToRound, final DataColumnSpec[] newColSpecs) {
+            final NumberMode numberMode, final RoundingMode roundingMode, 
+            final boolean outputAsString, final int[] colIndexToRound, 
+            final DataColumnSpec[] newColSpecs) {
         super(newColSpecs);
         
         // check for invalid arguments
@@ -105,11 +110,16 @@ class RoundDoubleCellFactory extends AbstractCellFactory {
             throw new IllegalArgumentException(
                     "Array of column indices to round may not be null!");
         }
+        if (numberMode == null) {
+            throw new IllegalArgumentException(
+                    "Number mode may not be null!");
+        }
         
         m_precision = precision;
         m_roundingMode = roundingMode;
         m_outputAsString = outputAsString;
         m_colIndexToRound = colIndexToRound;
+        m_numberMode = numberMode;
     }
 
     /**
@@ -140,16 +150,35 @@ class RoundDoubleCellFactory extends AbstractCellFactory {
                     double value = ((DoubleValue)row.getCell(i))
                                 .getDoubleValue();
                 
-                    // ROUND
-                    BigDecimal bd = new BigDecimal(value).setScale(m_precision, 
-                            m_roundingMode);
-                    
-                    if (!m_outputAsString) {
-                        double newValue = bd.doubleValue();
-                        newCells[nextIndexToRound] = new DoubleCell(newValue);
+                    // check for infinity or nan
+                    if (Double.isInfinite(value) || Double.isNaN(value)) {
+                        newCells[nextIndexToRound] = createDataCell(value);
+                    // if values are in range -> round
                     } else {
-                        String newValue = bd.toString(); 
-                        newCells[nextIndexToRound] = new StringCell(newValue);
+                        BigDecimal bd = null;
+
+                        // decimal places or significant figures
+                        if (m_numberMode.equals(NumberMode.DECIMAL_PLACES)) {
+                            bd = new BigDecimal(value).setScale(m_precision,
+                                            m_roundingMode);
+                        } else {
+                            double roundedValue = roundToSignificantFigures(
+                                    value, m_precision, m_roundingMode);
+                            
+                            // check rounded value for infinity or nan
+                            if (Double.isInfinite(roundedValue) 
+                                    || Double.isNaN(roundedValue)) {
+                                newCells[nextIndexToRound] = createDataCell(
+                                        roundedValue);
+                            } else {
+                                bd = new BigDecimal(roundedValue);
+                            }
+                        }
+                        
+                        // create data cell out of big decimal value
+                        if (bd != null) {
+                            newCells[nextIndexToRound] = createDataCell(bd);
+                        }
                     }
                 }
                     
@@ -159,5 +188,65 @@ class RoundDoubleCellFactory extends AbstractCellFactory {
         }
         
         return newCells;
+    }
+    
+    private DataCell createDataCell(final double value) {
+        DataCell cell = null;
+        if (!m_outputAsString) {
+            cell = new DoubleCell(value);
+        } else {
+            cell = new StringCell(new Double(value).toString());
+        }
+        return cell;
+    }
+    
+    private DataCell createDataCell(final BigDecimal value) {
+        DataCell cell = null;
+        if (!m_outputAsString) {
+            cell = new DoubleCell(value.doubleValue());
+        } else {
+            cell = new StringCell(value.toString());
+        }
+        return cell;
+    }
+
+    private static double roundToSignificantFigures(final double number, 
+            final int precision, final RoundingMode roundingMode) {
+        // avoid NaN result 
+        if (number == 0) {
+            return 0;
+        }
+        
+        // determine maximum power to avoid infinity magnitude
+        final double maxPowerOfTen = Math.floor(Math.log10(Double.MAX_VALUE));
+
+        // avoid log of negative numbers
+        double posNum = number;
+        if (number < 0) {
+            posNum = -number;
+        }
+        final double d = Math.ceil(Math.log10(posNum));
+        final int pow = precision - (int)d;
+
+        // power (pow) may not be larger than allowed maximum power
+        // if so, split up scaling factors
+        double firstScalingFactor = 1.0;
+        double secondScalingFactor = 1.0;
+        if (pow > maxPowerOfTen) {
+            firstScalingFactor = Math.pow(10.0, maxPowerOfTen);
+            secondScalingFactor = Math.pow(10.0, pow - maxPowerOfTen);
+        } else {
+            firstScalingFactor = Math.pow(10.0, pow);
+        }
+
+        // scale by factors
+        double toBeRounded = number * firstScalingFactor * secondScalingFactor;
+
+        // apply rounding mode
+        BigDecimal scaled = new BigDecimal(toBeRounded).setScale(0, 
+                roundingMode);
+        
+        // re-scale by factors
+        return scaled.doubleValue() / firstScalingFactor / secondScalingFactor;
     }
 }

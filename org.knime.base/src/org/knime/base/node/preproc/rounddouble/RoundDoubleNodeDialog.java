@@ -80,7 +80,9 @@ class RoundDoubleNodeDialog extends DefaultNodeSettingsPane {
      */
     @SuppressWarnings("unchecked")
     static final SettingsModelColumnFilter2 getFilterDoubleColModel() {
-        return new SettingsModelColumnFilter2(RoundDoubleConfigKeys.COLUMN_NAMES, new Class[]{DoubleValue.class});
+        return new SettingsModelColumnFilter2(
+                RoundDoubleConfigKeys.COLUMN_NAMES, 
+                new Class[]{DoubleValue.class});
     }
 
     /**
@@ -137,6 +139,16 @@ class RoundDoubleNodeDialog extends DefaultNodeSettingsPane {
                 RoundDoubleNodeModel.DEF_OUTPUT_AS_STRING);
     }
 
+    /**
+     * Creates and returns the settings model, storing the number mode.
+     *
+     * @return The settings model with the number mode.
+     */
+    static final SettingsModelString getNumberModeStringModel() {
+        return new SettingsModelString(RoundDoubleConfigKeys.NUMBER_MODE,
+                RoundDoubleNodeModel.DEF_NUMBER_MODE);
+    }
+    
     private SettingsModelString m_suffixModel;
     private SettingsModelBoolean m_appendColumnModel;
 
@@ -146,7 +158,8 @@ class RoundDoubleNodeDialog extends DefaultNodeSettingsPane {
     public RoundDoubleNodeDialog() {
         // COLUMN SELECTION
         createNewGroup("Column selection");
-        addDialogComponent(new DialogComponentColumnFilter2(getFilterDoubleColModel(), 0));
+        addDialogComponent(new DialogComponentColumnFilter2(
+                getFilterDoubleColModel(), 0));
         closeCurrentGroup();
 
         // COLUMN SETTINGS
@@ -172,7 +185,11 @@ class RoundDoubleNodeDialog extends DefaultNodeSettingsPane {
         createNewGroup("Rounding settings");
         setHorizontalPlacement(true);
         addDialogComponent(new DialogComponentNumber(getNumberPrecisionModel(),
-                "Decimal place", 1));
+                "Precision", 1));
+        
+        addDialogComponent(new DialogComponentStringSelection(
+                getNumberModeStringModel(), "Precision mode",
+                RoundDoubleNodeModel.NUMBER_MODES));
 
         addDialogComponent(new DialogComponentStringSelection(
                 getRoundingModelStringModel(), "Rounding mode",

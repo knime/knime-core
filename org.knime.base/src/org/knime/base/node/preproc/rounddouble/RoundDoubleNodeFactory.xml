@@ -6,12 +6,13 @@
     </shortDescription>
     <fullDescription>
         <intro>
-			Rounds double values to the specified decimal place, applying the
-			specified rounding method. The columns containing the double values
-			can be specified. The rounded values can be appended as additional 
-			columns, or the old values are replaced by the rounded values. If
-			rounded values are appended as additional columns, a column suffix
-			for the columns to append needs to be specified.<br />
+			Rounds double values to the specified decimal place or significant 
+			figures, applying the specified rounding method. The columns 
+			containing the double values can be specified. The rounded values 
+			can be appended as additional columns, or the old values are 
+			replaced by the rounded values. If rounded values are appended as 
+			additional columns, a column suffix for the columns to append needs 
+			to be specified.<br />
 			To round the values seven different rounding modes are available:
 			UP, DOWN, CEILING, FLOOR, HALF_UP, HALF_DOWN, HALF_EVEN. For the
             detailed description of each rounding mode please see the			
@@ -35,13 +36,19 @@
         <option name="Format as string">
             If checked, the rounded values in the output table will be 
             represented as strings. The rounded double values may have another
-            scale as specified by the setting "Decimal place", since e.g. 
+            scale as specified by the setting "Precision", since e.g. 
             trailing zeros will be removed. The rounded values represented as 
             strings will always have the exact scale which is specified. 
         </option>        
-        <option name="Decimal place">
+        <option name="Precision">
             The scale of the double values to round to. If the scale is reduced
             the specified rounding mode is applied.
+        </option>
+        <option name="Precision mode">
+            The type of precision to which the values are rounded. Decimal 
+            places, the default option rounds to the specified decimal places,
+            whereas significant figures rounds to significant figures or 
+            numbers. 
         </option>
         <option name="Rounding mode">
             The rounding mode which is applied when double values are rounded.
