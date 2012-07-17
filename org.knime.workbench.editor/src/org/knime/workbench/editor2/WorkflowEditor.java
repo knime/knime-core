@@ -118,6 +118,7 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
@@ -1322,7 +1323,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         display.syncExec(new Runnable() {
             @Override
             public void run() {
-                proceed.set(newNameDialog.open() == InputDialog.OK);
+                proceed.set(newNameDialog.open() == Window.OK);
             }
         });
         if (!proceed.get()) {
@@ -1609,7 +1610,13 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         getCommandStack().execute(newNodeCmd);
         // after adding a node the editor should get the focus
-        setFocus();
+        // this is issued asynchronously, in order to avoid bug #3029
+        Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                setFocus();
+            }
+        });
         return true;
     }
 
