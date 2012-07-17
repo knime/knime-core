@@ -108,7 +108,7 @@ public class PairedTTestNodeDialog extends NodeDialogPane {
         p.add(new JLabel("Confidence Interval (in %):"), c);
         c.gridx ++;
         c.insets = rightInsets;
-        m_confidenceIntervalProb = new JTextField("75");
+        m_confidenceIntervalProb = new JTextField("95");
         p.add(m_confidenceIntervalProb, c);
 
 

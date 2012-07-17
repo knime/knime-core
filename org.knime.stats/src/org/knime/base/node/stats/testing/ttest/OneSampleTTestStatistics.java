@@ -254,7 +254,7 @@ public class OneSampleTTestStatistics {
                 StringCell.TYPE
                 , DoubleCell.TYPE
                 , DoubleCell.TYPE
-                , DoubleCell.TYPE
+                , IntCell.TYPE
                 , DoubleCell.TYPE
                 , DoubleCell.TYPE
                 , DoubleCell.TYPE
@@ -308,7 +308,7 @@ public class OneSampleTTestStatistics {
             double stdDeviation = m_statsDiff.getStandardDeviation();
             double stdErrorMean =
                 stdDeviation / FastMath.sqrt(m_statsDiff.getN());
-            double df = m_statsDiff.getN() - 1;
+            long df = m_statsDiff.getN() - 1;
             TDistribution distribution = new TDistribution(df);
             double tValue = FastMath.abs(
                     distribution.inverseCumulativeProbability(
@@ -325,7 +325,7 @@ public class OneSampleTTestStatistics {
             cells.add(new StringCell(m_column));
             cells.add(new DoubleCell(m_testValue));
             cells.add(new DoubleCell(t));
-            cells.add(new DoubleCell(df));
+            cells.add(new IntCell((int)df));
             cells.add(new DoubleCell(pValue));
             cells.add(new DoubleCell(meanDiff));
             cells.add(new DoubleCell(m_confidenceIntervalProp));

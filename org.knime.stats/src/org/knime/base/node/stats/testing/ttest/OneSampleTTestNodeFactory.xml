@@ -4,18 +4,31 @@
     <name>Single sample t-test</name>
     
     <shortDescription>
-        The single sample t-test tests the null hypothesis that the population mean is equal to a given number.
+        The single sample t-test tests the null hypothesis that the population 
+        mean is equal to a given number.
     </shortDescription>
     
     <fullDescription>
-        <intro>Computes statistics for the single sample t-test. The single sample t-test tests the null hypothesis that the population mean is equal to a given number.
+        <intro>Computes statistics for the single sample t-test. The single 
+        sample t-test tests the null hypothesis that the population mean is 
+        equal to a given number.
         </intro>
+        <option name="Test value">The hypothesized value to test against. 
+	    </option>
+	    <option name="Confidence Interval (in %)">
+	    The limits for the confidence interval are computed using this number. The
+	    default is 95 which means that you can be 95% confident that the true value 
+	    of the parameter is in the confidence interval.
+	    </option>
+	    <option name="Test columns">
+	    A two sample t-test is performed separately for each of these columns.
+	    </option>
     </fullDescription>
     
     <ports>
         <inPort index="0" name="Data Table">The Input</inPort>
-        <outPort index="0" name="Descriptive Statistics">Descriptive statistics of the input.</outPort>
-        <outPort index="1" name="One-Sample T-Test">Statistics for the one sample t-test.</outPort>
+        <outPort index="0" name="One-Sample T-Test">Statistics for the one sample t-test.</outPort>
+        <outPort index="1" name="Descriptive Statistics">Descriptive statistics of the input.</outPort>        
     </ports>  
     <views>
         <view name="Test statistics" index="0">

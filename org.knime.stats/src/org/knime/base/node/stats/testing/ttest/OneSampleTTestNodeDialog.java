@@ -1,10 +1,12 @@
 package org.knime.base.node.stats.testing.ttest;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
 
+import javax.swing.BorderFactory;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
@@ -66,33 +68,43 @@ public class OneSampleTTestNodeDialog extends NodeDialogPane {
 
         p.add(new JLabel("Test value:"), c);
         c.gridx ++;
+        c.weightx = 0.5;
         c.insets = rightCategoryInsets;
         m_testValue = new JTextField();
         p.add(m_testValue, c);
 
         c.gridx = 0;
         c.gridy++;
+        c.weightx = 0;
         c.insets = leftInsets;
         p.add(new JLabel("Confidence Interval (in %):"), c);
         c.gridx ++;
         c.insets = rightInsets;
-        m_confidenceIntervalProb = new JTextField("75");
+        m_confidenceIntervalProb = new JTextField("95");
         p.add(m_confidenceIntervalProb, c);
 
         c.gridx = 0;
         c.gridy++;
         c.insets = leftInsets;
-        c.gridwidth = 2;
+        c.gridwidth = 3;
+        c.weightx = 1;
         c.weighty = 1;
-        m_testColumns = new DataColumnSpecFilterPanel(true, DoubleValue.class);
+        m_testColumns = new DataColumnSpecFilterPanel(DoubleValue.class);
+        m_testColumns.setBorder(
+                BorderFactory.createTitledBorder("Test columns"));
         p.add(m_testColumns, c);
 
-//        c.gridx = 0;
-//        c.insets = new Insets(0, 0, 0, 0);
-//        c.gridwidth = 2;
-//        c.weightx = 1;
-//        c.weighty = 1;
-//        p.add(new JPanel(), c);
+        // dummy panel to make the controls smaller above the last component
+        // (the DataColumnSpecFilterPanel).
+        c.gridheight = c.gridy;
+        c.gridx = 2;
+        c.gridy = 0;
+        c.weighty = 1;
+        c.weightx = 1;
+        c.gridwidth = 1;
+        JPanel foo = new JPanel();
+        foo.setBorder(BorderFactory.createLineBorder(Color.red));
+        p.add(foo, c);
 
 		return p;
 	}

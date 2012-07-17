@@ -285,7 +285,7 @@ public class PairedTTestStatistics {
                 StringCell.TYPE
                 , StringCell.TYPE
                 , DoubleCell.TYPE
-                , DoubleCell.TYPE
+                , IntCell.TYPE
                 , DoubleCell.TYPE
                 , DoubleCell.TYPE
                 , DoubleCell.TYPE
@@ -340,7 +340,7 @@ public class PairedTTestStatistics {
             double stdDeviation = m_statsDiff.getStandardDeviation();
             double stdErrorMean =
                 stdDeviation / FastMath.sqrt(m_statsDiff.getN());
-            double df = m_statsDiff.getN() - 1;
+            long df = m_statsDiff.getN() - 1;
             TDistribution distribution = new TDistribution(df);
             double tValue = FastMath.abs(
                     distribution.inverseCumulativeProbability(
@@ -357,7 +357,7 @@ public class PairedTTestStatistics {
             cells.add(new StringCell(m_pair));
             cells.add(new StringCell(m_columnA + " - " + m_columnB));
             cells.add(new DoubleCell(t));
-            cells.add(new DoubleCell(df));
+            cells.add(new IntCell((int)df));
             cells.add(new DoubleCell(pValue));
             cells.add(new DoubleCell(mean));
             cells.add(new DoubleCell(stdDeviation));

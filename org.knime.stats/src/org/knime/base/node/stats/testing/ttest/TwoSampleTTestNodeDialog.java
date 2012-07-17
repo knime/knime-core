@@ -8,6 +8,7 @@ import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+import javax.swing.BorderFactory;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -97,6 +98,7 @@ public class TwoSampleTTestNodeDialog extends NodeDialogPane {
         c.weighty = 0;
         p.add(new JLabel("Group one:"), c);
         c.gridx ++;
+        c.weightx = 0.5;
         c.insets = rightInsets;
         m_groupOne = new JComboBox();
         m_groupOne.setEditable(true);
@@ -111,6 +113,7 @@ public class TwoSampleTTestNodeDialog extends NodeDialogPane {
         c.weighty = 0;
         p.add(new JLabel("Group two:"), c);
         c.gridx ++;
+        c.weightx = 0.5;
         c.insets = rightInsets;
         m_groupTwo = new JComboBox();
         m_groupTwo.setEditable(true);
@@ -119,19 +122,33 @@ public class TwoSampleTTestNodeDialog extends NodeDialogPane {
         c.gridx = 0;
         c.gridy++;
         c.insets = leftInsets;
+        c.weightx = 0;
         p.add(new JLabel("Confidence Interval (in %):"), c);
         c.gridx ++;
         c.insets = rightInsets;
-        m_confidenceIntervalProb = new JTextField("75");
+        m_confidenceIntervalProb = new JTextField("95");
         p.add(m_confidenceIntervalProb, c);
 
         c.gridx = 0;
         c.gridy++;
         c.insets = leftInsets;
-        c.gridwidth = 2;
+        c.gridwidth = 3;
         c.weighty = 1;
-        m_testColumns = new DataColumnSpecFilterPanel(true, DoubleValue.class);
+        c.weightx = 1;
+        m_testColumns = new DataColumnSpecFilterPanel(DoubleValue.class);
+        m_testColumns.setBorder(
+                BorderFactory.createTitledBorder("Test columns"));
         p.add(m_testColumns, c);
+
+        // dummy panel to make the controls smaller above the last component
+        // (the DataColumnSpecFilterPanel).
+        c.gridheight = c.gridy;
+        c.gridx = 2;
+        c.gridy = 0;
+        c.weighty = 1;
+        c.weightx = 1;
+        c.gridwidth = 1;
+        p.add(new JPanel(), c);
 
 		return p;
 	}

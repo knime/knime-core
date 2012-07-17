@@ -49,6 +49,12 @@ public class PairedTTestNodeModel extends NodeModel
             throw new InvalidSettingsException(
                     "Please select at least one pair.");
         }
+        if (m_settings.getConfidenceIntervalProb() > 0.99 ||
+                m_settings.getConfidenceIntervalProb() < 0.01) {
+            throw new InvalidSettingsException("The property "
+                    + "\"Confidence Interval (in %)\" must be in the range "
+                    + "[1, 99].");
+        }
 
 
         return new DataTableSpec[]{

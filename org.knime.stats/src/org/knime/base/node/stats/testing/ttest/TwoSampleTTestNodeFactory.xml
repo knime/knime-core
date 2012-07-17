@@ -8,9 +8,29 @@
     </shortDescription>
     
     <fullDescription>
-        <intro>Computes statistics for the two sample t-test. It is designed to compare the means of observations in the same column between two groups.
-        </intro>
+        <intro>Computes statistics for the two sample t-test. It is designed 
+        to compare the means of observations in the same column between 
+        two groups. The node allows the testing of equality of variances 
+        (Levene's test) and the t-value for both equal- and unequal-variance. 
+        It also provides the relevant descriptive statistics.</intro>
         
+        <option name="Grouping column">Column holding the grouping information
+        data.
+        </option>
+        <option name="Grouping one">All rows of the input table which have this
+        this value in the grouping column are assigned to group one.
+        </option>
+        <option name="Grouping two">All rows of the input table which have this
+        this value in the grouping column are assigned to group two.
+        </option>
+        <option name="Confidence Interval (in %)">
+	    The limits for the confidence interval are computed using this number. The
+	    default is 95 which means that you can be 95% confident that the true value 
+	    of the parameter is in the confidence interval.
+	    </option>
+        <option name="Test columns">
+        A two sample t-test is performed separately for each of these columns.
+        </option>	    
     </fullDescription>
     
     <ports>

@@ -58,7 +58,12 @@ public class OneSampleTTestNodeModel extends NodeModel
                     + "is needed to perform the test.");
             }
         }
-
+        if (m_settings.getConfidenceIntervalProb() > 0.99 ||
+                m_settings.getConfidenceIntervalProb() < 0.01) {
+            throw new InvalidSettingsException("The property "
+                    + "\"Confidence Interval (in %)\" must be in the range "
+                    + "[1, 99].");
+        }
         return new DataTableSpec[]{
                 OneSampleTTestStatistics.getTableSpec()
                 , OneSampleTTestStatistics.getDescStatsSpec()};
