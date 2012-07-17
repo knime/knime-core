@@ -53,6 +53,7 @@ package org.knime.workbench.repository.view;
 import java.io.File;
 import java.util.List;
 
+import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.SWT;
@@ -119,10 +120,10 @@ public class DefaultRepositoryView extends AbstractRepositoryView {
     }
 
     @Override
-    protected void readRepository(final Composite parent) {
-        super.readRepository(parent);
+    protected void readRepository(final Composite parent, final IProgressMonitor monitor) {
+        super.readRepository(parent, monitor);
 
-        Root repository = RepositoryManager.INSTANCE.getRoot();
+        Root repository = RepositoryManager.INSTANCE.getRoot(monitor);
         // check if there were categories that could not be
         // processed properly
         // i.e. the after-relationship information was wrong

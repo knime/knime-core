@@ -64,6 +64,8 @@ import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
 import org.eclipse.core.runtime.IExtensionPoint;
 import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
@@ -156,20 +158,32 @@ public final class RepositoryManager {
     private RepositoryManager() {
     }
 
-    private void readRepository() {
+    private void readRepository(final IProgressMonitor monitor) {
         assert !m_root.hasChildren();
         boolean isInExpertMode =
                 Boolean.getBoolean(KNIMEConstants.PROPERTY_EXPERT_MODE);
 
-        readCategories();
-        readNodes(isInExpertMode);
-        readNodeSets(isInExpertMode);
-        readMetanodes(isInExpertMode);
+        readCategories(monitor);
+        if (monitor.isCanceled()) {
+            return;
+        }
+        readNodes(isInExpertMode, monitor);
+        if (monitor.isCanceled()) {
+            return;
+        }
+        readNodeSets(isInExpertMode, monitor);
+        if (monitor.isCanceled()) {
+            return;
+        }
+        readMetanodes(isInExpertMode, monitor);
+        if (monitor.isCanceled()) {
+            return;
+        }
         removeEmptyCategories(m_root);
         m_loadListeners.clear();
     }
 
-    private void readMetanodes(final boolean isInExpertMode) {
+    private void readMetanodes(final boolean isInExpertMode, final IProgressMonitor monitor) {
         // iterate over the meta node config elements
         // and create meta node templates
         IExtension[] metanodeExtensions = getExtensions(ID_META_NODE);
@@ -177,7 +191,7 @@ public final class RepositoryManager {
             IConfigurationElement[] mnConfigElems =
                     mnExt.getConfigurationElements();
             for (IConfigurationElement mnConfig : mnConfigElems) {
-                if (!Platform.isRunning()) { // shutdown was initiated
+                if (monitor.isCanceled()) {
                     return;
                 }
 
@@ -241,7 +255,7 @@ public final class RepositoryManager {
         }
     }
 
-    private void readCategories() {
+    private void readCategories(final IProgressMonitor monitor) {
         //
         // First, process the contributed categories
         //
@@ -285,6 +299,9 @@ public final class RepositoryManager {
         });
 
         for (IConfigurationElement e : allElements) {
+            if (monitor.isCanceled()) {
+                return;
+            }
             try {
                 Category category = RepositoryFactory.createCategory(m_root, e);
                 LOGGER.debug("Found category extension '" + category.getID()
@@ -309,7 +326,7 @@ public final class RepositoryManager {
     /**
      * @param isInExpertMode
      */
-    private void readNodes(final boolean isInExpertMode) {
+    private void readNodes(final boolean isInExpertMode, final IProgressMonitor monitor) {
         //
         // Second, process the contributed nodes
         //
@@ -319,7 +336,7 @@ public final class RepositoryManager {
             // objects
             IConfigurationElement[] elements = ext.getConfigurationElements();
             for (IConfigurationElement e : elements) {
-                if (!Platform.isRunning()) { // shutdown was initiated
+                if (monitor.isCanceled()) {
                     return;
                 }
 
@@ -391,7 +408,7 @@ public final class RepositoryManager {
     /**
      * @param isInExpertMode
      */
-    private void readNodeSets(final boolean isInExpertMode) {
+    private void readNodeSets(final boolean isInExpertMode, final IProgressMonitor monitor) {
         //
         // Process the contributed node sets
         //
@@ -402,15 +419,14 @@ public final class RepositoryManager {
             // objects
             IConfigurationElement[] elements = ext.getConfigurationElements();
             for (IConfigurationElement elem : elements) {
-                if (!Platform.isRunning()) { // shutdown was initiated
-                    return;
-                }
-
                 try {
                     Collection<DynamicNodeTemplate> dynamicNodeTemplates =
                             RepositoryFactory.createNodeSet(m_root, elem);
 
                     for (DynamicNodeTemplate node : dynamicNodeTemplates) {
+                        if (monitor.isCanceled()) {
+                            return;
+                        }
                         for (Listener l : m_loadListeners) {
                             l.newNode(m_root, node);
                         }
@@ -553,13 +569,27 @@ public final class RepositoryManager {
      * be created during the call. Thus the first call to this method can take
      * some time.
      *
+     * @param monitor a progress monitor, mainly use for canceling; must not be
+     *            <code>null</code>
+     *
+     * @return the root object
+     */
+    public synchronized Root getRoot(final IProgressMonitor monitor) {
+        if (!m_root.hasChildren()) {
+            readRepository(monitor);
+        }
+        return m_root;
+    }
+
+    /**
+     * Returns the repository root. If the repository has not yet read, it will
+     * be created during the call. Thus the first call to this method can take
+     * some time.
+     *
      * @return the root object
      */
     public synchronized Root getRoot() {
-        if (!m_root.hasChildren()) {
-            readRepository();
-        }
-        return m_root;
+        return getRoot(new NullProgressMonitor());
     }
 
     /**
@@ -583,7 +613,7 @@ public final class RepositoryManager {
      */
     public synchronized NodeTemplate getNodeTemplate(final String id) {
         if (!m_root.hasChildren()) {
-            readRepository();
+            readRepository(new NullProgressMonitor());
         }
         return m_nodesById.get(id);
     }

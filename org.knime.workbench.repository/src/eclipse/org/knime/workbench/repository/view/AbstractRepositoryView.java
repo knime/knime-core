@@ -55,6 +55,7 @@ import java.util.ConcurrentModificationException;
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IMenuListener;
@@ -86,6 +87,7 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.util.KNIMEJob;
 import org.knime.workbench.core.nodeprovider.NodeProvider;
 import org.knime.workbench.repository.NodeUsageRegistry;
 import org.knime.workbench.repository.RepositoryFactory;
@@ -94,6 +96,7 @@ import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.MetaNodeTemplate;
 import org.knime.workbench.repository.model.NodeTemplate;
 import org.knime.workbench.repository.model.Root;
+import org.osgi.framework.FrameworkUtil;
 
 /**
  * This view shows the content of the repository that was loaded from the
@@ -173,17 +176,18 @@ public abstract class AbstractRepositoryView extends ViewPart implements
                 Boolean.getBoolean(KNIMEConstants.PROPERTY_ENABLE_FAST_LOADING);
 
         if (fastLoad) {
-            final Job treeUpdater = new Job("Node Repository Loader") {
+            final Job treeUpdater = new KNIMEJob("Node Repository Loader",
+                    FrameworkUtil.getBundle(getClass())) {
                 @Override
                 protected IStatus run(final IProgressMonitor monitor) {
-                    readRepository(parent);
+                    readRepository(parent, monitor);
                     return Status.OK_STATUS;
                 }
             };
             treeUpdater.setSystem(true);
             treeUpdater.schedule();
         } else {
-            readRepository(parent);
+            readRepository(parent, new NullProgressMonitor());
         }
     }
 
@@ -192,10 +196,11 @@ public abstract class AbstractRepositoryView extends ViewPart implements
      * {@link #m_viewer tree view}.
      *
      * @param parent the parent component of this view
+     * @param monitor a progress monitor, must not be <code>null</code>
      */
-    protected void readRepository(final Composite parent) {
+    protected void readRepository(final Composite parent, final IProgressMonitor monitor) {
         RepositoryManager.INSTANCE.addLoadListener(this);
-        Root repository = RepositoryManager.INSTANCE.getRoot();
+        Root repository = RepositoryManager.INSTANCE.getRoot(monitor);
 
         updateRepositoryView(repository);
         Display.getDefault().asyncExec(new Runnable() {

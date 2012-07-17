@@ -70,6 +70,7 @@ import org.eclipse.ui.part.ViewPart;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.util.KNIMEJob;
 import org.knime.workbench.core.nodeprovider.NodeProvider;
 import org.knime.workbench.repository.NodeUsageListener;
 import org.knime.workbench.repository.NodeUsageRegistry;
@@ -77,6 +78,7 @@ import org.knime.workbench.repository.model.NodeTemplate;
 import org.knime.workbench.repository.model.Root;
 import org.knime.workbench.repository.view.RepositoryContentProvider;
 import org.knime.workbench.repository.view.RepositoryLabelProvider;
+import org.osgi.framework.FrameworkUtil;
 
 /**
  *
@@ -108,7 +110,8 @@ public class FavoritesView extends ViewPart implements NodeUsageListener {
         m_viewer.setComparator(null);
         m_viewer.setInput("Loading favorite nodes...");
 
-        Job treeUpdater = new Job("Favorite Nodes Loader") {
+        Job treeUpdater = new KNIMEJob("Favorite Nodes Loader",
+                FrameworkUtil.getBundle(getClass())) {
             @Override
             protected IStatus run(final IProgressMonitor monitor) {
                 final Root root = FavoriteNodesManager.getInstance().getRoot();

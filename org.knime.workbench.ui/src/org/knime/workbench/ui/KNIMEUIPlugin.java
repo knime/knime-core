@@ -53,6 +53,8 @@ package org.knime.workbench.ui;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
+import org.eclipse.core.runtime.jobs.IJobManager;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.equinox.internal.p2.ui.ProvUIActivator;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -213,9 +215,12 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
         if (MetaNodeTemplateRepositoryView.wasInitialized()) {
             MetaNodeTemplateRepositoryView.getInstance().dispose();
         }
-        super.stop(context);
+        IJobManager jobMan = Job.getJobManager();
+        jobMan.cancel(getBundle().getSymbolicName());
+        jobMan.join(getBundle().getSymbolicName(), null);
         plugin = null;
         m_resourceBundle = null;
+        super.stop(context);
     }
 
     /**

@@ -50,6 +50,8 @@ package org.knime.workbench.repository;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
+import org.eclipse.core.runtime.jobs.IJobManager;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.swt.graphics.Image;
@@ -93,9 +95,12 @@ public class KNIMERepositoryPlugin extends AbstractUIPlugin {
      */
     @Override
     public void stop(final BundleContext context) throws Exception {
-        super.stop(context);
+        IJobManager jobMan = Job.getJobManager();
+        jobMan.cancel(getBundle().getSymbolicName());
+        jobMan.join(getBundle().getSymbolicName(), null);
         plugin = null;
         m_resourceBundle = null;
+        super.stop(context);
     }
 
     /**
