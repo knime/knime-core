@@ -415,8 +415,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      */
     @Override
     public void commandStackChanged(final EventObject event) {
-        LOGGER.debug("WorkflowRoot: command stack changed");
-
+        // not doing anything
     }
 
     /**
