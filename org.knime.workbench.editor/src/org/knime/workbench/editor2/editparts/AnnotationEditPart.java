@@ -57,6 +57,7 @@ import org.eclipse.draw2d.ColorConstants;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.TextUtilities;
 import org.eclipse.draw2d.geometry.Rectangle;
+import org.eclipse.gef.DragTracker;
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
@@ -79,6 +80,7 @@ import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
 import org.knime.core.node.workflow.WorkflowAnnotation;
+import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
 import org.knime.workbench.editor2.directannotationedit.AnnotationEditManager;
 import org.knime.workbench.editor2.directannotationedit.AnnotationEditPolicy;
 import org.knime.workbench.editor2.directannotationedit.StyledTextEditorLocator;
@@ -500,5 +502,13 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
         return annoList.toArray(new WorkflowAnnotation[annoList.size()]);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public DragTracker getDragTracker(final Request request) {
+        // in case the annotation is moved (in a chunk with nodes) we need to include bend points
+        return new WorkflowSelectionDragEditPartsTracker(this);
+    }
 
 }
