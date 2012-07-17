@@ -57,7 +57,9 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.commands.ChangeAnnotationBoundsCommand;
 import org.knime.workbench.editor2.commands.ChangeNodeBoundsCommand;
+import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.snap.SnapIconToGrid;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
@@ -152,30 +154,47 @@ public class MoveNodeUpAction extends AbstractNodeAction {
         int offset = STEP;
         CompoundCommand cc = new CompoundCommand();
         NodeContainerEditPart[] selectedNodes = getSelectedParts(NodeContainerEditPart.class);
-        for (NodeContainerEditPart ep : selectedNodes) {
-            NodeContainer nc = ep.getNodeContainer();
-            NodeContainerFigure figure = (NodeContainerFigure)ep.getFigure();
-            Rectangle bounds = figure.getBounds().getCopy();
+        AnnotationEditPart[] selectedAnnos = getSelectedParts(AnnotationEditPart.class);
+        if (selectedNodes.length < 1) {
+            return;
+        }
 
-            if (!getEditor().getEditorSnapToGrid()) {
-                bounds.y -= offset;
-            } else {
-                // adjust offset to grid
+        if (getEditor().getEditorSnapToGrid()) {
+            // adjust offset to grid size
+            if (selectedNodes.length > 1) {
+                // if we have multiple nodes, the step size is always the grid size
+                // to maintain the inner distances in the selected chunk
                 offset = getEditor().getEditorGridYOffset(offset);
-
+            } else {
+                // with one node we move the node onto the grid if it is off
+                NodeContainerFigure figure = (NodeContainerFigure)selectedNodes[0].getFigure();
                 Point iconOffset = SnapIconToGrid.getGridRefPointOffset(figure);
                 Point refLoc = new Point(figure.getBounds().x, figure.getBounds().y);
                 refLoc.translate(iconOffset);
                 Point gridLoc = getEditor().getPrevGridLocation(refLoc);
-                if (gridLoc.y == refLoc.y) {
-                    // node already on the grid
-                    bounds.y -= offset;
+                if (gridLoc.y != refLoc.y) {
+                    // node is off the grid: place node on next grid line
+                    offset = refLoc.y - gridLoc.y;
                 } else {
-                    // place node on prev grid line
-                    bounds.y = gridLoc.y - iconOffset.y;
+                    // node already on the grid: step grid size
+                    offset = getEditor().getEditorGridYOffset(offset);
                 }
             }
+        }
+        // apply the offset to all selected nodes
+        for (NodeContainerEditPart ep : selectedNodes) {
+            NodeContainer nc = ep.getNodeContainer();
+            NodeContainerFigure figure = (NodeContainerFigure)ep.getFigure();
+            Rectangle bounds = figure.getBounds().getCopy();
+            bounds.y -= offset;
             ChangeNodeBoundsCommand cmd = new ChangeNodeBoundsCommand(nc, figure, bounds);
+            cc.add(cmd);
+        }
+        // apply to all selected annotations
+        for (AnnotationEditPart anno : selectedAnnos) {
+            Rectangle bounds = anno.getFigure().getBounds().getCopy();
+            bounds.y -= offset;
+            ChangeAnnotationBoundsCommand cmd = new ChangeAnnotationBoundsCommand(getManager(), anno, bounds);
             cc.add(cmd);
         }
         getCommandStack().execute(cc);
