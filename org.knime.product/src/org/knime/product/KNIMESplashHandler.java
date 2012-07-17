@@ -1,9 +1,10 @@
 package org.knime.product;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
 
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
@@ -72,9 +73,34 @@ public class KNIMESplashHandler extends BasicSplashHandler {
         IExtension[] extensions =
                 Platform.getExtensionRegistry()
                         .getExtensionPoint(SPLASH_EXTENSION_ID).getExtensions();
-        Arrays.sort(extensions, new Comparator<IExtension>() {
+
+        List<IConfigurationElement> configElements = new ArrayList<IConfigurationElement>();
+
+        // add and check for duplicates
+        for (IExtension ext : extensions) {
+            for (IConfigurationElement elem : ext.getConfigurationElements()) {
+                String id1 = elem.getAttribute("id");
+                boolean exists = false;
+                if (id1 != null) {
+                    // check if the same id already exists
+                    for (IConfigurationElement elem2 : configElements) {
+                        String id2 = elem2.getAttribute("id");
+                        if (id1.equals(id2)) {
+                            exists = true;
+                            break;
+                        }
+                    }
+                }
+                if (!exists) {
+                    configElements.add(elem);
+                }
+            }
+        }
+
+        // sort genuine KNIME extensions to the front
+        Collections.sort(configElements, new Comparator<IConfigurationElement>() {
             @Override
-            public int compare(final IExtension o1, final IExtension o2) {
+            public int compare(final IConfigurationElement o1, final IConfigurationElement o2) {
                 String name1 = o1.getContributor().getName();
                 String name2 = o2.getContributor().getName();
                 if (name1.startsWith("com.knime.")) {
@@ -99,9 +125,11 @@ public class KNIMESplashHandler extends BasicSplashHandler {
             }
         });
 
+
+
         // Process all splash handler extensions
-        for (int i = 0; i < extensions.length; i++) {
-            processSplashExtension(extensions[i]);
+        for (IConfigurationElement elem : configElements) {
+            processSplashElements(elem);
         }
 
         // If no splash extensions were loaded abort the splash handler
@@ -222,14 +250,6 @@ public class KNIMESplashHandler extends BasicSplashHandler {
         return getSplash().getSize().x - (SPLASH_SCREEN_BEVEL * 2);
     }
 
-    private void processSplashExtension(final IExtension extension) {
-        // Get all splash handler configuration elements
-        IConfigurationElement[] elements = extension.getConfigurationElements();
-        // Process all splash handler configuration elements
-        for (int j = 0; j < elements.length; j++) {
-            processSplashElements(elements[j]);
-        }
-    }
 
     private void processSplashElements(
             final IConfigurationElement configurationElement) {
