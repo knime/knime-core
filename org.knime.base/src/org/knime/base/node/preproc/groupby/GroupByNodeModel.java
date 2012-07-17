@@ -661,9 +661,8 @@ public class GroupByNodeModel extends NodeModel {
         final boolean enableHilite = m_enableHilite.getBooleanValue();
         final ColumnNamePolicy colNamePolicy = ColumnNamePolicy
         .getPolicy4Label(m_columnNamePolicy.getStringValue());
-        final GlobalSettings globalSettings = new GlobalSettings(groupByCols,
-                maxUniqueVals, m_valueDelimiter.getStringValue(),
-                table.getDataTableSpec(), table.getRowCount());
+        final GlobalSettings globalSettings =
+            createGlobalSettings(table, groupByCols, maxUniqueVals);
 
         //reset all aggregators in order to use enforce operator creation
         for (final ColumnAggregator colAggr : aggregators) {
@@ -693,6 +692,24 @@ public class GroupByNodeModel extends NodeModel {
                         Integer.MAX_VALUE, Integer.MAX_VALUE));
         }
         return resultTable;
+    }
+
+    /**
+     * Creates the {@link GlobalSettings} object that is passed to all
+     * {@link AggregationMethod}s.
+     *
+     * @param table the {@link BufferedDataTable}
+     * @param groupByCols the names of the columns to group by
+     * @param maxUniqueVals the maximum number of unique values per group
+     * @return the {@link GlobalSettings} object to use
+     * @since 2.6
+     */
+    protected GlobalSettings createGlobalSettings(
+            final BufferedDataTable table, final List<String> groupByCols,
+            final int maxUniqueVals) {
+        return new GlobalSettings(groupByCols,
+                maxUniqueVals, m_valueDelimiter.getStringValue(),
+                table.getDataTableSpec(), table.getRowCount());
     }
 
     /**
