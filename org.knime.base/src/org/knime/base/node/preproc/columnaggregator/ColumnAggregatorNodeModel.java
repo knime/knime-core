@@ -207,7 +207,7 @@ public class ColumnAggregatorNodeModel extends NodeModel {
                 origSpec, selectedCols, new GlobalSettings(
                         m_maxUniqueValues.getIntValue(),
                         m_valueDelimiter.getStringValue(), origSpec,
-                        table.getRowCount(), exec), m_methods);
+                        table.getRowCount()), m_methods);
         final ColumnRearranger cr =
             createRearranger(origSpec, cellFactory);
         final BufferedDataTable out =
