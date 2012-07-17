@@ -2248,6 +2248,10 @@ public class WorkflowEditor extends GraphicalEditor implements
         case TemplateConnection:
             updateEditorBackgroundColor();
             break;
+        case MetaNodePorts:
+            // for meta node editors in case the port bar needs to dis/appear
+            getViewer().getContents().refresh();
+            break;
         default:
             // ignore
         }
