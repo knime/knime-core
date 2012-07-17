@@ -56,6 +56,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -144,16 +145,16 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
                 return o1.getFirst() - o2.getFirst();
             }
         });
-        for (Pair<Integer, QuickFormConfigurationPanel<?>> weightPanelPair
-                    : sortedPanelList) {
+        for (Pair<Integer, QuickFormConfigurationPanel<?>> weightPanelPair : sortedPanelList) {
+            final QuickFormConfigurationPanel<?> qconfPanel = weightPanelPair.getSecond();
 
             JPanel qpanel = new JPanel();
-            final BoxLayout boxLayout2 = new BoxLayout(qpanel,
-                    BoxLayout.Y_AXIS);
+            final BoxLayout boxLayout2 = new BoxLayout(qpanel, BoxLayout.Y_AXIS);
             qpanel.setLayout(boxLayout2);
+            qpanel.setBorder(BorderFactory.createTitledBorder((String) null));
 
             JPanel p = new JPanel(new FlowLayout(FlowLayout.LEFT));
-            p.add(weightPanelPair.getSecond());
+            p.add(qconfPanel);
             qpanel.add(p);
             m_panel.add(qpanel);
         }
