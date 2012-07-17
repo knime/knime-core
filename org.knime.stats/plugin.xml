@@ -27,7 +27,13 @@
               category-path="/statistics/hypothesis-testing"
               factory-class="org.knime.base.node.stats.testing.ttest.PairedTTestNodeFactory"
               id="org.knime.base.node.stats.testing.ttest.PairedTTestNodeFactory">
-        </node>             
+        </node>
+        <node
+              after="org.knime.base.node.stats.testing.ttest.PairedTTestNodeFactory"
+              category-path="/statistics/hypothesis-testing"
+              factory-class="org.knime.base.node.stats.testing.ttest.OneWayANOVANodeFactory"
+              id="org.knime.base.node.stats.testing.ttest.OneWayANOVANodeFactory">
+        </node>     
    </extension>
 
 </plugin>

@@ -52,20 +52,18 @@ package org.knime.base.node.stats.testing.ttest;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.math3.distribution.FDistribution;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.apache.commons.math3.util.FastMath;
-import org.knime.base.node.stats.testing.ttest.Grouping.Group;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -79,20 +77,30 @@ import org.knime.core.util.MutableInteger;
  */
 public class LeveneTestStatistics {
     public static final String F_VALUE = "test statistic (Levene)";
+    public static final String DF1_VALUE = "df 1";
+    public static final String DF2_VALUE = "df 2";
     public static final String P_VALUE = "p-value (Levene)";
 
     /** the test column. */
     private String m_column;
     /** the group identifiers. */
-    private Map<Group, String> m_groups;
-    /** summary statistics per group (levence test). */
-    private Map<Group, SummaryStatistics> m_lgstats;
+    private List<String> m_groups;
+    /** summary statistics per group (levence test).
+     * Yji in http://de.wikipedia.org/wiki/Levene-Test*/
+    private List<SummaryStatistics> m_lgstats;
+    /** summary statistics per group (levence test).
+     * Yji - Y_bar in http://de.wikipedia.org/wiki/Levene-Test */
+    private List<SummaryStatistics> m_lgstats2;
+    /** the mean over all groups */
+    private double m_m;
+    /** the total number of observations */
+    private int m_N;
     /** summary statistics across groups (levence test). */
     private SummaryStatistics m_lstats;
     /** summary statistics per group. */
-    private Map<Group, SummaryStatistics> m_gstats;
+    private List<SummaryStatistics> m_gstats;
     /** number of missing values per group. */
-    private Map<Group, MutableInteger> m_missing;
+    private List<MutableInteger> m_missing;
     /** number of missing values in the grouping column */
     private MutableInteger m_missingGroup;
 
@@ -105,41 +113,60 @@ public class LeveneTestStatistics {
      * @param gstats summary statistics per group
      */
     public LeveneTestStatistics(final String column,
-            final Map<Group, String> groups,
-            final Map<Group, SummaryStatistics> gstats) {
+            final List<String> groups,
+            final List<SummaryStatistics> gstats) {
         super();
         m_column = column;
         m_groups = groups;
         m_gstats = gstats;
         m_missingGroup = new MutableInteger(0);
 
-        m_lgstats = new HashMap<Group, SummaryStatistics>();
-        m_lgstats.put(Group.GroupX, new SummaryStatistics());
-        m_lgstats.put(Group.GroupY, new SummaryStatistics());
+        int numGroups = groups.size();
+        m_lgstats = new ArrayList<SummaryStatistics>(numGroups);
+        for (int i = 0; i < numGroups; i++) {
+            m_lgstats.add(new SummaryStatistics());
+        }
+        m_lgstats2 = new ArrayList<SummaryStatistics>(numGroups);
+        for (int i = 0; i < numGroups; i++) {
+            m_lgstats2.add(new SummaryStatistics());
+        }
         m_lstats = new SummaryStatistics();
-        m_missing = new HashMap<Group, MutableInteger>();
-        m_missing.put(Group.GroupX, new MutableInteger(0));
-        m_missing.put(Group.GroupY, new MutableInteger(0));
+        m_missing = new ArrayList<MutableInteger>(numGroups);
+        for (int i = 0; i < numGroups; i++) {
+            m_missing.add(new MutableInteger(0));
+        }
+        m_N = 0;
+        m_m = 0;
+        for (int i = 0; i < numGroups; i++) {
+            SummaryStatistics statsGi = gstats.get(i);
+            double ni = statsGi.getN();
+            double mi = statsGi.getMean();
+            m_N += (int)ni;
+            m_m += ni * mi;
+        }
+        m_m = m_m / m_N;
     }
 
     /**
      * Add value to the test.
      * @param value the value
-     * @param group the group of the value
+     * @param gIndex the group of the value
      */
-    public void addValue(final double value, final Group group) {
-        m_lgstats.get(group).addValue(
-                FastMath.abs(value - m_gstats.get(group).getMean()));
+    public void addValue(final double value, final int gIndex) {
+        // Yji - Y_bar in http://de.wikipedia.org/wiki/Levene-Test
+        double Yji = FastMath.abs(value - m_gstats.get(gIndex).getMean());
+        m_lgstats.get(gIndex).addValue(Yji);
+        m_lgstats2.get(gIndex).addValue(Yji - m_m);
         m_lstats.addValue(
-                FastMath.abs(value - m_gstats.get(group).getMean()));
+                FastMath.abs(value - m_gstats.get(gIndex).getMean()));
     }
 
     /**
      * Notify about a missing value in the given group.
-     * @param group the group
+     * @param gIndex the group
      */
-    public void addMissing(final Group group) {
-        m_missing.get(group).add(1);
+    public void addMissing(final int gIndex) {
+        m_missing.get(gIndex).add(1);
     }
 
     /**
@@ -158,12 +185,16 @@ public class LeveneTestStatistics {
                 TwoSampleTTestStatistics.TEST_COLUMN
                 , TwoSampleTTestStatistics.VARIANCE_ASSUMPTION
                 , F_VALUE
+                , DF1_VALUE
+                , DF2_VALUE
                 , P_VALUE
                 },
                 new DataType[] {
                 StringCell.TYPE
                 , StringCell.TYPE
                 , DoubleCell.TYPE
+                , IntCell.TYPE
+                , IntCell.TYPE
                 , DoubleCell.TYPE
         });
     }
@@ -191,12 +222,56 @@ public class LeveneTestStatistics {
 
 
     /**
-     * Get the test result of the t-test.
-     * @return the t-test results
+     * Get the test result of the Levene test.
+     * @return the Levene test
      */
     public List<List<DataCell>> getTTestCells() {
-        SummaryStatistics statsX = m_lgstats.get(Group.GroupX);
-        SummaryStatistics statsY = m_lgstats.get(Group.GroupY);
+        if (m_groups.size() == 2) {
+            // optimized version for two groups
+            return getLeveneTestTwoGroupsCells();
+        }
+
+
+        double num = 0;
+        int k = m_groups.size();
+        for (int i = 0; i < k; i++) {
+            SummaryStatistics statsGi = m_lgstats.get(i);
+            double ni = statsGi.getN();
+            double mi = statsGi.getMean();
+            num += ni * (mi - m_m) * (mi - m_m) / (k - 1);
+        }
+        double den = 0;
+        for (int i = 0; i < k; i++) {
+            SummaryStatistics stats2Gi = m_lgstats2.get(i);
+            den += stats2Gi.getSumsq() / (m_N - k);
+        }
+        double L = num / den;
+
+        long df1 = k - 1 ;
+        long df2 = m_N - k;
+        FDistribution distribution = new FDistribution(df1, df2);
+        double pValue = 1 -
+            distribution.cumulativeProbability(L);
+
+        List<DataCell> cells = new ArrayList<DataCell>();
+        cells.add(new StringCell(m_column));
+        cells.add(TwoSampleTTestStatistics.EQUAL_VARIANCES_ASSUMED);
+        cells.add(new DoubleCell(L));
+        cells.add(new IntCell((int)df1));
+        cells.add(new IntCell((int)df2));
+        cells.add(new DoubleCell(pValue));
+        return Collections.singletonList(cells);
+
+    }
+
+    /**
+     * Get the test result of the Levene test. This is an optimized version for
+     * two groups.
+     * @return the Levene test
+     */
+    public List<List<DataCell>> getLeveneTestTwoGroupsCells() {
+        SummaryStatistics statsX = m_lgstats.get(0);
+        SummaryStatistics statsY = m_lgstats.get(1);
 
         // overall sample mean
         double m = m_lstats.getMean();
@@ -219,7 +294,9 @@ public class LeveneTestStatistics {
         double den = (n1 - 1) * v1 + (n2 - 1) * v2;
         double L = (n1 + n2 - 2) / den * num;
 
-        FDistribution distribution = new FDistribution(1, n1 + n2 - 2);
+        long df1 = 1;
+        long df2 = (long)n1 + (long)n2 - 2;
+        FDistribution distribution = new FDistribution(df1, df2);
         double pValue = 1 -
             distribution.cumulativeProbability(L);
 
@@ -227,8 +304,9 @@ public class LeveneTestStatistics {
         cells.add(new StringCell(m_column));
         cells.add(TwoSampleTTestStatistics.EQUAL_VARIANCES_ASSUMED);
         cells.add(new DoubleCell(L));
+        cells.add(new IntCell((int)df1));
+        cells.add(new IntCell((int)df2));
         cells.add(new DoubleCell(pValue));
         return Collections.singletonList(cells);
-
     }
 }

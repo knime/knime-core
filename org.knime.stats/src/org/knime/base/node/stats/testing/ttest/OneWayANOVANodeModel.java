@@ -4,13 +4,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
-import org.knime.base.node.stats.testing.ttest.Grouping.Group;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
@@ -27,13 +26,13 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 
 /**
- * This is the model implementation of "Two-Sample T-Test" Node.
+ * This is the model implementation of "one-way ANOVA" Node.
  *
  * @author Heiko Hofer
  */
-public class TwoSampleTTestNodeModel extends NodeModel
+public class OneWayANOVANodeModel extends NodeModel
         implements BufferedDataTableHolder {
-	private final TwoSampleTTestNodeSettings m_settings;
+	private final OneWayANOVANodeSettings m_settings;
 	private BufferedDataTable m_descStats;
 	private BufferedDataTable m_leveneStats;
 	private BufferedDataTable m_stats;
@@ -41,9 +40,9 @@ public class TwoSampleTTestNodeModel extends NodeModel
     /**
      * Constructor for the node model.
      */
-    protected TwoSampleTTestNodeModel() {
+    protected OneWayANOVANodeModel() {
         super(1, 3);
-        m_settings = new TwoSampleTTestNodeSettings();
+        m_settings = new OneWayANOVANodeSettings();
     }
 
     /**
@@ -58,14 +57,6 @@ public class TwoSampleTTestNodeModel extends NodeModel
                 || !spec.containsName(m_settings.getGroupingColumn())) {
             throw new InvalidSettingsException(
                     "Please define a grouping column.");
-        }
-        if (m_settings.getGroupOne() == null) {
-            throw new InvalidSettingsException(
-                    "Value of group one is not set.");
-        }
-        if (m_settings.getGroupTwo() == null) {
-            throw new InvalidSettingsException(
-                    "Value of group two is not set.");
         }
 
         FilterResult filterResult = m_settings.getTestColumns().applyTo(spec);
@@ -87,9 +78,9 @@ public class TwoSampleTTestNodeModel extends NodeModel
                     + "[1, 99].");
         }
         return new DataTableSpec[]{
-                TwoSampleTTestStatistics.getTableSpec()
+                OneWayANOVAStatistics.getTableSpec()
                 , LeveneTestStatistics.getTableSpec()
-                , TwoSampleTTestStatistics.getGroupStatisticsSpec()};
+                , OneWayANOVAStatistics.getGroupStatisticsSpec()};
 
     }
 
@@ -100,21 +91,16 @@ public class TwoSampleTTestNodeModel extends NodeModel
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
 
-        Map<Group, String> groups = new LinkedHashMap<Group, String>();
-        groups.put(Group.GroupX, m_settings.getGroupOne());
-        groups.put(Group.GroupY, m_settings.getGroupTwo());
-        Grouping grouping = new StringValueGrouping(
-                m_settings.getGroupingColumn(), groups);
-
         DataTableSpec spec = inData[0].getSpec();
         FilterResult filter = m_settings.getTestColumns().applyTo(spec);
-        TwoSampleTTest test = new TwoSampleTTest(filter.getIncludes(),
-                grouping, m_settings.getConfidenceIntervalProb());
-        TwoSampleTTestStatistics[] result = test.execute(inData[0], exec);
+        List<String> groups = getGroups(inData[0], exec);
+        OneWayANOVA test = new OneWayANOVA(filter.getIncludes(),
+                m_settings.getGroupingColumn(),
+                groups, m_settings.getConfidenceIntervalProb());
+        OneWayANOVAStatistics[] result = test.execute(inData[0], exec);
         LeveneTest leveneTest = new LeveneTest(filter.getIncludes(),
                 m_settings.getGroupingColumn(),
-                Arrays.asList(new String[] {m_settings.getGroupOne(),
-                        m_settings.getGroupTwo()}),
+                groups,
                 getGroupSummaryStats(result));
         LeveneTestStatistics[] leveneResult =
             leveneTest.execute(inData[0], exec);
@@ -127,14 +113,30 @@ public class TwoSampleTTestNodeModel extends NodeModel
         return new BufferedDataTable[]{m_stats, m_leveneStats, m_descStats};
     }
 
+    private List<String> getGroups(final BufferedDataTable inData,
+            final ExecutionContext exec) throws InvalidSettingsException {
+        DataTableSpec spec = inData.getSpec();
+        int gIndex = spec.findColumnIndex(m_settings.getGroupingColumn());
+        LinkedHashSet<String> groups = new LinkedHashSet<String>();
+        if (gIndex < 0) {
+            throw new InvalidSettingsException("Grouping column not found.");
+        }
+        for (DataRow row : inData) {
+            DataCell group = row.getCell(gIndex);
+            if (!group.isMissing()) {
+                groups.add(group.toString());
+            }
+        }
+        return Arrays.asList(groups.toArray(new String[groups.size()]));
+    }
 
     private List<List<SummaryStatistics>> getGroupSummaryStats(
-            final TwoSampleTTestStatistics[] result) {
+            final OneWayANOVAStatistics[] result) {
         List<List<SummaryStatistics>> gstats =
             new ArrayList<List<SummaryStatistics>>();
-        for (TwoSampleTTestStatistics r : result) {
+        for (OneWayANOVAStatistics r : result) {
             List<SummaryStatistics> stats = new ArrayList<SummaryStatistics>();
-            stats.addAll(r.getGroupSummaryStatistics().values());
+            stats.addAll(r.getGroupSummaryStatistics());
             gstats.add(stats);
         }
         return gstats;
@@ -147,10 +149,10 @@ public class TwoSampleTTestNodeModel extends NodeModel
      * @return a combined table of the test statistic
      */
     private BufferedDataTable getDescriptiveStatisticsTable(
-            final TwoSampleTTestStatistics[] result,
+            final OneWayANOVAStatistics[] result,
             final ExecutionContext exec) {
         BufferedDataContainer cont = exec.createDataContainer(
-                TwoSampleTTestStatistics.getGroupStatisticsSpec());
+                OneWayANOVAStatistics.getGroupStatisticsSpec());
         int r = 0;
         for (int i = 0; i < result.length; i++) {
             for (List<DataCell> cells : result[i].getGroupStatisticsCells()) {
@@ -170,10 +172,10 @@ public class TwoSampleTTestNodeModel extends NodeModel
      * @return a combined table of the test statistic
      */
     private BufferedDataTable getTestStatisticsTable(
-            final TwoSampleTTestStatistics[] result,
+            final OneWayANOVAStatistics[] result,
             final ExecutionContext exec) {
         BufferedDataContainer cont = exec.createDataContainer(
-                TwoSampleTTestStatistics.getTableSpec());
+                OneWayANOVAStatistics.getTableSpec());
         int r = 0;
         for (int i = 0; i < result.length; i++) {
             for (List<DataCell> cells : result[i].getTTestCells()) {
@@ -226,7 +228,7 @@ public class TwoSampleTTestNodeModel extends NodeModel
      *
      * @return the settings object
      */
-    TwoSampleTTestNodeSettings getSettings() {
+    OneWayANOVANodeSettings getSettings() {
         return m_settings;
     }
 
@@ -285,7 +287,7 @@ public class TwoSampleTTestNodeModel extends NodeModel
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-    	TwoSampleTTestNodeSettings s = new TwoSampleTTestNodeSettings();
+    	OneWayANOVANodeSettings s = new OneWayANOVANodeSettings();
         s.loadSettings(settings);
     }
 

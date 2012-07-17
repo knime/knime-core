@@ -52,7 +52,6 @@ package org.knime.base.node.stats.testing.ttest;
 
 import java.util.List;
 
-import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -65,35 +64,35 @@ import org.knime.core.node.InvalidSettingsException;
  *
  * @author Heiko Hofer
  */
-public class LeveneTest {
+public class OneWayANOVA {
 
     private String[] m_testColumns;
     private List<String> m_groups;
-    /** summary statistics per group. */
-    private List<List<SummaryStatistics>> m_gstats;
+    private double m_confidenceIntervalProb;
     private String m_groupingColumn;
 
     /**
-     * Levene-Test
+     * A one-way ANOVA.
      *
      * @param testColumns the test columns
-     * @param groupingColumn the column of the input table holding the groups
+     * @param groupingColumn the grouping column
      * @param groups the groups to use
-     * @param gstats the summary statistics per group if already computed
+     * @param confidenceIntervalProb the probability used to compute
+     * confidence intervals (Typically 0.95)
      */
-    public LeveneTest(final String[] testColumns, final String groupingColumn,
-            final List<String> groups,
-            final List<List<SummaryStatistics>> gstats) {
+    public OneWayANOVA(final String[] testColumns,
+            final String groupingColumn, final List<String> groups,
+            final double confidenceIntervalProb) {
         super();
         m_testColumns = testColumns;
         m_groupingColumn = groupingColumn;
         m_groups = groups;
-        m_gstats = gstats;
+        m_confidenceIntervalProb = confidenceIntervalProb;
     }
 
 
 
-    public LeveneTestStatistics[] execute(final DataTable table,
+    public OneWayANOVAStatistics[] execute(final DataTable table,
             final ExecutionContext exec) throws InvalidSettingsException {
 
         DataTableSpec spec = table.getDataTableSpec();
@@ -107,13 +106,11 @@ public class LeveneTest {
         }
 
         int testColumnCount = m_testColumns.length;
-
-        // The Levene-Test requires a second run over the data
-        LeveneTestStatistics[] result =
-            new LeveneTestStatistics[testColumnCount];
+        OneWayANOVAStatistics[] result =
+            new OneWayANOVAStatistics[testColumnCount];
         for (int i = 0; i < testColumnCount; i++) {
-            result[i] = new LeveneTestStatistics(m_testColumns[i],
-                    m_groups, m_gstats.get(i));
+            result[i] = new OneWayANOVAStatistics(m_testColumns[i],
+                    m_groups, m_confidenceIntervalProb);
         }
 
         for (DataRow row : table) {
