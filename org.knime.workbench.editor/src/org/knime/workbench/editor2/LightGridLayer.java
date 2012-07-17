@@ -45,51 +45,36 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
- * History
- *   28.02.2006 (sieb): created
+ * Created: 17.07.2012
+ * Author: Peter Ohl
  */
 package org.knime.workbench.editor2;
 
-import org.eclipse.gef.DragTracker;
-import org.eclipse.gef.Request;
+import org.eclipse.draw2d.Graphics;
 import org.eclipse.gef.editparts.GridLayer;
-import org.eclipse.gef.editparts.ScalableFreeformRootEditPart;
+import org.eclipse.swt.SWT;
 
 /**
- * Overrides the default <code>ScalableFreeformRootEditPart</code> to return
- * <code>MarqueeSelectionTool</code>s selecting also connections.
- *
- * @author Christoph Sieb, University of Konstanz
+ * Allows modification of grid lines.
+ * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
  */
-public class ConnectionSelectingScalableFreeformRootEditPart extends
-        ScalableFreeformRootEditPart {
+public class LightGridLayer extends GridLayer {
 
     /**
-     * Creates a MarqueeDragTracker selecting also connections.
-     *
-     * @see org.eclipse.gef.EditPart#getDragTracker(org.eclipse.gef.Request)
+     * uses the default gray color of the super constructor.
      */
-    @Override
-    public DragTracker getDragTracker(final Request req) {
-        /*
-         * The root will only be asked for a drag tracker if for some reason the
-         * contents editpart says it is neither selector nor opaque.
-         */
-        WorkflowMarqueeSelectionTool tracker =
-                new WorkflowMarqueeSelectionTool();
-        tracker
-                .setMarqueeBehavior(WorkflowMarqueeSelectionTool.BEHAVIOR_NODES_AND_CONNECTIONS_TOUCHED);
-
-        return tracker;
+    LightGridLayer() {
+        super();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected GridLayer createGridLayer() {
-        return new LightGridLayer();
+    protected void paintGrid(final Graphics g) {
+        g.setLineStyle(SWT.LINE_CUSTOM);
+        g.setLineDash(new int[]{/*on pixels*/1, /*off pixels*/3});
+        super.paintGrid(g);
     }
-
 
 }
