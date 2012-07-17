@@ -1,6 +1,5 @@
 package org.knime.base.node.stats.testing.ttest;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -102,9 +101,7 @@ public class OneSampleTTestNodeDialog extends NodeDialogPane {
         c.weighty = 1;
         c.weightx = 1;
         c.gridwidth = 1;
-        JPanel foo = new JPanel();
-        foo.setBorder(BorderFactory.createLineBorder(Color.red));
-        p.add(foo, c);
+        p.add(new JPanel(), c);
 
 		return p;
 	}
