@@ -52,19 +52,20 @@ package org.knime.workbench.editor2;
 
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.gef.editparts.GridLayer;
-import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
 
 /**
  * Allows modification of grid lines.
  * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
  */
 public class LightGridLayer extends GridLayer {
-
+    private static final Color veryLightGray = new Color(null, 240, 240, 240);
     /**
      * uses the default gray color of the super constructor.
      */
     LightGridLayer() {
         super();
+        setForegroundColor(veryLightGray);
     }
 
     /**
@@ -72,8 +73,6 @@ public class LightGridLayer extends GridLayer {
      */
     @Override
     protected void paintGrid(final Graphics g) {
-        g.setLineStyle(SWT.LINE_CUSTOM);
-        g.setLineDash(new int[]{/*on pixels*/1, /*off pixels*/3});
         super.paintGrid(g);
     }
 
