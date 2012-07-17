@@ -172,7 +172,10 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
         m_variableList.addListSelectionListener(new ListSelectionListener() {
             @Override
             public void valueChanged(final ListSelectionEvent arg0) {
-                if (!arg0.getValueIsAdjusting() && (m_lastUsedTextfield != null)) {
+                if (arg0.getValueIsAdjusting()) {
+                    return;
+                }
+                if (m_lastUsedTextfield != null) {
                     String existingText = m_lastUsedTextfield.getText();
                     if (existingText.equals(RULE_LABEL)) {
                         existingText = "";
@@ -187,9 +190,9 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
                         if (m_lastUsedTextfield == m_ruleLabelEditor) {
                             m_outcomeIsColumn.setSelected(true);
                         }
-                        m_variableList.clearSelection();
                     }
                 }
+                m_variableList.clearSelection();
             }
         });
         /*
