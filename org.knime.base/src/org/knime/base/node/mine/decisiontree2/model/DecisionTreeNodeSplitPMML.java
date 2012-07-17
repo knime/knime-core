@@ -433,4 +433,21 @@ public class DecisionTreeNodeSplitPMML extends DecisionTreeNodeSplit {
     public PMMLPredicate[] getSplitPred() {
         return m_splitPred;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void removeChildren(final Set<Integer> indices) {
+        super.removeChildren(indices);
+        PMMLPredicate[] predicates
+                = new PMMLPredicate[m_splitPred.length - indices.size()];
+        int pos = 0;
+        for (int i = 0; i < m_splitPred.length; i++) {
+            if (!indices.contains(i)) {
+                predicates[pos++] = m_splitPred[i];
+            }
+        }
+        m_splitPred = predicates;
+    }
 }

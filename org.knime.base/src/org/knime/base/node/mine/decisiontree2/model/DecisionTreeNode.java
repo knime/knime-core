@@ -457,6 +457,31 @@ public abstract class DecisionTreeNode implements TreeNode, Serializable {
         }
     }
 
+    /** Post-processes the tree and remove empty leave nodes
+     *
+     * @since 2.6
+     */
+    public final void filterEmptyLeaveNodes() {
+        if (this instanceof DecisionTreeNodeSplit) {
+            DecisionTreeNodeSplit splitNode = (DecisionTreeNodeSplit)this;
+            DecisionTreeNode[] children = splitNode.getChildren();
+            Set<Integer> emptyLeaveIndices = new LinkedHashSet<Integer>();
+            for (int i = 0; i < getChildCount(); i++) {
+                final DecisionTreeNode child = children[i];
+                if (child.isLeaf()) {
+                    if (child.getEntireClassCount() == 0.0) {
+                       emptyLeaveIndices.add(i);
+                    }
+                } else {
+                    child.filterEmptyLeaveNodes();
+                }
+            }
+            if (!emptyLeaveIndices.isEmpty()) {
+                splitNode.removeChildren(emptyLeaveIndices);
+            }
+        }
+    }
+
     /** Get from a child the attribute name the child is testing for and also
      * the list of attribute values the child is testing for. Used to refine
      * filter in {@link #filterIllegalAttributes(Map)}.

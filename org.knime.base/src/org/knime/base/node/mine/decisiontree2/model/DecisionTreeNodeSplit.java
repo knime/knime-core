@@ -588,6 +588,29 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
     }
 
     /**
+     * Removes the children at the given indices
+     * .
+     * @param indices the indices of the children to remove
+     */
+    public void removeChildren(final Set<Integer> indices) {
+        DecisionTreeNode[] children
+                = new DecisionTreeNode[m_child.length - indices.size()];
+        int[] childIndex =
+            new int[m_childIndex.length - indices.size()];
+
+        int pos = 0;
+        for (int i = 0; i < m_child.length; i++) {
+            if (!indices.contains(i)) {
+                children[pos] = m_child[i];
+                childIndex[pos] = m_childIndex[i];
+                pos++;
+            }
+        }
+        m_child = children;
+        m_childIndex = childIndex;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override

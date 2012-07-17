@@ -314,4 +314,21 @@ public class DecisionTreeNodeSplitNominal extends DecisionTreeNodeSplit {
     public DataCell[] getSplitValues() {
         return m_splitValues;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void removeChildren(final Set<Integer> indices) {
+        super.removeChildren(indices);
+        DataCell[] attributes
+                = new DataCell[m_splitValues.length - indices.size()];
+        int pos = 0;
+        for (int i = 0; i < m_splitValues.length; i++) {
+            if (!indices.contains(i)) {
+                attributes[pos++] = m_splitValues[i];
+            }
+        }
+        m_splitValues = attributes;
+    }
 }

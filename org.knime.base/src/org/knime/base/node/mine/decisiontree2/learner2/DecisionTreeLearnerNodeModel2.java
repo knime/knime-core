@@ -109,7 +109,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
  * @author Christoph Sieb, University of Konstanz
  *
  * @see DecisionTreeLearnerNodeFactory2
- * 
+ *
  * @since 2.6
  */
 public class DecisionTreeLearnerNodeModel2 extends NodeModel {
@@ -501,7 +501,6 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
                 PMMLMissingValueStrategy.LAST_PREDICTION);
         m_decisionTree.setColorColumn(colorColumn);
 
-
         // prune the tree
         exec.setMessage("Prune tree with "
                 + m_pruningMethod.getStringValue() + "...");
@@ -611,7 +610,8 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
             // Pruner.estimatedErrorPruning(m_decisionTree,
             // m_pruningConfidenceThreshold);
         } else if (m_pruningMethod.getStringValue().equals(PRUNING_NO)) {
-            // do nothing
+            // do nothing except removing empty leave nodes
+            m_decisionTree.getRootNode().filterEmptyLeaveNodes();
         } else {
             throw new IllegalArgumentException("Pruning methdod "
                     + m_pruningMethod.getStringValue() + " not allowed.");

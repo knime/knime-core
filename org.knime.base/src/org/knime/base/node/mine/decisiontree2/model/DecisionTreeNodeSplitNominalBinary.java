@@ -400,4 +400,15 @@ public class DecisionTreeNodeSplitNominalBinary extends
     public List<Integer> getRightChildIndices() {
         return m_rightChildIndices;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void removeChildren(final Set<Integer> indices) {
+       super.removeChildren(indices);
+       /* Additional processing is not needed for the binary case as the 
+        * learner would stop earlier and add a leave if on of the two branches
+        * had not contained any data. */
+    }
 }
