@@ -51,8 +51,10 @@ package org.knime.base.data.aggregation;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
+import org.knime.core.node.ExecutionContext;
 
 
 /**
@@ -246,7 +248,10 @@ public abstract class AggregationOperator implements AggregationMethod {
 
     /**
      * @param cell the {@link DataCell} to consider during computing
+     * @deprecated use the
+     * {@link #compute(ExecutionContext, DataRow, int)} method instead
      */
+    @Deprecated
     public final void compute(final DataCell cell) {
         if (m_skipped) {
             return;
@@ -255,7 +260,27 @@ public abstract class AggregationOperator implements AggregationMethod {
             throw new NullPointerException("cell must not be null");
         }
         if (inclMissingCells() || !cell.isMissing()) {
-            m_skipped = computeInternal(cell);
+                m_skipped = computeInternal(cell);
+        }
+    }
+
+    /**
+     * @param exec the {@link ExecutionContext} this method is called
+     * @param row the complete {@link DataRow} the given cell belongs to
+     * @param idx the index of the column to aggregate
+     * @since 2.6
+     */
+    public final void compute(final ExecutionContext exec, final DataRow row,
+            final int idx) {
+        if (exec == null) {
+            throw new NullPointerException("exec must not be null");
+        }
+        if (m_skipped) {
+            return;
+        }
+        final DataCell cell = row.getCell(idx);
+        if (inclMissingCells() || !cell.isMissing()) {
+            m_skipped = computeInternal(exec, row, cell);
         }
     }
 
@@ -268,12 +293,43 @@ public abstract class AggregationOperator implements AggregationMethod {
     }
 
     /**
+     * Override this method if your {@link AggregationOperator} also requires
+     * the {@link DataRow} and/or {@link ExecutionContext} during computation.
+     * This method calls by default the {@link #computeInternal(DataCell)}
+     * method.
+     * @param exec the {@link ExecutionContext} this method is called
+     * @param row the complete {@link DataRow} the given cell belongs to
      * @param cell the {@link DataCell} to consider during computing the cell
      * can't be <code>null</code> but can be a missing cell
-     * {@link DataCell#isMissing()} if the option is
-     * {@link #inclMissingCells()} option is set to <code>true</code>.
+     * {@link DataCell#isMissing()} if the {@link #inclMissingCells()}
+     * option is set to <code>true</code>.
      * @return <code>true</code> if this column should be skipped in further
      * calculations
+     * @since 2.6
+     * @see AggregationOperator#computeInternal(DataCell)
+     */
+    protected boolean computeInternal(final ExecutionContext exec,
+            final DataRow row, final DataCell cell) {
+        return computeInternal(cell);
+    }
+
+    /**
+     * If the {@link AggregationOperator} implementation also requires
+     * the {@link DataRow} during computation override the
+     * {@link #computeInternal(ExecutionContext, DataRow, DataCell)} method.
+     * Even if you override the
+     * {@link #computeInternal(ExecutionContext, DataRow, DataCell)} method
+     * this method still might be called by previous implementations
+     * prior version 2.6 and should compute a reasonable result.
+     *
+     * @param cell the {@link DataCell} to consider during computing the cell
+     * can't be <code>null</code> but can be a missing cell
+     * {@link DataCell#isMissing()} if the {@link #inclMissingCells()}
+     * option is set to <code>true</code>.
+     * @return <code>true</code> if this column should be skipped in further
+     * calculations
+     * @see AggregationOperator#computeInternal(
+     * ExecutionContext, DataRow, DataCell)
      */
     protected abstract boolean computeInternal(final DataCell cell);
 

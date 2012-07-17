@@ -63,6 +63,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.container.CellFactory;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 
 import java.util.HashSet;
@@ -83,16 +84,20 @@ public class AggregationCellFactory implements CellFactory {
     private final DataTableSpec m_origSpec;
     private final DataType m_superType;
     private final DataColumnSpec m_dummyOrigSpec;
+    private final ExecutionContext m_exec;
 
     /**Constructor for class AggregationCellFactory.
+     * @param exec the {@link ExecutionContext}
      * @param origSpec the original {@link DataTableSpec}
      * @param colNames the names of the columns to aggregate
      * @param globalSettings the {@link GlobalSettings}
      * @param methods the {@link AggregationMethod}s
      */
-    public AggregationCellFactory(final DataTableSpec origSpec,
-            final List<String> colNames, final GlobalSettings globalSettings,
+    public AggregationCellFactory(final ExecutionContext exec,
+            final DataTableSpec origSpec, final List<String> colNames,
+            final GlobalSettings globalSettings,
             final List<NamedAggregationOperator> methods) {
+        m_exec = exec;
         m_origSpec = origSpec;
         m_colIdxs = new int[colNames.size()];
         final Set<String> inclCols =
@@ -133,9 +138,8 @@ public class AggregationCellFactory implements CellFactory {
     @Override
     public DataCell[] getCells(final DataRow row) {
         for (final int idx : m_colIdxs) {
-            final DataCell cell = row.getCell(idx);
             for (final AggregationOperator method : m_operators) {
-                method.compute(cell);
+                method.compute(m_exec, row, idx);
             }
         }
         final DataCell[] cells = new DataCell[m_operators.length];

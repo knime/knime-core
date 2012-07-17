@@ -48,6 +48,10 @@
 
 package org.knime.base.node.preproc.groupby;
 
+import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.GlobalSettings;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
@@ -58,10 +62,6 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-
-import org.knime.base.data.aggregation.AggregationOperator;
-import org.knime.base.data.aggregation.ColumnAggregator;
-import org.knime.base.data.aggregation.GlobalSettings;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -132,6 +132,7 @@ public class MemoryGroupByTable extends GroupByTable {
      * @see #MemoryGroupByTable(ExecutionContext, BufferedDataTable, List,
      * ColumnAggregator[], GlobalSettings, boolean, ColumnNamePolicy, boolean)
      */
+    @SuppressWarnings("deprecation")
     @Deprecated
     protected MemoryGroupByTable(final ExecutionContext exec,
             final BufferedDataTable inDataTable, final List<String> groupByCols,
@@ -170,7 +171,7 @@ public class MemoryGroupByTable extends GroupByTable {
             }
             final GroupKey groupKey = new GroupKey(currentGroup);
             addRowKey(groupKey, row.getKey());
-            addRow(origSpec, groupKey, row);
+            addRow(exec, origSpec, groupKey, row);
         }
         return createResultTable(exec.createSubExecutionContext(0.3),
                 resultSpec);
@@ -223,8 +224,9 @@ public class MemoryGroupByTable extends GroupByTable {
         return dc.getTable();
     }
 
-    private void addRow(final DataTableSpec origSpec,
-            final GroupKey groupKey, final DataRow row) {
+    private void addRow(final ExecutionContext exec,
+            final DataTableSpec origSpec, final GroupKey groupKey,
+            final DataRow row) {
         ColumnAggregator[] aggregators = m_vals.get(groupKey);
         if (aggregators == null) {
             final ColumnAggregator[] origAggregators = getColAggregators();
@@ -237,8 +239,8 @@ public class MemoryGroupByTable extends GroupByTable {
         for (final ColumnAggregator aggregator : aggregators) {
             final int colIdx =
                 origSpec.findColumnIndex(aggregator.getOriginalColName());
-            final DataCell cell = row.getCell(colIdx);
-            aggregator.getOperator(getGlobalSettings()).compute(cell);
+            aggregator.getOperator(getGlobalSettings()).compute(
+                    exec, row, colIdx);
         }
     }
 

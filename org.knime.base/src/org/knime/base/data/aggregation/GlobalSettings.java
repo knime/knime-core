@@ -51,6 +51,11 @@ package org.knime.base.data.aggregation;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 
 /**
  * Utility class that contains general information such as the
@@ -61,7 +66,8 @@ import org.knime.core.data.DataTableSpec;
  */
 public class GlobalSettings {
 
-    /**Default global settings object used in operator templates.*/
+    /**Default global settings object that should be only used in
+     * operator templates!!!*/
     public static final GlobalSettings DEFAULT = new GlobalSettings();
 
     /**The standard delimiter used in concatenation operators.*/
@@ -78,11 +84,20 @@ public class GlobalSettings {
 
     private final int m_noOfRows;
 
+    /**This key value map allows the storing of arbitrary objects associated
+     * with a unique key which are accessible in the
+     * <code>AggregationMethod</code> implementations.
+     */
+    private final Map<String, Object> m_keyValueMap =
+        new HashMap<String, Object>();
+
+    private final List<String> m_groupColNames;
+
     /**Constructor for class GlobalSettings.
      * This constructor is used to create a dummy object that contains
      * default settings.
      */
-    GlobalSettings() {
+    private GlobalSettings() {
         this(0);
     }
 
@@ -92,7 +107,8 @@ public class GlobalSettings {
      * @param maxUniqueValues the maximum number of unique values to consider
      */
     public GlobalSettings(final int maxUniqueValues) {
-        this(maxUniqueValues, STANDARD_DELIMITER, new DataTableSpec(), 0);
+        this(maxUniqueValues, STANDARD_DELIMITER,
+                new DataTableSpec(), 0);
     }
 
     /**Constructor for class GlobalSettings.
@@ -101,9 +117,28 @@ public class GlobalSettings {
      * @param spec the {@link DataTableSpec} of the input table
      * @param noOfRows the number of rows of the input table
      */
+    @SuppressWarnings("unchecked")
     public GlobalSettings(final int maxUniqueValues,
             final String valueDelimiter, final DataTableSpec spec,
             final int noOfRows) {
+        this(Collections.EMPTY_LIST, maxUniqueValues, valueDelimiter, spec,
+                noOfRows);
+    }
+
+    /**Constructor for class GlobalSettings.
+     * @param groupColNames the names of the columns to group by
+     * @param maxUniqueValues the maximum number of unique values to consider
+     * @param valueDelimiter the delimiter to use for value separation
+     * @param spec the {@link DataTableSpec} of the input table
+     * @param noOfRows the number of rows of the input table
+     * @since 2.6
+     */
+    public GlobalSettings(final List<String> groupColNames,
+            final int maxUniqueValues, final String valueDelimiter,
+            final DataTableSpec spec, final int noOfRows) {
+        if (groupColNames == null) {
+            throw new NullPointerException("groupColNames must not be null");
+        }
         if (maxUniqueValues < 0) {
             throw new IllegalArgumentException(
                     "Maximum unique values must be a positive integer");
@@ -118,6 +153,7 @@ public class GlobalSettings {
         if (noOfRows < 0) {
             throw new IllegalArgumentException("No of rows must be positive");
         }
+        m_groupColNames = groupColNames;
         m_maxUniqueValues = maxUniqueValues;
         m_valueDelimiter = valueDelimiter;
         m_spec = spec;
@@ -192,5 +228,49 @@ public class GlobalSettings {
      */
     public DataColumnSpec getOriginalColumnSpec(final String column) {
         return m_spec.getColumnSpec(column);
+    }
+
+
+    /**
+     * @return unmodifiable {@link List} that contains the names of the columns
+     * to group by
+     * @since 2.6
+     */
+    public List<String> getGroupColNames() {
+        return Collections.unmodifiableList(m_groupColNames);
+    }
+
+    /**
+     * Allows the adding of arbitrary objects with a given <tt>key</tt>.
+     * @param key the <tt>key</tt> to use. Must not be <code>null</code>.
+     * @param value the value to store. Must not be <code>null</code>.
+     * @return the previous value associated with <tt>key</tt>, or
+     *         <code>null</code> if there was no mapping for <tt>key</tt>.
+     * @since 2.6
+     */
+    public Object addValue(final String key, final Object value) {
+        if (key == null) {
+            throw new NullPointerException("key must not be null");
+        }
+        if (value == null) {
+            throw new NullPointerException("value must not be null");
+        }
+        return m_keyValueMap.put(key, value);
+    }
+
+    /**
+     * Returns the value to which the specified key is mapped,
+     * or {@code null} if this map contains no mapping for the key.
+     *
+     * @param key the key whose associated value is to be returned
+     * @return the value to which the specified key is mapped, or
+     *         {@code null} if this map contains no mapping for the key
+     * @since 2.6
+     */
+    public Object getValue(final String key) {
+        if (key == null) {
+            throw new NullPointerException("key must not be null");
+        }
+        return m_keyValueMap.get(key);
     }
 }

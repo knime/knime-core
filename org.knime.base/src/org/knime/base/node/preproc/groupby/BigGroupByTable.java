@@ -48,17 +48,10 @@
 
 package org.knime.base.node.preproc.groupby;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.ColumnAggregator;
 import org.knime.base.data.aggregation.GlobalSettings;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -75,6 +68,14 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
 import org.knime.core.util.MutableInteger;
 import org.knime.core.util.Pair;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 
 /**
@@ -144,6 +145,7 @@ GroupByTable {
      * @see #BigGroupByTable(ExecutionContext, BufferedDataTable, List,
      * ColumnAggregator[], GlobalSettings, boolean, ColumnNamePolicy, boolean)
      */
+    @SuppressWarnings("deprecation")
     @Deprecated
     public BigGroupByTable(final ExecutionContext exec,
             final BufferedDataTable inDataTable,
@@ -276,9 +278,9 @@ GroupByTable {
             }
             //compute the current row values
             for (final ColumnAggregator colAggr : member.getFirst()) {
-                final DataCell cell = row.getCell(origSpec.findColumnIndex(
-                        colAggr.getOriginalColName()));
-                colAggr.getOperator(getGlobalSettings()).compute(cell);
+                colAggr.getOperator(getGlobalSettings()).compute(
+                        exec, row, origSpec.findColumnIndex(
+                                colAggr.getOriginalColName()));
             }
             if (isEnableHilite()) {
                 member.getSecond().add(row.getKey());
@@ -297,12 +299,11 @@ GroupByTable {
      * @param currentGroup The current group
      * @return That string. */
     private String createGroupLabelForProgress(final DataCell[] currentGroup) {
-        StringBuilder b = new StringBuilder("(");
+        final StringBuilder b = new StringBuilder("(");
         for (int i = 0; i < currentGroup.length; i++) {
             b.append(i > 0 ? "; " : "");
             if (i > 3) {
                 b.append("...");
-                break;
             } else {
                 b.append('\"');
                 String s = currentGroup[i].toString();

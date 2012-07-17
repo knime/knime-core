@@ -50,6 +50,9 @@ package org.knime.base.data.aggregation;
 
 import org.knime.core.data.DataColumnSpec;
 
+import java.util.HashMap;
+import java.util.Map;
+
 
 /**
  * Contains the operator specific settings for a specific column such as
@@ -75,6 +78,13 @@ public class OperatorColumnSettings {
 
     /**The original {@link DataColumnSpec} of the column to aggregate.*/
     private final DataColumnSpec m_origColSpec;
+
+    /**This key value map allows the storing of arbitrary objects associated
+     * with a unique key which are accessible in the
+     * <code>AggregationMethod</code> implementations.
+     */
+    private final Map<String, Object> m_keyValueMap =
+        new HashMap<String, Object>();
 
     /**Constructor for class OperatorSeetings.
      *
@@ -115,5 +125,39 @@ public class OperatorColumnSettings {
      */
     public DataColumnSpec getOriginalColSpec() {
         return m_origColSpec;
+    }
+
+    /**
+     * Allows the adding of arbitrary objects with a given <tt>key</tt>.
+     * @param key the <tt>key</tt> to use. Must not be <code>null</code>.
+     * @param value the value to store. Must not be <code>null</code>.
+     * @return the previous value associated with <tt>key</tt>, or
+     *         <code>null</code> if there was no mapping for <tt>key</tt>.
+     * @since 2.6
+     */
+    public Object addValue(final String key, final Object value) {
+        if (key == null) {
+            throw new NullPointerException("key must not be null");
+        }
+        if (value == null) {
+            throw new NullPointerException("value must not be null");
+        }
+        return m_keyValueMap.put(key, value);
+    }
+
+    /**
+     * Returns the value to which the specified key is mapped,
+     * or {@code null} if this map contains no mapping for the key.
+     *
+     * @param key the key whose associated value is to be returned
+     * @return the value to which the specified key is mapped, or
+     *         {@code null} if this map contains no mapping for the key
+     * @since 2.6
+     */
+    public Object getValue(final String key) {
+        if (key == null) {
+            throw new NullPointerException("key must not be null");
+        }
+        return m_keyValueMap.get(key);
     }
 }
