@@ -301,6 +301,25 @@ public class ColumnSelectionPanel extends JPanel {
         return m_isRequired;
     }
 
+    /**
+     * Updates this filter panel by removing all current items and adding the
+     * columns according to the content of the argument <code>spec</code>. If
+     * a column name is provided and it is not filtered out the corresponding
+     * item in the combo box will be selected.
+     *
+     * Use the {@link #update(DataTableSpec, String, boolean)} method instead
+     * if the {@link ColumnSelectionPanel} contains the none and RowID option.
+     *
+     * @param spec To get the column names, types and the current index from.
+     * @param selColName The column name to be set as chosen.
+     * @throws NotConfigurableException If the spec does not contain at least
+     * one compatible type.
+     * @see #update(DataTableSpec, String, boolean)
+     */
+    public final void update(final DataTableSpec spec, final String selColName)
+    throws NotConfigurableException {
+        update(spec, selColName, false);
+    }
 
     /**
      * Updates this filter panel by removing all current items and adding the
@@ -310,10 +329,15 @@ public class ColumnSelectionPanel extends JPanel {
      *
      * @param spec To get the column names, types and the current index from.
      * @param selColName The column name to be set as chosen.
+     * @param useRowID set this parameter to <code>true</code> and the
+     * selColName to <code>null</code> if the the row id option should be
+     * selected
      * @throws NotConfigurableException If the spec does not contain at least
      * one compatible type.
+     * @since 2.6
      */
-    public final void update(final DataTableSpec spec, final String selColName)
+    public final void update(final DataTableSpec spec, final String selColName,
+            final boolean useRowID)
     throws NotConfigurableException {
         m_spec = spec;
         m_chooser.removeAllItems();
@@ -347,9 +371,9 @@ public class ColumnSelectionPanel extends JPanel {
             if (selectMe != null) {
                 m_chooser.setSelectedItem(selectMe);
             } else {
-                if (m_addNoneColOption) {
+                if (m_addNoneColOption && !useRowID) {
                     m_chooser.setSelectedItem(m_noneColSpec);
-                } else if (m_addRowIDOption) {
+                } else if (m_addRowIDOption && useRowID) {
                     m_chooser.setSelectedItem(m_rowIDColSpec);
                 } else {
                     // select last element

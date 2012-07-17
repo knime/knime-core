@@ -290,12 +290,10 @@ public class DialogComponentColumnNameSelection extends DialogComponent {
         try {
             final DataTableSpec spec =
                 (DataTableSpec)getLastTableSpec(m_specIndex);
+            boolean useRowID = getModel() instanceof SettingsModelColumnName
+                && ((SettingsModelColumnName)getModel()).useRowID();
             if (spec != null) {
-                m_chooser.update(spec, classCol);
-            }
-            if (getModel() instanceof SettingsModelColumnName
-                    && ((SettingsModelColumnName)getModel()).useRowID()) {
-                m_chooser.setRowIDSelected();
+                m_chooser.update(spec, classCol, useRowID);
             }
         } catch (final NotConfigurableException e1) {
             // we check the correctness of the table spec before, so
