@@ -588,9 +588,9 @@ public abstract class DecisionTreeNodeSplit extends DecisionTreeNode {
     }
 
     /**
-     * Removes the children at the given indices
-     * .
+     * Removes the children at the given indices.
      * @param indices the indices of the children to remove
+     * @since 2.6
      */
     public void removeChildren(final Set<Integer> indices) {
         DecisionTreeNode[] children
