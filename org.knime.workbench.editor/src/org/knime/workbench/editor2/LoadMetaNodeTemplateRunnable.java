@@ -51,8 +51,6 @@
 package org.knime.workbench.editor2;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.net.URI;
 
 import javax.swing.UIManager;
@@ -61,18 +59,13 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.swt.widgets.Display;
-import org.knime.core.internal.CorePlugin;
-import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.node.workflow.WorkflowPersistorVersion1xx;
+import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
-
 
 /**
  * A runnable which is used by the {@link WorkflowEditor} to load a workflow
@@ -85,18 +78,9 @@ import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
  * @author Fabian Dill, University of Konstanz
  */
 public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
-
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(LoadMetaNodeTemplateRunnable.class);
-
     private WorkflowManager m_parentWFM;
 
     private AbstractExplorerFileStore m_templateKNIMEFolder;
-
-    private Throwable m_throwable = null;
-
-    /** Message, which is non-null if the user canceled to the load. */
-    private String m_loadingCanceledMessage;
 
     private WorkflowLoadResult m_result;
 
@@ -104,7 +88,7 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
      *
      * @param wfm target workflow (where to insert)
      * @param templateKNIMEFolder the workflow dir from which the template
-     *        should be loaded
+     *            should be loaded
      */
     public LoadMetaNodeTemplateRunnable(final WorkflowManager wfm,
             final AbstractExplorerFileStore templateKNIMEFolder) {
@@ -113,63 +97,63 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
     }
 
     /**
-     *
-     * @return the throwable which was thrown during the loading of the workflow
-     * or null, if no throwable was thrown
-     */
-    Throwable getThrowable() {
-        return m_throwable;
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
     public void run(final IProgressMonitor pm) {
-        m_throwable = null;
-
         try {
             // create progress monitor
-            ProgressHandler progressHandler = new ProgressHandler(pm, 101,
-                    "Loading meta node template...");
-            final CheckCancelNodeProgressMonitor progressMonitor
-                = new CheckCancelNodeProgressMonitor(pm);
+            ProgressHandler progressHandler =
+                    new ProgressHandler(pm, 101,
+                            "Loading meta node template...");
+            final CheckCancelNodeProgressMonitor progressMonitor =
+                    new CheckCancelNodeProgressMonitor(pm);
             progressMonitor.addProgressListener(progressHandler);
 
             URI sourceURI = m_templateKNIMEFolder.toURI();
-            File parentFile = CorePlugin.resolveURItoLocalOrTempFile(
-                    sourceURI);
-            Display d = Display.getDefault();
+            File parentFile =
+                    ResolverUtil.resolveURItoLocalOrTempFile(sourceURI, pm);
+            if (pm.isCanceled()) {
+                throw new InterruptedException();
+            }
 
+            Display d = Display.getDefault();
             GUIWorkflowLoadHelper loadHelper =
-                new GUIWorkflowLoadHelper(d, parentFile.getName(), true);
+                    new GUIWorkflowLoadHelper(d, parentFile.getName(), true);
             WorkflowPersistorVersion1xx loadPersistor =
-                WorkflowManager.createLoadPersistor(parentFile, loadHelper);
+                    WorkflowManager.createLoadPersistor(parentFile, loadHelper);
             loadPersistor.setTemplateInformationLinkURI(sourceURI);
             loadPersistor.setNameOverwrite(parentFile.getName());
-            m_result = m_parentWFM.load(loadPersistor,
-                    new ExecutionMonitor(progressMonitor), false);
+            m_result =
+                    m_parentWFM.load(loadPersistor, new ExecutionMonitor(
+                            progressMonitor), false);
+            if (pm.isCanceled()) {
+                throw new InterruptedException();
+            }
             pm.subTask("Finished.");
             pm.done();
 
-            final IStatus status = createStatus(m_result,
-                    !m_result.getGUIMustReportDataLoadErrors());
+            final IStatus status =
+                    createStatus(m_result,
+                            !m_result.getGUIMustReportDataLoadErrors());
             final String message;
             switch (status.getSeverity()) {
-            case IStatus.OK:
-                message = "No problems during load.";
-                break;
-            case IStatus.WARNING:
-                message = "Warnings during load";
-                logPreseveLineBreaks("Warnings during load: "
-                        + m_result.getFilteredError(
-                                "", LoadResultEntryType.Warning), false);
-                break;
-            default:
-                message = "Errors during load";
-                logPreseveLineBreaks("Errors during load: "
-                        + m_result.getFilteredError(
-                                "", LoadResultEntryType.Warning), true);
+                case IStatus.OK:
+                    message = "No problems during load.";
+                    break;
+                case IStatus.WARNING:
+                    message = "Warnings during load";
+                    logPreseveLineBreaks(
+                            "Warnings during load: "
+                                    + m_result.getFilteredError("",
+                                            LoadResultEntryType.Warning), false);
+                    break;
+                default:
+                    message = "Errors during load";
+                    logPreseveLineBreaks(
+                            "Errors during load: "
+                                    + m_result.getFilteredError("",
+                                            LoadResultEntryType.Warning), true);
             }
             Display.getDefault().asyncExec(new Runnable() {
                 @Override
@@ -180,29 +164,8 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
                             "Workflow Load", message, status);
                 }
             });
-        } catch (FileNotFoundException fnfe) {
-            m_throwable = fnfe;
-            LOGGER.fatal("File not found", fnfe);
-        } catch (IOException ioe) {
-            m_throwable = ioe;
-            LOGGER.error("Could not load meta node from: "
-                        + m_templateKNIMEFolder.getName(), ioe);
-        } catch (InvalidSettingsException ise) {
-            LOGGER.error("Could not load meta node from: "
-                    + m_templateKNIMEFolder.getName(), ise);
-            m_throwable = ise;
-        } catch (UnsupportedWorkflowVersionException uve) {
-            m_loadingCanceledMessage =
-                "Canceled meta node load due to incompatible version";
-            LOGGER.info(m_loadingCanceledMessage, uve);
-        } catch (CanceledExecutionException cee) {
-            m_loadingCanceledMessage =
-                "Canceled loading meta node: "
-                + m_templateKNIMEFolder.getName();
-            LOGGER.info(m_loadingCanceledMessage, cee);
-        } catch (Throwable e) {
-            m_throwable = e;
-            LOGGER.error("Meta node could not be loaded. " + e.getMessage(), e);
+        } catch (Exception ex) {
+            throw new RuntimeException(ex);
         } finally {
             // IMPORTANT: Remove the reference to the file and the
             // editor!!! Otherwise the memory can not be freed later
@@ -211,28 +174,8 @@ public class LoadMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
         }
     }
 
-    /** @return True if the load process has been interrupted. */
-    public boolean hasLoadingBeenCanceled() {
-        return m_loadingCanceledMessage != null;
-    }
-
-    /** @return the loadingCanceledMessage, non-null if
-     * {@link #hasLoadingBeenCanceled()}. */
-    public String getLoadingCanceledMessage() {
-        return m_loadingCanceledMessage;
-    }
-
     /** @return the result */
     public WorkflowLoadResult getWorkflowLoadResult() {
         return m_result;
     }
-
-    /** Set fields to null so that they can get GC'ed. */
-    public void discard() {
-        m_result = null;
-        m_templateKNIMEFolder = null;
-        m_parentWFM = null;
-    }
-
 }
-

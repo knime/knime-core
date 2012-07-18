@@ -50,15 +50,21 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.progress.IProgressService;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.workbench.editor2.LoadMetaNodeTemplateRunnable;
@@ -70,7 +76,6 @@ import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
  * @author Bernd Wiswedel, KNIME.com, Zurich
  */
 public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
-
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(CreateMetaNodeTemplateCommand.class);
 
@@ -127,10 +132,6 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
                     m_templateKNIMEFolder);
             ps.busyCursorWhile(loadRunnable);
             WorkflowLoadResult result = loadRunnable.getWorkflowLoadResult();
-            if (result == null) {
-                throw new RuntimeException(
-                        "No load result, see log for details");
-            }
             m_container = result.getWorkflowManager();
             if (m_container == null) {
                 throw new RuntimeException("No template returned by load "
@@ -142,21 +143,39 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
             info.setSnapToGrid(m_snapToGrid);
             info.setIsDropLocation(true);
             m_container.setUIInformation(info);
-        } catch (Throwable t) {
-            // if fails notify the user
-            String error = "The selected node could not be created "
-                + "due to the following reason:\n" + t.getMessage();
-            LOGGER.debug(error, t);
-            MessageDialog.openError(Display.getDefault().
-                    getActiveShell(), "Node cannot be created.", error);
-            return;
-        } finally {
-            if (loadRunnable != null) {
-                loadRunnable.discard();
+        } catch (Throwable ex) {
+            while ((ex.getCause() != null) && (ex.getCause() != ex)) {
+                ex = ex.getCause();
+            }
+
+            String error = "The selected node could not be created";
+            if (ex instanceof FileNotFoundException) {
+                error += " because a file could not be found: " + ex.getMessage();
+                MessageDialog.openError(Display.getDefault().
+                        getActiveShell(), "Node cannot be created.", error);
+            } else if (ex instanceof IOException) {
+                error += " because of an I/O error: " + ex.getMessage();
+                MessageDialog.openError(Display.getDefault().
+                        getActiveShell(), "Node cannot be created.", error);
+            } else if (ex instanceof InvalidSettingsException) {
+                error += " because the metanode contains invalid settings: " + ex.getMessage();
+                MessageDialog.openError(Display.getDefault().
+                        getActiveShell(), "Node cannot be created.", error);
+            } else if (ex instanceof UnsupportedWorkflowVersionException) {
+                error += " because the metanode version is incompatible: " + ex.getMessage();
+                MessageDialog.openError(Display.getDefault().
+                        getActiveShell(), "Node cannot be created.", error);
+            } else if ((ex instanceof CanceledExecutionException) || (ex instanceof InterruptedException)) {
+                LOGGER.info("Metanode loading was canceled by the user", ex);
+            } else {
+                error += ": " + ex.getMessage();
+                MessageDialog.openError(Display.getDefault().
+                        getActiveShell(), "Node cannot be created.", error);
             }
         }
-
     }
+
+
 
     /** {@inheritDoc} */
     @Override

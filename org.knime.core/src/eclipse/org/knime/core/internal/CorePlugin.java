@@ -56,10 +56,10 @@ import java.net.URI;
 import java.net.URL;
 
 import org.knime.core.node.NodeLogger;
+import org.knime.core.util.pathresolve.ResolverUtil;
 import org.knime.core.util.pathresolve.URIToFileResolve;
 import org.osgi.framework.BundleActivator;
 import org.osgi.framework.BundleContext;
-import org.osgi.util.tracker.ServiceTracker;
 
 /**
  * Plugin class that is initialized when the plugin project is started. It will
@@ -99,8 +99,6 @@ public class CorePlugin implements BundleActivator {
 
     }
 
-    private ServiceTracker m_serviceTracker;
-
     /**
      * {@inheritDoc}
      */
@@ -118,10 +116,6 @@ public class CorePlugin implements BundleActivator {
 
         }
 
-        m_serviceTracker = new ServiceTracker(
-                context, URIToFileResolve.class.getName(), null);
-        m_serviceTracker.open();
-
         /* Unfortunately we have to activate the plugin
          * org.eclipse.ecf.filetransfer explicitly by accessing one of the
          * contained classed. This will trigger the initialization of the
@@ -138,7 +132,6 @@ public class CorePlugin implements BundleActivator {
     /** {@inheritDoc} */
     @Override
     public void stop(final BundleContext context) throws Exception {
-        m_serviceTracker.close();
         instance = null;
     }
 
@@ -157,36 +150,12 @@ public class CorePlugin implements BundleActivator {
      * @return The local file underlying the URI (if any)
      * @throws IOException If no service is registered or the URI can't be
      * resolved.
+     *
+     * @deprecated Use {@link ResolverUtil#resolveURItoLocalFile(URI)} instead
      */
+    @Deprecated
     public static File resolveURItoLocalFile(final URI uri) throws IOException {
-        if (uri == null) {
-            throw new IOException("Can't resolve null URI to file");
-        }
-        // try resolving file-URIs without helper
-        String scheme = uri.getScheme();
-        if (scheme == null) {
-            throw new IOException("Can't resolve URI \"" + uri
-                    + "\": it does not have a scheme");
-        }
-        if (scheme.equalsIgnoreCase("file")) {
-            try {
-                return new File(uri);
-            } catch (IllegalArgumentException e) {
-                throw new IOException("Can't resolve file URI \"" + uri
-                        + "\" to file", e);
-            }
-        }
-        if (instance == null) {
-            throw new IOException("Core bundle is not active, "
-                    + "can't resolve URI \"" + uri + "\"");
-        }
-        ServiceTracker serviceTracker = instance.m_serviceTracker;
-        URIToFileResolve res = (URIToFileResolve)serviceTracker.getService();
-        if (res == null) {
-            throw new IOException("Can't resolve URI \"" + uri
-                    + "\"; no URI resolve service registered");
-        }
-        return res.resolveToFile(uri);
+        return ResolverUtil.resolveURItoLocalFile(uri);
     }
 
     /** Fetches a service implementing the {@link URIToFileResolve} interface
@@ -196,19 +165,11 @@ public class CorePlugin implements BundleActivator {
      *      URI (if any)
      * @throws IOException If no service is registered or the URI can't be
      *      resolved.
+     * @deprecated Use {@link ResolverUtil#resolveURItoLocalOrTempFile(URI)} instead
      */
+    @Deprecated
     public static File resolveURItoLocalOrTempFile(final URI uri)
             throws IOException {
-        File localFile = resolveURItoLocalFile(uri);
-        if (localFile != null) {
-            return localFile;
-        }
-        ServiceTracker serviceTracker = instance.m_serviceTracker;
-        URIToFileResolve res = (URIToFileResolve)serviceTracker.getService();
-        if (res == null) {
-            throw new IOException("Can't resolve URI \"" + uri
-                    + "\"; no URI resolve service registered");
-        }
-        return res.resolveToLocalOrTempFile(uri);
+        return ResolverUtil.resolveURItoLocalOrTempFile(uri);
     }
 }

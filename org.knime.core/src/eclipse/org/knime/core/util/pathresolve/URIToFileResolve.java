@@ -52,22 +52,25 @@ import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+
 /**
  * A service interface to convert a URI into a local file. The URI is usually
  * (always?) either a file URI or a URI pointing into the team space (also file
  * based), e.g. "knime:/MOUNT_ID/some/path/workflow.knime".
  *
- * <p>This interface is used to resolve URIs that are stored as part of
- * referenced meta node templates.
+ * <p>
+ * This interface is used to resolve URIs that are stored as part of referenced
+ * meta node templates. It is not meant to be implemented by third-party plug-ins.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @noimplement
  */
 public interface URIToFileResolve {
-
-
-    /** Resolves the given URI into a local file or throws an exception if
-     * that isn't possible (e.g. because the URI does not represent a local
-     * file).
+    /**
+     * Resolves the given URI into a local file or throws an exception if that
+     * isn't possible (e.g. because the URI does not represent a local file).
+     *
      * @param uri The URI, e.g. "knime:/MOUNT_ID/some/path/workflow.knime"
      * @return the local file represented by the URI.
      * @throws IOException If the URI can't be resolved
@@ -75,17 +78,44 @@ public interface URIToFileResolve {
     public File resolveToFile(final URI uri) throws IOException;
 
     /**
-    * Resolves the given URI into a local file. If the URI does not represent
-    * a local file (e.g. a remote file on a server) it is downloaded first to
-    * a temporary directory and the the temporary copy is returned. If it
-    * represents a local file the behavior is the same as in
-    * {@link #resolveToFile(URI)}.
-    *
-    * @param uri The URI, e.g. "knime:/MOUNT_ID/some/path/workflow.knime"
-    * @return the file represented by the URI or a temporary copy of that file
-    *       if it represents a remote file
-    * @throws IOException If the URI can't be resolved
-    */
-   public File resolveToLocalOrTempFile(final URI uri) throws IOException;
+     * Resolves the given URI into a local file or throws an exception if that
+     * isn't possible (e.g. because the URI does not represent a local file).
+     *
+     * @param uri The URI, e.g. "knime:/MOUNT_ID/some/path/workflow.knime"
+     * @param monitor a progress monitor, must not be <code>null</code>
+     * @return the local file represented by the URI.
+     * @throws IOException If the URI can't be resolved
+     * @since 2.6
+     */
+    public File resolveToFile(final URI uri, IProgressMonitor monitor) throws IOException;
 
+    /**
+     * Resolves the given URI into a local file. If the URI does not represent a
+     * local file (e.g. a remote file on a server) it is downloaded first to a
+     * temporary directory and the the temporary copy is returned. If it
+     * represents a local file the behavior is the same as in
+     * {@link #resolveToFile(URI)}.
+     *
+     * @param uri The URI, e.g. "knime:/MOUNT_ID/some/path/workflow.knime"
+     * @return the file represented by the URI or a temporary copy of that file
+     *         if it represents a remote file
+     * @throws IOException If the URI can't be resolved
+     */
+    public File resolveToLocalOrTempFile(final URI uri) throws IOException;
+
+    /**
+     * Resolves the given URI into a local file. If the URI does not represent a
+     * local file (e.g. a remote file on a server) it is downloaded first to a
+     * temporary directory and the the temporary copy is returned. If it
+     * represents a local file the behavior is the same as in
+     * {@link #resolveToFile(URI)}.
+     *
+     * @param uri The URI, e.g. "knime:/MOUNT_ID/some/path/workflow.knime"
+     * @param monitor a progress monitor, must not be <code>null</code>
+     * @return the file represented by the URI or a temporary copy of that file
+     *         if it represents a remote file
+     * @throws IOException If the URI can't be resolved
+     * @since 2.6
+     */
+    public File resolveToLocalOrTempFile(final URI uri, IProgressMonitor monitor) throws IOException;
 }

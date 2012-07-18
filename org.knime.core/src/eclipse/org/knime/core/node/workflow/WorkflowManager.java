@@ -88,7 +88,6 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
-import org.knime.core.internal.CorePlugin;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -149,6 +148,7 @@ import org.knime.core.quickform.in.QuickFormInputNode;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.LockFailedException;
 import org.knime.core.util.Pair;
+import org.knime.core.util.pathresolve.ResolverUtil;
 
 /**
  * Container holding nodes and connections of a (sub) workflow. In contrast
@@ -5416,7 +5416,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         URI sourceURI = linkInfo.getSourceURI();
         WorkflowPersistorVersion1xx loadPersistor;
         try {
-            File localDir = CorePlugin.resolveURItoLocalOrTempFile(sourceURI);
+            File localDir = ResolverUtil.resolveURItoLocalOrTempFile(sourceURI);
             loadPersistor = WorkflowManager.createLoadPersistor(
                     localDir, loadHelper);
             loadPersistor.preLoadNodeContainer(null, null,
@@ -5509,7 +5509,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         URI sourceURI = templInfo.getSourceURI();
         File localDir;
         try {
-            localDir = CorePlugin.resolveURItoLocalOrTempFile(sourceURI);
+            localDir = ResolverUtil.resolveURItoLocalOrTempFile(sourceURI);
         } catch (IOException e) {
             String error = "Failed to update meta node reference: "
                 + e.getMessage();

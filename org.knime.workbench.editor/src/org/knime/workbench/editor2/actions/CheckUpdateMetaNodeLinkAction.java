@@ -55,6 +55,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.MultiStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.dialogs.ErrorDialog;
@@ -204,8 +205,8 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
         }
         List<NodeID> updateList = runner.getUpdateList();
         Status status = runner.getStatus();
-        if (status.getSeverity() == Status.ERROR
-                || status.getSeverity() == Status.WARNING) {
+        if (status.getSeverity() == IStatus.ERROR
+                || status.getSeverity() == IStatus.WARNING) {
             ErrorDialog.openError(
                     Display.getDefault().getActiveShell(),
                     null, "Errors while checking for "
@@ -294,6 +295,7 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
             WorkflowLoadHelper lH = new WorkflowLoadHelper(true);
             final String idName = KNIMEEditorPlugin.PLUGIN_ID;
             Status[] stats = new Status[m_candidateList.size()];
+            int overallStatus = IStatus.OK;
             for (int i = 0; i < m_candidateList.size(); i++) {
                 NodeID id = m_candidateList.get(i);
                 WorkflowManager wm =
@@ -308,13 +310,19 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
                     } else {
                         msg = "No update available for " + wm.getNameWithID();
                     }
-                    stat = new Status(Status.OK, idName, msg);
+                    stat = new Status(IStatus.OK, idName, msg);
                 } catch (Exception ex) {
+                    Throwable cause = ex;
+                    while ((cause.getCause() != null) && (cause.getCause() != cause)) {
+                        cause = cause.getCause();
+                    }
+
                     String msg = "Unable to check for update on meta "
                         + "node \"" + wm.getNameWithID() + "\": "
-                        + ex.getMessage();
-                    LOGGER.warn(msg, ex);
-                    stat = new Status(Status.WARNING , idName, msg, ex);
+                        + cause.getMessage();
+                    LOGGER.warn(msg, cause);
+                    stat = new Status(IStatus.WARNING , idName, msg, null);
+                    overallStatus = IStatus.WARNING;
                 }
                 if (monitor.isCanceled()) {
                     throw new InterruptedException("Update check canceled");
@@ -323,7 +331,7 @@ public class CheckUpdateMetaNodeLinkAction extends AbstractNodeAction {
                 monitor.worked(1);
             }
             m_status = new MultiStatus(
-                    idName, Status.OK, stats, "Meta Node Link Updates", null);
+                    idName, overallStatus, stats, "Some Meta Node Link Updates failed", null);
             monitor.done();
         }
 
