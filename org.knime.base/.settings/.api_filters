@@ -1,13 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.base" version="2">
-    <resource path="META-INF/MANIFEST.MF">
-        <filter id="923795461">
-            <message_arguments>
-                <message_argument value="2.6.0.qualifier"/>
-                <message_argument value="2.5.4.0032957"/>
-            </message_arguments>
-        </filter>
-    </resource>
     <resource path="META-INF/MANIFEST.MF" type="Jama.CholeskyDecomposition">
         <filter id="305365105">
             <message_arguments>
@@ -376,14 +368,6 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.base.node.preproc.correlation.pmcc.PMCCPortObjectAndSpec">
-        <filter id="305324134">
-            <message_arguments>
-                <message_argument value="org.knime.base.node.preproc.correlation.pmcc.PMCCPortObjectAndSpec"/>
-                <message_argument value="org.knime.base_2.6.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.base.node.preproc.filter.column.FilterColumnNodeFactory">
         <filter id="305324134">
             <message_arguments>
@@ -396,26 +380,6 @@
         <filter id="305324134">
             <message_arguments>
                 <message_argument value="org.knime.base.node.preproc.joiner.ColumnPairsSelectionPanel"/>
-                <message_argument value="org.knime.base_2.5.4"/>
-            </message_arguments>
-        </filter>
-        <filter id="305324134">
-            <message_arguments>
-                <message_argument value="org.knime.base.node.preproc.joiner.ColumnPairsSelectionPanel"/>
-                <message_argument value="org.knime.base_2.6.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="META-INF/MANIFEST.MF" type="org.knime.base.node.preproc.joiner.ColumnSpecListRenderer">
-        <filter id="305324134">
-            <message_arguments>
-                <message_argument value="org.knime.base.node.preproc.joiner.ColumnSpecListRenderer"/>
-                <message_argument value="org.knime.base_2.5.4"/>
-            </message_arguments>
-        </filter>
-        <filter id="305324134">
-            <message_arguments>
-                <message_argument value="org.knime.base.node.preproc.joiner.ColumnSpecListRenderer"/>
                 <message_argument value="org.knime.base_2.6.0"/>
             </message_arguments>
         </filter>
