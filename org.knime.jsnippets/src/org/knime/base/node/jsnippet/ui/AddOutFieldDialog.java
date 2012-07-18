@@ -106,13 +106,13 @@ import org.knime.core.node.workflow.FlowVariable.Type;
 public final class AddOutFieldDialog extends JDialog {
     private JavaField m_result;
 
-    private OutFieldsTableModel m_model;
-    private DataTableSpec m_spec;
-    private Map<String, FlowVariable> m_flowVars;
-    private boolean m_flowVarsOnly;
+    private final OutFieldsTableModel m_model;
+    private final DataTableSpec m_spec;
+    private final Map<String, FlowVariable> m_flowVars;
+    private final boolean m_flowVarsOnly;
 
     private final JComboBox m_fieldType;
-    private JCheckBox m_isArray;
+    private final JCheckBox m_isArray;
     private final JRadioButton m_replace;
     private final JRadioButton m_append;
 
@@ -153,6 +153,7 @@ public final class AddOutFieldDialog extends JDialog {
         m_fieldType = new JComboBox();
         m_knimeName = new JTextField();
         m_knimeType = new JComboBox();
+        m_isArray = new JCheckBox("Is array");
 
         // instantiate the components of the dialog
         JPanel p = createPanel();
@@ -309,7 +310,6 @@ public final class AddOutFieldDialog extends JDialog {
             c.gridy++;
             c.gridx = 1;
             c.insets = rightInsets;
-            m_isArray = new JCheckBox("Is array");
             p.add(m_isArray, c);
         }
 
