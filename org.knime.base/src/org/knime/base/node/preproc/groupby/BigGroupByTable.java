@@ -145,7 +145,6 @@ GroupByTable {
      * @see #BigGroupByTable(ExecutionContext, BufferedDataTable, List,
      * ColumnAggregator[], GlobalSettings, boolean, ColumnNamePolicy, boolean)
      */
-    @SuppressWarnings("deprecation")
     @Deprecated
     public BigGroupByTable(final ExecutionContext exec,
             final BufferedDataTable inDataTable,

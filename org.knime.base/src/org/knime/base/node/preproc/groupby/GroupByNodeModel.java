@@ -148,7 +148,8 @@ public class GroupByNodeModel extends NodeModel {
     /** Configuration key for the enable hilite option. */
     protected static final String CFG_ENABLE_HILITE = "enableHilite";
 
-    /** Configuration key for the sort in memory option. */
+    /** This setting was used prior KNIME 2.6. */
+    @Deprecated
     protected static final String CFG_SORT_IN_MEMORY = "sortInMemory";
 
     /** Configuration key for the retain order option. */
@@ -172,6 +173,10 @@ public class GroupByNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_enableHilite =
         new SettingsModelBoolean(CFG_ENABLE_HILITE, false);
+    
+    //This setting was used prior KNNIME 2.6
+    private final SettingsModelBoolean m_sortInMemory =
+        new SettingsModelBoolean(CFG_SORT_IN_MEMORY, false);
 
     private final SettingsModelBoolean m_retainOrder = new SettingsModelBoolean(
             CFG_RETAIN_ORDER, false);
@@ -267,6 +272,8 @@ public class GroupByNodeModel extends NodeModel {
         m_groupByCols.saveSettingsTo(settings);
         m_maxUniqueValues.saveSettingsTo(settings);
         m_enableHilite.saveSettingsTo(settings);
+        //this setting was used prior KNIME 2.6
+        m_sortInMemory.saveSettingsTo(settings);
         if (m_columnAggregators.isEmpty() && m_oldNominal != null
                 && m_oldNumerical != null) {
             // these settings were used prior Knime 2.0
@@ -650,7 +657,6 @@ public class GroupByNodeModel extends NodeModel {
      * @see #createGroupByTable(ExecutionContext, BufferedDataTable, List,
      * boolean, boolean, List)
      */
-    @SuppressWarnings("deprecation")
     @Deprecated
     protected final GroupByTable createGroupByTable(final ExecutionContext exec,
             final BufferedDataTable table, final List<String> groupByCols,
@@ -662,7 +668,7 @@ public class GroupByNodeModel extends NodeModel {
         final ColumnNamePolicy colNamePolicy = ColumnNamePolicy
         .getPolicy4Label(m_columnNamePolicy.getStringValue());
         final GlobalSettings globalSettings =
-            createGlobalSettings(table, groupByCols, maxUniqueVals);
+            createGlobalSettings(exec, table, groupByCols, maxUniqueVals);
 
         //reset all aggregators in order to use enforce operator creation
         for (final ColumnAggregator colAggr : aggregators) {
@@ -697,14 +703,14 @@ public class GroupByNodeModel extends NodeModel {
     /**
      * Creates the {@link GlobalSettings} object that is passed to all
      * {@link AggregationMethod}s.
-     *
+     * @param exec the {@link ExecutionContext}
      * @param table the {@link BufferedDataTable}
      * @param groupByCols the names of the columns to group by
      * @param maxUniqueVals the maximum number of unique values per group
      * @return the {@link GlobalSettings} object to use
      * @since 2.6
      */
-    protected GlobalSettings createGlobalSettings(
+    protected GlobalSettings createGlobalSettings(final ExecutionContext exec,
             final BufferedDataTable table, final List<String> groupByCols,
             final int maxUniqueVals) {
         return new GlobalSettings(groupByCols,

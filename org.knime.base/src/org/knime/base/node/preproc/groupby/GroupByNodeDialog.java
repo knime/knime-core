@@ -116,6 +116,12 @@ public class GroupByNodeDialog extends NodeDialogPane {
         new SettingsModelString(GroupByNodeModel.CFG_VALUE_DELIMITER,
             GlobalSettings.STANDARD_DELIMITER);
 
+    /** This setting was used prior KNIME 2.6. 
+     * @deprecated */
+    @Deprecated
+    private final SettingsModelBoolean m_sortInMemory =
+        new SettingsModelBoolean(GroupByNodeModel.CFG_SORT_IN_MEMORY, false);
+
     private final SettingsModelBoolean m_retainOrder =
         new SettingsModelBoolean(GroupByNodeModel.CFG_RETAIN_ORDER, false);
 
@@ -340,6 +346,8 @@ public class GroupByNodeDialog extends NodeDialogPane {
         m_maxUniqueValues.saveSettingsTo(settings);
         m_enableHilite.saveSettingsTo(settings);
         m_valueDelimiter.saveSettingsTo(settings);
+        // This setting was used prior KNIME 2.6
+        m_sortInMemory.saveSettingsTo(settings);
         m_columnNamePolicy.saveSettingsTo(settings);
         m_aggrColPanel.saveSettingsTo(settings);
         m_retainOrder.saveSettingsTo(settings);

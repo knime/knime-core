@@ -132,7 +132,6 @@ public class MemoryGroupByTable extends GroupByTable {
      * @see #MemoryGroupByTable(ExecutionContext, BufferedDataTable, List,
      * ColumnAggregator[], GlobalSettings, boolean, ColumnNamePolicy, boolean)
      */
-    @SuppressWarnings("deprecation")
     @Deprecated
     protected MemoryGroupByTable(final ExecutionContext exec,
             final BufferedDataTable inDataTable, final List<String> groupByCols,
