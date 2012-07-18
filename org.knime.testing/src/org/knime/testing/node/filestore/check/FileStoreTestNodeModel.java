@@ -105,14 +105,10 @@ final class FileStoreTestNodeModel extends NodeModel {
                     continue;
                 }
                 LargeFileStoreValue v = (LargeFileStoreValue)c;
-                LargeFile lf = v.acquireLargeFile();
-                try {
-                    long seed = lf.read();
-                    if (seed != v.getSeed()) {
-                        throw new Exception("Unequal in row " + r.getKey());
-                    }
-                } finally {
-                    v.releaseLargeFile();
+                LargeFile lf = v.getLargeFile();
+                long seed = lf.read();
+                if (seed != v.getSeed()) {
+                    throw new Exception("Unequal in row " + r.getKey());
                 }
             }
             exec.checkCanceled();

@@ -67,7 +67,7 @@ import org.knime.core.data.filestore.FileStore;
  */
 public final class LargeFile {
 
-    public static final int SIZE_OF_FILE = 1024 * 1024;
+    public static final int SIZE_OF_FILE = 1024;
 
     private final FileStore m_fileStore;
     private final long m_seed;

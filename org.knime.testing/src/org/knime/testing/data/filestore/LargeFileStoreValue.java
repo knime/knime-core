@@ -58,9 +58,7 @@ import org.knime.core.data.DataValue;
  */
 public interface LargeFileStoreValue extends DataValue {
 
-    public LargeFile acquireLargeFile();
-
-    public void releaseLargeFile();
+    public LargeFile getLargeFile();
 
     public long getSeed();
 
