@@ -51,7 +51,7 @@
 package org.knime.base.node.stats.testing.ttest;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -144,11 +144,11 @@ public class TwoSampleTTestStatistics {
         m_tTest = new KnimeTTest();
         m_missingGroup = new MutableInteger(0);
 
-        m_gstats = new HashMap<Group, SummaryStatistics>();
+        m_gstats = new LinkedHashMap<Group, SummaryStatistics>();
         m_gstats.put(Group.GroupX, new SummaryStatistics());
         m_gstats.put(Group.GroupY, new SummaryStatistics());
         m_stats = new SummaryStatistics();
-        m_missing = new HashMap<Group, MutableInteger>();
+        m_missing = new LinkedHashMap<Group, MutableInteger>();
         m_missing.put(Group.GroupX, new MutableInteger(0));
         m_missing.put(Group.GroupY, new MutableInteger(0));
     }

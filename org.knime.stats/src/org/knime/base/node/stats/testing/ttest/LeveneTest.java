@@ -108,14 +108,36 @@ public class LeveneTest {
 
         int testColumnCount = m_testColumns.length;
 
-        // The Levene-Test requires a second run over the data
+        LeveneTestPreProcessing[] levenePre =
+            new LeveneTestPreProcessing[testColumnCount];
+        for (int i = 0; i < testColumnCount; i++) {
+            levenePre[i] = new LeveneTestPreProcessing(m_gstats.get(i));
+        }
+        if (m_groups.size() > 2) {
+            // we can skip the pre-processing for a groups size of two.
+            for (DataRow row : table) {
+                String group = row.getCell(groupingIndex).toString();
+                for (int i = 0; i < testColumnCount; i++) {
+                    if (group == null) {
+                        continue;
+                    }
+                    int gIndex = m_groups.indexOf(group);
+                    DataCell cell = row.getCell(testColumnsIndex[i]);
+                    if (!cell.isMissing()) {
+                        DoubleValue value = (DoubleValue)cell;
+                        levenePre[i].addValue(value.getDoubleValue(), gIndex);
+                    }
+                }
+            }
+        }
+
         LeveneTestStatistics[] result =
             new LeveneTestStatistics[testColumnCount];
         for (int i = 0; i < testColumnCount; i++) {
             result[i] = new LeveneTestStatistics(m_testColumns[i],
-                    m_groups, m_gstats.get(i));
+                    m_groups, levenePre[i]);
         }
-
+        // a second run over the data for a group size greater than two
         for (DataRow row : table) {
             String group = row.getCell(groupingIndex).toString();
             for (int i = 0; i < testColumnCount; i++) {

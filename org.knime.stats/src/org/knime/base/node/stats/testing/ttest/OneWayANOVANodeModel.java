@@ -102,8 +102,8 @@ public class OneWayANOVANodeModel extends NodeModel
                 m_settings.getGroupingColumn(),
                 groups,
                 getGroupSummaryStats(result));
-        LeveneTestStatistics[] leveneResult =
-            leveneTest.execute(inData[0], exec);
+        LeveneTestStatistics[] leveneResult = leveneTest.execute(
+                inData[0], exec);
         leveneResult[0].getTTestCells();
 
         m_descStats = getDescriptiveStatisticsTable(result, exec);

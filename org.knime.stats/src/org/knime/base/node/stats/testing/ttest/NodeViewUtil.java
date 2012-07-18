@@ -50,6 +50,7 @@
  */
 package org.knime.base.node.stats.testing.ttest;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -60,7 +61,6 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
-import org.knime.core.data.IntervalValue;
 import org.knime.core.data.StringValue;
 import org.knime.core.node.BufferedDataTable;
 
@@ -121,7 +121,7 @@ public class NodeViewUtil {
      * @param buffer append to this buffer
      */
     public static  void renderDataTable(final BufferedDataTable table,
-            final String rowHeader, final Set<String> exclude,
+            final String rowHeader, final Collection<String> exclude,
             final Map<String, String> colHeaders,
             final StringBuilder buffer) {
         int rowHeaderI = table.getDataTableSpec().findColumnIndex(rowHeader);
@@ -169,7 +169,11 @@ public class NodeViewUtil {
      */
     public static void renderDataCell(final DataCell cell,
             final StringBuilder buffer) {
-        if (cell.getType().isCompatible(IntervalValue.class)) {
+        if (cell.isMissing()) {
+            buffer.append("<td></td>");
+            return;
+        }
+        if (cell.getType().isCompatible(IntValue.class)) {
             IntValue value = (IntValue)cell;
             buffer.append("<td class=\"numeric\">");
             buffer.append(value.getIntValue());

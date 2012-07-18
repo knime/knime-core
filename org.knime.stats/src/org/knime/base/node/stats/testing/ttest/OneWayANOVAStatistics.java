@@ -53,9 +53,9 @@ package org.knime.base.node.stats.testing.ttest;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.commons.math3.distribution.FDistribution;
 import org.apache.commons.math3.distribution.TDistribution;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
-import org.apache.commons.math3.stat.inference.TTest;
 import org.apache.commons.math3.util.FastMath;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTableSpec;
@@ -79,14 +79,10 @@ import org.knime.stats.StatsUtil;
  * @author Heiko Hofer
  */
 public class OneWayANOVAStatistics {
-    public static final String VARIANCE_ASSUMPTION = "Variance Assumption";
-    public static final StringCell EQUAL_VARIANCES_ASSUMED =
-        new StringCell("Equal variances assumed");
-    public static final StringCell EQUAL_VARIANCES_NOT_ASSUMED =
-        new StringCell("Equal variances not assumed");
-    public static final String T_VALUE = "t";
+
+    public static final String F_VALUE = "F";
     public static final String DEGREES_OF_FREEDOM = "df";
-    public static final String P_VALUE = "p-value (2-tailed)";
+    public static final String P_VALUE = "p-value";
 
     public static final String TEST_COLUMN = "Test Column";
     public static final String GROUP = "Group";
@@ -98,9 +94,6 @@ public class OneWayANOVAStatistics {
     public static final String STANDARD_DEVIATION = "Standard Deviation";
     public static final String STANDARD_ERROR = "Standard Error Mean";
 
-    public static final String MEAN_DIFFERENCE = "Mean Difference";
-    public static final String STANDARD_ERROR_DIFFERENCE =
-        "Standard Error Difference";
     public static final String CONFIDENCE_INTERVAL_PROBABILITY =
         "Confidence Interval Probability";
     public static final String CONFIDENCE_INTERVAL_LOWER_BOUND =
@@ -109,6 +102,15 @@ public class OneWayANOVAStatistics {
         "Confidence Interval of the Difference (Upper Bound)";
     public static final String MINIMUM = "Minimum";
     public static final String MAXIMUM = "Maximum";
+
+    public static final String SUM_OF_SQUARES = "Sum of Squares";
+    public static final String MEAN_SQUARE = "Mean Square";
+
+    public static final String SOURCE = "Source";
+    public static final String SOURCE_BETWEEN_GROUPS = "Between Groups";
+    public static final String SOURCE_WITHIN_GROUPS = "Within Groups";
+    public static final String SOURCE_TOTAL = "Total";
+
 
     /** the test column. */
     private String m_column;
@@ -124,8 +126,6 @@ public class OneWayANOVAStatistics {
     private List<MutableInteger> m_missing;
     /** number of missing values in the grouping column */
     private MutableInteger m_missingGroup;
-    /** Dummy object to access protected methods of {@link TTest} */
-    private KnimeTTest m_tTest;
 
     /**
      * @param column the test column
@@ -140,7 +140,6 @@ public class OneWayANOVAStatistics {
         m_column = column;
         m_confidenceIntervalProp = confindeceIntervalProb;
         m_groups = groups;
-        m_tTest = new KnimeTTest();
         m_missingGroup = new MutableInteger(0);
 
         m_stats = new SummaryStatistics();
@@ -248,14 +247,14 @@ public class OneWayANOVAStatistics {
         for (int i = 0; i < m_groups.size(); i++) {
             cells.add(getGroupStatistics(i));
         }
-
+        cells.add(getGroupsTotalStatistics());
         return cells;
     }
 
     /**
      * Get descriptive statistics for the given Group.
-     * @param group the group
-     * @return the
+     * @param groupIndex the index of the group
+     * @return the descriptive statistics for this group.
      */
     public List<DataCell> getGroupStatistics(final int groupIndex) {
         List<DataCell> cells = new ArrayList<DataCell>();
@@ -270,10 +269,63 @@ public class OneWayANOVAStatistics {
         cells.add(new DoubleCell(StatsUtil.getStandardError(stats)));
         cells.add(new DoubleCell(m_confidenceIntervalProp));
 
+        long df = stats.getN() - 1;
+        TDistribution distribution = new TDistribution(df);
+        double tValue = FastMath.abs(
+                distribution.inverseCumulativeProbability(
+                        (1 - m_confidenceIntervalProp) / 2));
+        double confidenceDelta = tValue * StatsUtil.getStandardError(stats);
+        double confidenceLowerBound = stats.getMean() - confidenceDelta;
+        double confidenceUpperBound = stats.getMean() + confidenceDelta;
+
+
+        cells.add(new DoubleCell(confidenceLowerBound));
+        cells.add(new DoubleCell(confidenceUpperBound));
+
         cells.add(new DoubleCell(stats.getMin()));
         cells.add(new DoubleCell(stats.getMax()));
         return cells;
     }
+
+    /**
+     * Get descriptive statistics for all groups.
+     * @return the descriptive statistics for all groups
+     */
+    public List<DataCell> getGroupsTotalStatistics() {
+        List<DataCell> cells = new ArrayList<DataCell>();
+        cells.add(new StringCell(m_column));
+        cells.add(new StringCell("Total"));
+        SummaryStatistics stats = m_stats;
+        cells.add(new IntCell((int)stats.getN()));
+        int missingCount = 0;
+        for (MutableInteger m : m_missing) {
+            missingCount += m.intValue();
+        }
+        cells.add(new IntCell(missingCount));
+        cells.add(new IntCell(m_missingGroup.intValue()));
+        cells.add(new DoubleCell(stats.getMean()));
+        cells.add(new DoubleCell(stats.getStandardDeviation()));
+        cells.add(new DoubleCell(StatsUtil.getStandardError(stats)));
+        cells.add(new DoubleCell(m_confidenceIntervalProp));
+
+        long df = stats.getN() - 1;
+        TDistribution distribution = new TDistribution(df);
+        double tValue = FastMath.abs(
+                distribution.inverseCumulativeProbability(
+                        (1 - m_confidenceIntervalProp) / 2));
+        double confidenceDelta = tValue * StatsUtil.getStandardError(stats);
+        double confidenceLowerBound = stats.getMean() - confidenceDelta;
+        double confidenceUpperBound = stats.getMean() + confidenceDelta;
+
+
+        cells.add(new DoubleCell(confidenceLowerBound));
+        cells.add(new DoubleCell(confidenceUpperBound));
+
+        cells.add(new DoubleCell(stats.getMin()));
+        cells.add(new DoubleCell(stats.getMax()));
+        return cells;
+    }
+
 
     /**
      * Get the spec of the group statistics table.
@@ -282,24 +334,18 @@ public class OneWayANOVAStatistics {
     public static DataTableSpec getTableSpec() {
         return new DataTableSpec(new String[] {
                 TEST_COLUMN
-                , VARIANCE_ASSUMPTION
-                , T_VALUE
+                , SOURCE
+                , SUM_OF_SQUARES
                 , DEGREES_OF_FREEDOM
+                , MEAN_SQUARE
+                , F_VALUE
                 , P_VALUE
-                , MEAN_DIFFERENCE
-                , STANDARD_ERROR_DIFFERENCE
-                , CONFIDENCE_INTERVAL_PROBABILITY
-                , CONFIDENCE_INTERVAL_LOWER_BOUND
-                , CONFIDENCE_INTERVAL_UPPER_BOUND
                 },
                 new DataType[] {
                 StringCell.TYPE
                 , StringCell.TYPE
                 , DoubleCell.TYPE
-                , DoubleCell.TYPE
-                , DoubleCell.TYPE
-                , DoubleCell.TYPE
-                , DoubleCell.TYPE
+                , IntCell.TYPE
                 , DoubleCell.TYPE
                 , DoubleCell.TYPE
                 , DoubleCell.TYPE
@@ -334,131 +380,59 @@ public class OneWayANOVAStatistics {
      */
     public List<List<DataCell>> getTTestCells() {
         List<List<DataCell>> cells = new ArrayList<List<DataCell>>();
-        cells.add(m_tTest.getEqualVariancesAssumedTTest());
-        cells.add(m_tTest.getEqualVariancesNotAssumedTTest());
 
+        ANOVA anova = new ANOVA();
+        cells.add(getBetweenGroups(anova));
+        cells.add(getWithinGroups(anova));
+        cells.add(getTotal(anova));
         return cells;
     }
 
-    /** A wrapper to the TTest class to access protected methods. */
-    private class KnimeTTest extends TTest {
-
-        /**
-         * Computes p-value for 2-sided, 2-sample t-test.
-         * Does not assume that subpopulation variances are equal.
-         *
-         * @return the row with t-Test statistics
-         */
-        private List<DataCell> getEqualVariancesNotAssumedTTest() {
-
-            SummaryStatistics statsX = m_gstats.get(0);
-            SummaryStatistics statsY = m_gstats.get(1);
-
-            // first sample mean
-            double m1 = statsX.getMean();
-            // second sample mean
-            double m2 = statsY.getMean();
-            // first sample variance
-            double v1 = statsX.getVariance();
-            // second sample variance
-            double v2 = statsY.getVariance();
-            // first sample count
-            double n1 = statsX.getN();
-            // second sample count
-            double n2 = statsY.getN();
-            // the t-test statistic =
-            //            (difference in means) / standard error (difference):
-            double t = t(m1, m2, v1, v2, n1, n2);
-            // approximate degrees of freedom for 2-sample t-test
-            double df = df(v1, v2, n1, n2);
-            TDistribution distribution = new TDistribution(df);
-            double pValue = 2.0 *
-                distribution.cumulativeProbability(-FastMath.abs(t));
-
-            double meanDifference = m1 - m2;
-
-            double standardErrorDiff = FastMath.sqrt((v1 / n1) + (v2 / n2));
-            double tValue = FastMath.abs(
-                    distribution.inverseCumulativeProbability(
-                            (1 - m_confidenceIntervalProp) / 2));
-            double confidenceDelta = tValue * standardErrorDiff;
-            double confidenceLowerBound = meanDifference - confidenceDelta;
-            double confidenceUpperBound = meanDifference + confidenceDelta;
-
-            List<DataCell> cells = new ArrayList<DataCell>();
-            cells.add(new StringCell(m_column));
-            cells.add(EQUAL_VARIANCES_NOT_ASSUMED);
-            cells.add(new DoubleCell(t));
-            cells.add(new DoubleCell(df));
-            cells.add(new DoubleCell(pValue));
-            cells.add(new DoubleCell(meanDifference));
-            cells.add(new DoubleCell(standardErrorDiff));
-            cells.add(new DoubleCell(m_confidenceIntervalProp));
-            cells.add(new DoubleCell(confidenceLowerBound));
-            cells.add(new DoubleCell(confidenceUpperBound));
-            return cells;
-        }
-
-        /**
-         * Computes p-value for 2-sided, 2-sample t-test, under the assumption
-         * of equal subpopulation variances.
-         * The sum of the sample sizes minus 2 is used as degrees of freedom.
-         *
-         * @return the row with t-Test statistics
-         */
-        private List<DataCell> getEqualVariancesAssumedTTest() {
-
-            SummaryStatistics statsX = m_gstats.get(0);
-            SummaryStatistics statsY = m_gstats.get(0);
-
-            // first sample mean
-            double m1 = statsX.getMean();
-            // second sample mean
-            double m2 = statsY.getMean();
-            // first sample variance
-            double v1 = statsX.getVariance();
-            // second sample variance
-            double v2 = statsY.getVariance();
-            // first sample count
-            double n1 = statsX.getN();
-            // second sample count
-            double n2 = statsY.getN();
-            // the t-test statistic =
-            //            (difference in means) / standard error (difference):
-            double t = homoscedasticT(m1, m2, v1, v2, n1, n2);
-            double df = n1 + n2 - 2;
-            TDistribution distribution = new TDistribution(df);
-            double pValue = 2.0 *
-                distribution.cumulativeProbability(-FastMath.abs(t));
-
-            double meanDifference = m1 - m2;
-
-            double pooledVariance =
-                ((n1  - 1) * v1 + (n2 -1) * v2 ) / (n1 + n2 - 2);
-            double standardErrorDiff =
-                FastMath.sqrt(pooledVariance * (1d / n1 + 1d / n2));
-            double tValue = FastMath.abs(
-                    distribution.inverseCumulativeProbability(
-                            (1 - m_confidenceIntervalProp) / 2));
-            double confidenceDelta = tValue * standardErrorDiff;
-            double confidenceLowerBound = meanDifference - confidenceDelta;
-            double confidenceUpperBound = meanDifference + confidenceDelta;
-
-            List<DataCell> cells = new ArrayList<DataCell>();
-            cells.add(new StringCell(m_column));
-            cells.add(EQUAL_VARIANCES_ASSUMED);
-            cells.add(new DoubleCell(t));
-            cells.add(new DoubleCell(df));
-            cells.add(new DoubleCell(pValue));
-            cells.add(new DoubleCell(meanDifference));
-            cells.add(new DoubleCell(standardErrorDiff));
-            cells.add(new DoubleCell(m_confidenceIntervalProp));
-            cells.add(new DoubleCell(confidenceLowerBound));
-            cells.add(new DoubleCell(confidenceUpperBound));
-            return cells;
-        }
-
+    /**
+     * Get the row of the ANOVA table with the cells "Between Groups".
+     */
+    private List<DataCell> getBetweenGroups(final ANOVA anova) {
+        List<DataCell> cells = new ArrayList<DataCell>();
+        cells.add(new StringCell(m_column));
+        cells.add(new StringCell(SOURCE_BETWEEN_GROUPS));
+        cells.add(new DoubleCell(anova.getSqurb()));
+        cells.add(new IntCell((int)anova.getDfb()));
+        cells.add(new DoubleCell(anova.getMsqurb()));
+        cells.add(new DoubleCell(anova.getF()));
+        cells.add(new DoubleCell(anova.getpValue()));
+        return cells;
     }
+
+    /**
+     * Get the row of the ANOVA table with the cells "Within Groups".
+     */
+    private List<DataCell> getWithinGroups(final ANOVA anova) {
+        List<DataCell> cells = new ArrayList<DataCell>();
+        cells.add(new StringCell(m_column));
+        cells.add(new StringCell(SOURCE_WITHIN_GROUPS));
+        cells.add(new DoubleCell(anova.getSquri()));
+        cells.add(new IntCell((int)anova.getDfi()));
+        cells.add(new DoubleCell(anova.getMsquri()));
+        cells.add(DataType.getMissingCell());
+        cells.add(DataType.getMissingCell());
+        return cells;
+    }
+
+    /**
+     * Get the row of the ANOVA table with the cells "Total".
+     */
+    private List<DataCell> getTotal(final ANOVA anova) {
+        List<DataCell> cells = new ArrayList<DataCell>();
+        cells.add(new StringCell(m_column));
+        cells.add(new StringCell(SOURCE_TOTAL));
+        cells.add(new DoubleCell(anova.getSqurb() + anova.getSquri()));
+        cells.add(new IntCell((int)(anova.getDfb() + anova.getDfi())));
+        cells.add(DataType.getMissingCell());
+        cells.add(DataType.getMissingCell());
+        cells.add(DataType.getMissingCell());
+        return cells;
+    }
+
 
     /**
      * Get summary statistics per group
@@ -474,5 +448,112 @@ public class OneWayANOVAStatistics {
      */
     public SummaryStatistics getSummaryStatistics() {
         return m_stats;
+    }
+
+    private class ANOVA {
+        /** sum of squares between the groups */
+        private double m_squrb;
+        /** sum of squares within the groups */
+        private double m_squri;
+        /** degrees of freedom between the groups */
+        private long m_dfb;
+        /** degrees of freedom within the groups */
+        private long m_dfi;
+        /** mean square between the groups */
+        private double m_msqurb;
+        /** mean square within the groups */
+        private double m_msquri;
+        /** the test statistic F */
+        private double m_f;
+        /** the p-value */
+        private double m_pValue;
+
+        /**
+         * Computes all values for the ANOVA table.
+         */
+        public ANOVA() {
+            int k = m_groups.size();
+            // sum of squares between the groups:
+            m_squrb = 0;
+            for (SummaryStatistics stat : m_gstats) {
+                m_squrb += stat.getN() * (stat.getMean() - m_stats.getMean())
+                        * (stat.getMean() - m_stats.getMean());
+            }
+
+            // sum of squares within the groups:
+            m_squri = 0;
+            for (SummaryStatistics stat : m_gstats) {
+                m_squri += (stat.getN() - 1) * stat.getStandardDeviation()
+                    * stat.getStandardDeviation();
+            }
+
+            m_dfb = k - 1;
+            m_dfi = m_stats.getN() - k;
+            m_msqurb = m_squrb / m_dfb;
+            m_msquri = m_squri / m_dfi;
+            m_f = m_msqurb / m_msquri;
+
+            FDistribution distribution = new FDistribution(m_dfb, m_dfi);
+            m_pValue = 1 - distribution.cumulativeProbability(m_f);
+        }
+
+        /**
+         * @return the squrb
+         */
+        public double getSqurb() {
+            return m_squrb;
+        }
+
+        /**
+         * @return the squri
+         */
+        public double getSquri() {
+            return m_squri;
+        }
+
+        /**
+         * @return the dfb
+         */
+        public long getDfb() {
+            return m_dfb;
+        }
+
+        /**
+         * @return the dfi
+         */
+        public long getDfi() {
+            return m_dfi;
+        }
+
+        /**
+         * @return the msqurb
+         */
+        public double getMsqurb() {
+            return m_msqurb;
+        }
+
+        /**
+         * @return the msquri
+         */
+        public double getMsquri() {
+            return m_msquri;
+        }
+
+        /**
+         * @return the f
+         */
+        public double getF() {
+            return m_f;
+        }
+
+        /**
+         * @return the pValue
+         */
+        public double getpValue() {
+            return m_pValue;
+        }
+
+
+
     }
 }

@@ -54,7 +54,7 @@ import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -182,7 +182,7 @@ public class OneWayANOVANodeView extends NodeView<OneWayANOVANodeModel> {
     private String renderHeader() {
         StringBuilder buffer = NodeViewUtil.createHtmlHeader();
         buffer.append("<body>\n");
-        buffer.append("<h2>Two-Samples T-Test ");
+        buffer.append("<h2>One-way analysis of variance (ANOVA) ");
         buffer.append("</h2>");
         buffer.append("</body>\n");
         buffer.append("</html>\n");
@@ -194,12 +194,30 @@ public class OneWayANOVANodeView extends NodeView<OneWayANOVANodeModel> {
         StringBuilder buffer = NodeViewUtil.createHtmlHeader();
         buffer.append("<body>\n");
 
-        buffer.append("<h3>Independent Samples Statistics</h3>");
+        buffer.append("<h3>Descriptive Statistics</h3>");
+        buffer.append("<p>");
+        buffer.append("Confidence Interval (CI) Probability: ");
+        buffer.append(
+                getNodeModel().getSettings().getConfidenceIntervalProb() * 100);
+        buffer.append("%");
+        buffer.append("</p>");
+        Map<String, String> colNames = new HashMap<String, String>();
+        colNames.put(OneWayANOVAStatistics.MISSING_COUNT, "Missing");
+        colNames.put(OneWayANOVAStatistics.MISSING_COUNT_GROUP_COL,
+                "Missing Group");
+        colNames.put(OneWayANOVAStatistics.STANDARD_DEVIATION,
+                "Std. Deviation");
+        colNames.put(OneWayANOVAStatistics.STANDARD_ERROR, "Std. Error");
+        colNames.put(OneWayANOVAStatistics.CONFIDENCE_INTERVAL_LOWER_BOUND ,
+                "CI (Lower Bound)");
+        colNames.put(OneWayANOVAStatistics.CONFIDENCE_INTERVAL_UPPER_BOUND ,
+                "CI (Upper Bound)");
         NodeViewUtil.renderDataTable(getNodeModel().getDescritiveStatistics(),
                 OneWayANOVAStatistics.TEST_COLUMN,
-                Collections.singleton(OneWayANOVAStatistics.TEST_COLUMN),
-                new HashMap<String, String>(),
-                buffer);
+                Arrays.asList(new String[]{OneWayANOVAStatistics.TEST_COLUMN
+                      , OneWayANOVAStatistics.CONFIDENCE_INTERVAL_PROBABILITY
+                      }),
+                      colNames, buffer);
 
         buffer.append("</body>\n");
         buffer.append("</html>\n");
@@ -240,14 +258,8 @@ public class OneWayANOVANodeView extends NodeView<OneWayANOVANodeModel> {
         StringBuilder buffer = NodeViewUtil.createHtmlHeader();
         buffer.append("<body>\n");
 
-        buffer.append("<h3>Independent Samples Statistics</h3>");
+        buffer.append("<h3>ANOVA</h3>");
 
-        buffer.append("<p>");
-        buffer.append("Confidence Interval (CI) Probability: ");
-        buffer.append(
-                getNodeModel().getSettings().getConfidenceIntervalProb() * 100);
-        buffer.append("%");
-        buffer.append("</p>");
         Set<String> exclude = new HashSet<String>();
         exclude.add(OneWayANOVAStatistics.TEST_COLUMN);
         exclude.add(OneWayANOVAStatistics.CONFIDENCE_INTERVAL_PROBABILITY);
