@@ -111,14 +111,14 @@ public final class AddOutFieldDialog extends JDialog {
     private Map<String, FlowVariable> m_flowVars;
     private boolean m_flowVarsOnly;
 
-    private JComboBox m_fieldType;
+    private final JComboBox m_fieldType;
     private JCheckBox m_isArray;
-    private JRadioButton m_replace;
-    private JRadioButton m_append;
+    private final JRadioButton m_replace;
+    private final JRadioButton m_append;
 
-    private JComboBox m_replacedKnimeName;
-    private JTextField m_knimeName;
-    private JComboBox m_knimeType;
+    private final JComboBox m_replacedKnimeName;
+    private final JTextField m_knimeName;
+    private final JComboBox m_knimeType;
 
 
     /**
@@ -143,6 +143,17 @@ public final class AddOutFieldDialog extends JDialog {
         m_flowVarsOnly = flowVarsOnly;
 
         setTitle("Add output field");
+
+        // initialize fields
+        m_replace = new JRadioButton("Replace:");
+        m_replace.setSelected(true);
+        m_append = new JRadioButton("Append:");
+        m_replacedKnimeName = new JComboBox();
+
+        m_fieldType = new JComboBox();
+        m_knimeName = new JTextField();
+        m_knimeType = new JComboBox();
+
         // instantiate the components of the dialog
         JPanel p = createPanel();
 
@@ -200,11 +211,7 @@ public final class AddOutFieldDialog extends JDialog {
         c.gridwidth = 1;
         c.weightx = 0;
 
-        m_replace = new JRadioButton("Replace:");
-        m_replace.setSelected(true);
-        m_append = new JRadioButton("Append:");
 
-        m_fieldType = new JComboBox();
         m_fieldType.addItem(FieldType.Column);
         m_fieldType.addItem(FieldType.FlowVariable);
         if (!m_flowVarsOnly) {
@@ -253,7 +260,7 @@ public final class AddOutFieldDialog extends JDialog {
 
         c.gridx++;
         c.insets = rightInsets;
-        m_replacedKnimeName = new JComboBox();
+
         initKnimeNameComboBox();
         p.add(m_replacedKnimeName, c);
 
@@ -278,7 +285,6 @@ public final class AddOutFieldDialog extends JDialog {
         c.gridx++;
         c.insets = rightInsets;
         c.weightx = 1.0;
-        m_knimeName = new JTextField();
         p.add(m_knimeName, c);
         c.weightx = 0.0;
 
@@ -294,7 +300,7 @@ public final class AddOutFieldDialog extends JDialog {
 
         c.gridx++;
         c.insets = rightInsets;
-        m_knimeType = new JComboBox();
+
         initKnimeTypeComboBox();
         p.add(m_knimeType, c);
 
