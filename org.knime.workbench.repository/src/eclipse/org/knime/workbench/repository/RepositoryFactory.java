@@ -204,6 +204,9 @@ public final class RepositoryFactory {
                 icon = ImageRepository.getImage(pluginId, iconPath);
             }
             if (icon == null) {
+                LOGGER.coding("Icon '" + iconPath
+                        + "' for metanode " + categoryPath + "/"
+                        + name + " does not exist");
                 icon =
                         ImageRepository
                                 .getImage(SharedImages.DefaultMetaNodeIcon);
@@ -276,7 +279,12 @@ public final class RepositoryFactory {
                     ImageRepository.getImage(pluginID,
                             element.getAttribute("icon"));
             if (img == null) {
-                img = ImageRepository.getImage(SharedImages.DefaultCategoryIcon);
+                LOGGER.coding("Icon '" + element.getAttribute("icon")
+                        + "' for category " + cat.getPath() + "/"
+                        + cat.getName() + " does not exist");
+                img =
+                        ImageRepository
+                                .getImage(SharedImages.DefaultCategoryIcon);
             }
             cat.setIcon(img);
         }
@@ -446,7 +454,12 @@ public final class RepositoryFactory {
         if (!Boolean.getBoolean("java.awt.headless")) {
             Image img = ImageRepository.getImage(pluginID, icon);
             if (img == null) {
-                img = ImageRepository.getImage(SharedImages.DefaultCategoryIcon);
+                LOGGER.coding("Icon '" + icon
+                        + "' for category " + cat.getPath() + "/"
+                        + cat.getName() + " does not exist");
+                img =
+                        ImageRepository
+                                .getImage(SharedImages.DefaultCategoryIcon);
             }
             cat.setIcon(img);
         }

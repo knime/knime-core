@@ -332,7 +332,7 @@ public class ImageRepository {
      *
      * @param pluginID the plug-in's id
      * @param path the path of the image
-     * @return an image
+     * @return an image or <code>null</code> if the image does not exist
      */
     public static Image getImage(final String pluginID, final String path) {
         if (path == null) {
@@ -349,6 +349,9 @@ public class ImageRepository {
         URL url =
                 FileLocator.find(Platform.getBundle(pluginID), new Path(path),
                         null);
+        if (url == null) {
+            return null;
+        }
         ImageDescriptor desc = ImageDescriptor.createFromURL(url);
         registry.put(key, desc);
         return registry.get(key);
