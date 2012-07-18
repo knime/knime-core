@@ -1,4 +1,4 @@
- 
+
 /*
  * ------------------------------------------------------------------------
  *
@@ -45,7 +45,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 29, 2006 (wiswedel): created
  */
@@ -61,6 +61,7 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
 import org.knime.core.data.container.BufferFromFileIteratorVersion20.DataCellStreamReader;
+import org.knime.core.data.filestore.internal.FileStoreKey;
 import org.knime.core.data.util.NonClosableInputStream;
 
 
@@ -68,11 +69,11 @@ import org.knime.core.data.util.NonClosableInputStream;
  * Class interpreting the file format as written by the {@link Buffer} class.
  * It supports both modes of {@link DataCell} serialization, that is using
  * a {@link DataCellSerializer} and a plain java serialization.
- * 
- * <p>This class is the counterpart to {@link DCObjectOutputVersion2}, see 
+ *
+ * <p>This class is the counterpart to {@link DCObjectOutputVersion2}, see
  * details on the file format in there.
- * 
- * @author Bernd Wiswedel, University of Konstanz 
+ *
+ * @author Bernd Wiswedel, University of Konstanz
  */
 final class DCObjectInputVersion2 implements KNIMEStreamConstants {
 
@@ -82,29 +83,29 @@ final class DCObjectInputVersion2 implements KNIMEStreamConstants {
     /** Wrapped stream that is passed to the DataCellSerializer,
      * this stream reads from m_in. */
     private final DCLongUTFDataInputStream m_dataIn;
-    
+
     /** Buffer used to deserialized contained DataCells (when DataCells are
      * wrapped in DataCells). */
     private final DataCellStreamReader m_cellReader;
-    
-    /** Preferred class loader that is set shortly before a java 
+
+    /** Preferred class loader that is set shortly before a java
      * de-serialization takes place. May be null. */
     private ClassLoader m_priorityClassLoader;
-    
+
     /**
      * Creates new input stream that reads from <code>in</code>.
      * @param in The stream to read from.
-     * @param cellReader The object that helps to read DataCell contained in 
+     * @param cellReader The object that helps to read DataCell contained in
      * DataCell as required by {@link DataCellDataInput#readDataCell()}.
      */
-    DCObjectInputVersion2(final InputStream in, 
+    DCObjectInputVersion2(final InputStream in,
             final DataCellStreamReader cellReader) {
         m_cellReader = cellReader;
         m_in = new BlockableInputStream(in);
         m_dataIn = new DCLongUTFDataInputStream(new DataInputStream(m_in));
     }
-    
-    /** Reads a data cell from the stream. 
+
+    /** Reads a data cell from the stream.
      * @param serializer The factory that is used to create the cell
      * @return A new data cell instance.
      * @throws IOException If reading fails.
@@ -115,35 +116,43 @@ final class DCObjectInputVersion2 implements KNIMEStreamConstants {
         throws IOException {
         return serializer.deserialize(m_dataIn);
     }
-    
-    
-    /** Reads a data cell from the stream using java de-serialization. 
+
+
+    /** Reads a data cell from the stream using java de-serialization.
      * @return A new data cell instance.
-     * @throws IOException If reading fails (also e.g. 
-     * {@link ClassCastException} are wrapped in such IO exceptions). 
+     * @throws IOException If reading fails (also e.g.
+     * {@link ClassCastException} are wrapped in such IO exceptions).
      */
     DataCell readDataCellPerJavaSerialization() throws IOException {
-        PriorityGlobalObjectInputStream gl = 
+        PriorityGlobalObjectInputStream gl =
             new PriorityGlobalObjectInputStream(
                     new NonClosableInputStream(m_dataIn));
         gl.setCurrentClassLoader(m_priorityClassLoader);
         try {
             return (DataCell)gl.readObject();
         } catch (Exception exception) {
-            throw new IOException("Unable to restore data cell (" 
+            throw new IOException("Unable to restore data cell ("
                     + exception.getClass().getSimpleName() + ")" , exception);
         } finally {
             gl.close();
         }
     }
-    
+
+    /** ...
+     * @return ...
+     * @throws IOException ...
+     */
+    FileStoreKey readFileStoreKey() throws IOException {
+        return FileStoreKey.load(m_dataIn);
+    }
+
     /** Reads a blob address from the stream.
      * @return as read from the stream.
      * @throws IOException If that fails. */
     BlobAddress readBlobAddress() throws IOException {
         return BlobAddress.deserialize(m_dataIn);
     }
-    
+
     /** Reads a row key from the stream.
      * @return A new row key instance.
      * @throws IOException If IO problems occur.
@@ -151,40 +160,40 @@ final class DCObjectInputVersion2 implements KNIMEStreamConstants {
     RowKey readRowKey() throws IOException {
         return new RowKey(m_dataIn.readUTF());
     }
-    
+
     /** Reads a single byte from the stream.
      * @return That byte.
      * @throws IOException If IO problems occur. */
     byte readControlByte() throws IOException {
         return m_dataIn.readByte();
     }
-    
+
     /** Pushes the stream forth until a mark is encountered.
      * @throws IOException If IO problems occur. */
     void endBlock() throws IOException {
         m_in.endBlock();
     }
-    
-    /** Set the class loader to ask "first" to load classes. Used when 
+
+    /** Set the class loader to ask "first" to load classes. Used when
      * a data cell is deserialized and all its member should be loaded in the
      * context of that class loader.
-     * @param l The class loader to use, if <code>null</code> it uses the 
+     * @param l The class loader to use, if <code>null</code> it uses the
      * globally known class loader (GlobalClassCreator)
      */
     void setCurrentClassLoader(final ClassLoader l) {
         m_priorityClassLoader = l;
     }
-    
+
     /** Closes the underlying streams.
      * @throws IOException If underlying streams fail to close.
      */
     void close() throws IOException {
         m_dataIn.close();
     }
-    
+
     /** Data input stream with functionality to read encapsulated DataCell
      * objects. */
-    private final class DCLongUTFDataInputStream 
+    private final class DCLongUTFDataInputStream
         extends LongUTFDataInputStream implements DataCellDataInput {
 
         /** Inherited constructor.
@@ -200,7 +209,7 @@ final class DCObjectInputVersion2 implements KNIMEStreamConstants {
         public DataCell readDataCell() throws IOException {
             return m_cellReader.readDataCell(DCObjectInputVersion2.this);
         }
-        
+
     }
-    
+
 }

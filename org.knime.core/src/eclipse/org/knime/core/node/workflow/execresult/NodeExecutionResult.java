@@ -50,7 +50,7 @@
  */
 package org.knime.core.node.workflow.execresult;
 
-import org.knime.core.data.filestore.internal.FileStoreHandler;
+import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeContentPersistor;
@@ -169,7 +169,7 @@ public class NodeExecutionResult implements NodeContentPersistor {
     /** {@inheritDoc}
      * @since 2.6*/
     @Override
-    public FileStoreHandler getFileStoreHandler() {
+    public IFileStoreHandler getFileStoreHandler() {
         return null;
     }
 

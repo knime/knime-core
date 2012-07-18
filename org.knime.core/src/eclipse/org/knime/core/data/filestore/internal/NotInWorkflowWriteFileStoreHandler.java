@@ -46,40 +46,71 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   Feb 21, 2012 (wiswedel): created
+ *   Jul 13, 2012 (wiswedel): created
  */
 package org.knime.core.data.filestore.internal;
 
-import java.io.File;
+import java.io.IOException;
+import java.util.UUID;
 
-import org.knime.core.util.DuplicateChecker;
+import org.knime.core.data.filestore.FileStore;
+import org.knime.core.data.filestore.FileStoreUtil;
+import org.knime.core.util.FileUtil;
+import org.knime.core.util.LRUCache;
 
 /**
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @since 2.6
  */
-public class FileOrganizer {
+public final class NotInWorkflowWriteFileStoreHandler extends WriteFileStoreHandler {
 
-    private final File m_parentFolder;
-    private DuplicateChecker m_duplicateChecker;
-    private int m_fileIndex;
+    private LRUCache<FileStoreKey, FileStoreKey> m_createdFileStoreKeys;
 
     /**
-     * @param parentFolder */
-    public FileOrganizer(final File parentFolder) {
-        if (parentFolder == null) {
+     * @param storeUUID */
+    public NotInWorkflowWriteFileStoreHandler(final UUID storeUUID) {
+        this(storeUUID, new NotInWorkflowFileStoreHandlerRepository());
+    }
+
+    /**
+     * @param storeUUID */
+    public NotInWorkflowWriteFileStoreHandler(final UUID storeUUID,
+            final FileStoreHandlerRepository repository) {
+        super("notInWorkflow", storeUUID);
+        if (repository == null) {
             throw new NullPointerException("Argument must not be null.");
         }
-        if (!parentFolder.isDirectory()) {
-            throw new IllegalArgumentException("Path \""
-                    + parentFolder.getAbsolutePath() + "\" does not denote "
-                    + " an existing directory.");
+        addToRepository(repository);
+    }
+
+    public boolean hasCopiedFileStores() {
+        return getNextIndex() > 0;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public synchronized FileStoreKey translateToLocal(final FileStore fs) {
+        FileStoreKey key = FileStoreUtil.getFileStoreKey(fs);
+        if (!key.getStoreUUID().equals(getStoreUUID())) {
+            if (m_createdFileStoreKeys == null) {
+                m_createdFileStoreKeys = new LRUCache<FileStoreKey, FileStoreKey>(10000);
+            }
+            FileStoreKey local = m_createdFileStoreKeys.get(key);
+            if (local != null) {
+                return local;
+            }
+            FileStore newStore;
+            try {
+                newStore = createFileStoreInternal(getNextIndex() + "_" + key.getName(), null, -1);
+                FileUtil.copy(fs.getFile(), newStore.getFile());
+            } catch (IOException e) {
+                throw new RuntimeException("Failed copying file stores to local handler", e);
+            }
+            final FileStoreKey newKey = FileStoreUtil.getFileStoreKey(newStore);
+            m_createdFileStoreKeys.put(key, newKey);
+            return newKey;
         }
-        if (!parentFolder.canWrite()) {
-            throw new IllegalArgumentException("Folder \""
-                    + parentFolder.getAbsolutePath() + "\" can't be written.");
-        }
-        m_parentFolder = parentFolder;
+        return super.translateToLocal(fs);
     }
 
 }

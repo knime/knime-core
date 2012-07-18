@@ -46,27 +46,47 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   Feb 22, 2012 (wiswedel): created
+ *   Jul 2, 2012 (wiswedel): created
  */
 package org.knime.core.data.filestore.internal;
 
-import org.knime.core.data.filestore.FileStore;
+import java.util.UUID;
 
-
-/**
+/** Fallback repository that is used when the node is run outside the workflow manager,
+ * for instance in the testing environment or using a 3rd party executor.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @noextend This interface is not intended to be extended by clients.
- * @noimplement This interface is not intended to be implemented by clients.
- * @since 2.6
  */
-public interface FileStoreHandler {
+public final class NotInWorkflowFileStoreHandlerRepository extends FileStoreHandlerRepository {
 
-    /** @return the fileStoreHandlerRepository */
-    public FileStoreHandlerRepository getFileStoreHandlerRepository();
+    private IFileStoreHandler m_fileStoreHandler;
 
-    public void clearAndDispose();
+    /** {@inheritDoc} */
+    @Override
+    public void addFileStoreHandler(final IWriteFileStoreHandler writableFileStoreHandler) {
+        assert m_fileStoreHandler == null : "Already assigned";
+        m_fileStoreHandler = writableFileStoreHandler;
+    }
 
-    public FileStore getFileStore(final FileStoreKey key);
+    /** {@inheritDoc} */
+    @Override
+    public void removeFileStoreHandler(final IWriteFileStoreHandler writableFileStoreHandler) {
+        assert m_fileStoreHandler == writableFileStoreHandler;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public IFileStoreHandler getHandler(final UUID storeHandlerUUID) {
+        if (!(m_fileStoreHandler instanceof IWriteFileStoreHandler)) {
+            throw new IllegalStateException("no file stores in repository to \"" + m_fileStoreHandler + "\"");
+        }
+        IWriteFileStoreHandler defFileStoreHandler = (IWriteFileStoreHandler)m_fileStoreHandler;
+        if (!defFileStoreHandler.getStoreUUID().equals(storeHandlerUUID)) {
+            throw new IllegalStateException("Unknown file store id \""
+                    + storeHandlerUUID + "\"; only \"" + defFileStoreHandler.getStoreUUID()
+                    + "\" is valid in repository to \"" + m_fileStoreHandler + "\"");
+        }
+        return defFileStoreHandler;
+    }
 
 }

@@ -46,39 +46,74 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   Jun 29, 2012 (wiswedel): created
+ *   Jul 11, 2012 (wiswedel): created
  */
 package org.knime.core.data.filestore.internal;
 
-import java.io.File;
-import java.util.UUID;
+import java.io.IOException;
 
-import org.knime.core.node.Node;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellDataInput;
+import org.knime.core.data.DataCellDataOutput;
+import org.knime.core.data.DataCellSerializer;
+import org.knime.core.data.DataType;
 
 /**
+ * A data cell used internally to save the file store keys generated in a loop to a buffered data table.
+ * This cell is not used in client code.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @since 2.6
+ * @noinstantiate This class is not intended to be instantiated by clients.
  */
-public final class FileStoreHandlerRestoreHelper {
+public final class FileStoreKeyDataCell extends DataCell implements FileStoreKeyDataValue {
 
-    private final UUID m_restoredUUID;
-    private final File m_baseDirInSavedWorkflow;
-    private final Node m_node;
+    public static final DataType TYPE = DataType.getType(FileStoreKeyDataCell.class);
+
+    private final FileStoreKey m_key;
+
+    public static final DataCellSerializer<FileStoreKeyDataCell> getCellSerializer() {
+        return new DataCellSerializer<FileStoreKeyDataCell>() {
+
+            @Override
+            public void serialize(final FileStoreKeyDataCell cell, final DataCellDataOutput output) throws IOException {
+                cell.getKey().save(output);
+            }
+
+            @Override
+            public FileStoreKeyDataCell deserialize(final DataCellDataInput input) throws IOException {
+                return new FileStoreKeyDataCell(FileStoreKey.load(input));
+            }
+        };
+    }
+
     /**
-     * @param restoredUUID
-     * @param baseDirInSavedWorkflow
-     * @param node */
-    public FileStoreHandlerRestoreHelper(final UUID restoredUUID,
-            final File baseDirInSavedWorkflow, final Node node) {
-        m_restoredUUID = restoredUUID;
-        m_baseDirInSavedWorkflow = baseDirInSavedWorkflow;
-        m_node = node;
+     * @param key */
+    FileStoreKeyDataCell(final FileStoreKey key) {
+        m_key = key;
     }
 
-    public FileStoreHandlerRestoreHelper(final Node node) {
-        this(null, null, node);
+    /** {@inheritDoc} */
+    @Override
+    public FileStoreKey getKey() {
+        return m_key;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        return m_key.toString();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected boolean equalsDataCell(final DataCell dc) {
+        return ((FileStoreKeyDataCell)dc).m_key.equals(m_key);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode() {
+        return m_key.hashCode();
+    }
 
 }

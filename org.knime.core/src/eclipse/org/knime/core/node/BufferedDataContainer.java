@@ -56,6 +56,8 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 
@@ -138,7 +140,7 @@ public class BufferedDataContainer extends DataContainer {
             final boolean forceCopyOfBlobs, final int maxCellsInMemory,
             final Map<Integer, ContainerTable> globalTableRepository,
             final Map<Integer, ContainerTable> localTableRepository,
-            final FileStoreHandlerRepository fileStoreHandlerRepository) {
+            final IWriteFileStoreHandler fileStoreHandler) {
         // force synchronous IO when the node is a loop end:
         // rows containing blobs need to be written instantly as their owning
         // buffer is discarded in the next loop iteration, see bug 2935
@@ -148,7 +150,7 @@ public class BufferedDataContainer extends DataContainer {
         m_node = node;
         m_globalTableRepository = globalTableRepository;
         m_localTableRepository = localTableRepository;
-        super.setFileStoreHandlerRepository(fileStoreHandlerRepository);
+        super.setFileStoreHandler(fileStoreHandler);
         super.setForceCopyOfBlobs(forceCopyOfBlobs);
     }
 

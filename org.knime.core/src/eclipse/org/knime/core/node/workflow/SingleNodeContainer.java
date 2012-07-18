@@ -60,10 +60,19 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.filestore.internal.FileStoreHandler;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.IFileStoreHandler;
+import org.knime.core.data.filestore.internal.ILoopStartWriteFileStoreHandler;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.data.filestore.internal.LoopEndWriteFileStoreHandler;
+import org.knime.core.data.filestore.internal.LoopStartReferenceWriteFileStoreHandler;
+import org.knime.core.data.filestore.internal.LoopStartWritableFileStoreHandler;
+import org.knime.core.data.filestore.internal.ReferenceWriteFileStoreHandler;
+import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
@@ -115,10 +124,6 @@ public final class SingleNodeContainer extends NodeContainer {
 
     /** underlying node. */
     private final Node m_node;
-
-    /** The file store handler that is assigned when the node is executing or
-     * executed. Otherwise it's null. */
-    private FileStoreHandler m_fileStoreHandler;
 
     private SingleNodeContainerSettings m_settings =
         new SingleNodeContainerSettings();
@@ -314,6 +319,7 @@ public final class SingleNodeContainer extends NodeContainer {
     void cleanup() {
         super.cleanup();
         m_node.cleanup();
+        clearFileStoreHandler();
         if (m_outputPorts != null) {
             for (NodeOutPort p : m_outputPorts) {
                 if (p != null) {
@@ -500,6 +506,7 @@ public final class SingleNodeContainer extends NodeContainer {
             switch (getState()) {
             case EXECUTED:
                 m_node.reset();
+                clearFileStoreHandler();
                 cleanOutPorts(false);
                 // After reset we need explicit configure!
                 setState(State.IDLE);
@@ -516,6 +523,7 @@ public final class SingleNodeContainer extends NodeContainer {
                  * nodes subsequent to meta nodes with through-connections.
                  */
                 m_node.reset();
+                clearFileStoreHandler();
                 setState(State.IDLE);
                 return;
             default:
@@ -763,7 +771,7 @@ public final class SingleNodeContainer extends NodeContainer {
                 if (!Thread.currentThread().isInterrupted()) {
                     LOGGER.debug("Execution of node " + getNameWithID()
                             + " was probably canceled (node is " + getState()
-                            + " during 'preexecute') but calling thead is not"
+                            + " during 'preexecute') but calling thread is not"
                             + " interrupted");
                 }
                 return false;
@@ -831,6 +839,16 @@ public final class SingleNodeContainer extends NodeContainer {
                     setNodeMessage(oldMessage);
                     setState(State.IDLE);
                 }
+                IFileStoreHandler fsh = m_node.getFileStoreHandler();
+                if (fsh instanceof IWriteFileStoreHandler) {
+                    ((IWriteFileStoreHandler)fsh).close();
+                } else {
+                    // can be null if run through 3rd party executor
+                    // (if not null "should" always be instance of WriteFileStoreHandler
+                    assert fsh == null : "must not be " + fsh.getClass().getSimpleName() + " in execute";
+                    LOGGER.debug("Can't close file store handler, not writable: "
+                            + (fsh == null ? "<null>" : fsh.getClass().getSimpleName()));
+                }
                 setExecutionJob(null);
                 break;
             default:
@@ -850,8 +868,14 @@ public final class SingleNodeContainer extends NodeContainer {
      */
     public NodeContainerExecutionStatus performExecuteNode(
             final PortObject[] inObjects) {
-        m_node.initFileStoreHandler(getParent().getFileStoreHandlerRepository());
+        IWriteFileStoreHandler fsh =
+            initFileStore(getParent().getFileStoreHandlerRepository());
+        m_node.setFileStoreHandler(fsh);
+        // this call requires the FSH to be set on the node (ideally would take
+        // it as an argument but createExecutionContext became API unfortunately)
         ExecutionContext ec = createExecutionContext();
+        fsh.open(ec);
+
         boolean success;
         try {
             ec.checkCanceled();
@@ -876,6 +900,84 @@ public final class SingleNodeContainer extends NodeContainer {
         return success ? NodeContainerExecutionStatus.SUCCESS
                 : NodeContainerExecutionStatus.FAILURE;
     }
+
+    private IWriteFileStoreHandler initFileStore(
+            final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository) {
+
+        FlowLoopContext upstreamFLC = getFlowObjectStack().peek(FlowLoopContext.class);
+        NodeID outerStartNodeID = upstreamFLC == null ? null : upstreamFLC.getHeadNode();
+        // loop start nodes will put their loop context on the outgoing flow object stack
+        assert !getID().equals(outerStartNodeID) : "Loop start on incoming flow stack can't be node itself";
+
+        FlowLoopContext innerFLC = getOutgoingFlowObjectStack().peek(FlowLoopContext.class);
+        NodeID innerStartNodeID = innerFLC == null ? null : innerFLC.getHeadNode();
+        // if there is a loop context on this node's stack, this node must be the start
+        assert !getLoopRole().equals(LoopRole.BEGIN) || getID().equals(innerStartNodeID);
+
+        IFileStoreHandler oldFSHandler = m_node.getFileStoreHandler();
+        IWriteFileStoreHandler newFSHandler;
+
+        if (innerFLC == null && upstreamFLC == null) {
+            // node is not a start node and not contained in a loop
+            if (oldFSHandler instanceof IWriteFileStoreHandler) {
+                clearFileStoreHandler();
+                assert false : "Node " + getNameWithID() + " must not have file store handler at this point (not a "
+                    + "loop start and not contained in loop), disposing old handler";
+            }
+            newFSHandler = new WriteFileStoreHandler(getNameWithID(), UUID.randomUUID());
+            newFSHandler.addToRepository(fileStoreHandlerRepository);
+        } else if (innerFLC != null) {
+            // node is a loop start node
+            int loopIteration = innerFLC.getIterationIndex();
+            if (loopIteration == 0) {
+                if (oldFSHandler instanceof IWriteFileStoreHandler) {
+                    assert false : "Loop Start " + getNameWithID() + " must not have file store handler at this point "
+                        + "(no iteration ran), disposing old handler";
+                    clearFileStoreHandler();
+                }
+                if (upstreamFLC != null) {
+                    ILoopStartWriteFileStoreHandler upStreamFSHandler = upstreamFLC.getFileStoreHandler();
+                    newFSHandler = new LoopStartReferenceWriteFileStoreHandler(upStreamFSHandler, innerFLC);
+                } else {
+                    newFSHandler = new LoopStartWritableFileStoreHandler(getNameWithID(), UUID.randomUUID(), innerFLC);
+                }
+                newFSHandler.addToRepository(fileStoreHandlerRepository);
+                innerFLC.setFileStoreHandler((ILoopStartWriteFileStoreHandler)newFSHandler);
+            } else {
+                assert oldFSHandler instanceof IWriteFileStoreHandler : "Loop Start " + getNameWithID()
+                    + " must have file store handler in iteration " + loopIteration;
+                newFSHandler = (IWriteFileStoreHandler)oldFSHandler;
+                // keep the old one
+            }
+        } else {
+            // ordinary node contained in loop
+            assert innerFLC == null && upstreamFLC != null;
+            ILoopStartWriteFileStoreHandler upStreamFSHandler = upstreamFLC.getFileStoreHandler();
+            if (LoopRole.END.equals(m_node.getLoopRole())) {
+                if (upstreamFLC.getIterationIndex() > 0) {
+                    newFSHandler = (IWriteFileStoreHandler)oldFSHandler;
+                } else {
+                    newFSHandler = new LoopEndWriteFileStoreHandler(upStreamFSHandler);
+                    newFSHandler.addToRepository(fileStoreHandlerRepository);
+                }
+            } else {
+                newFSHandler = new ReferenceWriteFileStoreHandler(upStreamFSHandler);
+                newFSHandler.addToRepository(fileStoreHandlerRepository);
+            }
+        }
+        return newFSHandler;
+    }
+
+    /** Disposes file store handler (if set) and sets it to null. Called from reset and cleanup.
+     * @noreference This method is not intended to be referenced by clients. */
+    public void clearFileStoreHandler() {
+        IFileStoreHandler fileStoreHandler = m_node.getFileStoreHandler();
+        if (fileStoreHandler != null) {
+            fileStoreHandler.clearAndDispose();
+            m_node.setFileStoreHandler(null);
+        }
+    }
+
 
     /**
      * Enumerates the output tables and puts them into the workflow global
@@ -1169,7 +1271,7 @@ public final class SingleNodeContainer extends NodeContainer {
     }
 
 
-    /** Delegates to node to get flow variables they are added or modified
+    /** Delegates to node to get flow variables that are added or modified
      * by the node.
      * @return The list of outgoing flow variables.
      * @see org.knime.core.node.Node#getOutgoingFlowObjectStack()

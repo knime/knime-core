@@ -63,7 +63,7 @@ import java.util.Map;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.EmptyFileStoreHandler;
-import org.knime.core.data.filestore.internal.FileStoreHandler;
+import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
@@ -114,7 +114,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
 
     private BufferedDataTable[] m_internalHeldTables;
 
-    private FileStoreHandler m_fileStoreHandler;
+    private IFileStoreHandler m_fileStoreHandler;
 
     private boolean m_needsResetAfterLoad;
 
@@ -292,12 +292,12 @@ public class NodePersistorVersion1xx implements NodePersistor {
         // sub class hook
     }
 
-    FileStoreHandler loadFileStoreHandler(
+    IFileStoreHandler loadFileStoreHandler(
             final Node node, final ExecutionMonitor execMon,
             final NodeSettingsRO settings,
             final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository)
     throws InvalidSettingsException {
-        return EmptyFileStoreHandler.create(fileStoreHandlerRepository);
+        return new EmptyFileStoreHandler(fileStoreHandlerRepository);
     }
 
     private BufferedDataTable loadBufferedDataTable(final Node node,
@@ -826,7 +826,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
     /** {@inheritDoc}
      * @since 2.6 */
     @Override
-    public FileStoreHandler getFileStoreHandler() {
+    public IFileStoreHandler getFileStoreHandler() {
         return m_fileStoreHandler;
     }
 }

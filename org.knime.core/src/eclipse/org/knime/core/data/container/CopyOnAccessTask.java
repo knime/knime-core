@@ -178,6 +178,7 @@ final class CopyOnAccessTask {
         ZipEntry entry;
         File binFile = DataContainer.createTempFile();
         File blobDir = null;
+        File fileStoreDir = null;
         // we only need to read from this file while being in
         // this method; temp file is deleted later on.
         File metaTempFile = File.createTempFile("meta", ".xml");
@@ -207,6 +208,11 @@ final class CopyOnAccessTask {
                     blobDir = Buffer.createBlobDirNameForTemp(binFile);
                 }
                 copyEntryToDir(entry, inStream, blobDir);
+            } else if (name.startsWith(Buffer.ZIP_ENTRY_FILESTORES)) {
+                if (fileStoreDir == null) {
+                    fileStoreDir = FileUtil.createTempDir("knime_fs_datacontainer-");
+                }
+                copyEntryToDir(entry, inStream, fileStoreDir);
             } else if (name.equals(DataContainer.ZIP_ENTRY_SPEC)
                     && !isSpecFound) {
                 InputStream nonClosableStream =
@@ -241,8 +247,8 @@ final class CopyOnAccessTask {
         }
         InputStream metaIn = new BufferedInputStream(
                 new FileInputStream(metaTempFile));
-        Buffer buffer = m_bufferCreator.createBuffer(binFile, blobDir, spec,
-                metaIn, m_bufferID, m_tableRep, m_fileStoreHandlerRepository);
+        Buffer buffer = m_bufferCreator.createBuffer(binFile, blobDir, fileStoreDir,
+                spec, metaIn, m_bufferID, m_tableRep, m_fileStoreHandlerRepository);
         if (m_needsRestoreIntoMemory) {
             buffer.restoreIntoMemory();
         }
@@ -283,12 +289,15 @@ final class CopyOnAccessTask {
      * directory. Used to copy the blobs from the zip file to /temp/.
      */
     private static void copyEntryToDir(final ZipEntry entry,
-            final ZipInputStream in, final File blobDir) throws IOException {
+            final ZipInputStream in, final File tempDir) throws IOException {
         String path = entry.getName();
         if (path.startsWith(Buffer.ZIP_ENTRY_BLOBS + "/")) {
             path = path.substring((Buffer.ZIP_ENTRY_BLOBS + "/").length());
         }
-        File f = new File(blobDir, path);
+        if (path.startsWith(Buffer.ZIP_ENTRY_FILESTORES + "/")) {
+            path = path.substring((Buffer.ZIP_ENTRY_FILESTORES + "/").length());
+        }
+        File f = new File(tempDir, path);
         if (entry.isDirectory()) {
             if (!f.mkdirs()) {
                 throw new IOException("Unable to create temporary directory "

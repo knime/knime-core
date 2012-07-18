@@ -63,6 +63,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Exchanger;
 import java.util.concurrent.ExecutionException;
@@ -91,7 +92,8 @@ import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
-import org.knime.core.data.filestore.internal.IsolatedFileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.internal.ReferencedFile;
@@ -323,12 +325,11 @@ public class DataContainer implements RowAppender {
     /** Local repository map, created lazily. */
     private Map<Integer, ContainerTable> m_localMap;
 
-    /** A file store handler repository. It's lazy initialized in this class.
-     * The buffered data container overwrites the
-     * {@link #getFileStoreHandlerRepository()} method to return the workflow
-     * global repository. A plain data container will copy file store cells.
+    /** A file store handler. It's lazy initialized in this class.
+     * The buffered data container sets the FSH of the corresponding node.
+     * A plain data container will copy file store cells.
      */
-    private FileStoreHandlerRepository m_fileStoreHandlerRepository;
+    private IWriteFileStoreHandler m_fileStoreHandler;
 
     /** Whether to force a copy of any added blob.
      * See {@link #setForceCopyOfBlobs(boolean)} for details. */
@@ -681,7 +682,7 @@ public class DataContainer implements RowAppender {
         if (m_buffer == null) {
             m_buffer = m_bufferCreator.createBuffer(m_maxRowsInMemory,
                     createInternalBufferID(), getGlobalTableRepository(),
-                    getLocalTableRepository(), getFileStoreHandlerRepository());
+                    getLocalTableRepository(), getFileStoreHandler());
         }
         if (!m_isSynchronousWrite) {
             try {
@@ -825,10 +826,9 @@ public class DataContainer implements RowAppender {
                 getGlobalTableRepository();
             Map<Integer, ContainerTable> localTableRep =
                 getLocalTableRepository();
-            FileStoreHandlerRepository fileStoreHandlerRepository =
-                getFileStoreHandlerRepository();
+            IWriteFileStoreHandler fileStoreHandler = getFileStoreHandler();
             m_buffer = m_bufferCreator.createBuffer(m_maxRowsInMemory, bufID,
-                    globalTableRep, localTableRep, fileStoreHandlerRepository);
+                    globalTableRep, localTableRep, fileStoreHandler);
             if (m_buffer == null) {
                 throw new NullPointerException(
                         "Implementation error, must not return a null buffer.");
@@ -919,31 +919,30 @@ public class DataContainer implements RowAppender {
      * @nooverride
      * @noreference This method is not intended to be referenced by clients.
      */
-    protected FileStoreHandlerRepository getFileStoreHandlerRepository() {
-        if (m_fileStoreHandlerRepository == null) {
-            m_fileStoreHandlerRepository = createIsolatedFileStoreHandler();
+    protected IWriteFileStoreHandler getFileStoreHandler() {
+        if (m_fileStoreHandler == null) {
+            m_fileStoreHandler = createNotInWorkflowFileStoreHandler();
         }
-        return m_fileStoreHandlerRepository;
+        return m_fileStoreHandler;
     }
 
-    /** @return new file store handler for non buffered tables. */
-    private static IsolatedFileStoreHandlerRepository createIsolatedFileStoreHandler() {
-        return new IsolatedFileStoreHandlerRepository("<isolated data container>");
-    }
-
-    /** @param repository the fileStoreHandlerRepository to set
+    /** @param handler the fileStoreHandler to set
      * @nooverride
      * @noreference This method is not intended to be referenced by clients. */
-    protected final void setFileStoreHandlerRepository(
-            final FileStoreHandlerRepository repository) {
-        if (m_fileStoreHandlerRepository != null) {
-            throw new IllegalStateException("File store "
-                    + "repository already assigned");
+    protected final void setFileStoreHandler(final IWriteFileStoreHandler handler) {
+        if (m_fileStoreHandler != null) {
+            throw new IllegalStateException("File store handler already assigned");
         }
-        if (repository == null) {
+        if (handler == null) {
             throw new NullPointerException("Argument must not be null.");
         }
-        m_fileStoreHandlerRepository = repository;
+        m_fileStoreHandler = handler;
+    }
+
+    /**
+     * @return */
+    private static NotInWorkflowWriteFileStoreHandler createNotInWorkflowFileStoreHandler() {
+        return new NotInWorkflowWriteFileStoreHandler(UUID.randomUUID());
     }
 
     /**
@@ -1132,7 +1131,7 @@ public class DataContainer implements RowAppender {
             exec.setMessage("Archiving table");
             e = exec.createSubProgress(0.8);
             buf = new Buffer(0, -1, new HashMap<Integer, ContainerTable>(),
-                    new HashMap<Integer, ContainerTable>(), createIsolatedFileStoreHandler());
+                    new HashMap<Integer, ContainerTable>(), createNotInWorkflowFileStoreHandler());
             int rowCount = 0;
             for (DataRow row : table) {
                 rowCount++;
@@ -1360,6 +1359,7 @@ public class DataContainer implements RowAppender {
         /** Creates buffer for reading.
          * @param binFile the binary temp file.
          * @param blobDir temp directory containing blobs (may be null).
+         * @param fileStoreDir temp dir containing file stores (mostly null)
          * @param spec The spec.
          * @param metaIn Input stream containing meta information.
          * @param bufID The buffer's id used for blob (de)serialization
@@ -1369,12 +1369,13 @@ public class DataContainer implements RowAppender {
          * @throws IOException If parsing fails.
          */
         Buffer createBuffer(final File binFile, final File blobDir,
-                final DataTableSpec spec, final InputStream metaIn,
-                final int bufID, final Map<Integer, ContainerTable> tblRep,
+                final File fileStoreDir, final DataTableSpec spec,
+                final InputStream metaIn, final int bufID,
+                final Map<Integer, ContainerTable> tblRep,
                 final FileStoreHandlerRepository fileStoreHandlerRepository)
             throws IOException {
-            return new Buffer(binFile, blobDir, spec, metaIn, bufID, tblRep,
-                    fileStoreHandlerRepository);
+            return new Buffer(binFile, blobDir, fileStoreDir, spec, metaIn,
+                    bufID, tblRep, fileStoreHandlerRepository);
         }
 
         /** Creates buffer for writing (adding of rows).
@@ -1382,15 +1383,15 @@ public class DataContainer implements RowAppender {
          * @param bufferID The buffer's id used for blob (de)serialization.
          * @param globalTableRep Table repository for blob (de)serialization.
          * @param localTableRep Table repository for blob (de)serialization.
-         * @param fileStoreHandlerRepository ...
+         * @param fileStoreHandler ...
          * @return A newly created buffer.
          */
         Buffer createBuffer(final int rowsInMemory, final int bufferID,
                 final Map<Integer, ContainerTable> globalTableRep,
                 final Map<Integer, ContainerTable> localTableRep,
-                final FileStoreHandlerRepository fileStoreHandlerRepository) {
+                final IWriteFileStoreHandler fileStoreHandler) {
             return new Buffer(rowsInMemory, bufferID, globalTableRep,
-                    localTableRep, fileStoreHandlerRepository);
+                    localTableRep, fileStoreHandler);
         }
 
     }

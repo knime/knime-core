@@ -72,9 +72,7 @@ import javax.swing.UIManager;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainerException;
-import org.knime.core.data.filestore.internal.DefaultFileStoreHandler;
-import org.knime.core.data.filestore.internal.FileStoreHandler;
-import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
@@ -215,7 +213,7 @@ public final class Node implements NodeModelWarningListener {
 
     /** File store handler that is non null during and after execution.
      * Set null on reset. */
-    private FileStoreHandler m_fileStoreHandler;
+    private IFileStoreHandler m_fileStoreHandler;
 
     // lock that prevents a possible deadlock if a node is currently configuring
     // (e.g. because inportHasNodeModelContent has been called)
@@ -1085,16 +1083,12 @@ public final class Node implements NodeModelWarningListener {
         return true;
     }
 
-    /**
-     *
-     * @param repository workflow global file store repository
-     * @since 2.6
+    /** Sets new file store handler, disposes old one first.
+     * @param fileStoreHandler new handler (possibly null to unset)
      * @noreference This method is not intended to be referenced by clients.
      */
-    public void initFileStoreHandler(
-            final WorkflowFileStoreHandlerRepository repository) {
-        m_fileStoreHandler =
-            DefaultFileStoreHandler.createNewHandler(this, repository);
+    public void setFileStoreHandler(final IFileStoreHandler fileStoreHandler) {
+        m_fileStoreHandler = fileStoreHandler;
     }
 
     /**
@@ -1103,7 +1097,7 @@ public final class Node implements NodeModelWarningListener {
      * is reset or executing with 3rd party executor).
      * @since 2.6
      * @noreference This method is not intended to be referenced by clients.  */
-    FileStoreHandler getFileStoreHandler() {
+    public IFileStoreHandler getFileStoreHandler() {
         return m_fileStoreHandler;
     }
 
@@ -1256,10 +1250,6 @@ public final class Node implements NodeModelWarningListener {
      */
     public void reset() {
         m_logger.debug("reset");
-        if (m_fileStoreHandler != null) {
-            m_fileStoreHandler.clearAndDispose();
-            m_fileStoreHandler = null;
-        }
         clearLoopContext();
         setPauseLoopExecution(false);
         m_model.resetModel();
@@ -1453,10 +1443,6 @@ public final class Node implements NodeModelWarningListener {
                     + " during cleanup of node: " + t.getMessage(), t);
         }
         cleanOutPorts(false);
-        if (m_fileStoreHandler != null) {
-            m_fileStoreHandler.clearAndDispose();
-            m_fileStoreHandler = null;
-        }
     }
 
     /** Used before configure, to apply the variable mask to the nodesettings,

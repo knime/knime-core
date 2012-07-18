@@ -50,13 +50,11 @@
  */
 package org.knime.core.data.filestore;
 
-import java.io.DataOutput;
 import java.io.IOException;
 import java.util.UUID;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataCellDataInput;
-import org.knime.core.data.filestore.internal.FileStoreHandler;
+import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.FileStoreKey;
 import org.knime.core.node.NodeLogger;
@@ -70,8 +68,8 @@ public abstract class FileStoreCell extends DataCell {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(FileStoreCell.class);
 
-    private final FileStoreKey m_fileStoreKey;
-    private FileStoreHandler m_fileStoreHandler;
+    private FileStoreKey m_fileStoreKey;
+    private IFileStoreHandler m_fileStoreHandler;
 
     /**
      *  */
@@ -80,31 +78,29 @@ public abstract class FileStoreCell extends DataCell {
         m_fileStoreHandler = fileStore.getFileStoreHandler();
     }
 
-    protected FileStoreCell(final DataCellDataInput input) throws IOException {
-        m_fileStoreKey = FileStoreKey.load(input);
+    /** Used when read from persisted stream.
+     *  */
+    protected FileStoreCell() {
     }
 
-    protected void save(final DataOutput output) throws IOException {
-        m_fileStoreKey.save(output);
+    /** @return the fileStoreKey */
+    final FileStoreKey getFileStoreKey() {
+        return m_fileStoreKey;
     }
 
-    public FileStore acquire() {
+    protected FileStore getFileStore() {
         if (m_fileStoreHandler == null) {
             throw new IllegalStateException("Can't read file store object, "
                     + "probably the cell has not been fully initialized");
         }
-        // TODO, really acquire
         return m_fileStoreHandler.getFileStore(m_fileStoreKey);
     }
 
-    public void release() {
-        // TODO, really release
-    }
-
     /** @noreference This method is not intended to be referenced by clients. */
-    public void retrieveFileStoreHandlerFrom(
+    final void retrieveFileStoreHandlerFrom(final FileStoreKey key,
             final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException {
-        UUID id = m_fileStoreKey.getStoreUUID();
+        m_fileStoreKey = key;
+        UUID id = key.getStoreUUID();
         m_fileStoreHandler = fileStoreHandlerRepository.getHandler(id);
         postConstruct();
     }

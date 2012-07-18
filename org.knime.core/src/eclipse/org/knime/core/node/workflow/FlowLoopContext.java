@@ -50,6 +50,7 @@
  */
 package org.knime.core.node.workflow;
 
+import org.knime.core.data.filestore.internal.ILoopStartWriteFileStoreHandler;
 import org.knime.core.node.util.ConvenienceMethods;
 
 
@@ -61,6 +62,8 @@ import org.knime.core.node.util.ConvenienceMethods;
  */
 public class FlowLoopContext extends FlowObject {
 
+    private int m_iterationIndex = 0;
+    private ILoopStartWriteFileStoreHandler m_fileStoreHandler;
     private NodeID m_tailNode;
 
     public NodeID getHeadNode() {
@@ -75,12 +78,38 @@ public class FlowLoopContext extends FlowObject {
         return m_tailNode;
     }
 
+    /** The current iteration index, incremented after each loop iteration.
+     * @return the iterationIndex
+     * @noreference This method is not intended to be referenced by clients. */
+    public int getIterationIndex() {
+        return m_iterationIndex;
+    }
+
+    /** increment iteration index and return new value.
+     * @return new iteration index.
+     * @noreference This method is not intended to be referenced by clients. */
+    public final int incrementIterationIndex() {
+        return ++m_iterationIndex;
+    }
+
     /** {@inheritDoc} */
     @Override
     protected FlowObject cloneAndUnsetOwner() {
         FlowLoopContext clone = (FlowLoopContext)super.cloneAndUnsetOwner();
         clone.setTailNode(null);
+        clone.m_iterationIndex = 0;
+        clone.m_fileStoreHandler = null;
         return clone;
+    }
+
+    /** @param fileStoreHandler the fileStoreHandler to set */
+    void setFileStoreHandler(final ILoopStartWriteFileStoreHandler fileStoreHandler) {
+        m_fileStoreHandler = fileStoreHandler;
+    }
+
+    /** @return the fileStoreHandler */
+    ILoopStartWriteFileStoreHandler getFileStoreHandler() {
+        return m_fileStoreHandler;
     }
 
     String getClassSummary() {
@@ -101,6 +130,7 @@ public class FlowLoopContext extends FlowObject {
             b.append(tailNode);
         }
         b.append(")>");
+        b.append(" - iteration ").append(getIterationIndex());
         return b.toString();
     }
 

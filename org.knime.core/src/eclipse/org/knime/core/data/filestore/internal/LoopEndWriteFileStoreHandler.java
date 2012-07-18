@@ -46,48 +46,111 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   Jun 29, 2012 (wiswedel): created
+ *   Jul 12, 2012 (wiswedel): created
  */
 package org.knime.core.data.filestore.internal;
 
+import java.io.IOException;
+import java.util.UUID;
+
 import org.knime.core.data.filestore.FileStore;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
+import org.knime.core.util.LRUCache;
 
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @noinstantiate This class is not intended to be instantiated by clients.
- * @since 2.6
  */
-public class EmptyFileStoreHandler implements IFileStoreHandler {
+public final class LoopEndWriteFileStoreHandler implements IWriteFileStoreHandler {
 
-    private final FileStoreHandlerRepository m_fileStoreHandlerRepository;
+    private final ILoopStartWriteFileStoreHandler m_loopStartFSHandler;
+    private FileStoresInLoopCache m_fileStoresInLoopCache;
+    private InternalDuplicateChecker m_duplicateChecker;
+    private LRUCache<FileStoreKey, FileStoreKey> m_fsKeysToKeepLRUCache;
 
     /**
-     * @param fileStoreHandlerRepository */
-    public EmptyFileStoreHandler(final FileStoreHandlerRepository fileStoreHandlerRepository) {
-        if (fileStoreHandlerRepository == null) {
-            throw new NullPointerException("Argument must not be null.");
-        }
-        m_fileStoreHandlerRepository = fileStoreHandlerRepository;
+     * @param loopStartFSHandler */
+    public LoopEndWriteFileStoreHandler(final ILoopStartWriteFileStoreHandler loopStartFSHandler) {
+        m_loopStartFSHandler = loopStartFSHandler;
     }
 
     /** {@inheritDoc} */
     @Override
     public FileStoreHandlerRepository getFileStoreHandlerRepository() {
-        return m_fileStoreHandlerRepository;
+        return m_loopStartFSHandler.getFileStoreHandlerRepository();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public UUID getStoreUUID() {
+        // no own file stores
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public FileStoreKey translateToLocal(final FileStore fs) {
+        final FileStoreKey result = m_loopStartFSHandler.translateToLocal(fs);
+        if (m_loopStartFSHandler.isCreatedInThisLoop(result)) {
+            if (m_fsKeysToKeepLRUCache.put(result, result) == null) {
+                m_fileStoresInLoopCache.add(result);
+            }
+        }
+        return result;
     }
 
     /** {@inheritDoc} */
     @Override
     public void clearAndDispose() {
-        // no op
+        // ignore, loop start will be reset, too
     }
 
     /** {@inheritDoc} */
     @Override
     public FileStore getFileStore(final FileStoreKey key) {
-        return m_fileStoreHandlerRepository.getHandler(
-                key.getStoreUUID()).getFileStore(key);
+        return m_loopStartFSHandler.getFileStore(key);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public FileStore createFileStore(final String name) throws IOException {
+        FileStore fs = m_loopStartFSHandler.createFileStore(name);
+        m_duplicateChecker.add(name);
+        m_fileStoresInLoopCache.add(fs);
+        return fs;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void open(final ExecutionContext exec) {
+        m_fileStoresInLoopCache = new FileStoresInLoopCache(exec);
+        m_duplicateChecker = new InternalDuplicateChecker();
+        m_fsKeysToKeepLRUCache = new LRUCache<FileStoreKey, FileStoreKey>(1000);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void close() {
+        if (m_duplicateChecker != null) {
+            m_duplicateChecker.close();
+            m_duplicateChecker = null;
+            m_fsKeysToKeepLRUCache = null;
+            try {
+                BufferedDataTable keysToRetainTable = m_fileStoresInLoopCache.close();
+                m_loopStartFSHandler.onLoopEndFinish(keysToRetainTable);
+                m_fileStoresInLoopCache = null;
+            } catch (CanceledExecutionException e) {
+                throw new RuntimeException("Canceled", e);
+            }
+        }
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void addToRepository(final FileStoreHandlerRepository repository) {
+        // ignore, handler does not define own file stores (only the start does)
     }
 
 }

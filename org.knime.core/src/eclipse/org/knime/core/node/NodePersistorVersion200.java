@@ -64,11 +64,11 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.filestore.internal.DefaultFileStoreHandler;
 import org.knime.core.data.filestore.internal.EmptyFileStoreHandler;
-import org.knime.core.data.filestore.internal.FileStoreHandler;
+import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObject.PortObjectSerializer;
@@ -401,12 +401,12 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             final ExecutionMonitor fileStoreMon, final boolean isSaveData)
         throws IOException {
         NodeSettingsWO fsSettings = settings.addNodeSettings("filestores");
-        FileStoreHandler fileStoreHandler = node.getFileStoreHandler();
+        IFileStoreHandler fileStoreHandler = node.getFileStoreHandler();
         String uuidS;
         String dirNameInFlow;
-        if (isSaveData && fileStoreHandler instanceof DefaultFileStoreHandler) {
-            final DefaultFileStoreHandler defFileStoreHandler =
-                (DefaultFileStoreHandler)fileStoreHandler;
+        if (isSaveData && fileStoreHandler instanceof WriteFileStoreHandler) {
+            final WriteFileStoreHandler defFileStoreHandler =
+                (WriteFileStoreHandler)fileStoreHandler;
             File baseDir = defFileStoreHandler.getBaseDir();
             dirNameInFlow = baseDir == null ? null : "filestore";
             if (dirNameInFlow != null) {
@@ -568,7 +568,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
 
     /** {@inheritDoc} */
     @Override
-    FileStoreHandler loadFileStoreHandler(final Node node,
+    IFileStoreHandler loadFileStoreHandler(final Node node,
             final ExecutionMonitor execMon, final NodeSettingsRO settings,
             final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository)
     throws InvalidSettingsException {
@@ -579,13 +579,13 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         NodeSettingsRO fsSettings = settings.getNodeSettings("filestores");
         String dirNameInFlow = fsSettings.getString("file_store_location");
         if (dirNameInFlow == null) {
-            return EmptyFileStoreHandler.create(fileStoreHandlerRepository);
+            return new EmptyFileStoreHandler(fileStoreHandlerRepository);
         } else {
             String uuidS = fsSettings.getString("file_store_id");
             UUID uuid = UUID.fromString(uuidS);
             ReferencedFile subDirFile =
                 new ReferencedFile(getNodeDirectory(), dirNameInFlow);
-            FileStoreHandler fsh = DefaultFileStoreHandler.restore(node, uuid,
+            IFileStoreHandler fsh = WriteFileStoreHandler.restore(node.getName(), uuid,
                     fileStoreHandlerRepository, subDirFile.getFile());
             return fsh;
         }

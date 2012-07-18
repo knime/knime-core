@@ -46,89 +46,102 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   Jun 26, 2012 (wiswedel): created
+ *   Jul 11, 2012 (wiswedel): created
  */
 package org.knime.core.data.filestore.internal;
 
+import java.io.IOException;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
-import org.knime.core.node.NodeLogger;
+import org.knime.core.data.filestore.FileStore;
+import org.knime.core.node.ExecutionContext;
 
-/** File store handler associated with a workflow. It's a map of
- * store UUIDs to file store handlers. Each file store handler corresponds
- * to a node.
+/**
+ * File store handler used for non-start nodes that are part of a loop body (not the loop end). They
+ * forward all calls to the file store handler associated with the loop start.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @since 2.6
  */
-public final class WorkflowFileStoreHandlerRepository extends FileStoreHandlerRepository {
+public final class ReferenceWriteFileStoreHandler implements IWriteFileStoreHandler {
 
-    private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(WorkflowFileStoreHandlerRepository.class);
-
-    private final ConcurrentHashMap<UUID, IWriteFileStoreHandler> m_handlerMap;
+    private final ILoopStartWriteFileStoreHandler m_reference;
+    private InternalDuplicateChecker m_duplicateChecker;
 
     /**
-     *  */
-    public WorkflowFileStoreHandlerRepository() {
-        m_handlerMap = new ConcurrentHashMap<UUID, IWriteFileStoreHandler>();
-    }
-
-    @Override
-    public void addFileStoreHandler(final IWriteFileStoreHandler handler) {
-        final UUID storeUUID = handler.getStoreUUID();
-        if (storeUUID != null) {
-            m_handlerMap.put(storeUUID, handler);
+     * @param reference */
+    public ReferenceWriteFileStoreHandler(final ILoopStartWriteFileStoreHandler reference) {
+        if (reference == null) {
+            throw new NullPointerException("Argument must not be null.");
         }
+        m_reference = reference;
     }
 
+    /** {@inheritDoc} */
     @Override
-    public void removeFileStoreHandler(final IWriteFileStoreHandler handler) {
-        final UUID storeUUID = handler.getStoreUUID();
-        if (storeUUID != null) {
-            IFileStoreHandler old = m_handlerMap.remove(storeUUID);
-            if (old == null) {
-                throw new IllegalArgumentException(
-                        "No such file store hander: " + handler);
-            }
-        }
+    public void addToRepository(final FileStoreHandlerRepository repository) {
+        // ignore, handler does not define own file stores (only the start does)
     }
 
-    /** Get handler to id, never null.
-     * @param storeHandlerUUID the store id
-     * @return the handler.
-     * @throws IllegalStateException If store is not registered. */
+    /** {@inheritDoc} */
     @Override
-    public IFileStoreHandler getHandler(final UUID storeHandlerUUID) {
-        IFileStoreHandler h = m_handlerMap.get(storeHandlerUUID);
-        if (h == null) {
-            final String s =
-                "Unknown file store handler to UUID " + storeHandlerUUID;
-            LOGGER.error(s);
-            printValidFileStoreHandlersToLogDebug();
-            throw new IllegalStateException(s);
-        }
-        return h;
+    public UUID getStoreUUID() {
+        // doesn't define own file stores
+        return null;
     }
 
-    private void printValidFileStoreHandlersToLogDebug() {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Valid file store handlers are:");
-            LOGGER.debug("--------- Start --------------");
-            for (IFileStoreHandler fsh : m_handlerMap.values()) {
-                LOGGER.debug("  " + fsh);
-            }
-            LOGGER.debug("--------- End ----------------");
+    /** {@inheritDoc} */
+    @Override
+    public FileStoreKey translateToLocal(final FileStore fs) {
+        return m_reference.translateToLocal(fs);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public FileStoreHandlerRepository getFileStoreHandlerRepository() {
+        return m_reference.getFileStoreHandlerRepository();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void clearAndDispose() {
+        // ignore
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public FileStore getFileStore(final FileStoreKey key) {
+        return m_reference.getFileStore(key);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public synchronized FileStore createFileStore(final String name) throws IOException {
+        if (m_duplicateChecker == null) {
+            throw new IOException("File store handler \"" + toString() + "\" is read only/closed");
+        }
+        m_duplicateChecker.add(name);
+        return m_reference.createFileStoreInLoopBody(name);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void open(final ExecutionContext exec) {
+        m_duplicateChecker = new InternalDuplicateChecker();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void close() {
+        if (m_duplicateChecker != null) {
+            m_duplicateChecker.close();
+            m_duplicateChecker = null;
         }
     }
 
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        return "File store handler repository ("
-            + m_handlerMap.size() + " handler(s))";
+        return "Reference on " + m_reference.toString();
     }
-
 
 }

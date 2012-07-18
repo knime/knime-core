@@ -46,45 +46,38 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   Jul 2, 2012 (wiswedel): created
+ *   Jul 15, 2012 (wiswedel): created
  */
-package org.knime.core.data.filestore.internal;
+package org.knime.core.util;
 
-import java.util.UUID;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-/** Fallback repository that is used when the node is run outside the workflow manager,
- * for instance in the testing environment or using a 3rd party executor.
+/** Unsynchronized last recently used cache.
+ *
+ * @see LinkedHashMap#LinkedHashMap(int, float, boolean)
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 2.6
  */
-public final class IsolatedFileStoreHandlerRepository extends FileStoreHandlerRepository {
+public class LRUCache<K, V> extends LinkedHashMap<K, V> {
 
-    private final String m_nameForDebug;
-    private FileStoreHandler m_fileStoreHandler;
+    private final int m_maxHistory;
 
     /**
-     *  */
-    public IsolatedFileStoreHandlerRepository(final String nameForDebug) {
-        m_nameForDebug = nameForDebug;
-    }
-
-    /** @param fileStoreHandler the fileStoreHandler to set */
-    public void setFileStoreHandler(final FileStoreHandler fileStoreHandler) {
-        m_fileStoreHandler = fileStoreHandler;
+     * @param maxHistory cache size */
+    public LRUCache(final int maxHistory) {
+        super(16, 0.75f, true);
+        if (maxHistory < 1) {
+            throw new IllegalArgumentException("max history must be larger 0: " + maxHistory);
+        }
+        m_maxHistory = maxHistory;
     }
 
     /** {@inheritDoc} */
     @Override
-    public FileStoreHandler getHandler(final UUID storeHandlerUUID) {
-        if (!(m_fileStoreHandler instanceof DefaultFileStoreHandler)) {
-            throw new IllegalStateException("no file stores in repository to \"" + m_nameForDebug + "\"");
-        }
-        DefaultFileStoreHandler defFileStoreHandler = (DefaultFileStoreHandler)m_fileStoreHandler;
-        if (!defFileStoreHandler.getStoreUUID().equals(storeHandlerUUID)) {
-            throw new IllegalStateException("Unknown file store id \"" + storeHandlerUUID + "\"; only \""
-                    + defFileStoreHandler.getStoreUUID() + "\" is valid in repository to \"" + m_nameForDebug + "\"");
-        }
-        return defFileStoreHandler;
+    protected boolean removeEldestEntry(final Map.Entry<K, V> e) {
+        return size() >= m_maxHistory;
     }
 
 }

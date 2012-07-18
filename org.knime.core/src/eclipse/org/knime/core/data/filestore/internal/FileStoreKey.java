@@ -53,27 +53,41 @@ package org.knime.core.data.filestore.internal;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.UUID;
 
 /** Wraps name and enumerated number to a file store object.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public final class FileStoreKey {
+public final class FileStoreKey implements Comparable<FileStoreKey> {
 
     private final UUID m_storeUUID;
+    private final byte[] m_nestedLoopPath;
+    private final int m_iterationIndex;
     private final int m_index;
     private final String m_name;
     /**
      * @param index
      * @param name */
-    FileStoreKey(final UUID storeUUID, final int index, final String name) {
-        if (name == null) {
+    FileStoreKey(final UUID storeUUID, final int index,
+            final byte[] nestedLoopPath,
+            final int iterationIndex,
+            final String name) {
+        if (name == null || storeUUID == null) {
             throw new NullPointerException("Argument must not be null.");
+        }
+        // iteration < 0 --> no loops (neither nested or directly)
+        if ((iterationIndex < 0) != (nestedLoopPath == null)) {
+            throw new IllegalArgumentException(String.format(
+                    "Invalid argument %d  -  %s",
+                    iterationIndex, Arrays.toString(nestedLoopPath)));
         }
         m_storeUUID = storeUUID;
         m_index = index;
         m_name = name;
+        m_nestedLoopPath = nestedLoopPath;
+        m_iterationIndex = iterationIndex;
     }
 
     /** @return the storeUUID */
@@ -81,11 +95,31 @@ public final class FileStoreKey {
         return m_storeUUID;
     }
 
+    /** @return the nestedLoopPath */
+    public byte[] getNestedLoopPath() {
+        return m_nestedLoopPath;
+    }
+
     /** @return the name */
     public String getName() {
         return m_name;
     }
 
+    /** @return the name, possibly corrected by loop information. */
+    public String getNameOnDisc() {
+        if (m_iterationIndex < 0) {
+            return m_name;
+        }
+        StringBuilder b = new StringBuilder();
+        for (int i = 0; i < m_nestedLoopPath.length; i++) {
+            b.append(i > 0 ? "-" : "").append(m_nestedLoopPath[i]);
+        }
+        b.append(m_nestedLoopPath.length > 0 ? "_" : "");
+        b.append(m_index).append("_");
+        b.append(m_iterationIndex);
+        b.append("_").append(m_name);
+        return b.toString();
+    }
     /** @return the index */
     public int getIndex() {
         return m_index;
@@ -95,40 +129,116 @@ public final class FileStoreKey {
         output.writeUTF(m_storeUUID.toString());
         output.writeInt(m_index);
         output.writeUTF(m_name);
+        output.writeInt(m_iterationIndex);
+        if (m_iterationIndex >= 0) {
+            output.writeInt(m_nestedLoopPath.length);
+            output.write(m_nestedLoopPath);
+        }
     }
 
     public static FileStoreKey load(final DataInput input) throws IOException {
         UUID uuid = UUID.fromString(input.readUTF());
         int index = input.readInt();
         String name = input.readUTF();
-        return new FileStoreKey(uuid, index, name);
+        int iterationIndex = input.readInt();
+        byte[] nestedLoopPath = null;
+        if (iterationIndex >= 0) {
+            int nestedLoopPathLength = input.readInt();
+            nestedLoopPath = new byte[nestedLoopPathLength];
+            input.readFully(nestedLoopPath);
+        }
+        return new FileStoreKey(uuid, index, nestedLoopPath, iterationIndex, name);
     }
 
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        // index 391 and name "foobar" to "0391-foobar (uuid-string)"
-        return String.format("%04d-%s (%s)", m_index, m_name, m_storeUUID);
+        StringBuilder b = new StringBuilder(Integer.toString(m_index));
+        b.append("_").append(getNameOnDisc()).append("-(").append(m_storeUUID).append(")");
+        return b.toString();
     }
+
+
 
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        return m_name.hashCode() ^ m_index ^ m_storeUUID.hashCode();
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + m_index;
+        result = prime * result + m_iterationIndex;
+        result = prime * result + m_name.hashCode();
+        result = prime * result + Arrays.hashCode(m_nestedLoopPath);
+        result = prime * result + m_storeUUID.hashCode();
+        return result;
     }
 
     /** {@inheritDoc} */
     @Override
     public boolean equals(final Object obj) {
-        if (obj == this) {
+        if (this == obj) {
             return true;
         }
-        if (obj instanceof FileStoreKey) {
-            FileStoreKey o = (FileStoreKey)obj;
-            return o.m_index == m_index && o.m_name.equals(m_name)
-                && o.m_storeUUID.equals(m_storeUUID);
+        if (!(obj instanceof FileStoreKey)) {
+            return false;
         }
-        return false;
+        FileStoreKey other = (FileStoreKey)obj;
+        if (m_index != other.m_index) {
+            return false;
+        }
+        if (m_iterationIndex != other.m_iterationIndex) {
+            return false;
+        }
+        if (!m_name.equals(other.m_name)) {
+            return false;
+        }
+        if (!Arrays.equals(m_nestedLoopPath, other.m_nestedLoopPath)) {
+            return false;
+        }
+        if (!m_storeUUID.equals(other.m_storeUUID)) {
+            return false;
+        }
+        return true;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public int compareTo(final FileStoreKey o) {
+        int comp = m_storeUUID.compareTo(o.getStoreUUID());
+        if (comp != 0) {
+            return comp;
+        }
+
+        comp = m_index - o.m_index;
+        if (comp != 0) {
+            return comp;
+        }
+
+        int thisNestedLoopLength = m_nestedLoopPath == null ? 0 : m_nestedLoopPath.length;
+        int oNestedLoopLength = o.m_nestedLoopPath == null ? 0 : o.m_nestedLoopPath.length;
+        for (int i = 0; i < Math.max(oNestedLoopLength, thisNestedLoopLength); i++) {
+            Byte thisV = getValueFromArray(m_nestedLoopPath, i);
+            Byte oV = getValueFromArray(o.m_nestedLoopPath, i);
+            comp = thisV.compareTo(oV);
+            if (comp != 0) {
+                return comp;
+            }
+        }
+
+        comp = m_iterationIndex - o.m_iterationIndex;
+        if (comp != 0) {
+            return comp;
+        }
+
+        assert o.m_name.equals(m_name) : o.m_name + " vs. " + m_name;
+        return 0;
+    }
+
+    Byte getValueFromArray(final byte[] array, final int index) {
+        if (array == null || array.length >= index - 1) {
+            return Byte.valueOf((byte)-1);
+        }
+        return Byte.valueOf(array[index]);
     }
 
 }

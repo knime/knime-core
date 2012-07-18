@@ -72,6 +72,7 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ColumnRearranger.SpecAndFactoryObject;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.BufferedDataTable.KnowsRowCountTable;
@@ -635,17 +636,17 @@ public final class RearrangeColumnsTable
         Buffer createBuffer(final int rowsInMemory, final int bufferID,
                 final Map<Integer, ContainerTable> globalTableRep,
                 final Map<Integer, ContainerTable> localTableRep,
-                final FileStoreHandlerRepository fileStoreHandlerRepository) {
+                final IWriteFileStoreHandler fileStoreHandler) {
             return new NoKeyBuffer(rowsInMemory, bufferID, globalTableRep,
-                    localTableRep, fileStoreHandlerRepository);
+                    localTableRep, fileStoreHandler);
         }
 
         /** {@inheritDoc} */
         @Override
         Buffer createBuffer(final File binFile, final File blobDir,
-                final DataTableSpec spec, final InputStream metaIn,
-                final int bufID, final Map<Integer, ContainerTable> tblRep,
-                final FileStoreHandlerRepository fileStoreHandlerRepository)
+                File fileStoreDir, final DataTableSpec spec,
+                final InputStream metaIn, final int bufID,
+                final Map<Integer, ContainerTable> tblRep, final FileStoreHandlerRepository fileStoreHandlerRepository)
             throws IOException {
             return new NoKeyBuffer(binFile, blobDir, spec,
                     metaIn, bufID, tblRep, fileStoreHandlerRepository);

@@ -46,89 +46,48 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   Jun 26, 2012 (wiswedel): created
+ *   Jul 15, 2012 (wiswedel): created
  */
 package org.knime.core.data.filestore.internal;
 
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import java.io.IOException;
 
-import org.knime.core.node.NodeLogger;
+import org.knime.core.util.DuplicateChecker;
+import org.knime.core.util.DuplicateKeyException;
 
-/** File store handler associated with a workflow. It's a map of
- * store UUIDs to file store handlers. Each file store handler corresponds
- * to a node.
+/**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @since 2.6
  */
-public final class WorkflowFileStoreHandlerRepository extends FileStoreHandlerRepository {
+class InternalDuplicateChecker {
 
-    private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(WorkflowFileStoreHandlerRepository.class);
+    private DuplicateChecker m_duplicateChecker = new DuplicateChecker();
 
-    private final ConcurrentHashMap<UUID, IWriteFileStoreHandler> m_handlerMap;
-
-    /**
-     *  */
-    public WorkflowFileStoreHandlerRepository() {
-        m_handlerMap = new ConcurrentHashMap<UUID, IWriteFileStoreHandler>();
-    }
-
-    @Override
-    public void addFileStoreHandler(final IWriteFileStoreHandler handler) {
-        final UUID storeUUID = handler.getStoreUUID();
-        if (storeUUID != null) {
-            m_handlerMap.put(storeUUID, handler);
+    void add(final String key) {
+        if (m_duplicateChecker == null) {
+            throw new IllegalStateException("No add permitted (open not called)");
+        }
+        try {
+            m_duplicateChecker.addKey(key);
+        } catch (IOException e) {
+            throw new IllegalStateException(e.getClass().getSimpleName()
+                    + " while checking for duplicate names", e);
         }
     }
 
-    @Override
-    public void removeFileStoreHandler(final IWriteFileStoreHandler handler) {
-        final UUID storeUUID = handler.getStoreUUID();
-        if (storeUUID != null) {
-            IFileStoreHandler old = m_handlerMap.remove(storeUUID);
-            if (old == null) {
-                throw new IllegalArgumentException(
-                        "No such file store hander: " + handler);
-            }
+    void close() {
+        if (m_duplicateChecker == null) {
+            return;
         }
-    }
-
-    /** Get handler to id, never null.
-     * @param storeHandlerUUID the store id
-     * @return the handler.
-     * @throws IllegalStateException If store is not registered. */
-    @Override
-    public IFileStoreHandler getHandler(final UUID storeHandlerUUID) {
-        IFileStoreHandler h = m_handlerMap.get(storeHandlerUUID);
-        if (h == null) {
-            final String s =
-                "Unknown file store handler to UUID " + storeHandlerUUID;
-            LOGGER.error(s);
-            printValidFileStoreHandlersToLogDebug();
-            throw new IllegalStateException(s);
+        try {
+            m_duplicateChecker.checkForDuplicates();
+        } catch (DuplicateKeyException e) {
+            throw new IllegalArgumentException("Duplicate file store " + e.getMessage(), e);
+        } catch (IOException e) {
+            throw new IllegalStateException(e.getClass().getSimpleName()
+                    + " while checking for duplicate names", e);
         }
-        return h;
+        m_duplicateChecker = null;
     }
-
-    private void printValidFileStoreHandlersToLogDebug() {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Valid file store handlers are:");
-            LOGGER.debug("--------- Start --------------");
-            for (IFileStoreHandler fsh : m_handlerMap.values()) {
-                LOGGER.debug("  " + fsh);
-            }
-            LOGGER.debug("--------- End ----------------");
-        }
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String toString() {
-        return "File store handler repository ("
-            + m_handlerMap.size() + " handler(s))";
-    }
-
 
 }

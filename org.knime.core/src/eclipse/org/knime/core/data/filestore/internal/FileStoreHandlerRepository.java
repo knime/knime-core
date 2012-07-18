@@ -54,23 +54,24 @@ import java.util.UUID;
 
 /** Lookup for file store handlers. A workflow (manager) has a {@link WorkflowFileStoreHandlerRepository} as
  * member that is passed to nodes and tables to lookup file stores.
- * If run outside the usual execution mode, we use a {@link IsolatedFileStoreHandlerRepository},
+ * If run outside the usual execution mode, we use a {@link NotInWorkflowFileStoreHandlerRepository},
  * which most of the times only throws exceptions when asked for a file store.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class FileStoreHandlerRepository {
 
-    /**
-     *  */
-    FileStoreHandlerRepository() {
-        super();
-    }
-
     /** Get handler to ID (which is part of a saved data stream). Throws exception when ID
      * is unknown, returns never <code>null</code>.
      * @param storeHandlerUUID The handler ID.
      * @return The handler for the id, never null. */
-    public abstract FileStoreHandler getHandler(final UUID storeHandlerUUID);
+    public abstract IFileStoreHandler getHandler(final UUID storeHandlerUUID);
 
+    /**
+     * @param writableFileStoreHandler */
+    public abstract void removeFileStoreHandler(final IWriteFileStoreHandler writableFileStoreHandler);
+
+    /**
+     * @param writableFileStoreHandler */
+    public abstract void addFileStoreHandler(IWriteFileStoreHandler writableFileStoreHandler);
 }

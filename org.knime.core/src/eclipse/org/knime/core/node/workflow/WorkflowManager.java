@@ -85,7 +85,7 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.filestore.internal.FileStoreHandler;
+import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.CorePlugin;
@@ -225,7 +225,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** for internal usage, holding output table references. */
     private final HashMap<Integer, ContainerTable> m_globalTableRepository;
 
-    /** The repository of all active {@link FileStoreHandler}. It inherits
+    /** The repository of all active {@link IFileStoreHandler}. It inherits
      * from the parent if this wfm is a meta node. */
     private final WorkflowFileStoreHandlerRepository m_fileStoreHandlerRepository;
 
@@ -2277,11 +2277,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // allow SNC to update states etc
             if (nc instanceof SingleNodeContainer) {
                 SingleNodeContainer snc = (SingleNodeContainer)nc;
+                FlowObjectStack flowObjectStack = snc.getFlowObjectStack();
+                FlowLoopContext slc = flowObjectStack.peek(FlowLoopContext.class);
+                if (slc instanceof RestoredFlowLoopContext) {
+                    throw new IllegalFlowObjectStackException(
+                            "Can't continue loop as the workflow was "
+                            + "restored with the loop being partially "
+                            + "executed. Reset loop start and execute "
+                            + "entire loop again.");
+                }
                 if (LoopRole.END.equals(snc.getLoopRole())) {
                     // if this is an END to a loop, make sure it knows its head
-                    FlowObjectStack flowObjectStack = snc.getFlowObjectStack();
-                    FlowLoopContext slc =
-                        flowObjectStack.peek(FlowLoopContext.class);
                     if (slc == null) {
                         LOGGER.debug("Incoming flow object stack for "
                                 + snc.getNameWithID() + ":\n"
@@ -2289,12 +2295,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         throw new IllegalFlowObjectStackException(
                                 "Encountered loop-end without "
                                 + "corresponding head!");
-                    } else if (slc instanceof RestoredFlowLoopContext) {
-                        throw new IllegalFlowObjectStackException(
-                                "Can't continue loop as the workflow was "
-                                + "restored with the loop being partially "
-                                + "executed. Reset loop start and execute "
-                                + "entire loop again.");
                     }
                     NodeContainer headNode = m_workflow.getNode(slc.getOwner());
                     if (headNode == null) {
@@ -2546,7 +2546,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // clean up all newly added objects on FlowVariable Stack
         // (otherwise we will push the same variables many times...
         // push ISLC back onto the stack is done in doBeforeExecute()!
-        headSNC.getOutgoingFlowObjectStack().pop(InnerFlowLoopContext.class);
+        final FlowObjectStack headOutgoingStack = headSNC.getOutgoingFlowObjectStack();
+        headOutgoingStack.pop(InnerFlowLoopContext.class);
+        headOutgoingStack.peek(FlowLoopContext.class).incrementIterationIndex();
         // (4-7) reset/configure loop body - or not...
         if (headSNC.resetAndConfigureLoopBody()) {
             // (4a) reset the nodes in the body (only those -

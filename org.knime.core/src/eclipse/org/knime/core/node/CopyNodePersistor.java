@@ -50,7 +50,7 @@
  */
 package org.knime.core.node;
 
-import org.knime.core.data.filestore.internal.FileStoreHandler;
+import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -183,7 +183,7 @@ public class CopyNodePersistor implements NodePersistor {
     /** {@inheritDoc}
      * @since 2.6*/
     @Override
-    public FileStoreHandler getFileStoreHandler() {
+    public IFileStoreHandler getFileStoreHandler() {
         return null;
     }
 

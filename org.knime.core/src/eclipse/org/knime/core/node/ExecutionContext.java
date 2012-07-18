@@ -67,10 +67,9 @@ import org.knime.core.data.container.TableSpecReplacerTable;
 import org.knime.core.data.container.WrappedTable;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
-import org.knime.core.data.filestore.internal.DefaultFileStoreHandler;
-import org.knime.core.data.filestore.internal.EmptyFileStoreHandler;
-import org.knime.core.data.filestore.internal.FileStoreHandler;
-import org.knime.core.data.filestore.internal.IsolatedFileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.NotInWorkflowFileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.ROWriteFileStoreHandler;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.util.KNIMEJob;
@@ -128,7 +127,7 @@ public class ExecutionContext extends ExecutionMonitor {
     private final MemoryPolicy m_memoryPolicy;
     private final HashMap<Integer, ContainerTable> m_globalTableRepository;
     private final HashMap<Integer, ContainerTable> m_localTableRepository;
-    private final FileStoreHandler m_fileStoreHandler;
+    private final IWriteFileStoreHandler m_fileStoreHandler;
 
     /** Creates new object based on a progress monitor and a node as parent
      * of any created buffered data table.
@@ -161,8 +160,9 @@ public class ExecutionContext extends ExecutionMonitor {
     public ExecutionContext(final NodeProgressMonitor progMon, final Node node,
             final MemoryPolicy policy,
             final HashMap<Integer, ContainerTable> tableRepository) {
-        this(progMon, node, policy, tableRepository,
-                new HashMap<Integer, ContainerTable>(), node.getFileStoreHandler());
+        this(progMon, node, policy, tableRepository, new HashMap<Integer, ContainerTable>(),
+                (node.getFileStoreHandler() instanceof IWriteFileStoreHandler ?
+                        (IWriteFileStoreHandler)node.getFileStoreHandler() : null));
     }
 
     /** Creates execution context with all required arguments. It's used
@@ -175,30 +175,29 @@ public class ExecutionContext extends ExecutionMonitor {
      * @param localTableRepository execution context local table. This argument
      * is non-null only if this is a sub execution context (inheriting table
      * repository from parent).
-     * @param the file store handler (often retrieved from the node but maybe null)
      */
     private ExecutionContext(final NodeProgressMonitor progMon, final Node node,
             final MemoryPolicy policy,
             final HashMap<Integer, ContainerTable> tableRepository,
             final HashMap<Integer, ContainerTable> localTableRepository,
-            final FileStoreHandler fileStoreHandler) {
+            final IWriteFileStoreHandler fileStoreHandler) {
         super(progMon);
         if (node == null || tableRepository == null) {
             throw new NullPointerException("Argument must not be null.");
         }
         m_node = node;
-        m_memoryPolicy = policy;
-        m_globalTableRepository = tableRepository;
-        m_localTableRepository = localTableRepository;
         if (fileStoreHandler == null) {
-            LOGGER.debug("No file store handler set on \"" + node.getName()
+            LOGGER.debug("No file store handler set on \"" + m_node.getName()
                     + "\" (possibly running in 3rd party executor)");
-            IsolatedFileStoreHandlerRepository repo =
-                new IsolatedFileStoreHandlerRepository("node \"" + node.getName() + "\"");
-            m_fileStoreHandler = EmptyFileStoreHandler.create(repo);
+            NotInWorkflowFileStoreHandlerRepository repo =
+                new NotInWorkflowFileStoreHandlerRepository();
+            m_fileStoreHandler = new ROWriteFileStoreHandler(repo);
         } else {
             m_fileStoreHandler = fileStoreHandler;
         }
+        m_memoryPolicy = policy;
+        m_globalTableRepository = tableRepository;
+        m_localTableRepository = localTableRepository;
     }
 
     /** Creates a FileStore handle during execution that can be used to
@@ -217,12 +216,7 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     public FileStore createFileStore(final String relativePath)
         throws IOException {
-        FileStoreHandler fileStoreHandler = m_fileStoreHandler;
-        if (!(fileStoreHandler instanceof DefaultFileStoreHandler)) {
-            throw new IllegalStateException("File store handler does not "
-                    + "permit defintion of file stores");
-        }
-        return ((DefaultFileStoreHandler)fileStoreHandler).createFileStore(relativePath);
+        return m_fileStoreHandler.createFileStore(relativePath);
     }
 
     /**
@@ -354,8 +348,7 @@ public class ExecutionContext extends ExecutionMonitor {
         boolean forceCopyOfBlobs = LoopRole.END.equals(m_node.getLoopRole());
         return new BufferedDataContainer(spec, initDomain, m_node,
                 m_memoryPolicy, forceCopyOfBlobs, maxCellsInMemory,
-                m_globalTableRepository, m_localTableRepository,
-                m_fileStoreHandler.getFileStoreHandlerRepository());
+                m_globalTableRepository, m_localTableRepository, m_fileStoreHandler);
     }
 
     /**
@@ -563,8 +556,7 @@ public class ExecutionContext extends ExecutionMonitor {
     public ExecutionContext createSubExecutionContext(final double maxProg) {
         NodeProgressMonitor subProgress = createSubProgressMonitor(maxProg);
         return new ExecutionContext(subProgress, m_node, m_memoryPolicy,
-                m_globalTableRepository, m_localTableRepository,
-                m_fileStoreHandler);
+                m_globalTableRepository, m_localTableRepository, m_fileStoreHandler);
     }
 
     /**
@@ -583,11 +575,9 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     public ExecutionContext createSilentSubExecutionContext(
             final double maxProg) {
-        NodeProgressMonitor subProgress =
-            createSilentSubProgressMonitor(maxProg);
+        NodeProgressMonitor subProgress = createSilentSubProgressMonitor(maxProg);
         return new ExecutionContext(subProgress, m_node, m_memoryPolicy,
-                m_globalTableRepository, m_localTableRepository,
-                m_fileStoreHandler);
+                m_globalTableRepository, m_localTableRepository, m_fileStoreHandler);
     }
 
     /**

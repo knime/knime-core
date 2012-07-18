@@ -55,10 +55,9 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.knime.core.data.filestore.FileStore;
-import org.knime.core.node.Node;
+import org.knime.core.data.filestore.FileStoreUtil;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.util.DuplicateChecker;
-import org.knime.core.util.DuplicateKeyException;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -67,9 +66,9 @@ import org.knime.core.util.FileUtil;
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @since 2.6
  */
-public class DefaultFileStoreHandler implements FileStoreHandler {
+public class WriteFileStoreHandler implements IWriteFileStoreHandler {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(DefaultFileStoreHandler.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(WriteFileStoreHandler.class);
 
     /** File organization of file stores. There are {@value #FOLDER_LEVEL} levels of sub folders in the temp dir,
      * each folder contains {@value #FILES_PER_FOLDER} sub folders or files (in the leaf folders). A file store
@@ -80,35 +79,38 @@ public class DefaultFileStoreHandler implements FileStoreHandler {
 
     private static int MAX_NR_FILES = (int)Math.pow(FILES_PER_FOLDER, FOLDER_LEVEL + 1);
 
-    private final Node m_node;
+    private final String m_name;
     private final UUID m_storeUUID;
     private File m_baseDirInWorkflowFolder;
     private File m_baseDir;
-    private DuplicateChecker m_duplicateChecker;
-    private WorkflowFileStoreHandlerRepository m_fileStoreHandlerRepository;
+    private InternalDuplicateChecker m_duplicateChecker;
+    private FileStoreHandlerRepository m_fileStoreHandlerRepository;
     private int m_nextIndex = 0;
 
     /**
      *  */
-    DefaultFileStoreHandler(final Node node, final UUID storeUUID) {
-        if (node == null) {
+    public WriteFileStoreHandler(final String name, final UUID storeUUID) {
+        if (name == null) {
             throw new NullPointerException("Argument must not be null.");
         }
-        m_node = node;
+        m_name = name;
         m_storeUUID = storeUUID;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public void addToRepository(final FileStoreHandlerRepository fileStoreHandlerRepository) {
+        fileStoreHandlerRepository.addFileStoreHandler(this);
+        m_fileStoreHandlerRepository = fileStoreHandlerRepository;
     }
 
     public void setBaseDir(final File baseDir) {
         if (!baseDir.isDirectory()) {
             throw new IllegalStateException(
-                    "Base directory of file store to node " + m_node.getName()
+                    "Base directory of file store to node " + m_name
                     + " does not exist: " + baseDir.getAbsolutePath());
         }
         m_baseDir = baseDir;
-    }
-
-    void setFileStoreHandlerRepository(final WorkflowFileStoreHandlerRepository repo) {
-        m_fileStoreHandlerRepository = repo;
     }
 
     /** {@inheritDoc} */
@@ -141,39 +143,55 @@ public class DefaultFileStoreHandler implements FileStoreHandler {
     }
 
     /** @return the storeUUID */
-    public UUID getStoreUUID() {
+    @Override
+    public final UUID getStoreUUID() {
         return m_storeUUID;
     }
 
     /** {@inheritDoc} */
     @Override
+    public FileStoreKey translateToLocal(final FileStore fs) {
+        final FileStoreKey key = FileStoreUtil.getFileStoreKey(fs);
+        getOwnerHandler(key);
+        return key;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public FileStore getFileStore(final FileStoreKey key) {
-        FileStoreHandler ownerHandler;
+        IFileStoreHandler ownerHandler = getOwnerHandler(key);
+        if (!(ownerHandler instanceof WriteFileStoreHandler)) {
+            throw new IllegalStateException(String.format(
+                    "Owner file store handler \"%s\" to file store key \"%s\" "
+                    + "is not of expected type %s",
+                    ownerHandler, key,
+                    WriteFileStoreHandler.class.getSimpleName()));
+        }
+        try {
+            WriteFileStoreHandler owner = (WriteFileStoreHandler)ownerHandler;
+            return owner.getFileStoreInternal(key);
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not init file store \""
+                    + ownerHandler + "\"", e);
+        }
+    }
+
+    /**
+     * @param key
+     * @return */
+    IFileStoreHandler getOwnerHandler(final FileStoreKey key) {
+        IFileStoreHandler ownerHandler;
         if (key.getStoreUUID().equals(m_storeUUID)) {
             ownerHandler = this;
         } else {
-            final WorkflowFileStoreHandlerRepository repo =
-                m_fileStoreHandlerRepository;
+            FileStoreHandlerRepository repo = m_fileStoreHandlerRepository;
             if (repo == null) {
                 throw new IllegalStateException(
                         "No file store handler repository set");
             }
             ownerHandler = repo.getHandler(m_storeUUID);
         }
-        if (!(ownerHandler instanceof DefaultFileStoreHandler)) {
-            throw new IllegalStateException(String.format(
-                    "Owner file store handler \"%s\" to file store key \"%s\" "
-                    + "is not of expected type %s",
-                    ownerHandler, key,
-                    DefaultFileStoreHandler.class.getSimpleName()));
-        }
-        try {
-            DefaultFileStoreHandler owner = (DefaultFileStoreHandler)ownerHandler;
-            return owner.getFileStoreInternal(key);
-        } catch (IOException e) {
-            throw new IllegalStateException("Could not init file store \""
-                    + ownerHandler + "\"", e);
-        }
+        return ownerHandler;
     }
 
     private synchronized FileStore getFileStoreInternal(final FileStoreKey key)
@@ -192,14 +210,14 @@ public class DefaultFileStoreHandler implements FileStoreHandler {
             m_baseDirInWorkflowFolder = null;
             FileUtil.copyDir(source, m_baseDir);
         }
-        return new FileStore(this, key);
+        return FileStoreUtil.createFileStore(this, key);
     }
 
     /** {@inheritDoc} */
     @Override
     public String toString() {
         StringBuilder b = new StringBuilder(m_storeUUID.toString());
-        b.append(" (").append(m_node.getName()).append(": ");
+        b.append(" (").append(m_name).append(": ");
         if (m_baseDir == null) {
             b.append("<no directory>");
         } else {
@@ -209,8 +227,24 @@ public class DefaultFileStoreHandler implements FileStoreHandler {
         return b.toString();
     }
 
-    public synchronized FileStore createFileStore(final String name)
-        throws IOException {
+    public synchronized FileStore createFileStore(final String name) throws IOException {
+        addToDuplicateChecker(name);
+        return createFileStoreInternal(name, null, -1);
+    }
+
+    /**
+     * @param name
+     * @throws IOException */
+    void addToDuplicateChecker(final String name) throws IOException {
+        if (m_duplicateChecker == null) {
+            throw new IllegalStateException("File store on node " + m_name + " is read only/closed");
+        }
+        m_duplicateChecker.add(name);
+    }
+
+    FileStore createFileStoreInternal(final String name,
+            final byte[] nestedLoopPath, final int iterationIndex) throws IOException {
+        assert Thread.holdsLock(this);
         if (name == null) {
             throw new NullPointerException("Argument must not be null.");
         }
@@ -222,25 +256,20 @@ public class DefaultFileStoreHandler implements FileStoreHandler {
             throw new IOException("Invalid file name, must not contain (back)"
                     + " slash: \"" + name + "\"");
         }
-        if (m_duplicateChecker == null) {
-            throw new IllegalStateException("File store on node "
-                    + m_node.getName() + " is read only");
-        }
-        try {
-            m_duplicateChecker.addKey(name);
-        } catch (IOException e) {
-            throw new IllegalStateException(e.getClass().getSimpleName()
-                    + " while checking for duplicate names", e);
-        }
+        FileStoreKey key = new FileStoreKey(m_storeUUID, m_nextIndex, nestedLoopPath, iterationIndex, name);
         ensureInitBaseDirectory();
         if (m_nextIndex > MAX_NR_FILES) {
             throw new IOException("Maximum number of files stores reached: " + MAX_NR_FILES);
         }
-        FileStoreKey key = new FileStoreKey(m_storeUUID, m_nextIndex, name);
         getParentDir(m_nextIndex, true);
         m_nextIndex++;
-        FileStore fs = new FileStore(this, key);
+        FileStore fs = FileStoreUtil.createFileStore(this, key);
         return fs;
+    }
+
+    /** @return the nextIndex */
+    public int getNextIndex() {
+        return m_nextIndex;
     }
 
     public File getParentDir(final int indexArg, final boolean create) {
@@ -256,7 +285,9 @@ public class DefaultFileStoreHandler implements FileStoreHandler {
             parentDir = new File(parentDir, subFolderNames[level]);
         }
         if (!parentDir.isDirectory()) {
-            parentDir.mkdirs();
+            if (!parentDir.mkdirs()) {
+                LOGGER.error("Failed to create directory \"" + parentDir.getAbsolutePath() + "\"");
+            }
         }
         return parentDir;
     }
@@ -266,49 +297,37 @@ public class DefaultFileStoreHandler implements FileStoreHandler {
         assert Thread.holdsLock(this);
         if (m_baseDir == null) {
             StringBuilder baseDirName = new StringBuilder("knime_fs-");
-            String nodeName = m_node.getName();
+            String nodeName = m_name;
             // delete special chars
             nodeName = nodeName.replaceAll("[()-]", "");
+            nodeName = nodeName.replaceAll(":", "-");
             // non-word chars by '_'
             nodeName = nodeName.replaceAll("\\W", "_");
-            baseDirName.append(nodeName);
-            baseDirName.append("-").append(getStoreUUID().toString());
+            baseDirName.append(nodeName).append("-");
             m_baseDir = FileUtil.createTempDir(baseDirName.toString());
             LOGGER.debug("Assigning temp directory to file store \"" + toString() + "\"");
         }
     }
 
-    public synchronized void close() {
-        if (m_duplicateChecker == null) {
-            return;
-        }
-        try {
-            m_duplicateChecker.checkForDuplicates();
-        } catch (DuplicateKeyException e) {
-            throw new IllegalArgumentException("Duplicate file store "
-                    + "name encountered: " + e.getMessage(), e);
-        } catch (IOException e) {
-            throw new IllegalStateException(e.getClass().getSimpleName()
-                    + " while checking for duplicate names", e);
+    /** {@inheritDoc} */
+    @Override
+    public void open(final ExecutionContext exec) {
+        m_duplicateChecker = new InternalDuplicateChecker();
+    }
+
+    public void close() {
+        if (m_duplicateChecker != null) {
+            m_duplicateChecker.close();
+            m_duplicateChecker = null;
         }
     }
 
-    public static final FileStoreHandler createNewHandler(final Node node,
-            final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository) {
-        DefaultFileStoreHandler result = new DefaultFileStoreHandler(node, UUID.randomUUID());
-        fileStoreHandlerRepository.addFileStoreHandler(result);
-        result.setFileStoreHandlerRepository(fileStoreHandlerRepository);
-        result.m_duplicateChecker = new DuplicateChecker();
-        return result;
-    }
-
-    public static final FileStoreHandler restore(final Node node,
+    public static final IFileStoreHandler restore(final String name,
             final UUID uuid,
             final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository,
             final File inWorkflowDirectory) {
-        DefaultFileStoreHandler fileStoreHandler = new DefaultFileStoreHandler(node, uuid);
-        fileStoreHandlerRepository.addFileStoreHandler(fileStoreHandler);
-        fileStoreHandler.setFileStoreHandlerRepository(fileStoreHandlerRepository);
+        WriteFileStoreHandler fileStoreHandler = new WriteFileStoreHandler(name, uuid);
+        fileStoreHandler.addToRepository(fileStoreHandlerRepository);
         fileStoreHandler.m_baseDirInWorkflowFolder = inWorkflowDirectory;
         return fileStoreHandler;
     }

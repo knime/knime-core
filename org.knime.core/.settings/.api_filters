@@ -3953,6 +3953,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/FlowLoopContext.java" type="org.knime.core.node.workflow.FlowLoopContext">
+        <filter id="354463860">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.FlowLoopContext"/>
+                <message_argument value="FlowLoopContext()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainer.java" type="org.knime.core.node.workflow.NodeContainer">
         <filter id="1143996420">
             <message_arguments>

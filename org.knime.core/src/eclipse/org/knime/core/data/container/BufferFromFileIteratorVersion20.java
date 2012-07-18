@@ -65,6 +65,8 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
 import org.knime.core.data.filestore.FileStoreCell;
+import org.knime.core.data.filestore.FileStoreUtil;
+import org.knime.core.data.filestore.internal.FileStoreKey;
 import org.knime.core.node.NodeLogger;
 
 /**
@@ -302,6 +304,13 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
             }
             CellClassInfo type = m_buffer.getTypeForChar(identifier);
             Class<? extends DataCell> cellClass = type.getCellClass();
+            boolean isFileStore = FileStoreCell.class.isAssignableFrom(cellClass);
+            final FileStoreKey fileStoreKey;
+            if (isFileStore) {
+                fileStoreKey = inStream.readFileStoreKey();
+            } else {
+                fileStoreKey = null;
+            }
             boolean isBlob = BlobDataCell.class.isAssignableFrom(cellClass);
             final DataCell result;
             if (isBlob) {
@@ -328,10 +337,10 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
                 result = inStream.readDataCellPerKNIMESerializer(serializer);
             }
 
-            if (result instanceof FileStoreCell) {
+            if (fileStoreKey != null) {
                 FileStoreCell fsCell = (FileStoreCell)result;
-                fsCell.retrieveFileStoreHandlerFrom(
-                        m_buffer.getFileStoreHandlerRepository());
+                FileStoreUtil.retrieveFileStoreHandlerFrom(fsCell,
+                        fileStoreKey, m_buffer.getFileStoreHandlerRepository());
             }
             return result;
         }

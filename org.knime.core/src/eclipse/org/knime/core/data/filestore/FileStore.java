@@ -51,11 +51,10 @@
 package org.knime.core.data.filestore;
 
 import java.io.File;
-import java.io.IOException;
 
-import org.knime.core.data.filestore.internal.DefaultFileStoreHandler;
-import org.knime.core.data.filestore.internal.FileStoreHandler;
 import org.knime.core.data.filestore.internal.FileStoreKey;
+import org.knime.core.data.filestore.internal.IFileStoreHandler;
+import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 
 /**
  *
@@ -65,14 +64,14 @@ import org.knime.core.data.filestore.internal.FileStoreKey;
 public final class FileStore {
 
     private final FileStoreKey m_key;
-    private final DefaultFileStoreHandler m_fileStoreHandler;
+    private final WriteFileStoreHandler m_fileStoreHandler;
 
     /**
      * @param storeHandler
      * @param key
      * @noreference Not intended to be referenced by clients.
      */
-    public FileStore(final DefaultFileStoreHandler storeHandler,
+    FileStore(final WriteFileStoreHandler storeHandler,
             final FileStoreKey key) {
         if (key == null || storeHandler == null) {
             throw new NullPointerException("Argument must not be null.");
@@ -87,13 +86,13 @@ public final class FileStore {
     }
 
     /** @return the fileStoreHandler */
-    FileStoreHandler getFileStoreHandler() {
+    IFileStoreHandler getFileStoreHandler() {
         return m_fileStoreHandler;
     }
 
-    public File getFile() throws IOException {
+    public File getFile() {
         File parentDir = m_fileStoreHandler.getParentDir(m_key.getIndex(), false);
-        String relativePath = m_key.getName();
+        String relativePath = m_key.getNameOnDisc();
         return new File(parentDir, relativePath);
     }
 

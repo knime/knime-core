@@ -50,7 +50,7 @@
  */
 package org.knime.core.node;
 
-import org.knime.core.data.filestore.internal.FileStoreHandler;
+import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -76,7 +76,7 @@ public interface NodeContentPersistor {
     String getPortObjectSummary(final int outportIndex);
     BufferedDataTable[] getInternalHeldTables();
     /** @since 2.6 */
-    FileStoreHandler getFileStoreHandler();
+    IFileStoreHandler getFileStoreHandler();
     String getWarningMessage();
 
 }

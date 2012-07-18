@@ -46,89 +46,76 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   Jun 26, 2012 (wiswedel): created
+ *   Jul 11, 2012 (wiswedel): created
  */
 package org.knime.core.data.filestore.internal;
 
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
+import javax.swing.Icon;
 
-import org.knime.core.node.NodeLogger;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.DataValueComparator;
+import org.knime.core.data.renderer.DataValueRendererFamily;
+import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
+import org.knime.core.data.renderer.StringValueRenderer;
 
-/** File store handler associated with a workflow. It's a map of
- * store UUIDs to file store handlers. Each file store handler corresponds
- * to a node.
+/**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @since 2.6
  */
-public final class WorkflowFileStoreHandlerRepository extends FileStoreHandlerRepository {
+public interface FileStoreKeyDataValue extends DataValue {
 
-    private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(WorkflowFileStoreHandlerRepository.class);
+    /** Meta information to this value type.
+     * @see DataValue#UTILITY
+     */
+    public static final UtilityFactory UTILITY = new FileStoreKeyUtilityFactory();
 
-    private final ConcurrentHashMap<UUID, IWriteFileStoreHandler> m_handlerMap;
+    /** @return the key represented by this cell/value. */
+    public FileStoreKey getKey();
 
-    /**
-     *  */
-    public WorkflowFileStoreHandlerRepository() {
-        m_handlerMap = new ConcurrentHashMap<UUID, IWriteFileStoreHandler>();
-    }
+    /** Implementations of the meta information of this value class. */
+    public static class FileStoreKeyUtilityFactory extends UtilityFactory {
 
-    @Override
-    public void addFileStoreHandler(final IWriteFileStoreHandler handler) {
-        final UUID storeUUID = handler.getStoreUUID();
-        if (storeUUID != null) {
-            m_handlerMap.put(storeUUID, handler);
-        }
-    }
-
-    @Override
-    public void removeFileStoreHandler(final IWriteFileStoreHandler handler) {
-        final UUID storeUUID = handler.getStoreUUID();
-        if (storeUUID != null) {
-            IFileStoreHandler old = m_handlerMap.remove(storeUUID);
-            if (old == null) {
-                throw new IllegalArgumentException(
-                        "No such file store hander: " + handler);
+        private static final DataValueComparator COMPARATOR =
+            new DataValueComparator() {
+            @Override
+            protected int compareDataValues(final DataValue v1, final DataValue v2) {
+                FileStoreKeyDataValue f1 = (FileStoreKeyDataValue)v1;
+                FileStoreKeyDataValue f2 = (FileStoreKeyDataValue)v2;
+                return f1.getKey().compareTo(f2.getKey());
             }
+        };
+
+        /** Singleton. */
+        private FileStoreKeyUtilityFactory() {
         }
-    }
 
-    /** Get handler to id, never null.
-     * @param storeHandlerUUID the store id
-     * @return the handler.
-     * @throws IllegalStateException If store is not registered. */
-    @Override
-    public IFileStoreHandler getHandler(final UUID storeHandlerUUID) {
-        IFileStoreHandler h = m_handlerMap.get(storeHandlerUUID);
-        if (h == null) {
-            final String s =
-                "Unknown file store handler to UUID " + storeHandlerUUID;
-            LOGGER.error(s);
-            printValidFileStoreHandlersToLogDebug();
-            throw new IllegalStateException(s);
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public Icon getIcon() {
+            return null;
         }
-        return h;
-    }
 
-    private void printValidFileStoreHandlersToLogDebug() {
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("Valid file store handlers are:");
-            LOGGER.debug("--------- Start --------------");
-            for (IFileStoreHandler fsh : m_handlerMap.values()) {
-                LOGGER.debug("  " + fsh);
-            }
-            LOGGER.debug("--------- End ----------------");
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected DataValueComparator getComparator() {
+            return COMPARATOR;
         }
-    }
 
-    /** {@inheritDoc} */
-    @Override
-    public String toString() {
-        return "File store handler repository ("
-            + m_handlerMap.size() + " handler(s))";
-    }
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        protected DataValueRendererFamily getRendererFamily(
+                final DataColumnSpec spec) {
+            return new DefaultDataValueRendererFamily(
+                    StringValueRenderer.INSTANCE);
+        }
 
+    }
 
 }

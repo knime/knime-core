@@ -59,6 +59,7 @@ import java.util.Map;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.node.NodeLogger;
 
 
@@ -101,14 +102,14 @@ class NoKeyBuffer extends Buffer {
      * @param bufferID Passed on to super.
      * @param tblRep Passed on to super.
      * @param localTblRep Passed on to super.
-     * @param fileStoreHandlerRepository passed on to super.
+     * @param fileStoreHandler passed on to super.
      */
     NoKeyBuffer(final int maxRowsInMemory,
             final int bufferID, final Map<Integer, ContainerTable> tblRep,
             final Map<Integer, ContainerTable> localTblRep,
-            final FileStoreHandlerRepository fileStoreHandlerRepository) {
+            final IWriteFileStoreHandler fileStoreHandler) {
         super(maxRowsInMemory, bufferID, tblRep, localTblRep,
-                fileStoreHandlerRepository);
+                fileStoreHandler);
     }
 
     /** Creates new buffer for reading.
@@ -126,8 +127,8 @@ class NoKeyBuffer extends Buffer {
             final int bufferID, final Map<Integer, ContainerTable> tblRep,
             final FileStoreHandlerRepository fileStoreHandlerRepository)
             throws IOException {
-        super(binFile, blobDir, spec, metaIn, bufferID, tblRep,
-                fileStoreHandlerRepository);
+        super(binFile, blobDir, /*can't have fs dir in workflow*/null,
+                spec, metaIn, bufferID, tblRep, fileStoreHandlerRepository);
     }
 
     /** {@inheritDoc} */
@@ -161,7 +162,7 @@ class NoKeyBuffer extends Buffer {
     @SuppressWarnings("unchecked")
     Buffer createLocalCloneForWriting() {
         return new NoKeyBuffer(0, getBufferID(), getGlobalRepository(),
-                Collections.EMPTY_MAP, getFileStoreHandlerRepository());
+                Collections.EMPTY_MAP, castAndGetFileStoreHandler());
     }
 
 }

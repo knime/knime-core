@@ -72,6 +72,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.UUID;
 import java.util.WeakHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -91,7 +92,17 @@ import org.knime.core.data.collection.BlobSupportDataCellIterator;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
 import org.knime.core.data.container.BufferFromFileIteratorVersion20.DataCellStreamReader;
+import org.knime.core.data.filestore.FileStore;
+import org.knime.core.data.filestore.FileStoreCell;
+import org.knime.core.data.filestore.FileStoreUtil;
+import org.knime.core.data.filestore.internal.EmptyFileStoreHandler;
+import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.FileStoreKey;
+import org.knime.core.data.filestore.internal.NotInWorkflowFileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
+import org.knime.core.data.filestore.internal.ROWriteFileStoreHandler;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
@@ -142,6 +153,10 @@ class Buffer implements KNIMEStreamConstants {
     /** Name of the zip entry containing the blob files (directory). */
     static final String ZIP_ENTRY_BLOBS = "blobs";
 
+    /** Name of the zip entry containing the filestore files (directory);
+     * only used when the buffer is isolated (not in workflow). */
+    static final String ZIP_ENTRY_FILESTORES = "filestores";
+
     /** Name of the zip entry containing the meta information (e.g. #rows). */
     static final String ZIP_ENTRY_META = "meta.xml";
 
@@ -158,6 +173,10 @@ class Buffer implements KNIMEStreamConstants {
 
     /** Config entry whether or not this buffer contains blobs. */
     private static final String CFG_CONTAINS_BLOBS = "container.contains.blobs";
+
+    /** Config entry (String) for buffer's filestore handler UUID,
+     * only applicable if buffer is not in workflow. */
+    private static final String CFG_FILESTORES_UUID = "container.filestores.uuid";
 
     /** Config entry whether this buffer resides in memory. */
     private static final String CFG_IS_IN_MEMORY = "container.inmemory";
@@ -352,10 +371,11 @@ class Buffer implements KNIMEStreamConstants {
      * executed. It is only important while writing to this buffer. */
     private Map<Integer, ContainerTable> m_localRepository;
 
-    /** Used while reading file store cells. When used in a BufferedDataTable
-     * this is the workflow global repository, otherwise a repository with at
-     * most one handler. */
+    /** {@link #getFileStoreHandlerRepository()}. */
     private final FileStoreHandlerRepository m_fileStoreHandlerRepository;
+
+    /** {@link #getFileStoreHandler()}. */
+    private IFileStoreHandler m_fileStoreHandler;
 
     /** Number of open file input streams on m_binFile. */
     private AtomicInteger m_nrOpenInputStreams = new AtomicInteger();
@@ -438,12 +458,12 @@ class Buffer implements KNIMEStreamConstants {
      * @param globalRep Table repository for blob (de)serialization (read only).
      * @param localRep Local table repository for blob (de)serialization.
      * @param bufferID The id of this buffer used for blob (de)serialization.
-     * @param fileStoreHandlerRepository ...
+     * @param fileStoreHandler ...
      */
     Buffer(final int maxRowsInMemory, final int bufferID,
             final Map<Integer, ContainerTable> globalRep,
             final Map<Integer, ContainerTable> localRep,
-            final FileStoreHandlerRepository fileStoreHandlerRepository) {
+            final IWriteFileStoreHandler fileStoreHandler) {
         assert (maxRowsInMemory >= 0);
         m_maxRowsInMem = maxRowsInMemory;
         m_list = new ArrayList<BlobSupportDataRow>();
@@ -452,7 +472,8 @@ class Buffer implements KNIMEStreamConstants {
         m_bufferID = bufferID;
         m_globalRepository = globalRep;
         m_localRepository = localRep;
-        m_fileStoreHandlerRepository = fileStoreHandlerRepository;
+        m_fileStoreHandler = fileStoreHandler;
+        m_fileStoreHandlerRepository = fileStoreHandler.getFileStoreHandlerRepository();
     }
 
     /** Creates new buffer for <strong>reading</strong>. The
@@ -461,6 +482,7 @@ class Buffer implements KNIMEStreamConstants {
      *
      * @param binFile The binary file to read from (will be deleted on exit).
      * @param blobDir temp directory containing blobs (may be null).
+     * @param fileStoreDir ...
      * @param spec The data table spec to which the this buffer complies to.
      * @param metaIn An input stream from which this constructor reads the
      * meta information (e.g. which byte encodes which DataCell).
@@ -469,9 +491,9 @@ class Buffer implements KNIMEStreamConstants {
      * @param fileStoreHandlerRepository ...
      * @throws IOException If the header (the spec information) can't be read.
      */
-    Buffer(final File binFile, final File blobDir, final DataTableSpec spec,
-            final InputStream metaIn, final int bufferID,
-            final Map<Integer, ContainerTable> tblRep,
+    Buffer(final File binFile, final File blobDir, final File fileStoreDir,
+            final DataTableSpec spec, final InputStream metaIn,
+            final int bufferID, final Map<Integer, ContainerTable> tblRep,
             final FileStoreHandlerRepository fileStoreHandlerRepository)
             throws IOException {
         // just check if data is present!
@@ -483,14 +505,20 @@ class Buffer implements KNIMEStreamConstants {
         m_blobDir = blobDir;
         m_bufferID = bufferID;
         m_globalRepository = tblRep;
-        m_fileStoreHandlerRepository = fileStoreHandlerRepository;
+        if (fileStoreHandlerRepository == null) {
+            LOGGER.debug("no file store handler repository set, using new instance of "
+                    + NotInWorkflowFileStoreHandlerRepository.class.getName());
+            m_fileStoreHandlerRepository = new NotInWorkflowFileStoreHandlerRepository();
+        }  else {
+            m_fileStoreHandlerRepository = fileStoreHandlerRepository;
+        }
         m_openIteratorSet = new WeakHashMap<FromFileIterator, Object>();
         if (metaIn == null) {
             throw new IOException("No meta information given (null)");
         }
         m_maxRowsInMem = 0;
         try {
-            readMetaFromFile(metaIn);
+            readMetaFromFile(metaIn, fileStoreDir);
         } catch (InvalidSettingsException ise) {
             IOException ioe = new IOException(
                     "Unable to read meta information from file \""
@@ -634,7 +662,7 @@ class Buffer implements KNIMEStreamConstants {
                 : new BlobSupportDataRow(row.getKey(), cellCopies);
     }
 
-    private DataCell handleIncomingBlob(final DataCell cell,  final int col,
+    private DataCell handleIncomingBlob(final DataCell cell, final int col,
             final int totalColCount, final boolean copyForVersionHop,
             final boolean forceCopyOfBlobsArg) throws IOException {
         // whether the content of the argument row needs to be copied
@@ -898,6 +926,16 @@ class Buffer implements KNIMEStreamConstants {
         subSettings.addString(CFG_VERSION, getVersion());
         subSettings.addInt(CFG_SIZE, size());
         subSettings.addBoolean(CFG_CONTAINS_BLOBS, m_containsBlobs);
+        // added between version 8 and 9 - no increment of version number
+        String fileStoresUUID = null;
+        if (m_fileStoreHandler instanceof NotInWorkflowWriteFileStoreHandler) {
+            NotInWorkflowWriteFileStoreHandler notInWorkflowFSH =
+                (NotInWorkflowWriteFileStoreHandler)m_fileStoreHandler;
+            if (notInWorkflowFSH.hasCopiedFileStores()) {
+                fileStoresUUID = notInWorkflowFSH.getStoreUUID().toString();
+            }
+        }
+        subSettings.addString(CFG_FILESTORES_UUID, fileStoresUUID);
         subSettings.addBoolean(CFG_IS_IN_MEMORY, !usesOutFile());
         subSettings.addInt(CFG_BUFFER_ID, m_bufferID);
         NodeSettingsWO typeSubSettings =
@@ -925,8 +963,8 @@ class Buffer implements KNIMEStreamConstants {
      * @throws ClassNotFoundException If any of the classes can't be loaded.
      * @throws InvalidSettingsException If the internal structure is broken.
      */
-    private void readMetaFromFile(final InputStream metaIn)
-    throws IOException, InvalidSettingsException {
+    private void readMetaFromFile(final InputStream metaIn,
+            final File fileStoreDir) throws IOException, InvalidSettingsException {
         InputStream inStream = new BufferedInputStream(metaIn);
         try {
             NodeSettingsRO settings = NodeSettings.loadFromXML(inStream);
@@ -952,6 +990,24 @@ class Buffer implements KNIMEStreamConstants {
                         + m_bufferID + "), unpredictable errors may occur");
                 }
             }
+            IFileStoreHandler fileStoreHandler = new EmptyFileStoreHandler(m_fileStoreHandlerRepository);
+            if (m_version >= 8) { // file stores added between version 8 and 9
+                String fileStoresUUIDS = subSettings.getString(CFG_FILESTORES_UUID, null);
+                UUID fileStoresUUID = null;
+                if (fileStoresUUIDS != null) {
+                    try {
+                        fileStoresUUID = UUID.fromString(fileStoresUUIDS);
+                    } catch (IllegalArgumentException iae) {
+                        throw new InvalidSettingsException("Can't parse UUID " + fileStoresUUIDS, iae);
+                    }
+                }
+                if (fileStoresUUID != null) {
+                    NotInWorkflowWriteFileStoreHandler notInWorkflowFSH =
+                        new NotInWorkflowWriteFileStoreHandler(fileStoresUUID, m_fileStoreHandlerRepository);
+                    notInWorkflowFSH.setBaseDir(fileStoreDir);
+                }
+            }
+            m_fileStoreHandler = fileStoreHandler;
             if (m_version >= 8) { // no back into memory option prior 2.0
                 // the "back into memory" option was added in buffer
                 // version 5 (2.0 TechPreview Version), though it has a bug
@@ -1104,7 +1160,10 @@ class Buffer implements KNIMEStreamConstants {
         return m_globalRepository;
     }
 
-    /** @return the fileStoreHandlerRepository */
+    /** Used while reading file store cells. When used in a BufferedDataTable
+     * this is the workflow global repository, otherwise a repository with at
+     * most one handler.
+     * @return the fileStoreHandlerRepository */
     final FileStoreHandlerRepository getFileStoreHandlerRepository() {
         return m_fileStoreHandlerRepository;
     }
@@ -1171,10 +1230,21 @@ class Buffer implements KNIMEStreamConstants {
                 : CellClassInfo.get(cell);
         DataCellSerializer<DataCell> ser = getSerializerForDataCell(cellClass);
         Byte identifier = m_typeShortCuts.get(cellClass);
+        FileStoreKey fileStoreKey = null;
+        if (cell instanceof FileStoreCell) {
+            FileStore fileStore = FileStoreUtil.getFileStore((FileStoreCell)cell);
+            fileStoreKey = ((IWriteFileStoreHandler)m_fileStoreHandler).translateToLocal(fileStore);
+        }
+        final boolean isJavaSerializationOrBlob = ser == null && !isBlob;
+        if (isJavaSerializationOrBlob) {
+            outStream.writeControlByte(BYTE_TYPE_SERIALIZATION);
+        }
+        outStream.writeControlByte(identifier);
+        if (fileStoreKey != null) {
+            outStream.writeFileStoreKey(fileStoreKey);
+        }
         // DataCell is datacell-serializable
-        if (ser != null || isBlob) {
-            // memorize type if it does not exist
-            outStream.writeControlByte(identifier);
+        if (!isJavaSerializationOrBlob) {
             if (isBlob) {
                 BlobWrapperDataCell bc = (BlobWrapperDataCell)cell;
                 outStream.writeBlobAddress(bc.getAddress());
@@ -1182,8 +1252,6 @@ class Buffer implements KNIMEStreamConstants {
                 outStream.writeDataCellPerKNIMESerializer(ser, cell);
             }
         } else {
-            outStream.writeControlByte(BYTE_TYPE_SERIALIZATION);
-            outStream.writeControlByte(identifier);
             outStream.writeDataCellPerJavaSerialization(cell);
         }
     }
@@ -1497,6 +1565,20 @@ class Buffer implements KNIMEStreamConstants {
         return m_containsBlobs;
     }
 
+    /** @return true if this buffer represents an isolated table that has file stores copied
+     * from another table. */
+    boolean hasOwnFileStoreCells() {
+        return m_fileStoreHandler instanceof NotInWorkflowWriteFileStoreHandler
+        && ((NotInWorkflowWriteFileStoreHandler)m_fileStoreHandler).hasCopiedFileStores();
+    }
+
+    /** @return the directory having file store if {@link #hasOwnFileStoreCells()} returns true
+     * (otherwise throws an exception). */
+    File getOwnFileStoreCellsDirectory() {
+        assert hasOwnFileStoreCells();
+        return ((NotInWorkflowWriteFileStoreHandler)m_fileStoreHandler).getBaseDir();
+    }
+
     /** Creates a clone of this buffer for writing the content to a stream
      * that is of the current version.
      * @return A new buffer with the same ID, which is only used locally to
@@ -1504,9 +1586,21 @@ class Buffer implements KNIMEStreamConstants {
      */
     @SuppressWarnings("unchecked")
     Buffer createLocalCloneForWriting() {
-        return new Buffer(0, getBufferID(),
-                getGlobalRepository(), Collections.EMPTY_MAP,
-                getFileStoreHandlerRepository());
+        return new Buffer(0, getBufferID(), getGlobalRepository(),
+                Collections.EMPTY_MAP, castAndGetFileStoreHandler());
+    }
+
+    /** Returns a file store handler used when data needs to be copied (version hop,
+     * see {@link #createLocalCloneForWriting()}). When this buffer was created using the 'write' constructor
+     * this will be the constructor file store handler. Otherwise it will be a wrapper that is write-protected.
+     * @return ...
+     */
+    final IWriteFileStoreHandler castAndGetFileStoreHandler() {
+        if (m_fileStoreHandler instanceof IWriteFileStoreHandler) {
+            return (IWriteFileStoreHandler)m_fileStoreHandler;
+        }
+        LOGGER.debug("file store handler is not writable, creating fallback");
+        return new ROWriteFileStoreHandler(getFileStoreHandlerRepository());
     }
 
     /**
@@ -1565,7 +1659,10 @@ class Buffer implements KNIMEStreamConstants {
                 assert copy.m_blobDir == null;
             }
             if (blobDir != null) {
-                addBlobsToZip(ZIP_ENTRY_BLOBS, zipOut, blobDir);
+                addToZip(ZIP_ENTRY_BLOBS, zipOut, blobDir);
+            }
+            if (hasOwnFileStoreCells()) {
+                addToZip(ZIP_ENTRY_FILESTORES, zipOut, getOwnFileStoreCellsDirectory());
             }
             zipOut.setLevel(Deflater.DEFAULT_COMPRESSION);
             zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_META));
@@ -1577,7 +1674,10 @@ class Buffer implements KNIMEStreamConstants {
             FileUtil.copy(new FileInputStream(m_binFile), zipOut);
             shortCutsLookup = m_shortCutsLookup;
             if (m_blobDir != null) {
-                addBlobsToZip(ZIP_ENTRY_BLOBS, zipOut, m_blobDir);
+                addToZip(ZIP_ENTRY_BLOBS, zipOut, m_blobDir);
+            }
+            if (hasOwnFileStoreCells()) {
+                addToZip(ZIP_ENTRY_FILESTORES, zipOut, getOwnFileStoreCellsDirectory());
             }
             zipOut.setLevel(Deflater.DEFAULT_COMPRESSION);
             zipOut.putNextEntry(new ZipEntry(ZIP_ENTRY_META));
@@ -1589,14 +1689,14 @@ class Buffer implements KNIMEStreamConstants {
     /** Adds recursively the content of the directory <code>dir</code> to
      * a zip output stream, prefixed with <code>zipEntry</code>.
      */
-    private void addBlobsToZip(final String zipEntry,
+    private static void addToZip(final String zipEntry,
             final ZipOutputStream zipOut, final File dir) throws IOException {
         for (File f : dir.listFiles()) {
             String name = f.getName();
             if (f.isDirectory()) {
                 String dirPath = zipEntry + "/" + name + "/";
                 zipOut.putNextEntry(new ZipEntry(dirPath));
-                addBlobsToZip(dirPath, zipOut, f);
+                addToZip(dirPath, zipOut, f);
             } else {
                 zipOut.putNextEntry(new ZipEntry(zipEntry + "/" + name));
                 InputStream i = new BufferedInputStream(new FileInputStream(f));
@@ -1664,6 +1764,9 @@ class Buffer implements KNIMEStreamConstants {
             } else {
                 DeleteInBackgroundThread.delete(m_binFile);
             }
+        }
+        if (m_fileStoreHandler instanceof NotInWorkflowWriteFileStoreHandler) {
+            m_fileStoreHandler.clearAndDispose();
         }
         if (m_blobLRUCache != null) {
             m_blobLRUCache.clear();
