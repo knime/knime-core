@@ -19,6 +19,7 @@
 package org.knime.workbench.ui.wfvars;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.jface.dialogs.Dialog;
@@ -483,6 +484,9 @@ public class WorkflowVariablesDialog extends Dialog {
      * @since 2.6
      */
     public List<FlowVariable> getVariables() {
+        if (m_table == null) {
+            return Collections.emptyList();
+        }
         return m_table.getVariables();
     }
 

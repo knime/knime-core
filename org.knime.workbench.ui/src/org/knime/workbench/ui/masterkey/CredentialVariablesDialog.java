@@ -19,6 +19,7 @@
 package org.knime.workbench.ui.masterkey;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.eclipse.jface.dialogs.Dialog;
@@ -299,6 +300,9 @@ public class CredentialVariablesDialog extends Dialog {
      * @return a list of <code>Credentials</code> entered in the dialog
      */
     public List<Credentials> getCredentials() {
+        if (m_credentials == null) {
+            return Collections.emptyList();
+        }
         return m_credentials;
     }
 
