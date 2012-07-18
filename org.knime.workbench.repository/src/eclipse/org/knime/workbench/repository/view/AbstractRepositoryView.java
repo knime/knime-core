@@ -206,8 +206,10 @@ public abstract class AbstractRepositoryView extends ViewPart implements
         Display.getDefault().asyncExec(new Runnable() {
             @Override
             public void run() {
-                parent.setCursor(null);
-                m_viewer.getControl().setToolTipText(null);
+                if (!m_viewer.getControl().isDisposed()) {
+                    parent.setCursor(null);
+                    m_viewer.getControl().setToolTipText(null);
+                }
             }
         });
     }
