@@ -93,7 +93,7 @@ public class JavaSnippetNodeModel extends NodeModel {
             throws InvalidSettingsException {
         m_snippet.setSettings(m_settings);
         FlowVariableRepository flowVarRepository =
-            new FlowVariableRepository(getAvailableFlowVariables());
+            new FlowVariableRepository(getAvailableInputFlowVariables());
         ValidationReport report = m_snippet.validateSettings(inSpecs[0],
                 flowVarRepository);
         if (report.hasWarnings()) {
@@ -129,7 +129,7 @@ public class JavaSnippetNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         m_snippet.setSettings(m_settings);
         FlowVariableRepository flowVarRepo =
-            new FlowVariableRepository(getAvailableFlowVariables());
+            new FlowVariableRepository(getAvailableInputFlowVariables());
         BufferedDataTable output = m_snippet.execute(inData[0],
                 flowVarRepo, exec);
         for (FlowVariable var : flowVarRepo.getModified()) {

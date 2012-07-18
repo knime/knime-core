@@ -243,8 +243,7 @@ public class JSnippetFieldsController {
 
         if (index >= 0) {
             // return java field name
-            return (String)model.getValueAt(index,
-                    Column.COLUMN);
+            return (String)model.getValueAt(index, Column.JAVA_FIELD);
         } else {
             // try to add a row for the flow variable
             boolean success = m_inFieldsTable.addRow(v);

@@ -98,7 +98,7 @@ public class JavaEditVarNodeModel extends NodeModel {
             throws InvalidSettingsException {
         m_snippet.setSettings(m_settings);
         FlowVariableRepository flowVarRepository =
-            new FlowVariableRepository(getAvailableFlowVariables());
+            new FlowVariableRepository(getAvailableInputFlowVariables());
         ValidationReport report = m_snippet.validateSettings(
                 new DataTableSpec(), flowVarRepository);
         if (report.hasWarnings()) {
@@ -133,7 +133,7 @@ public class JavaEditVarNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         m_snippet.setSettings(m_settings);
         FlowVariableRepository flowVarRepo =
-            new FlowVariableRepository(getAvailableFlowVariables());
+            new FlowVariableRepository(getAvailableInputFlowVariables());
         m_snippet.execute(flowVarRepo, exec);
         for (FlowVariable var : flowVarRepo.getModified()) {
             Type type = var.getType();
