@@ -476,5 +476,14 @@ public class WorkflowVariablesDialog extends Dialog {
         }
         getShell().redraw();
     }
+    
+    /**
+     * Return list of flow variables shown in this dialog.
+     * @return list of flow variables
+     * @since 2.6
+     */
+    public List<FlowVariable> getVariables() {
+        return m_table.getVariables();
+    }
 
 }
