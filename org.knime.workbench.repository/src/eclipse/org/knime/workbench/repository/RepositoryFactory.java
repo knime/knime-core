@@ -204,9 +204,8 @@ public final class RepositoryFactory {
                 icon = ImageRepository.getImage(pluginId, iconPath);
             }
             if (icon == null) {
-                LOGGER.coding("Icon '" + iconPath
-                        + "' for metanode " + categoryPath + "/"
-                        + name + " does not exist");
+                LOGGER.coding("Icon '" + iconPath + "' for metanode "
+                        + categoryPath + "/" + name + " does not exist");
                 icon =
                         ImageRepository
                                 .getImage(SharedImages.DefaultMetaNodeIcon);
@@ -274,22 +273,29 @@ public final class RepositoryFactory {
         cat.setPluginID(pluginID);
         cat.setDescription(str(element.getAttribute("description"), ""));
         cat.setAfterID(str(element.getAttribute("after"), ""));
+        String path = str(element.getAttribute("path"), "/");
+        cat.setPath(path);
         if (!Boolean.getBoolean("java.awt.headless")) {
-            Image img =
-                    ImageRepository.getImage(pluginID,
-                            element.getAttribute("icon"));
-            if (img == null) {
-                LOGGER.coding("Icon '" + element.getAttribute("icon")
-                        + "' for category " + cat.getPath() + "/"
-                        + cat.getName() + " does not exist");
+            String iconPath = element.getAttribute("icon");
+            Image img;
+            if (iconPath == null) {
                 img =
                         ImageRepository
                                 .getImage(SharedImages.DefaultCategoryIcon);
+
+            } else {
+                img = ImageRepository.getImage(pluginID, iconPath);
+                if (img == null) {
+                    LOGGER.coding("Icon '" + element.getAttribute("icon")
+                            + "' for category " + cat.getPath() + "/"
+                            + cat.getName() + " does not exist");
+                    img =
+                            ImageRepository
+                                    .getImage(SharedImages.DefaultCategoryIcon);
+                }
             }
             cat.setIcon(img);
         }
-        String path = str(element.getAttribute("path"), "/");
-        cat.setPath(path);
 
         //
         // Insert in proper location, create all categories on the path
@@ -451,20 +457,27 @@ public final class RepositoryFactory {
         cat.setPluginID(pluginID);
         cat.setDescription(str(description, ""));
         cat.setAfterID(str(afterID, ""));
+        String path = str(categoryPath, "/");
+        cat.setPath(path);
         if (!Boolean.getBoolean("java.awt.headless")) {
-            Image img = ImageRepository.getImage(pluginID, icon);
-            if (img == null) {
-                LOGGER.coding("Icon '" + icon
-                        + "' for category " + cat.getPath() + "/"
-                        + cat.getName() + " does not exist");
+            Image img;
+            if (icon == null) {
                 img =
                         ImageRepository
                                 .getImage(SharedImages.DefaultCategoryIcon);
+            } else {
+                img = ImageRepository.getImage(pluginID, icon);
+                if (img == null) {
+                    LOGGER.coding("Icon '" + icon + "' for category "
+                            + cat.getPath() + "/" + cat.getName()
+                            + " does not exist");
+                    img =
+                            ImageRepository
+                                    .getImage(SharedImages.DefaultCategoryIcon);
+                }
             }
             cat.setIcon(img);
         }
-        String path = str(categoryPath, "/");
-        cat.setPath(path);
 
         return cat;
     }
