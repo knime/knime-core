@@ -1318,7 +1318,7 @@ public abstract class NodeModel {
      * only returns the variables provided at the input.
      * @return A new map of available flow variables in a non-modifiable map
      *         (never null).
-     * @since v2.3.3
+     * @since 2.3.3
      */
     public final Map<String, FlowVariable> getAvailableFlowVariables() {
         Map<String, FlowVariable> result =
@@ -1327,6 +1327,27 @@ public abstract class NodeModel {
             result.putAll(m_flowObjectStack.getAvailableFlowVariables());
             result.putAll(
                     m_outgoingFlowObjectStack.getAvailableFlowVariables());
+        }
+        return Collections.unmodifiableMap(result);
+    }
+
+    /** Get all flow variables currently available at the input of this node.
+     * The keys of the returned map will be the identifiers of the flow
+     * variables and the values the flow variables itself. The map is
+     * non-modifiable.
+     *
+     * <p>The map contains only flow variables that are provided as part of
+     * (all) input connections (which is same as the list returned in the
+     * dialog by calling {@link NodeDialogPane#getAvailableFlowVariables()}).
+     * @return A new map of input flow variables in a non-modifiable map
+     *         (never null).
+     * @since 2.6
+     */
+    public final Map<String, FlowVariable> getAvailableInputFlowVariables() {
+        Map<String, FlowVariable> result =
+            new LinkedHashMap<String, FlowVariable>();
+        if (m_flowObjectStack != null) {
+            result.putAll(m_flowObjectStack.getAvailableFlowVariables());
         }
         return Collections.unmodifiableMap(result);
     }
@@ -1392,7 +1413,7 @@ public abstract class NodeModel {
     // Loop Support...
     //
     // TODO: maybe all of this should be moved into an adaptor class
-    // "LoopNodeModelAdaptor" which keeps the node's role and all of
+    // "LoopNodeModelAdapter" which keeps the node's role and all of
     // the loop specific stuff? Later...
     //
     //////////////////////////////////////////
