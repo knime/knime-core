@@ -57,6 +57,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -823,6 +824,26 @@ public abstract class NameFilterPanel<T> extends JPanel {
             exclNames.add(getNameForT(t));
         }
         return exclNames;
+    }
+
+    /**
+     * Returns all values include and exclude in its original order they have added to this panel.
+     * @return a set of string containing all values from the in- and exclude list
+     */
+    public Set<String> getAllValues() {
+        final Set<String> set = new LinkedHashSet<String>();
+        for (T t : m_order) {
+            set.add(getNameForT(t));
+        }
+        return Collections.unmodifiableSet(set);
+    }
+
+    /**
+     * Returns all objects T in its original order.
+     * @return a set of T objects retrieved from the in- and exclude list
+     */
+    public Set<T> getAllValuesT() {
+        return Collections.unmodifiableSet(m_order);
     }
 }
 
