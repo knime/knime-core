@@ -329,7 +329,7 @@ public final class BatchExecutor {
         long t = System.currentTimeMillis();
         if (args.length < 1) {
             usage();
-            return EXIT_ERR_PRESTART;
+            return EXIT_SUCCESS;
         }
 
         File input = null, output = null;
