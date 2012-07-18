@@ -203,10 +203,14 @@ public class KnnNodeModel extends NodeModel {
             return new DataTableSpec[1];
         }
 
+        DataColumnSpec classColSpec = inSpecs[0].getColumnSpec(classColIndex);
+        if (m_settings.outputClassProbabilities()
+                && (classColSpec.getDomain().getValues() == null)) {
+            return new DataTableSpec[1];
+        }
+
         ColumnRearranger crea =
-                createRearranger(inSpecs[1],
-                        inSpecs[1].getColumnSpec(classColIndex), null, null,
-                        null, -1);
+                createRearranger(inSpecs[1], classColSpec, null, null, null, -1);
 
         return new DataTableSpec[]{crea.createSpec()};
     }
@@ -354,10 +358,11 @@ public class KnnNodeModel extends NodeModel {
         crea.setName(newName);
         colSpecs.add(crea.createSpec());
 
-        DataColumnSpec classCol = in.getColumnSpec(m_settings.classColumn());
-        final DataCell[] possibleValues = classCol.getDomain().getValues().
-                toArray(new DataCell[0]);
+        final DataCell[] possibleValues;
         if (m_settings.outputClassProbabilities()) {
+            possibleValues =
+                    classColumnSpec.getDomain().getValues()
+                            .toArray(new DataCell[0]);
             Arrays.sort(possibleValues, new Comparator<DataCell>() {
                 @Override
                 public int compare(final DataCell o1, final DataCell o2) {
@@ -373,10 +378,12 @@ public class KnnNodeModel extends NodeModel {
                 crea = new DataColumnSpecCreator(newName, DoubleCell.TYPE);
                 colSpecs.add(crea.createSpec());
             }
+        } else {
+            possibleValues = new DataCell[0];
         }
 
-        final DataColumnSpec[] colSpecArray = colSpecs.toArray(
-                new DataColumnSpec[colSpecs.size()]);
+        final DataColumnSpec[] colSpecArray =
+                colSpecs.toArray(new DataColumnSpec[colSpecs.size()]);
         c.append(new CellFactory() {
             /**
              * {@inheritDoc}
@@ -461,7 +468,6 @@ public class KnnNodeModel extends NodeModel {
                 }
             }
         }
-
 
         output.add(winnerCell);
 
