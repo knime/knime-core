@@ -48,7 +48,7 @@
  * History
  *   26.06.2012 (hofer): created
  */
-package org.knime.base.node.stats.testing.ttest;
+package org.knime.base.node.stats.testing.levene;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -76,6 +76,7 @@ import org.knime.core.util.MutableInteger;
  * @author Heiko Hofer
  */
 public class LeveneTestStatistics {
+    public static final String TEST_COLUMN = "Test Column";
     public static final String F_VALUE = "test statistic (Levene)";
     public static final String DF1_VALUE = "df 1";
     public static final String DF2_VALUE = "df 2";
@@ -169,7 +170,7 @@ public class LeveneTestStatistics {
      */
     public static DataTableSpec getTableSpec() {
         return new DataTableSpec(new String[] {
-                TwoSampleTTestStatistics.TEST_COLUMN
+                TEST_COLUMN
                 , F_VALUE
                 , DF1_VALUE
                 , DF2_VALUE

@@ -31,7 +31,7 @@
         <node
               after="org.knime.base.node.stats.testing.ttest.PairedTTestNodeFactory"
               category-path="/statistics/hypothesis-testing"
-              factory-class="org.knime.base.node.stats.testing.ttest.OneWayANOVANodeFactory"
+              factory-class="org.knime.base.node.stats.testing.anova.OneWayANOVANodeFactory"
               id="org.knime.base.node.stats.testing.ttest.OneWayANOVANodeFactory">
         </node>     
    </extension>

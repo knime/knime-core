@@ -1,4 +1,4 @@
-package org.knime.base.node.stats.testing.ttest;
+package org.knime.base.node.stats.testing.anova;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,6 +8,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
+import org.knime.base.node.stats.testing.levene.LeveneTest;
+import org.knime.base.node.stats.testing.levene.LeveneTestStatistics;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;

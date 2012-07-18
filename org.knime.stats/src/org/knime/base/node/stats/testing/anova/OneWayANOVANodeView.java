@@ -48,7 +48,7 @@
  * History
  *   03.07.2012 (hofer): created
  */
-package org.knime.base.node.stats.testing.ttest;
+package org.knime.base.node.stats.testing.anova;
 
 import java.awt.Color;
 import java.awt.GridBagConstraints;
@@ -64,6 +64,8 @@ import javax.swing.JEditorPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
+import org.knime.base.node.stats.testing.levene.LeveneTestStatistics;
+import org.knime.base.node.stats.testing.ttest.NodeViewUtil;
 import org.knime.core.node.NodeView;
 
 /**

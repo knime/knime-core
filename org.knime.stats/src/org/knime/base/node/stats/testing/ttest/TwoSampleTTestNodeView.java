@@ -64,6 +64,7 @@ import javax.swing.JEditorPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
+import org.knime.base.node.stats.testing.levene.LeveneTestStatistics;
 import org.knime.core.node.NodeView;
 
 /**

@@ -48,7 +48,7 @@
  * History
  *   26.06.2012 (hofer): created
  */
-package org.knime.base.node.stats.testing.ttest;
+package org.knime.base.node.stats.testing.anova;
 
 import java.util.ArrayList;
 import java.util.List;

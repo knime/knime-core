@@ -1,4 +1,4 @@
-package org.knime.base.node.stats.testing.ttest;
+package org.knime.base.node.stats.testing.anova;
 
 
 import java.awt.Component;
