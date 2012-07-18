@@ -78,11 +78,13 @@ public interface IContainerObject extends IRepositoryObject {
     public IRepositoryObject[] getChildren();
 
     /**
-     * Adds a child, should throw an exception if invalid.
+     * Adds a child and returns whether it was successfully added nor not. A child can not be added, e.g.,
+     * if a sibling with the same name already exists.
      *
      * @param child The child to add
+     * @return <code>true</code> if the child was added successfully, <code>false</code> otherwise
      */
-    public void addChild(AbstractRepositoryObject child);
+    public boolean addChild(AbstractRepositoryObject child);
 
     /**
      * Adds a child after an existing object. If the specified existing object

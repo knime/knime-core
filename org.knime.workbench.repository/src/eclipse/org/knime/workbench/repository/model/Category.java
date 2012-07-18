@@ -50,6 +50,11 @@
  */
 package org.knime.workbench.repository.model;
 
+import java.util.HashSet;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.eclipse.swt.graphics.Image;
 
 /**
@@ -188,35 +193,67 @@ public class Category extends AbstractContainerObject {
         return result;
     }
 
+//    /**
+//     * {@inheritDoc}
+//     */
+//    @Override
+//    public boolean equals(final Object obj) {
+//        if (this == obj) {
+//            return true;
+//        }
+//        if (!super.equals(obj)) {
+//            return false;
+//        }
+//        if (getClass() != obj.getClass()) {
+//            return false;
+//        }
+//        Category other = (Category)obj;
+//        if (m_description == null) {
+//            if (other.m_description != null) {
+//                return false;
+//            }
+//        } else if (!m_description.equals(other.m_description)) {
+//            return false;
+//        }
+//        if (m_path == null) {
+//            if (other.m_path != null) {
+//                return false;
+//            }
+//        } else if (!m_path.equals(other.m_path)) {
+//            return false;
+//        }
+//        return true;
+//    }
+
+    private static final Pattern numericalEndPattern = Pattern.compile("(.*?)(\\d+)$");
+
     /**
-     * {@inheritDoc}
+     * Creates a unique name for a new category inside the given parent. The new name consists of the given name
+     * and potentially a number added at the end.
+     *
+     * @param parent the parent category
+     * @param name the desired new name
+     * @return the given name, if it is unique, or a uniquified name
      */
-    @Override
-    public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-        if (!super.equals(obj)) {
-            return false;
-        }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        Category other = (Category)obj;
-        if (m_description == null) {
-            if (other.m_description != null) {
-                return false;
+    public static String createUniqueName(final IContainerObject parent, final String name) {
+        Set<String> childNames = new HashSet<String>();
+        for (IRepositoryObject o : parent.getChildren()) {
+            if (o instanceof Category) {
+                childNames.add(((Category) o).getName());
             }
-        } else if (!m_description.equals(other.m_description)) {
-            return false;
         }
-        if (m_path == null) {
-            if (other.m_path != null) {
-                return false;
-            }
-        } else if (!m_path.equals(other.m_path)) {
-            return false;
+
+        String newName = name;
+        String oldName = name;
+        int index = 1;
+        Matcher m = numericalEndPattern.matcher(name);
+        if (m.matches()) {
+            index = Integer.parseInt(m.group(2)) + 1;
+            oldName = m.group(1);
         }
-        return true;
+        while (childNames.contains(newName)) {
+            newName = oldName.trim() + " " + index++;
+        }
+        return newName;
     }
 }

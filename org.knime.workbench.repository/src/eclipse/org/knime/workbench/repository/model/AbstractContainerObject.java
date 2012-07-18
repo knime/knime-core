@@ -152,10 +152,9 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
      *      AbstractRepositoryObject)
      */
     @Override
-    public void addChild(final AbstractRepositoryObject child) {
+    public boolean addChild(final AbstractRepositoryObject child) {
         if (m_children.contains(child)) {
-            throw new IllegalArgumentException(
-                    "Can't add child, already contained");
+            return false;
         }
         if (child instanceof Root) {
             throw new IllegalArgumentException(
@@ -167,6 +166,7 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
         m_children.add(child);
 
         child.setParent(this);
+        return true;
 
     }
 

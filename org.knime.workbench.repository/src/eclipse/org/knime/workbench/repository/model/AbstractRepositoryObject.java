@@ -50,6 +50,7 @@
  */
 package org.knime.workbench.repository.model;
 
+
 /**
  * Abstract base implementation of a generic repository object.
  *
@@ -150,6 +151,14 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
     }
 
     public void setName(final String newName) {
+        if (m_parent != null) {
+            for (IRepositoryObject o : m_parent.getChildren()) {
+                if (!(o == this) && (o instanceof AbstractRepositoryObject) &&
+                    newName.equals(((AbstractRepositoryObject)o).getName())) {
+                    throw new IllegalArgumentException("A sibling with name '" + newName + "' already exists");
+                }
+            }
+        }
         m_name = newName;
     }
 
