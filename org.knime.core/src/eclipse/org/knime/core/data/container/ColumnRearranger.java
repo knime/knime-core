@@ -616,7 +616,7 @@ public class ColumnRearranger {
      * @param emptyInternals An empty instance of a
      * {@link StreamableOperatorInternals} that is filled by
      * the client implementation and that gets returned by the function's
-     * {@link StreamableFunction#getInternals()} method after the table has been
+     * {@link StreamableFunction#saveInternals()} method after the table has been
      * processed.
      * @return The function representing the calculation.
      * @since 2.6

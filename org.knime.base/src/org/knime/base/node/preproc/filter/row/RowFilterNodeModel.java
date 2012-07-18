@@ -261,12 +261,12 @@ public class RowFilterNodeModel extends NodeModel {
         return new StreamableOperator() {
 
             @Override
-            public StreamableOperatorInternals getInternals() {
+            public StreamableOperatorInternals saveInternals() {
                 return null;
             }
 
             @Override
-            public void execute(final PortInput[] inputs,
+            public void runFinal(final PortInput[] inputs,
                     final PortOutput[] outputs,
                     final ExecutionContext ctx) throws Exception {
                 RowInput in = (RowInput)inputs[0];

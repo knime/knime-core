@@ -179,7 +179,7 @@ public abstract class SimpleStreamableFunctionWithInternalsNodeModel<T extends S
         return new MergeOperator() {
 
             @Override
-            public StreamableOperatorInternals merge(final StreamableOperatorInternals[] internals) {
+            public StreamableOperatorInternals mergeFinal(final StreamableOperatorInternals[] internals) {
                 @SuppressWarnings("unchecked")
                 T[] castedInternals = (T[])Array.newInstance(m_class, internals.length);
                 for (int i = 0; i < internals.length; i++) {
@@ -196,10 +196,6 @@ public abstract class SimpleStreamableFunctionWithInternalsNodeModel<T extends S
                 return mergeStreamingOperatorInternals(castedInternals);
             }
 
-            @Override
-            public boolean isHierarchical() {
-                return false;
-            }
         };
     }
 

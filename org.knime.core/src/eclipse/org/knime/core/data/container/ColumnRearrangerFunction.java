@@ -122,7 +122,7 @@ final class ColumnRearrangerFunction extends StreamableFunction {
 
     /** {@inheritDoc} */
     @Override
-    public StreamableOperatorInternals getInternals() {
+    public StreamableOperatorInternals saveInternals() {
         return m_emptyInternals;
     }
 

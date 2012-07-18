@@ -61,11 +61,11 @@ import org.knime.core.node.ExecutionContext;
  * @since 2.6
  * @noextend See {@link StreamableOperator}.
  */
-public abstract class StreamableFunction implements StreamableOperator {
+public abstract class StreamableFunction extends StreamableOperator {
 
     /** {@inheritDoc} */
     @Override
-    public void execute(final PortInput[] inputs, final PortOutput[] outputs,
+    public void runFinal(final PortInput[] inputs, final PortOutput[] outputs,
             final ExecutionContext ctx) throws Exception {
         RowInput rowInput = ((RowInput)inputs[0]);
         RowOutput rowOutput = ((RowOutput)outputs[0]);

@@ -69,13 +69,14 @@ import org.knime.core.node.NodeModel;
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public interface StreamableOperator {
+public abstract class StreamableOperator {
 
     /**
      * Performs the execution on the input and (possibly) produces the output.
      * The array elements of the <code>inputs</code> argument must be cast to
      * specific classes. The class depends on the {@link InputPortRole} of the
-     * corresponding port (as described by {@link NodeModel#getInputPortRoles()}.
+     * corresponding port (as described by
+     * {@link NodeModel#getInputPortRoles()}.
      * If it is streamable (which can only be true for data ports), then the
      * object can be cast to {@link RowInput}. If it's non streamable, then it's
      * an instance of {@link PortObjectInput}.
@@ -92,11 +93,43 @@ public interface StreamableOperator {
      * @param ctx The context for cancelation, progress reporting.
      * @throws Exception Any exception to indicate an error, cancelation.
      */
-    public void execute(final PortInput[] inputs, final PortOutput[] outputs,
-            final ExecutionContext ctx) throws Exception;
+    public abstract void runFinal(final PortInput[] inputs,
+            final PortOutput[] outputs, final ExecutionContext ctx)
+    throws Exception;
 
-    /** Create the internals calculated during eecution that need to be merged
-     * and feeded back to the node that controls the execution. Only distributed
+    /**
+     * Called when the corresponding {@link org.knime.core.node.NodeModel#
+     * iterate(StreamableOperatorInternals)}
+     * returns <code>true</code>. It performs one iteration on the input data
+     * to, e.g. adjust clusters or compute data statistics. The result of this
+     * run will be persisted in {@link #saveInternals()} and fed back to
+     * {@link org.knime.core.node.NodeModel#
+     * iterate(StreamableOperatorInternals)}
+     * (after aggregated using a {@link MergeOperator}.
+     *
+     * <p>
+     * The default implementation is empty.
+     *
+     * @param inputs The input handles.
+     * @param ctx The execution context (progress/cancelation)
+     * @throws Exception Any exception to abort the calculation.
+     */
+    public void runIntermediate(final PortInput[] inputs,
+            final ExecutionContext ctx) throws Exception {
+        // possibly overwritten
+    }
+
+    /** Called to restore intermediate results when used in an iterative manner.
+     * The argument internals contain information aggregated by the
+     * {@link MergeOperator#mergeIntermediate(StreamableOperatorInternals[])}
+     * method.
+     * @param internals To restore from. */
+    public void loadInternals(final StreamableOperatorInternals internals) {
+        // possible overwritten
+    }
+
+    /** Create the internals calculated during execution that need to be merged
+     * and fed back to the node that controls the execution. Only distributed
      * streamable operator should have internals (and only if they need to
      * pass information to the node, e.g. parts of the output object or view
      * internals or warning messages).
@@ -104,6 +137,8 @@ public interface StreamableOperator {
      * @return The internals that are transferred back to the client. Internals
      * of different operators are merged using a {@link MergeOperator}.
      */
-    public StreamableOperatorInternals getInternals();
+    public StreamableOperatorInternals saveInternals() {
+        return null;
+    }
 
 }
