@@ -57,7 +57,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import org.knime.core.node.InvalidSettingsException;
-
+import org.knime.core.util.node.quickform.in.AbstractQuickFormInElement;
 
 /**
  *
@@ -70,7 +70,8 @@ public abstract class QuickFormConfigurationPanel
 
 
     /**
-     *  */
+     * Creates a new QuickForm configuration panel.
+     */
     public QuickFormConfigurationPanel() {
         super();
     }
@@ -95,6 +96,14 @@ public abstract class QuickFormConfigurationPanel
      */
     public abstract void loadSettings(final CFG config);
 
+    /**
+     * Creates a new AbstractQuickFormInElement with the current configuration of this panel.
+     * @param e the QuickForm element to be filled with the current configuration
+     * @throws InvalidSettingsException if settings can't updated
+     * @since 2.6
+     */
+    public abstract void updateQuickFormInElement(final AbstractQuickFormInElement e)
+            throws InvalidSettingsException;
 
     /**
      * {@inheritDoc}

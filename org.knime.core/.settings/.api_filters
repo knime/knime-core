@@ -4269,6 +4269,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/quickform/QuickFormConfigurationPanel.java" type="org.knime.core.quickform.QuickFormConfigurationPanel">
+        <filter id="336695337">
+            <message_arguments>
+                <message_argument value="org.knime.core.quickform.QuickFormConfigurationPanel"/>
+                <message_argument value="updateQuickFormInElement(AbstractQuickFormInElement)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/xmlbeans/org/knime/node2012/ADocument.java" type="org.knime.node2012.ADocument">
         <filter id="1110441988">
             <message_arguments>
