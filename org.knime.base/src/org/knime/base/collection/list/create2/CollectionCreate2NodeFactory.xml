@@ -14,7 +14,51 @@
 		  the original column content. The reverse operation is available 
 		  in the "Split Collection Column" node. 
 		</intro>
-		<option name="Column Filter">Select the columns to be aggregated.</option>
+		
+      <tab name="Column Filter">      
+      
+        <option name="Exclude">
+            This list contains the column names of the input table that are 
+            not included in the collection cell.
+        </option>
+
+        <option name="Enforce Exclusion">
+            Select this option to enforce the current exclusion list to stay
+            the same even if the input table specification changes. If some
+            of the excluded columns are not available anymore, a warning
+            is displayed. (New columns will automatically be added to the
+            inclusion list.)
+        </option>
+        
+        <option name="Select">
+            Use these buttons to move columns between the Include and Exclude 
+            list.
+        </option>
+        
+        <option name="Search">
+            Use one of these fields to search either within the Include
+            or Exclude list for certain column names or name substrings.
+            Repeated clicking of the search button marks the next column that 
+            matches the search text. The check box 'Mark all search hits' causes
+            all matching columns to be selected making them movable between
+            the two lists.
+        </option>
+        
+                  <option name="Include">
+            This list contains the column names that are aggregated in a separate
+            new column.
+        </option>
+        
+        <option name="Enforce Inclusion">
+            Select this option to enforce the current inclusion list to stay
+            the same even if the input table specification changes. If some
+            of the included columns are not available anymore, a warning
+            is displayed. (New columns will automatically be added to the
+            exclusion list.)
+        </option>
+       </tab>
+       <tab name="Collection type">      
+    
        <option name="Create a collection of type 'set' (doesn't store duplicate values)">
          If checked, a collection column of type set is created. Set collections
          contain only distinct values, duplicates are deleted.
@@ -22,7 +66,10 @@
         <option name="ignore missing values">
           If checked, missing values are ignored, i.e. not stored in collection
           cells.
-        </option>      
+        </option> 
+        </tab>
+              <tab name="Output table structure">      
+             
 
         <option name="Remove aggregated columns from table">
           If checked, aggregated columns are removed from out put table.
@@ -30,6 +77,7 @@
         <option name="Enter the name of the new column">
           Specifies the name of the new column containing the collection cells.
         </option>
+        </tab>
 	</fullDescription>
 	
 	<ports>

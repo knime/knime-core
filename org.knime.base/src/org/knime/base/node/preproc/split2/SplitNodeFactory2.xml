@@ -10,14 +10,50 @@
 		    and the bottom table (right list). Use the buttons to move columns 
 		    from one list to the other.
 		</intro>
+		
+		      <tab name="Column Filter">      
+		
 		<option name="Top">
-			A list of column names that make up the first output table (top 
-			output port).
-		</option>
-		<option name="Bottom">
-			A list of column names that make up the second output table (bottom 
-			output port).
-		</option>
+            A list of column names that make up the first output table (top 
+            output port).
+        </option>
+        
+        <option name="Enforce Exclusion (Top)">
+            Select this option to enforce the current top list to stay
+            the same even if the input table specification changes. If some
+            of the included columns are not available anymore, a warning
+            is displayed. (New columns will automatically be added to the
+            bottom list.)
+        </option>
+        
+        <option name="Select">
+            Use these buttons to move columns between the Top and Bottom 
+            list.
+        </option>
+        
+        <option name="Search">
+            Use one of these fields to search either within the Top
+            or Bottom list for certain column names or name substrings.
+            Repeated clicking of the search button marks the next column that 
+            matches the search text. The check box 'Mark all search hits' causes
+            all matching columns to be selected making them movable between
+            the two lists.
+        </option>
+        
+        <option name="Bottom">
+            A list of column names that make up the second output table (bottom 
+            output port).
+        </option>
+
+        <option name="Enforce Inclusion (Bottom)">
+            Select this option to enforce the current exclusion list to stay
+            the same even if the input table specification changes. If some
+            of the bottom columns are not available anymore, a warning
+            is displayed. (New columns will automatically be added to the
+            Top list.)
+        </option>
+        </tab>
+		
 	</fullDescription>
     <ports>
         <inPort index="0" name="Table to split">Table to split.</inPort>
