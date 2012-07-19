@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   17.05.2012 (kilian): created
  */
@@ -73,14 +73,14 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 import org.knime.core.util.FileUtil;
 
 /**
- * The node model of the url to file path variable node. Converting url strings 
- * into file paths, consisting of four elements: the complete file path, the 
- * parent folder of the file, the file name, and the file extension. The node 
- * expects flow variables as input, with one string flow variable containing 
- * the url string. The file path, parent folder, file name, and file extension 
- * are pushed as flow variables as well. It can be specified if the node fails 
+ * The node model of the url to file path variable node. Converting url strings
+ * into file paths, consisting of four elements: the complete file path, the
+ * parent folder of the file, the file name, and the file extension. The node
+ * expects flow variables as input, with one string flow variable containing
+ * the url string. The file path, parent folder, file name, and file extension
+ * are pushed as flow variables as well. It can be specified if the node fails
  * or not, if an input url string is not valid or a file does not exist.
- * 
+ *
  * @author Kilian Thiel, KNIME.com, Berlin, Germany
  */
 class UrlToFilePathVariableNodeModel extends NodeModel {
@@ -89,12 +89,12 @@ class UrlToFilePathVariableNodeModel extends NodeModel {
      * Default selected column name.
      */
     static final String DEF_VARNAME = "URL";
-    
+
     /**
      * Default fail on invalid syntax setting.
      */
     static final boolean DEF_FAIL_ON_INVALID_SYNTAX = false;
-    
+
     /**
      * Default fail on invalid location setting.
      */
@@ -103,8 +103,8 @@ class UrlToFilePathVariableNodeModel extends NodeModel {
     /**
      * Default add prefix to variable value (<code>false</code>).
      */
-    static final boolean DEF_ADD_PREFIX_TO_VARIABLE = false;    
-    
+    static final boolean DEF_ADD_PREFIX_TO_VARIABLE = false;
+
     /**
      * Default name for column containing parent folders.
      */
@@ -117,14 +117,14 @@ class UrlToFilePathVariableNodeModel extends NodeModel {
 
     /**
      * Default name for column containing file extension.
-     */    
+     */
     static final String DEF_VARNAME_FILEEXTENSION = "file_extension";
 
     /**
      * Default name for column containing file extension.
-     */    
+     */
     static final String DEF_VARNAME_FILEPATH = "file_path";
-    
+
     /**
      * Default "missing value" for flow variable parent folder.
      */
@@ -134,38 +134,38 @@ class UrlToFilePathVariableNodeModel extends NodeModel {
      * Default "missing value" for flow variable file name.
      */
     static final String DEF_FLOWVAR_FILENAME_MISSING = "";
-    
+
     /**
      * Default "missing value" for flow variable file extension.
      */
     static final String DEF_FLOWVAR_FILEEXTENSION_MISSING = "";
-    
+
     /**
      * Default "missing value" for flow variable file path.
      */
     static final String DEF_FLOWVAR_FILEPATH_MISSING = "";
-    
-    
-    private SettingsModelString m_flowVarNameModel = 
+
+
+    private SettingsModelString m_flowVarNameModel =
         UrlToFilePathVaribaleNodeDialog.getFlowVariableModel();
-    
+
     private SettingsModelBoolean m_failOnInvalidUrlModel =
         UrlToFilePathVaribaleNodeDialog.getFailOnInvalidSyntaxModel();
-    
+
     private SettingsModelBoolean m_failOnInvalidLocationModel =
         UrlToFilePathVaribaleNodeDialog.getFailOnInvalidLocationModel();
-    
+
     private SettingsModelBoolean m_addPrefixToVarModel =
         UrlToFilePathVaribaleNodeDialog.getAddPrefixToVariableModel();
-    
+
     /**
      * Creates new instance of <code>UrlToFilePathVariableNodeModel</code>.
      */
     UrlToFilePathVariableNodeModel() {
-        super(new PortType[]{FlowVariablePortObject.TYPE}, 
+        super(new PortType[]{FlowVariablePortObject.TYPE_OPTIONAL},
               new PortType[]{FlowVariablePortObject.TYPE});
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -175,33 +175,33 @@ class UrlToFilePathVariableNodeModel extends NodeModel {
         convert();
         return new PortObjectSpec[] {FlowVariablePortObjectSpec.INSTANCE};
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inObjects, 
+    protected PortObject[] execute(final PortObject[] inObjects,
             final ExecutionContext exec) throws Exception {
         // convert is not called since it is called already on configure
         return new PortObject[] {FlowVariablePortObject.INSTANCE};
     }
-    
+
     /**
-     * Converts url string from specified flow variable into file path, 
-     * consisting of four parts: file path, parent folder, file name, and file 
+     * Converts url string from specified flow variable into file path,
+     * consisting of four parts: file path, parent folder, file name, and file
      * extension. Each part is pushed as a string flow variable if conversion is
      * successful. If url is not valid or file does not exist an exception
      * will be throw if specified, otherwise empty string will be set for each
      * output variable.
-     * 
-     * @throws InvalidSettingsException If url is invalid or file location does 
+     *
+     * @throws InvalidSettingsException If url is invalid or file location does
      * not exist and specified in the settings.
      */
     private void convert() throws InvalidSettingsException {
         String inputVarname = m_flowVarNameModel.getStringValue();
         // only if specified variable is available
         if (getAvailableFlowVariables().keySet().contains(inputVarname)) {
-            
+
             // get variable
             String urlStr =
                     peekFlowVariableString(inputVarname);
@@ -221,12 +221,12 @@ class UrlToFilePathVariableNodeModel extends NodeModel {
                     throw new InvalidSettingsException("URL " + urlStr
                             + " is not valid!");
                 }
-                // file can not exist since url is invalid 
+                // file can not exist since url is invalid
                 // => throw exception if fail is specified
                 if (m_failOnInvalidLocationModel.getBooleanValue()) {
                     throw new InvalidSettingsException("File at " + urlStr
                             + " does not exist!");
-                }                
+                }
                 error = true;
             }
             if (!error) {
@@ -239,40 +239,38 @@ class UrlToFilePathVariableNodeModel extends NodeModel {
                     }
                     error = true;
                 }
-                
+
                 // if url is valid and file exists, get corresponding values
-                if (!error) {
-                    parentFolder = UrlToFileUtil.getParentFolder(file);
-                    fileName = UrlToFileUtil.getFileName(file);
-                    fileExtension = UrlToFileUtil.getFileExtension(file);
-                    filePath = file.getAbsolutePath();
-                }
+                parentFolder = UrlToFileUtil.getParentFolder(file);
+                fileName = UrlToFileUtil.getFileName(file);
+                fileExtension = UrlToFileUtil.getFileExtension(file);
+                filePath = file.getAbsolutePath();
             }
-            
+
             // push all file path values as variables
             String varnameParentfolder = DEF_VARNAME_PARENTFOLDER;
             String varnameFilename = DEF_VARNAME_FILENAME;
             String varnameFileextension = DEF_VARNAME_FILEEXTENSION;
             String varnameFilepath = DEF_VARNAME_FILEPATH;
             if (m_addPrefixToVarModel.getBooleanValue()) {
-                varnameParentfolder = inputVarname + "_" 
+                varnameParentfolder = inputVarname + "_"
                                         + varnameParentfolder;
                 varnameFilename = inputVarname + "_" + varnameFilename;
-                varnameFileextension = inputVarname + "_" 
+                varnameFileextension = inputVarname + "_"
                                         + varnameFileextension;
                 varnameFilepath = inputVarname + "_" + varnameFilepath;
             }
-            
+
             pushFlowVariableString(varnameParentfolder, parentFolder);
             pushFlowVariableString(varnameFilename, fileName);
             pushFlowVariableString(varnameFileextension, fileExtension);
             pushFlowVariableString(varnameFilepath, filePath);
         } else {
-            throw new InvalidSettingsException("Specified flow variable " 
+            throw new InvalidSettingsException("Specified flow variable "
                     + m_flowVarNameModel.getStringValue() + " does not exist!");
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -320,7 +318,7 @@ class UrlToFilePathVariableNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
+    protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
     throws IOException, CanceledExecutionException {
         // Nothing to do ...
@@ -330,7 +328,7 @@ class UrlToFilePathVariableNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
+    protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
     throws IOException, CanceledExecutionException {
         // Nothing to do ...

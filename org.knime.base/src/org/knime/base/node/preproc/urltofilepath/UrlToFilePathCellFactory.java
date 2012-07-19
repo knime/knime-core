@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   16.05.2012 (kilian): created
  */
@@ -64,45 +64,45 @@ import org.knime.core.util.FileUtil;
 
 /**
  * Cell factory that creates cells with converted string (url to file path).
- * 
+ *
  * @author Kilian Thiel, KNIME.com, Berlin, Germany
  */
 class UrlToFilePathCellFactory extends AbstractCellFactory {
 
     private int m_colIndex;
-    
+
     private boolean m_failOnInvalidURL;
-    
+
     private boolean m_failOnNonExistsingFile;
-    
+
     /**
      * Creates new instance of <code>UrlToFilePathCellFactory</code>.
-     * 
+     *
      * @param colIndex The index of the column containing url strings.
-     * @param failOnInvalidURL if set <code>true</code> an exception will be 
+     * @param failOnInvalidURL if set <code>true</code> an exception will be
      * thrown if an invalid url string occurs, otherwise missing values will
      * be inserted as file path.
-     * @param failOnNonExistsingFile if set <code>true</code> an exception 
-     * will be thrown if file location does not exist, otherwise missing 
+     * @param failOnNonExistsingFile if set <code>true</code> an exception
+     * will be thrown if file location does not exist, otherwise missing
      * values will be inserted as file path.
      * @param newColSpecs The specs of the new columns to append.
      */
-    UrlToFilePathCellFactory(final int colIndex, 
-            final boolean failOnInvalidURL, 
+    UrlToFilePathCellFactory(final int colIndex,
+            final boolean failOnInvalidURL,
             final boolean failOnNonExistsingFile,
             final DataColumnSpec[] newColSpecs) {
         super(newColSpecs);
-        
+
         if (colIndex < 0) {
-            throw new IllegalArgumentException("Invalid column index: " 
+            throw new IllegalArgumentException("Invalid column index: "
                     + colIndex);
         }
-        
+
         m_colIndex = colIndex;
         m_failOnInvalidURL = failOnInvalidURL;
         m_failOnNonExistsingFile = failOnNonExistsingFile;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -110,59 +110,54 @@ class UrlToFilePathCellFactory extends AbstractCellFactory {
     public DataCell[] getCells(final DataRow row) {
         DataCell[] newCells = new DataCell[4];
         DataCell cell = row.getCell(m_colIndex);
-        
+
         // check for missing
-        if (cell.isMissing()) {            
+        if (cell.isMissing()) {
             newCells = getMissingCells();
-            
+
         // if not missing try to convert url string
         } else {
-            
+
             URL url = null;
             try {
                 url = new URL(cell.toString());
             } catch (MalformedURLException e) {
-                
+
                 // if url string is not valid fail if specified
                 if (m_failOnInvalidURL) {
-                    throw new IllegalArgumentException("URL "  
+                    throw new IllegalArgumentException("URL "
                             + cell.toString() + " is not valid!");
-                    
+
                 // or insert missing value
                 } else {
                     // if fail on file does not exist is check, throw exception
                     if (m_failOnNonExistsingFile) {
-                        throw new IllegalArgumentException("File at URL " 
+                        throw new IllegalArgumentException("File at URL "
                                 + cell.toString() + " does not exist!");
                     }
                     newCells = getMissingCells();
                     return newCells;
                 }
             }
-            
+
             File file = FileUtil.getFileFromURL(url);
             if (!file.exists()) {
-                
+
                 // if file does not exists fail if specified
                 if (m_failOnNonExistsingFile) {
-                    throw new IllegalArgumentException("File "  
+                    throw new IllegalArgumentException("File "
                             + file.getAbsolutePath() + " does not exist!");
-                    
-                // or insert missing value
-                } else {
-                    newCells = getMissingCells();
-                    return newCells;                    
                 }
             }
-            
-            // get parent folder, file name, file extension, and complete 
+
+            // get parent folder, file name, file extension, and complete
             // file path
             newCells[0] = new StringCell(UrlToFileUtil.getParentFolder(file));
             newCells[1] = new StringCell(UrlToFileUtil.getFileName(file));
             newCells[2] = new StringCell(UrlToFileUtil.getFileExtension(file));
             newCells[3] = new StringCell(file.getAbsolutePath());
         }
-        
+
         return newCells;
     }
 
