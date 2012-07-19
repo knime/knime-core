@@ -62,10 +62,8 @@
         
         <option name="Enforce Inclusion">
             Select this option to enforce the current inclusion list to stay
-            the same even if the input table specification changes. If some
-            of the included columns are not available anymore, a warning
-            is displayed. (New columns will automatically be added to the
-            exclusion list.)
+            the same even if the input table specification changes. 
+            New columns will automatically be added to the exclusion list.
         </option>
 	  
         <option name="Select">
@@ -89,10 +87,8 @@
         
         <option name="Enforce Exclusion">
             Select this option to enforce the current exclusion list to stay
-            the same even if the input table specification changes. If some
-            of the excluded columns are not available anymore, a warning
-            is displayed. (New columns will automatically be added to the
-            inclusion list.)
+            the same even if the input table specification changes. 
+            New columns will automatically be added to the inclusion list.
         </option>
         
       </tab>
