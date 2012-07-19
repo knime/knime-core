@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="treeensemble.png" type="Learner">
+	<name>Tree Ensemble Learner</name>
+
+	<shortDescription>
+		Learns an ensemble of decision trees (such as random forest variants).
+	</shortDescription>
+
+	<fullDescription>
+		<intro>
+            Learns an ensemble of decision trees (such as random forest variants).
+            <p>
+                <i>This node is lacking documentation, it will be added for the open source release</i>
+            </p>
+		</intro>
+	    <option name="Target Column">
+	       Select the column containing the value to be learned. Rows with
+	       missing values in this column will be ignored during the learning
+	       process.
+        </option>
+	</fullDescription>
+	<ports>
+	    <inPort index="0" name="Input Data">The data to learn from. It must
+	    contain at least one nominal target column and either a fingerprint
+	    (bitvector) column or another numeric or nominal column.</inPort>
+		<outPort index="0" name="Out-of-bag error estimates">The input data with
+		  the out-of-bag error estimates, i.e. for each record the majority vote
+		  of all models that were not used in the training of the that models.
+		  If the entire data was used to train the individual models, then this
+		  output will contain the input data with missing prediction and 
+		  confidence values. The appended columns are equivalent to the columns
+		  appended by the corresponding predictor node. There is one additional
+		  column <i>model count</i>, which contains the number of models used
+		  for the voting (that is, the number of models that did not use the 
+		  record throughout the learning.)
+	    </outPort>
+		<outPort index="1" name="Attribute Statistics">A statistics table on the
+		attributes used in the different tree learners. Each row represents
+		one training attribute with these statistics: <i>#splits (level	x)</i>
+		as  the number of models, which use the attribute as split on 
+		level <i>x</i> (with level 0 as root split); <i>#candidates (level 
+		x)</i> is the number of times an attribute was in the attribute sample
+		for level <i>x</i> (in a random forest setup these samples differ from
+		node to node). If no attribute sampling is used this is the 
+		number of models. Note, these numbers are uncorrected, i.e. if an 
+		attribute is selected on level 0 but is also in the candidate set
+		of level 1 (but will not be split on level 1 because it has been split 
+		one level up), the #candidate number will still count the attribute 
+		as candidate.</outPort>
+		<outPort index="2" name="Tree Ensemble Model">The trained model.</outPort>
+	</ports>
+	<views>
+      <view name="Tree Views" index="0">An decision tree viewer for all the 
+        trained models. Use the spinner to iterate through the different models.
+      </view>
+    </views>
+</knimeNode>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<plugin>
+   <extension
+         point="org.knime.workbench.repository.nodes">
+<!--      <node
+            category-path="/preview"
+            factory-class="org.knime.base.node.similaritysearch.SimilaritySearchNodeFactory"
+            id="org.knime.base.node.similaritysearch.SimilaritySearchNodeFactory">
+      </node>
+-->
+      <node
+            category-path="/mining/dtree"
+            expert-flag="false"
+            factory-class="org.knime.base.node.mine.treeensemble.node.learner.classification.TreeEnsembleClassificationLearnerNodeFactory"
+            id="org.knime.base.node.mine.treeensemble.node.learner.classification.TreeEnsembleClassificationLearnerNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerNodeFactory"
+            category-path="/mining/dtree"
+            expert-flag="false"
+            factory-class="org.knime.base.node.mine.treeensemble.node.predictor.TreeEnsemblePredictorNodeFactory"
+            id="org.knime.base.node.mine.treeensemble.node.predictor.TreeEnsemblePredictorNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.mine.treeensemble.node.predictor.TreeEnsemblePredictorNodeFactory"
+            category-path="/mining/dtree"
+            expert-flag="false"
+            factory-class="org.knime.base.node.mine.treeensemble.node.modelextractor.TreeEnsembleModelExtractorNodeFactory"
+            id="org.knime.base.node.mine.treeensemble.node.modelextractor.TreeEnsembleModelExtractorNodeFactory">
+      </node>
+   </extension>
+
+</plugin>
