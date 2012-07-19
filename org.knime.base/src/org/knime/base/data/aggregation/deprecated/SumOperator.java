@@ -48,21 +48,26 @@
 
 package org.knime.base.data.aggregation.deprecated;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.def.DoubleCell;
-
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.def.DoubleCell;
+
 /**
  * Returns the sum per group as DoubleCell.
  *
  * @author Tobias Koetter, University of Konstanz
+ * @deprecated has been replaced by the new
+ * {@link org.knime.base.data.aggregation.numerical.SumOperator} that
+ * returns an int, long or double cell depending on the type of the
+ * aggregation column
  */
+@Deprecated
 public class SumOperator extends AggregationOperator {
 
     private final DataType m_type = DoubleCell.TYPE;

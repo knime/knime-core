@@ -248,8 +248,7 @@ public abstract class AggregationOperator implements AggregationMethod {
 
     /**
      * @param cell the {@link DataCell} to consider during computing
-     * @deprecated use the
-     * {@link #compute(ExecutionContext, DataRow, int)} method instead
+     * @deprecated use the {@link #compute(DataRow, int[])} method instead
      */
     @Deprecated
     public final void compute(final DataCell cell) {
@@ -265,22 +264,25 @@ public abstract class AggregationOperator implements AggregationMethod {
     }
 
     /**
-     * @param exec the {@link ExecutionContext} this method is called
-     * @param row the complete {@link DataRow} the given cell belongs to
-     * @param idx the index of the column to aggregate
+     * @param row the {@link DataRow} the given cell belongs to
+     * @param idxs the indices of the columns to aggregate
      * @since 2.6
      */
-    public final void compute(final ExecutionContext exec, final DataRow row,
-            final int idx) {
-        if (exec == null) {
-            throw new NullPointerException("exec must not be null");
-        }
+    public final void compute(final DataRow row, final int... idxs) {
         if (m_skipped) {
             return;
         }
-        final DataCell cell = row.getCell(idx);
-        if (inclMissingCells() || !cell.isMissing()) {
-            m_skipped = computeInternal(exec, row, cell);
+        if (row == null) {
+            throw new NullPointerException("row must not be null");
+        }
+        if (idxs == null || idxs.length < 1) {
+            throw new NullPointerException("indices must not be null or empty");
+        }
+        for (final int idx : idxs) {
+            final DataCell cell = row.getCell(idx);
+            if (inclMissingCells() || !cell.isMissing()) {
+                m_skipped = computeInternal(row, cell);
+            }
         }
     }
 
@@ -296,9 +298,13 @@ public abstract class AggregationOperator implements AggregationMethod {
      * Override this method if your {@link AggregationOperator} also requires
      * the {@link DataRow} and/or {@link ExecutionContext} during computation.
      * This method calls by default the {@link #computeInternal(DataCell)}
-     * method.
-     * @param exec the {@link ExecutionContext} this method is called
-     * @param row the complete {@link DataRow} the given cell belongs to
+     * method. The given {@link DataRow} is filtered and contains only the
+     * group and aggregation columns. The {@link DataColumnSpec}s as well as
+     * the indices of the columns by name can be obtained from the
+     * {@link GlobalSettings} object.
+     *
+     * @param row the filtered row {@link DataRow} the given cell belongs to.
+     * The row contains only the group and aggregation columns.
      * @param cell the {@link DataCell} to consider during computing the cell
      * can't be <code>null</code> but can be a missing cell
      * {@link DataCell#isMissing()} if the {@link #inclMissingCells()}
@@ -307,20 +313,21 @@ public abstract class AggregationOperator implements AggregationMethod {
      * calculations
      * @since 2.6
      * @see AggregationOperator#computeInternal(DataCell)
+     * @see GlobalSettings#getOriginalColumnSpec(int)
+     * @see GlobalSettings#getOriginalColumnSpec(String)
+     * @see GlobalSettings#findColumnIndex(String)
      */
-    protected boolean computeInternal(final ExecutionContext exec,
-            final DataRow row, final DataCell cell) {
+    protected boolean computeInternal(final DataRow row, final DataCell cell) {
         return computeInternal(cell);
     }
 
     /**
      * If the {@link AggregationOperator} implementation also requires
      * the {@link DataRow} during computation override the
-     * {@link #computeInternal(ExecutionContext, DataRow, DataCell)} method.
-     * Even if you override the
-     * {@link #computeInternal(ExecutionContext, DataRow, DataCell)} method
-     * this method still might be called by previous implementations
-     * prior version 2.6 and should compute a reasonable result.
+     * {@link #computeInternal(DataRow, DataCell)} method.
+     * Even if the {@link #computeInternal(DataRow, DataCell)} method is
+     * implemented  this method still might be called by previous
+     * implementations prior version 2.6 and should compute a reasonable result.
      *
      * @param cell the {@link DataCell} to consider during computing the cell
      * can't be <code>null</code> but can be a missing cell
@@ -328,8 +335,7 @@ public abstract class AggregationOperator implements AggregationMethod {
      * option is set to <code>true</code>.
      * @return <code>true</code> if this column should be skipped in further
      * calculations
-     * @see AggregationOperator#computeInternal(
-     * ExecutionContext, DataRow, DataCell)
+     * @see AggregationOperator#computeInternal(DataRow, DataCell)
      */
     protected abstract boolean computeInternal(final DataCell cell);
 

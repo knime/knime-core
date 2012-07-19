@@ -156,7 +156,7 @@ public class MemoryGroupByTable extends GroupByTable {
         m_rowKeys = new HashMap<GroupKey, Set<RowKey>>();
         m_vals = new LinkedHashMap<GroupKey, ColumnAggregator[]>();
         final ExecutionMonitor groupExec = exec.createSubProgress(0.7);
-        final DataTableSpec origSpec = dataTable.getDataTableSpec();
+        final DataTableSpec spec = dataTable.getDataTableSpec();
         final int rowCount = dataTable.getRowCount();
         int rowCounter = 0;
         for (final DataRow row : dataTable) {
@@ -170,7 +170,7 @@ public class MemoryGroupByTable extends GroupByTable {
             }
             final GroupKey groupKey = new GroupKey(currentGroup);
             addRowKey(groupKey, row.getKey());
-            addRow(exec, origSpec, groupKey, row);
+            addRow(spec, groupKey, row);
         }
         return createResultTable(exec.createSubExecutionContext(0.3),
                 resultSpec);
@@ -223,8 +223,7 @@ public class MemoryGroupByTable extends GroupByTable {
         return dc.getTable();
     }
 
-    private void addRow(final ExecutionContext exec,
-            final DataTableSpec origSpec, final GroupKey groupKey,
+    private void addRow(final DataTableSpec spec, final GroupKey groupKey,
             final DataRow row) {
         ColumnAggregator[] aggregators = m_vals.get(groupKey);
         if (aggregators == null) {
@@ -237,9 +236,8 @@ public class MemoryGroupByTable extends GroupByTable {
         }
         for (final ColumnAggregator aggregator : aggregators) {
             final int colIdx =
-                origSpec.findColumnIndex(aggregator.getOriginalColName());
-            aggregator.getOperator(getGlobalSettings()).compute(
-                    exec, row, colIdx);
+                spec.findColumnIndex(aggregator.getOriginalColName());
+            aggregator.getOperator(getGlobalSettings()).compute(row, colIdx);
         }
     }
 

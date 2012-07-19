@@ -277,9 +277,9 @@ GroupByTable {
             }
             //compute the current row values
             for (final ColumnAggregator colAggr : member.getFirst()) {
-                colAggr.getOperator(getGlobalSettings()).compute(
-                        exec, row, origSpec.findColumnIndex(
-                                colAggr.getOriginalColName()));
+                final int colIdx = origSpec.findColumnIndex(
+                        colAggr.getOriginalColName());
+                colAggr.getOperator(getGlobalSettings()).compute(row, colIdx);
             }
             if (isEnableHilite()) {
                 member.getSecond().add(row.getKey());

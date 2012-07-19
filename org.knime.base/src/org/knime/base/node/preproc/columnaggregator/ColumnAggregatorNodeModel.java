@@ -187,7 +187,7 @@ public class ColumnAggregatorNodeModel extends NodeModel {
                     "None of the selected columns found in input table.");
         }
         final AggregationCellFactory cellFactory = new AggregationCellFactory(
-                null, inSpec, selectedCols, GlobalSettings.DEFAULT, m_methods);
+                inSpec, selectedCols, GlobalSettings.DEFAULT, m_methods);
         return new DataTableSpec[]{
                 createRearranger(inSpec, cellFactory).createSpec()};
     }
@@ -204,8 +204,8 @@ public class ColumnAggregatorNodeModel extends NodeModel {
         final List<String> selectedCols =
             Arrays.asList(filterResult.getIncludes());
         final AggregationCellFactory cellFactory = new AggregationCellFactory(
-                exec,  origSpec, selectedCols, new GlobalSettings(selectedCols,
-                        m_maxUniqueValues.getIntValue(),
+                origSpec, selectedCols, new GlobalSettings(exec, selectedCols, 
+                        m_maxUniqueValues.getIntValue(), 
                         m_valueDelimiter.getStringValue(), origSpec,
                         table.getRowCount()), m_methods);
         final ColumnRearranger cr =

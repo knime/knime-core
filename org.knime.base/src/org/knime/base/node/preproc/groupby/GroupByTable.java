@@ -48,6 +48,13 @@
 
 package org.knime.base.node.preproc.groupby;
 
+import org.knime.base.data.aggregation.AggregationMethod;
+import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.sort.SortedTable;
+import org.knime.base.node.preproc.sorter.SorterNodeDialogPanel2;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -63,13 +70,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.util.MutableInteger;
 import org.knime.core.util.Pair;
-
-import org.knime.base.data.aggregation.AggregationMethod;
-import org.knime.base.data.aggregation.AggregationMethods;
-import org.knime.base.data.aggregation.ColumnAggregator;
-import org.knime.base.data.aggregation.GlobalSettings;
-import org.knime.base.data.sort.SortedTable;
-import org.knime.base.node.preproc.sorter.SorterNodeDialogPanel2;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -177,7 +177,6 @@ public abstract class GroupByTable {
             m_hiliteMapping = null;
         }
         m_groupCols = groupByCols;
-        m_globalSettings = globalSettings;
         m_colNamePolicy = colNamePolicy;
         m_retainOrder = retainOrder;
         final Set<String> workingCols =
@@ -213,16 +212,19 @@ public abstract class GroupByTable {
                     columnRearranger, exec.createSubExecutionContext(0.01));
             aggrs = colAggregators;
         }
-        final DataTableSpec inTableSpec = dataTable.getDataTableSpec();
+        final DataTableSpec dataTableSpec = dataTable.getDataTableSpec();
+        //set the DataTableSpec of the filtered table that is processed instead
+        //of the original table in the GlobalSettings object
+        m_globalSettings = new GlobalSettings(dataTableSpec, globalSettings);
         m_colAggregators = aggrs;
-        final DataTableSpec resultSpec = createGroupByTableSpec(inTableSpec,
+        final DataTableSpec resultSpec = createGroupByTableSpec(dataTableSpec,
                 m_groupCols, m_colAggregators, m_colNamePolicy);
         final int[] groupColIdx = new int[m_groupCols.size()];
         int groupColIdxCounter = 0;
         //get the indices of the group by columns
-        for (int i = 0, length = inTableSpec.getNumColumns(); i < length;
+        for (int i = 0, length = dataTableSpec.getNumColumns(); i < length;
             i++) {
-            final DataColumnSpec colSpec = inTableSpec.getColumnSpec(i);
+            final DataColumnSpec colSpec = dataTableSpec.getColumnSpec(i);
             if (m_groupCols.contains(colSpec.getName())) {
                 groupColIdx[groupColIdxCounter++] = i;
             }

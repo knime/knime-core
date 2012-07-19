@@ -63,7 +63,6 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.data.container.CellFactory;
-import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 
 import java.util.HashSet;
@@ -84,20 +83,17 @@ public class AggregationCellFactory implements CellFactory {
     private final DataTableSpec m_origSpec;
     private final DataType m_superType;
     private final DataColumnSpec m_dummyOrigSpec;
-    private final ExecutionContext m_exec;
 
     /**Constructor for class AggregationCellFactory.
-     * @param exec the {@link ExecutionContext}
      * @param origSpec the original {@link DataTableSpec}
      * @param colNames the names of the columns to aggregate
      * @param globalSettings the {@link GlobalSettings}
      * @param methods the {@link AggregationMethod}s
      */
-    public AggregationCellFactory(final ExecutionContext exec,
-            final DataTableSpec origSpec, final List<String> colNames,
+    public AggregationCellFactory(final DataTableSpec origSpec,
+            final List<String> colNames,
             final GlobalSettings globalSettings,
             final List<NamedAggregationOperator> methods) {
-        m_exec = exec;
         m_origSpec = origSpec;
         m_colIdxs = new int[colNames.size()];
         final Set<String> inclCols =
@@ -137,15 +133,12 @@ public class AggregationCellFactory implements CellFactory {
      */
     @Override
     public DataCell[] getCells(final DataRow row) {
-        for (final int idx : m_colIdxs) {
-            for (final AggregationOperator method : m_operators) {
-                method.compute(m_exec, row, idx);
-            }
-        }
         final DataCell[] cells = new DataCell[m_operators.length];
         for (int i = 0; i < m_operators.length; i++) {
-            cells[i] = m_operators[i].getResult();
-            m_operators[i].reset();
+            final AggregationOperator operator = m_operators[i];
+            operator.compute(row, m_colIdxs);
+            cells[i] = operator.getResult();
+            operator.reset();
         }
         return cells;
     }

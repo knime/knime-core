@@ -50,6 +50,7 @@ package org.knime.base.data.aggregation;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.ExecutionContext;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -93,6 +94,8 @@ public class GlobalSettings {
 
     private final List<String> m_groupColNames;
 
+    private final ExecutionContext m_exec;
+
     /**Constructor for class GlobalSettings.
      * This constructor is used to create a dummy object that contains
      * default settings.
@@ -106,6 +109,7 @@ public class GlobalSettings {
      *
      * @param maxUniqueValues the maximum number of unique values to consider
      */
+    @Deprecated
     public GlobalSettings(final int maxUniqueValues) {
         this(maxUniqueValues, STANDARD_DELIMITER,
                 new DataTableSpec(), 0);
@@ -116,26 +120,62 @@ public class GlobalSettings {
      * @param valueDelimiter the delimiter to use for value separation
      * @param spec the {@link DataTableSpec} of the input table
      * @param noOfRows the number of rows of the input table
+     * @see #GlobalSettings(ExecutionContext, List, int, String,
+     * DataTableSpec, int)
      */
     @SuppressWarnings("unchecked")
+    @Deprecated
     public GlobalSettings(final int maxUniqueValues,
             final String valueDelimiter, final DataTableSpec spec,
             final int noOfRows) {
-        this(Collections.EMPTY_LIST, maxUniqueValues, valueDelimiter, spec,
-                noOfRows);
+        this(null, Collections.EMPTY_LIST, maxUniqueValues, valueDelimiter,
+                spec, noOfRows);
     }
 
     /**Constructor for class GlobalSettings.
+     * @param newSpec the {@link DataTableSpec} of the table to process
+     * @param oldSettings the {@link GlobalSettings} object to change the
+     * {@link DataTableSpec}
+     * @since 2.6
+     */
+    public GlobalSettings(final DataTableSpec newSpec,
+            final GlobalSettings oldSettings) {
+        this(oldSettings.m_exec, true, oldSettings.m_groupColNames,
+                oldSettings.m_maxUniqueValues, oldSettings.m_valueDelimiter,
+                newSpec, oldSettings.m_noOfRows);
+    }
+
+    /**Constructor for class GlobalSettings.
+     * @param exec the {@link ExecutionContext}
      * @param groupColNames the names of the columns to group by
      * @param maxUniqueValues the maximum number of unique values to consider
      * @param valueDelimiter the delimiter to use for value separation
-     * @param spec the {@link DataTableSpec} of the input table
+     * @param spec the {@link DataTableSpec} of the table to process
      * @param noOfRows the number of rows of the input table
      * @since 2.6
      */
-    public GlobalSettings(final List<String> groupColNames,
-            final int maxUniqueValues, final String valueDelimiter,
-            final DataTableSpec spec, final int noOfRows) {
+    public GlobalSettings(final ExecutionContext exec,
+            final List<String> groupColNames, final int maxUniqueValues,
+            final String valueDelimiter, final DataTableSpec spec,
+            final int noOfRows) {
+        this(exec, false, groupColNames, maxUniqueValues, valueDelimiter, spec,
+                noOfRows);
+    }
+    /**Constructor for class GlobalSettings.
+     * @param exec the {@link ExecutionContext}
+     * @param silent <code>true</code> if the {@link ExecutionContext} ignores
+     * any progress and message updates
+     * @param groupColNames the names of the columns to group by
+     * @param maxUniqueValues the maximum number of unique values to consider
+     * @param valueDelimiter the delimiter to use for value separation
+     * @param spec the {@link DataTableSpec} of the table to process
+     * @param noOfRows the number of rows of the input table
+     * @since 2.6
+     */
+    private GlobalSettings(final ExecutionContext exec, final boolean silent,
+            final List<String> groupColNames, final int maxUniqueValues,
+            final String valueDelimiter, final DataTableSpec spec,
+            final int noOfRows) {
         if (groupColNames == null) {
             throw new NullPointerException("groupColNames must not be null");
         }
@@ -152,6 +192,11 @@ public class GlobalSettings {
         }
         if (noOfRows < 0) {
             throw new IllegalArgumentException("No of rows must be positive");
+        }
+        if (!silent && exec != null) {
+            m_exec = exec.createSilentSubExecutionContext(0);
+        } else {
+            m_exec = exec;
         }
         m_groupColNames = groupColNames;
         m_maxUniqueValues = maxUniqueValues;
@@ -230,6 +275,21 @@ public class GlobalSettings {
         return m_spec.getColumnSpec(column);
     }
 
+
+    /**
+     * Returns the {@link ExecutionContext} the aggregation is performed in.
+     * The method returns <code>null</code> if the {@link ExecutionContext} is
+     * not available. The returned {@link ExecutionContext} can not be used
+     * for any progress or message updates.
+     *
+     * @return the exec the {@link ExecutionContext} the aggregation is
+     * performed in. The method might return <code>null</code> if the
+     * {@link ExecutionContext} is not available
+     * @since 2.6
+     */
+    public ExecutionContext getExecutionContext() {
+        return m_exec;
+    }
 
     /**
      * @return unmodifiable {@link List} that contains the names of the columns

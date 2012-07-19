@@ -50,6 +50,17 @@
  */
 package org.knime.base.node.viz.crosstable;
 
+import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
+import org.knime.base.data.aggregation.deprecated.SumOperator;
+import org.knime.base.data.aggregation.general.CountOperator;
+import org.knime.base.node.preproc.groupby.BigGroupByTable;
+import org.knime.base.node.preproc.groupby.ColumnNamePolicy;
+import org.knime.base.node.preproc.groupby.GroupByTable;
+import org.knime.base.node.viz.crosstable.CrosstabStatisticsCalculator.CrosstabStatistics;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -76,27 +87,17 @@ import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
 
-import org.knime.base.data.aggregation.ColumnAggregator;
-import org.knime.base.data.aggregation.GlobalSettings;
-import org.knime.base.data.aggregation.OperatorColumnSettings;
-import org.knime.base.data.aggregation.OperatorData;
-import org.knime.base.data.aggregation.deprecated.SumOperator;
-import org.knime.base.data.aggregation.general.CountOperator;
-import org.knime.base.node.preproc.groupby.BigGroupByTable;
-import org.knime.base.node.preproc.groupby.ColumnNamePolicy;
-import org.knime.base.node.preproc.groupby.GroupByTable;
-import org.knime.base.node.viz.crosstable.CrosstabStatisticsCalculator.CrosstabStatistics;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 
 /**
  * This is the model for the Crosstab node.
@@ -458,7 +459,10 @@ public class CrosstabNodeModel extends NodeModel
 
         final ColumnNamePolicy colNamePolicy =
             ColumnNamePolicy.AGGREGATION_METHOD_COLUMN_NAME;
-        final GlobalSettings globalSettings = new GlobalSettings(maxUniqueVals);
+        final GlobalSettings globalSettings =
+            new GlobalSettings(exec, groupByCols, maxUniqueVals,
+                    GlobalSettings.STANDARD_DELIMITER, table.getDataTableSpec(),
+                    table.getRowCount());
 
         ColumnAggregator collAggregator = null;
         if (null != m_settings.getWeightColumn()) {
