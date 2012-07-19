@@ -690,6 +690,7 @@ public final class AggregationMethods {
      * method for
      * @return the default {@link AggregationMethod} for the given
      * {@link DataValue} class
+     * @since 2.6
      */
     public static AggregationMethod getDefaultMethod(
             final Class<? extends DataValue> dataValueClass) {
@@ -723,8 +724,7 @@ public final class AggregationMethods {
      * @throws IllegalArgumentException if no <code>AggregationMethod</code>
      * exists for the given id
      */
-    public static AggregationMethod getMethod4Id(final String id)
-    throws IllegalArgumentException {
+    public static AggregationMethod getMethod4Id(final String id) {
         final AggregationOperator operator = instance().getOperator(id);
         if (operator == null) {
             throw new IllegalArgumentException("No method found for id: "
