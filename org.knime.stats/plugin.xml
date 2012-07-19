@@ -4,7 +4,7 @@
     <extension
          point="org.knime.workbench.repository.categories">
        <category
-            icon="icons/missing.gif"
+            icon="icons/test_category.png"
             level-id="hypothesis-testing"
             name="Hypothesis Testing"
             path="/statistics"/>
