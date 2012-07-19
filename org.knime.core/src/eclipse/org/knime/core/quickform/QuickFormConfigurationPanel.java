@@ -48,8 +48,12 @@
  */
 package org.knime.core.quickform;
 
+import java.awt.Color;
+import java.awt.Component;
 import java.awt.LayoutManager;
 
+import javax.swing.AbstractButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import org.knime.core.node.InvalidSettingsException;
@@ -91,4 +95,19 @@ public abstract class QuickFormConfigurationPanel
      */
     public abstract void loadSettings(final CFG config);
 
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setBackground(final Color bg) {
+        int max = getComponentCount();
+        for (int i = 0; i < max; i++) {
+            Component c = getComponent(i);
+            if ((c instanceof AbstractButton) || (c instanceof JPanel) || (c instanceof JLabel)) {
+                c.setBackground(bg);
+            }
+        }
+        super.setBackground(bg);
+    }
 }

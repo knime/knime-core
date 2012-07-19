@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   09.02.2005 (georg): created
  */
@@ -58,7 +58,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
 import javax.swing.JApplet;
-import javax.swing.JPanel;
+import javax.swing.JComponent;
 import javax.swing.Timer;
 
 import org.eclipse.swt.SWT;
@@ -69,25 +69,25 @@ import org.eclipse.swt.widgets.Composite;
 /**
  * Wrapper Composite that uses the SWT_AWT bridge to embed an AWT Panel into a
  * SWT composite.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class Panel2CompositeWrapper extends Composite {
     private Frame m_awtFrame;
 
-    private JPanel m_awtPanel;
+    private JComponent m_awtComponent;
     /** see {@link #initX11ErrorHandlerFix()} for details. */
     private static boolean x11ErrorHandlerFixInstalled;
 
     /**
      * Creates a new wrapper.
-     * 
+     *
      * @param parent The parent composite
      * @param panel The AWT panel to wrap
      * @param style Style bits, ignored so far
      */
     public Panel2CompositeWrapper(final Composite parent,
-            final JPanel panel, final int style) {
+            final JComponent panel, final int style) {
         super(parent, style | SWT.EMBEDDED | SWT.NO_BACKGROUND);
         final GridLayout gridLayout = new GridLayout();
         gridLayout.verticalSpacing = 0;
@@ -106,21 +106,21 @@ public class Panel2CompositeWrapper extends Composite {
             });
         }
         // use panel as root
-        m_awtPanel = panel;
-        /* Create another root pane container (JApplet) to enable swing/awt 
+        m_awtComponent = panel;
+        /* Create another root pane container (JApplet) to enable swing/awt
          * components and SWT frames/dialogs to work smoothly together:
          * http://www.eclipse.org/articles/article.php?file=Article-Swing-SWT-Integration/index.html
          */
         JApplet wrap = new JApplet();
-        wrap.add(m_awtPanel);
+        wrap.add(m_awtComponent);
         m_awtFrame.add(wrap);
-        
+
         // Pack the frame
         m_awtFrame.pack();
         m_awtFrame.setVisible(true);
 
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -139,10 +139,10 @@ public class Panel2CompositeWrapper extends Composite {
     /**
      * @return The wrapped panel, as it can be used within legacy AWT/Swing code
      */
-    public JPanel getAwtPanel() {
-        return m_awtPanel;
+    public JComponent getAwtPanel() {
+        return m_awtComponent;
     }
-    
+
     /**
      * Workaround for https://bugs.eclipse.org/bugs/show_bug.cgi?id=171432
      * (comment #15).
@@ -153,7 +153,7 @@ public class Panel2CompositeWrapper extends Composite {
         try {
             // get XlibWrapper.SetToolkitErrorHandler() and XSetErrorHandler()
             // methods
-            Class xlibwrapperClass = Class.forName("sun.awt.X11.XlibWrapper");
+            Class<?> xlibwrapperClass = Class.forName("sun.awt.X11.XlibWrapper");
             final Method setToolkitErrorHandlerMethod =
                     xlibwrapperClass.getDeclaredMethod(
                             "SetToolkitErrorHandler", null);
@@ -164,7 +164,7 @@ public class Panel2CompositeWrapper extends Composite {
             setErrorHandlerMethod.setAccessible(true);
 
             // get XToolkit.saved_error_handler field
-            Class xtoolkitClass = Class.forName("sun.awt.X11.XToolkit");
+            Class<?> xtoolkitClass = Class.forName("sun.awt.X11.XToolkit");
             final Field savedErrorHandlerField =
                     xtoolkitClass.getDeclaredField("saved_error_handler");
             savedErrorHandlerField.setAccessible(true);
