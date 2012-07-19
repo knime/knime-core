@@ -85,8 +85,8 @@ import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.knime.core.data.container.ContainerTable;
-import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
@@ -2396,7 +2396,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         // first retrieve FlowLoopContext object
                         FlowLoopContext slc = node.getLoopContext();
                         // first check if the loop is properly configured:
-                        if (m_workflow.getNode(slc.getOwner()) == null) {
+                        if (m_workflow.getNode(slc.getHeadNode()) == null) {
                             // obviously not: origin of loop is not in this WFM!
                             // nothing else to do: NC stays configured
                             assert nc.getState()
@@ -2407,11 +2407,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                                     "Loop nodes are not in the same workflow!");
                             success = false;
                         } else {
-                            // make sure the end of the loop is properly
-                            // configured:
-                            slc.setTailNode(nc.getID());
-                            // and try to restart loop
                             try {
+                                // make sure the end of the loop is properly
+                                // configured:
+                                slc.setTailNode(nc.getID());
+                                // and try to restart loop
                                 if (!snc.getNode().getPauseLoopExecution()) {
                                     restartLoop(slc);
                                 } else {

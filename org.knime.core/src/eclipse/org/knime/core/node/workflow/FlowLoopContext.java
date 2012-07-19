@@ -70,7 +70,12 @@ public class FlowLoopContext extends FlowObject {
         return super.getOwner();
     }
 
-    public void setTailNode(final NodeID tail) {
+    public void setTailNode(final NodeID tail) throws IllegalLoopException {
+        if (m_tailNode != null && tail != null) {
+            if (!m_tailNode.equals(tail)) {
+                throw new IllegalLoopException("Loop end already assigned (start node has more than one end node)");
+            }
+        }
         m_tailNode = tail;
     }
 
@@ -96,7 +101,7 @@ public class FlowLoopContext extends FlowObject {
     @Override
     protected FlowObject cloneAndUnsetOwner() {
         FlowLoopContext clone = (FlowLoopContext)super.cloneAndUnsetOwner();
-        clone.setTailNode(null);
+        clone.m_tailNode = null;
         clone.m_iterationIndex = 0;
         clone.m_fileStoreHandler = null;
         return clone;
