@@ -70,6 +70,8 @@ import org.knime.workbench.core.KNIMECorePlugin;
  * {@link ImageRegistry} so that they get disposed automatically when the
  * plug-in is deactivated (which it probably never will).
  *
+ * <b>This class is experimental API, please do not use it for now.</b>
+ *
  * @author Thorsten Meinl, University of Konstanz
  * @since 2.6
  */
@@ -124,8 +126,13 @@ public class ImageRepository {
         /** Icon for the most frequently used nodes category. */
         FavoriteNodesFrequentlyUsed("icons/fav/folder_freq.png"),
         /** Icon for the last used nodes category. */
-        FavoriteNodesLastUsed("icons/fav/folder_last.png");
-
+        FavoriteNodesLastUsed("icons/fav/folder_last.png"),
+        /** Icon for all kinds of warnings. */
+        Warning("icons/warning.gif"),
+        /** Icon for information messages. */
+        Info("icons/info.gif"),
+        /** Icon for all kinds of errors. */
+        Error("icons/error.png");
 
         private final URL m_url;
 
