@@ -360,7 +360,7 @@ final class CorrelationComputer {
             }
             valIndex = 0;
             for (int i = 0; i < m_categoricalColIndexMap.length; i++) {
-                for (int j = i + 1; j < m_categoricalColIndexMap.length; j++) {
+                for (int j = i + 1; j < m_categoricalColIndexMap.length; j++, valIndex++) {
                     LinkedHashMap<DataCell, Integer> possibleValuesI =
                         m_possibleValues[i];
                     LinkedHashMap<DataCell, Integer> possibleValuesJ =
@@ -381,7 +381,6 @@ final class CorrelationComputer {
                             table.getDataTableSpec().getColumnSpec(
                                     m_categoricalColIndexMap[j]).getName(), ci);
                     contingencyTables[valIndex][indexI][indexJ]++;
-                    valIndex++;
                 }
             }
             exec.checkCanceled();
