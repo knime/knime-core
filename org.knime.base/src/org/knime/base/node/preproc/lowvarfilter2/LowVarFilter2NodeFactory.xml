@@ -26,21 +26,21 @@
 			are likely to get filtered out. Choose 0 to filter for columns, which
 			only contain one constant value.
 		</option>
-				
-        <option name="Exclude">
-            This list contains the column names of the input table that 
-            will be left untouched (i.e. will also be present
+		
+	    <option name="Include">
+            This list contains the column names that are considered for
+            filtering. Any other column will be left untouched (i.e. will also be present
             in the output table independent of their variance).
         </option>
-
-        <option name="Enforce Exclusion">
-            Select this option to enforce the current exclusion list to stay
+        
+        <option name="Enforce Inclusion">
+            Select this option to enforce the current inclusion list to stay
             the same even if the input table specification changes. If some
-            of the excluded columns are not available anymore, a warning
+            of the included columns are not available anymore, a warning
             is displayed. (New columns will automatically be added to the
-            inclusion list.)
-        </option>
-		
+            exclusion list.)
+        </option>				
+	
         <option name="Select">
             Use these buttons to move columns between the Include and Exclude 
             list.
@@ -55,18 +55,18 @@
             the two lists.
         </option>
         
-        <option name="Include">
-            This list contains the column names that are considered for
-            filtering. Any other column will be left untouched (i.e. will also be present
+        <option name="Exclude">
+            This list contains the column names of the input table that 
+            will be left untouched (i.e. will also be present
             in the output table independent of their variance).
         </option>
-        
-        <option name="Enforce Inclusion">
-            Select this option to enforce the current inclusion list to stay
+
+        <option name="Enforce Exclusion">
+            Select this option to enforce the current exclusion list to stay
             the same even if the input table specification changes. If some
-            of the included columns are not available anymore, a warning
+            of the excluded columns are not available anymore, a warning
             is displayed. (New columns will automatically be added to the
-            exclusion list.)
+            inclusion list.)
         </option>
         
         </tab>	

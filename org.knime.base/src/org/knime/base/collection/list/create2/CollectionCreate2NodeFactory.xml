@@ -17,19 +17,19 @@
 		
       <tab name="Column Filter">      
       
-        <option name="Exclude">
-            This list contains the column names of the input table that are 
-            not included in the collection cell.
-        </option>
-
-        <option name="Enforce Exclusion">
-            Select this option to enforce the current exclusion list to stay
-            the same even if the input table specification changes. If some
-            of the excluded columns are not available anymore, a warning
-            is displayed. (New columns will automatically be added to the
-            inclusion list.)
+        <option name="Include">
+            This list contains the column names that are aggregated in a separate
+            new column.
         </option>
         
+        <option name="Enforce Inclusion">
+            Select this option to enforce the current inclusion list to stay
+            the same even if the input table specification changes. If some
+            of the included columns are not available anymore, a warning
+            is displayed. (New columns will automatically be added to the
+            exclusion list.)
+        </option>
+      
         <option name="Select">
             Use these buttons to move columns between the Include and Exclude 
             list.
@@ -44,18 +44,19 @@
             the two lists.
         </option>
         
-                  <option name="Include">
-            This list contains the column names that are aggregated in a separate
-            new column.
+        <option name="Exclude">
+            This list contains the column names of the input table that are 
+            not included in the collection cell.
+        </option>
+
+        <option name="Enforce Exclusion">
+            Select this option to enforce the current exclusion list to stay
+            the same even if the input table specification changes. If some
+            of the excluded columns are not available anymore, a warning
+            is displayed. (New columns will automatically be added to the
+            inclusion list.)
         </option>
         
-        <option name="Enforce Inclusion">
-            Select this option to enforce the current inclusion list to stay
-            the same even if the input table specification changes. If some
-            of the included columns are not available anymore, a warning
-            is displayed. (New columns will automatically be added to the
-            exclusion list.)
-        </option>
        </tab>
        <tab name="Collection type">      
     
