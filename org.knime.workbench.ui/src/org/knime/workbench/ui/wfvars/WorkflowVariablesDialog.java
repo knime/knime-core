@@ -71,7 +71,8 @@ public class WorkflowVariablesDialog extends Dialog {
 
     private Label m_warningLabel;
 
-    private NodeStateChangeListener m_listener;
+    private final NodeStateChangeListener m_listener;
+    private boolean m_buttonsHidden = false;
 
     /**
      *
@@ -119,6 +120,20 @@ public class WorkflowVariablesDialog extends Dialog {
     /** {@inheritDoc} */
     @Override
     public Control createDialogArea(final Composite parent) {
+        return createDialogArea(parent, false);
+    }
+
+    /**
+     * Creates and returns the contents of this dialog with or without edit,
+     * add and remove buttons.
+     * @param parent the parent composite
+     * @param hideButtons true to hide the button bar, false to show it
+     * @return the control
+     * @since 2.6
+     */
+    public Control createDialogArea(final Composite parent,
+            final boolean hideButtons) {
+        m_buttonsHidden  = hideButtons;
         parent.getShell().setText("Workflow Variable Administration");
         Composite composite = new Composite(parent, SWT.NONE);
         composite.setLayout(new GridLayout(1, false));
@@ -155,79 +170,82 @@ public class WorkflowVariablesDialog extends Dialog {
             }
         });
 
-        // second column: 3 buttons
-        Composite btnsComp = new Composite(tableAndBtnsComp, SWT.NONE);
-        btnsComp.setLayout(new GridLayout(1, false));
-        gridData = new GridData();
-        gridData.verticalAlignment = GridData.VERTICAL_ALIGN_CENTER;
-        btnsComp.setLayoutData(gridData);
+        if (!hideButtons) {
+            // second column: 3 buttons
+            Composite btnsComp = new Composite(tableAndBtnsComp, SWT.NONE);
+            btnsComp.setLayout(new GridLayout(1, false));
+            gridData = new GridData();
+            gridData.verticalAlignment = GridData.VERTICAL_ALIGN_CENTER;
+            btnsComp.setLayoutData(gridData);
 
-        m_addVarBtn = new Button(btnsComp, SWT.PUSH);
-        m_addVarBtn.setText("Add");
-        m_addVarBtn.addSelectionListener(new SelectionListener() {
-            @Override
-            public void widgetDefaultSelected(final SelectionEvent arg0) {
-                widgetSelected(arg0);
-            }
 
-            @Override
-            public void widgetSelected(final SelectionEvent arg0) {
-                addWorkflowVariable();
-            }
-
-        });
-        gridData = new GridData();
-        gridData.widthHint = 80;
-        m_addVarBtn.setLayoutData(gridData);
-
-        m_editVarBtn = new Button(btnsComp, SWT.PUSH);
-        m_editVarBtn.setText("Edit");
-        m_editVarBtn.setLayoutData(gridData);
-        m_editVarBtn.addSelectionListener(new SelectionListener() {
-
-            @Override
-            public void widgetDefaultSelected(final SelectionEvent arg0) {
-                widgetSelected(arg0);
-            }
-
-            @Override
-            public void widgetSelected(final SelectionEvent arg0) {
-                int selectionIdx = m_table.getViewer().getTable()
-                    .getSelectionIndex();
-                if (selectionIdx < 0) {
-                    MessageDialog.openWarning(getShell(), "Empty selection",
-                    "Please select the parameter you want to edit.");
-                    return;
+            m_addVarBtn = new Button(btnsComp, SWT.PUSH);
+            m_addVarBtn.setText("Add");
+            m_addVarBtn.addSelectionListener(new SelectionListener() {
+                @Override
+                public void widgetDefaultSelected(final SelectionEvent arg0) {
+                    widgetSelected(arg0);
                 }
-                FlowVariable selectedVar = m_table.get(selectionIdx);
-                editWorkflowVariable(selectedVar, selectionIdx);
-            }
-        });
 
-        m_removeVarBtn = new Button(btnsComp, SWT.PUSH);
-        m_removeVarBtn.setText("Remove");
-        m_removeVarBtn.setLayoutData(gridData);
-        m_removeVarBtn.addSelectionListener(new SelectionListener() {
-            @Override
-            public void widgetDefaultSelected(final SelectionEvent arg0) {
-                widgetSelected(arg0);
-            }
-
-            @Override
-            public void widgetSelected(final SelectionEvent arg0) {
-                int idx = m_table.getViewer().getTable().getSelectionIndex();
-                if (idx < 0) {
-                    MessageDialog.openWarning(getShell(), "Empty selection",
-                            "Please select the parameter you want to remove.");
-                    return;
+                @Override
+                public void widgetSelected(final SelectionEvent arg0) {
+                    addWorkflowVariable();
                 }
-                FlowVariable selectedParam =
-                    (FlowVariable)((IStructuredSelection)m_table
-                        .getViewer().getSelection()).getFirstElement();
-                removeWorkflowVariable(selectedParam);
-            }
-        });
 
+            });
+            gridData = new GridData();
+            gridData.widthHint = 80;
+            m_addVarBtn.setLayoutData(gridData);
+
+            m_editVarBtn = new Button(btnsComp, SWT.PUSH);
+            m_editVarBtn.setText("Edit");
+            m_editVarBtn.setLayoutData(gridData);
+            m_editVarBtn.addSelectionListener(new SelectionListener() {
+
+                @Override
+                public void widgetDefaultSelected(final SelectionEvent arg0) {
+                    widgetSelected(arg0);
+                }
+
+                @Override
+                public void widgetSelected(final SelectionEvent arg0) {
+                    int selectionIdx = m_table.getViewer().getTable()
+                        .getSelectionIndex();
+                    if (selectionIdx < 0) {
+                        MessageDialog.openWarning(getShell(), "Empty selection",
+                        "Please select the parameter you want to edit.");
+                        return;
+                    }
+                    FlowVariable selectedVar = m_table.get(selectionIdx);
+                    editWorkflowVariable(selectedVar, selectionIdx);
+                }
+            });
+
+            m_removeVarBtn = new Button(btnsComp, SWT.PUSH);
+            m_removeVarBtn.setText("Remove");
+            m_removeVarBtn.setLayoutData(gridData);
+            m_removeVarBtn.addSelectionListener(new SelectionListener() {
+                @Override
+                public void widgetDefaultSelected(final SelectionEvent arg0) {
+                    widgetSelected(arg0);
+                }
+
+                @Override
+                public void widgetSelected(final SelectionEvent arg0) {
+                    int idx = m_table.getViewer().getTable().getSelectionIndex();
+                    if (idx < 0) {
+                        MessageDialog.openWarning(getShell(), "Empty selection",
+                                "Please select the parameter you want to remove.");
+                        return;
+                    }
+                    FlowVariable selectedParam =
+                        (FlowVariable)((IStructuredSelection)m_table
+                            .getViewer().getSelection()).getFirstElement();
+                    removeWorkflowVariable(selectedParam);
+                }
+            });
+
+        }
         // second row: the warning label (in case the edit buttons are disabled
         // due to executing workflow...)
         m_warningLabel = new Label(composite, SWT.NONE);
@@ -394,23 +412,30 @@ public class WorkflowVariablesDialog extends Dialog {
         m_workflow.addWorkflowVariables(skipReset,
                 m_table.getVariables().toArray(vars));
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public void okPressed() {
         // if one or more variables were added or edited
         // first ask flag -> if true do a closer investigation...
         if (hasChanges()) {
-            // -> ask for reset confirmation
-            int returnCode = openConfirmationDialog();
-            // 1. skip reset -> add table content to WFM and do not reset
-            // 2. reset -> add table content to WFM and do reset
-            // 3. cancel -> do nothing
-            if (returnCode == RESET_IDX || returnCode == SKIP_RESET_IDX) {
-                replaceWorkflowVariables(returnCode == SKIP_RESET_IDX);
+            if (m_buttonsHidden) {
+                /* Workflow variables can only be edited, not deleted or added.
+                 * (Called from the execution wizard) No confirmation is
+                 * necessary. */
+                replaceWorkflowVariables(false);
             } else {
-                // CANCEL -> let dialog open
-                return;
+                // -> ask for reset confirmation
+                int returnCode = openConfirmationDialog();
+                // 1. skip reset -> add table content to WFM and do not reset
+                // 2. reset -> add table content to WFM and do reset
+                // 3. cancel -> do nothing
+                if (returnCode == RESET_IDX || returnCode == SKIP_RESET_IDX) {
+                    replaceWorkflowVariables(returnCode == SKIP_RESET_IDX);
+                } else {
+                    // CANCEL -> let dialog open
+                    return;
+                }
             }
         }
         // no changes -> close dialog
@@ -477,7 +502,7 @@ public class WorkflowVariablesDialog extends Dialog {
         }
         getShell().redraw();
     }
-    
+
     /**
      * Return list of flow variables shown in this dialog.
      * @return list of flow variables

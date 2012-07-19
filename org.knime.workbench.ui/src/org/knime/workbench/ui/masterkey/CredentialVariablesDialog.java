@@ -130,6 +130,19 @@ public class CredentialVariablesDialog extends Dialog {
     /** {@inheritDoc} */
     @Override
     public Control createDialogArea(final Composite parent) {
+        return createDialogArea(parent, false);
+    }
+
+    /**
+     * Creates and returns the contents of this dialog with or without edit,
+     * add and remove buttons.
+     * @param parent the parent composite
+     * @param hideButtons true to hide the button bar, false to show it
+     * @return the control
+     * @since 2.6
+     */
+    public Control createDialogArea(final Composite parent,
+            final boolean hideButtons) {
         parent.getShell().setText("Workflow Credentials...");
         Composite composite = new Composite(parent, SWT.NONE);
         if (m_workflowName != null) {
@@ -171,79 +184,81 @@ public class CredentialVariablesDialog extends Dialog {
             }
         });
 
-        // second column: 3 buttons
-        Composite btnsComp = new Composite(tableAndBtnsComp, SWT.NONE);
-        btnsComp.setLayout(new GridLayout(1, false));
-        gridData = new GridData();
-        gridData.verticalAlignment = GridData.VERTICAL_ALIGN_CENTER;
-        btnsComp.setLayoutData(gridData);
+        if (!hideButtons) {
+            // second column: 3 buttons
+            Composite btnsComp = new Composite(tableAndBtnsComp, SWT.NONE);
+            btnsComp.setLayout(new GridLayout(1, false));
+            gridData = new GridData();
+            gridData.verticalAlignment = GridData.VERTICAL_ALIGN_CENTER;
+            btnsComp.setLayoutData(gridData);
 
-        m_addVarBtn = new Button(btnsComp, SWT.PUSH);
-        m_addVarBtn.setText("Add");
-        m_addVarBtn.addSelectionListener(new SelectionListener() {
-            @Override
-            public void widgetDefaultSelected(final SelectionEvent arg0) {
-                widgetSelected(arg0);
-            }
-
-            @Override
-            public void widgetSelected(final SelectionEvent arg0) {
-                addCredential();
-            }
-
-        });
-        gridData = new GridData();
-        gridData.widthHint = 80;
-        gridData.heightHint = 20;
-        m_addVarBtn.setLayoutData(gridData);
-
-        m_editVarBtn = new Button(btnsComp, SWT.PUSH);
-        m_editVarBtn.setText("Edit");
-        m_editVarBtn.setLayoutData(gridData);
-        m_editVarBtn.addSelectionListener(new SelectionListener() {
-
-            @Override
-            public void widgetDefaultSelected(final SelectionEvent arg0) {
-                widgetSelected(arg0);
-            }
-
-            @Override
-            public void widgetSelected(final SelectionEvent arg0) {
-                int selectionIdx = m_table.getViewer().getTable()
-                    .getSelectionIndex();
-                if (selectionIdx < 0) {
-                    MessageDialog.openWarning(getShell(), "Empty selection",
-                        "Please select the credential you want to edit.");
-                    return;
+            m_addVarBtn = new Button(btnsComp, SWT.PUSH);
+            m_addVarBtn.setText("Add");
+            m_addVarBtn.addSelectionListener(new SelectionListener() {
+                @Override
+                public void widgetDefaultSelected(final SelectionEvent arg0) {
+                    widgetSelected(arg0);
                 }
-                Credentials selectedCred = m_table.get(selectionIdx);
-                editCredentials(selectedCred, selectionIdx);
-            }
-        });
 
-        m_removeVarBtn = new Button(btnsComp, SWT.PUSH);
-        m_removeVarBtn.setText("Remove");
-        m_removeVarBtn.setLayoutData(gridData);
-        m_removeVarBtn.addSelectionListener(new SelectionListener() {
-            @Override
-            public void widgetDefaultSelected(final SelectionEvent arg0) {
-                widgetSelected(arg0);
-            }
-
-            @Override
-            public void widgetSelected(final SelectionEvent arg0) {
-                int idx = m_table.getViewer().getTable().getSelectionIndex();
-                if (idx < 0) {
-                    MessageDialog.openWarning(getShell(), "Empty selection",
-                            "Please select the parameter you want to remove.");
-                    return;
+                @Override
+                public void widgetSelected(final SelectionEvent arg0) {
+                    addCredential();
                 }
-                Credentials cred =
-                    (Credentials)((IStructuredSelection)m_table
-                        .getViewer().getSelection()).getFirstElement();
-                removeCredential(cred);
-            }
-        });
+
+            });
+            gridData = new GridData();
+            gridData.widthHint = 80;
+            gridData.heightHint = 20;
+            m_addVarBtn.setLayoutData(gridData);
+
+            m_editVarBtn = new Button(btnsComp, SWT.PUSH);
+            m_editVarBtn.setText("Edit");
+            m_editVarBtn.setLayoutData(gridData);
+            m_editVarBtn.addSelectionListener(new SelectionListener() {
+
+                @Override
+                public void widgetDefaultSelected(final SelectionEvent arg0) {
+                    widgetSelected(arg0);
+                }
+
+                @Override
+                public void widgetSelected(final SelectionEvent arg0) {
+                    int selectionIdx = m_table.getViewer().getTable()
+                        .getSelectionIndex();
+                    if (selectionIdx < 0) {
+                        MessageDialog.openWarning(getShell(), "Empty selection",
+                            "Please select the credential you want to edit.");
+                        return;
+                    }
+                    Credentials selectedCred = m_table.get(selectionIdx);
+                    editCredentials(selectedCred, selectionIdx);
+                }
+            });
+
+            m_removeVarBtn = new Button(btnsComp, SWT.PUSH);
+            m_removeVarBtn.setText("Remove");
+            m_removeVarBtn.setLayoutData(gridData);
+            m_removeVarBtn.addSelectionListener(new SelectionListener() {
+                @Override
+                public void widgetDefaultSelected(final SelectionEvent arg0) {
+                    widgetSelected(arg0);
+                }
+
+                @Override
+                public void widgetSelected(final SelectionEvent arg0) {
+                    int idx = m_table.getViewer().getTable().getSelectionIndex();
+                    if (idx < 0) {
+                        MessageDialog.openWarning(getShell(), "Empty selection",
+                                "Please select the parameter you want to remove.");
+                        return;
+                    }
+                    Credentials cred =
+                        (Credentials)((IStructuredSelection)m_table
+                            .getViewer().getSelection()).getFirstElement();
+                    removeCredential(cred);
+                }
+            });
+        }
         return composite;
     }
 
@@ -292,7 +307,9 @@ public class CredentialVariablesDialog extends Dialog {
     /** {@inheritDoc} */
     @Override
     public void okPressed() {
-        m_credentials = m_table.getCredentials();
+        if (m_table != null) {
+            m_credentials = m_table.getCredentials();
+        }
         super.okPressed();
     }
 
