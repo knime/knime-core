@@ -12,8 +12,7 @@
         It is designed 
         to compare the means of observations in the same column between 
         several groups. The node allows the testing of equality of variances 
-        (Levene's test) and the t-value for both equal- and unequal-variance. 
-        It also provides the relevant descriptive statistics.</intro>
+        (Levene's test) and provides the relevant descriptive statistics.</intro>
         
         <option name="Factor">Column holding the grouping information
         data.
@@ -24,7 +23,7 @@
 	    of the parameter is in the confidence interval.
 	    </option>
         <option name="Test columns">
-        A two sample t-test is performed separately for each of these columns.
+        A one-way ANOVA is performed separately for each of these columns.
         </option>	    
     </fullDescription>
     
@@ -37,7 +36,7 @@
     <views>
         <view name="Test statistics" index="0">
             Tables with descriptive statistics of the input columns
-             and test statistics of the independent samples t-test.
+             and test statistics of the one-way ANOVA.
         </view>
     </views>       
 </knimeNode>
