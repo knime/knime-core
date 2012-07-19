@@ -53,9 +53,9 @@ package org.knime.base.node.meta.looper.group;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
+import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 
 /**
  * Creates the dialog of the group loop start node and provides static methods
@@ -70,9 +70,11 @@ class GroupLoopStartNodeDialog extends DefaultNodeSettingsPane {
      * 
      * @return The settings model with the selected columns.
      */
-    static final SettingsModelFilterString getFilterDoubleColModel() {
-        return new SettingsModelFilterString(
-                GroupLoopStartConfigKeys.COLUMN_NAMES);
+    @SuppressWarnings("unchecked")
+    static final SettingsModelColumnFilter2 getFilterDoubleColModel() {
+        return new SettingsModelColumnFilter2(
+                GroupLoopStartConfigKeys.COLUMN_NAMES,
+                DataValue.class);
     }
     
     /**
@@ -90,12 +92,11 @@ class GroupLoopStartNodeDialog extends DefaultNodeSettingsPane {
     /**
      * Creates new instance of <code>GroupLoopStartNodeDialog</code>. 
      */
-    @SuppressWarnings("unchecked")
     public GroupLoopStartNodeDialog() {
         
         // column selection
-        addDialogComponent(new DialogComponentColumnFilter(
-                getFilterDoubleColModel(), 0, false, DataValue.class));
+        addDialogComponent(new DialogComponentColumnFilter2(
+                getFilterDoubleColModel(), 0));
         
         // sorted input table
         addDialogComponent(

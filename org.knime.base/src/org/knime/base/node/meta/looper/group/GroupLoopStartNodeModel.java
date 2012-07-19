@@ -74,7 +74,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
+import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.workflow.LoopStartNodeTerminator;
 import org.knime.core.util.DuplicateChecker;
 import org.knime.core.util.DuplicateKeyException;
@@ -95,13 +95,13 @@ class GroupLoopStartNodeModel extends NodeModel implements
      * The default "sorted input table" setting.
      */
     public static final boolean DEF_SORTED_INPUT_TABLE = false;
-    
+
     /**
      * The separator to separate groups in group identifier.
      */
     public static final String GROUP_SEPARATOR = "%";
 
-    private final SettingsModelFilterString m_filterGroupColModel =
+    private final SettingsModelColumnFilter2 m_filterGroupColModel =
         GroupLoopStartNodeDialog.getFilterDoubleColModel();
 
     private final SettingsModelBoolean m_sortedInputTableModel =
@@ -141,7 +141,16 @@ class GroupLoopStartNodeModel extends NodeModel implements
         m_spec = inSpecs[0];
 
         // check if all included columns are available in the spec
-        List<String> includedColNames = m_filterGroupColModel.getIncludeList();
+        List<String> includedColNames =
+                Arrays.asList(m_filterGroupColModel.applyTo(m_spec)
+                        .getIncludes());
+
+        // at least one column containing double values must be specified
+        if (includedColNames.size() <= 0) {
+            throw new InvalidSettingsException(
+                    "Select at least one column containing group information!");
+        }
+
         for (String colName : includedColNames) {
             if (!m_spec.containsName(colName)) {
                 throw new InvalidSettingsException("Column \"" + colName
@@ -169,6 +178,7 @@ class GroupLoopStartNodeModel extends NodeModel implements
         //
         ///////////////////////////
         BufferedDataTable table = inData[0];
+        DataTableSpec spec = table.getDataTableSpec();
         if (table.getRowCount() <= 0) {
             m_endLoop = true;
         }
@@ -186,13 +196,12 @@ class GroupLoopStartNodeModel extends NodeModel implements
             // sort if not already sorted
             if (!m_sortedInputTableModel.getBooleanValue()) {
                 // asc
-                boolean[] sortAsc =
-                    new boolean[m_filterGroupColModel.getIncludeList().size()];
+                final String[] includes = m_filterGroupColModel.applyTo(spec).getIncludes();
+                boolean[] sortAsc = new boolean[includes.length];
                 Arrays.fill(sortAsc, true);
                 BufferedDataTableSorter tableSorter =
                     new BufferedDataTableSorter(table,
-                            m_filterGroupColModel.getIncludeList(),
-                            sortAsc, false);
+                            Arrays.asList(includes), sortAsc, false);
                 m_sortedTable = tableSorter.sort(exec);
             } else {
                 // no sort necessary
@@ -297,7 +306,7 @@ class GroupLoopStartNodeModel extends NodeModel implements
             }
         }
         cont.close();
-        
+
         // check for duplicates and throw exception if duplicate exist
         try {
             m_duplicateChecker.checkForDuplicates();
@@ -307,7 +316,7 @@ class GroupLoopStartNodeModel extends NodeModel implements
                  + m_currentGroupingState.getGroupIdentifier()
                  + ")");
         }
-        
+
         // push variables
         pushFlowVariableInt("currentIteration", m_iteration);
         pushGroupColumnValuesAsFlowVariables(m_lastGroupingState);
@@ -394,7 +403,8 @@ class GroupLoopStartNodeModel extends NodeModel implements
      */
     private void initGroupColumnsAsFlowVariables() {
         if (m_spec != null && m_filterGroupColModel != null) {
-            List<String> inclCols = m_filterGroupColModel.getIncludeList();
+            List<String> inclCols = Arrays.asList(m_filterGroupColModel.applyTo(
+                    m_spec).getIncludes());
             for (String colName : inclCols) {
                 DataType dt = m_spec.getColumnSpec(colName).getType();
                 pushVariable(dt, m_spec.getColumnSpec(colName).getName(), null);
@@ -484,7 +494,7 @@ class GroupLoopStartNodeModel extends NodeModel implements
                     }
                 }
 
-                groupIdentifier += GROUP_SEPARATOR + row.getCell(c).toString() 
+                groupIdentifier += GROUP_SEPARATOR + row.getCell(c).toString()
                                  + GROUP_SEPARATOR;
 
                 // get current group cell
@@ -510,7 +520,8 @@ class GroupLoopStartNodeModel extends NodeModel implements
      * @return An array containing the indices of the included columns.
      */
     private int[] getIncludedColIndices(final DataTableSpec dataSpec) {
-        List<String> includedColNames = m_filterGroupColModel.getIncludeList();
+        List<String> includedColNames = Arrays.asList(
+                m_filterGroupColModel.applyTo(dataSpec).getIncludes());
         int[] includedColIndices = new int[includedColNames.size()];
         int noCols = dataSpec.getNumColumns();
         int j = 0;
@@ -541,15 +552,6 @@ class GroupLoopStartNodeModel extends NodeModel implements
             throws InvalidSettingsException {
         m_filterGroupColModel.validateSettings(settings);
         m_sortedInputTableModel.validateSettings(settings);
-
-        // at least one column containing double values must be specified
-        List<String> selectedCols = ((SettingsModelFilterString)
-                m_filterGroupColModel.createCloneWithValidatedValue(settings))
-                .getIncludeList();
-        if (selectedCols.size() <= 0) {
-            throw new InvalidSettingsException(
-                    "Select at least one column containing double values!");
-        }
     }
 
     /**
