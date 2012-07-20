@@ -59,7 +59,6 @@ import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
  * @param <T> the instance T this object is parameterized on.
  * @author Kilian Thiel, KNIME.com AG, Zurich
  * @since 2.6
- * @noextend This class is not intended to be subclassed by clients. Pending API.
  */
 public abstract class InputFilter<T> {
 

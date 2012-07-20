@@ -68,14 +68,13 @@ import org.knime.core.node.NodeSettingsWO;
  *
  * @author Thomas Gabriel, KNIME.com AG, Zurich
  * @since 2.6
- * @noextend This class is not intended to be subclassed by clients. Pending API.
  */
 public class NameFilterConfiguration implements Cloneable {
 
     private String[] m_includeList = new String[0];
     private String[] m_excludeList = new String[0];
 
-    private EnforceOption m_enforceOption = EnforceOption.EnforceInclusion;
+    private EnforceOption m_enforceOption = EnforceOption.EnforceExclusion;
 
     /** Enforce inclusion/exclusion options. */
     public enum EnforceOption {
