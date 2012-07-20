@@ -89,8 +89,7 @@ public class GlobalSettings {
      * with a unique key which are accessible in the
      * <code>AggregationMethod</code> implementations.
      */
-    private final Map<String, Object> m_keyValueMap =
-        new HashMap<String, Object>();
+    private final Map<String, Object> m_keyValueMap;
 
     private final List<String> m_groupColNames;
 
@@ -142,7 +141,7 @@ public class GlobalSettings {
             final GlobalSettings oldSettings) {
         this(oldSettings.m_exec, true, oldSettings.m_groupColNames,
                 oldSettings.m_maxUniqueValues, oldSettings.m_valueDelimiter,
-                newSpec, oldSettings.m_noOfRows);
+                newSpec, oldSettings.m_noOfRows, oldSettings.m_keyValueMap);
     }
 
     /**Constructor for class GlobalSettings.
@@ -159,7 +158,7 @@ public class GlobalSettings {
             final String valueDelimiter, final DataTableSpec spec,
             final int noOfRows) {
         this(exec, false, groupColNames, maxUniqueValues, valueDelimiter, spec,
-                noOfRows);
+                noOfRows, new HashMap<String, Object>());
     }
     /**Constructor for class GlobalSettings.
      * @param exec the {@link ExecutionContext}
@@ -175,7 +174,7 @@ public class GlobalSettings {
     private GlobalSettings(final ExecutionContext exec, final boolean silent,
             final List<String> groupColNames, final int maxUniqueValues,
             final String valueDelimiter, final DataTableSpec spec,
-            final int noOfRows) {
+            final int noOfRows, final Map<String, Object> keyValueMap) {
         if (groupColNames == null) {
             throw new NullPointerException("groupColNames must not be null");
         }
@@ -193,6 +192,9 @@ public class GlobalSettings {
         if (noOfRows < 0) {
             throw new IllegalArgumentException("No of rows must be positive");
         }
+        if (keyValueMap == null) {
+            throw new NullPointerException("keyValueMap must not be null");
+        }
         if (!silent && exec != null) {
             m_exec = exec.createSilentSubExecutionContext(0);
         } else {
@@ -203,6 +205,7 @@ public class GlobalSettings {
         m_valueDelimiter = valueDelimiter;
         m_spec = spec;
         m_noOfRows = noOfRows;
+        m_keyValueMap = keyValueMap;
     }
 
     /**
@@ -298,6 +301,27 @@ public class GlobalSettings {
      */
     public List<String> getGroupColNames() {
         return Collections.unmodifiableList(m_groupColNames);
+    }
+
+    /**
+     * Allows the adding of arbitrary key value pairs.
+     * @param map the {@link Map} with the values to add
+     * @since 2.6
+     */
+    public void addValues(final Map<String, Object> map) {
+        if (map == null) {
+            throw new NullPointerException("Map must not be null");
+        }
+        try {
+            if (map.containsKey(null)) {
+                throw new IllegalArgumentException(
+                        "Map should not contain null");
+            }
+        } catch (final NullPointerException e) {
+            // map does not support null as key
+        }
+
+        m_keyValueMap.putAll(map);
     }
 
     /**
