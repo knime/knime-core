@@ -93,7 +93,6 @@ import org.fife.ui.autocomplete.BasicCompletion;
 import org.fife.ui.autocomplete.Completion;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
-import org.fife.ui.rtextarea.RTextScrollPane;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
@@ -298,7 +297,7 @@ public class JSnippetPanel extends JPanel {
     private JComponent createEditorComponent() {
         RSyntaxTextArea textArea = new RSyntaxTextArea(20, 60);
         textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
-        JScrollPane scroller = new RTextScrollPane(textArea);
+        JScrollPane scroller = new JScrollPane(textArea);
 
         // An AutoCompletion acts as a "middle-man" between a text component
         // and a CompletionProvider. It manages any options associated with
