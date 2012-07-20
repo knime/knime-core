@@ -98,7 +98,9 @@ class Cell {
         if (m_value == null) {
             DataCellFactory cellFactory = new DataCellFactory();
             cellFactory.setMissingValuePattern(m_missingValuePattern);
-            m_value = cellFactory.createDataCellOfType(m_type, m_text);
+            m_value = null != m_text
+                ? cellFactory.createDataCellOfType(m_type, m_text)
+                : DataType.getMissingCell();
             m_errorMessage = cellFactory.getErrorMessage() == null ? ""
                     : cellFactory.getErrorMessage();
         }
