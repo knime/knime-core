@@ -92,7 +92,7 @@
             name="Statistics"
             path="/"/>
        <category
-            icon="icons/missing.gif"
+            icon="icons/16x16/regression.png"
             level-id="regression"
             name="Regression"
             path="/statistics"/>
