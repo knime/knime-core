@@ -55,19 +55,22 @@ import java.util.Collections;
 import java.util.List;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.util.ObjectToDataCellConverter;
+import org.knime.core.node.BufferedDataTable;
 
 /**
  * Deprecated(!) default implementation of a {@link DataTable} object. This
  * implementation keeps the data in memory all the time. Don't use it. We have
  * better containers: rather use the
  * {@link org.knime.core.data.container.DataContainer DataContainer}.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  * @deprecated DefaultTable will hold the entire data in main memory and should
  *             therefore not be used anymore. Instead, you should consider to
@@ -78,6 +81,7 @@ import org.knime.core.data.util.ObjectToDataCellConverter;
  *             {@link org.knime.core.node.BufferedDataTable} to create
  *             DataTables).
  */
+@Deprecated
 public class DefaultTable implements DataTable {
 
     /**
@@ -96,11 +100,11 @@ public class DefaultTable implements DataTable {
     /**
      * Creates a new table object from an array of <code>DataRow</code>
      * objects, and an array of column names and types.
-     * 
+     *
      * @param rows The list of <code>DataRow</code> objects.
      * @param spec The Spec of this table.
-     * @throws NullPointerException If one of the arguments is 
-     *              <code>null</code>, or if the array contains 
+     * @throws NullPointerException If one of the arguments is
+     *              <code>null</code>, or if the array contains
      *              <code>null</code> values.
      * @throws IllegalArgumentException If any runtime class in the row's cells
      *             does not comply with the settings in the spec.
@@ -142,12 +146,12 @@ public class DefaultTable implements DataTable {
     /**
      * Creates a new table object from an array of <code>DataRow</code>
      * objects, and an array of column names and types.
-     * 
+     *
      * @param rows The list of <code>DataRow</code> objects.
      * @param columnNames The names of the columns.
      * @param columnTypes The column types.
-     * @throws NullPointerException If one of the arguments is 
-     *              <code>null</code>, or if any array contains 
+     * @throws NullPointerException If one of the arguments is
+     *              <code>null</code>, or if any array contains
      *              <code>null</code> values.
      * @throws IllegalStateException If redundant column names are found.
      * @throws IllegalArgumentException If any element in
@@ -164,7 +168,7 @@ public class DefaultTable implements DataTable {
     /**
      * Private constructor that is used by all constructors below. It inits the
      * data structure from the ObjectSupplier.
-     * 
+     *
      * @param data Get the data from, in whatever way.
      * @param rowHeader Containing row header information.
      * @param colHeader Containing column header information.
@@ -199,7 +203,7 @@ public class DefaultTable implements DataTable {
         }
 
         // sanity check if column count is consistent
-        if (colCount >= 0 && colHeader != null 
+        if (colCount >= 0 && colHeader != null
                 && colHeader.length != colCount) {
             throw new IllegalArgumentException("Column count inconsistent: "
                     + colHeader.length + " vs. " + colCount + ".");
@@ -257,7 +261,7 @@ public class DefaultTable implements DataTable {
      * <code>createDataCell(Object)</code> method. The column type is
      * determined by the most specific <code>DataCell</code> class for all
      * cells in a column.
-     * 
+     *
      * @param data Content of the table, all rows must have same length,
      *            <code>null</code> values are ok to indicate missing values.
      * @param rowHeader The name of the rows in an array. May be
@@ -297,7 +301,7 @@ public class DefaultTable implements DataTable {
      * implementation, {@link ObjectToDataCellConverter#createDataCell(Object)},
      * for details. The column type is determined by the most specific
      * <code>DataCell</code> class for all cells in a column.
-     * 
+     *
      * @param data Content of the table, all rows must have same length,
      *            <code>null</code> values are ok to indicate missing values.
      * @param rowHeader The name of the rows in an array. May be
@@ -329,7 +333,7 @@ public class DefaultTable implements DataTable {
 
     /**
      * Calls <code>this(data, (String[])null, (String[])null);</code>.
-     * 
+     *
      * @param data Data to be set in this table. For further details see other
      *            constructor
      * @see #DefaultTable(Object[][], String[], String[])
@@ -344,7 +348,7 @@ public class DefaultTable implements DataTable {
      * wrapped by an <code>IntCell</code> by calling
      * <code>ObjectToDataCellConverter.createDataCell(new Integer(data[i][j])
      * </code>
-     * 
+     *
      * @param data Content of the table, all rows must have same length.
      * @param rowHeader The name of the rows in an array. May be
      *            <code>null</code>. The length of the array (if given) must
@@ -375,7 +379,7 @@ public class DefaultTable implements DataTable {
 
     /**
      * Calls <code>this(data, (String[])null, (String[])null);</code>.
-     * 
+     *
      * @param data Data to be set in this table. For further details see other
      *            constructor
      * @see #DefaultTable(int[][], String[], String[])
@@ -390,7 +394,7 @@ public class DefaultTable implements DataTable {
      * array are wrapped by an <code>DoubleCell</code> by calling
      * <code>ObjectToDataCellConverter.createDataCell(new Double(data[i][j])
      * </code>
-     * 
+     *
      * @param data Content of the table, all rows must have same length.
      * @param rowHeader The name of the rows in an array. May be
      *            <code>null</code>. The length of the array (if given) must
@@ -420,7 +424,7 @@ public class DefaultTable implements DataTable {
 
     /**
      * Calls <code>this(data, (String[])null, (String[])null);</code>.
-     * 
+     *
      * @param data Data to be set in this table. For further details see other
      *            constructor
      * @see #DefaultTable(double[][], String[], String[])
@@ -448,7 +452,7 @@ public class DefaultTable implements DataTable {
      * <code>ArrayList</code> contains objects of type <code>DataRow</code>.
      * This method never returns <code>null</code>, even though the returned
      * list can be empty if there are no rows in the table.
-     * 
+     *
      * @return reference to internal data container.
      */
     protected final List<DataRow> getRowsInList() {
@@ -457,11 +461,46 @@ public class DefaultTable implements DataTable {
 
     /**
      * Get the number of rows in this table.
-     * 
+     *
      * @return The number of rows.
      */
     public int getRowCount() {
         return m_rowList.size();
+    }
+
+    /** Prints the table to a string (row header, newline, first line, newline, ...).
+     * Prints at most 100 rows, columns delimited by tab.
+     * @param table Table to print, not null.
+     * @return That string
+     * @since 2.6
+     */
+    public static final String toString(final DataTable table) {
+        StringBuilder b = new StringBuilder();
+        b.append("\"Key\"");
+        for (DataColumnSpec cs : table.getDataTableSpec()) {
+            b.append("\t\"").append(cs.getName()).append("\"");
+        }
+        int rowIndex = 0;
+        for (DataRow r : table) {
+            b.append("\n\"").append(r.getKey()).append("\"");
+            for (DataCell c : r) {
+                b.append("\t");
+                if (!(c.isMissing() || c instanceof DoubleValue)) {
+                    b.append("\"").append(c).append("\"");
+                } else {
+                    b.append(c);
+                }
+            }
+            if (rowIndex >= 100) {
+                b.append("\n... ");
+                if (table instanceof BufferedDataTable) {
+                    b.append("<");
+                    b.append(((BufferedDataTable)table).getRowCount() - 100);
+                    b.append(" more>");
+                }
+            }
+        }
+        return b.toString();
     }
 
     /**
@@ -482,7 +521,7 @@ public class DefaultTable implements DataTable {
 
         /**
          * Constructor handling int values.
-         * 
+         *
          * @param data the data in an int array
          */
         public ObjectSupplier(final int[][] data) {
@@ -494,7 +533,7 @@ public class DefaultTable implements DataTable {
 
         /**
          * Constructor handling double values.
-         * 
+         *
          * @param data the data in a double array
          */
         public ObjectSupplier(final double[][] data) {
@@ -506,7 +545,7 @@ public class DefaultTable implements DataTable {
 
         /**
          * Constructor handling arbitray Objects.
-         * 
+         *
          * @param data the data in an array
          */
         public ObjectSupplier(final Object[][] data) {
@@ -518,7 +557,7 @@ public class DefaultTable implements DataTable {
 
         /**
          * Get the row count, that is the length of m_rows.
-         * 
+         *
          * @return number of rows
          */
         public int getRowCount() {
@@ -529,7 +568,7 @@ public class DefaultTable implements DataTable {
          * Get the column count for a particular row. In general, the column
          * count is the same for all rows. The outer class will use these return
          * values for sanity checks.
-         * 
+         *
          * @param row the row of interest
          * @return the length of the row
          */
@@ -548,7 +587,7 @@ public class DefaultTable implements DataTable {
          * expecting an Object[][] was called, it simply returns the value at
          * the proper position, otherwise it will do a return new Double(..) or
          * new Integer(..), resp.
-         * 
+         *
          * @param row the row of interest
          * @param column the column of interest
          * @return the object at this position, or a new Number if the generic
