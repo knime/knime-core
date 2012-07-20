@@ -845,7 +845,7 @@ public final class SingleNodeContainer extends NodeContainer {
                 } else {
                     // can be null if run through 3rd party executor
                     // might be not an IWriteFileStoreHandler if restored loop is executed
-                    // (this will result in a failure before the client execute is called)
+                    // (this will result in a failure before model#execute is called)
                     assert !status.isSuccess() || fsh == null
                         : "must not be " + fsh.getClass().getSimpleName() + " in execute";
                     LOGGER.debug("Can't close file store handler, not writable: "

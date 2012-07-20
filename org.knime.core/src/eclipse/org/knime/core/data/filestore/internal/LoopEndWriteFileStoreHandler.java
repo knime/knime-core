@@ -116,6 +116,9 @@ public final class LoopEndWriteFileStoreHandler implements IWriteFileStoreHandle
     /** {@inheritDoc} */
     @Override
     public FileStore createFileStore(final String name) throws IOException {
+        if (m_duplicateChecker == null) {
+            throw new IllegalStateException("file store handler is not open");
+        }
         FileStore fs = m_loopStartFSHandler.createFileStore(name);
         m_duplicateChecker.add(name);
         m_fileStoresInLoopCache.add(fs);
@@ -135,14 +138,15 @@ public final class LoopEndWriteFileStoreHandler implements IWriteFileStoreHandle
     public void close() {
         if (m_duplicateChecker != null) {
             m_duplicateChecker.close();
-            m_duplicateChecker = null;
-            m_fsKeysToKeepLRUCache = null;
             try {
                 BufferedDataTable keysToRetainTable = m_fileStoresInLoopCache.close();
                 m_loopStartFSHandler.onLoopEndFinish(keysToRetainTable);
-                m_fileStoresInLoopCache = null;
             } catch (CanceledExecutionException e) {
                 throw new RuntimeException("Canceled", e);
+            } finally {
+                m_fsKeysToKeepLRUCache = null;
+                m_fileStoresInLoopCache = null;
+                m_duplicateChecker = null;
             }
         }
     }

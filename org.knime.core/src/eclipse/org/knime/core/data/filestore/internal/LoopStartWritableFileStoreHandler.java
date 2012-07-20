@@ -73,6 +73,8 @@ public class LoopStartWritableFileStoreHandler
     private FileStoresInLoopCache m_fileStoresInLoopCache;
     private final NestedLoopIdentifierProvider m_nestedLoopIdentifierProvider;
 
+    private BufferedDataTable m_tableWithKeysToPersist;
+
     /**
      * @param name
      * @param storeUUID
@@ -94,6 +96,14 @@ public class LoopStartWritableFileStoreHandler
     @Override
     public void open(final ExecutionContext exec) {
         super.open(exec);
+        if (m_tableWithKeysToPersist != null) {
+            try {
+                m_fileStoresInLoopCache.onIterationEnd(m_tableWithKeysToPersist, this);
+            } catch (CanceledExecutionException e) {
+                throw new RuntimeException("Canceled", e);
+            }
+            m_tableWithKeysToPersist = null;
+        }
         m_fileStoresInLoopCache = new FileStoresInLoopCache(exec);
     }
 
@@ -127,7 +137,7 @@ public class LoopStartWritableFileStoreHandler
     @Override
     public synchronized void onLoopEndFinish(final BufferedDataTable tableWithKeysToPersist)
     throws CanceledExecutionException {
-        m_fileStoresInLoopCache.onIterationEnd(tableWithKeysToPersist, this);
+        m_tableWithKeysToPersist = tableWithKeysToPersist;
     }
 
     /** {@inheritDoc} */

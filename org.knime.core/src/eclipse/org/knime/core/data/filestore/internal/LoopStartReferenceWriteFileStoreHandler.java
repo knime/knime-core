@@ -78,6 +78,7 @@ public final class LoopStartReferenceWriteFileStoreHandler implements ILoopStart
     private InternalDuplicateChecker m_duplicateChecker;
 
     private FileStoresInLoopCache m_fileStoresInLoopCache;
+    private BufferedDataTable m_tableWithKeysToPersist;
 
 
     /**
@@ -123,6 +124,7 @@ public final class LoopStartReferenceWriteFileStoreHandler implements ILoopStart
     /** {@inheritDoc} */
     @Override
     public void clearAndDispose() {
+        clearFileStoresFromPreviousIteration();
         m_reference.clearNestedLoopPath(m_thisNestedLoopPath[m_thisNestedLoopPath.length - 1]);
     }
 
@@ -152,8 +154,22 @@ public final class LoopStartReferenceWriteFileStoreHandler implements ILoopStart
     /** {@inheritDoc} */
     @Override
     public void open(final ExecutionContext exec) {
+        clearFileStoresFromPreviousIteration();
         m_fileStoresInLoopCache = new FileStoresInLoopCache(exec);
         m_duplicateChecker = new InternalDuplicateChecker();
+    }
+
+    /**
+     *  */
+    private void clearFileStoresFromPreviousIteration() {
+        if (m_tableWithKeysToPersist != null) {
+            try {
+                m_fileStoresInLoopCache.onIterationEnd(m_tableWithKeysToPersist, this);
+            } catch (CanceledExecutionException e) {
+                throw new RuntimeException("Canceled", e);
+            }
+            m_tableWithKeysToPersist = null;
+        }
     }
 
     /** {@inheritDoc} */
@@ -174,9 +190,10 @@ public final class LoopStartReferenceWriteFileStoreHandler implements ILoopStart
 
     /** {@inheritDoc} */
     @Override
-    public void onLoopEndFinish(final BufferedDataTable tableWithKeysToPersist) throws CanceledExecutionException {
-        m_fileStoresInLoopCache.onIterationEnd(tableWithKeysToPersist, this);
-        m_reference.addFileStoreKeysFromNestedLoop(tableWithKeysToPersist);
+    public synchronized void onLoopEndFinish(
+            final BufferedDataTable tableWithKeysToPersist) throws CanceledExecutionException {
+        m_tableWithKeysToPersist = tableWithKeysToPersist;
+        m_reference.addFileStoreKeysFromNestedLoop(m_tableWithKeysToPersist);
     }
 
     /** {@inheritDoc} */

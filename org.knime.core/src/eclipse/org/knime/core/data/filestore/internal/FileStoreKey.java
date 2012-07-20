@@ -153,8 +153,8 @@ public final class FileStoreKey implements Comparable<FileStoreKey> {
     /** {@inheritDoc} */
     @Override
     public String toString() {
-        StringBuilder b = new StringBuilder(Integer.toString(m_index));
-        b.append("_").append(getNameOnDisc()).append("-(").append(m_storeUUID).append(")");
+        StringBuilder b = new StringBuilder(getNameOnDisc());
+        b.append("-(").append(m_storeUUID).append(")");
         return b.toString();
     }
 
