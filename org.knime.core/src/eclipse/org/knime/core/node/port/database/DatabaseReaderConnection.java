@@ -267,8 +267,8 @@ public final class DatabaseReaderConnection {
                     }
                 } catch (Exception e) {
                     // otherwise use standard statement
-                    LOGGER.warn("PreparedStatment not support by database: "
-                            + e.getMessage(), e);
+                    LOGGER.info("PreparedStatment not support by database "
+                            + "(using java.sql.Statement instead): " + e.getMessage(), e);
                     m_stmt = conn.createStatement();
                     // if more than one SQL statement is being executed
                     if (oQueries.length > 1) {
