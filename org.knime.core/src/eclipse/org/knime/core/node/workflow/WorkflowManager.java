@@ -1605,13 +1605,19 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param snc
      */
     private void disableNodeForExecution(final NodeID id) {
+        // TODO:
+        // (a) we need to consider connected ports of metanodes
+        // (b) this really should be done backwards (tail to start)
         NodeContainer nc = m_workflow.getNode(id);
         if (nc != null) {
             switch (nc.getState()) {
             case IDLE:
             case CONFIGURED:
-                // nothing needs to be done - also with the successors!
-                return;
+                if (nc instanceof SingleNodeContainer) {
+                    // nothing needs to be done - also with the successors!
+                    return;
+                }
+                // in not-SNC case do check successor (could be a through-conn)
             case MARKEDFOREXEC:
             case UNCONFIGURED_MARKEDFOREXEC:
                 if (nc instanceof SingleNodeContainer) {
