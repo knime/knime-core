@@ -433,7 +433,8 @@ class NominalAttributeModel extends AttributeModel {
      */
     @Override
     String getHTMLViewHeadLine() {
-        return "P(" + getAttributeName() + " | class=?)";
+        return getAttributeName()
+        + ": Number of occurences per attribute and class value";
     }
 
     /**
@@ -516,9 +517,9 @@ class NominalAttributeModel extends AttributeModel {
         buf.append("<th>");
         buf.append("Rate:");
         buf.append("</th>");
-        for (int i = 0, length = rowsPerValCounts.length; i < length; i++) {
+        for (final int rowsPerValCount : rowsPerValCounts) {
             buf.append("<td align='center'>");
-            buf.append(nf.format(rowsPerValCounts[i] / (double)totalRowCount));
+            buf.append(nf.format(rowsPerValCount / (double)totalRowCount));
             buf.append("</td>");
         }
         buf.append("</tr>");
