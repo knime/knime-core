@@ -139,13 +139,19 @@ public class LeveneTest {
         }
         // a second run over the data for a group size greater than two
         for (DataRow row : table) {
-            String group = row.getCell(groupingIndex).toString();
+            DataCell groupCell = row.getCell(groupingIndex);
+            String group = groupCell.toString();
             for (int i = 0; i < testColumnCount; i++) {
-                if (group == null) {
+                if (groupCell.isMissing()) {
                     result[i].addMissingGroup();
                     continue;
                 }
                 int gIndex = m_groups.indexOf(group);
+                if (gIndex == -1) {
+                    throw new RuntimeException("Unepected value \""
+                            + group + "\" in group column. Allowe values are "
+                            + m_groups);
+                }
                 DataCell cell = row.getCell(testColumnsIndex[i]);
                 if (!cell.isMissing()) {
                     DoubleValue value = (DoubleValue)cell;
