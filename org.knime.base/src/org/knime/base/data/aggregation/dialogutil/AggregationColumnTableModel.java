@@ -57,6 +57,7 @@ import org.knime.base.data.aggregation.ColumnAggregator;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.DoubleValue;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -92,9 +93,26 @@ public class AggregationColumnTableModel
      */
     public Collection<Integer> getCompatibleRowIdxs(
             final Class<? extends DataValue> type) {
+        return getRowIdxs(true, type);
+    }
+
+    /**
+     * @param type the type to check for compatibility
+     * @return indices of all rows that are not compatible with the given type
+     * or an empty collection if all are compatible
+     * @since 2.6
+     */
+    public Collection<Integer> getNotCompatibleRowIdxs(
+            final Class<? extends DoubleValue> type) {
+        return getRowIdxs(false, type);
+    }
+
+    private Collection<Integer> getRowIdxs(final boolean compatible,
+            final Class<? extends DataValue> type) {
         final Collection<Integer> result = new LinkedList<Integer>();
         for (int i = 0, length = getRowCount(); i < length; i++) {
-            if (isCompatible(i, type)) {
+            if ((compatible && isCompatible(i, type))
+                    || (!compatible && !isCompatible(i, type))) {
                 result.add(Integer.valueOf(i));
             }
         }

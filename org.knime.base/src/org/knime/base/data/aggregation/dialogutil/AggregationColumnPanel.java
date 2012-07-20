@@ -59,6 +59,7 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.collection.CollectionCellFactory;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -111,7 +112,6 @@ ColumnAggregator, DataColumnSpec> {
             return menu;
         }
         createColumnSelectionMenu(menu);
-        menu.addSeparator();
         createMissingValuesMenu(menu);
         menu.addSeparator();
         createAggregationSection(menu);
@@ -130,8 +130,8 @@ ColumnAggregator, DataColumnSpec> {
         if (existingTypes.size() < 3) {
             //create no sub menu if their are to few different types
             for (final Class<? extends DataValue> type : existingTypes) {
-                if (type == DataValue.class) {
-                    //skip the general type since this one is always present
+                if (type == DataValue.class || type == DoubleValue.class) {
+                    //skip the general and numerical types
                     continue;
                 }
                 final JMenuItem selectCompatible =
@@ -155,8 +155,8 @@ ColumnAggregator, DataColumnSpec> {
             final JMenu menuItem = new JMenu("Select all...");
             final JMenuItem supportedMenu = menu.add(menuItem);
             for (final Class<? extends DataValue> type : existingTypes) {
-                if (type == DataValue.class) {
-                    //skip the general type since this one is always present
+                if (type == DataValue.class || type == DoubleValue.class) {
+                    //skip the general and numerical types
                     continue;
                 }
                 final JMenuItem selectCompatible =
@@ -174,6 +174,40 @@ ColumnAggregator, DataColumnSpec> {
                 });
                 supportedMenu.add(selectCompatible);
             }
+        }
+      //add the select numerical columns entry if they are available
+        final Collection<Integer> numericIdxs =
+            getTableModel().getCompatibleRowIdxs(DoubleValue.class);
+        if (numericIdxs != null && !numericIdxs.isEmpty()) {
+            final JMenuItem selectNoneNumerical =
+                new JMenuItem("Select all numerical columns");
+            selectNoneNumerical.addActionListener(new ActionListener() {
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
+                public void actionPerformed(final ActionEvent e) {
+                    updateSelection(numericIdxs);
+                }
+            });
+            menu.add(selectNoneNumerical);
+        }
+        //add the select none numerical columns entry if they are available
+        final Collection<Integer> nonNumericIdxs =
+            getTableModel().getNotCompatibleRowIdxs(DoubleValue.class);
+        if (nonNumericIdxs != null && !nonNumericIdxs.isEmpty()) {
+            final JMenuItem selectNoneNumerical =
+                new JMenuItem("Select all non-numerical columns");
+            selectNoneNumerical.addActionListener(new ActionListener() {
+                /**
+                 * {@inheritDoc}
+                 */
+                @Override
+                public void actionPerformed(final ActionEvent e) {
+                    updateSelection(nonNumericIdxs);
+                }
+            });
+            menu.add(selectNoneNumerical);
         }
         //add the select all columns entry
         final JMenuItem selectAll =
@@ -198,6 +232,7 @@ ColumnAggregator, DataColumnSpec> {
             //show this option only if at least one row is selected
             return;
         }
+        menu.addSeparator();
       //add the select all columns entry
         final JMenuItem toggleMissing =
             new JMenuItem("Toggle missing cell option");
@@ -362,7 +397,7 @@ ColumnAggregator, DataColumnSpec> {
     /**
      * @param idxs the indices to select
      */
-    private void updateSelection(final Collection<Integer> idxs) {
+    void updateSelection(final Collection<Integer> idxs) {
         if (idxs == null || idxs.isEmpty()) {
             getTable().clearSelection();
             return;

@@ -59,32 +59,25 @@ import org.knime.core.data.def.DoubleCell;
 
 
 /**
- * Returns the standard deviation per group.
+ * Returns the geometric standard deviation per group. The geometric standard
+ * deviation can be computed using the standard deviation by taking the
+ * natural logarithm of all values before computing the standard deviation and
+ * taking the exponential of the result.
  *
  * @author Tobias Koetter, University of Konstanz
+ * @since 2.6
  */
-public class StdDeviationOperator extends VarianceOperator {
+public class GeometricStdDeviationOperator extends StdDeviationOperator {
 
     /**Constructor for class StdDeviationOperator.
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings
      */
-    public StdDeviationOperator(final GlobalSettings globalSettings,
+    public GeometricStdDeviationOperator(final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        super(new OperatorData("Standard deviation", false, false,
+        super(new OperatorData("Geometric standard deviation",
+                "Geom. standard deviation", false, false,
                 DoubleValue.class, false), globalSettings, opColSettings);
-    }
-
-    /**Constructor for class MeanOperator.
-     * @param operatorData the operator data
-     * @param globalSettings the global settings
-     * @param opColSettings the operator column specific settings
-     * @since 2.6
-     */
-    protected StdDeviationOperator(final OperatorData operatorData,
-            final GlobalSettings globalSettings,
-            final OperatorColumnSettings opColSettings) {
-        super(operatorData, globalSettings, opColSettings);
     }
 
     /**
@@ -94,7 +87,16 @@ public class StdDeviationOperator extends VarianceOperator {
     public AggregationOperator createInstance(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        return new StdDeviationOperator(globalSettings, opColSettings);
+        return new GeometricStdDeviationOperator(globalSettings, opColSettings);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean computeInternal(final DataCell cell) {
+        final double value = ((DoubleValue)cell).getDoubleValue();
+        return super.computeInternal(new DoubleCell(Math.log(value)));
     }
 
     /**
@@ -105,7 +107,7 @@ public class StdDeviationOperator extends VarianceOperator {
         final DataCell result = super.getResultInternal();
         if (!result.isMissing()) {
             final double value = ((DoubleValue)result).getDoubleValue();
-            return new DoubleCell(Math.sqrt(Math.abs(value)));
+            return new DoubleCell(Math.exp(value));
         }
         return result;
     }
@@ -115,6 +117,7 @@ public class StdDeviationOperator extends VarianceOperator {
      */
     @Override
     public String getDescription() {
-        return "Calculates the standard deviation per group.";
+        return "Calculates the geometric standard deviation per group."
+        + " The method returns NaN if any of the values is &lt;= 0.";
     }
 }

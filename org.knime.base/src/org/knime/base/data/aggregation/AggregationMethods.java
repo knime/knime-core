@@ -77,6 +77,7 @@ import org.knime.base.data.aggregation.general.UniqueConcatenateOperator;
 import org.knime.base.data.aggregation.general.UniqueConcatenateWithCountOperator;
 import org.knime.base.data.aggregation.general.UniqueCountOperator;
 import org.knime.base.data.aggregation.numerical.GeometricMeanOperator;
+import org.knime.base.data.aggregation.numerical.GeometricStdDeviationOperator;
 import org.knime.base.data.aggregation.numerical.MeanOperator;
 import org.knime.base.data.aggregation.numerical.MedianOperator;
 import org.knime.base.data.aggregation.numerical.ProductOperator;
@@ -99,6 +100,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -169,7 +171,7 @@ public final class AggregationMethods {
 
     /**Map with all valid operators that are available to the user.*/
     private final Map<String, AggregationOperator> m_operators =
-        new HashMap<String, AggregationOperator>();
+        new LinkedHashMap<String, AggregationOperator>();
     /**Map with previously used but now deprecated operators. These
      * operators are not shown to the user.*/
     private final Map<String, AggregationOperator> m_deprecatedOperators =
@@ -237,8 +239,12 @@ public final class AggregationMethods {
                         OperatorColumnSettings.DEFAULT_EXCL_MISSING);
             addOperator(meanOperator);
             m_defNumericalMeth = getOperator(meanOperator.getId());
-            /**Geometric Mean.*/
-            addOperator(new GeometricMeanOperator(GlobalSettings.DEFAULT,
+            /**Standard deviation.*/
+            addOperator(
+                    new StdDeviationOperator(GlobalSettings.DEFAULT,
+                            OperatorColumnSettings.DEFAULT_EXCL_MISSING));
+            /**Variance.*/
+            addOperator(new VarianceOperator(GlobalSettings.DEFAULT,
                     OperatorColumnSettings.DEFAULT_EXCL_MISSING));
             /**Median.*/
             addOperator(new MedianOperator(GlobalSettings.DEFAULT,
@@ -252,12 +258,12 @@ public final class AggregationMethods {
             /**Range.*/
             addOperator(new RangeOperator(GlobalSettings.DEFAULT,
                     OperatorColumnSettings.DEFAULT_EXCL_MISSING));
-            /**Variance.*/
-            addOperator(new VarianceOperator(GlobalSettings.DEFAULT,
+            /**Geometric Mean.*/
+            addOperator(new GeometricMeanOperator(GlobalSettings.DEFAULT,
                     OperatorColumnSettings.DEFAULT_EXCL_MISSING));
-            /**Standard deviation.*/
+            /**Geometric deviation.*/
             addOperator(
-                    new StdDeviationOperator(GlobalSettings.DEFAULT,
+                    new GeometricStdDeviationOperator(GlobalSettings.DEFAULT,
                             OperatorColumnSettings.DEFAULT_EXCL_MISSING));
 
 //The boolean methods
@@ -311,6 +317,9 @@ public final class AggregationMethods {
             /**Counts the number of missing values per group.*/
             addOperator(new MissingValueCountOperator(GlobalSettings.DEFAULT,
                     OperatorColumnSettings.DEFAULT_INCL_MISSING));
+            /** Set collection.*/
+            addOperator(new SetCellOperator(GlobalSettings.DEFAULT,
+                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
             /** List collection.*/
             addOperator(new ListCellOperator(GlobalSettings.DEFAULT,
                     OperatorColumnSettings.DEFAULT_INCL_MISSING));
@@ -318,9 +327,6 @@ public final class AggregationMethods {
             addOperator(
                     new SortedListCellOperator(GlobalSettings.DEFAULT,
                             OperatorColumnSettings.DEFAULT_INCL_MISSING));
-            /** Set collection.*/
-            addOperator(new SetCellOperator(GlobalSettings.DEFAULT,
-                    OperatorColumnSettings.DEFAULT_INCL_MISSING));
 
             //add old and deprecated operators to be backward compatible
             registerDeprecatedOperators();
@@ -529,7 +535,6 @@ public final class AggregationMethods {
                 compatibleMethods.add(operator);
             }
         }
-        Collections.sort(compatibleMethods);
         return compatibleMethods;
     }
 

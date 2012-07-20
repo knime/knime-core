@@ -86,8 +86,8 @@ public class GeometricMeanOperator extends AggregationOperator {
      */
     public GeometricMeanOperator(final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        this(new OperatorData("Geometric Mean", "Geom. mean", false, false,
-                DoubleValue.class, false),
+        this(new OperatorData("Geometric Mean", "Geometric mean", "Geom. mean",
+                false, false, DoubleValue.class, false),
                 globalSettings, setInclMissingFlag(opColSettings));
     }
 
