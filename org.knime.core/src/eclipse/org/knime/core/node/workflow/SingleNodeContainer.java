@@ -822,6 +822,18 @@ public final class SingleNodeContainer extends NodeContainer {
         synchronized (m_nodeMutex) {
             switch (getState()) {
             case POSTEXECUTE:
+                IFileStoreHandler fsh = m_node.getFileStoreHandler();
+                if (fsh instanceof IWriteFileStoreHandler) {
+                    ((IWriteFileStoreHandler)fsh).close();
+                } else {
+                    // can be null if run through 3rd party executor
+                    // might be not an IWriteFileStoreHandler if restored loop is executed
+                    // (this will result in a failure before model#execute is called)
+                    assert !status.isSuccess() || fsh == null
+                    : "must not be " + fsh.getClass().getSimpleName() + " in execute";
+                    LOGGER.debug("Can't close file store handler, not writable: "
+                            + (fsh == null ? "<null>" : fsh.getClass().getSimpleName()));
+                }
                 if (status.isSuccess()) {
                     if (m_node.getLoopContext() == null) {
                         setState(State.EXECUTED);
@@ -836,20 +848,9 @@ public final class SingleNodeContainer extends NodeContainer {
                     // We do keep the message, though.
                     NodeMessage oldMessage = getNodeMessage();
                     m_node.reset();
+                    clearFileStoreHandler();
                     setNodeMessage(oldMessage);
                     setState(State.IDLE);
-                }
-                IFileStoreHandler fsh = m_node.getFileStoreHandler();
-                if (fsh instanceof IWriteFileStoreHandler) {
-                    ((IWriteFileStoreHandler)fsh).close();
-                } else {
-                    // can be null if run through 3rd party executor
-                    // might be not an IWriteFileStoreHandler if restored loop is executed
-                    // (this will result in a failure before model#execute is called)
-                    assert !status.isSuccess() || fsh == null
-                        : "must not be " + fsh.getClass().getSimpleName() + " in execute";
-                    LOGGER.debug("Can't close file store handler, not writable: "
-                            + (fsh == null ? "<null>" : fsh.getClass().getSimpleName()));
                 }
                 setExecutionJob(null);
                 break;
