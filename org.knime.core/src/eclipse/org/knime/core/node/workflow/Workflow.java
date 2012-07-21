@@ -1262,14 +1262,15 @@ class Workflow {
         while (!st.isEmpty()) {
             Pair<NodeID, Integer> p = st.pop();
             NodeID currentID = p.getFirst();
-            int currentDepth = p.getSecond();
             for (ConnectionContainer cc
                     : m_connectionsByDest.get(currentID)) {
                 assert currentID.equals(cc.getDest());
+                int currentDepth = p.getSecond();
                 NodeID srcID = cc.getSource();
                 if (this.getID().equals(srcID)) {
                     // ignore connections from outside the workflow (they
-                    // can still feed data into an existing loop).
+                    // can still feed data into an existing loop but the
+                    // head of the loop can not be outside this WFM!).
                     continue;
                 }
                 NodeContainer srcNC = getNode(srcID);
