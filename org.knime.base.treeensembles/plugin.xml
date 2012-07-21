@@ -10,25 +10,35 @@
       </node>
 -->
       <node
-            category-path="/mining/dtree"
+            category-path="/labs/treeensemble"
             expert-flag="false"
             factory-class="org.knime.base.node.mine.treeensemble.node.learner.classification.TreeEnsembleClassificationLearnerNodeFactory"
             id="org.knime.base.node.mine.treeensemble.node.learner.classification.TreeEnsembleClassificationLearnerNodeFactory">
       </node>
       <node
             after="org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerNodeFactory"
-            category-path="/mining/dtree"
+            category-path="/labs/treeensemble"
             expert-flag="false"
             factory-class="org.knime.base.node.mine.treeensemble.node.predictor.TreeEnsemblePredictorNodeFactory"
             id="org.knime.base.node.mine.treeensemble.node.predictor.TreeEnsemblePredictorNodeFactory">
       </node>
       <node
             after="org.knime.base.node.mine.treeensemble.node.predictor.TreeEnsemblePredictorNodeFactory"
-            category-path="/mining/dtree"
+            category-path="/labs/treeensemble"
             expert-flag="false"
             factory-class="org.knime.base.node.mine.treeensemble.node.modelextractor.TreeEnsembleModelExtractorNodeFactory"
             id="org.knime.base.node.mine.treeensemble.node.modelextractor.TreeEnsembleModelExtractorNodeFactory">
       </node>
+   </extension>
+   <extension
+         point="org.knime.workbench.repository.categories">
+      <category
+            description="tree ensembles, including random forest"
+            icon="icons/treeensemble.png"
+            level-id="treeensemble"
+            name="Decision Tree Ensemble"
+            path="/labs">
+      </category>
    </extension>
 
 </plugin>
