@@ -50,6 +50,7 @@
  */
 package org.knime.core.data.filestore.internal;
 
+import java.util.Collection;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -93,6 +94,10 @@ public final class WorkflowFileStoreHandlerRepository extends FileStoreHandlerRe
                         "No such file store hander: " + handler);
             }
         }
+    }
+
+    public Collection<IWriteFileStoreHandler> getWriteFileStoreHandlers() {
+        return m_handlerMap.values();
     }
 
     /** Get handler to id, never null.

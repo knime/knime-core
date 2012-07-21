@@ -284,7 +284,7 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
         for (int level = 0; level < FOLDER_LEVEL; level++) {
             parentDir = new File(parentDir, subFolderNames[level]);
         }
-        if (!parentDir.isDirectory()) {
+        if (create && !parentDir.isDirectory()) {
             if (!parentDir.mkdirs()) {
                 LOGGER.error("Failed to create directory \"" + parentDir.getAbsolutePath() + "\"");
             }

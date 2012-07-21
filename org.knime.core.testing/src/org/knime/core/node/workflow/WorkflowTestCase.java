@@ -28,7 +28,9 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
@@ -36,6 +38,10 @@ import java.util.concurrent.locks.ReentrantLock;
 import junit.framework.TestCase;
 
 import org.eclipse.core.runtime.FileLocator;
+import org.knime.core.data.filestore.internal.IFileStoreHandler;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer.State;
@@ -61,23 +67,11 @@ public abstract class WorkflowTestCase extends TestCase {
     }
 
     protected NodeID loadAndSetWorkflow() throws Exception {
-        ClassLoader l = getClass().getClassLoader();
-        String workflowDirString = getClass().getPackage().getName();
-        URL workflowURL = l.getResource(workflowDirString.replace('.', '/'));
-        if (workflowURL == null) {
-            throw new Exception("Can't load workflow that's expected to be "
-                    + "in package " + workflowDirString);
-        }
+        File workflowDir = getDefaultWorkflowDirectory();
+        return loadAndSetWorkflow(workflowDir);
+    }
 
-        if (!"file".equals(workflowURL.getProtocol())) {
-            workflowURL = FileLocator.resolve(workflowURL);
-        }
-
-        File workflowDir = new File(workflowURL.getFile());
-        if (!workflowDir.isDirectory()) {
-            throw new Exception("Can't load workflow directory: "
-                    + workflowDir);
-        }
+    protected NodeID loadAndSetWorkflow(final File workflowDir) throws Exception {
         WorkflowLoadResult loadResult = WorkflowManager.ROOT.load(
                 workflowDir, new ExecutionMonitor(),
                 WorkflowLoadHelper.INSTANCE, false);
@@ -97,6 +91,31 @@ public abstract class WorkflowTestCase extends TestCase {
         }
         setManager(m);
         return m.getID();
+    }
+
+    /**
+     * @return
+     * @throws Exception
+     * @throws IOException */
+    protected File getDefaultWorkflowDirectory() throws Exception {
+        ClassLoader l = getClass().getClassLoader();
+        String workflowDirString = getClass().getPackage().getName();
+        URL workflowURL = l.getResource(workflowDirString.replace('.', '/'));
+        if (workflowURL == null) {
+            throw new Exception("Can't load workflow that's expected to be "
+                    + "in package " + workflowDirString);
+        }
+
+        if (!"file".equals(workflowURL.getProtocol())) {
+            workflowURL = FileLocator.resolve(workflowURL);
+        }
+
+        File workflowDir = new File(workflowURL.getFile());
+        if (!workflowDir.isDirectory()) {
+            throw new Exception("Can't load workflow directory: "
+                    + workflowDir);
+        }
+        return workflowDir;
     }
 
     /**
@@ -200,6 +219,47 @@ public abstract class WorkflowTestCase extends TestCase {
             }
         }
         return null;
+    }
+
+    protected Collection<IWriteFileStoreHandler> getWriteFileStoreHandlers() {
+        WorkflowFileStoreHandlerRepository fshr =
+                m_manager.getFileStoreHandlerRepository();
+        return fshr.getWriteFileStoreHandlers();
+    }
+
+    protected File getFileStoresDirectory(final NodeID id) throws Exception {
+        NodeContainer nc = findNodeContainer(id);
+        if (nc instanceof SingleNodeContainer) {
+            IFileStoreHandler fsh = ((SingleNodeContainer)nc).getNode().getFileStoreHandler();
+            if (fsh instanceof WriteFileStoreHandler) {
+                return ((WriteFileStoreHandler)fsh).getBaseDir();
+            }
+        }
+        return null;
+    }
+
+    protected static int countFilesInDirectory(final File directory) {
+        int count = 0;
+        for (File child : directory.listFiles()) {
+            if (child.isDirectory()) {
+                count += countFilesInDirectory(child);
+            } else {
+                count += 1;
+            }
+        }
+        return count;
+    }
+
+    protected static Collection<SingleNodeContainer> iterateSNCs(final WorkflowManager wfm, final boolean recurse) {
+        ArrayList<SingleNodeContainer> result = new ArrayList<SingleNodeContainer>();
+        for (NodeContainer nc : wfm.getNodeContainers()) {
+            if (nc instanceof SingleNodeContainer) {
+                result.add((SingleNodeContainer)nc);
+            } else if (recurse) {
+                result.addAll(iterateSNCs((WorkflowManager)nc, true));
+            }
+        }
+        return result;
     }
 
     protected ConnectionContainer findLeavingWorkflowConnection(final NodeID id,
