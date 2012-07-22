@@ -2155,10 +2155,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // (B) check if this node is markable and mark it!
             boolean canBeMarked = true;
             for (NodeOutPort portIt : predPorts) {
-                if (portIt != null
-                    && (!portIt.getNodeState().executionInProgress()
-                        && portIt.getPortObject() == null)) {
-                    canBeMarked = false;
+                if (portIt != null) {
+                    // allowed to be null: could be optional and if not it
+                    // was tested above
+                    if (!portIt.getNodeState().executionInProgress()
+                            && portIt.getPortObject() == null) {
+                        // if not executing anymore then we should have
+                        // a port object otherwise we can't mark:
+                        canBeMarked = false;
+                    }
                 }
             }
             if (canBeMarked) {
