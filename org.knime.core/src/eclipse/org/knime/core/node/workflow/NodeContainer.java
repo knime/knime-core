@@ -1106,7 +1106,7 @@ public abstract class NodeContainer implements NodeProgressListener {
      * {@link NodeDialog}
      */
     public String getDisplayLabel() {
-        String label = getID().getIDWithoutRoot() + " - "
+        String label = getID().toString() + " - "
             + getName();
         // if this node has an annotation add the first line to the label
         String customLabel = getDisplayCustomLine();

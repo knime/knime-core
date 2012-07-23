@@ -3892,15 +3892,19 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     if ((lsid != null) && (!allnodes.containsKey(lsid))) {
                         // found a LoopEndNode without matching LoopStart
                         // to be reset as well: try to reset&configure the
-                        // node (and its successors) if it is executed:
-                        if (State.EXECUTED.equals(
-                                m_workflow.getNode(lsid).getState())) {
+                        // node (and its successors) if it is executed and
+                        // we are past the first iteration (=corresponding
+                        // End loop was executed at least once already - which
+                        // also means it is set in the LoopContextObject):
+                        SingleNodeContainer lsnc = (SingleNodeContainer)m_workflow.getNode(lsid);
+                        FlowLoopContext flc = lsnc.getOutgoingFlowObjectStack().peek(FlowLoopContext.class);
+                        if ((flc.getTailNode() != null)
+                            && (State.EXECUTED.equals(lsnc.getState()))) {
                             // this is ugly but necessary: we need to make
                             // sure we don't go into an infinite loop here,
                             // trying to reset this part over and over again.
                             // so reset this node "out of the order" first
                             // as a "flag" that we have already done it:
-                            SingleNodeContainer lsnc = (SingleNodeContainer)m_workflow.getNode(lsid);
                             invokeResetOnSingleNodeContainer(lsnc);
                             configureSingleNodeContainer(lsnc, true);
                             // and now launch the proper reset (&configure!)
