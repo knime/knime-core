@@ -2055,4 +2055,12 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         getPanel().repaint();
     }
 
+    @Override
+    public void onClose() {
+    	if (m_previewTable != null) {
+    	    m_previewTableView.setDataTable(null);
+    		m_previewTable.dispose();
+    		m_previewTable = null;
+    	}
+    }
 }
