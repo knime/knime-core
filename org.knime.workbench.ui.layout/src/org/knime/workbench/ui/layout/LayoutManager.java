@@ -395,7 +395,7 @@ public class LayoutManager {
         int y = 0;
         String label = nc.getCustomName();
         if (label == null || label.isEmpty()) {
-            label = "Node " + nc.getID().getIDWithoutRoot();
+            label = "Node " + nc.getID().toString();
         }
         if (uiInfo != null && uiInfo instanceof NodeUIInformation) {
             NodeUIInformation nui = (NodeUIInformation)uiInfo;
