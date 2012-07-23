@@ -932,7 +932,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         }
         // if this is a project
         if (m_parentEditor == null) {
-            return m_manager.getID().getIDWithoutRoot() + ": "
+            return m_manager.getID().toString() + ": "
                     + new Path(m_fileResource.getPath()).lastSegment();
         } else {
             // we are a meta node editor
@@ -2326,7 +2326,7 @@ public class WorkflowEditor extends GraphicalEditor implements
                     @Override
                     public void run() {
                         String newTitle =
-                                m_manager.getID().getIDWithoutRoot() + ": "
+                                m_manager.getID().toString() + ": "
                                         + newName;
                         setTitleToolTip(newTitle);
                         setPartName(newTitle);

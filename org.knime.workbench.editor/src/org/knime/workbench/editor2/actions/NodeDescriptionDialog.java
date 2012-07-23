@@ -128,7 +128,7 @@ public class NodeDescriptionDialog extends Dialog {
 
         // NodeID value (bugfix 1402)
         m_nodeIdLabel = new Label(content, SWT.LEFT | SWT.READ_ONLY);
-        m_nodeIdLabel.setText(m_nodeID.getIDWithoutRoot());
+        m_nodeIdLabel.setText(m_nodeID.toString());
         m_nodeIdLabel.setLayoutData(nameData);
 
         // Description label
