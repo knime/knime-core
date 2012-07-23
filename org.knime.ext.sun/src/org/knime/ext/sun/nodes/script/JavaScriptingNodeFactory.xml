@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="./javascripting.png" type="Manipulator" deprecated="true">
-    <name>Java Snippet</name>
+<knimeNode icon="./javascripting.png" type="Manipulator">
+    <name>Java Snippet (simple)</name>
     <shortDescription>Calculates a new column based on java code snippets.</shortDescription>
     <fullDescription>
         <intro>
