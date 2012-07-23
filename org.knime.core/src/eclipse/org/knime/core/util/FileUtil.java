@@ -50,6 +50,7 @@
  */
 package org.knime.core.util;
 
+import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -60,6 +61,7 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
@@ -74,6 +76,7 @@ import java.util.zip.ZipOutputStream;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 
@@ -898,5 +901,35 @@ public final class FileUtil {
         conn.setConnectTimeout(urlTimeout);
         conn.setReadTimeout(urlTimeout);
         return conn.getInputStream();
+    }
+
+    /** Opens a buffered input stream for the location (file path or URL).
+     * @param loc the location; can be both a file path or URL.
+     * @return a buffered input stream.
+     * @throws IOException Forwarded from file input stream or url.openStream.
+     * @throws InvalidSettingsException If the argument is invalid or null.
+     * @since 2.6 */
+    public static InputStream openInputStream(final String loc)
+        throws IOException, InvalidSettingsException {
+        if (loc == null || loc.length() == 0) {
+            throw new InvalidSettingsException("No location provided");
+        }
+        InputStream stream;
+        if (loc.matches("^[a-zA-Z]+:/.*")) {
+            URL url;
+            try {
+                url = new URL(loc);
+            } catch (MalformedURLException ex) {
+                throw new InvalidSettingsException("Invalid URL: " + loc, ex);
+            }
+            stream = FileUtil.openStreamWithTimeout(url);
+        } else {
+            File file = new File(loc);
+            if (!file.exists()) {
+                throw new InvalidSettingsException("No such file: " + loc);
+            }
+            stream = new FileInputStream(file);
+        }
+        return new BufferedInputStream(stream);
     }
 }

@@ -52,11 +52,8 @@ package org.knime.base.node.io.table.read;
 
 import java.io.BufferedInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
@@ -259,24 +256,7 @@ public class ReadTableNodeModel extends NodeModel {
     private InputStream openInputStream()
         throws IOException, InvalidSettingsException {
         String loc = m_fileName.getStringValue();
-        if (loc == null || loc.length() == 0) {
-            throw new InvalidSettingsException("No location provided");
-        }
-        if (loc.matches("^[a-zA-Z]+:/.*")) { // URL style, added in v2.2.1
-            URL url;
-            try {
-                url = new URL(loc);
-            } catch (MalformedURLException ex) {
-                throw new InvalidSettingsException("Invalid URL: " + loc, ex);
-            }
-            return FileUtil.openStreamWithTimeout(url);
-        } else {
-            File file = new File(loc);
-            if (!file.exists()) {
-                throw new InvalidSettingsException("No such file: " + loc);
-            }
-            return new BufferedInputStream(new FileInputStream(file));
-        }
+        return FileUtil.openInputStream(loc);
     }
 
     /**

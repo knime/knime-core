@@ -249,10 +249,22 @@ public final class PortUtil {
         return po;
     }
 
-    public static PortObjectSpec readObjectSpecFromFile(final File file)
-    throws IOException {
-        ZipInputStream in = new ZipInputStream(
+    public static PortObjectSpec readObjectSpecFromFile(
+            final File file) throws IOException {
+        return readObjectSpecFromStream(
                 new BufferedInputStream(new FileInputStream(file)));
+    }
+
+    /** Read spec from stream. Argument will be wrapped in zip input
+     * stream, the spec is extracted and the stream is closed.
+     * @param stream to read from.
+     * @return The spec.
+     * @throws IOException IO problems and unexpected content.
+     * @since 2.6
+     */
+    public static PortObjectSpec readObjectSpecFromStream(
+            final InputStream stream) throws IOException {
+        ZipInputStream in = new ZipInputStream(stream);
 
         ZipEntry entry = in.getNextEntry();
         if (entry == null) {

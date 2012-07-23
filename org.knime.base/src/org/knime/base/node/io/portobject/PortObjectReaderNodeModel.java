@@ -52,12 +52,14 @@ package org.knime.base.node.io.portobject;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
@@ -65,6 +67,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortUtil;
+import org.knime.core.util.FileUtil;
 
 /**
  * Read ModelContent object from file.
@@ -78,7 +81,7 @@ class PortObjectReaderNodeModel extends NodeModel {
 
     private final SettingsModelString m_fileName =
             new SettingsModelString(FILENAME, null);
-    
+
     /**
      * Constructor: Create new NodeModel with only one Model Input Port.
      * @param type Type of output
@@ -123,9 +126,25 @@ class PortObjectReaderNodeModel extends NodeModel {
     protected PortObject[] execute(final PortObject[] data,
             final ExecutionContext exec) throws Exception {
         String fileName = m_fileName.getStringValue();
-        checkFileAccess(fileName);
-        PortObject po = PortUtil.readObjectFromFile(new File(fileName), exec);
-        return new PortObject[]{po};
+        InputStream inStream = null;
+        try {
+            inStream = FileUtil.openInputStream(fileName);
+            return new PortObject[]{
+                    PortUtil.readObjectFromStream(inStream, exec)};
+        } catch (IOException ioe) {
+            throw new InvalidSettingsException(
+                    "Failed to extract object from \""
+                    + fileName + "\": " + ioe.getMessage(), ioe);
+        } finally {
+            if (inStream != null) {
+                try {
+                    inStream.close();
+                } catch (IOException e) {
+                    NodeLogger.getLogger(getClass()).debug(
+                            "Failed closing stream", e);
+                }
+            }
+        }
     }
 
     /** {@inheritDoc} */
@@ -137,42 +156,28 @@ class PortObjectReaderNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        checkFileAccess(m_fileName.getStringValue());
-        try {
-            return new PortObjectSpec[]{PortUtil.readObjectSpecFromFile(
-                    new File(m_fileName.getStringValue()))};
-        } catch (IOException ioe) {
-            throw new InvalidSettingsException("Failed to parse file \""
-                    + m_fileName.getStringValue() + "\": " 
-                    + ioe.getMessage(), ioe);
-        }
-    }
-
-    /**
-     * Helper that checks some properties for the file argument.
-     *
-     * @param fileName The file to check @throws InvalidSettingsException If
-     * that fails.
-     */
-    private void checkFileAccess(final String fileName)
-            throws InvalidSettingsException {
+        final String fileName = m_fileName.getStringValue();
         if (fileName == null) {
             throw new InvalidSettingsException("No file set.");
         }
-        File file = new File(fileName);
-        if (file.isDirectory()) {
-            throw new InvalidSettingsException("\"" + file.getAbsolutePath()
-                    + "\" is a directory, but must be a file.");
-        }
-        if (!file.exists()) {
+        InputStream inStream = null;
+        try {
+            inStream = FileUtil.openInputStream(fileName);
+            return new PortObjectSpec[]{
+                    PortUtil.readObjectSpecFromStream(inStream)};
+        } catch (IOException ioe) {
             throw new InvalidSettingsException(
-                    "File \"" + file.getAbsolutePath() + "\""
-                        + " does not exist.");
-        }
-        // check read access to file
-        if (!file.canRead()) {
-            throw new InvalidSettingsException("Cannot read from file \""
-                    + file.getAbsolutePath() + "\".");
+                    "Failed to extract specification from \""
+                    + fileName + "\": " + ioe.getMessage(), ioe);
+        } finally {
+            if (inStream != null) {
+                try {
+                    inStream.close();
+                } catch (IOException e) {
+                    NodeLogger.getLogger(getClass()).debug(
+                            "Failed closing stream", e);
+                }
+            }
         }
     }
 
