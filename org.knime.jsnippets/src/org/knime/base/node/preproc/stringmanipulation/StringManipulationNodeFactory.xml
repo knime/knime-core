@@ -2,12 +2,12 @@
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
 <knimeNode icon="./string_manipulation.png" type="Manipulator">
     <name>String Manipulation</name>
-    <shortDescription>Allows to do string manipulations like search and replace,
+    <shortDescription>Manipulates strings like search and replace,
      capitalize or remove leading and trailing white spaces.</shortDescription>
     <fullDescription>
         <intro>
 	        <p>
-				Allows to do string manipulations like search and replace,
+				Manipulates strings like search and replace,
 				capitalize or remove leading and trailing white spaces.
 	        </p>
 	        <b>Examples:</b>
@@ -29,6 +29,16 @@
                 Or if you want to have the number of characters of the strings
                 in a column with name <i>text</i>: <br/>
                 <i>length($text$)</i>
+            </p>
+            <p>
+               Note that strings which are part of the expression and are not from the 
+               input data (or the result of another wrapped function call) need
+               to be enclosed in double quotes ('"'). Additionally, if the string contains a 
+               quote character, it must be escaped using a backslash character ('\"'). 
+               Finally, other special characters such as single quotes and backslashes need 
+               to be escaped using a backslash. For instance, a single backslash in a string 
+               is written as two consecutive backslash characters; the first one acts as 
+               the escape character for the second.
             </p>
 		</intro>
 		<option name="Column List">
