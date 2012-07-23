@@ -6806,6 +6806,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     if (!metaNode.sweep(metaContent, false)) {
                         wasClean = false;
                     }
+                    continue;
                 }
                 Set<State> allowedStates =
                     new HashSet<State>(Arrays.asList(State.values()));
