@@ -86,7 +86,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.SingleNodeContainer;
@@ -120,6 +119,8 @@ public class TestConfigNodeDialog extends NodeDialogPane {
 
     private int m_lastSelectedIndex = -1;
 
+    private WorkflowManager m_workflowManager;
+
     /**
      * Creates a new dialog.
      */
@@ -133,7 +134,7 @@ public class TestConfigNodeDialog extends NodeDialogPane {
             public Component getListCellRendererComponent(final JList list,
                     final Object value, final int index,
                     final boolean isSelected, final boolean cellHasFocus) {
-                SingleNodeContainer cont = (SingleNodeContainer)value;
+                NodeContainer cont = (NodeContainer)value;
                 if (value != null) {
                     String text = cont.getNameWithID();
                     return super.getListCellRendererComponent(list, text,
@@ -259,7 +260,7 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         c2.insets = new Insets(2, 2, 2, 2);
         c2.gridx = 0;
         c2.gridy = 0;
-        p2.add(new JLabel("Node must fail   "), c2);
+        p2.add(new JLabel("Node must not be executed   "), c2);
         c2.gridx = 1;
         p2.add(m_mustFail, c2);
 
@@ -316,9 +317,8 @@ public class TestConfigNodeDialog extends NodeDialogPane {
     }
 
     private void storeNodeConfiguration(final int index) {
-        SingleNodeContainer cont =
-                (SingleNodeContainer)m_allNodesModel.get(index);
-        String nodeID = Integer.toString(cont.getID().getIndex());
+        NodeContainer cont = (NodeContainer)m_allNodesModel.get(index);
+        String nodeID = TestConfigSettings.getNodeIDWithoutRootPrefix(m_workflowManager, cont);
 
         if (m_mustFail.isSelected()) {
             m_settings.addFailingNode(nodeID);
@@ -342,9 +342,8 @@ public class TestConfigNodeDialog extends NodeDialogPane {
     }
 
     private void updateNodeConfigurationFields(final int index) {
-        SingleNodeContainer cont =
-                (SingleNodeContainer)m_allNodesModel.get(index);
-        String nodeID = Integer.toString(cont.getID().getIndex());
+        NodeContainer cont = (NodeContainer)m_allNodesModel.get(index);
+        String nodeID = TestConfigSettings.getNodeIDWithoutRootPrefix(m_workflowManager, cont);
 
         m_mustFail.setSelected(m_settings.failingNodes().contains(nodeID));
 
@@ -426,28 +425,37 @@ public class TestConfigNodeDialog extends NodeDialogPane {
             m_logInfosModel.addElement(l);
         }
 
+        m_workflowManager = findWorkflowManager(WorkflowManager.ROOT);
         fillNodeList();
     }
 
-    private void fillNodeList() {
-        m_allNodesModel.removeAllElements();
-        WorkflowManager root = findWorkflowManager(WorkflowManager.ROOT);
 
+    private void fillNodeList(final WorkflowManager root, final Set<String> existingNodeIds) {
         for (NodeContainer cont : root.getNodeContainers()) {
             if (cont instanceof SingleNodeContainer) {
                 if (((SingleNodeContainer)cont).getNode().getDialogPane() != this) {
                     m_allNodesModel.addElement(cont);
+                    existingNodeIds.add(TestConfigSettings.getNodeIDWithoutRootPrefix(m_workflowManager, cont));
                 }
+            } else if (cont instanceof WorkflowManager) {
+                m_allNodesModel.addElement(cont);
+                existingNodeIds.add(TestConfigSettings.getNodeIDWithoutRootPrefix(m_workflowManager, cont));
+                fillNodeList((WorkflowManager) cont, existingNodeIds);
             }
         }
+
+    }
+
+    private void fillNodeList() {
+        m_allNodesModel.removeAllElements();
+
+        Set<String> existingNodeIds = new HashSet<String>();
+        fillNodeList(m_workflowManager, existingNodeIds);
 
         // remove config of non-existing nodes
         Set<String> set = new HashSet<String>();
         for (String nodeId : m_settings.requiredNodeErrors().keySet()) {
-            try {
-                root.getNodeContainer(new NodeID(root.getID(), Integer
-                        .parseInt(nodeId)));
-            } catch (IllegalArgumentException ex) {
+            if (!existingNodeIds.contains(nodeId)) {
                 set.add(nodeId);
             }
         }
@@ -458,10 +466,7 @@ public class TestConfigNodeDialog extends NodeDialogPane {
 
         set.clear();
         for (String nodeId : m_settings.requiredNodeWarnings().keySet()) {
-            try {
-                root.getNodeContainer(new NodeID(root.getID(), Integer
-                        .parseInt(nodeId)));
-            } catch (IllegalArgumentException ex) {
+            if (!existingNodeIds.contains(nodeId)) {
                 set.add(nodeId);
             }
         }
@@ -493,5 +498,13 @@ public class TestConfigNodeDialog extends NodeDialogPane {
             }
         }
         return null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onClose() {
+        m_workflowManager = null;
     }
 }

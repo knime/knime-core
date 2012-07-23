@@ -62,7 +62,9 @@ import java.util.Set;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  * This class holds the settings for the testflow configuration node.
@@ -407,4 +409,20 @@ public class TestConfigSettings {
         }
         subs.addInt("count", i);
     }
+
+    /**
+     * Returns an node id suffix, which is essentially the given node container's id minus the given workflow
+     * manager's id.
+     *
+     * @param root the workflow manager which is the current root for nodes
+     * @param cont a node container
+     * @return a node id suffix
+     */
+    public static String getNodeIDWithoutRootPrefix(final WorkflowManager root, final NodeContainer cont) {
+        int prefixLength = root.getID().toString().length();
+
+        String nodeId = cont.getID().toString();
+        return nodeId.substring(prefixLength + 1);
+    }
+
 }

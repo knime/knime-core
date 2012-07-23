@@ -327,20 +327,20 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
             new ArrayList<MsgPattern>();
 
     // node IDs are strings like "0:1:4" - but only the ID without prefix!
-    private final Set<String> m_requiredUnexecutedNodes = new HashSet<String>();
+    private final Set<NodeID> m_requiredUnexecutedNodes = new HashSet<NodeID>();
 
     // file readers loaded in as executed nodes are expected to have a warning
     // (file <blah> not accessible anymore). This stores their ID (like "0:1:3")
     // without prefix
-    private final Set<String> m_preExecutedNodes = new HashSet<String>();
+    private final Set<NodeID> m_preExecutedNodes = new HashSet<NodeID>();
 
     // maps node IDs (strings like "0:1:4" w/o prefix) to messages
-    private final Map<String, MsgPattern> m_warningStatus =
-            new HashMap<String, MsgPattern>();
+    private final Map<NodeID, MsgPattern> m_warningStatus =
+            new HashMap<NodeID, MsgPattern>();
 
     // maps node IDs (strings like "0:1:4" w/o prefix) to messages
-    private final Map<String, MsgPattern> m_errorStatus =
-            new HashMap<String, MsgPattern>();
+    private final Map<NodeID, MsgPattern> m_errorStatus =
+            new HashMap<NodeID, MsgPattern>();
 
     private final LinkedList<String> m_unexpectedErrors =
             new LinkedList<String>();
@@ -699,13 +699,12 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
      *
      * @param manager the workflow manager holding the workflow to check.
      */
-    private void checkNodeExecution() {
-        for (NodeContainer node : m_manager.getNodeContainers()) {
+    private void checkNodeExecution(final WorkflowManager manager) {
+        for (NodeContainer node : manager.getNodeContainers()) {
             State status = node.getState();
-            String nodeSimpleID = getNodeID(node);
 
             if (!status.equals(State.EXECUTED)
-                    && !m_requiredUnexecutedNodes.contains(nodeSimpleID)) {
+                    && !m_requiredUnexecutedNodes.contains(node.getID())) {
 
                 // not executed but supposed to be
 
@@ -721,7 +720,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                 // make sure to log an error - during wrapUp the test fails then
                 logger.error(msg);
             } else if (status.equals(State.EXECUTED)
-                    && m_requiredUnexecutedNodes.contains(nodeSimpleID)) {
+                    && m_requiredUnexecutedNodes.contains(node.getID())) {
 
                 // executed but shouldn't be
 
@@ -739,7 +738,9 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                         + (status.equals(State.EXECUTED) ? " " : " not ")
                         + "executed - which is good.");
             }
-
+            if (node instanceof WorkflowManager) {
+                checkNodeExecution((WorkflowManager)node);
+            }
         }
     }
 
@@ -748,17 +749,16 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
      * file. If a node has an unexpected status or not the expected one, an
      * error is logged and the test fails.
      */
-    private void checkNodeStatus() {
-        for (NodeContainer node : m_manager.getNodeContainers()) {
-
+    private void checkNodeStatus(final WorkflowManager manager) {
+        for (NodeContainer node : manager.getNodeContainers()) {
             NodeMessage status = node.getNodeMessage();
             if (status != null
                     && status.getMessageType().equals(NodeMessage.Type.ERROR)) {
 
-                MsgPattern expMsg = m_errorStatus.get(getNodeID(node));
+                MsgPattern expMsg = m_errorStatus.get(node.getID());
                 if (expMsg == null) {
                     // node was not expected to finish with an error status
-                    if (!m_preExecutedNodes.contains(getNodeID(node))) {
+                    if (!m_preExecutedNodes.contains(node.getID())) {
                         // complain only if the node was not loaded in executed
                         String msg =
                                 "Node '" + node.getNameWithID() + "' has an "
@@ -789,6 +789,15 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                         // during wrapUp the test fails then
                         logger.error(msg);
                     } else {
+                        Iterator<MsgPattern> iter = m_requiredErrors.iterator();
+                        while (iter.hasNext()) {
+                            MsgPattern p = iter.next();
+                            if (p.matches(status.getMessage())) {
+                                iter.remove();
+                                break;
+                            }
+                        }
+
                         logger.debug("Node '" + node.getNameWithID()
                                 + "' finished"
                                 + " with an error status - which is good.");
@@ -798,10 +807,10 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
             } else if (status != null
                     && status.getMessageType().equals(NodeMessage.Type.WARNING)) {
 
-                MsgPattern expMsg = m_warningStatus.get(getNodeID(node));
+                MsgPattern expMsg = m_warningStatus.get(node.getID());
                 if (expMsg == null) {
                     // Node was not supposed to finish with a warning status
-                    if (!m_preExecutedNodes.contains(getNodeID(node))) {
+                    if (!m_preExecutedNodes.contains(node.getID())) {
                         // Complain only if node was not loaded in executed
                         String msg =
                                 "Node '"
@@ -833,6 +842,15 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                         // during wrapUp the test fails then
                         logger.error(msg);
                     } else {
+                        Iterator<MsgPattern> iter = m_requiredWarnings.iterator();
+                        while (iter.hasNext()) {
+                            MsgPattern p = iter.next();
+                            if (p.matches(status.getMessage())) {
+                                iter.remove();
+                                break;
+                            }
+                        }
+
                         logger.debug("Node '" + node.getNameWithID()
                                 + "' finished"
                                 + " with a warning status - which is good.");
@@ -840,7 +858,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                     // Pre-Executed nodes with warning status don't create
                     // log entries - except for reader nodes. Remove the
                     // message from the list of required messages!
-                    if (m_preExecutedNodes.contains(getNodeID(node))) {
+                    if (m_preExecutedNodes.contains(node.getID())) {
                         String nodeWarnMsg = status.getMessage();
                         Iterator<MsgPattern> warns =
                                 m_requiredWarnings.iterator();
@@ -863,7 +881,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
             } else {
                 // no or unknown status
 
-                MsgPattern expMsg = m_warningStatus.get(getNodeID(node));
+                MsgPattern expMsg = m_warningStatus.get(node.getID());
                 if (expMsg != null) {
                     String msg =
                             "Node '"
@@ -887,11 +905,11 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                     // during wrapUp the test fails then
                     logger.error(msg);
                 }
-
             }
-
+            if (node instanceof WorkflowManager) {
+                checkNodeStatus((WorkflowManager)node);
+            }
         }
-
     }
 
     private void dumpToLogError(final String s) {
@@ -938,15 +956,18 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
     }
 
     /**
-     * Cuts off the prefix from the node container's ID.
+     * Builds a node id using the current workflow manager as prefix and the given partial node id
+     * as suffix.
      *
-     * @param nc the node to create the short ID for
-     * @param prefix the prefix cut off the node's ID
-     * @return the node's ID w/o prefix or the full ID if the ID was not
-     *         prefixed with the prefix
+     * @param nodeId a node id relative to the current workflow manager
+     * @return a complete node id including the current workflow manager's id
      */
-    private String getNodeID(final NodeContainer nc) {
-        return Integer.toString(nc.getID().getIndex());
+    private NodeID createCompleteNodeID(final String nodeId) {
+        NodeID id = m_manager.getID();
+        for (String s : nodeId.split(":")) {
+            id = new NodeID(id, Integer.parseInt(s));
+        }
+        return id;
     }
 
     /**
@@ -1003,7 +1024,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                     + "(specify node id and status):" + line);
         }
 
-        String nodeID = splits[0];
+        NodeID nodeID = createCompleteNodeID(splits[0]);
 
         String msg = null;
 
@@ -1097,16 +1118,17 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
             m_requiredInfos.add(new MsgPattern(info));
         }
 
-        m_requiredUnexecutedNodes.addAll(settings.failingNodes());
+        for (String id : settings.failingNodes()) {
+            m_requiredUnexecutedNodes.add(createCompleteNodeID(id));
+        }
 
         for (Map.Entry<String, String> e : settings.requiredNodeErrors()
                 .entrySet()) {
+            NodeID nodeId = createCompleteNodeID(e.getKey());
             try {
-                m_manager.getNodeContainer(new NodeID(m_manager.getID(),
-                        Integer.parseInt(e.getKey())));
-
+                m_manager.findNodeContainer(nodeId);
                 MsgPattern msg = new MsgPattern(e.getValue());
-                m_errorStatus.put(e.getKey(), msg);
+                m_errorStatus.put(nodeId, msg);
                 // error status on node also creates an error in the log
                 m_requiredErrors.add(msg);
             } catch (IllegalArgumentException ex) {
@@ -1118,12 +1140,11 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
 
         for (Map.Entry<String, String> e : settings.requiredNodeWarnings()
                 .entrySet()) {
+            NodeID nodeId = createCompleteNodeID(e.getKey());
             try {
-                m_manager.getNodeContainer(new NodeID(m_manager.getID(),
-                        Integer.parseInt(e.getKey())));
-
+                m_manager.findNodeContainer(nodeId);
                 MsgPattern msg = new MsgPattern(e.getValue());
-                m_warningStatus.put(e.getKey(), msg);
+                m_warningStatus.put(nodeId, msg);
                 // warning status on node also creates a warning in the log
                 m_requiredWarnings.add(msg);
             } catch (IllegalArgumentException ex) {
@@ -1213,8 +1234,12 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
      *
      * @param wfm the workflow to examine
      */
-    private void registerExecutedNodes() {
-        for (NodeContainer nc : m_manager.getNodeContainers()) {
+    private void registerExecutedNodes(final WorkflowManager manager) {
+        for (NodeContainer nc : manager.getNodeContainers()) {
+            if (nc instanceof WorkflowManager) {
+                registerExecutedNodes((WorkflowManager)nc);
+            }
+
             if (!nc.getState().equals(State.EXECUTED)) {
                 continue;
             }
@@ -1223,7 +1248,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                 continue;
             }
             String status = nc.getNodeMessage().getMessageType().name();
-            m_preExecutedNodes.add(getNodeID(nc));
+            m_preExecutedNodes.add(nc.getID());
             logger.debug("Registering node " + nc.getNameWithID()
                     + " as pre-executed with a " + status + " status");
         }
@@ -1352,12 +1377,12 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                  * 1) make sure all nodes are executed (or nodes not supposed to
                  * execute are not executed).
                  */
-                checkNodeExecution();
+                checkNodeExecution(m_manager);
 
                 /*
                  * 2) check the status (warning and/or error) of the nodes.
                  */
-                checkNodeStatus();
+                checkNodeStatus(m_manager);
 
                 /*
                  * the above checks only write errors into the log file - thus
@@ -1490,7 +1515,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
 
             // remember the executed nodes (before executing) to not
             // complain about their warning status later.
-            registerExecutedNodes();
+            registerExecutedNodes(m_manager);
 
             // construct a list of options (i.e. settings to change in the flow)
             File optionsFile =
