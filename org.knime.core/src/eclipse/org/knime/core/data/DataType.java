@@ -1054,9 +1054,17 @@ public final class DataType {
         if (type == this) {
             return true;
         }
+        if (MissingCell.class.equals(type.m_cellClass)) {
+            return true;
+        }
         for (Class<? extends DataValue> cl : m_valueClasses) {
             if (!type.isCompatible(cl)) {
                 return false;
+            } else if (cl.equals(CollectionDataValue.class)) {
+                if (!getCollectionElementType().isASuperTypeOf(
+                        type.getCollectionElementType())) {
+                    return false;
+                }
             }
         }
         return true;
