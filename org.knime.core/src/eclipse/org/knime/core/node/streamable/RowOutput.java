@@ -51,7 +51,6 @@
 package org.knime.core.node.streamable;
 
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTableSpec;
 
 /**
  * Output of a sequence of rows. See description of super class when the output
@@ -61,19 +60,6 @@ import org.knime.core.data.DataTableSpec;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public abstract class RowOutput extends PortOutput {
-
-    /**
-     * Initializes the output. This method is called by the framework when the
-     * client implementation returns a non-null table spec during the node's
-     * configuration (NodeModel#configure). This method must be called by the
-     * client if configure returns null (e.g. in the implementation of a node
-     * that transposes the input table). This method must not be called after
-     * rows have been added.
-     *
-     * @param spec The table spec describing the rows that are adding during
-     *            {@link #push(DataRow)}.
-     */
-    public abstract void init(final DataTableSpec spec);
 
     /**
      * Adds a new row to the output. The method will block if previously added

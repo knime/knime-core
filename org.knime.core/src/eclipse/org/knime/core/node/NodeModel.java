@@ -76,6 +76,7 @@ import org.knime.core.node.streamable.PortObjectInput;
 import org.knime.core.node.streamable.PortObjectOutput;
 import org.knime.core.node.streamable.PortOutput;
 import org.knime.core.node.streamable.RowInput;
+import org.knime.core.node.streamable.RowOutput;
 import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.streamable.StreamableOperatorInternals;
 import org.knime.core.node.workflow.CredentialsProvider;
@@ -1514,6 +1515,7 @@ public abstract class NodeModel {
     //////////////////////////////////////////
 
     /**
+     * Streaming API (pending):
      * Defines properties on the input ports when used in a streamed and/or
      * distributed fashion.
      *
@@ -1549,6 +1551,7 @@ public abstract class NodeModel {
     }
 
     /**
+     * Streaming API (pending):
      * Similar to {@link #getInputPortRoles()} describes the role of the output.
      * An output is distributable when the (distributed!) input directly maps to
      * the output without any further merge or reduction step (which is
@@ -1600,6 +1603,7 @@ public abstract class NodeModel {
     // isDistributable or (isStreamable xor isBuffered)
 
     /**
+     * Streaming API (pending):
      * Factory method for a streamable operator that is used to execute this
      * node. The default implementation returns a standard operator that wraps
      * the {@link #execute(PortObject[], ExecutionContext)} method. Subclasses
@@ -1657,6 +1661,7 @@ public abstract class NodeModel {
     }
 
     /**
+     * Streaming API (pending):
      * Used to initialize an iterative streamable execution. If the result is
      * non-null and {@link #iterate(StreamableOperatorInternals)} returns true,
      * the object will be used to initialize {@link StreamableOperator} on the
@@ -1680,7 +1685,9 @@ public abstract class NodeModel {
         return null;
     }
 
-    /** Called to determine whether the node requires an(other) iteration on the
+    /**
+     * Streaming API (pending):
+     * Called to determine whether the node requires an(other) iteration on the
      * data before the final results are computed. If <code>true</code> the
      * argument internals are transferred to the remote side and loaded into a
      * {@link StreamableOperator} on which {@link StreamableOperator#
@@ -1701,6 +1708,42 @@ public abstract class NodeModel {
     }
 
     /**
+     * Streaming API (pending):
+     * Finally determines the specifiction of the output (tables). In most cases
+     * implementations just return the result of
+     * {@link #configure(PortObjectSpec[])} here (which is also the default
+     * implementation). In some cases the node needs access on the data to
+     * determine the output spec (e.g. for nodes such as "Transpose" or
+     * "One-to-Many"), which is iterated as described in
+     * {@link #iterate(StreamableOperatorInternals)}.
+     *
+     * This method is called after
+     * {@linkplain #iterate(StreamableOperatorInternals) iterate} returns
+     * <code>false</code> to prepare the {@link RowOutput}. It will then call
+     * the
+     * {@link StreamableOperator#runFinal(
+     * PortInput[], PortOutput[], ExecutionContext)}
+     * method to compute the final output.
+     *
+     * @param internals The internals of the last "intermediate" merge.
+     * @param inSpecs The input specs.
+     * @return The specs describing the outputs that are computed by
+     *         {@link StreamableOperator#runFinal(
+     *         PortInput[], PortOutput[], ExecutionContext)} and
+     *         {@link #finishStreamableExecution(
+     *         StreamableOperatorInternals, ExecutionContext, PortOutput[])},
+     *         never null (elements).
+     * @throws InvalidSettingsException As described in the configure method.
+     * @since 2.6
+     */
+    public PortObjectSpec[] computeFinalOutputSpecs(
+            final StreamableOperatorInternals internals,
+            final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        return configure(inSpecs);
+    }
+
+    /**
+     * Streaming API (pending):
      * Factory method to create a merge operator that combines results created
      * in different {@link StreamableOperator} objects. This method must be
      * overwritten if the input is distributable but the output is not
@@ -1726,6 +1769,7 @@ public abstract class NodeModel {
     }
 
     /**
+     * Streaming API (pending):
      * Called by the executor if the data is processed in a distributed fashion
      * to create the final output result or update node internals (for instance
      * a warning message or view content). This method is called on the local
