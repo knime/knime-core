@@ -6806,95 +6806,95 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     if (!metaNode.sweep(metaContent, false)) {
                         wasClean = false;
                     }
-                    continue;
-                }
-                Set<State> allowedStates =
-                    new HashSet<State>(Arrays.asList(State.values()));
-                NodeOutPort[] predPorts = assemblePredecessorOutPorts(id);
-                for (int pi = 0; pi < predPorts.length; pi++) {
-                    NodeOutPort predOutPort = predPorts[pi];
-                    NodeInPort inport = nc.getInPort(pi);
-                    State predOutPortState;
-                    if (predOutPort == null) { // unconnected
-                        if (inport.getPortType().isOptional()) {
-                            // optional inport -- imitate executed predecessor
-                            predOutPortState = State.EXECUTED;
+                } else {
+                    Set<State> allowedStates =
+                        new HashSet<State>(Arrays.asList(State.values()));
+                    NodeOutPort[] predPorts = assemblePredecessorOutPorts(id);
+                    for (int pi = 0; pi < predPorts.length; pi++) {
+                        NodeOutPort predOutPort = predPorts[pi];
+                        NodeInPort inport = nc.getInPort(pi);
+                        State predOutPortState;
+                        if (predOutPort == null) { // unconnected
+                            if (inport.getPortType().isOptional()) {
+                                // optional inport -- imitate executed predecessor
+                                predOutPortState = State.EXECUTED;
+                            } else {
+                                predOutPortState = State.IDLE;
+                            }
                         } else {
-                            predOutPortState = State.IDLE;
+                            predOutPortState = predOutPort.getNodeState();
                         }
-                    } else {
-                        predOutPortState = predOutPort.getNodeState();
+                        switch (predOutPortState) {
+                        case IDLE:
+                            allowedStates.retainAll(Arrays.asList(
+                                    State.IDLE));
+                            break;
+                        case CONFIGURED:
+                            allowedStates.retainAll(Arrays.asList(
+                                    State.CONFIGURED, State.IDLE));
+                            break;
+                        case UNCONFIGURED_MARKEDFOREXEC:
+                            allowedStates.retainAll(Arrays.asList(State.IDLE,
+                                    State.UNCONFIGURED_MARKEDFOREXEC));
+                            break;
+                        case MARKEDFOREXEC:
+                        case QUEUED:
+                        case PREEXECUTE:
+                        case EXECUTING:
+                        case POSTEXECUTE:
+                            allowedStates.retainAll(Arrays.asList(State.IDLE,
+                                    State.UNCONFIGURED_MARKEDFOREXEC,
+                                    State.CONFIGURED, State.MARKEDFOREXEC));
+                            break;
+                        case EXECUTINGREMOTELY:
+                            // be more flexible than in the EXECUTING case
+                            // EXECUTINGREMOTELY is used in meta nodes,
+                            // which are executed elsewhere -- they set all nodes
+                            // of their internal flow to EXECUTINGREMOTELY
+                            allowedStates.retainAll(Arrays.asList(State.IDLE,
+                                    State.UNCONFIGURED_MARKEDFOREXEC,
+                                    State.CONFIGURED, State.MARKEDFOREXEC,
+                                    State.EXECUTINGREMOTELY));
+                            break;
+                        case EXECUTED:
+                        }
                     }
-                    switch (predOutPortState) {
-                    case IDLE:
-                        allowedStates.retainAll(Arrays.asList(
-                                State.IDLE));
-                        break;
-                    case CONFIGURED:
-                        allowedStates.retainAll(Arrays.asList(
-                                State.CONFIGURED, State.IDLE));
-                        break;
-                    case UNCONFIGURED_MARKEDFOREXEC:
-                        allowedStates.retainAll(Arrays.asList(State.IDLE,
-                                State.UNCONFIGURED_MARKEDFOREXEC));
-                        break;
-                    case MARKEDFOREXEC:
-                    case QUEUED:
-                    case PREEXECUTE:
-                    case EXECUTING:
-                    case POSTEXECUTE:
-                        allowedStates.retainAll(Arrays.asList(State.IDLE,
-                                State.UNCONFIGURED_MARKEDFOREXEC,
-                                State.CONFIGURED, State.MARKEDFOREXEC));
-                        break;
-                    case EXECUTINGREMOTELY:
-                        // be more flexible than in the EXECUTING case
-                        // EXECUTINGREMOTELY is used in meta nodes,
-                        // which are executed elsewhere -- they set all nodes
-                        // of their internal flow to EXECUTINGREMOTELY
-                        allowedStates.retainAll(Arrays.asList(State.IDLE,
-                                State.UNCONFIGURED_MARKEDFOREXEC,
-                                State.CONFIGURED, State.MARKEDFOREXEC,
-                                State.EXECUTINGREMOTELY));
-                        break;
-                    case EXECUTED:
+                    if (!allowedStates.contains(nc.getState())) {
+                        wasClean = false;
+                        switch (nc.getState()) {
+                        case EXECUTED:
+                            resetSuccessors(nc.getID());
+                            invokeResetOnNode(nc.getID());
+                            break;
+                        case EXECUTING:
+                        case EXECUTINGREMOTELY:
+                        case QUEUED:
+                        case MARKEDFOREXEC:
+                        case UNCONFIGURED_MARKEDFOREXEC:
+                            assert nc instanceof SingleNodeContainer;
+                            ((SingleNodeContainer)nc).cancelExecution();
+                            break;
+                        default:
+                        }
+                        if (!allowedStates.contains(State.CONFIGURED)) {
+                            nc.setState(State.IDLE);
+                        }
                     }
-                }
-                if (!allowedStates.contains(nc.getState())) {
-                    wasClean = false;
-                    switch (nc.getState()) {
-                    case EXECUTED:
+                    boolean hasData = true;
+                    // meta nodes don't need to provide output data and can still
+                    // be executed.
+                    if (nc instanceof SingleNodeContainer) {
+                        for (int i = 0; i < nc.getNrOutPorts(); i++) {
+                            NodeOutPort p = nc.getOutPort(i);
+                            hasData &= p != null && p.getPortObject() != null
+                                && p.getPortObjectSpec() != null;
+                        }
+                    }
+                    if (!hasData && nc.getState().equals(State.EXECUTED)) {
+                        wasClean = false;
                         resetSuccessors(nc.getID());
                         invokeResetOnNode(nc.getID());
-                        break;
-                    case EXECUTING:
-                    case EXECUTINGREMOTELY:
-                    case QUEUED:
-                    case MARKEDFOREXEC:
-                    case UNCONFIGURED_MARKEDFOREXEC:
-                        assert nc instanceof SingleNodeContainer;
-                        ((SingleNodeContainer)nc).cancelExecution();
-                        break;
-                    default:
                     }
-                    if (!allowedStates.contains(State.CONFIGURED)) {
-                        nc.setState(State.IDLE);
-                    }
-                }
-                boolean hasData = true;
-                // meta nodes don't need to provide output data and can still
-                // be executed.
-                if (nc instanceof SingleNodeContainer) {
-                    for (int i = 0; i < nc.getNrOutPorts(); i++) {
-                        NodeOutPort p = nc.getOutPort(i);
-                        hasData &= p != null && p.getPortObject() != null
-                            && p.getPortObjectSpec() != null;
-                    }
-                }
-                if (!hasData && nc.getState().equals(State.EXECUTED)) {
-                    wasClean = false;
-                    resetSuccessors(nc.getID());
-                    invokeResetOnNode(nc.getID());
                 }
             }
         }
