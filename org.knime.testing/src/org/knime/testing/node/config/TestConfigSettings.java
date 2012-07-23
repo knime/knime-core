@@ -141,8 +141,6 @@ public class TestConfigSettings {
      * Returns a set with the IDs of the nodes that must fail during the test.
      *
      * @return a set with node IDs <b>without</b> the root prefix.
-     *
-     * @see NodeID#getIDWithoutRoot()
      */
     public Set<String> failingNodes() {
         return Collections.unmodifiableSet(m_failingNodes);
@@ -205,8 +203,6 @@ public class TestConfigSettings {
      * without the root prefix.
      *
      * @param nodeID the node's id without the root prefix
-     *
-     * @see NodeID#getIDWithoutRoot()
      */
     public void addFailingNode(final String nodeID) {
         m_failingNodes.add(nodeID);
@@ -217,8 +213,6 @@ public class TestConfigSettings {
      * given without the root prefix.
      *
      * @param nodeID the node's id without the root prefix
-     *
-     * @see NodeID#getIDWithoutRoot()
      */
     public void removeFailingNode(final String nodeID) {
         m_failingNodes.remove(nodeID);
