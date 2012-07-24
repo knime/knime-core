@@ -159,8 +159,7 @@ public class PCAApplyNodeModel extends NodeModel {
 
         final Matrix eigenvectors =
                 EigenValue.getSortedEigenVectors(model.getEigenVectors(), model
-                        .getEigenvalues(), dimensions);
-        eigenvectors.transpose();
+                        .getEigenvalues(), dimensions).transpose();
         final DataColumnSpec[] specs =
                 PCANodeModel.createAddTableSpec(
                         (DataTableSpec)inData[DATA_INPORT].getSpec(),
