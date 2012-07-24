@@ -96,13 +96,13 @@ import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
 import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.data.filestore.internal.EmptyFileStoreHandler;
-import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.FileStoreKey;
+import org.knime.core.data.filestore.internal.IFileStoreHandler;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowFileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.ROWriteFileStoreHandler;
-import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
@@ -589,7 +589,7 @@ class Buffer implements KNIMEStreamConstants {
             final boolean forceCopyOfBlobs) {
         try {
             BlobSupportDataRow row =
-                saveBlobs(r, isCopyOfExisting, forceCopyOfBlobs);
+                saveBlobsAndFileStores(r, isCopyOfExisting, forceCopyOfBlobs);
             m_list.add(row);
             incrementSize();
             // if threshold exceeded, write all rows to disk
@@ -629,7 +629,7 @@ class Buffer implements KNIMEStreamConstants {
         }
     } // addRow(DataRow)
 
-    private BlobSupportDataRow saveBlobs(final DataRow row,
+    private BlobSupportDataRow saveBlobsAndFileStores(final DataRow row,
             final boolean isCopyOfExisting, final boolean forceCopyOfBlobs)
     throws IOException {
         final int cellCount = row.getNumCells();
@@ -648,6 +648,13 @@ class Buffer implements KNIMEStreamConstants {
             DataCell processedCell = handleIncomingBlob(
                     cell, col, row.getNumCells(),
                     isCopyOfExisting, forceCopyOfBlobs);
+            if (needFileStoresBeReassigned(processedCell)) {
+                if (m_maxRowsInMem != 0) {
+                    LOGGER.debug("Forcing buffer to disc as it contains "
+                            + "file store cells that need to be copied");
+                    m_maxRowsInMem = 0;
+                }
+            }
             if (processedCell != cell) {
                 if (cellCopies == null) {
                     cellCopies = new DataCell[cellCount];
@@ -846,6 +853,29 @@ class Buffer implements KNIMEStreamConstants {
             }
         }
         return wc;
+    }
+
+    private boolean needFileStoresBeReassigned(final DataCell cell) {
+        if (cell instanceof FileStoreCell) {
+            FileStore fileStore = FileStoreUtil.getFileStore((FileStoreCell)cell);
+            FileStoreKey oldKey = FileStoreUtil.getFileStoreKey(fileStore);
+            FileStoreKey newKey = ((IWriteFileStoreHandler)
+                    m_fileStoreHandler).translateToLocal(fileStore);
+            return !oldKey.equals(newKey);
+        } else if (cell instanceof CollectionDataValue) {
+            for (DataCell c : (CollectionDataValue)cell) {
+                if (needFileStoresBeReassigned(c)) {
+                    return true;
+                }
+            }
+        } else if (cell instanceof BlobWrapperDataCell) {
+            final BlobWrapperDataCell blobWrapperCell = (BlobWrapperDataCell)cell;
+            Class<? extends BlobDataCell> blobClass = blobWrapperCell.getBlobClass();
+            if (CollectionDataValue.class.isAssignableFrom(blobClass)) {
+                return needFileStoresBeReassigned(blobWrapperCell.getCell());
+            }
+        }
+        return false;
     }
 
     /** Creates temp file (m_binFile) and adds this buffer to shutdown hook. */
@@ -1889,7 +1919,7 @@ class Buffer implements KNIMEStreamConstants {
                 m_backIntoMemoryIterator;
 
             Object semaphore = backIntoMemoryIterator != null
-            	? backIntoMemoryIterator : FromListIterator.this;
+            ? backIntoMemoryIterator : FromListIterator.this;
             synchronized (semaphore) {
             	// need to synchronize access to the list as the list is
             	// potentially modified by the backIntoMemoryIterator

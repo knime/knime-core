@@ -61,11 +61,18 @@ import java.util.UUID;
  */
 public abstract class FileStoreHandlerRepository {
 
+    /** Get handler to ID (which is part of a saved data stream)
+     * @param storeHandlerUUID The handler ID.
+     * @return The handler for the id, never null. */
+    public abstract IFileStoreHandler getHandler(final UUID storeHandlerUUID);
+
     /** Get handler to ID (which is part of a saved data stream). Throws exception when ID
      * is unknown, returns never <code>null</code>.
      * @param storeHandlerUUID The handler ID.
      * @return The handler for the id, never null. */
-    public abstract IFileStoreHandler getHandler(final UUID storeHandlerUUID);
+    public abstract IFileStoreHandler getHandlerNotNull(final UUID storeHandlerUUID);
+
+    abstract void printValidFileStoreHandlersToLogDebug();
 
     /**
      * @param writableFileStoreHandler */

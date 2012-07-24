@@ -86,7 +86,7 @@ public class EmptyFileStoreHandler implements IFileStoreHandler {
     /** {@inheritDoc} */
     @Override
     public FileStore getFileStore(final FileStoreKey key) {
-        return m_fileStoreHandlerRepository.getHandler(
+        return m_fileStoreHandlerRepository.getHandlerNotNull(
                 key.getStoreUUID()).getFileStore(key);
     }
 

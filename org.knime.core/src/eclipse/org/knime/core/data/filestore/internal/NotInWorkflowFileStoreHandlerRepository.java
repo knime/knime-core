@@ -52,12 +52,16 @@ package org.knime.core.data.filestore.internal;
 
 import java.util.UUID;
 
+import org.knime.core.node.NodeLogger;
+
 /** Fallback repository that is used when the node is run outside the workflow manager,
  * for instance in the testing environment or using a 3rd party executor.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class NotInWorkflowFileStoreHandlerRepository extends FileStoreHandlerRepository {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(NotInWorkflowFileStoreHandlerRepository.class);
 
     private IFileStoreHandler m_fileStoreHandler;
 
@@ -77,6 +81,19 @@ public final class NotInWorkflowFileStoreHandlerRepository extends FileStoreHand
     /** {@inheritDoc} */
     @Override
     public IFileStoreHandler getHandler(final UUID storeHandlerUUID) {
+        if (m_fileStoreHandler instanceof IWriteFileStoreHandler) {
+            IWriteFileStoreHandler defFileStoreHandler =
+                (IWriteFileStoreHandler)m_fileStoreHandler;
+            if (defFileStoreHandler.getStoreUUID().equals(storeHandlerUUID)) {
+                return defFileStoreHandler;
+            }
+        }
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public IFileStoreHandler getHandlerNotNull(final UUID storeHandlerUUID) {
         if (!(m_fileStoreHandler instanceof IWriteFileStoreHandler)) {
             throw new IllegalStateException("no file stores in repository to \"" + m_fileStoreHandler + "\"");
         }
@@ -89,4 +106,13 @@ public final class NotInWorkflowFileStoreHandlerRepository extends FileStoreHand
         return defFileStoreHandler;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    void printValidFileStoreHandlersToLogDebug() {
+        if (m_fileStoreHandler instanceof IWriteFileStoreHandler) {
+            LOGGER.debug("Single file store handler " + ((IWriteFileStoreHandler)m_fileStoreHandler).getStoreUUID());
+        } else {
+            LOGGER.debug("No writable file store handler set");
+        }
+    }
 }

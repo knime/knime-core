@@ -81,6 +81,7 @@ public final class WorkflowFileStoreHandlerRepository extends FileStoreHandlerRe
         final UUID storeUUID = handler.getStoreUUID();
         if (storeUUID != null) {
             m_handlerMap.put(storeUUID, handler);
+            LOGGER.debug("Adding handler " + handler + " - " + m_handlerMap.size() + " in total");
         }
     }
 
@@ -93,6 +94,7 @@ public final class WorkflowFileStoreHandlerRepository extends FileStoreHandlerRe
                 throw new IllegalArgumentException(
                         "No such file store hander: " + handler);
             }
+            LOGGER.debug("Removing handler " + handler + " - " + m_handlerMap.size() + " remaining");
         }
     }
 
@@ -100,12 +102,18 @@ public final class WorkflowFileStoreHandlerRepository extends FileStoreHandlerRe
         return m_handlerMap.values();
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public IFileStoreHandler getHandler(final UUID storeHandlerUUID) {
+        return m_handlerMap.get(storeHandlerUUID);
+    }
+
     /** Get handler to id, never null.
      * @param storeHandlerUUID the store id
      * @return the handler.
      * @throws IllegalStateException If store is not registered. */
     @Override
-    public IFileStoreHandler getHandler(final UUID storeHandlerUUID) {
+    public IFileStoreHandler getHandlerNotNull(final UUID storeHandlerUUID) {
         IFileStoreHandler h = m_handlerMap.get(storeHandlerUUID);
         if (h == null) {
             final String s =
@@ -117,7 +125,9 @@ public final class WorkflowFileStoreHandlerRepository extends FileStoreHandlerRe
         return h;
     }
 
-    private void printValidFileStoreHandlersToLogDebug() {
+    /** {@inheritDoc} */
+    @Override
+    void printValidFileStoreHandlersToLogDebug() {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Valid file store handlers are:");
             LOGGER.debug("--------- Start --------------");

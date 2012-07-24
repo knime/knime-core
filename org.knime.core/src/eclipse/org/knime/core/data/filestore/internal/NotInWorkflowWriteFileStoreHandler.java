@@ -50,21 +50,13 @@
  */
 package org.knime.core.data.filestore.internal;
 
-import java.io.IOException;
 import java.util.UUID;
-
-import org.knime.core.data.filestore.FileStore;
-import org.knime.core.data.filestore.FileStoreUtil;
-import org.knime.core.util.FileUtil;
-import org.knime.core.util.LRUCache;
 
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public final class NotInWorkflowWriteFileStoreHandler extends WriteFileStoreHandler {
-
-    private LRUCache<FileStoreKey, FileStoreKey> m_createdFileStoreKeys;
 
     /**
      * @param storeUUID */
@@ -85,32 +77,6 @@ public final class NotInWorkflowWriteFileStoreHandler extends WriteFileStoreHand
 
     public boolean hasCopiedFileStores() {
         return getNextIndex() > 0;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public synchronized FileStoreKey translateToLocal(final FileStore fs) {
-        FileStoreKey key = FileStoreUtil.getFileStoreKey(fs);
-        if (!key.getStoreUUID().equals(getStoreUUID())) {
-            if (m_createdFileStoreKeys == null) {
-                m_createdFileStoreKeys = new LRUCache<FileStoreKey, FileStoreKey>(10000);
-            }
-            FileStoreKey local = m_createdFileStoreKeys.get(key);
-            if (local != null) {
-                return local;
-            }
-            FileStore newStore;
-            try {
-                newStore = createFileStoreInternal(getNextIndex() + "_" + key.getName(), null, -1);
-                FileUtil.copy(fs.getFile(), newStore.getFile());
-            } catch (IOException e) {
-                throw new RuntimeException("Failed copying file stores to local handler", e);
-            }
-            final FileStoreKey newKey = FileStoreUtil.getFileStoreKey(newStore);
-            m_createdFileStoreKeys.put(key, newKey);
-            return newKey;
-        }
-        return super.translateToLocal(fs);
     }
 
 }

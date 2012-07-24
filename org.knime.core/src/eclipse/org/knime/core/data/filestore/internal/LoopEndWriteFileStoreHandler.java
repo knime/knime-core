@@ -93,7 +93,10 @@ public final class LoopEndWriteFileStoreHandler implements IWriteFileStoreHandle
     @Override
     public FileStoreKey translateToLocal(final FileStore fs) {
         final FileStoreKey result = m_loopStartFSHandler.translateToLocal(fs);
-        if (m_loopStartFSHandler.isCreatedInThisLoop(result)) {
+        // might be called after node is closed, e.g. when workflow
+        // is saved
+        boolean isClosed = m_fileStoresInLoopCache == null;
+        if (!isClosed && m_loopStartFSHandler.isCreatedInThisLoop(result)) {
             if (m_fsKeysToKeepLRUCache.put(result, result) == null) {
                 m_fileStoresInLoopCache.add(result);
             }

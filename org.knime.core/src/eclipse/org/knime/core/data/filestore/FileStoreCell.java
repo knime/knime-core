@@ -101,7 +101,7 @@ public abstract class FileStoreCell extends DataCell {
             final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException {
         m_fileStoreKey = key;
         UUID id = key.getStoreUUID();
-        m_fileStoreHandler = fileStoreHandlerRepository.getHandler(id);
+        m_fileStoreHandler = fileStoreHandlerRepository.getHandlerNotNull(id);
         postConstruct();
     }
 

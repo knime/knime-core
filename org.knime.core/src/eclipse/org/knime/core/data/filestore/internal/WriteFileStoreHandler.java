@@ -59,6 +59,7 @@ import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.FileUtil;
+import org.knime.core.util.LRUCache;
 
 /**
  *
@@ -85,7 +86,9 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
     private File m_baseDir;
     private InternalDuplicateChecker m_duplicateChecker;
     private FileStoreHandlerRepository m_fileStoreHandlerRepository;
+    private LRUCache<FileStoreKey, FileStoreKey> m_createdFileStoreKeys;
     private int m_nextIndex = 0;
+
 
     /**
      *  */
@@ -152,8 +155,35 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
     @Override
     public FileStoreKey translateToLocal(final FileStore fs) {
         final FileStoreKey key = FileStoreUtil.getFileStoreKey(fs);
-        getOwnerHandler(key);
+        if (getOwnerHandler(key) == null) {
+            return copyFileStore(fs);
+        }
         return key;
+    }
+
+    synchronized FileStoreKey copyFileStore(final FileStore fs) {
+        FileStoreKey key = FileStoreUtil.getFileStoreKey(fs);
+        if (m_createdFileStoreKeys == null) {
+            LOGGER.debug("Duplicating file store objects - file store handler id "
+                    + key.getStoreUUID() + " is unknown to " + m_fileStoreHandlerRepository.getClass().getName());
+            LOGGER.debug("Dump of valid file store handlers follows, omitting further log output");
+            m_fileStoreHandlerRepository.printValidFileStoreHandlersToLogDebug();
+            m_createdFileStoreKeys = new LRUCache<FileStoreKey, FileStoreKey>(10000);
+        }
+        FileStoreKey local = m_createdFileStoreKeys.get(key);
+        if (local != null) {
+            return local;
+        }
+        FileStore newStore;
+        try {
+            newStore = createFileStoreInternal(getNextIndex() + "_" + key.getName(), null, -1);
+            FileUtil.copy(fs.getFile(), newStore.getFile());
+        } catch (IOException e) {
+            throw new RuntimeException("Failed copying file stores to local handler", e);
+        }
+        final FileStoreKey newKey = FileStoreUtil.getFileStoreKey(newStore);
+        m_createdFileStoreKeys.put(key, newKey);
+        return newKey;
     }
 
     /** {@inheritDoc} */
@@ -181,7 +211,8 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
      * @return */
     IFileStoreHandler getOwnerHandler(final FileStoreKey key) {
         IFileStoreHandler ownerHandler;
-        if (key.getStoreUUID().equals(m_storeUUID)) {
+        final UUID keyStoreUUID = key.getStoreUUID();
+        if (keyStoreUUID.equals(m_storeUUID)) {
             ownerHandler = this;
         } else {
             FileStoreHandlerRepository repo = m_fileStoreHandlerRepository;
@@ -189,7 +220,7 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
                 throw new IllegalStateException(
                         "No file store handler repository set");
             }
-            ownerHandler = repo.getHandler(m_storeUUID);
+            ownerHandler = repo.getHandler(keyStoreUUID);
         }
         return ownerHandler;
     }
