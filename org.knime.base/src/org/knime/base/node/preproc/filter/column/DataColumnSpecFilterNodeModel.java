@@ -140,14 +140,12 @@ final class DataColumnSpecFilterNodeModel extends NodeModel {
      * exist in the input table spec.
      */
     private ColumnRearranger createColumnRearranger(final DataTableSpec spec) {
-        final DataColumnSpecFilterConfiguration conf;
         if (m_conf == null) {
-            // auto-guess
-            conf = new DataColumnSpecFilterConfiguration(CFG_KEY_FILTER);
-        } else {
-            conf = m_conf;
-        }
-        final FilterResult filter = conf.applyTo(spec);
+            m_conf = new DataColumnSpecFilterConfiguration(CFG_KEY_FILTER);
+            // auto-configure
+            m_conf.loadDefaults(spec, true);
+        } 
+        final FilterResult filter = m_conf.applyTo(spec);
 
         final String[] incls = filter.getIncludes();
         final String[] excls = filter.getExcludes();
@@ -178,7 +176,6 @@ final class DataColumnSpecFilterNodeModel extends NodeModel {
             setWarningMessage(b.toString());
         }
 
-
         final ColumnRearranger c = new ColumnRearranger(spec);
         c.keepOnly(incls);
         return c;
@@ -192,9 +189,6 @@ final class DataColumnSpecFilterNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        if (m_conf == null) {
-            m_conf = new DataColumnSpecFilterConfiguration(CFG_KEY_FILTER);
-        }
         m_conf.saveConfiguration(settings);
     }
 

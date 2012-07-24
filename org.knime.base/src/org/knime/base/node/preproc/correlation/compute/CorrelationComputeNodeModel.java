@@ -87,12 +87,11 @@ final class CorrelationComputeNodeModel extends NodeModel
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(CorrelationComputeNodeModel.class);
 
-    private final SettingsModelColumnFilter2 m_columnFilterModel;
+    private SettingsModelColumnFilter2 m_columnFilterModel;
+    
     private final SettingsModelIntegerBounded m_maxPossValueCountModel;
 
     private BufferedDataTable m_correlationTable;
-
-    private boolean m_mayAutoConfigure = true;
 
     /** One input, one output.
      */
@@ -100,7 +99,6 @@ final class CorrelationComputeNodeModel extends NodeModel
         super(new PortType[]{BufferedDataTable.TYPE},
                 new PortType[]{BufferedDataTable.TYPE,
                 PMCCPortObjectAndSpec.TYPE});
-        m_columnFilterModel = createColumnFilterModel();
         m_maxPossValueCountModel = createNewPossValueCounterModel();
     }
 
@@ -183,14 +181,17 @@ final class CorrelationComputeNodeModel extends NodeModel
             throw new InvalidSettingsException(
                     "No double or nominal compatible columns in input");
         }
-        FilterResult applyTo = m_columnFilterModel.applyTo(in);
-        String[] includes = applyTo.getIncludes();
-        if (m_mayAutoConfigure) {
+        final String[] includes;
+        if (m_columnFilterModel == null) {
+            m_columnFilterModel = createColumnFilterModel();
             // auto-configure, no previous configuration
             m_columnFilterModel.loadDefaults(in);
             includes = m_columnFilterModel.applyTo(in).getIncludes();
             setWarningMessage("Auto configuration: Using all suitable "
                     + "columns (in total " + includes.length + ")");
+        } else {
+            FilterResult applyTo = m_columnFilterModel.applyTo(in);
+            includes = applyTo.getIncludes();
         }
         if (includes.length == 0) {
             throw new InvalidSettingsException("No columns selected");
@@ -226,7 +227,6 @@ final class CorrelationComputeNodeModel extends NodeModel
             throws InvalidSettingsException {
         m_columnFilterModel.loadSettingsFrom(settings);
         m_maxPossValueCountModel.loadSettingsFrom(settings);
-        m_mayAutoConfigure = false;
     }
 
     /**

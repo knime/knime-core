@@ -96,11 +96,9 @@ import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
  */
 final class Unpivot2NodeModel extends NodeModel {
 
-    private final SettingsModelColumnFilter2 m_retainedColumns =
-        Unpivot2NodeDialogPane.createColumnFilterRetainedColumns();
+    private SettingsModelColumnFilter2 m_retainedColumns;
 
-    private final SettingsModelColumnFilter2 m_valueColumns =
-        Unpivot2NodeDialogPane.createColumnFilterValueColumns();
+    private SettingsModelColumnFilter2 m_valueColumns;
 
     private final SettingsModelBoolean m_enableHilite =
         Unpivot2NodeDialogPane.createHiLiteModel();
@@ -128,6 +126,16 @@ final class Unpivot2NodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        final DataTableSpec in = inSpecs[0];
+        if (m_retainedColumns == null || m_valueColumns == null) {
+            // auto-configure, no previous configuration
+            m_retainedColumns = Unpivot2NodeDialogPane.createColumnFilterRetainedColumns();
+            m_retainedColumns.loadDefaults(in);
+            m_valueColumns = Unpivot2NodeDialogPane.createColumnFilterValueColumns();
+            m_valueColumns.loadDefaults(in);
+            setWarningMessage("Auto configuration: Using all suitable "
+                    + "columns in Value and Retain column lists.");
+        }
         return new DataTableSpec[]{createOutSpec(inSpecs[0])};
     }
 

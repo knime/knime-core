@@ -103,7 +103,6 @@ public class CollectionCreate2NodeModel extends NodeModel {
      */
     public CollectionCreate2NodeModel() {
         super(1, 1);
-        m_includeModel = createSettingsModel();
         m_createSet = createSettingsModelSetOrList();
         m_removeCols = createSettingsModelRemoveCols();
         m_newColName = createSettingsModelColumnName();
@@ -114,6 +113,13 @@ public class CollectionCreate2NodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        if (m_includeModel == null) {
+            // auto-configure
+            m_includeModel = createSettingsModel();
+            m_includeModel.loadDefaults(inSpecs[0]);
+            setWarningMessage("Auto configuration: Using all suitable "
+                    + "columns (in total " + m_includeModel.applyTo(inSpecs[0]).getIncludes().length + ")");
+        }
         ColumnRearranger rearranger = createColumnRearranger(inSpecs[0]);
         try {
             DataTableSpec outspec = rearranger.createSpec();
@@ -137,6 +143,7 @@ public class CollectionCreate2NodeModel extends NodeModel {
 
     private ColumnRearranger createColumnRearranger(final DataTableSpec in)
             throws InvalidSettingsException {
+
         FilterResult filterResult = m_includeModel.applyTo(in);
         List<String> includes = Arrays.asList(filterResult.getIncludes());
 
