@@ -53,7 +53,6 @@ package org.knime.workbench.editor2;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -72,9 +71,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.MetaNodeTemplateInformation;
-import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
-import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
@@ -197,18 +194,7 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
                             "Workflow Load", message, status);
                 }
             });
-            final List<WorkflowManager> linkedMNs =
-                new ArrayList<WorkflowManager>();
-            for (NodeContainer nc : wm.getNodeContainers()) {
-                if (nc instanceof WorkflowManager) {
-                    WorkflowManager mn = (WorkflowManager)nc;
-                    MetaNodeTemplateInformation templInfo =
-                        mn.getTemplateInformation();
-                    if (templInfo.getRole().equals(Role.Link)) {
-                        linkedMNs.add(mn);
-                    }
-                }
-            }
+            final List<NodeID> linkedMNs = wm.getLinkedMetaNodes(true);
             if (!linkedMNs.isEmpty()) {
                 final WorkflowEditor editor = m_editor;
                 m_editor.addAfterOpenRunnable(new Runnable() {
@@ -303,11 +289,11 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
     }
 
     static void postLoadCheckForMetaNodeUpdates(final WorkflowEditor editor,
-            final WorkflowManager parent, final List<WorkflowManager> links) {
+            final WorkflowManager parent, final List<NodeID> links) {
         StringBuilder m = new StringBuilder("The workflow contains ");
         if (links.size() == 1) {
             m.append("one meta node link (\"");
-            m.append(links.get(0).getNameWithID());
+            m.append(parent.findNodeContainer(links.get(0)).getNameWithID());
             m.append("\").");
         } else {
             m.append(links.size()).append(" meta node links.");

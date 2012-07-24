@@ -60,10 +60,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.TimerTask;
 
 import org.eclipse.core.resources.IWorkspace;
@@ -86,7 +84,6 @@ import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.util.StringFormat;
-import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
@@ -714,39 +711,24 @@ public final class BatchExecutor {
             final WorkflowLoadHelper lH, final boolean failOnLoadError)
             throws IOException, CanceledExecutionException {
         // use queue, add meta node children while traversing the node list
-        Queue<NodeContainer> ncsToCheck =
-            new LinkedList<NodeContainer>(wfm.getNodeContainers());
-        NodeContainer nc;
+        List<NodeID> ncsToCheck = wfm.getLinkedMetaNodes(true);
         int linksChecked = 0;
         int linksUpdated = 0;
-        while ((nc = ncsToCheck.poll()) != null) {
-            if (nc instanceof WorkflowManager) {
-                WorkflowManager wm = (WorkflowManager)nc;
-                if (wm.getTemplateInformation().getRole().equals(Role.Link)) {
-                    linksChecked += 1;
-                    WorkflowManager parent = wm.getParent();
-                    if (parent.checkUpdateMetaNodeLink(wm.getID(), lH)) {
-                        MetaNodeLinkUpdateResult loadResult =
-                            parent.updateMetaNodeLink(
-                                    wm.getID(), new ExecutionMonitor(), lH);
-                        linksUpdated += 1;
-                        if (failOnLoadError && loadResult.hasErrors()) {
-                            System.err.println("Error(s) while updating ");
-                            LOGGER.error(loadResult.getFilteredError("",
-                                    LoadResultEntryType.Error));
-                            return false;
-                        }
-                        WorkflowManager wm2 = loadResult.getMetaNode();
-                        if (wm2 == null) {
-                            LOGGER.error("Updating meta node link \""
-                                    + wm.getNameWithID() + "\" failed, load"
-                                    + " routines did not return new meta node");
-                            return false;
-                        }
-                        wm = wm2;
-                    }
+        for (NodeID wmID : ncsToCheck) {
+            WorkflowManager wm = (WorkflowManager)wfm.findNodeContainer(wmID);
+            linksChecked += 1;
+            WorkflowManager parent = wm.getParent();
+            if (parent.checkUpdateMetaNodeLink(wm.getID(), lH)) {
+                MetaNodeLinkUpdateResult loadResult =
+                    parent.updateMetaNodeLink(
+                            wm.getID(), new ExecutionMonitor(), lH);
+                linksUpdated += 1;
+                if (failOnLoadError && loadResult.hasErrors()) {
+                    System.err.println("Error(s) while updating ");
+                    LOGGER.error(loadResult.getFilteredError("",
+                            LoadResultEntryType.Error));
+                    return false;
                 }
-                ncsToCheck.addAll(wm.getNodeContainers());
             }
         }
         if (linksChecked == 0) {

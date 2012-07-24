@@ -50,7 +50,10 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import java.util.List;
+
 import org.eclipse.gef.EditPart;
+import org.knime.core.node.workflow.NodeID;
 import org.knime.workbench.editor2.WorkflowEditor;
 
 /**
@@ -83,6 +86,12 @@ public class CheckUpdateMetaNodeLinkAllAction extends
     @Override
     public String getId() {
         return ID;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected List<NodeID> getMetaNodesToCheck() {
+        return getManager().getLinkedMetaNodes(true);
     }
 
     /** {@inheritDoc} */

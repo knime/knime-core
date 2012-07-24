@@ -5369,6 +5369,35 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         setDirty();
     }
 
+    /** The list of contained meta nodes that are linked meta nodes. If recurse
+     * flag is set, each meta node is checked recursively, whereby linked
+     * meta nodes itself are excluded (links in links are not checked).
+     * @param recurse ...
+     * @return list of node ids, ids not necessarily direct childs of this WFM!
+     * @since 2.6
+     */
+    public List<NodeID> getLinkedMetaNodes(final boolean recurse) {
+        return fillLinkedMetaNodesList(
+                new ArrayList<NodeID>(), recurse);
+    }
+
+    private List<NodeID> fillLinkedMetaNodesList(
+            final List<NodeID> list, final boolean recurse) {
+        for (NodeID id : m_workflow.createBreadthFirstSortedList(
+                m_workflow.getNodeIDs(), true).keySet()) {
+            NodeContainer nc = getNodeContainer(id);
+            if (nc instanceof WorkflowManager) {
+                WorkflowManager wm = (WorkflowManager)nc;
+                if (wm.getTemplateInformation().getRole().equals(Role.Link)) {
+                    list.add(wm.getID());
+                } else if (recurse) {
+                    wm.fillLinkedMetaNodesList(list, true);
+                }
+            }
+        }
+        return list;
+    }
+
     /** Query the template to the linked meta node with the given ID and check
      * whether a newer version is available.
      * @param id The ID of the linked meta node

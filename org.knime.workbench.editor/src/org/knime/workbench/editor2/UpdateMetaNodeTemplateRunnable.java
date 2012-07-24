@@ -114,7 +114,7 @@ public class UpdateMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
         for (int i = 0; i < m_ids.length; i++) {
             NodeID id = m_ids[i];
             WorkflowManager wm =
-                (WorkflowManager)m_parentWFM.getNodeContainer(id);
+                (WorkflowManager)m_parentWFM.findNodeContainer(id);
             LOGGER.debug("Updating " + wm.getNameWithID() + " from "
                     + wm.getTemplateInformation().getSourceURI());
             ExecutionMonitor subExec =
@@ -126,7 +126,7 @@ public class UpdateMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
             MetaNodeLinkUpdateResult updateMetaNodeLinkResult;
             try {
                 updateMetaNodeLinkResult =
-                    m_parentWFM.updateMetaNodeLink(id, subExec, loadHelper);
+                    wm.getParent().updateMetaNodeLink(id, subExec, loadHelper);
             } catch (CanceledExecutionException e) {
                 String message = "Meta node update canceled";
                 LOGGER.warn(message, e);
