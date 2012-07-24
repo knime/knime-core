@@ -915,18 +915,14 @@ public final class FileUtil {
             throw new InvalidSettingsException("No location provided");
         }
         InputStream stream;
-        if (loc.matches("^[a-zA-Z]+:/.*")) {
-            URL url;
-            try {
-                url = new URL(loc);
-            } catch (MalformedURLException ex) {
-                throw new InvalidSettingsException("Invalid URL: " + loc, ex);
-            }
+        try {
+            URL url = new URL(loc);
             stream = FileUtil.openStreamWithTimeout(url);
-        } else {
+        } catch (MalformedURLException mue) {
             File file = new File(loc);
             if (!file.exists()) {
-                throw new InvalidSettingsException("No such file: " + loc);
+                throw new InvalidSettingsException(
+                        "No such file or URL: " + loc);
             }
             stream = new FileInputStream(file);
         }
