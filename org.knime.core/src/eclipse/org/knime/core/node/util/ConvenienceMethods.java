@@ -82,8 +82,8 @@ public final class ConvenienceMethods {
         if (o1 != null) {
             return o1.equals(o2);
         } else {
-            // o2 != null
-            return o2.equals(o1);
+            // o2 != null && o1 == null
+            return false;
         }
     }
 
