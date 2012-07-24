@@ -216,13 +216,13 @@ public final class DatabaseWriterConnection {
                         }
                     }
                     rs.close();
-                    statement.close();
                 } else {
                     mapping = new int[spec.getNumColumns()];
                     for (int k = 0; k < mapping.length; k++) {
                         mapping[k] = k;
                     }
                 }
+                statement.close();
             } else {
                 mapping = new int[spec.getNumColumns()];
                 for (int k = 0; k < mapping.length; k++) {

@@ -294,7 +294,7 @@ public class PMMLPreprocPortObject extends AbstractPortObject {
      *
      * @author Dominik Morent, KNIME.com, Zurich, Switzerland
      */
-    private class PortObjectZipOutputStreamAndString extends OutputStream {
+    private static class PortObjectZipOutputStreamAndString extends OutputStream {
         private final StringBuilder m_buffer;
         private final PortObjectZipOutputStream m_zipOut;
 

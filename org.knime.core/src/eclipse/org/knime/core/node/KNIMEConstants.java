@@ -279,7 +279,7 @@ public final class KNIMEConstants {
 
 
     static {
-        BUILD_DATE = "Nightly-Build May 04, 2012";
+        BUILD_DATE = "Nightly-Build July 23, 2012";
         String versionString;
         Bundle coreBundle = OSGIHelper.getBundle(KNIMEConstants.class);
         if (coreBundle != null) {
@@ -305,13 +305,12 @@ public final class KNIMEConstants {
                         + "KNIME GmbH, Germany";
         line2 =
                 "***"
-                        + "        ".substring(0, (int)Math.floor((line1
-                                .length()
-                                - line2.length() - 6) / 2))
+                        + "        ".substring(0, (line1.length()
+                                - line2.length() - 6) / 2)
                         + line2
                         + "        ".substring(0, (int)Math.ceil((line1
                                 .length()
-                                - line2.length() - 6) / 2)) + "***";
+                                - line2.length() - 6) / 2.0)) + "***";
 
         String stars =
                 "***************************************************"

@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Apr 12, 2006 (meinl): created
  *   11.05.2006 (wiswedel, ohl) reviewed
@@ -61,9 +61,9 @@ import java.util.List;
  * several sub pools, e.g. if the objects have different "sizes". If memory
  * becomes scarce some of the sub pools may get garbage collected, but this is
  * transparent.
- * 
+ *
  * @param <T> any class whose objects are stored in the pool
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ObjectPool<T> {
@@ -76,7 +76,7 @@ public class ObjectPool<T> {
 
     /**
      * Creates a new object pool.
-     * 
+     *
      * @param subPools the number of sub pools
      * @param maxSizes the maximum size of each sub pool
      */
@@ -98,7 +98,7 @@ public class ObjectPool<T> {
     /**
      * Returns an object from the (sub) pool, or <code>null</code> if the pool
      * is empty.
-     * 
+     *
      * @param subPool the number of the sub pool, starting with 0
      * @return an object or <code>null</code>
      */
@@ -116,7 +116,7 @@ public class ObjectPool<T> {
     /**
      * Puts an object into the specified subpool. If the pool is already full,
      * the object will not be added, in this case the method does nothing.
-     * 
+     *
      * @param object an object to store
      * @param subPool the index of the sub pool (starting with 0)
      */
@@ -136,7 +136,7 @@ public class ObjectPool<T> {
 
     /**
      * Prints statistics about hits and misses.
-     * 
+     *
      * @param out a print stream to which the statistic should be written
      */
     public void printStats(final PrintStream out) {
@@ -144,7 +144,7 @@ public class ObjectPool<T> {
         for (int i = 0; i < m_pools.length; i++) {
             if (m_hits[i] + m_misses[i] > 0) {
                 out.printf("Pool %1$3d => %2$8d accesses, "
-                        + "%3$8d hits => %4$2.2f%%\n", i, m_hits[i]
+                        + "%3$8d hits => %4$2.2f%%%n", i, m_hits[i]
                         + m_misses[i], m_hits[i], 100.0 * m_hits[i]
                         / (m_hits[i] + m_misses[i]));
             }

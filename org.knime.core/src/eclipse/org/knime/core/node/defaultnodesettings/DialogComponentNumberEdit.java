@@ -102,7 +102,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
             final String label) {
         this(numberModel, label, null);
     }
-    
+
     /**
      * Constructor that puts label and JTextField into panel.
      * It also enables the definition of a flow variable model to overwrite
@@ -110,7 +110,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
      *
      * @param numberModel the model handling the value
      * @param label text to be displayed in front of the edit box
-     * @param fvm A variable model or null. (If not null, a small button 
+     * @param fvm A variable model or null. (If not null, a small button
      * opening an input dialog is added.)
      */
     public DialogComponentNumberEdit(final SettingsModelNumber numberModel,
@@ -130,20 +130,20 @@ public class DialogComponentNumberEdit extends DialogComponent {
             final String label, final int compWidth) {
         this(numberModel, label, compWidth, null);
     }
-    
+
     /**
-     * Constructor that puts label and JTextField into panel. 
+     * Constructor that puts label and JTextField into panel.
      * It also enables the definition of a flow variable model to overwrite
      * the user setting using a custom variable.
      *
      * @param numberModel the model handling the value
      * @param label text to be displayed in front of the edit box
      * @param compWidth the width (in columns/characters) of the edit field.
-     * @param fvm A variable model or null. (If not null, a small button 
+     * @param fvm A variable model or null. (If not null, a small button
      * opening an input dialog is added.)
      */
     public DialogComponentNumberEdit(final SettingsModelNumber numberModel,
-            final String label, final int compWidth, 
+            final String label, final int compWidth,
             final FlowVariableModel fvm) {
         super(numberModel);
 
@@ -260,7 +260,7 @@ public class DialogComponentNumberEdit extends DialogComponent {
             throw new InvalidSettingsException(e.getMessage());
         }
 
-        if (m_valueField.getText() == "") {
+        if ("".equals(m_valueField.getText())) {
             // user must enter a value
             showError(m_valueField);
             throw new InvalidSettingsException("Please enter a value.");

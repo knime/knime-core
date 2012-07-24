@@ -444,7 +444,7 @@ public class ObsoleteMetaNodeWorkflowPersistorVersion1xx extends
                 if (in.equals(newClass)) {
                     newClass =
                         "org.knime.base.node.meta.looper.ForLoopHeadNodeFactory";
-                } else if (out.equals(f)) {
+                } else if (out.equals(newClass)) {
                     newClass =
                         "org.knime.base.node.meta.looper.ForLoopTailNodeFactory";
                 }

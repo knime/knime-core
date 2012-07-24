@@ -524,7 +524,7 @@ abstract class TableSorter {
                 cont = createDataContainer(dataTable.getDataTableSpec(), true);
                 if (m_rowsInInputTable > 0) {
                     double estimatedReads =
-                        Math.ceil(chunksCont.size() / m_maxOpenContainers)
+                        Math.ceil(chunksCont.size() / (double) m_maxOpenContainers)
                         * m_rowsInInputTable;
                     incProgress = (1.0 - progress) / estimatedReads;
                 }
@@ -642,6 +642,36 @@ abstract class TableSorter {
             } else {
                 return value;
             }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + m_index;
+            result = prime * result + ((m_row == null) ? 0 : m_row.hashCode());
+            return result;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(final Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            MergeEntry other = (MergeEntry)obj;
+            return (this.compareTo(other) == 0);
         }
     }
 

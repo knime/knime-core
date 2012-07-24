@@ -338,7 +338,7 @@ public class BlobSupportDataCellSet
      * possibly wrapped elements.
      *
      */
-    private final class Wrapper {
+    private static final class Wrapper {
 
         private final DataCell m_cell;
 

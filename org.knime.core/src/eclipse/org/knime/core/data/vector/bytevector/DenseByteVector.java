@@ -357,6 +357,7 @@ public class DenseByteVector {
             result.m_storage[i] =
                     bv.m_storage[i] < m_storage[i] ? bv.m_storage[i]
                             : m_storage[i];
+            i--;
 
         }
         // the rest of the counts stays zero.

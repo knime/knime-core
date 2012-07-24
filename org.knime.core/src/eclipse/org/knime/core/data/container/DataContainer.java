@@ -92,8 +92,8 @@ import org.knime.core.data.NominalValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
-import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
+import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.data.util.NonClosableOutputStream;
 import org.knime.core.internal.ReferencedFile;
@@ -1270,7 +1270,10 @@ public class DataContainer implements RowAppender {
      * @throws IOException If that fails for any reason.
      */
     public static final File createTempFile() throws IOException {
-        String date = DATE_FORMAT.format(new Date());
+        String date;
+        synchronized (DATE_FORMAT) {
+            date = DATE_FORMAT.format(new Date());
+        }
         String fileName = "knime_container_" + date + "_";
         String suffix = ".bin.gz";
         File f = File.createTempFile(fileName, suffix,

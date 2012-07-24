@@ -739,17 +739,16 @@ public class TokenizerSettings {
             errMsg +=
                     "You must pass a non-empty string "
                             + "as delimiter pattern\n";
+        } else if (delimiter.charAt(0) > Tokenizer.MAX_CHAR) {
+            errMsg +=
+                "The delimiter must begin with a plain ASCII "
+                + "character (ascii code < 127) \n";
         }
         if (returnAsSeparateToken && includeInToken) {
             errMsg +=
                     "You cannot specify 'returnAsSeparateToken' AND"
                             + "'includeInToken'. "
                             + "They are mutually exclusive!\n";
-        }
-        if (delimiter.charAt(0) > Tokenizer.MAX_CHAR) {
-            errMsg +=
-                    "The delimiter must begin with a plain ASCII "
-                            + "character (ascii code < 127) \n";
         }
         if (!errMsg.equals("")) {
             errMsg = "replaceDelimiterPattern:\n" + errMsg;
@@ -1048,11 +1047,9 @@ public class TokenizerSettings {
         String errMsg = "";
         if (ws == null) {
             errMsg += "Please specify a non-null whitespace character.\n";
-        }
-        if (ws.length() != 1) {
+        } else if (ws.length() != 1) {
             errMsg += "Please specify a one-character string as whitespace.\n";
-        }
-        if (ws.charAt(0) > Tokenizer.MAX_CHAR) {
+        } else if (ws.charAt(0) > Tokenizer.MAX_CHAR) {
             errMsg +=
                     "The whitespace must begin with a plain ASCII "
                             + "character (ascii code < 127) \n";

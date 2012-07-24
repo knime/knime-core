@@ -339,9 +339,8 @@ public final class NodeViewExport {
         /** {@inheritDoc} */
         @Override
         public boolean equals(final Object obj) {
-            return getClass().equals(obj.getClass());
+            return (obj != null) && getClass().equals(obj.getClass());
         }
-
     }
 
     /** Describes access method to get container to be exported by the view.

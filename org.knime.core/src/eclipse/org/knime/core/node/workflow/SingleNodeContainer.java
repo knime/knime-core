@@ -1245,7 +1245,7 @@ public final class SingleNodeContainer extends NodeContainer {
                 StringBuilder debug = new StringBuilder(
                         "Found " + files.length + " node local file(s) to "
                         + getNameWithID() + ": ");
-                debug.append(Arrays.copyOf(files, Math.max(3, files.length)));
+                debug.append(Arrays.toString(Arrays.copyOf(files, Math.max(3, files.length))));
                 for (String f : files) {
                     File child = new File(directory, f);
                     try {

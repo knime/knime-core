@@ -52,8 +52,6 @@ package org.knime.core.data.vector.bytevector;
 
 import java.util.Arrays;
 
-import org.knime.core.data.vector.bitvector.SparseBitVector;
-
 /**
  * A vector of fixed length holding byte counts at specific positions. Only
  * positive values of counts are supported. Each index can store a number
@@ -756,7 +754,7 @@ public class SparseByteVector {
      */
     @Override
     public boolean equals(final Object obj) {
-        if (obj instanceof SparseBitVector) {
+        if (obj instanceof SparseByteVector) {
             SparseByteVector s = (SparseByteVector)obj;
             if (s.m_length != m_length) {
                 return false;

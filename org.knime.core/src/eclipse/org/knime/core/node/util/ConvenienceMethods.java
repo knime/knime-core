@@ -76,15 +76,15 @@ public final class ConvenienceMethods {
      */
     public static boolean areEqual(final Object o1, final Object o2) {
         if (o1 == o2) {
+            // same object or both are null
             return true;
         }
         if (o1 != null) {
             return o1.equals(o2);
-        } else if (o2 != null) {
+        } else {
+            // o2 != null
             return o2.equals(o1);
         }
-        assert false : "Both objects are null, hence equal";
-        return true;
     }
 
     /** Read system property "line.separator", returns '\n' if that fails

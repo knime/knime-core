@@ -552,7 +552,9 @@ public final class FileUtil {
             return false;
         } finally {
             zout.closeEntry();
-            in.close();
+            if (in != null) {
+                in.close();
+            }
         }
         return true;
     }
@@ -692,8 +694,7 @@ public final class FileUtil {
         byte[] buf = new byte[BUFF_SIZE];
         while ((e = zipStream.getNextEntry()) != null) {
 
-            String name = e.getName();
-            name.replace('\\', '/');
+            String name = e.getName().replace('\\', '/');
             name = stripOff(name, stripLevel);
 
             if (e.isDirectory()) {

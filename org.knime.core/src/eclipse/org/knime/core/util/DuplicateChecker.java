@@ -361,6 +361,42 @@ public class DuplicateChecker {
         public String toString() {
             return m_s;
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + ((m_s == null) ? 0 : m_s.hashCode());
+            return result;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(final Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            Helper other = (Helper)obj;
+            if (m_s == null) {
+                if (other.m_s != null) {
+                    return false;
+                }
+            } else if (!m_s.equals(other.m_s)) {
+                return false;
+            }
+            return true;
+        }
     }
 
     /**

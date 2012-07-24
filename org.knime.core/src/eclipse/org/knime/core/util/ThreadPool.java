@@ -194,7 +194,7 @@ public class ThreadPool {
 
     private static int workerCounter;
 
-    private class Worker extends Thread {
+    private static class Worker extends Thread {
         private final Object m_lock = new Object();
 
         private MyFuture<?> m_runnable;

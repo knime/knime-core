@@ -734,7 +734,7 @@ public abstract class NodeFactory<T extends NodeModel> {
             return "No description available";
         } else {
             return e.getFirstChild().getNodeValue().trim().replaceAll(
-                    "(?:\\s+|\n", " ");
+                    "(?:\\s+|\n)", " ");
         }
     }
 

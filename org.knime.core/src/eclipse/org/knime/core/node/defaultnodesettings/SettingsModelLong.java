@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   12.09.2007 (Fabian Dill): created
  */
@@ -57,27 +57,27 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class SettingsModelLong extends SettingsModelNumber {
-    
+
     private long m_value;
 
     private final String m_configKey;
 
     /**
      * Creates a new object holding a long value.
-     * 
+     *
      * @param configName the identifier the value is stored with in the
      *            {@link org.knime.core.node.NodeSettings} object
      * @param defaultValue the initial value
      */
     public SettingsModelLong(final String configName, final long defaultValue) {
-        if ((configName == null) || (configName == "")) {
+        if ((configName == null) || "".equals(configName)) {
             throw new IllegalArgumentException("The configName must be a "
                     + "non-empty string");
-        }        
+        }
         m_configKey = configName;
         m_value = defaultValue;
     }
@@ -89,11 +89,11 @@ public class SettingsModelLong extends SettingsModelNumber {
     String getNumberValueStr() {
         return Long.toString(getLongValue());
     }
-    
+
     /**
-     * If the new value is different from the old value the listeners are 
+     * If the new value is different from the old value the listeners are
      * notified.
-     * 
+     *
      * @param value the new value
      */
     public void setLongValue(final long value) {
@@ -105,7 +105,7 @@ public class SettingsModelLong extends SettingsModelNumber {
             notifyChangeListeners();
         }
     }
-    
+
     /**
      * @return the stored long value
      */
@@ -121,9 +121,9 @@ public class SettingsModelLong extends SettingsModelNumber {
         setLongValue(Long.parseLong(newValueStr));
     }
 
-    
-    
-    
+
+
+
     /**
      * {@inheritDoc}
      */
@@ -142,7 +142,7 @@ public class SettingsModelLong extends SettingsModelNumber {
         return model;
     }
 
-    
+
 
     /**
      * {@inheritDoc}
@@ -214,11 +214,11 @@ public class SettingsModelLong extends SettingsModelNumber {
             throws InvalidSettingsException {
         validateValue(settings.getLong(m_configKey));
     }
-    
+
     /**
      * Called during {@link #validateSettingsForModel}, can be overwritten by
      * derived classes.
-     * 
+     *
      * @param value the value to validate
      * @throws InvalidSettingsException if the value is not valid and should be
      *             rejected
@@ -226,6 +226,6 @@ public class SettingsModelLong extends SettingsModelNumber {
     protected void validateValue(final long value)
             throws InvalidSettingsException {
         // deriving class needs to check value
-    }    
+    }
 
 }

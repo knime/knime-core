@@ -117,7 +117,7 @@ public class SettingsModelFilterString extends SettingsModel {
             final Collection<String> defaultInclList,
             final Collection<String> defaultExclList,
             final boolean keepAll) {
-        if ((configName == null) || (configName == "")) {
+        if ((configName == null) || "".equals(configName)) {
             throw new IllegalArgumentException("The configName must be a "
                     + "non-empty string");
         }

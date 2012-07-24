@@ -67,11 +67,11 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
-import javax.swing.JFrame;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingUtilities;
+import javax.swing.WindowConstants;
 import javax.swing.border.LineBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
@@ -203,7 +203,7 @@ implements ChangeListener, ActionListener {
                     loader.getResource(packagePath + correctedPath));
             this.setIconImage(icon.getImage());
             // finalize setup
-            this.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+            this.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
             initComponents();
             pack();
         }
@@ -390,7 +390,7 @@ implements ChangeListener, ActionListener {
     }
 
     /** Helper class to allow also the display of disabled list elements. */
-    class CustomListCellRenderer extends FlowVariableListCellRenderer {
+    static class CustomListCellRenderer extends FlowVariableListCellRenderer {
         private String m_toDisable;
 
         /** Create new render which disables given string.

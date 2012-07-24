@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   17.01.2007 (mb): created
  */
@@ -59,7 +59,7 @@ import org.knime.core.node.port.PortObjectSpec;
 /**
  * Settings model for a double range [min, max]. It stores two floating point
  * numbers. It ensures that the minimum is smaller than the maximum at any time.
- * 
+ *
  * @author M. Berthold, University of Konstanz
  */
 public class SettingsModelDoubleRange extends SettingsModel {
@@ -74,7 +74,7 @@ public class SettingsModelDoubleRange extends SettingsModel {
 
     /**
      * Create setting object.
-     * 
+     *
      * @param configName identifier in the config file.
      * @param minRange minimum default minimum value
      * @param maxRange maximum default maximum value
@@ -84,7 +84,7 @@ public class SettingsModelDoubleRange extends SettingsModel {
     public SettingsModelDoubleRange(final String configName,
             final double minRange, final double maxRange)
             throws IllegalArgumentException {
-        if ((configName == null) || (configName == "")) {
+        if ((configName == null) || "".equals(configName)) {
             throw new IllegalArgumentException("The configName must be a "
                     + "non-empty string");
         }
@@ -111,7 +111,7 @@ public class SettingsModelDoubleRange extends SettingsModel {
 
     /**
      * Sets a new min and a new max value.
-     * 
+     *
      * @param newMin the new min value
      * @param newMax the new max value
      * @throws IllegalArgumentException if the min is larger than the max or
@@ -141,7 +141,7 @@ public class SettingsModelDoubleRange extends SettingsModel {
 
     /**
      * Sets a new min value of the range.
-     * 
+     *
      * @param minRange the new min vale of the range
      * @throws IllegalArgumentException if the new min is larger than the
      *             current max
@@ -153,7 +153,7 @@ public class SettingsModelDoubleRange extends SettingsModel {
 
     /**
      * Sets a new max value of the range.
-     * 
+     *
      * @param maxRange the new max value of the range
      * @throws IllegalArgumentException if the current min is larger than the
      *             new max
@@ -208,7 +208,7 @@ public class SettingsModelDoubleRange extends SettingsModel {
         } catch (IllegalArgumentException iae) {
             // ignore, keep the old values
         } catch (InvalidSettingsException ise) {
-            // ignore, keep the old values            
+            // ignore, keep the old values
         }
     }
 
@@ -254,7 +254,7 @@ public class SettingsModelDoubleRange extends SettingsModel {
      */
     @Override
     public String toString() {
-        return getClass().getSimpleName() + " - " + m_configName + ":[" 
+        return getClass().getSimpleName() + " - " + m_configName + ":["
         + m_minRange + "," + m_maxRange + "]";
     }
 

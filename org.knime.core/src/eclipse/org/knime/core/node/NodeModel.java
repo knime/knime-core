@@ -263,25 +263,25 @@ public abstract class NodeModel {
             m_inPortTypes = new PortType[0];
         } else {
             m_inPortTypes = new PortType[inPortTypes.length];
-        }
-        for (int i = 0; i < inPortTypes.length; i++) {
-            if (inPortTypes[i] == null) {
-                throw new NullPointerException("InPortType[" + i
-                        + "] must not be null!");
+            for (int i = 0; i < inPortTypes.length; i++) {
+                if (inPortTypes[i] == null) {
+                    throw new NullPointerException("InPortType[" + i
+                            + "] must not be null!");
+                }
+                m_inPortTypes[i] = inPortTypes[i];
             }
-            m_inPortTypes[i] = inPortTypes[i];
         }
         if (outPortTypes == null) {
             m_outPortTypes = new PortType[0];
         } else {
             m_outPortTypes = new PortType[outPortTypes.length];
-        }
-        for (int i = 0; i < outPortTypes.length; i++) {
-            if (outPortTypes[i] == null) {
-                throw new NullPointerException("OutPortType[" + i
-                        + "] must not be null!");
+            for (int i = 0; i < outPortTypes.length; i++) {
+                if (outPortTypes[i] == null) {
+                    throw new NullPointerException("OutPortType[" + i
+                            + "] must not be null!");
+                }
+                m_outPortTypes[i] = outPortTypes[i];
             }
-            m_outPortTypes[i] = outPortTypes[i];
         }
 
         m_hasContent = false;

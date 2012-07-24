@@ -51,12 +51,6 @@
 
 package org.knime.core.node.defaultnodesettings;
 
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.port.PortObjectSpec;
-import org.knime.core.node.util.DefaultStringIconOption;
-import org.knime.core.node.util.StringIconListCellRenderer;
-import org.knime.core.node.util.StringIconOption;
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.util.ArrayList;
@@ -73,6 +67,12 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.util.DefaultStringIconOption;
+import org.knime.core.node.util.StringIconListCellRenderer;
+import org.knime.core.node.util.StringIconOption;
 
 /**
  * Provide a standard component for a dialog that allows to select one or more
@@ -295,7 +295,7 @@ public final class DialogComponentStringListSelection extends DialogComponent {
                         i < size; i++) {
                         if (((StringIconOption)m_listModel.getElementAt(i)).
                                 getText().equals(val)) {
-                            selectedIndices.add(new Integer(i));
+                            selectedIndices.add(i);
                             break;
                         }
                     }
@@ -495,7 +495,7 @@ public final class DialogComponentStringListSelection extends DialogComponent {
                     i < size; i++) {
                     if (((StringIconOption)m_listModel.getElementAt(i)).
                     getText().equals(val)) {
-                        selectedIndices.add(new Integer(i));
+                        selectedIndices.add(i);
                         found = true;
                         break;
                     }

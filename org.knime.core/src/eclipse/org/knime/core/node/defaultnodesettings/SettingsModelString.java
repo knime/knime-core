@@ -77,7 +77,7 @@ implements SettingsModelFlowVariableCompatible {
      */
     public SettingsModelString(final String configName,
             final String defaultValue) {
-        if ((configName == null) || (configName == "")) {
+        if ((configName == null) || "".equals(configName)) {
             throw new IllegalArgumentException("The configName must be a "
                     + "non-empty string");
         }

@@ -1,6 +1,6 @@
-/* @(#)$RCSfile$ 
+/* @(#)$RCSfile$
  * $Revision$ $Date$ $Author$
- * 
+ *
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -69,7 +69,7 @@ import sun.misc.BASE64Encoder;
  * This class handles the encryption and decryption with the static stored key.
  * To this class one static key supplier can be registered that is invoked if no
  * key is available.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public final class KnimeEncryption {
@@ -100,7 +100,7 @@ public final class KnimeEncryption {
 
     /**
      * Enrypts password.
-     * 
+     *
      * @param password as char array
      * @return The password encrypt.
      * @throws IllegalBlockSizeException {@link IllegalBlockSizeException}
@@ -108,7 +108,7 @@ public final class KnimeEncryption {
      * @throws InvalidKeyException {@link InvalidKeyException}
      * @throws UnsupportedEncodingException {@link UnsupportedEncodingException}
      */
-    public static String encrypt(final char[] password) 
+    public static String encrypt(final char[] password)
             throws BadPaddingException, IllegalBlockSizeException,
             InvalidKeyException, UnsupportedEncodingException {
         SecretKey secretKey = null;
@@ -117,10 +117,10 @@ public final class KnimeEncryption {
         }
         return encrypt(secretKey, password);
     }
-    
+
     /**
      * Enrypts password with the given <code>SecrectKey</code>.
-     * 
+     *
      * @param secretKey <code>SecretKey</code> used to encrypt the password
      * @param password as char array
      * @return The password encrypt.
@@ -129,9 +129,9 @@ public final class KnimeEncryption {
      * @throws InvalidKeyException {@link InvalidKeyException}
      * @throws UnsupportedEncodingException {@link UnsupportedEncodingException}
      */
-    public static String encrypt(final SecretKey secretKey, 
+    public static String encrypt(final SecretKey secretKey,
             final char[] password) throws BadPaddingException,
-            IllegalBlockSizeException, InvalidKeyException, 
+            IllegalBlockSizeException, InvalidKeyException,
             UnsupportedEncodingException {
         if (secretKey == null) {
             return new String(password);
@@ -144,7 +144,7 @@ public final class KnimeEncryption {
 
     /**
      * Decrypts password.
-     * 
+     *
      * @param password The password to decrypt.
      * @return The decrypted password.
      * @throws IllegalBlockSizeException {@link IllegalBlockSizeException}
@@ -165,7 +165,7 @@ public final class KnimeEncryption {
 
     /**
      * Decrypts password with the given <code>SecrectKey</code>.
-     * 
+     *
      * @param secretKey <code>SecretKey</code> used to decrypt the password
      * @param password The password to decrypt.
      * @return The decrypted password.
@@ -175,9 +175,9 @@ public final class KnimeEncryption {
      * @throws IOException {@link IOException}
      * @throws UnsupportedEncodingException {@link UnsupportedEncodingException}
      */
-    public static String decrypt(final SecretKey secretKey, 
-            final String password) throws BadPaddingException, 
-            IllegalBlockSizeException, InvalidKeyException, IOException, 
+    public static String decrypt(final SecretKey secretKey,
+            final String password) throws BadPaddingException,
+            IllegalBlockSizeException, InvalidKeyException, IOException,
             UnsupportedEncodingException {
         if (secretKey == null) {
             return password;
@@ -188,11 +188,11 @@ public final class KnimeEncryption {
         byte[] decryptedText = cipher.doFinal(pw);
         return new String(decryptedText, "UTF-8");
     }
-    
+
     /**
      * Sets the static encryption key supplier for this global static knime
      * encryptor.
-     * 
+     *
      * @param supplier the {@link EncryptionKeySupplier} that is asked for a key
      *            if has not been set so far
      */
@@ -220,7 +220,7 @@ public final class KnimeEncryption {
                 newKey += phrase;
             } while (newKey.length() < 8);
             // trim key to multiple of 8
-            newKey = newKey.substring(0, ((int) newKey.length() / 8) * 8); 
+            newKey = newKey.substring(0, (newKey.length() / 8) * 8);
         }
         try {
             byte[] key = newKey.getBytes();

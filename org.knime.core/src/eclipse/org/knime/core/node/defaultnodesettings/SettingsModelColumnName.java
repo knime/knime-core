@@ -85,7 +85,7 @@ public class SettingsModelColumnName extends SettingsModelString {
     public SettingsModelColumnName(final String configName,
             final String defaultValue) {
         super(CFG_COLUMN_NAME, defaultValue);
-        if ((configName == null) || (configName == "")) {
+        if ((configName == null) || "".equals(configName)) {
             throw new IllegalArgumentException("The configName must be a "
                     + "non-empty string");
         }

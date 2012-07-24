@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Dec 21, 2006 (wiswedel): created
  */
@@ -64,7 +64,7 @@ import javax.swing.plaf.basic.BasicLabelUI;
 
 /**
  * Label UI that respects the linebreaks in the label to be rendered. This
- * UI does not support an icon or respects in any kind the alignment of the 
+ * UI does not support an icon or respects in any kind the alignment of the
  * label.
  * @author Bernd Wiswedel, University of Konstanz
  */
@@ -96,7 +96,7 @@ public class MultiLineBasicLabelUI extends BasicLabelUI {
     private Rectangle m_paintViewR = new Rectangle();
     private String m_string;
     private String[] m_splittedStrings;
-    
+
     /**
      * {@inheritDoc}
      */
@@ -110,8 +110,8 @@ public class MultiLineBasicLabelUI extends BasicLabelUI {
         int dx = insets.left + insets.right;
         int dy = insets.top + insets.bottom;
 
-        if ((text == null) || ((text != null) && (font == null))) {
-                return new Dimension(dx, dy);
+        if ((text == null) || (font == null)) {
+            return new Dimension(dx, dy);
         } else {
             FontMetrics fm = label.getFontMetrics(font);
             String[] splittedString = splitStrings(text);
@@ -138,7 +138,7 @@ public class MultiLineBasicLabelUI extends BasicLabelUI {
             return;
         }
 
-        FontMetrics fm = label.getFontMetrics(label.getFont()); 
+        FontMetrics fm = label.getFontMetrics(label.getFont());
         Insets insets = c.getInsets(m_viewInsets);
 
         m_paintViewR.x = insets.left;
@@ -154,7 +154,7 @@ public class MultiLineBasicLabelUI extends BasicLabelUI {
         m_paintTextR.y = 0;
         m_paintTextR.width = 0;
         m_paintTextR.height = 0;
-        
+
         String[] splits = splitStrings(text);
         for (int i = 0; i < splits.length; i++) {
             String s = splits[i];
@@ -170,7 +170,7 @@ public class MultiLineBasicLabelUI extends BasicLabelUI {
             }
         }
     }
-    
+
     private String[] splitStrings(final String s) {
         if (s == null) {
             return new String[]{};

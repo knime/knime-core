@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   13.09.2006 (Fabian Dill): created
  */
@@ -60,18 +60,18 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
-public class ShapeSelectionListRenderer extends DefaultListCellRenderer { 
-    
+public class ShapeSelectionListRenderer extends DefaultListCellRenderer {
+
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Component getListCellRendererComponent(final JList list, 
-            final Object value, final int index, final boolean isSelected, 
+    public Component getListCellRendererComponent(final JList list,
+            final Object value, final int index, final boolean isSelected,
             final boolean cellHasFocus) {
         Component c = super.getListCellRendererComponent(
                 list, value, index, isSelected, cellHasFocus);
@@ -82,27 +82,27 @@ public class ShapeSelectionListRenderer extends DefaultListCellRenderer {
         cell.setForeground(c.getForeground());
         return cell;
     }
-    
-    
+
+
     /**
      * Draws the passed shape.
-     * 
+     *
      * @author Fabian Dill, University of Konstanz
      */
-    private class ShapeListCellComponent extends JPanel {
-        
+    private static class ShapeListCellComponent extends JPanel {
+
         private ShapeFactory.Shape m_shape;
-        
+
         private static final int BORDER = 5;
-        
+
         /**
-         * 
+         *
          * @param s the shape to be drawn.
          */
         public ShapeListCellComponent(final ShapeFactory.Shape s) {
             m_shape = s;
         }
-        
+
         /**
          * {@inheritDoc}
          */
@@ -112,11 +112,11 @@ public class ShapeSelectionListRenderer extends DefaultListCellRenderer {
             Graphics2D g2 = (Graphics2D)g;
             g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
                     RenderingHints.VALUE_ANTIALIAS_ON);
-            int x = getPreferredSize().height / 2; 
+            int x = getPreferredSize().height / 2;
             int y = getPreferredSize().height / 2;
             int size = getPreferredSize().height - BORDER;
             m_shape.paintShape(g, x, y, size, false, false);
-            g.drawString(m_shape.toString(), getPreferredSize().height + 2, 
+            g.drawString(m_shape.toString(), getPreferredSize().height + 2,
                     (getPreferredSize().height / 2) + BORDER);
         }
     }

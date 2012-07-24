@@ -57,8 +57,8 @@ import javax.swing.JComponent;
 import javax.swing.JFormattedTextField;
 import javax.swing.JLabel;
 import javax.swing.JSpinner;
-import javax.swing.SpinnerNumberModel;
 import javax.swing.JSpinner.DefaultEditor;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -109,7 +109,7 @@ public class DialogComponentNumber extends DialogComponent {
      *            or int)
      * @param label label for dialog in front of the spinner
      * @param stepSize step size for the spinner
-     * @param fvm The variable model (for displaying a little icon next to the 
+     * @param fvm The variable model (for displaying a little icon next to the
      * component to overwrite the settings with variables). Can be null.
      */
     public DialogComponentNumber(final SettingsModelNumber numberModel,
@@ -136,13 +136,13 @@ public class DialogComponentNumber extends DialogComponent {
     /**
      * Constructor puts label and spinner into panel and allows to specify
      * width (in #characters) of component.
-     * 
+     *
      * @param numberModel the SettingsModel determining the number type (double
      *            or int)
      * @param label label for dialog in front of the spinner
      * @param stepSize step size for the spinner
      * @param compWidth the width (number of columns/characters) of the spinner
-     * @param fvm The variable model (for displaying a little icon next to the 
+     * @param fvm The variable model (for displaying a little icon next to the
      * component to overwrite the settings with variables). Can be null.
      */
     public DialogComponentNumber(final SettingsModelNumber numberModel,
@@ -217,7 +217,7 @@ public class DialogComponentNumber extends DialogComponent {
         });
 
         getComponentPanel().add(m_spinner);
-        
+
         // add variable editor button if so desired
         if (fvm != null) {
             fvm.addChangeListener(new ChangeListener() {
@@ -299,7 +299,7 @@ public class DialogComponentNumber extends DialogComponent {
                     (SettingsModelInteger)getModel();
                 final int val = ((Integer)m_spinner.getValue()).intValue();
                 if (val != model.getIntValue()) {
-                    m_spinner.setValue(new Integer(model.getIntValue()));
+                    m_spinner.setValue(Integer.valueOf(model.getIntValue()));
                 }
             }
         } catch (final ParseException e) {
@@ -311,7 +311,7 @@ public class DialogComponentNumber extends DialogComponent {
             } else {
                 final SettingsModelInteger model =
                     (SettingsModelInteger)getModel();
-                m_spinner.setValue(new Integer(model.getIntValue()));
+                m_spinner.setValue(Integer.valueOf(model.getIntValue()));
             }
         }
 

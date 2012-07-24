@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.core.data.util;
 
@@ -60,17 +60,17 @@ import javax.swing.ListModel;
 import org.knime.core.data.DataColumnSpec;
 
 /**
- * Utility class providing filter methods on <code>JList</code> and 
+ * Utility class providing filter methods on <code>JList</code> and
  * <code>ListModel</code>.
- * 
+ *
  * @author Thomas Gabriel, KNIME.com AG, Zurich, Switzerland
  */
 public final class ListModelFilterUtils {
-    
+
     private ListModelFilterUtils() {
         // no op
     }
-    
+
     /**
      * This method is called when the user wants to search the given
      * {@link JList} for the text of the given {@link JTextField}.
@@ -184,7 +184,7 @@ public final class ListModelFilterUtils {
                 break;
             }
             index = tempIndex;
-            hits.add(new Integer(index));
+            hits.add(index);
             // increase the index to start the search from the next position
             // after the current hit
             index++;
@@ -199,7 +199,7 @@ public final class ListModelFilterUtils {
         }
         return new int[0];
     }
-    
+
     /**
      * Returns a set of columns as String.
      * @param model The list from which to retrieve the elements

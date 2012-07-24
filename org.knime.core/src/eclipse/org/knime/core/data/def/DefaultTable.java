@@ -596,7 +596,7 @@ public class DefaultTable implements DataTable {
         public Object getObject(final int row, final int column) {
             if (m_rows instanceof int[][]) {
                 int[] allInts = (int[])m_rows[row];
-                return new Integer(allInts[column]);
+                return Integer.valueOf(allInts[column]);
             }
             if (m_rows instanceof double[][]) {
                 double[] allDoubles = (double[])m_rows[row];

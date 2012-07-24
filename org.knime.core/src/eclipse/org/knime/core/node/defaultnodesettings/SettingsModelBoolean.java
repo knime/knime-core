@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   22.09.2006 (ohl): created
  */
@@ -58,7 +58,7 @@ import org.knime.core.node.port.PortObjectSpec;
 
 /**
  * A settingsmodel for boolean default components.
- * 
+ *
  * @author ohl, University of Konstanz
  */
 public class SettingsModelBoolean extends SettingsModel {
@@ -69,14 +69,14 @@ public class SettingsModelBoolean extends SettingsModel {
 
     /**
      * Creates a new object holding a boolean value.
-     * 
+     *
      * @param configName the identifier the value is stored with in the
      *            {@link org.knime.core.node.NodeSettings} object
      * @param defaultValue the initial value
      */
     public SettingsModelBoolean(final String configName,
             final boolean defaultValue) {
-        if ((configName == null) || (configName == "")) {
+        if ((configName == null) || "".equals(configName)) {
             throw new IllegalArgumentException("The configName must be a "
                     + "non-empty string");
         }
@@ -112,14 +112,14 @@ public class SettingsModelBoolean extends SettingsModel {
     /**
      * set the value stored to the new value. Notifies all registered listeners
      * if the new value is different from the old value.
-     * 
+     *
      * @param newValue the new value to store.
      */
     public void setBooleanValue(final boolean newValue) {
         boolean changed = (newValue != m_value);
-        
+
         m_value = newValue;
-        
+
         if (changed) {
             notifyChangeListeners();
         }

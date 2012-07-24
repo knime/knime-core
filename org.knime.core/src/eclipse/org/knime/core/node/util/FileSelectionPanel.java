@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   12.12.2006 (thiel): created
  */
@@ -74,17 +74,17 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.util.SimpleFileFilter;
 
 /**
- * 
+ *
  * @author Kilian Thiel, University of Konstanz
  */
 public class FileSelectionPanel extends JPanel {
-    
+
     /** default foreground color for editable components. */
     protected static final Color DEFAULT_FG = new JTextField().getForeground();
 
     /** default background color for editable components. */
     protected static final Color DEFAULT_BG = new JTextField().getBackground();
-    
+
     private final JComboBox m_fileComboBox;
 
     private StringHistory m_fileHistory;
@@ -92,21 +92,21 @@ public class FileSelectionPanel extends JPanel {
     private final JButton m_browseButton;
 
     private final TitledBorder m_border;
-    
+
     private String m_configKey;
-    
+
     private String m_filename;
 
     /**
      * Constructor that creates a file chooser with an
      * {@link JFileChooser#OPEN_DIALOG} that filters files according to the
      * given extensions. Also non-existing paths are accepted.
-     * 
+     *
      * @param configKey the model holding the value
      * @param historyID to identify the file history
      * @param validExtensions only show files with those extensions
      */
-    public FileSelectionPanel(final String configKey, final String historyID, 
+    public FileSelectionPanel(final String configKey, final String historyID,
             final String... validExtensions) {
         this(configKey, historyID, JFileChooser.OPEN_DIALOG, validExtensions);
     }
@@ -114,7 +114,7 @@ public class FileSelectionPanel extends JPanel {
     /**
      * Constructor that creates a file/directory chooser of the given type
      * without a file filter. Also non-existing paths are accepted.
-     * 
+     *
      * @param configKey the model holding the value
      * @param dialogType {@link JFileChooser#OPEN_DIALOG},
      *            {@link JFileChooser#SAVE_DIALOG} or
@@ -123,7 +123,7 @@ public class FileSelectionPanel extends JPanel {
      * @param directoryOnly <code>true</code> if only directories should be
      *            selectable, otherwise only files can be selected
      */
-    public FileSelectionPanel(final String configKey, final String historyID, 
+    public FileSelectionPanel(final String configKey, final String historyID,
             final int dialogType, final boolean directoryOnly) {
         this(configKey, historyID, dialogType, directoryOnly, new String[0]);
     }
@@ -132,7 +132,7 @@ public class FileSelectionPanel extends JPanel {
      * Constructor that creates a file chooser of the given type that filters
      * the files according to the given extensions. Also non-existing paths are
      * accepted.
-     * 
+     *
      * @param configKey the config key
      * @param dialogType {@link JFileChooser#OPEN_DIALOG},
      *            {@link JFileChooser#SAVE_DIALOG} or
@@ -140,7 +140,7 @@ public class FileSelectionPanel extends JPanel {
      * @param validExtensions only show files with those extensions
      * @param historyID id for the file history
      */
-    public FileSelectionPanel(final String configKey, final String historyID, 
+    public FileSelectionPanel(final String configKey, final String historyID,
             final int dialogType, final String... validExtensions) {
         this(configKey, historyID, dialogType, false, validExtensions);
     }
@@ -149,7 +149,7 @@ public class FileSelectionPanel extends JPanel {
      * Constructor that creates a file or directory chooser of the given type
      * that filters the files according to the given extensions. Also
      * non-existing paths are accepted.
-     * 
+     *
      * @param configKey the config key.
      * @param dialogType {@link JFileChooser#OPEN_DIALOG},
      *            {@link JFileChooser#SAVE_DIALOG} or
@@ -159,8 +159,8 @@ public class FileSelectionPanel extends JPanel {
      * @param validExtensions only show files with those extensions
      * @param historyID to identify the file histroy
      */
-    public FileSelectionPanel(final String configKey, final String historyID, 
-            final int dialogType, final boolean directoryOnly, 
+    public FileSelectionPanel(final String configKey, final String historyID,
+            final int dialogType, final boolean directoryOnly,
             final String... validExtensions) {
         setLayout(new FlowLayout());
         m_configKey = configKey;
@@ -202,10 +202,10 @@ public class FileSelectionPanel extends JPanel {
                     if (validExtensions != null && validExtensions.length > 0) {
                         // disable "All Files" selection
                         chooser.setAcceptAllFileFilterUsed(false);
-                    }
-                    // set file filter for given extensions
-                    for (String extension : validExtensions) {
-                        chooser.setFileFilter(new SimpleFileFilter(extension));
+                        // set file filter for given extensions
+                        for (String extension : validExtensions) {
+                            chooser.setFileFilter(new SimpleFileFilter(extension));
+                        }
                     }
                 }
                 int returnVal = chooser.showDialog(getParent(), null);
@@ -249,7 +249,7 @@ public class FileSelectionPanel extends JPanel {
 
     /**
      * Transfers the value from the component into the settings model.
-     * 
+     *
      * @param noColoring if set true, the component will not be marked red, even
      *            if the entered value was erroneous.
      * @throws InvalidSettingsException if the entered filename is null or
@@ -272,7 +272,7 @@ public class FileSelectionPanel extends JPanel {
     /**
      * Seems the super.showError doesn't work with comboboxes. This is to
      * replace it with a working version.
-     * 
+     *
      * @param box the box to color red.
      */
     private void showError(final JComboBox box) {
@@ -336,9 +336,9 @@ public class FileSelectionPanel extends JPanel {
      * Replaces the title displayed in the border that surrounds the editfield
      * and browse button with the specified new title. The default title of the
      * component is "Selected File:" or "Selected Directory:".
-     * 
+     *
      * @param newTitle the new title to display in the border.
-     * 
+     *
      * @throws NullPointerException if the new title is null.
      */
     public void setBorderTitle(final String newTitle) {
@@ -347,22 +347,22 @@ public class FileSelectionPanel extends JPanel {
                     + " be null.");
         }
         m_border.setTitle(newTitle);
-    }   
-    
-    
+    }
+
+
     /**
      * Saves all settings to settings object.
-     * 
+     *
      * @param settings Object to store settings in.
      */
     public void saveSettingsTo(final NodeSettingsWO settings) {
         assert (settings != null);
         settings.addString(m_configKey, m_filename);
     }
-    
+
     /**
      * Method loadSettingsFrom.
-     * 
+     *
      * @param settings The NodeSettings object of the containing NodeDialogPane.
      * @param specs The DataTableSpec[] of the containing NodeDialogPane.
      * @throws InvalidSettingsException If settings could not be loaded.

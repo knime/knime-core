@@ -1000,9 +1000,6 @@ public abstract class Config extends ConfigBase
             ois = new GlobalObjectInputStream(bais);
         } else {
             final Class<?> cl = Class.forName(className);
-            if (cl == null) {
-                throw new ClassNotFoundException("Could not find class: " + cl);
-            }
             ois = new GlobalObjectInputStream(bais) {
                 @Override
                 protected Class<?> resolveClass(final ObjectStreamClass desc)

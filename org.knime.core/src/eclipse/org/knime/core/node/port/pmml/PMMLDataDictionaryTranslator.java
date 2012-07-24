@@ -135,7 +135,7 @@ public class PMMLDataDictionaryTranslator implements PMMLTranslator {
                                    "Intervals cannot be defined for Strings.");
                        }
                        cells = new StringCell[valueArray.length];
-                       if (valueArray != null && valueArray.length > 0) {
+                       if (valueArray.length > 0) {
                            for (int j = 0; j < cells.length; j++) {
                                cells[j] = new StringCell(
                                        valueArray[j].getValue());
