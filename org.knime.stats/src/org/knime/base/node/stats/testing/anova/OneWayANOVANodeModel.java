@@ -95,19 +95,32 @@ public class OneWayANOVANodeModel extends NodeModel
 
         DataTableSpec spec = inData[0].getSpec();
         FilterResult filter = m_settings.getTestColumns().applyTo(spec);
-        List<String> groups = getGroups(inData[0], exec);
+        ExecutionMonitor groupExec = exec.createSubProgress(0.3);
+        ExecutionMonitor oneWayAnovaExec = exec.createSubProgress(0.3);
+        ExecutionMonitor leveneExec = exec.createSubProgress(0.4); // runs twice, maybe
+        exec.setMessage("Determining groups");
+        List<String> groups = getGroups(inData[0], groupExec);
+        groupExec.setProgress(1.0);
+
+        exec.setMessage("Computing ANOVA");
         OneWayANOVA test = new OneWayANOVA(filter.getIncludes(),
                 m_settings.getGroupingColumn(),
                 groups, m_settings.getConfidenceIntervalProb());
-        OneWayANOVAStatistics[] result = test.execute(inData[0], exec);
+        OneWayANOVAStatistics[] result = test.execute(inData[0], oneWayAnovaExec);
+        oneWayAnovaExec.setProgress(1.0);
+
+
+        exec.setMessage("Computing Levene");
         LeveneTest leveneTest = new LeveneTest(filter.getIncludes(),
                 m_settings.getGroupingColumn(),
                 groups,
                 getGroupSummaryStats(result));
         LeveneTestStatistics[] leveneResult = leveneTest.execute(
-                inData[0], exec);
+                inData[0], leveneExec);
         leveneResult[0].getTTestCells();
+        leveneExec.setProgress(1.0);
 
+        exec.setMessage("Assembling output");
         m_descStats = getDescriptiveStatisticsTable(result, exec);
         m_leveneStats = getLeveneStatistices(leveneResult, exec);
         m_stats = getTestStatisticsTable(result, exec);
@@ -116,14 +129,19 @@ public class OneWayANOVANodeModel extends NodeModel
     }
 
     private List<String> getGroups(final BufferedDataTable inData,
-            final ExecutionContext exec) throws InvalidSettingsException {
+            final ExecutionMonitor exec) throws InvalidSettingsException, CanceledExecutionException {
         DataTableSpec spec = inData.getSpec();
         int gIndex = spec.findColumnIndex(m_settings.getGroupingColumn());
         LinkedHashSet<String> groups = new LinkedHashSet<String>();
         if (gIndex < 0) {
             throw new InvalidSettingsException("Grouping column not found.");
         }
+        final int rowCount = inData.getRowCount();
+        int rowIndex = 0;
         for (DataRow row : inData) {
+            exec.checkCanceled();
+            exec.setProgress(rowIndex++ / (double)rowCount,
+                    rowIndex + "/" + rowCount + " (\"" + row.getKey() + "\")");
             DataCell group = row.getCell(gIndex);
             if (!group.isMissing()) {
                 groups.add(group.toString());

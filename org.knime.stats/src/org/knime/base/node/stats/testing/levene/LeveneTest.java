@@ -55,10 +55,11 @@ import java.util.List;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 
 /**
@@ -93,8 +94,9 @@ public class LeveneTest {
 
 
 
-    public LeveneTestStatistics[] execute(final DataTable table,
-            final ExecutionContext exec) throws InvalidSettingsException {
+    public LeveneTestStatistics[] execute(final BufferedDataTable table,
+            final ExecutionMonitor exec)
+        throws InvalidSettingsException, CanceledExecutionException {
 
         DataTableSpec spec = table.getDataTableSpec();
         int groupingIndex = spec.findColumnIndex(m_groupingColumn);
@@ -113,10 +115,20 @@ public class LeveneTest {
         for (int i = 0; i < testColumnCount; i++) {
             levenePre[i] = new LeveneTestPreProcessing(m_gstats.get(i));
         }
+        final int rowCount = table.getRowCount();
+        ExecutionMonitor secondPassExec = exec;
         if (m_groups.size() > 2) {
             // we can skip the pre-processing for a groups size of two.
+            ExecutionMonitor firstPassExec = exec.createSubProgress(0.5);
+            secondPassExec = exec.createSubProgress(0.5);
+            exec.setMessage("1st pass");
+            int rowIndex = 0;
             for (DataRow row : table) {
-                String group = row.getCell(groupingIndex).toString();
+                firstPassExec.checkCanceled();
+                firstPassExec.setProgress(rowIndex++ / (double)rowCount,
+                        rowIndex + "/" + rowCount + " (\"" + row.getKey() + "\")");
+                final DataCell groupCell = row.getCell(groupingIndex);
+                String group = groupCell.isMissing() ? null : groupCell.toString();
                 for (int i = 0; i < testColumnCount; i++) {
                     if (group == null) {
                         continue;
@@ -129,6 +141,8 @@ public class LeveneTest {
                     }
                 }
             }
+            firstPassExec.setProgress(1.0);
+            exec.setMessage("2nd pass");
         }
 
         LeveneTestStatistics[] result =
@@ -137,8 +151,12 @@ public class LeveneTest {
             result[i] = new LeveneTestStatistics(m_testColumns[i],
                     m_groups, levenePre[i]);
         }
+        int rowIndex = 0;
         // a second run over the data for a group size greater than two
         for (DataRow row : table) {
+            secondPassExec.checkCanceled();
+            secondPassExec.setProgress(rowIndex++ / (double)rowCount,
+                    rowIndex + "/" + rowCount + " (\"" + row.getKey() + "\")");
             DataCell groupCell = row.getCell(groupingIndex);
             String group = groupCell.toString();
             for (int i = 0; i < testColumnCount; i++) {

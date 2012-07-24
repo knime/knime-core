@@ -54,10 +54,11 @@ import java.util.List;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 
 /**
@@ -92,8 +93,8 @@ public class OneWayANOVA {
 
 
 
-    public OneWayANOVAStatistics[] execute(final DataTable table,
-            final ExecutionContext exec) throws InvalidSettingsException {
+    public OneWayANOVAStatistics[] execute(final BufferedDataTable table,
+            final ExecutionMonitor exec) throws InvalidSettingsException, CanceledExecutionException {
 
         DataTableSpec spec = table.getDataTableSpec();
         int groupingIndex = spec.findColumnIndex(m_groupingColumn);
@@ -113,8 +114,14 @@ public class OneWayANOVA {
                     m_groups, m_confidenceIntervalProb);
         }
 
+        int rowIndex = 0;
+        final int rowCount = table.getRowCount();
         for (DataRow row : table) {
-            String group = row.getCell(groupingIndex).toString();
+            exec.checkCanceled();
+            exec.setProgress(rowIndex++ / (double)rowCount,
+                    rowIndex + "/" + rowCount + " (\"" + row.getKey() + "\")");
+            final DataCell groupCell = row.getCell(groupingIndex);
+            String group = groupCell.isMissing() ? null : groupCell.toString();
             for (int i = 0; i < testColumnCount; i++) {
                 if (group == null) {
                     result[i].addMissingGroup();
