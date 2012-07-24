@@ -2728,10 +2728,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             WorkflowManager subwfm = createAndAddSubWorkflow(
                     exposedInportTypes, new PortType[0], "Parallel Chunks");
-            UIInformation startUIPlain = getNodeContainer(startID).getUIInformation();
-            if (startUIPlain instanceof NodeUIInformation) {
-                NodeUIInformation startUI = ((NodeUIInformation)startUIPlain).
-                createNewWithOffsetPosition(new int[]{60, -60, 0, 0});
+            NodeUIInformation startUIPlain = getNodeContainer(startID).getUIInformation();
+            if (startUIPlain != null) {
+                NodeUIInformation startUI = startUIPlain.
+                    createNewWithOffsetPosition(new int[]{60, -60, 0, 0});
                 subwfm.setUIInformation(startUI);
             }
             // connect outside(!) nodes to new sub metanote
@@ -2830,10 +2830,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         NodeID virtualStartID = subWFM.createAndAddNode(
                 new VirtualPortObjectInNodeFactory(outTypes));
-        UIInformation startUIPlain = startNode.getUIInformation();
-        if (startUIPlain instanceof NodeUIInformation) {
-            NodeUIInformation startUI = ((NodeUIInformation)startUIPlain).
-            createNewWithOffsetPosition(moveUIDist);
+        NodeUIInformation startUIPlain = startNode.getUIInformation();
+        if (startUIPlain != null) {
+            NodeUIInformation startUI = startUIPlain.
+                createNewWithOffsetPosition(moveUIDist);
             subWFM.getNodeContainer(virtualStartID).setUIInformation(startUI);
         }
         // create virtual end node
@@ -2846,10 +2846,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         NodeID virtualEndID = subWFM.createAndAddNode(
                 new VirtualPortObjectOutNodeFactory(realInTypes));
-        UIInformation endUIPlain = endNode.getUIInformation();
-        if (endUIPlain instanceof NodeUIInformation) {
-            NodeUIInformation endUI = ((NodeUIInformation)endUIPlain).
-            createNewWithOffsetPosition(moveUIDist);
+        NodeUIInformation endUIPlain = endNode.getUIInformation();
+        if (endUIPlain != null) {
+            NodeUIInformation endUI = endUIPlain.
+                createNewWithOffsetPosition(moveUIDist);
             subWFM.getNodeContainer(virtualEndID).setUIInformation(endUI);
         }
         // copy nodes in loop body
@@ -2862,10 +2862,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         for (int i = 0; i < oldIDs.length; i++) {
             oldIDsHash.put(oldIDs[i], newIDs[i]);
             NodeContainer nc = subWFM.getNodeContainer(newIDs[i]);
-            UIInformation uiInfo = nc.getUIInformation();
-            if (uiInfo instanceof NodeUIInformation) {
-                NodeUIInformation ui = (NodeUIInformation) uiInfo;
-                nc.setUIInformation(ui.createNewWithOffsetPosition(moveUIDist));
+            NodeUIInformation uiInfo = nc.getUIInformation();
+            if (uiInfo != null) {
+                nc.setUIInformation(uiInfo.createNewWithOffsetPosition(moveUIDist));
             }
         }
         // restore connections to nodes outside the loop body (only incoming)
@@ -3075,9 +3074,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             int ymax = Integer.MIN_VALUE;
             for (i = 0; i < newIDs.length; i++) {
                 NodeContainer nc = getNodeContainer(newIDs[i]);
-                UIInformation uii = nc.getUIInformation();
-                if (uii instanceof NodeUIInformation) {
-                    int[] bounds = ((NodeUIInformation)uii).getBounds();
+                NodeUIInformation uii = nc.getUIInformation();
+                if (uii != null) {
+                    int[] bounds = uii.getBounds();
                     if (bounds.length >= 2) {
                         xmin = Math.min(bounds[0], xmin);
                         ymin = Math.min(bounds[1], ymin);
@@ -3086,17 +3085,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     }
                 }
             }
-            UIInformation uii = subWFM.getUIInformation();
-            if (uii instanceof NodeUIInformation) {
-                int[] metaBounds = ((NodeUIInformation)uii).getBounds();
+            NodeUIInformation uii = subWFM.getUIInformation();
+            if (uii != null) {
+                int[] metaBounds = uii.getBounds();
                 int xShift = metaBounds[0] - (xmin + xmax) / 2;
                 int yShift = metaBounds[1] - (ymin + ymax) / 2;
                 for (i = 0; i < newIDs.length; i++) {
                     NodeContainer nc = getNodeContainer(newIDs[i]);
                     uii = nc.getUIInformation();
-                    if (uii instanceof NodeUIInformation) {
+                    if (uii != null) {
                         NodeUIInformation newUii
-                           = ((NodeUIInformation)uii).createNewWithOffsetPosition(
+                           = uii.createNewWithOffsetPosition(
                                    new int[]{xShift, yShift});
                         nc.setUIInformation(newUii);
                     }
@@ -3366,9 +3365,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             if (orgIDs.length >= 1) {
                 for (int i = 0; i < orgIDs.length; i++) {
                     NodeContainer nc = getNodeContainer(orgIDs[i]);
-                    UIInformation uii = nc.getUIInformation();
-                    if (uii instanceof NodeUIInformation) {
-                        int[] bounds = ((NodeUIInformation)uii).getBounds();
+                    NodeUIInformation uii = nc.getUIInformation();
+                    if (uii != null) {
+                        int[] bounds = uii.getBounds();
                         if (bounds.length >= 2) {
                             x += bounds[0];
                             y += bounds[1];
@@ -3403,9 +3402,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 // calculate shift
                 for (int i = 0; i < newIDs.length; i++) {
                     NodeContainer nc = newWFM.getNodeContainer(newIDs[i]);
-                    UIInformation uii = nc.getUIInformation();
-                    if (uii instanceof NodeUIInformation) {
-                        int[] bounds = ((NodeUIInformation)uii).getBounds();
+                    NodeUIInformation uii = nc.getUIInformation();
+                    if (uii != null) {
+                        int[] bounds = uii.getBounds();
                         if (bounds.length >= 2) {
                             xmin = Math.min(bounds[0], xmin);
                             ymin = Math.min(bounds[1], ymin);
@@ -3417,10 +3416,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 // move new nodes
                 for (int i = 0; i < newIDs.length; i++) {
                     NodeContainer nc = newWFM.getNodeContainer(newIDs[i]);
-                    UIInformation uii = nc.getUIInformation();
-                    if (uii instanceof NodeUIInformation) {
+                    NodeUIInformation uii = nc.getUIInformation();
+                    if (uii != null) {
                         NodeUIInformation newUii =
-                            ((NodeUIInformation)uii).createNewWithOffsetPosition(
+                            uii.createNewWithOffsetPosition(
                                    new int[]{xshift, yshift});
                         nc.setUIInformation(newUii);
                     }
