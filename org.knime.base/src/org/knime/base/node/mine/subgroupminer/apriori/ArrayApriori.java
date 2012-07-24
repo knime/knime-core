@@ -473,10 +473,9 @@ public class ArrayApriori implements AprioriAlgorithm {
             public int compare(final FrequentItemSet s1,
                     final FrequentItemSet s2) {
                 if (s1.getSupport() == s2.getSupport()) {
-                    return (new Integer(s1.getItems().size()).compareTo(s2
-                            .getItems().size()));
+                    return s1.getItems().size() - s2.getItems().size();
                 }
-                return (new Double(s1.getSupport()).compareTo(s2.getSupport()));
+                return Double.compare(s1.getSupport(), s2.getSupport());
             }
         });
         FrequentItemSet[] array = new FrequentItemSet[completeList.size()];

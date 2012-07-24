@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   21.09.2006 (Fabian Dill): created
  */
@@ -98,7 +98,7 @@ import org.knime.core.node.util.ColumnFilterPanel;
  * {@link org.knime.base.node.viz.plotter.line.LinePlotterDrawingPane} connects
  * the points by lines. Due to performance issues it initially plots the first
  * five numeric columns.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class LinePlotter extends ScatterPlotter {
@@ -121,7 +121,7 @@ public class LinePlotter extends ScatterPlotter {
 
     /**
      * The construction kit constructor. Registers all necessary listeners.
-     * 
+     *
      * @param panel
      *            the drawing panel
      * @param properties
@@ -133,7 +133,7 @@ public class LinePlotter extends ScatterPlotter {
         setDotSize(SIZE);
         m_columns2Draw = new ArrayList<Integer>();
         if (getProperties() instanceof LinePlotterProperties) {
-            final ColumnFilterPanel columnFilter 
+            final ColumnFilterPanel columnFilter
                 = ((LinePlotterProperties) getProperties()).getColumnFilter();
             columnFilter.addChangeListener(new ChangeListener() {
                 /**
@@ -154,7 +154,7 @@ public class LinePlotter extends ScatterPlotter {
                     }
                 }
             });
-            final ColorLegendTab legend 
+            final ColorLegendTab legend
                 = ((LinePlotterProperties) getProperties()).getColorLegend();
             legend.addChangeListener(new ChangeListener() {
                 /**
@@ -182,7 +182,7 @@ public class LinePlotter extends ScatterPlotter {
                     updatePaintModel();
                 }
             });
-            final JCheckBox showDotsBox 
+            final JCheckBox showDotsBox
                 = ((LinePlotterProperties) getProperties()).getShowDotsBox();
             showDotsBox.addItemListener(new ItemListener() {
                 /**
@@ -224,7 +224,7 @@ public class LinePlotter extends ScatterPlotter {
 
     /**
      * Default constructor.
-     * 
+     *
      */
     public LinePlotter() {
         this(new LinePlotterDrawingPane(), new LinePlotterProperties());
@@ -232,7 +232,7 @@ public class LinePlotter extends ScatterPlotter {
 
     /**
      * Sets color mapping and column selection to <code>null</code>.
-     * 
+     *
      * @see org.knime.base.node.viz.plotter.AbstractPlotter#reset()
      */
     @Override
@@ -246,7 +246,7 @@ public class LinePlotter extends ScatterPlotter {
      * Missing values may be linearly interpolated, if true they will be
      * interpolated, if false missing values will be left out and the line will
      * be interrupted.
-     * 
+     *
      * @param enable
      *            true if missing values should be interpolated(linear), false
      *            otherwise
@@ -260,7 +260,7 @@ public class LinePlotter extends ScatterPlotter {
      * model by the number of selected columns, calculates the coordinates by
      * determining the overall minimum and maximum values of the selected
      * columns and maps the data points to the resulting screen coordinates.
-     * 
+     *
      * @see org.knime.base.node.viz.plotter.AbstractPlotter#updatePaintModel()
      */
     @Override
@@ -276,7 +276,7 @@ public class LinePlotter extends ScatterPlotter {
             }
             // set only displayed columns for the color mapping in the
             // color legend and drawing pane....
-            Map<String, Color> displayedColors 
+            Map<String, Color> displayedColors
                 = new LinkedHashMap<String, Color>();
             // color mapping is initially defined for all columns
             for (String colName : m_columnNames) {
@@ -301,7 +301,7 @@ public class LinePlotter extends ScatterPlotter {
     /**
      * Selects the first five numeric columns. If there are some columns left,
      * the column filter tab is set to be on top.
-     * 
+     *
      * @param array
      *            the data to visualize
      */
@@ -324,7 +324,7 @@ public class LinePlotter extends ScatterPlotter {
     private void initializeColors(final DataTableSpec spec) {
         m_colorMapping = new LinkedHashMap<String, Color>();
         int nrOfCols = spec.getNumColumns();
-        float segment = 360f / (float) (nrOfCols);
+        float segment = 360f / (nrOfCols);
         int colNr = 0;
         for (DataColumnSpec colSpec : spec) {
             // if new columns are added...
@@ -341,7 +341,7 @@ public class LinePlotter extends ScatterPlotter {
      * large {@link org.knime.base.node.viz.plotter.scatter.DotInfoArray}, which
      * is passed to the
      * {@link org.knime.base.node.viz.plotter.line.LinePlotterDrawingPane}.
-     * 
+     *
      */
     protected void calculateDots() {
         if (!(getDrawingPane() instanceof ScatterPlotterDrawingPane)) {
@@ -429,7 +429,6 @@ public class LinePlotter extends ScatterPlotter {
                     // and clear the list again
                     missingValues.clear();
                 }
-                p1 = new Point(-1, -1);
             }
             DotInfo[] dots = new DotInfo[dotList.size()];
             dotList.toArray(dots);
@@ -442,7 +441,7 @@ public class LinePlotter extends ScatterPlotter {
 
     /**
      * Determines the overall minimum and maximum value of all selected columns.
-     * 
+     *
      * @param array
      *            the data to visualize
      */
@@ -485,7 +484,7 @@ public class LinePlotter extends ScatterPlotter {
     /**
      * The nr of intermediate points and the last row index is used to determine
      * the x value (only the y value is interpolated).
-     * 
+     *
      * @param p1
      *            the domain value 1
      * @param p2

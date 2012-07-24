@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------
- * 
+ *
  * History
  *   15.06.2007 (cebron): created
  */
@@ -73,12 +73,12 @@ import org.knime.core.node.util.ColumnFilterPanel;
 /**
  * Dialog for the {@link ColConvertNodeModel}.
  * Lets the user choose the columns to use and the convert mode.
- * 
+ *
  * @author cebron, University of Konstanz
  */
 public class ColConvertNodeDialog extends NodeDialogPane {
-    
-    
+
+
     private JRadioButton m_stringToNumber;
 
     private JRadioButton m_numberToString;
@@ -97,11 +97,11 @@ public class ColConvertNodeDialog extends NodeDialogPane {
         ButtonGroup buttongroup = new ButtonGroup();
         m_numberToString = new JRadioButton("Number -> String", true);
         m_numberToString
-                .setToolTipText("Convert selected columns from " 
+                .setToolTipText("Convert selected columns from "
                        + "DoubleValue to StringValue");
         m_stringToNumber = new JRadioButton("String -> Number", false);
         m_stringToNumber
-                .setToolTipText("Convert selected columns from" 
+                .setToolTipText("Convert selected columns from"
                        + " StringValue to DoubleValue");
         buttongroup.add(m_stringToNumber);
         buttongroup.add(m_numberToString);
@@ -112,12 +112,13 @@ public class ColConvertNodeDialog extends NodeDialogPane {
         radiopanel.setLayout(blayout);
         radiopanel.add(m_stringToNumber);
         radiopanel.add(m_numberToString);
-        
+
         JPanel radiocontent = new JPanel();
         blayout = new BoxLayout(radiocontent, BoxLayout.X_AXIS);
         radiocontent.add(radiopanel);
         radiocontent.add(Box.createHorizontalGlue());
-        
+        radiocontent.setLayout(blayout);
+
         contentpanel.add(radiocontent);
         contentpanel.add(Box.createVerticalStrut(20));
         m_filterpanel =
@@ -126,7 +127,7 @@ public class ColConvertNodeDialog extends NodeDialogPane {
         contentpanel.add(m_filterpanel);
         super.addTab("Options", contentpanel);
     }
-    
+
     /**
      * {@inheritDoc}
      */

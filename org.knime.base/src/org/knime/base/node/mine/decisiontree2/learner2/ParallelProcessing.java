@@ -55,14 +55,15 @@ package org.knime.base.node.mine.decisiontree2.learner2;
  * synchronization stuff.
  *
  * @author Christoph Sieb, University of Konstanz
- * 
+ *
  * @since 2.6
  */
 public class ParallelProcessing {
-
     private int m_maxNumberThreads;
 
     private int m_currentThreadsInUse;
+
+    private final Object m_lock = new Object();
 
     /**
      * Constructor.
@@ -114,17 +115,18 @@ public class ParallelProcessing {
      *
      */
     public synchronized void isThreadAvailableBlocking() {
-        if (m_currentThreadsInUse < m_maxNumberThreads) {
-            // do nothing
-        } else {
-            try {
-                this.wait();
-            } catch (Exception e) {
+        synchronized(m_lock) {
+            if (m_currentThreadsInUse < m_maxNumberThreads) {
                 // do nothing
+            } else {
+                try {
+                    m_lock.wait();
+                } catch (Exception e) {
+                    // do nothing
+                }
             }
+            m_currentThreadsInUse++;
         }
-        m_currentThreadsInUse++;
-        return;
     }
 
     /**
@@ -134,12 +136,14 @@ public class ParallelProcessing {
      *
      * @return whether a thread is available
      */
-    public synchronized boolean isThreadAvailable() {
-        if (m_currentThreadsInUse < m_maxNumberThreads) {
-            m_currentThreadsInUse++;
-            return true;
-        } else {
-            return false;
+    public boolean isThreadAvailable() {
+        synchronized(m_lock) {
+            if (m_currentThreadsInUse < m_maxNumberThreads) {
+                m_currentThreadsInUse++;
+                return true;
+            } else {
+                return false;
+            }
         }
     }
 
@@ -147,9 +151,11 @@ public class ParallelProcessing {
      * Once a thread which synchronizes on this object has finished, it must
      * invoke this method to allow other threads to continue.
      */
-    public synchronized void threadTaskFinished() {
-        m_currentThreadsInUse--;
-        notify();
+    public void threadTaskFinished() {
+        synchronized(m_lock) {
+            m_currentThreadsInUse--;
+            m_lock.notify();
+        }
     }
 
     /**

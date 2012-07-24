@@ -170,8 +170,7 @@ public abstract class AbstractHistogramNodeModel extends NodeModel {
             m_noOfRows.validateSettings(settings);
             final SettingsModelInteger copy =
                 m_noOfRows.createCloneWithValidatedValue(settings);
-            if (copy.getIntValue() > Integer.MAX_VALUE
-                    || copy.getIntValue() <= 0) {
+            if (copy.getIntValue() <= 0) {
                 throw new InvalidSettingsException(
                         "No of rows must be greater zero");
             }

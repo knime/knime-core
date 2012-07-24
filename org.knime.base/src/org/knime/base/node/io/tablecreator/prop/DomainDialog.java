@@ -433,9 +433,7 @@ public class DomainDialog extends JDialog {
      * the values was added, false if it already existed in the list.
      */
     private boolean addDataCellPossValue(final DataCell newVal) {
-
         assert newVal != null;
-
         if (newVal == null) {
             return false;
         }

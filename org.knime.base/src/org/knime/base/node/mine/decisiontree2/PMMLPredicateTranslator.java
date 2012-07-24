@@ -158,7 +158,7 @@ public final class PMMLPredicateTranslator {
             PMMLSimplePredicate sp = (PMMLSimplePredicate)predicate;
             SimplePredicate simplePred = compound.addNewSimplePredicate();
             initSimplePredicate(sp, simplePred);
-        } else if (predicate instanceof SimpleSetPredicate) {
+        } else if (predicate instanceof PMMLSimpleSetPredicate) {
             PMMLSimpleSetPredicate sp = (PMMLSimpleSetPredicate)predicate;
             SimpleSetPredicate setPred = compound.addNewSimpleSetPredicate();
             initSimpleSetPred(sp, setPred);

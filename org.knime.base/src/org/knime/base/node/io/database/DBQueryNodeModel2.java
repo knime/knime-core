@@ -166,9 +166,9 @@ final class DBQueryNodeModel2 extends DBNodeModel
     }
 
     /**
-     * Parses the given SQL query and resolves the table placeholder and 
+     * Parses the given SQL query and resolves the table placeholder and
      * variables.
-     * @param query to be replaced (the incoming query from the Database 
+     * @param query to be replaced (the incoming query from the Database
      *              Connector)
      * @return a new query string
      */
@@ -187,9 +187,9 @@ final class DBQueryNodeModel2 extends DBNodeModel
         for (int i = 0; i < thisQueries.length - 1; i++) {
             resultQueries.append(thisQueries[i]);
             resultQueries.append(DatabaseReaderConnection.SQL_QUERY_SEPARATOR);
-        }        
-        thisSelect = new String(thisSelect).replaceAll(
-                DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER,  
+        }
+        thisSelect = thisSelect.replaceAll(
+                DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER,
                 "(" + inSelect + ")");
         thisSelect = DBVariableSupportNodeModel.Resolver.parse(
                 thisSelect, this);

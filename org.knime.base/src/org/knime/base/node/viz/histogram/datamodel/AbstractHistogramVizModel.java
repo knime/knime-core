@@ -51,23 +51,6 @@
 
 package org.knime.base.node.viz.histogram.datamodel;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnDomain;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.RowKey;
-import org.knime.core.data.def.StringCell;
-import org.knime.core.node.NodeLogger;
-
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.aggregation.AggregationValModel;
-import org.knime.base.node.viz.aggregation.AggregationValSubModel;
-import org.knime.base.node.viz.aggregation.HiliteShapeCalculator;
-import org.knime.base.node.viz.aggregation.util.GUIUtils;
-import org.knime.base.node.viz.aggregation.util.LabelDisplayPolicy;
-import org.knime.base.node.viz.histogram.HistogramLayout;
-import org.knime.base.node.viz.histogram.util.BinningUtil;
-import org.knime.base.node.viz.histogram.util.ColorColumn;
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Point;
@@ -80,6 +63,22 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.aggregation.AggregationValModel;
+import org.knime.base.node.viz.aggregation.AggregationValSubModel;
+import org.knime.base.node.viz.aggregation.HiliteShapeCalculator;
+import org.knime.base.node.viz.aggregation.util.GUIUtils;
+import org.knime.base.node.viz.aggregation.util.LabelDisplayPolicy;
+import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.util.BinningUtil;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomain;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.node.NodeLogger;
 
 /**
  * This is the basic visualization model for a histogram. It handles bin
@@ -194,7 +193,7 @@ public abstract class AbstractHistogramVizModel {
             final int hiliteWidth = Math.max((int)(barWidth
                     * AbstractHistogramVizModel.HILITE_RECT_WIDTH_FACTOR), 1);
             final int hiliteX =
-                    (int)(barRectangle.getX() + (barWidth - hiliteWidth) / 2);
+                    (int)(barRectangle.getX() + (barWidth - hiliteWidth) / 2.0);
             int hiliteY = barY;
             if (model.getAggregationValue(
                             getAggregationMethod()) > 0) {

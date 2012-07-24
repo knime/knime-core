@@ -144,7 +144,7 @@ public class DecisionTreeNodeView extends JPanel {
                     g.drawArc(0, 2, sqLen - 4, sqLen - 4, 0, angle);
                     int orgX = 0 + (sqLen - 4) / 2;  // X origin of pie
                     int orgY = 2 + (sqLen - 4) / 2;  // Y origin of pie
-                    double length = (sqLen - 4) / 2;    // radius if pie
+                    double length = (sqLen - 4) / 2.0;    // radius if pie
                     g.drawLine(orgX, orgY, orgX + (int)length, orgY);
                     int endX = orgX + (int)(Math.cos(radAngle) * length);
                     int endY = orgY - (int)(Math.sin(radAngle) * length);
@@ -221,11 +221,11 @@ public class DecisionTreeNodeView extends JPanel {
                 }
                 double parentCount = ownCount;
                 if (m_node.getParent() != null) {
-                    parentCount = ((DecisionTreeNode)m_node.getParent())
+                    parentCount = (m_node.getParent())
                             .getEntireClassCount();
                     if (m_node.newColors()) {
                         // new colors? Then we need to based this on color info!
-                        parentCount = ((DecisionTreeNode)m_node.getParent())
+                        parentCount = (m_node.getParent())
                                 .getOverallColorCount();
                     }
                 }

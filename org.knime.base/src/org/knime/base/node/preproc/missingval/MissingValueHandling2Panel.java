@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.preproc.missingval;
 
@@ -89,7 +89,7 @@ import org.knime.core.data.def.StringCell;
 /**
  * Panel on a ColSetting object. It holds properties for missing values for one
  * individual column or all columns of one type.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 final class MissingValueHandling2Panel extends JPanel {
@@ -107,32 +107,32 @@ final class MissingValueHandling2Panel extends JPanel {
     private final JRadioButton m_meanButton;
 
     private final JRadioButton m_mostFrequentButton;
-    
+
     private final JRadioButton m_fixButton;
 
     private final JComponent m_fixText;
 
     private final MissingValueHandling2ColSetting m_setting;
-    
+
     private final JLabel m_label;
 
     /**
      * Constructor for one individual column, invoked when Add in dialog was
      * pressed.
-     * 
+     *
      * @param spec the spec to that column
      */
     public MissingValueHandling2Panel(final DataColumnSpec spec) {
         this(new MissingValueHandling2ColSetting(spec), spec);
     }
-    
+
     /**
      * Constructor for one individual column, invoked when Add in dialog was
      * pressed.
      * @param specs list of column specs
      */
     public MissingValueHandling2Panel(final List<DataColumnSpec> specs) {
-        this(new MissingValueHandling2ColSetting(specs), 
+        this(new MissingValueHandling2ColSetting(specs),
                 specs.toArray(new DataColumnSpec[0]));
     }
 
@@ -184,8 +184,8 @@ final class MissingValueHandling2Panel extends JPanel {
                 names.remove(cspec.getName());
             }
             if (!names.isEmpty()) {
-                throw new NullPointerException("Not equal on init: '" 
-                        + Arrays.toString(setting.getNames()) + "' vs. '" 
+                throw new NullPointerException("Not equal on init: '"
+                        + Arrays.toString(setting.getNames()) + "' vs. '"
                         + Arrays.toString(spec) + "'.");
             }
             name = setting.getDisplayName();
@@ -234,7 +234,7 @@ final class MissingValueHandling2Panel extends JPanel {
         panel.add(m_removeButton);
 
         if (setting.getType() == MissingValueHandling2ColSetting.TYPE_DOUBLE
-                || setting.getType() 
+                || setting.getType()
                         == MissingValueHandling2ColSetting.TYPE_INT) {
             // MIN Button
             m_minButton = new JRadioButton("Min");
@@ -259,7 +259,7 @@ final class MissingValueHandling2Panel extends JPanel {
             m_meanButton.addActionListener(actionListener);
             buttonGroup.add(m_meanButton);
             panel.add(m_meanButton);
-            if (setting.getType() 
+            if (setting.getType()
                     == MissingValueHandling2ColSetting.TYPE_DOUBLE) {
                 panel.add(new JLabel()); // even number of components
             }
@@ -269,7 +269,7 @@ final class MissingValueHandling2Panel extends JPanel {
             m_maxButton = null;
         }
         if (setting.getType() == MissingValueHandling2ColSetting.TYPE_INT
-                || setting.getType() 
+                || setting.getType()
                         == MissingValueHandling2ColSetting.TYPE_STRING) {
             m_mostFrequentButton = new JRadioButton("Most Frequent");
             m_mostFrequentButton.setToolTipText("Replaces missing values "
@@ -277,7 +277,7 @@ final class MissingValueHandling2Panel extends JPanel {
             m_mostFrequentButton.addActionListener(actionListener);
             buttonGroup.add(m_mostFrequentButton);
             panel.add(m_mostFrequentButton);
-            if (setting.getType() 
+            if (setting.getType()
                     == MissingValueHandling2ColSetting.TYPE_STRING) {
                 panel.add(new JLabel()); // even number of components
             }
@@ -326,10 +326,10 @@ final class MissingValueHandling2Panel extends JPanel {
         m_setting = setting;
         add(panel);
     }
-    
+
     /**
-     * Register a <code>MouseListener</code> on the label used to display the 
-     * columns. Used to select all corresponding columns that fall into this 
+     * Register a <code>MouseListener</code> on the label used to display the
+     * columns. Used to select all corresponding columns that fall into this
      * individual missing setting property.
      * @param ml the mouse listener to be registered
      */
@@ -339,7 +339,7 @@ final class MissingValueHandling2Panel extends JPanel {
 
     /**
      * Get the settings currently entered in the dialog.
-     * 
+     *
      * @return the current settings
      */
     public MissingValueHandling2ColSetting getSettings() {
@@ -374,7 +374,7 @@ final class MissingValueHandling2Panel extends JPanel {
             method = MissingValueHandling2ColSetting.METHOD_MIN;
         } else if (m_meanButton != null && m_meanButton.isSelected()) {
             method = MissingValueHandling2ColSetting.METHOD_MEAN;
-        } else if (m_mostFrequentButton != null 
+        } else if (m_mostFrequentButton != null
                 && m_mostFrequentButton.isSelected()) {
             method = MissingValueHandling2ColSetting.METHOD_MOST_FREQUENT;
         } else {
@@ -413,10 +413,9 @@ final class MissingValueHandling2Panel extends JPanel {
             ((JFormattedTextField)fixText).setColumns(8);
             Integer integer;
             if (fixCell == null) {
-                integer = new Integer(0);
+                integer = 0;
             } else {
-                int i = ((IntValue)fixCell).getIntValue();
-                integer = new Integer(i);
+                integer = ((IntValue)fixCell).getIntValue();
             }
             ((JFormattedTextField)fixText).setValue(integer);
             break;
@@ -441,15 +440,15 @@ final class MissingValueHandling2Panel extends JPanel {
                  * JList, Object, int, boolean, boolean)
                  */
                @Override
-               public Component getListCellRendererComponent(final JList list, 
-                    final Object value, final int index, 
+               public Component getListCellRendererComponent(final JList list,
+                    final Object value, final int index,
                     final boolean isSelected, final boolean cellHasFocus) {
                     Component c = super.getListCellRendererComponent(
                             list, value, index, isSelected, cellHasFocus);
                     if (c instanceof JComponent) {
                         ((JComponent)c).setToolTipText(value.toString());
                     }
-                    return c; 
+                    return c;
                }
             });
             String string;

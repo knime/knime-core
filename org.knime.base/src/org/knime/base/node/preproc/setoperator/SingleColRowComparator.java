@@ -51,12 +51,12 @@
 
 package org.knime.base.node.preproc.setoperator;
 
+import java.util.Comparator;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.def.StringCell;
-
-import java.util.Comparator;
 
 
 /**
@@ -129,6 +129,9 @@ public class SingleColRowComparator implements Comparator<DataRow> {
         }
         if (c2 == null) {
             return -1;
+        }
+        if (c1.equals(c2)) {
+            return 0;
         }
         return comp.compare(new StringCell(c1), new StringCell(c2));
     }

@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   14.04.2005 (cebron): created
  */
@@ -67,7 +67,7 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
 /**
  * The SortItem is a JPanel with a JComboBox and two JRadioButtons.
- * 
+ *
  * @author Nicolas Cebron, University of Konstanz
  */
 public class SortItem extends JPanel {
@@ -91,12 +91,12 @@ public class SortItem extends JPanel {
     /*
      * Ascending
      */
-    private static final String ASC = new String("Ascending");
+    private static final String ASC = "Ascending";
 
     /*
      * Descending
      */
-    private static final String DESC = new String("Descending");
+    private static final String DESC = "Descending";
 
     /*
      * JRadioButton for ascending order
@@ -112,31 +112,31 @@ public class SortItem extends JPanel {
      * Constructs a new JPanel that consists of a JComboBox which lets the user
      * choose the columns to sort and two JRadioButtons to choose the sort order
      * (ascending/descending).
-     * 
+     *
      * @param id the unique ID of the SortItem
      * @param values the columns that the user can choose from
      * @param selected the selected column
      * @param sortOrder the sort
      */
-    SortItem(final int id, final Vector<DataColumnSpec> values, 
+    SortItem(final int id, final Vector<DataColumnSpec> values,
             final DataColumnSpec selected, final boolean sortOrder) {
         m_id = id;
         m_combovalues = values;
 
-       
+
         super.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         m_combo = new JComboBox(m_combovalues);
         m_combo.setRenderer(new DataColumnSpecListCellRenderer());
         m_combo.setLightWeightPopupEnabled(false);
         m_combo.setSelectedItem(selected);
         m_combo.setMaximumSize(new Dimension(800, 30));
-        
+
         JPanel comboPanel = new JPanel();
         comboPanel.setLayout(new BoxLayout(comboPanel, BoxLayout.Y_AXIS));
         comboPanel.add(m_combo);
         comboPanel.add(Box.createVerticalGlue());
-        
-        
+
+
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
         ButtonGroup group = new ButtonGroup();
@@ -156,7 +156,7 @@ public class SortItem extends JPanel {
         } else {
             m_descRB.setSelected(true);
         }
-       
+
         super.add(comboPanel);
         super.add(Box.createHorizontalStrut(20));
         super.add(buttonPanel);
@@ -164,7 +164,7 @@ public class SortItem extends JPanel {
 
     /**
      * Each SortItem has a unique ID.
-     * 
+     *
      * @return the ID of the SortItem
      */
     public int getID() {
@@ -173,7 +173,7 @@ public class SortItem extends JPanel {
 
     /**
      * The Sortorder of this SortItem.
-     * 
+     *
      * @return <code>true</code> for ascending, <code>false</code> for
      *         descending
      */
@@ -187,7 +187,7 @@ public class SortItem extends JPanel {
 
     /**
      * The column that is selected in the JComboBox.
-     * 
+     *
      * @return the selected column
      */
     public DataColumnSpec getSelectedColumn() {

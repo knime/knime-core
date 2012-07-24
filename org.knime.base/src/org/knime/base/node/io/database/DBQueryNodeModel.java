@@ -183,9 +183,9 @@ final class DBQueryNodeModel extends DBNodeModel {
         for (int i = 0; i < thisQueries.length - 1; i++) {
             resultQueries.append(thisQueries[i]);
             resultQueries.append(DatabaseReaderConnection.SQL_QUERY_SEPARATOR);
-        }        
-        thisSelect = new String(thisSelect).replaceAll(
-                DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER,  
+        }
+        thisSelect = thisSelect.replaceAll(
+                DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER,
                 "(" + inSelect + ")");
         resultQueries.append(thisSelect);
         return resultQueries.toString();

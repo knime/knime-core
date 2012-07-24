@@ -259,10 +259,7 @@ public class AutoBinner {
 
     private PMMLPreprocDiscretize createDisretizeOp(
             final Map<String, double[]> edgesMap) {
-        Map<String, List<PMMLDiscretizeBin>> binMap =
-            new HashMap<String, List<PMMLDiscretizeBin>>();
-
-        binMap = createBins(edgesMap);
+        Map<String, List<PMMLDiscretizeBin>> binMap = createBins(edgesMap);
 
         List<String> names = new ArrayList<String>();
         Map<String, PMMLDiscretize> discretize =

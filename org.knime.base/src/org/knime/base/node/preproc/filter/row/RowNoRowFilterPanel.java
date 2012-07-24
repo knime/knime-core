@@ -198,11 +198,11 @@ public class RowNoRowFilterPanel extends RowFilterPanel {
 
         // the filter contains index values (starting from 0)
         // the spinner show the numbers, so we need to add 1 here.
-        m_first.setValue(new Integer(first + 1));
+        m_first.setValue(Integer.valueOf(first + 1));
         m_tilEOT.setSelected(last == RowNoRowFilter.EOT); // en/disables
         // m_last
         if (last != RowNoRowFilter.EOT) {
-            m_last.setValue(new Integer(last + 1));
+            m_last.setValue(Integer.valueOf(last + 1));
         }
         updateErrText();
     }

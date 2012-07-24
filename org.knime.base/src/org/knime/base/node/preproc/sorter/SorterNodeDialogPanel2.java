@@ -168,7 +168,7 @@ public class SorterNodeDialogPanel2 extends JPanel {
             for (int j = 0; j < spec.getNumColumns(); j++) {
                 values.add(spec.getColumnSpec(j));
             }
-            if ((incl == null) && (sortOrder == null)) {
+            if ((incl == null) || (sortOrder == null)) {
 
                 for (int i = 0; i < nrsortitems
                 && i < spec.getNumColumns(); i++) {

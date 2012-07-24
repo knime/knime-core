@@ -63,6 +63,7 @@ import java.awt.event.ItemListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
 
 import javax.swing.BorderFactory;
@@ -264,20 +265,16 @@ public class ARFFReaderNodeDialog extends NodeDialogPane implements
 
         try {
             urli = ARFFReaderNodeModel.stringToURL(urlInput);
-            if (urli != null) {
-                try {
-                    InputStream is = FileUtil.openStreamWithTimeout(urli);
-                    if (is == null) {
-                        text = "Can't open: " + urli.toString();
-                    }
-                } catch (IOException ioe) {
+            try {
+                InputStream is = FileUtil.openStreamWithTimeout(urli);
+                if (is == null) {
                     text = "Can't open: " + urli.toString();
                 }
-            } else {
-                text = "Invalid URL";
+            } catch (IOException ioe) {
+                text = "Can't open: " + urli.toString();
             }
-        } catch (Exception e) {
-            text = "Invalid file location";
+        } catch (MalformedURLException e) {
+            text = "Invalid file location '" + urlInput + "'";
         }
 
         if (text == null) {

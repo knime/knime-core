@@ -105,7 +105,7 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
 /**
  * Binner dialog used to group numeric columns (int or double) into intervals.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 final class BinnerNodeDialogPane extends NodeDialogPane {
@@ -177,7 +177,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
         m_numList.setCellRenderer(new BinnerListCellRenderer());
         m_numList.addListSelectionListener(new ListSelectionListener() {
             /**
-             * 
+             *
              */
             public void valueChanged(final ListSelectionEvent e) {
                 columnChanged();
@@ -216,8 +216,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
 
     private SpinnerNumberModel createNumberModel(final DataType type) {
         if (IntCell.TYPE.equals(type)) {
-            return new SpinnerNumberModel(new Integer(0), null, null,
-                    new Integer(1));
+            return new SpinnerNumberModel(0, null, null, 1);
         }
         return new SpinnerNumberModel(0.0, NEGATIVE_INFINITY,
                 POSITIVE_INFINITY, 0.1);
@@ -238,7 +237,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
     }
 
     /**
-     * Creates new panel holding one bin column. 
+     * Creates new panel holding one bin column.
      */
     final class IntervalPanel extends JPanel {
         /** List of intervals. */
@@ -253,14 +252,14 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
 
         /**
          * Create new interval panel.
-         * 
+         *
          * @param column the current column name
          * @param appendColumn if a new binned column is append, otherwise the
          *            column is replaced
          * @param parent used to refresh column list is number of bins has
          *            changed
          * @param type the type for the spinner model
-         * 
+         *
          */
         IntervalPanel(final String column, final String appendColumn,
                 final Component parent, final DataType type) {
@@ -273,7 +272,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
             final JButton addButton = new JButton("Add");
             addButton.addActionListener(new ActionListener() {
                 /**
-                 * 
+                 *
                  */
                 public void actionPerformed(final ActionEvent e) {
                     final int size = m_intervalMdl.getSize();
@@ -293,7 +292,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                             // if non is selected or the last one is selected
                             if (o == null
                                     || m_intervalMdl.indexOf(o) == size - 1) {
-                                IntervalItemPanel p1 = 
+                                IntervalItemPanel p1 =
                                     (IntervalItemPanel)m_intervalMdl
                                         .getElementAt(size - 1);
                                 double d = p1.getLeftValue(false);
@@ -305,7 +304,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                                 p.updateInterval();
                             } else {
                                 IntervalItemPanel p1 = (IntervalItemPanel)o;
-                                IntervalItemPanel p2 = 
+                                IntervalItemPanel p2 =
                                     (IntervalItemPanel) m_intervalMdl
                                         .getElementAt(
                                                 m_intervalMdl.indexOf(p1) + 1);
@@ -327,7 +326,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
             final JButton removeButton = new JButton("Remove");
             removeButton.addActionListener(new ActionListener() {
                 /**
-                 * 
+                 *
                  */
                 public void actionPerformed(final ActionEvent e) {
                     IntervalItemPanel p = (IntervalItemPanel)m_intervalList
@@ -368,7 +367,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
             m_intervalList
                     .addListSelectionListener(new ListSelectionListener() {
                         /**
-                         * 
+                         *
                          */
                         public void valueChanged(final ListSelectionEvent e) {
                             selInterval.removeAll();
@@ -577,14 +576,14 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
             m_bin.setPreferredSize(new Dimension(50, 25));
 
             m_left = new JSpinner(createNumberModel(type));
-            JSpinner.DefaultEditor editorLeft = 
+            JSpinner.DefaultEditor editorLeft =
                 new JSpinner.NumberEditor(m_left, "0.0##############");
             editorLeft.getTextField().setColumns(15);
             m_left.setEditor(editorLeft);
             m_left.setPreferredSize(new Dimension(125, 25));
 
             m_right = new JSpinner(createNumberModel(type));
-            JSpinner.DefaultEditor editorRight = 
+            JSpinner.DefaultEditor editorRight =
                 new JSpinner.NumberEditor(m_right, "0.0##############");
             editorRight.getTextField().setColumns(15);
             m_right.setEditor(editorRight);
@@ -607,7 +606,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                     repairLeft();
                 }
             });
-            final JSpinner.DefaultEditor editorLeft = 
+            final JSpinner.DefaultEditor editorLeft =
                 (JSpinner.DefaultEditor)m_left.getEditor();
             editorLeft.getTextField().addFocusListener(new FocusAdapter() {
                 @Override
@@ -626,7 +625,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                     repairRight();
                 }
             });
-            final JSpinner.DefaultEditor editorRight = 
+            final JSpinner.DefaultEditor editorRight =
                 (JSpinner.DefaultEditor)m_right.getEditor();
             editorRight.getTextField().addFocusListener(new FocusAdapter() {
                 @Override
@@ -939,7 +938,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                     continue;
                 }
                 String appendedColumn = null;
-                if (settings.containsKey(columns[i].toString() 
+                if (settings.containsKey(columns[i].toString()
                         + BinnerNodeModel.IS_APPENDED)) {
                     appendedColumn = settings.getString(columns[i].toString()
                             + BinnerNodeModel.IS_APPENDED, null);
@@ -1000,10 +999,10 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
                                             + " matches other column.");
                         }
                     }
-                    settings.addString(cell.toString() 
+                    settings.addString(cell.toString()
                             + BinnerNodeModel.IS_APPENDED, appendedName);
                 } else {
-                    settings.addString(cell.toString() 
+                    settings.addString(cell.toString()
                             + BinnerNodeModel.IS_APPENDED, null);
                 }
                 for (int j = 0; j < p.getNumIntervals(); j++) {

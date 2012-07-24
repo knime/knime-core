@@ -47,22 +47,6 @@
  */
 package org.knime.base.node.viz.histogram.impl;
 
-import org.knime.core.data.property.ColorAttr;
-
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.aggregation.DrawingUtils;
-import org.knime.base.node.viz.aggregation.util.GUIUtils;
-import org.knime.base.node.viz.aggregation.util.LabelDisplayPolicy;
-import org.knime.base.node.viz.histogram.HistogramLayout;
-import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
-import org.knime.base.node.viz.histogram.datamodel.BarDataModel;
-import org.knime.base.node.viz.histogram.datamodel.BarElementDataModel;
-import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
-import org.knime.base.node.viz.histogram.datamodel.InteractiveBarDataModel;
-import org.knime.base.node.viz.histogram.datamodel.InteractiveBarElementDataModel;
-import org.knime.base.node.viz.histogram.datamodel.InteractiveBinDataModel;
-import org.knime.base.node.viz.plotter.AbstractDrawingPane;
-
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Font;
@@ -80,6 +64,21 @@ import java.awt.image.BufferedImage;
 import java.util.Collection;
 
 import javax.swing.ToolTipManager;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.aggregation.DrawingUtils;
+import org.knime.base.node.viz.aggregation.util.GUIUtils;
+import org.knime.base.node.viz.aggregation.util.LabelDisplayPolicy;
+import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
+import org.knime.base.node.viz.histogram.datamodel.BarDataModel;
+import org.knime.base.node.viz.histogram.datamodel.BarElementDataModel;
+import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
+import org.knime.base.node.viz.histogram.datamodel.InteractiveBarDataModel;
+import org.knime.base.node.viz.histogram.datamodel.InteractiveBarElementDataModel;
+import org.knime.base.node.viz.histogram.datamodel.InteractiveBinDataModel;
+import org.knime.base.node.viz.plotter.AbstractDrawingPane;
+import org.knime.core.data.property.ColorAttr;
 
 /**
  * The view class of a Histogram visualisation. It simply uses the given
@@ -585,15 +584,15 @@ public class HistogramDrawingPane extends AbstractDrawingPane {
         int textY = 0;
         if (aggrVal >= 0) {
             textY =  (int)(borderRect.getY() + borderRect.getHeight()
-                    - textWidth / 2) - AGGR_VAL_LABEL_SPACER;
+                    - textWidth / 2.0) - AGGR_VAL_LABEL_SPACER;
         } else {
-            textY = (int)(borderRect.getY() + textWidth / 2)
-            + AGGR_VAL_LABEL_SPACER;
+            textY = (int)(borderRect.getY() + textWidth / 2.0)
+                + AGGR_VAL_LABEL_SPACER;
         }
         final double screenHeight = drawingSpace.getHeight();
         //check if the label is outside of the drawing space
         if (textY + textWidth / 2 > screenHeight) {
-            textY = (int)(screenHeight - textWidth / 2 - AGGR_VAL_LABEL_SPACER);
+            textY = (int)(screenHeight - textWidth / 2.0 - AGGR_VAL_LABEL_SPACER);
         } else if (textY < 0) {
             textY = textWidth / 2 + AGGR_VAL_LABEL_SPACER;
         }

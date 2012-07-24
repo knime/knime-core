@@ -364,7 +364,7 @@ public class CommandExecution extends Observable {
      *
      * @author Kilian Thiel, University of Konstanz
      */
-    class CheckCanceledRunnable implements Runnable {
+    static class CheckCanceledRunnable implements Runnable {
 
         private final Process m_proc;
 

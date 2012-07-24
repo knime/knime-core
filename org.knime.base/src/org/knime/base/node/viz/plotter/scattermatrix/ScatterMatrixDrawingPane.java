@@ -201,12 +201,12 @@ public class ScatterMatrixDrawingPane extends ScatterPlotterDrawingPane {
                         element.getWidth() - 1, element.getHeight() - 1);
                 g.setColor(backupC);
                 // for the y axis draw vertical axes
-                if (j  == 0 && i % 2 == 1) {
+                if ((j  == 0) && (i % 2 != 0)) {
                     // paint at top
                     int y = m_hMargin - 6;
                     paintHorizontalCoordinate(g, element, y, true);
                 }
-                if (j % 2 == 1 && i == m_matrixElements.length - 1) {
+                if ((j % 2 != 0) && (i == m_matrixElements.length - 1)) {
                     // paint right
                     int x = getWidth() - m_vMargin + 3;
                     paintVerticalCoordinate(g, element, x, false);

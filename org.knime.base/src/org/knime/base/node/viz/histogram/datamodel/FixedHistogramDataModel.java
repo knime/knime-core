@@ -51,24 +51,6 @@
 
 package org.knime.base.node.viz.histogram.datamodel;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnDomain;
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.RowKey;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.NodeSettings;
-import org.knime.core.node.config.Config;
-import org.knime.core.node.config.ConfigRO;
-import org.knime.core.node.config.ConfigWO;
-
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.histogram.util.BinningUtil;
-import org.knime.base.node.viz.histogram.util.ColorColumn;
-
 import java.awt.Color;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -87,6 +69,23 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.histogram.util.BinningUtil;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnDomain;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.RowKey;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.config.Config;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
 
 /**
  * This is the fixed data model implementation of the histogram which
@@ -371,20 +370,17 @@ public class FixedHistogramDataModel {
 
     /**
      * @param directory the directory to write to
-     * @param exec the {@link ExecutionMonitor} to provide progress messages
+     * @param exec the {@link ExecutionMonitor} to provide progress messages; must not be <code>null</code>
      * @return the histogram data model
      * @throws InvalidSettingsException if the x column specification
      * wasn't valid
      * @throws IOException if a file exception occurs
      * @throws CanceledExecutionException if the operation is canceled
      */
-    @SuppressWarnings("unchecked")
     public static FixedHistogramDataModel loadFromFile(final File directory,
             final ExecutionMonitor exec) throws InvalidSettingsException,
             IOException, CanceledExecutionException {
-        if (exec != null) {
-            exec.setProgress(0.0, "Start reading data from file");
-        }
+        exec.setProgress(0.0, "Start reading data from file");
         final ConfigRO config;
         final FileInputStream is;
         final GZIPInputStream inData;
@@ -410,10 +406,8 @@ public class FixedHistogramDataModel {
         } catch (final Exception e) {
             // Take the default method
         }
-        if (exec != null) {
-            exec.setProgress(0.1, "Binning column specification loaded");
-            exec.setProgress("Loading aggregation columns...");
-        }
+        exec.setProgress(0.1, "Binning column specification loaded");
+        exec.setProgress("Loading aggregation columns...");
         final Config aggrConf = config.getConfig(CFG_AGGR_COLS);
         final int aggrColCounter = aggrConf.getInt(CFG_AGGR_COL_COUNTER);
         final ArrayList<ColorColumn> aggrCols =
@@ -422,9 +416,7 @@ public class FixedHistogramDataModel {
             final Config aggrColConf = aggrConf.getConfig(CFG_COLOR_COL + i);
             aggrCols.add(ColorColumn.loadFromFile(aggrColConf, exec));
         }
-        if (exec != null) {
-            exec.setProgress(0.3, "Loading bins...");
-        }
+        exec.setProgress(0.3, "Loading bins...");
         final ConfigRO binsConf = config.getConfig(CFG_BINS);
         final int binCounter = binsConf.getInt(CFG_BIN_COUNTER);
         final List<BinDataModel> bins = new ArrayList<BinDataModel>(binCounter);
@@ -435,9 +427,7 @@ public class FixedHistogramDataModel {
         final Config missingConfig = binsConf.getConfig(CFG_MISSING_BIN);
         final BinDataModel missingBin =
             BinDataModel.loadFromFile(missingConfig, exec);
-        if (exec != null) {
-            exec.setProgress(0.9, "Loading element colors...");
-        }
+        exec.setProgress(0.9, "Loading element colors...");
         final ConfigRO colorColsConf = config.getConfig(CFG_COLOR_COLS);
         final int counter = colorColsConf.getInt(CFG_ROW_COLOR_COUNTER);
         final SortedSet<Color> rowColors =
@@ -445,9 +435,7 @@ public class FixedHistogramDataModel {
         for (int i = 0; i < counter; i++) {
             rowColors.add(new Color(colorColsConf.getInt(CFG_ROW_COLOR + i)));
         }
-        if (exec != null) {
-            exec.setProgress(1.0, "Histogram data model loaded ");
-        }
+        exec.setProgress(1.0, "Histogram data model loaded ");
         //close the stream
         inData.close();
         is.close();

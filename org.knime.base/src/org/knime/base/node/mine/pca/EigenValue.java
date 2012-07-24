@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   04.10.2006 (uwe): created
  */
@@ -73,7 +73,7 @@ public class EigenValue implements Comparable<EigenValue> {
 
     /**
      * Create pair.
-     * 
+     *
      * @param position original position in eigenvalue matrix
      * @param value eigenvalue
      * @param vector eigenvector
@@ -98,9 +98,9 @@ public class EigenValue implements Comparable<EigenValue> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int compareTo(final EigenValue o) {
-
-        return -new Double(Math.abs(m_value)).compareTo(Math.abs(o.m_value));
+        return -Double.compare(Math.abs(m_value), Math.abs(o.m_value));
     }
 
     /**
@@ -127,7 +127,7 @@ public class EigenValue implements Comparable<EigenValue> {
 
     /**
      * extract the vector of eigenvalues.
-     * 
+     *
      * @param eig eigenvalue decomposition
      * @return vector of eigenvalues
      */
@@ -144,10 +144,10 @@ public class EigenValue implements Comparable<EigenValue> {
      * eigenvectors of <code>m</code>, where first refers to the corresponding
      * eigenvalues sorted by absolute value.<br>
      * <b>Take care that the matrix is symmetric!</b>
-     * 
+     *
      * @param eigenVectors list of eigenvectors
      * @param eigenvalues list of eigenvalues
-     * 
+     *
      * @param number number of eigenvectors in return matrix
      * @return matrix with eigenvectors columnwise
      */
@@ -188,4 +188,39 @@ public class EigenValue implements Comparable<EigenValue> {
 		return list;
 	}
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((m_value == null) ? 0 : m_value.hashCode());
+        return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        EigenValue other = (EigenValue)obj;
+        if (m_value == null) {
+            if (other.m_value != null) {
+                return false;
+            }
+        } else if (!m_value.equals(other.m_value)) {
+            return false;
+        }
+        return true;
+    }
 }

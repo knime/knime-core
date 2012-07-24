@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.preproc.missingval;
 
@@ -83,7 +83,7 @@ import org.knime.core.util.MutableInteger;
 
 /**
  * DataTable that replaces missing values according to ColSetting objects.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class MissingValueHandling2Table implements DataTable {
@@ -101,7 +101,7 @@ public final class MissingValueHandling2Table implements DataTable {
 
     /**
      * Creates new table.
-     * 
+     *
      * @param table table with missing values
      * @param colSetting the settings, for each column one and in correct order
      */
@@ -114,13 +114,13 @@ public final class MissingValueHandling2Table implements DataTable {
 
     /**
      * Get reference to underlying table.
-     * 
+     *
      * @return the table being wrapped by us
      */
     DataTable getUnderlyingTable() {
         return m_table;
     }
-    
+
     /**
      * Tries to retrieve the number of rows in the underlying table.
      * @return The number of rows or -1 if not possible.
@@ -129,7 +129,7 @@ public final class MissingValueHandling2Table implements DataTable {
         if (m_table instanceof BufferedDataTable) {
             return ((BufferedDataTable)m_table).getRowCount();
         } else if (m_table instanceof MyStatisticsTable) {
-            DataTable underlying = 
+            DataTable underlying =
                 ((MyStatisticsTable)m_table).getUnderlyingTable();
             if (underlying instanceof BufferedDataTable) {
                 return ((BufferedDataTable)underlying).getRowCount();
@@ -152,7 +152,7 @@ public final class MissingValueHandling2Table implements DataTable {
 
     /**
      * Delegating method to StatisticsTable.
-     * 
+     *
      * @param column the column of interest
      * @return the maximum in a column
      * @see StatisticsTable#getMax(int)
@@ -163,7 +163,7 @@ public final class MissingValueHandling2Table implements DataTable {
 
     /**
      * Delegating method to StatisticsTable.
-     * 
+     *
      * @param column the column of interest
      * @return the mean in a column (or {@link Double#NaN} for non-double
      *         columns)
@@ -174,8 +174,8 @@ public final class MissingValueHandling2Table implements DataTable {
     }
 
     /**
-     * Get the most frequent value in a column. 
-     * 
+     * Get the most frequent value in a column.
+     *
      * @param column the column of interest
      * @return Most frequent value in it.
      * @see StatisticsTable#getMean(int)
@@ -183,10 +183,10 @@ public final class MissingValueHandling2Table implements DataTable {
     protected DataCell getMostFrequent(final int column) {
         return getStatisticsTable().getMostFrequentCell(column);
     }
-    
+
     /**
      * Delegating method to StatisticsTable.
-     * 
+     *
      * @param column the column of interest
      * @return the min in a column
      * @see StatisticsTable#getMin(int)
@@ -199,7 +199,7 @@ public final class MissingValueHandling2Table implements DataTable {
      * This method is only called when we do replacement of missing values with
      * either min, max or mean values. The table as provided in the constructor
      * must have been a StatisticsTable then.
-     * 
+     *
      * @return cast of m_table.
      */
     private MyStatisticsTable getStatisticsTable() {
@@ -208,7 +208,7 @@ public final class MissingValueHandling2Table implements DataTable {
 
     /**
      * Get RowIterator of underlying table.
-     * 
+     *
      * @return the iterator of the base table
      */
     RowIterator getInternalIterator() {
@@ -217,18 +217,18 @@ public final class MissingValueHandling2Table implements DataTable {
 
     /**
      * The column settings for a column.
-     * 
+     *
      * @param column the column of interest
      * @return the column setting to use
      */
     MissingValueHandling2ColSetting getColSetting(final int column) {
         return m_settings[column];
     }
-    
+
     /**
      * Get the DataTableSpec that is created when creating a
      * MissingValueHandling with the settings <code>sets</code>.
-     * 
+     *
      * @param spec the spec of the original input table
      * @param sets the column settings to apply
      * @return the new DataTableSpec when handling missing values
@@ -257,13 +257,13 @@ public final class MissingValueHandling2Table implements DataTable {
                 DataCell l = dom.getLowerBound();
                 // lower and upper bound should not contain missing values
                 // (but rather be null). It may happen anyway, we catch it here
-                if (l != null && !l.isMissing() 
+                if (l != null && !l.isMissing()
                         && (comp.compare(fixCell, l) < 0)) {
                     changed = true;
                     l = fixCell;
                 }
                 DataCell u = dom.getUpperBound();
-                if (u != null && !u.isMissing() 
+                if (u != null && !u.isMissing()
                         && (comp.compare(fixCell, u) > 0)) {
                     changed = true;
                     u = fixCell;
@@ -277,7 +277,7 @@ public final class MissingValueHandling2Table implements DataTable {
                 if (changed) {
                     DataColumnDomain newDom = new DataColumnDomainCreator(vals,
                             l, u).createDomain();
-                    DataColumnSpecCreator c = 
+                    DataColumnSpecCreator c =
                         new DataColumnSpecCreator(colSpec);
                     c.setDomain(newDom);
                     newSpec = c.createSpec();
@@ -296,7 +296,7 @@ public final class MissingValueHandling2Table implements DataTable {
 
         // fill up the default (i.e. meta-settings for String, Double, Int,
         // and Other columns) - if they are available
-        Hashtable<Integer, MissingValueHandling2ColSetting> hash = 
+        Hashtable<Integer, MissingValueHandling2ColSetting> hash =
             new Hashtable<Integer, MissingValueHandling2ColSetting>();
         // the default one
         MissingValueHandling2ColSetting untouched = new MissingValueHandling2ColSetting(MissingValueHandling2ColSetting.TYPE_UNKNOWN);
@@ -313,15 +313,15 @@ public final class MissingValueHandling2Table implements DataTable {
         for (int i = 0; i < spec.getNumColumns(); i++) {
             DataColumnSpec colSpec = spec.getColumnSpec(i);
             DataType type = colSpec.getType();
-            Object hashKey;
+            Integer hashKey;
             if (type.isASuperTypeOf(StringCell.TYPE)) {
-                hashKey = new Integer(MissingValueHandling2ColSetting.TYPE_STRING);
+                hashKey = MissingValueHandling2ColSetting.TYPE_STRING;
             } else if (type.isASuperTypeOf(DoubleCell.TYPE)) {
-                hashKey = new Integer(MissingValueHandling2ColSetting.TYPE_DOUBLE);
+                hashKey = MissingValueHandling2ColSetting.TYPE_DOUBLE;
             } else if (type.isASuperTypeOf(IntCell.TYPE)) {
-                hashKey = new Integer(MissingValueHandling2ColSetting.TYPE_INT);
+                hashKey = MissingValueHandling2ColSetting.TYPE_INT;
             } else {
-                hashKey = new Integer(MissingValueHandling2ColSetting.TYPE_UNKNOWN);
+                hashKey = MissingValueHandling2ColSetting.TYPE_UNKNOWN;
             }
             MissingValueHandling2ColSetting setting = hash.get(hashKey);
             if (setting == null) {
@@ -398,7 +398,7 @@ public final class MissingValueHandling2Table implements DataTable {
     /**
      * Does missing value handling to the argument table given the col settings
      * in an array and also reports progress.
-     * 
+     *
      * @param table the table to do missing value handling on
      * @param colSettings the settings
      * @param exec for progress/cancel and to create the buffered data table
@@ -408,14 +408,14 @@ public final class MissingValueHandling2Table implements DataTable {
      */
     public static BufferedDataTable createMissingValueHandlingTable(
             final DataTable table, final MissingValueHandling2ColSetting[] colSettings,
-            final ExecutionContext exec, final StringBuffer warningBuffer) 
+            final ExecutionContext exec, final StringBuffer warningBuffer)
         throws CanceledExecutionException {
         MissingValueHandling2ColSetting[] colSetting;
         try {
             colSetting = getColSetting(
                     table.getDataTableSpec(), colSettings, false);
         } catch (InvalidSettingsException ise) {
-            LOGGER.coding("getColSetting method is not supposed to throw " 
+            LOGGER.coding("getColSetting method is not supposed to throw "
                     + "an exception, ignoring settings", ise);
             DataTableSpec s = table.getDataTableSpec();
             colSetting = new MissingValueHandling2ColSetting[s.getNumColumns()];
@@ -467,14 +467,14 @@ public final class MissingValueHandling2Table implements DataTable {
             t = table;
             e = exec;
         }
-        MissingValueHandling2Table mvht = 
+        MissingValueHandling2Table mvht =
             new MissingValueHandling2Table(t, colSetting);
-        BufferedDataContainer container = 
+        BufferedDataContainer container =
             exec.createDataContainer(mvht.getDataTableSpec());
         e.setMessage("Adding rows...");
         int count = 0;
         try {
-            MissingValueHandling2TableIterator it = 
+            MissingValueHandling2TableIterator it =
                 new MissingValueHandling2TableIterator(mvht, e);
             while (it.hasNext()) {
                 DataRow next;
@@ -492,7 +492,7 @@ public final class MissingValueHandling2Table implements DataTable {
         }
         return container.getTable();
     }
-    
+
     /**
      * Determines not only min, max, mean but also most frequent values
      * in a certain column set.
@@ -502,9 +502,9 @@ public final class MissingValueHandling2Table implements DataTable {
         private int[] m_cols;
         private DataCell[] m_mostFrequentCells;
         private String m_warningMessage;
-        
+
         @SuppressWarnings("unchecked")
-        private MyStatisticsTable(final DataTable t, 
+        private MyStatisticsTable(final DataTable t,
                 final ExecutionMonitor exec, final int[] cols)
             throws CanceledExecutionException {
             super(t);
@@ -513,7 +513,7 @@ public final class MissingValueHandling2Table implements DataTable {
             for (int i = 0; i < cols.length; i++) {
                 // use linked hash map to get the first most frequent value
                 // when counts are equal
-                m_countMaps[cols[i]] = 
+                m_countMaps[cols[i]] =
                     new LinkedHashMap<DataCell, MutableInteger>();
             }
             m_cols = cols;
@@ -521,7 +521,7 @@ public final class MissingValueHandling2Table implements DataTable {
             m_mostFrequentCells = new DataCell[colCount];
             ArrayList<String> errorCols = new ArrayList<String>();
             for (int i = 0; i < m_cols.length; i++) {
-                HashMap<DataCell, MutableInteger> map = 
+                HashMap<DataCell, MutableInteger> map =
                     m_countMaps[cols[i]];
                 // determine most frequent item
                 int bestCount = 0;
@@ -534,7 +534,7 @@ public final class MissingValueHandling2Table implements DataTable {
                     }
                 }
                 if (best == null) {
-                    String colName = 
+                    String colName =
                         t.getDataTableSpec().getColumnSpec(cols[i]).getName();
                     best = DataType.getMissingCell();
                     errorCols.add(colName);
@@ -544,14 +544,14 @@ public final class MissingValueHandling2Table implements DataTable {
             if (errorCols.isEmpty()) {
                 m_warningMessage = null;
             } else {
-                m_warningMessage = "Column(s) " 
-                    + Arrays.toString(errorCols.toArray()) 
+                m_warningMessage = "Column(s) "
+                    + Arrays.toString(errorCols.toArray())
                     + " contain(s) no valid cells.";
             }
             m_cols = null;
             m_countMaps = null;
         }
-        
+
         /**
          * {@inheritDoc}
          */
@@ -559,7 +559,7 @@ public final class MissingValueHandling2Table implements DataTable {
         protected void calculateMomentInSubClass(final DataRow row) {
             for (int i = 0; i < m_cols.length; i++) {
                 DataCell c = row.getCell(m_cols[i]);
-                HashMap<DataCell, MutableInteger> map = 
+                HashMap<DataCell, MutableInteger> map =
                     m_countMaps[m_cols[i]];
                 if (!c.isMissing()) {
                     MutableInteger count = map.get(c);
@@ -571,7 +571,7 @@ public final class MissingValueHandling2Table implements DataTable {
                 }
             }
         }
-        
+
         /**
          * @param col The column index
          * @return The most frequent cell.
@@ -583,7 +583,7 @@ public final class MissingValueHandling2Table implements DataTable {
             }
             return m_mostFrequentCells[col];
         }
-        
+
         /**
          * Changes scope.
          * @see StatisticsTable#getUnderlyingTable()

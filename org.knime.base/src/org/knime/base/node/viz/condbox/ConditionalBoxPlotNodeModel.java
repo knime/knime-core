@@ -361,7 +361,7 @@ public class ConditionalBoxPlotNodeModel extends NodeModel implements
             }
 
             exec.checkCanceled();
-            exec.setProgress(dataSetNr / keys.size(), "Creating statistics");
+            exec.setProgress(dataSetNr / (double) keys.size(), "Creating statistics");
 
             Map<Double, Set<RowKey>> extremeOutliers =
                     new LinkedHashMap<Double, Set<RowKey>>();

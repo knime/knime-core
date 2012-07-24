@@ -620,7 +620,8 @@ public class FileReaderSettings extends TokenizerSettings {
              * don't override a (possibly user set) name if it's not a new
              * location
              */
-            if (!dataFileLocation.equals(m_dataFileLocation)) {
+            if (!dataFileLocation.toExternalForm().equals(
+                    m_dataFileLocation.toExternalForm())) {
                 setTableName(getPureFileNameWithExtension(dataFileLocation));
             }
         }
@@ -1173,10 +1174,6 @@ public class FileReaderSettings extends TokenizerSettings {
                 BufferedReader reader = null;
                 try {
                     reader = createNewInputReader();
-                    if (reader == null) {
-                        status.addError("I/O Error while connecting to '"
-                                + m_dataFileLocation.toString() + "'.");
-                    }
                 } catch (Exception ioe) {
                     status.addError("I/O Error while connecting to '"
                             + m_dataFileLocation.toString() + "'.");

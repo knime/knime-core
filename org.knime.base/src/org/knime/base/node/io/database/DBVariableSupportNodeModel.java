@@ -70,7 +70,7 @@ public interface DBVariableSupportNodeModel {
          */
         public static String parse(final String query,
                 final DBVariableSupportNodeModel model) {
-            String command = new String(query);
+            String command = query;
             int currentIndex = 0;
             do {
                 currentIndex = command.indexOf("$${", currentIndex);

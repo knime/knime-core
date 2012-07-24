@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *    16.03.2007 (Tobias Koetter): created
  */
@@ -66,29 +66,29 @@ import org.knime.core.node.port.PortObjectSpec;
 
 
 /**
- * 
+ *
  * @author Tobias Koetter, University of Konstanz
  */
 public class SettingsModelColorNameColumns extends SettingsModel {
-    
+
 //    private static final String VALUE_SEPARATOR = "@";
 
     private static final String CFG_COLOR_COLUMN_NAMES = "colorColumnNames";
-    
+
     private ColorColumn[] m_value;
 
     private final String m_configName;
 
     /**
      * Creates a new object holding a string value.
-     * 
+     *
      * @param configName the identifier the value is stored with in the
      *            {@link org.knime.core.node.NodeSettings} object
      * @param defaultValue the initial value
      */
     public SettingsModelColorNameColumns(final String configName,
             final ColorColumn[] defaultValue) {
-        if ((configName == null) || (configName == "")) {
+        if ((configName == null) || "".equals(configName)) {
             throw new IllegalArgumentException("The configName must be a "
                     + "non-empty string");
         }
@@ -124,10 +124,10 @@ public class SettingsModelColorNameColumns extends SettingsModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadSettingsForDialog(final NodeSettingsRO settings, 
+    protected void loadSettingsForDialog(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) {
         try {
-            final ColorColumn[] columns = 
+            final ColorColumn[] columns =
                 loadColorColumns(m_configName, settings);
             if (columns != null) {
                 //only if the settings return a value use it
@@ -135,7 +135,7 @@ public class SettingsModelColorNameColumns extends SettingsModel {
             }
         } catch (IllegalArgumentException iae) {
             // if the argument is not accepted: keep the old value.
-        } 
+        }
     }
 
     /**
@@ -145,8 +145,8 @@ public class SettingsModelColorNameColumns extends SettingsModel {
     protected void saveSettingsForDialog(final NodeSettingsWO settings) {
         saveSettingsForModel(settings);
     }
-    
-    private static void saveColorColumns(final String configName, 
+
+    private static void saveColorColumns(final String configName,
             final NodeSettingsWO settings, final ColorColumn[] columns) {
         final Config config = settings.addConfig(configName);
         if (columns == null || columns.length < 1) {
@@ -159,7 +159,7 @@ public class SettingsModelColorNameColumns extends SettingsModel {
         }
         config.addStringArray(CFG_COLOR_COLUMN_NAMES, columnNames);
         for (ColorColumn column : columns) {
-            config.addInt(column.getColumnName(), 
+            config.addInt(column.getColumnName(),
                     column.getColor().getRGB());
         }
     }
@@ -168,12 +168,12 @@ public class SettingsModelColorNameColumns extends SettingsModel {
             final NodeSettingsRO settings) {
         try {
             final Config config = settings.getConfig(configName);
-            final String[] columnNames = 
+            final String[] columnNames =
                 config.getStringArray(CFG_COLOR_COLUMN_NAMES);
             if (columnNames == null) {
                 return null;
             }
-            final ColorColumn[] columns = 
+            final ColorColumn[] columns =
                 new ColorColumn[columnNames.length];
             for (int i = 0, length = columnNames.length; i < length; i++) {
                 final String columnName = columnNames[i];
@@ -185,12 +185,12 @@ public class SettingsModelColorNameColumns extends SettingsModel {
             return null;
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadSettingsForModel(final NodeSettingsRO settings) 
+    protected void loadSettingsForModel(final NodeSettingsRO settings)
     throws InvalidSettingsException {
         try {
             // no default value, throw an exception instead
@@ -219,10 +219,10 @@ public class SettingsModelColorNameColumns extends SettingsModel {
         System.arraycopy(m_value, 0, result, 0, m_value.length);
         return result;
     }
-    
+
     /**
      * set the value stored to (a copy of) the new value.
-     * 
+     *
      * @param newValue the new value to store.
      */
     public void setColorNameColumns(final ColorColumn... newValue) {
@@ -243,19 +243,19 @@ public class SettingsModelColorNameColumns extends SettingsModel {
                 }
             }
         }
-        
+
         if (newValue == null) {
             m_value = null;
         } else {
             m_value = new ColorColumn[newValue.length];
             System.arraycopy(newValue, 0, m_value, 0, newValue.length);
         }
-        
+
         if (!same) {
             notifyChangeListeners();
         }
     }
-    
+
 //    /**
 //     * @return the (a copy of the) current value stored.
 //     */
@@ -265,7 +265,7 @@ public class SettingsModelColorNameColumns extends SettingsModel {
 //
 //    /**
 //     * set the value stored to (a copy of) the new value.
-//     * 
+//     *
 //     * @param newValue the new value to store.
 //     */
 //    public void setStringArrayValue(final String[] newValue) {
@@ -293,12 +293,12 @@ public class SettingsModelColorNameColumns extends SettingsModel {
 //            m_value = new ColorNameColumn[newVals.length];
 //            System.arraycopy(newVals, 0, m_value, 0, newVals.length);
 //        }
-//        
+//
 //        if (!same) {
 //            notifyChangeListeners();
 //        }
 //    }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -311,7 +311,7 @@ public class SettingsModelColorNameColumns extends SettingsModel {
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettingsForModel(final NodeSettingsRO settings) 
+    protected void validateSettingsForModel(final NodeSettingsRO settings)
     throws InvalidSettingsException {
         settings.getStringArray(m_configName);
     }

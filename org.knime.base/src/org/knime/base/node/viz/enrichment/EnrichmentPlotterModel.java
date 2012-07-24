@@ -147,7 +147,7 @@ public class EnrichmentPlotterModel extends NodeModel {
          */
         @Override
         public int compareTo(final Helper o) {
-            return (int)Math.signum(this.a - o.a);
+            return Double.compare(this.a, o.a);
         }
     }
 

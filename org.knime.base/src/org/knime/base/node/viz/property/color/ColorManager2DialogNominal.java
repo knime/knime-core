@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   09.02.2006 (gabriel): created
  */
@@ -72,20 +72,20 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * A dialog panel used to set color for nominal values.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 final class ColorManager2DialogNominal extends JPanel {
-    
+
     /** Keeps mapping from data cell name to color. */
     private final Map<String, Map<DataCell, ColorAttr>> m_map;
 
     /** Keeps the all possible column values. */
     private final JList m_columnValues;
-    
+
     /** list model for column values. */
     private final DefaultListModel m_columnModel;
-    
+
     private int m_alpha = 255;
 
     /**
@@ -93,7 +93,7 @@ final class ColorManager2DialogNominal extends JPanel {
      */
     ColorManager2DialogNominal() {
         super(new GridLayout());
-        
+
         // map for key to color mapping
         m_map = new LinkedHashMap<String, Map<DataCell, ColorAttr>>();
 
@@ -107,7 +107,7 @@ final class ColorManager2DialogNominal extends JPanel {
 
     /**
      * Called is a new column is selected. If the column is null every
-     * 
+     *
      * @param column the new selected column
      * @return <code>true</code>, if the call caused any changes
      */
@@ -138,7 +138,7 @@ final class ColorManager2DialogNominal extends JPanel {
     /**
      * Select new color for the selected attribute value of the the selected
      * column.
-     * 
+     *
      * @param column the selected column
      * @param color the new color
      */
@@ -157,7 +157,7 @@ final class ColorManager2DialogNominal extends JPanel {
     /**
      * Adds the given set of possible values to the internal structure by the
      * given column name.
-     * 
+     *
      * @param column the column name
      * @param set the set of possible values for this column
      */
@@ -168,7 +168,7 @@ final class ColorManager2DialogNominal extends JPanel {
     }
 
     /**
-     * Create default color mapping for the given set of possible 
+     * Create default color mapping for the given set of possible
      * <code>DataCell</code> values.
      * @param set possible values
      * @return a map of possible value to color
@@ -182,8 +182,8 @@ final class ColorManager2DialogNominal extends JPanel {
         int idx = 0;
         for (DataCell cell : set) {
             // use Color, half saturated, half bright for base color
-            Color color = Color.getColor(null, 
-                Color.HSBtoRGB((float) idx++ / (float) set.size(), 1.0f, 1.0f));
+            Color color = new Color(Color.HSBtoRGB((float) idx++
+                    / (float) set.size(), 1.0f, 1.0f));
             map.put(cell, ColorAttr.getInstance(color));
         }
         return map;
@@ -200,7 +200,7 @@ final class ColorManager2DialogNominal extends JPanel {
 
     /**
      * Save settings that are the current color settings.
-     * 
+     *
      * @param settings to write to
      * @throws InvalidSettingsException if no nominal value are defined on the
      *             selected column
@@ -227,7 +227,7 @@ final class ColorManager2DialogNominal extends JPanel {
 
     /**
      * Reads the color settings for the given column.
-     * 
+     *
      * @param settings to read from
      * @param column the selected column
      */
@@ -255,14 +255,14 @@ final class ColorManager2DialogNominal extends JPanel {
             }
         }
     }
-    
+
     /**
      * @return intermediate alpha value as read from the current settings
      */
     final int getAlpha() {
         return m_alpha;
     }
-    
+
     /**
      * @param alpha the new alpha value as set by the alpha color panel
      */

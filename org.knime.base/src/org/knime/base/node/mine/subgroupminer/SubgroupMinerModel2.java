@@ -292,8 +292,7 @@ public class SubgroupMinerModel2 extends NodeModel {
                 for (final DataCell valCell : colCell) {
                     exec.checkCanceled();
                     if (!cell2ItemMap.containsKey(valCell)) {
-                        cell2ItemMap.put(valCell, new Integer(cell2ItemMap
-                                .size()));
+                        cell2ItemMap.put(valCell, cell2ItemMap.size());
                         nameMapping.add(valCell);
                     }
                 }

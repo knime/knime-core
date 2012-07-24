@@ -48,10 +48,17 @@
 
 package org.knime.base.node.preproc.groupby;
 
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.ColumnAggregator;
 import org.knime.base.data.aggregation.GlobalSettings;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -68,14 +75,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeLogger.LEVEL;
 import org.knime.core.util.MutableInteger;
 import org.knime.core.util.Pair;
-
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
 
 
 /**
@@ -309,7 +308,7 @@ GroupByTable {
                 if (s.length() > 31) {
                     s = s.substring(0, 30).concat("...");
                 }
-                s.replace('\n', '_');
+                s = s.replace('\n', '_');
                 b.append(s).append('\"');
             }
         }

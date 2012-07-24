@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   01.02.2006 (sieb): created
  */
@@ -60,7 +60,7 @@ import javax.swing.ScrollPaneLayout;
  * Overrides the default <code>JScrollPane</code> to force the application of
  * the own <code>Plotter2DScrollPaneLayout</code> overriding the default
  * <code>ScrollPaneLayout</code>.
- * 
+ *
  * @see org.knime.base.node.viz.plotter.Plotter2DScrollPaneLayout
  * @author Christoph Sieb, University of Konstanz
  */
@@ -68,7 +68,7 @@ public class Plotter2DScrollPane extends JScrollPane {
 
     /**
      * The constructor for a scatter plotter scroll pane.
-     * 
+     *
      * @param view the underlying view of the scroll pane. In case of the
      *            scatterplotter this is the drawing pane rendering the dots
      */
@@ -81,23 +81,15 @@ public class Plotter2DScrollPane extends JScrollPane {
      */
     @Override
     public void setLayout(final LayoutManager layout) {
-
-        LayoutManager managerToSet = null;
+        LayoutManager managerToSet;
         if (!(layout instanceof Plotter2DScrollPaneLayout)) {
             managerToSet = new Plotter2DScrollPaneLayout();
         } else {
             managerToSet = layout;
         }
 
-        if (managerToSet instanceof ScrollPaneLayout) {
-            super.setLayout(managerToSet);
-            ((ScrollPaneLayout)managerToSet).syncWithScrollPane(this);
-        } else if (managerToSet == null) {
-            super.setLayout(managerToSet);
-        } else {
-            String s = "layout of JScrollPane must be a ScrollPaneLayout";
-            throw new ClassCastException(s);
-        }
+        super.setLayout(managerToSet);
+        ((ScrollPaneLayout)managerToSet).syncWithScrollPane(this);
     }
 
 }

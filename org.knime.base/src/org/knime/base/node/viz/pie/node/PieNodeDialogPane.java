@@ -95,7 +95,6 @@ public class PieNodeDialogPane extends DefaultNodeSettingsPane {
      * Constructor for class HistogramNodeDialogPane.
      *
      */
-    @SuppressWarnings("unchecked")
     protected PieNodeDialogPane() {
         super();
         m_noOfRows = new SettingsModelIntegerBounded(
@@ -105,6 +104,7 @@ public class PieNodeDialogPane extends DefaultNodeSettingsPane {
         m_allRows = new SettingsModelBoolean(
                 PieNodeModel.CFGKEY_ALL_ROWS, false);
         m_allRows.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 m_noOfRows.setEnabled(!m_allRows.getBooleanValue());
             }
@@ -120,6 +120,7 @@ public class PieNodeDialogPane extends DefaultNodeSettingsPane {
                     AggregationMethod.values());
         m_aggrMethod.setEnabled(m_aggrColumn.getStringValue() != null);
         m_aggrColumn.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                boolean enable = m_aggrColumn.getStringValue() != null;
                m_aggrMethod.setEnabled(enable);
@@ -143,7 +144,7 @@ public class PieNodeDialogPane extends DefaultNodeSettingsPane {
 
         final DialogComponentNumber noOfRowsComp =
             new DialogComponentNumber(m_noOfRows,
-                NO_OF_ROWS_LABEL, new Integer(1));
+                NO_OF_ROWS_LABEL, 1);
         final DialogComponentBoolean allRowsComp =
             new DialogComponentBoolean(m_allRows, ALL_ROWS_LABEL);
         final DialogComponentColumnNameSelection pieCol =

@@ -53,9 +53,9 @@ package org.knime.base.node.io.tablecreator.table;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.Map.Entry;
 
 import javax.swing.table.AbstractTableModel;
 
@@ -69,8 +69,8 @@ import org.knime.core.data.DataType;
  */
 class SpreadsheetTableModel extends AbstractTableModel {
     private static final long serialVersionUID = 5162625446456392992L;
-    private SortedMap<IntPair, Cell> m_values;
-    private SortedMap<Integer, ColProperty> m_colProps;
+    private final SortedMap<IntPair, Cell> m_values;
+    private final SortedMap<Integer, ColProperty> m_colProps;
 
     /**
      * Create new instance.
@@ -366,8 +366,7 @@ class SpreadsheetTableModel extends AbstractTableModel {
                     }
                 }
                 if (!delete) {
-                    movedColNames.put(new Integer(pos - moveby),
-                            curr.getValue());
+                    movedColNames.put(pos - moveby, curr.getValue());
                 }
                 iter.remove();
             }
@@ -429,8 +428,7 @@ class SpreadsheetTableModel extends AbstractTableModel {
                         break;
                     }
                 }                if (pos + moveby < getColumnCount()) {
-                    movedColNames.put(new Integer(pos + moveby),
-                                curr.getValue());
+                    movedColNames.put(pos + moveby, curr.getValue());
                 }
                 iter.remove();
             }
@@ -612,17 +610,22 @@ class SpreadsheetTableModel extends AbstractTableModel {
          */
         @Override
         public boolean equals(final Object obj) {
-            if (this == obj)
+            if (this == obj) {
                 return true;
-            if (obj == null)
+            }
+            if (obj == null) {
                 return false;
-            if (getClass() != obj.getClass())
+            }
+            if (getClass() != obj.getClass()) {
                 return false;
+            }
             IntPair other = (IntPair)obj;
-            if (m_row != other.m_row)
+            if (m_row != other.m_row) {
                 return false;
-            if (m_col != other.m_col)
+            }
+            if (m_col != other.m_col) {
                 return false;
+            }
             return true;
         }
 

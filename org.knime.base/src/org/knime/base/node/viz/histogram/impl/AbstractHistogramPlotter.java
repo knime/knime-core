@@ -50,6 +50,34 @@
  */
 package org.knime.base.node.viz.histogram.impl;
 
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+
+import javax.swing.JSlider;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;
+import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
+import org.knime.base.node.viz.histogram.util.NoDomainColumnFilter;
+import org.knime.base.node.viz.plotter.AbstractPlotter;
+import org.knime.base.node.viz.plotter.Axis;
+import org.knime.base.util.coordinate.Coordinate;
+import org.knime.base.util.coordinate.CoordinateMapping;
+import org.knime.base.util.coordinate.NumericCoordinate;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
@@ -68,35 +96,6 @@ import org.knime.core.node.property.hilite.KeyEvent;
 import org.knime.core.node.util.ColumnFilter;
 import org.knime.core.node.util.CombinedColumnFilter;
 import org.knime.core.node.util.DataValueColumnFilter;
-
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.histogram.HistogramLayout;
-import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
-import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
-import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;
-import org.knime.base.node.viz.histogram.util.ColorColumn;
-import org.knime.base.node.viz.histogram.util.NoDomainColumnFilter;
-import org.knime.base.node.viz.plotter.AbstractPlotter;
-import org.knime.base.node.viz.plotter.Axis;
-import org.knime.base.util.coordinate.Coordinate;
-import org.knime.base.util.coordinate.CoordinateMapping;
-import org.knime.base.util.coordinate.NumericCoordinate;
-
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
-import java.util.Collection;
-import java.util.List;
-import java.util.Set;
-
-import javax.swing.JSlider;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 /**
  * Abstract class which is the coordinator between the
@@ -413,7 +412,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                     captionCell, drawingWidth);
             //subtract half of the bar width from the start position to place
             //the middle point of the bar on the mapped coordinate position
-            final int xCoord = (int)(labelCoord - (newBinWidth / 2));
+            final int xCoord = (int)(labelCoord - (newBinWidth / 2.0));
             bin.updateBinWidth(xCoord, newBinWidth, barElementColors,
                     aggrColumns, baseLine, calculator);
         }
@@ -507,7 +506,7 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
                 bin.getMinAggregationValue(aggrMethod, layout), 0);
             //subtract half of the bar width from the start position to place
             //the middle point of the bar on the mapped coordinate position
-            final int xCoord = (int)(labelCoord - (binWidth / 2));
+            final int xCoord = (int)(labelCoord - (binWidth / 2.0));
             final int upperY = (int)(drawingHeight
                     - yCoordinates.calculateMappedValue(
                             new DoubleCell(maxAggrVal), drawingHeight));
@@ -849,9 +848,6 @@ public abstract class AbstractHistogramPlotter extends AbstractPlotter {
         }
         if (vizModel.setShowGridLines(showGridLines)) {
             final HistogramDrawingPane drawingPane = getHistogramDrawingPane();
-            if (drawingPane == null) {
-                return;
-            }
             if (showGridLines) {
                 final Coordinate yCoordinates = getYAxis().getCoordinate();
                 if (yCoordinates == null) {

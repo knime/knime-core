@@ -50,6 +50,14 @@
  */
 package org.knime.base.node.viz.histogram.node;
 
+import java.awt.Dimension;
+
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import org.knime.base.node.viz.histogram.impl.AbstractHistogramPlotter;
+import org.knime.base.node.viz.histogram.util.AggregationColumnDialogComponent;
+import org.knime.base.node.viz.histogram.util.SettingsModelColorNameColumns;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
@@ -58,15 +66,6 @@ import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-
-import org.knime.base.node.viz.histogram.impl.AbstractHistogramPlotter;
-import org.knime.base.node.viz.histogram.util.AggregationColumnDialogComponent;
-import org.knime.base.node.viz.histogram.util.SettingsModelColorNameColumns;
-
-import java.awt.Dimension;
-
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 /**
  * The dialog of the {@link HistogramNodeModel} where the user can
@@ -94,7 +93,6 @@ public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
      * Constructor for class HistogramNodeDialogPane.
      *
      */
-    @SuppressWarnings("unchecked")
     protected HistogramNodeDialogPane() {
         super();
         createNewGroup("Rows to display:");
@@ -104,10 +102,11 @@ public class HistogramNodeDialogPane extends DefaultNodeSettingsPane {
                 Integer.MAX_VALUE);
         final DialogComponentNumber noOfRowsComp =
             new DialogComponentNumber(m_noOfRows,
-                NO_OF_ROWS_LABEL, new Integer(1));
+                NO_OF_ROWS_LABEL, 1);
         m_allRows = new SettingsModelBoolean(
                 AbstractHistogramNodeModel.CFGKEY_ALL_ROWS, false);
         m_allRows.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 m_noOfRows.setEnabled(!m_allRows.getBooleanValue());
             }

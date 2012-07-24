@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.mine.svm.learner;
 
@@ -59,20 +59,20 @@ import org.knime.core.node.ExecutionMonitor;
 
 /**
  * This class is the implementation of a binary SVM learning algorithm.
- * 
+ *
  * The main algorithm is described in:
- * 
+ *
  * Sequential Minimal Optimization: A Fast Algorithm for Training Support Vector
  * Machines, by John C. Platt. This source code also contains the improvements
  * to this algorithm presented in: Improvements to Platt's SMO Algorithm for SVM
  * Classifier Design, by Keerthi a.o.
- * 
+ *
  * In order to understand this code, you should read the above papers (which
  * describe the algorithm used) and possibly other documents about SVMs in
  * general.
- * 
+ *
  * The variable names used in this class follow the notations from the papers.
- * 
+ *
  * @author Stefan, University of Konstanz
  * @author Nicolas Cebron, University of Konstanz
  */
@@ -83,7 +83,7 @@ public class SvmAlgorithm {
      */
 //    private static final NodeLogger LOGGER =
 //            NodeLogger.getLogger(SvmAlgorithm.class);
-//    
+//
     /*
      * the input data.
      */
@@ -135,7 +135,7 @@ public class SvmAlgorithm {
      * the tolerance level for optimality.
      */
     private static final double TOLERANCE = 1.0e-3;
-    
+
     /*
      * the difference up to which two doubles are considered equal.
      */
@@ -143,7 +143,7 @@ public class SvmAlgorithm {
 
     /**
      * The main constructor.
-     * 
+     *
      * @param inputData the input vectors
      * @param positiveClass the class value for which to consider an input
      *            vector a 'positive' example. if input vectors have other class
@@ -152,7 +152,7 @@ public class SvmAlgorithm {
      * @param kernel the kernel to use in the algorithm
      */
     public SvmAlgorithm(final DoubleVector[] inputData,
-            final String positiveClass, final Kernel kernel, 
+            final String positiveClass, final Kernel kernel,
             final double paramC) {
         m_inputData = inputData;
         m_positiveClass = positiveClass;
@@ -163,7 +163,7 @@ public class SvmAlgorithm {
 
     /**
      * test if the parameter is very close to zero.
-     * 
+     *
      * @param x the number to check
      * @return true if the number is close to zero false otherwise
      */
@@ -173,7 +173,7 @@ public class SvmAlgorithm {
 
     /**
      * test if the two parameters are very close to each other.
-     * 
+     *
      * @param x the first parameter to check for equality
      * @param y the second parameter to check for equality
      * @return true if they are almost equal false otherwise
@@ -184,7 +184,7 @@ public class SvmAlgorithm {
 
     /**
      * determine the output for a given input vector.
-     * 
+     *
      * @return -1 or 1, depending if the input is a 'positive' example or not
      * @param i the index of the input vector
      */
@@ -198,7 +198,7 @@ public class SvmAlgorithm {
 
     /**
      * compute the predicted value of a vector by using the current SVM.
-     * 
+     *
      * @param i1 the index of the vector
      * @return the predicted value (-1 or 1)
      */
@@ -244,7 +244,7 @@ public class SvmAlgorithm {
 
     /**
      * update the sets knowing only i1 and i2 may have changed.
-     * 
+     *
      * @param i1 ...
      * @param i2 ...
      */
@@ -268,7 +268,7 @@ public class SvmAlgorithm {
     /**
      * after a successful optimization step, make sure each element is in the
      * set it belongs to.
-     * 
+     *
      * @param i1 the first Lagrange coefficient optimized
      * @param i2 the second Lagrange coefficient optimized
      */
@@ -320,10 +320,10 @@ public class SvmAlgorithm {
 
     /**
      * Given two examples, optimize their Lagrange coefficients.
-     * 
+     *
      * see Sequential Minimal Optimization: A Fast Algorithm for Training
      * Support Vector Machines by John C. Platt for pseudocode.
-     * 
+     *
      * @param i1 first index
      * @param i2 second index
      * @return was the optimization successful?
@@ -393,15 +393,14 @@ public class SvmAlgorithm {
         m_fcache[i1] += y1 * (a1 - alpha1) * k11 + y2 * (a2 - alpha2) * k12;
         m_fcache[i2] += y1 * (a1 - alpha1) * k12 + y2 * (a2 - alpha2) * k22;
         repairSets(i1, i2);
-        final double half = 0.5; 
-        m_b = (m_bLow + m_bUp) * half;
+        m_b = (m_bLow + m_bUp) * 0.5;
         return true;
     }
 
     /**
      * Given one of the example with which to optimize, find another convenient
      * example and optimize the alpha's of the two examples.
-     * 
+     *
      * see Sequential Minimal Optimization: A Fast Algorithm for Training
      * Support Vector Machines by John C. Platt and also Improvements to Platt's
      * SMO Algorithm for SVM Classifier Design
@@ -454,7 +453,7 @@ public class SvmAlgorithm {
     /**
      * Check the amount by which the KKT conditions for the i'th example are
      * violated.
-     * 
+     *
      * @param i the index of the example to examine
      * @return the amount of the violation
      */
@@ -494,7 +493,7 @@ public class SvmAlgorithm {
      * Implements the main algorithm (Sequential minimal optimization). see
      * Sequential Minimal Optimization: A Fast Algorithm for Training Support
      * Vector Machines by John C. Platt for pseudocode.
-     * 
+     *
      * @param exec report progress is reported here
      */
     private void mainAlgorithm(final ExecutionMonitor exec)
@@ -576,7 +575,7 @@ public class SvmAlgorithm {
                     }
                 }
             }
-               
+
             if (examineAll) {
                 examineAll = false;
             } else if (numChanged == 0) {
@@ -591,7 +590,7 @@ public class SvmAlgorithm {
 
     /**
      * Runs the main algorithm and return the resulting SVM.
-     * 
+     *
      * @param exec progress is reported here
      * @return the resulting SVM
      * @throws CanceledExecutionException if the algorithm is canceled.

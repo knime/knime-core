@@ -43,13 +43,13 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- *
  */
 package org.knime.base.util.kdtree;
 
 /**
  * This class represents a nearest neighbour found during the search.
- * 
+ *
  * @param <T> the type of the data object associated with the pattern
  * @author Thorsten Meinl, University of Konstanz
  */
@@ -60,7 +60,7 @@ public class NearestNeighbour<T> implements Comparable<NearestNeighbour<T>> {
 
     /**
      * Creates a new nearest neighbour.
-     * 
+     *
      * @param data the data, can be <code>null</code>
      * @param distance the distance from the query pattern
      */
@@ -71,7 +71,7 @@ public class NearestNeighbour<T> implements Comparable<NearestNeighbour<T>> {
 
     /**
      * Returns the data associated with the pattern.
-     * 
+     *
      * @return the data, can be <code>null</code>
      */
     public T getData() {
@@ -80,7 +80,7 @@ public class NearestNeighbour<T> implements Comparable<NearestNeighbour<T>> {
 
     /**
      * Returns the distance from the query pattern.
-     * 
+     *
      * @return the distance
      */
     public double getDistance() {
@@ -89,19 +89,20 @@ public class NearestNeighbour<T> implements Comparable<NearestNeighbour<T>> {
 
     /**
      * Sets the distance of this nearest neighbour.
-     * 
+     *
      * @param newDistance the new distance
      */
     void setDistance(final double newDistance) {
         m_distance = newDistance;
     }
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public int compareTo(final NearestNeighbour<T> o) {
         // query results are sorted by *de*creasing distance
-        return (int) Math.signum(o.m_distance - this.m_distance);
+        return Double.compare(o.m_distance, this.m_distance);
     }
 
     /**
@@ -110,5 +111,48 @@ public class NearestNeighbour<T> implements Comparable<NearestNeighbour<T>> {
     @Override
     public String toString() {
         return "(" + m_distance + ", " + m_data + ")";
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((m_data == null) ? 0 : m_data.hashCode());
+        long temp;
+        temp = Double.doubleToLongBits(m_distance);
+        result = prime * result + (int)(temp ^ (temp >>> 32));
+        return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        NearestNeighbour<?> other = (NearestNeighbour<?>)obj;
+        if (m_data == null) {
+            if (other.m_data != null) {
+                return false;
+            }
+        } else if (!m_data.equals(other.m_data)) {
+            return false;
+        }
+        if (Double.doubleToLongBits(m_distance) != Double
+                .doubleToLongBits(other.m_distance)) {
+            return false;
+        }
+        return true;
     }
 }

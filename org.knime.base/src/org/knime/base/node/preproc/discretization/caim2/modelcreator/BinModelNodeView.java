@@ -56,7 +56,6 @@ import java.util.List;
 import javax.swing.JTabbedPane;
 
 import org.knime.base.node.viz.plotter.AbstractPlotter;
-import org.knime.base.node.viz.plotter.DataProvider;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
@@ -91,29 +90,6 @@ public class BinModelNodeView extends
         plotter.setHiLiteHandler(model.getInHiLiteHandler(0));
         plotter.updatePaintModel();
         setComponent(plotter);
-    }
-
-    /**
-     * A generic NodeView which sets the model and calls the right methods of
-     * the abstract plotter.
-     *
-     * @param model the node model (must implement DataProvider).
-     * @param plotter the plotter
-     * @param title the title for the first tab
-     */
-    public BinModelNodeView(final CAIMDiscretizationNodeModel model,
-            final AbstractPlotter plotter, final String title) {
-        super(model);
-
-        m_plotters = new ArrayList<AbstractPlotter>();
-        m_plotters.add(plotter);
-        ((BinModelPlotter)plotter)
-                .setDiscretizationModel(model.getDiscretizationModel());
-        plotter.setDataProvider((DataProvider)model);
-        plotter.setHiLiteHandler(model.getInHiLiteHandler(0));
-        m_tabs = new JTabbedPane();
-        m_tabs.addTab(title, plotter);
-        setComponent(m_tabs);
     }
 
     /**

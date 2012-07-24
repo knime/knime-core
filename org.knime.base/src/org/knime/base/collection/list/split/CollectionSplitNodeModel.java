@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Feb 1, 2008 (wiswedel): created
  */
@@ -85,9 +85,9 @@ import org.knime.core.util.Pair;
  * @author Bernd Wiswedel, University of Konstanz
  */
 final class CollectionSplitNodeModel extends NodeModel {
-    
+
     private final CollectionSplitSettings m_settings;
-    
+
     /** One input, one output. */
     public CollectionSplitNodeModel() {
         super(1, 1);
@@ -107,7 +107,7 @@ final class CollectionSplitNodeModel extends NodeModel {
         case Count:
             execForCR = exec.createSubProgress(0.7);
             ExecutionMonitor e = exec.createSubProgress(0.3);
-            colSpecs = countNewColumns(table, e); 
+            colSpecs = countNewColumns(table, e);
             break;
         case UseElementNamesOrFail:
             colSpecs = getColSpecsByElementNames(spec);
@@ -118,13 +118,13 @@ final class CollectionSplitNodeModel extends NodeModel {
             } catch (InvalidSettingsException ise) {
                 execForCR = exec.createSubProgress(0.7);
                 e = exec.createSubProgress(0.3);
-                colSpecs = countNewColumns(table, e); 
+                colSpecs = countNewColumns(table, e);
             }
             break;
-        default: throw new InvalidSettingsException("Unsupported policy: " 
+        default: throw new InvalidSettingsException("Unsupported policy: "
                 + m_settings.getCountElementsPolicy());
         }
-        Pair<ColumnRearranger, SplitCellFactory> pair = 
+        Pair<ColumnRearranger, SplitCellFactory> pair =
             createColumnRearranger(spec, colSpecs);
         BufferedDataTable out = exec.createColumnRearrangeTable(
                 table, pair.getFirst(), execForCR);
@@ -159,7 +159,7 @@ final class CollectionSplitNodeModel extends NodeModel {
             return new DataTableSpec[]{null};
         case UseElementNamesOrFail:
             DataColumnSpec[] colSpecs = getColSpecsByElementNames(spec);
-            ColumnRearranger rearranger = 
+            ColumnRearranger rearranger =
                 createColumnRearranger(spec, colSpecs).getFirst();
             return new DataTableSpec[]{rearranger.createSpec()};
         case BestEffort:
@@ -170,14 +170,14 @@ final class CollectionSplitNodeModel extends NodeModel {
             } catch (InvalidSettingsException ise) {
                 return new DataTableSpec[]{null};
             }
-        default: throw new InvalidSettingsException("Unsupported policy: " 
+        default: throw new InvalidSettingsException("Unsupported policy: "
                 + m_settings.getCountElementsPolicy());
         }
     }
-    
+
     /** Iterate the argument table, determine maximum element count,
      * return freshly created column specs. */
-    private DataColumnSpec[] countNewColumns(final BufferedDataTable table, 
+    private DataColumnSpec[] countNewColumns(final BufferedDataTable table,
             final ExecutionMonitor exec) throws InvalidSettingsException,
             CanceledExecutionException {
         DataTableSpec spec = table.getDataTableSpec();
@@ -190,8 +190,8 @@ final class CollectionSplitNodeModel extends NodeModel {
             if (!c.isMissing()) {
                 max = Math.max(((CollectionDataValue)c).size(), max);
             }
-            exec.setProgress((i++) / (double)rowCount, 
-                    "Determining maximum element count, row \"" + row.getKey() 
+            exec.setProgress((i++) / (double)rowCount,
+                    "Determining maximum element count, row \"" + row.getKey()
                     + "\" (" + i + "/" + rowCount + ")");
             exec.checkCanceled();
         }
@@ -200,7 +200,7 @@ final class CollectionSplitNodeModel extends NodeModel {
             hashNames.add(s.getName());
         }
         if (m_settings.isReplaceInputColumn()) {
-            hashNames.remove(spec.getColumnSpec(targetColIndex));
+            hashNames.remove(spec.getColumnSpec(targetColIndex).getName());
         }
         DataType elementType = spec.getColumnSpec(
                 targetColIndex).getType().getCollectionElementType();
@@ -217,9 +217,9 @@ final class CollectionSplitNodeModel extends NodeModel {
         }
         return newColSpec;
     }
-    
+
     /** Validate settings and get the target column index. */
-    private int getTargetColIndex(final DataTableSpec spec) 
+    private int getTargetColIndex(final DataTableSpec spec)
         throws InvalidSettingsException {
         String colName = m_settings.getCollectionColName();
         if (colName == null || colName.length() == 0) {
@@ -231,15 +231,15 @@ final class CollectionSplitNodeModel extends NodeModel {
         }
         DataColumnSpec cs = spec.getColumnSpec(colIndex);
         if (!cs.getType().isCompatible(CollectionDataValue.class)) {
-            throw new InvalidSettingsException("Column \"" + colName 
+            throw new InvalidSettingsException("Column \"" + colName
                     + "\" does not contain collection.");
         }
         return colIndex;
     }
-    
-    /** Retype the argument table to use the types as determined by the 
+
+    /** Retype the argument table to use the types as determined by the
      * cell factory. */
-    private BufferedDataTable refineTypes(final BufferedDataTable table, 
+    private BufferedDataTable refineTypes(final BufferedDataTable table,
             final SplitCellFactory fac, final ExecutionContext exec) {
         HashMap<String, Integer> colMap = new HashMap<String, Integer>();
         DataTableSpec spec = table.getDataTableSpec();
@@ -252,7 +252,7 @@ final class CollectionSplitNodeModel extends NodeModel {
         for (int i = 0; i < oldReplacedSpecs.length; i++) {
             DataColumnSpec s = oldReplacedSpecs[i];
             Integer index = colMap.get(s.getName());
-            DataColumnSpecCreator creator = 
+            DataColumnSpecCreator creator =
                 new DataColumnSpecCreator(newColSpecs[index]);
             creator.setType(fac.getCommonTypes()[i]);
             newColSpecs[index] = creator.createSpec();
@@ -260,8 +260,8 @@ final class CollectionSplitNodeModel extends NodeModel {
         DataTableSpec newSpec = new DataTableSpec(spec.getName(), newColSpecs);
         return exec.createSpecReplacerTable(table, newSpec);
     }
-    
-    /** Get new column specs as inferred from the element names in the 
+
+    /** Get new column specs as inferred from the element names in the
      * collection column. */
     private DataColumnSpec[] getColSpecsByElementNames(final DataTableSpec spec)
         throws InvalidSettingsException {
@@ -269,9 +269,9 @@ final class CollectionSplitNodeModel extends NodeModel {
         DataColumnSpec colSpec = spec.getColumnSpec(colIndex);
         List<String> elementNames = colSpec.getElementNames();
         if (elementNames.isEmpty()) {
-            throw new InvalidSettingsException("Input column \"" 
+            throw new InvalidSettingsException("Input column \""
                     + colSpec.getName() + "\" does not provide element names; "
-                    + "consider to change option in dialog or make sure that" 
+                    + "consider to change option in dialog or make sure that"
                     + "the input table contains the necessary information.");
         }
         DataType type = colSpec.getType().getCollectionElementType();
@@ -294,7 +294,7 @@ final class CollectionSplitNodeModel extends NodeModel {
         }
         return newColSpec;
     }
-    
+
     /** Create rearrange object, setup the table. */
     private Pair<ColumnRearranger, SplitCellFactory> createColumnRearranger(
             final DataTableSpec spec, final DataColumnSpec[] newColSpecs)
@@ -310,7 +310,7 @@ final class CollectionSplitNodeModel extends NodeModel {
         }
         return new Pair<ColumnRearranger, SplitCellFactory>(arranger, fac);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected void reset() {
@@ -351,31 +351,31 @@ final class CollectionSplitNodeModel extends NodeModel {
             final File nodeInternDir, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
     }
-    
+
     /** CellFactory being used to split the column. */
     private static final class SplitCellFactory implements CellFactory {
-        
+
         private final DataColumnSpec[] m_colSpecs;
         private final DataType[] m_commonTypes;
         private final int m_colIndex;
         private String m_warnMessage;
-        
+
         /** Create new cell factory.
          * @param colIndex Index of collection column
-         * @param colSpecs The column specs of the new columns. 
+         * @param colSpecs The column specs of the new columns.
          */
         SplitCellFactory(final int colIndex, final DataColumnSpec[] colSpecs) {
             m_commonTypes = new DataType[colSpecs.length];
             m_colSpecs = colSpecs;
             m_colIndex = colIndex;
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public DataColumnSpec[] getColumnSpecs() {
             return m_colSpecs;
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public DataCell[] getCells(final DataRow row) {
@@ -394,7 +394,7 @@ final class CollectionSplitNodeModel extends NodeModel {
                 DataCell next;
                 DataType type;
                 if (it instanceof BlobSupportDataCellIterator) {
-                    next = 
+                    next =
                         ((BlobSupportDataCellIterator)it).nextWithBlobSupport();
                     if (next instanceof BlobWrapperDataCell) {
                         // try to not access the cell (will get deserialized)
@@ -410,35 +410,35 @@ final class CollectionSplitNodeModel extends NodeModel {
                 if (m_commonTypes[i] == null) {
                     m_commonTypes[i] = type;
                 } else {
-                    m_commonTypes[i] = 
+                    m_commonTypes[i] =
                         DataType.getCommonSuperType(m_commonTypes[i], type);
                 }
                 result[i] = next;
             }
             if (it.hasNext()) {
-                m_warnMessage = "At least one row had more elements than " 
+                m_warnMessage = "At least one row had more elements than "
                     + "specified; row was truncated.";
             }
             return result;
         }
-        
+
         /** {@inheritDoc} */
         @Override
-        public void setProgress(final int curRowNr, final int rowCount, 
+        public void setProgress(final int curRowNr, final int rowCount,
                 final RowKey lastKey, final ExecutionMonitor exec) {
-            exec.setProgress(curRowNr / (double)rowCount, "Split row " 
+            exec.setProgress(curRowNr / (double)rowCount, "Split row "
                     + curRowNr + " (\"" + lastKey + "\")");
         }
-        
+
         /** @return the commonTypes */
         public DataType[] getCommonTypes() {
             return m_commonTypes;
         }
-        
+
         /** @return the warnMessage or null */
         public String getWarnMessage() {
             return m_warnMessage;
         }
-        
+
     }
 }

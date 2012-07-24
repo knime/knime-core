@@ -57,7 +57,7 @@ import org.knime.core.data.DataValueComparator;
 /**
  * Comparator used to sort {@link DataRow}s by the value of the row with the
  * given index.
- * 
+ *
  * @author Tobias Koetter, University of Konstanz
  */
 public class RowByColumnComparator implements Comparator<DataRow> {
@@ -74,7 +74,7 @@ public class RowByColumnComparator implements Comparator<DataRow> {
 
     /**
      * Constructor for class RowByColumnComparator.
-     * 
+     *
      * @param colIndx the index of the column which should be used to compare
      *            the given <code>DataRow</code> objects
      * @param cellComp the <code>DataValueComparator</code> used to compare
@@ -100,14 +100,15 @@ public class RowByColumnComparator implements Comparator<DataRow> {
      * @return the result of the default comparator for the table cell with
      *         index set in the constructor
      */
+    @Override
     public int compare(final DataRow o1, final DataRow o2) {
         if (o1 == o2) {
             return m_isEquals;
         }
-        if (o1 == null && o2 != null) {
+        if (o1 == null) {
             return m_o1Smaller;
         }
-        if (o1 != null && o2 == null) {
+        if (o2 == null) {
             return m_o1Greater;
         }
         if (o1.getNumCells() < this.m_colIdx

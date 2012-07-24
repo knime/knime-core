@@ -133,8 +133,6 @@ public abstract class ExtToolOutputNodeModel extends NodeModel implements
             CanceledExecutionException {
         // load back in the standard output
         synchronized (m_extOutput) {
-            assert m_extOutput != null;
-
             File stdOutIn = new File(nodeInternDir, "execOutput");
             if ((!stdOutIn.exists()) || stdOutIn.isDirectory()) {
                 m_extOutput.clear();
@@ -147,15 +145,12 @@ public abstract class ExtToolOutputNodeModel extends NodeModel implements
                     m_extOutput.addLast(line);
                     line = breader.readLine();
                 }
-
+                breader.close();
             }
         }
 
         // load back in the error output
         synchronized (m_extErrout) {
-
-            assert m_extErrout != null;
-
             File stdErrIn = new File(nodeInternDir, "execErrout");
             if ((!stdErrIn.exists()) || stdErrIn.isDirectory()) {
                 m_extErrout.clear();
@@ -167,6 +162,7 @@ public abstract class ExtToolOutputNodeModel extends NodeModel implements
                     m_extErrout.addLast(line);
                     line = breader.readLine();
                 }
+                breader.close();
             }
 
         }

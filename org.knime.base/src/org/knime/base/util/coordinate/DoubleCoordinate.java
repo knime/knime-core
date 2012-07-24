@@ -242,7 +242,7 @@ public class DoubleCoordinate extends NumericCoordinate {
 
         double middle = (getMaxDomainValue() - getMinDomainValue()) / 2;
         return new CoordinateMapping[]{new DoubleCoordinateMapping(
-                formatNumber(middle), middle, (int)absoluteLength / 2)};
+                formatNumber(middle), middle, (int)(absoluteLength / 2))};
     }
 
     /**
@@ -348,11 +348,7 @@ public class DoubleCoordinate extends NumericCoordinate {
      */
     @Override
     public boolean isMinDomainValueSet() {
-        if (getMinDomainValue() != Double.NaN) {
-            return true;
-        }
-
-        return false;
+        return !Double.isNaN(getMinDomainValue());
     }
 
     /**
@@ -360,11 +356,7 @@ public class DoubleCoordinate extends NumericCoordinate {
      */
     @Override
     public boolean isMaxDomainValueSet() {
-        if (getMaxDomainValue() != Double.NaN) {
-            return true;
-        }
-
-        return false;
+        return !Double.isNaN(getMaxDomainValue());
     }
 
     /**

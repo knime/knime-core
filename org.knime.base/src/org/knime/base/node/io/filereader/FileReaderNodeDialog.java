@@ -70,6 +70,7 @@ import java.io.IOException;
 import java.io.Reader;
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
@@ -1275,13 +1276,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         Reader reader = null;
         try {
             reader = settingsToSave.createNewInputReader();
-            if (reader == null) {
-                throw new InvalidSettingsException("I/O Error while "
-                        + "accessing '"
-                        + settingsToSave.getDataFileLocation().toString()
-                        + "'.");
-            }
-        } catch (Exception ioe) {
+        } catch (IOException ioe) {
             throw new InvalidSettingsException("I/O Error while accessing '"
                     + settingsToSave.getDataFileLocation().toString() + "'.");
         }
@@ -1643,8 +1638,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         setErrorLabelText("");
 
         // update preview
-        if ((m_frSettings.getDataFileLocation() == null)
-                || (m_frSettings.getDataFileLocation().equals(""))) {
+        if (m_frSettings.getDataFileLocation() == null) {
             // if there is no data file specified display empty table
             setPreviewTable(null);
             showPreviewTable();
@@ -1976,7 +1970,9 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                 File tmpFile = new File(newURL.toURI().getPath());
                 startingDir = tmpFile.getAbsolutePath();
             }
-        } catch (Exception e) {
+        } catch (MalformedURLException e) {
+            // no valid path - start in the default dir of the file chooser
+        } catch (URISyntaxException ex) {
             // no valid path - start in the default dir of the file chooser
         }
 

@@ -119,7 +119,7 @@ public class ClusterAssignerNodeModel extends NodeModel {
 
         colre.append(new ClusterAssignFactory(
                 null, null, createNewOutSpec(dataSpec),
-                findLearnedColumnIndices(dataSpec, 
+                findLearnedColumnIndices(dataSpec,
                         new HashSet<String>(spec.getLearningFields()))));
 
         DataTableSpec out = colre.createSpec();
@@ -164,7 +164,7 @@ public class ClusterAssignerNodeModel extends NodeModel {
         ColumnRearranger colre = new ColumnRearranger(data.getSpec());
         colre.append(new ClusterAssignFactory(
                 measure, prototypes, createNewOutSpec(data.getDataTableSpec()),
-                findLearnedColumnIndices(data.getSpec(), 
+                findLearnedColumnIndices(data.getSpec(),
                         trans.getUsedColumns())));
         BufferedDataTable bdt =
                 exec.createColumnRearrangeTable(data, colre, exec);
@@ -237,7 +237,7 @@ public class ClusterAssignerNodeModel extends NodeModel {
             throws InvalidSettingsException {
     }
 
-    private class ClusterAssignFactory extends SingleCellFactory {
+    private static class ClusterAssignFactory extends SingleCellFactory {
         private final ComparisonMeasure m_measure;
         private final List<Prototype> m_prototypes;
         private final int[] m_colIndices;

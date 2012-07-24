@@ -327,7 +327,7 @@ public class ClusterNodeView extends NodeView<ClusterNodeModel>
         m_jtree.setModel(new DefaultTreeModel(root));
     }
 
-    private class ClusterMutableTreeNode extends DefaultMutableTreeNode {
+    private static class ClusterMutableTreeNode extends DefaultMutableTreeNode {
 
         private final RowKey m_rowId;
 

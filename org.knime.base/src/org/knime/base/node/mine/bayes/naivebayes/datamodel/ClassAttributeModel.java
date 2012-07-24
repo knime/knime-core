@@ -51,16 +51,16 @@
 
 package org.knime.base.node.mine.bayes.naivebayes.datamodel;
 
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.NominalValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.Config;
 import org.knime.core.util.MutableInteger;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 
 /**
@@ -228,7 +228,7 @@ class ClassAttributeModel extends AttributeModel {
         if (noOfRecs == null) {
             return null;
         }
-        return new Integer(noOfRecs.intValue());
+        return noOfRecs.intValue();
     }
 
     /**

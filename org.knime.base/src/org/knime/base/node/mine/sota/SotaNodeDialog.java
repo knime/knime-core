@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Nov 16, 2005 (Kilian Thiel): created
  */
@@ -69,38 +69,37 @@ import org.knime.core.node.NotConfigurableException;
 
 
 /**
- * 
+ *
  * @author Kilian Thiel, University of Konstanz
  */
 public class SotaNodeDialog extends NodeDialogPane {
-    private static final NodeLogger LOGGER = 
+    private static final NodeLogger LOGGER =
         NodeLogger.getLogger(SotaNodeDialog.class);
-    
+
     private SotaSettingsPanel m_settings;
     private SotaHierarchicalFuzzySettings m_hierarchicalFuzzyDataSettings;
-    
+
     /**
      * Constructor of SotaNodedialog.
      * Creates new instance of SotaNodeDialog.
      */
     public SotaNodeDialog() {
         super();
-        
+
         m_settings = new SotaSettingsPanel(LOGGER);
         JPanel outerSettingsPanel = new JPanel();
         outerSettingsPanel.add(m_settings);
         outerSettingsPanel.setBorder(new EtchedBorder());
-        
-        m_hierarchicalFuzzyDataSettings = 
+
+        m_hierarchicalFuzzyDataSettings =
             new SotaHierarchicalFuzzySettings(LOGGER);
         JPanel outerFuzzyPanel = new JPanel();
         outerFuzzyPanel.add(m_hierarchicalFuzzyDataSettings);
         outerFuzzyPanel.setBorder(new EtchedBorder());
-        
+
         JPanel jp = new JPanel(new GridBagLayout());
-        
+
         GridBagConstraints c = new GridBagConstraints();
-        c = new GridBagConstraints();
         c.gridx = 0;
         c.gridy = 1;
         c.weightx = 10;
@@ -109,7 +108,7 @@ public class SotaNodeDialog extends NodeDialogPane {
         c.anchor = GridBagConstraints.WEST;
         c.insets = new Insets(10, 10, 10, 10);
         jp.add(outerSettingsPanel, c);
-        
+
         c = new GridBagConstraints();
         c.gridx = 1;
         c.gridy = 1;
@@ -119,7 +118,7 @@ public class SotaNodeDialog extends NodeDialogPane {
         c.anchor = GridBagConstraints.WEST;
         c.insets = new Insets(10, 10, 10, 10);
         jp.add(outerFuzzyPanel, c);
-                
+
         addTab("Settings", jp);
     }
 
@@ -130,10 +129,10 @@ public class SotaNodeDialog extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
         assert (settings != null && specs != null);
-        
+
         int numberCells = 0;
         int fuzzyCells = 0;
-        for (int i = 0; i < specs[SotaNodeModel.INPORT].getNumColumns(); 
+        for (int i = 0; i < specs[SotaNodeModel.INPORT].getNumColumns();
             i++) {
                 DataType type = specs[SotaNodeModel.INPORT].getColumnSpec(i)
                         .getType();
@@ -147,7 +146,7 @@ public class SotaNodeDialog extends NodeDialogPane {
 
         StringBuffer buffer = new StringBuffer();
         if (numberCells <= 0 && fuzzyCells <= 0) {
-            buffer.append("No FuzzyIntervalCells or NumberCells found !" 
+            buffer.append("No FuzzyIntervalCells or NumberCells found !"
                     + " Is the node fully connected ?");
         }
 
@@ -155,7 +154,7 @@ public class SotaNodeDialog extends NodeDialogPane {
         if (buffer.length() > 0) {
             throw new NotConfigurableException(buffer.toString());
         }
-        
+
         m_settings.loadSettingsFrom(settings, specs);
         m_hierarchicalFuzzyDataSettings.loadSettingsFrom(settings, specs);
     }

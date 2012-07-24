@@ -1227,7 +1227,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
             throw new InvalidSettingsException("With the current settings"
                     + " an error occurs: " + errLabel);
         }
-        if (m_previewTable == null || m_previewTable.getErrorOccurred()) {
+        if (m_previewTable.getErrorOccurred()) {
             throw new InvalidSettingsException("With the current settings"
                     + " an error occurs when reading the file (line "
                     + m_previewTable.getErrorLine() + "): "
@@ -1248,12 +1248,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
         }
         try {
             reader = s.createNewInputReader();
-            if (reader == null) {
-                throw new InvalidSettingsException("I/O Error while "
-                        + "accessing '" + s.getDataFileLocation().toString()
-                        + "'.");
-            }
-        } catch (Exception ioe) {
+        } catch (IOException ioe) {
             throw new InvalidSettingsException("I/O Error while accessing '"
                     + s.getDataFileLocation().toString() + "'.");
         }

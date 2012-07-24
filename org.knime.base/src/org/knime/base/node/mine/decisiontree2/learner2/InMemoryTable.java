@@ -62,7 +62,7 @@ import org.knime.core.data.DataCell;
  * values and possible values of nominal attributes.
  *
  * @author Christoph Sieb, University of Konstanz
- * 
+ *
  * @since 2.6
  */
 public class InMemoryTable implements Iterable<DataRowWeighted> {
@@ -675,7 +675,7 @@ public class InMemoryTable implements Iterable<DataRowWeighted> {
      * @return the index of the element in the middle
      */
     private int partition(int left, int right, final int attributeIndex) {
-        double pivot = m_rows[(left + right) / 2].getValue(attributeIndex);
+        double pivot = m_rows[(left + right) >>> 1].getValue(attributeIndex);
         while (left < right) {
             while ((m_rows[left].getValue(attributeIndex) < pivot)
                     && (left < right)) {

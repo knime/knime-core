@@ -171,9 +171,9 @@ public enum PMMLOperator {
     public boolean evaluate(final Double a, final Double b) {
         switch (this) {
             case EQUAL:
-                return a == b;
+                return a == b || a.equals(b);
             case NOT_EQUAL:
-                return a != b;
+                return !a.equals(b);
             case LESS_THAN:
                 return a < b;
             case LESS_OR_EQUAL:

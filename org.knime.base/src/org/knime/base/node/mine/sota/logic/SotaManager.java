@@ -50,6 +50,9 @@
  */
 package org.knime.base.node.mine.sota.logic;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
 import org.knime.base.node.mine.sota.SotaConfigKeys;
 import org.knime.base.node.mine.sota.distances.DistanceManager;
 import org.knime.base.node.mine.sota.distances.DistanceManagerFactory;
@@ -67,9 +70,6 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-
-import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  *
@@ -354,10 +354,10 @@ public class SotaManager {
 
         // assign all Data to the root cell which have no missing values
         for (int i = 0; i < m_inDataContainer.size(); i++) {
-            if (m_root.getDataIds().indexOf(new Integer(i)) == -1) {
+            if (m_root.getDataIds().indexOf(i) == -1) {
                 DataRow row = m_inDataContainer.getRow(i);
                 if (!SotaUtil.hasMissingValues(row)) {
-                    m_root.getDataIds().add(new Integer(i));
+                    m_root.getDataIds().add(i);
                 }
             }
 
@@ -654,9 +654,9 @@ public class SotaManager {
 
                 // add data row id to winners data ids
                 if (winner.getDataIds().indexOf(
-                        new Integer(cell.getDataIds().get(i))) == -1) {
+                        cell.getDataIds().get(i)) == -1) {
                     winner.getDataIds().add(
-                            new Integer(cell.getDataIds().get(i)));
+                            cell.getDataIds().get(i));
                 }
 
                 // get class string for row
@@ -678,14 +678,14 @@ public class SotaManager {
 
             // add data row id to winners data ids
             if (cell.getLeft().getDataIds().indexOf(
-                    new Integer(cell.getDataIds().get(0))) == -1) {
+                    cell.getDataIds().get(0)) == -1) {
                 cell.getLeft().getDataIds().add(
-                        new Integer(cell.getDataIds().get(0)));
+                        cell.getDataIds().get(0));
             }
             if (cell.getRight().getDataIds().indexOf(
-                    new Integer(cell.getDataIds().get(1))) == -1) {
+                    cell.getDataIds().get(1)) == -1) {
                 cell.getRight().getDataIds().add(
-                        new Integer(cell.getDataIds().get(1)));
+                        cell.getDataIds().get(1));
             }
 
             // get class string for rows
@@ -774,8 +774,8 @@ public class SotaManager {
             }
 
             // add data row id to winners data ids
-            if (winner.getDataIds().indexOf(new Integer(i)) == -1) {
-                winner.getDataIds().add(new Integer(i));
+            if (winner.getDataIds().indexOf(i) == -1) {
+                winner.getDataIds().add(i);
             }
         }
     }

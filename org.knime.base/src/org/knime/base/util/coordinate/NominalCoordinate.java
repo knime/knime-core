@@ -203,7 +203,7 @@ public class NominalCoordinate extends Coordinate {
             return null;
         }
 
-        int tickWidth = (int)Math.ceil(absLength / m_numberPossibleValues);
+        int tickWidth = (int)Math.ceil(absLength / (double) m_numberPossibleValues);
         if (tickWidth == 0) {
             tickWidth = 1;
         }

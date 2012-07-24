@@ -51,18 +51,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class LinearNorm {
-    
-    
-    private class Interval {
+
+
+    private static class Interval {
         private final double m_original;
         private final double m_norm;
-        
+
         /**
-         * 
+         *
          * @param orig original value
          * @param norm normed value
          */
@@ -70,24 +70,24 @@ public class LinearNorm {
             m_original = orig;
             m_norm = norm;
         }
-        
+
         /**
-         * 
+         *
          * @return the original value
          */
         public double getOriginalValue() {
             return m_original;
         }
         /**
-         * 
+         *
          * @return the normalized value
          */
         public double getNormValue() {
             return m_norm;
         }
-        
+
         /**
-         * 
+         *
          * {@inheritDoc}
          */
         @Override
@@ -97,11 +97,11 @@ public class LinearNorm {
     }
 
     private final String m_fieldName;
-    
+
     private final List<Interval>m_intervals;
-    
+
     /**
-     * 
+     *
      * @param fieldName the name of the field
      */
     public LinearNorm(final String fieldName) {
@@ -110,9 +110,9 @@ public class LinearNorm {
     }
 
     /**
-     * Represents a LinearNorm PMML element. 
+     * Represents a LinearNorm PMML element.
      * Adds an pair of values: original value and normed value.
-     *  
+     *
      * @param origValue the original value
      * @param normValue the mapped norm value
      */
@@ -123,21 +123,21 @@ public class LinearNorm {
             if (normValue <= lower.m_norm
                     || origValue <= lower.m_original) {
                 throw new IllegalArgumentException(
-                        "Intervals for LinearNorm must be added " 
+                        "Intervals for LinearNorm must be added "
                         + "in ascending order!");
             }
         }
         m_intervals.add(new Interval(origValue, normValue));
     }
-    
+
     /**
-     * 
+     *
      * @return the name of the field
      */
     public String getName() {
         return m_fieldName;
     }
-    
+
     /**
      * Unnormalizes the given values.
      * @param value normalized which should be "unnormalized"
@@ -155,8 +155,8 @@ public class LinearNorm {
             }
         }
         throw new IllegalArgumentException(
-                "Value " + value 
+                "Value " + value
                 + " is out of reported linear normalization!");
     }
-    
+
 }

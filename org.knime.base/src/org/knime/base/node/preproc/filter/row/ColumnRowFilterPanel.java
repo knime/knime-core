@@ -430,14 +430,6 @@ public class ColumnRowFilterPanel extends RowFilterPanel implements
         m_errText.setForeground(Color.RED);
         /* set the default values */
         m_useRegExpr.setSelected(true);
-        if (tSpec == null) {
-            // no table spec no range. Sorry.
-            m_useRange.setEnabled(false);
-            m_upperBound.setEnabled(false);
-            m_lowerBound.setEnabled(false);
-            setErrMsg("configure (or execute) predecessor node"
-                    + " to enable range checking");
-        }
     }
 
     /**

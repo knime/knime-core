@@ -48,12 +48,6 @@
 
 package org.knime.base.node.mine.bayes.naivebayes.datamodel;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.vector.bitvector.BitVectorValue;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.config.Config;
-import org.knime.core.util.MutableInteger;
-
 import java.text.NumberFormat;
 import java.util.Arrays;
 import java.util.Collection;
@@ -61,6 +55,12 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+
+import org.knime.core.data.DataCell;
+import org.knime.core.data.vector.bitvector.BitVectorValue;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.config.Config;
+import org.knime.core.util.MutableInteger;
 
 
 /**
@@ -388,7 +388,7 @@ public class BitVectorAttributeModel extends AttributeModel {
         if (value == null) {
             return null;
         }
-        return new Integer(value.getNoOfRows());
+        return value.getNoOfRows();
     }
 
     /**

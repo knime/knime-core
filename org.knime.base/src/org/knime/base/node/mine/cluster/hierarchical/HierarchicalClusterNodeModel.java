@@ -266,7 +266,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
             ClusterNode currentClosestCluster2 = null;
 
             // subprogress for loop
-            double availableProgress = (1 / numberDataRows);
+            double availableProgress = (1.0 / numberDataRows);
             ExecutionContext subexec =
                     exec.createSubExecutionContext(availableProgress);
             for (int i = 0; i < clusters.size(); i++) {

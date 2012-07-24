@@ -556,7 +556,7 @@ public final class FileAnalyzer {
             throws IOException, InterruptedExecutionException {
 
         BufferedFileReader reader = settings.createNewInputReader();
-        long fileSize = reader.getFileSize();
+        final double fileSize = reader.getFileSize();
         long linesRead = 0;
 
         exec.setProgress("Guessing row IDs");
@@ -1413,11 +1413,9 @@ public final class FileAnalyzer {
 
         BufferedFileReader reader = settings.createNewInputReader();
         Tokenizer tokenizer = new Tokenizer(reader);
-        long fileSize = reader.getFileSize();
-
-        tokenizer = new Tokenizer(reader);
-
         tokenizer.setSettings(settings);
+
+        long fileSize = reader.getFileSize();
 
         int linesRead = 0;
         int columns = 0; // column counter per line

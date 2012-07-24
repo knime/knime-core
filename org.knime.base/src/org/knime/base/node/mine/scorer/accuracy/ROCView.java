@@ -43,7 +43,7 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- *
  */
 package org.knime.base.node.mine.scorer.accuracy;
 
@@ -61,26 +61,26 @@ import org.knime.base.node.viz.plotter.node.DefaultVisualizationNodeView;
 /**
  * This view plots a ROC curve for the classified data and prints the area under
  * the curve.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ROCView extends DefaultVisualizationNodeView {
-    /* (BW, 20. Dec 2006) Disabled this view as a ROC curve is senseless for 
+    /* (BW, 20. Dec 2006) Disabled this view as a ROC curve is senseless for
      * the scorer */
     private static class ROCPlotter extends BasicPlotterImpl {
         private final AccuracyScorerNodeModel m_model;
         private final NumberFormat m_formatter = new DecimalFormat("0.000");
-        
+
         /**
          * Creates a new ROC curve plotter.
-         * 
+         *
          * @param model the scorer's model
          */
         public ROCPlotter(final AccuracyScorerNodeModel model) {
             super(new ROCDrawingPane());
             m_model = model;
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public void updatePaintModel() {
@@ -88,16 +88,12 @@ public class ROCView extends DefaultVisualizationNodeView {
                 return;
             }
             BitSet bs = m_model.getRocCurve();
-            if (bs == null) {
-                return;
-            }
-            
             double area = 0;
             double[] x = new double[bs.length()];
             double[] y = new double[bs.length()];
             final double maxCorrect = m_model.getCorrectCount();
             final double maxWrong = m_model.getFalseCount();
-            
+
             y[0] = 0;
             x[0] = 0;
             int correct = 0, wrong = 0;
@@ -118,41 +114,41 @@ public class ROCView extends DefaultVisualizationNodeView {
                     + m_formatter.format(area));
             addLine(x, y, Color.red, null);
         }
-        
+
     }
-    
-    
+
+
     private static class ROCDrawingPane extends BasicDrawingPane {
         private String m_text = "";
         /** {@inheritDoc} */
         @Override
         public void paintContent(final Graphics g) {
             super.paintContent(g);
-            
+
             Font old = g.getFont();
             g.setFont(new Font(g.getFont().getName(), g.getFont().getStyle(),
                     g.getFont().getSize() + 2));
-            
+
             int width = g.getFontMetrics().stringWidth(m_text);
-            int height = g.getFontMetrics().getHeight();            
+            int height = g.getFontMetrics().getHeight();
             g.drawString(m_text, getWidth() - width - 20, getHeight() - height);
-            
+
             g.setFont(old);
         }
-        
+
         /**
          * Sets the the text that should be drawn on the pane.
-         * 
+         *
          * @param s the text
          */
         public void setText(final String s) {
             m_text = s;
         }
     }
- 
+
     /**
      * Creates a new view that plots a ROC curve.
-     * 
+     *
      * @param nodeModel the scorer model
      */
     public ROCView(final AccuracyScorerNodeModel nodeModel) {

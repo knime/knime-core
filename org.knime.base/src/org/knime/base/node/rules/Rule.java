@@ -472,7 +472,7 @@ public class Rule {
         } else if (startP == p) {
             throw new ParseException("Expected a number but did not find one", p);
         } else {
-            return new Integer(sign * n);
+            return sign * n;
         }
     }
 

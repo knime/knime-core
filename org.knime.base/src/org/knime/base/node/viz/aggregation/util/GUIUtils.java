@@ -51,13 +51,6 @@
 
 package org.knime.base.node.viz.aggregation.util;
 
-import org.knime.core.node.util.ButtonGroupEnumInterface;
-
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.aggregation.AggregationValModel;
-import org.knime.base.node.viz.aggregation.AggregationValSubModel;
-import org.knime.base.node.viz.aggregation.ValueScale;
-
 import java.awt.Color;
 import java.awt.event.ActionListener;
 import java.text.DecimalFormat;
@@ -74,6 +67,12 @@ import javax.swing.ButtonGroup;
 import javax.swing.JLabel;
 import javax.swing.JRadioButton;
 import javax.swing.JSlider;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.aggregation.AggregationValModel;
+import org.knime.base.node.viz.aggregation.AggregationValSubModel;
+import org.knime.base.node.viz.aggregation.ValueScale;
+import org.knime.core.node.util.ButtonGroupEnumInterface;
 
 
 /**
@@ -476,7 +475,7 @@ public final class GUIUtils {
             }
             hue = index / (float)size;
         }
-        return Color.getColor(null, Color.HSBtoRGB(hue, 1.0f, 1.0f));
+        return new Color(Color.HSBtoRGB(hue, 1.0f, 1.0f));
     }
 
     /**
@@ -499,7 +498,7 @@ public final class GUIUtils {
             // Hashtable labels = m_barWidth.createStandardLabels(1);
             final Hashtable<Integer, JLabel> labels =
                 new Hashtable<Integer, JLabel>(1);
-            labels.put(new Integer(minimum), new JLabel("Min"));
+            labels.put(minimum, new JLabel("Min"));
             slider.setLabelTable(labels);
             slider.setPaintLabels(true);
             slider.setEnabled(false);
@@ -508,15 +507,15 @@ public final class GUIUtils {
             final Hashtable<Integer, JLabel> labels =
                 new Hashtable<Integer, JLabel>();
             // labels.put(minimum, new JLabel("Min"));
-            labels.put(new Integer(minimum),
+            labels.put(minimum,
                     new JLabel(Integer.toString(minimum)));
             for (int i = 1; i < divisor; i++) {
                 final int value = minimum + i * increment;
-                labels.put(new Integer(value),
+                labels.put(value,
                         new JLabel(Integer.toString(value)));
             }
             // labels.put(maximum, new JLabel("Max"));
-            labels.put(new Integer(maximum),
+            labels.put(maximum,
                     new JLabel(Integer.toString(maximum)));
             slider.setLabelTable(labels);
             slider.setPaintLabels(true);
@@ -527,8 +526,8 @@ public final class GUIUtils {
         } else {
             final Hashtable<Integer, JLabel> labels =
                 new Hashtable<Integer, JLabel>();
-            labels.put(new Integer(minimum), new JLabel("Min"));
-            labels.put(new Integer(maximum), new JLabel("Max"));
+            labels.put(minimum, new JLabel("Min"));
+            labels.put(maximum, new JLabel("Max"));
             slider.setLabelTable(labels);
             slider.setPaintLabels(true);
             slider.setEnabled(true);

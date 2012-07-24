@@ -51,20 +51,19 @@
 
 package org.knime.base.node.viz.histogram.datamodel;
 
-import org.knime.core.data.RowKey;
-import org.knime.core.node.NodeLogger;
-
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.histogram.HistogramLayout;
-import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;
-import org.knime.base.node.viz.histogram.util.ColorColumn;
-
 import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.geom.Rectangle2D;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
+import org.knime.core.data.RowKey;
+import org.knime.core.node.NodeLogger;
 
 /**
  * This class extends the {@link BinDataModel} to support hiliting.
@@ -227,7 +226,7 @@ public class InteractiveBinDataModel extends BinDataModel {
         * AbstractHistogramVizModel.HILITE_RECT_WIDTH_FACTOR),
         1);
         final int hiliteX = (int) (binRectangle.getX()
-                + (binWidth - hiliteWidth) / 2);
+                + (binWidth - hiliteWidth) / 2.0);
         int hiliteY = binY;
         if (getMinAggregationValue(aggrMethod, layout) < 0
                 && getMaxAggregationValue(aggrMethod, layout) > 0) {

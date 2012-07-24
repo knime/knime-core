@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   11.12.2005 (dill): created
  */
@@ -63,25 +63,25 @@ import org.knime.base.node.mine.subgroupminer.freqitemset.TIDFrequentItemSet;
  * transactions with the bit set, if the items in the set are present in the
  * transaction where the id equals the position in the bitset. When an item is
  * added, the transaction ids are intersected.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public final class TIDItemSet {
     private List<TIDItem> m_items;
 
     private BitSet m_commonTIDs;
-    
+
     private final int m_dbsize;
-    
+
     private final String m_id;
-    
+
 
     /*
      * Creates an empty TIDItemSet and with no items. Attention: the bitset is
      * empty, that means adding an item to this set will result in an itemset
      * with support = 0, since the common transaction ids are intersected. Use
      * createEmptyTIDItemSet instead.
-     * 
+     *
      */
     private TIDItemSet(final String id, final int length) {
         m_items = new ArrayList<TIDItem>();
@@ -97,7 +97,7 @@ public final class TIDItemSet {
      * @param length the number of transactions
      * @return an empty TIDItemSet with no items but present in all transactions
      */
-    public static TIDItemSet createEmptyTIDItemSet(final String id, 
+    public static TIDItemSet createEmptyTIDItemSet(final String id,
             final int length) {
         TIDItemSet empty = new TIDItemSet(id, length);
         BitSet all = new BitSet(length);
@@ -105,7 +105,7 @@ public final class TIDItemSet {
         empty.m_commonTIDs = all;
         return empty;
     }
-    
+
     /**
      * @return item set ID as string
      */
@@ -115,7 +115,7 @@ public final class TIDItemSet {
 
     /**
      * Adds an item to the set and thereby intersecting the transaction ids.
-     * 
+     *
      * @param i the item to add
      */
     public void addItem(final TIDItem i) {
@@ -126,7 +126,7 @@ public final class TIDItemSet {
     }
 
     /**
-     * 
+     *
      * @return the items in this set
      */
     public List<TIDItem> getItems() {
@@ -136,13 +136,13 @@ public final class TIDItemSet {
     /**
      * Returns the support of this set, which is equal to the number of
      * transactions the items in this set appear together in.
-     * 
+     *
      * @return the support of this set
      */
     public double getSupport() {
-        // we do not have to take the itemset into account but only the 
+        // we do not have to take the itemset into account but only the
         // commonTIDs (amount of items in this node)
-        // if no items are in this node the cardinality - and the support - 
+        // if no items are in this node the cardinality - and the support -
         // will be 0.
         // The root node is a node with no items but all TIDs in the commonTIDs
         return (double)m_commonTIDs.cardinality() / (double)m_dbsize;
@@ -152,7 +152,7 @@ public final class TIDItemSet {
      * Return the transaction ids in which the items in this set appear together
      * as a bitset where the bit is set if the items are present in this
      * transaction. The position of the bit refers to the transaction id.
-     * 
+     *
      * @return the transaction ids in which the items in this set are present
      *         together
      */
@@ -162,7 +162,7 @@ public final class TIDItemSet {
 
     /**
      * Returns the list of tids as a integer list.
-     * 
+     *
      * @return the list of tids as a integer list.
      */
     public List<Integer> getTIDs() {
@@ -175,7 +175,7 @@ public final class TIDItemSet {
     }
 
     /**
-     * 
+     *
      * @param s the set to test
      * @return <code>true</code>, if this set contains all items of the other
      *         set, <code>false</code> otherwise
@@ -220,10 +220,32 @@ public final class TIDItemSet {
      * {@inheritDoc}
      */
     @Override
-    public boolean equals(final Object o) {
-        TIDItemSet theOther = (TIDItemSet)o;
-        return this.m_items.equals(theOther.getItems())
-                && this.m_commonTIDs.equals(theOther.getCommonTIDs());
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        TIDItemSet other = (TIDItemSet)obj;
+        if (m_commonTIDs == null) {
+            if (other.m_commonTIDs != null) {
+                return false;
+            }
+        } else if (!m_commonTIDs.equals(other.m_commonTIDs)) {
+            return false;
+        }
+        if (m_items == null) {
+            if (other.m_items != null) {
+                return false;
+            }
+        } else if (!m_items.equals(other.m_items)) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -231,7 +253,14 @@ public final class TIDItemSet {
      */
     @Override
     public int hashCode() {
-        return m_items.hashCode() + m_commonTIDs.hashCode();
+        final int prime = 31;
+        int result = 1;
+        result =
+                prime
+                        * result
+                        + ((m_commonTIDs == null) ? 0 : m_commonTIDs.hashCode());
+        result = prime * result + ((m_items == null) ? 0 : m_items.hashCode());
+        return result;
     }
 
     /**

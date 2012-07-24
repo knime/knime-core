@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   06.06.2005 (ohl): created
  */
@@ -86,7 +86,7 @@ import org.knime.core.data.def.StringCell;
 
 
 /**
- * 
+ *
  * @author Peter Ohl, University of Konstanz
  */
 public class DomainDialog extends JDialog {
@@ -117,7 +117,7 @@ public class DomainDialog extends JDialog {
      * current column name and type in the colProp object, and call the
      * {@link #showDialog} method to get user input. After {@link #showDialog}
      * returns the method getDomainSettings will return the new settings.
-     * 
+     *
      * @param parent the owner of this dialog
      * @param colProp current column settings. The column type will be used to
      *            determine required settings, values in the domain will be used
@@ -125,7 +125,7 @@ public class DomainDialog extends JDialog {
      */
     DomainDialog(final JDialog parent, final ColProperty colProp) {
         super(parent);
-        
+
         assert colProp != null;
 
         m_colProp = colProp;
@@ -206,7 +206,7 @@ public class DomainDialog extends JDialog {
         panel.add(Box.createVerticalStrut(5));
         panel.add(new JLabel("Values found in the table will be added "
                 + "automatically."));
-        panel.add(new JLabel("Enter only additional values here that you want " 
+        panel.add(new JLabel("Enter only additional values here that you want "
                 + "to be in the domain"));
 
         return panel;
@@ -237,7 +237,7 @@ public class DomainDialog extends JDialog {
      * parameter it will create one to enter integers or strings. The integer
      * panel will also have an additional checkbox to decide whether the integer
      * column has nominal values at all.
-     * 
+     *
      * @param stringValues the flag indicating that the panel should be for
      * entering possible values of type string. Otherwise (if set false) it will
      * allow only integer values to be entered.
@@ -432,9 +432,7 @@ public class DomainDialog extends JDialog {
      * the values was added, false if it already existed in the list.
      */
     private boolean addDataCellPossValue(final DataCell newVal) {
-
         assert newVal != null;
-
         if (newVal == null) {
             return false;
         }
@@ -472,7 +470,7 @@ public class DomainDialog extends JDialog {
      * dialog was canceled, <code>null</code> will be returned as result,
      * otherwise the column property passed to the constructor with a modified
      * domain and nominal value flag will be returned.
-     * 
+     *
      * @return a modified col property object, or <code>null</code> if user
      *         canceled
      */
@@ -557,7 +555,7 @@ public class DomainDialog extends JDialog {
 
         ColProperty result = new ColProperty();
         DataColumnSpecCreator dcsc = new DataColumnSpecCreator(
-                m_colProp.getColumnSpec().getName(), 
+                m_colProp.getColumnSpec().getName(),
                 m_colProp.getColumnSpec().getType());
 
         if (m_containsVals != null) {
@@ -577,7 +575,7 @@ public class DomainDialog extends JDialog {
             }
 
             if (pVals.size() > 0) {
-                DataColumnDomainCreator domainCreator = 
+                DataColumnDomainCreator domainCreator =
                     new DataColumnDomainCreator(pVals);
                 dcsc.setDomain(domainCreator.createDomain());
             }

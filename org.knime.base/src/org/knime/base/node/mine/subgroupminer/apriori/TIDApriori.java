@@ -358,7 +358,7 @@ public class TIDApriori implements AprioriAlgorithm {
             // rule with the rest of them in them in the antecendent
             // support = dbsize, confidence = 1
             List<Integer> rest = new ArrayList<Integer>(alwaysFrequentIds);
-            rest.remove(new Integer(item.getId()));
+            rest.remove(item.getId());
             List<Integer>itemList = new ArrayList<Integer>();
             itemList.add(item.getId());
             AssociationRule rule = new AssociationRule(

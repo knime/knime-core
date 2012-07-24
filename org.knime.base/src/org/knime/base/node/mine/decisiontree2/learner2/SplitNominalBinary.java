@@ -58,7 +58,7 @@ import java.util.List;
  * split consists of subsets for both partitions.
  *
  * @author Christoph Sieb, University of Konstanz
- * 
+ *
  * @since 2.6
  */
 public class SplitNominalBinary extends SplitNominal {
@@ -332,7 +332,7 @@ public class SplitNominalBinary extends SplitNominal {
                     i++;
                 }
                 // also adapt the right and left set
-                setFalse.remove(new Integer(currentBestNominalValueMapping));
+                setFalse.remove(Integer.valueOf(currentBestNominalValueMapping));
                 if (setTrue.contains(currentBestNominalValueMapping)) {
                     throw new RuntimeException("Nominal value already added: "
                             + currentBestNominalValueMapping);
@@ -569,7 +569,7 @@ public class SplitNominalBinary extends SplitNominal {
         /**
          * Returns the position of this counter. The position is the number of
          * increments that have been taken place so far.
-         * 
+         *
          * @return current position of this counter
          */
         public long getNumIncrements() {
@@ -628,7 +628,7 @@ public class SplitNominalBinary extends SplitNominal {
 
     /**
      * Main. Small test for GrayCodeCounter.
-     * 
+     *
      * @param args command line arguments
      */
     public static void main(final String[] args) {

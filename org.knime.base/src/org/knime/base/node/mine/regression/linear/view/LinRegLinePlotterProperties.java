@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -62,9 +62,9 @@ import org.knime.core.node.NotConfigurableException;
  * Properties for the {@link LinRegLinePlotter} which ensures
  * that the y axis is fixed to the target column and the x column selection box
  * only contains the columns used for the model calculation.
- * 
+ *
  * @author Fabian Dill, University of Konstanz
- * 
+ *
  */
 public class LinRegLinePlotterProperties extends ScatterPlotterProperties {
 
@@ -80,7 +80,7 @@ public class LinRegLinePlotterProperties extends ScatterPlotterProperties {
      * with different functionality. Only {@link DoubleValue}s are allowed and
      * the y column selection box is fixed and the x column selection box
      * contains only the columns used for the model calulation.
-     * 
+     *
      */
     @SuppressWarnings("unchecked")
     public LinRegLinePlotterProperties() {
@@ -89,7 +89,7 @@ public class LinRegLinePlotterProperties extends ScatterPlotterProperties {
 
     /**
      * Sets the target column.
-     * 
+     *
      * @param targetColumnName the name of the target column
      */
     public void setTargetColumn(final String targetColumnName) {
@@ -98,7 +98,7 @@ public class LinRegLinePlotterProperties extends ScatterPlotterProperties {
 
     /**
      * Sets the columns which were used for model calculation.
-     * 
+     *
      * @param includedColumns columns used for model calculation
      */
     public void setIncludedColumns(final String[] includedColumns) {
@@ -109,7 +109,7 @@ public class LinRegLinePlotterProperties extends ScatterPlotterProperties {
      * Updates the selection boxes with the passed
      * {@link org.knime.core.data.DataTableSpec} and sets 0 as x and the y
      * column to the target column.
-     * 
+     *
      * @param spec the new {@link org.knime.core.data.DataTableSpec}
      */
     @Override
@@ -121,7 +121,7 @@ public class LinRegLinePlotterProperties extends ScatterPlotterProperties {
         }
         // set the target column as y axis
         m_ySelector.setEnabled(true);
-        if (m_ySelector != null && m_ySelector.getSelectedColumn() != null) {
+        if (m_ySelector.getSelectedColumn() != null) {
             yIdx = spec.findColumnIndex(m_targetColumn);
         }
         if (xIdx == -1) {
@@ -139,7 +139,7 @@ public class LinRegLinePlotterProperties extends ScatterPlotterProperties {
      * Takes care, that the x column selection box only contains the columns
      * used for model calculation. For this purpose the ItemListeners of this
      * box are removed and afterwards added again in order to avoid event loops.
-     * 
+     *
      * @param spec the new data table spec.
      * @param xPreSelect the x column index (-1 if unknown)
      * @param yPreSelect the y column (-1 if unknown)
@@ -159,7 +159,7 @@ public class LinRegLinePlotterProperties extends ScatterPlotterProperties {
             for (ItemListener listener : listeners) {
                 m_xSelector.removeItemListener(listener);
             }
-            if (m_includs != null) {              
+            if (m_includs != null) {
                 // cleanup -> remove all items and add only the included
                 m_xSelector.removeAllItems();
                 List<String> survivors = Arrays.asList(m_includs);

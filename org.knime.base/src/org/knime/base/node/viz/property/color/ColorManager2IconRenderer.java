@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   09.02.2006 (gabriel): created
  */
@@ -66,7 +66,7 @@ class ColorManager2IconRenderer extends DefaultListCellRenderer {
     public Component getListCellRendererComponent(final JList list,
             final Object value, final int index, final boolean isSelected,
             final boolean cellHasFocus) {
-        if (list == null || value == null) {
+        if (value == null) {
             return super.getListCellRendererComponent(list, value, index,
                     isSelected, cellHasFocus);
         }

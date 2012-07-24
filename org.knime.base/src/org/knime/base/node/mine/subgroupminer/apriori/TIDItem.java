@@ -117,15 +117,21 @@ public class TIDItem implements Comparable<TIDItem> {
      * {@inheritDoc}
      */
     @Override
-    public boolean equals(final Object o) {
-        if (o == null) {
-            return false;
-        }
-        TIDItem theOther = (TIDItem)o;
-        if (m_id == theOther.getId()) {
+    public boolean equals(final Object obj) {
+        if (this == obj) {
             return true;
         }
-        return false;
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        TIDItem other = (TIDItem)obj;
+        if (m_id != other.m_id) {
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -133,7 +139,10 @@ public class TIDItem implements Comparable<TIDItem> {
      */
     @Override
     public int hashCode() {
-        return m_id;
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + m_id;
+        return result;
     }
 
     /**
@@ -141,7 +150,7 @@ public class TIDItem implements Comparable<TIDItem> {
      */
     @Override
     public TIDItem clone() {
-        TIDItem newItem = new TIDItem(new Integer(m_id));
+        TIDItem newItem = new TIDItem(m_id);
         for (int tid = m_transactionIDs.nextSetBit(0); tid >= 0;
             tid = m_transactionIDs.nextSetBit(tid + 1)) {
             newItem.addTID(tid);

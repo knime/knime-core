@@ -206,7 +206,7 @@ public class ColumnListLoopStartNodeModel extends NodeModel implements
 
         List<String> l = new ArrayList<String>();
         l.addAll(s.iterateOverColumns());
-        if (l.retainAll(l)) {
+        if (l.retainAll(s.alwaysIncludeColumns())) {
             throw new InvalidSettingsException(
                     "Columns to iterate over must not be included always");
         }

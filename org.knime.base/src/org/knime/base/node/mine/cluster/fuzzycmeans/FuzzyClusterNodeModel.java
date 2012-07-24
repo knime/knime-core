@@ -364,13 +364,11 @@ public class FuzzyClusterNodeModel extends NodeModel {
         double totalchange = Double.MAX_VALUE;
         while ((totalchange > 1e-7)
                 && (currentIteration < m_maxNrIterations)) {
-            if (exec != null) {
-                exec.checkCanceled();
-                exec.setProgress((double)currentIteration
-                        / (double)m_maxNrIterations, "Iteration "
-                        + currentIteration
-                        + " Total change of prototypes: " + totalchange);
-            }
+            exec.checkCanceled();
+            exec.setProgress((double)currentIteration
+                    / (double)m_maxNrIterations, "Iteration "
+                    + currentIteration
+                    + " Total change of prototypes: " + totalchange);
             totalchange = m_fcmAlgo.doOneIteration(exec);
             currentIteration++;
         } // while(!finished & nrIt<maxNrIt)
@@ -830,7 +828,6 @@ public class FuzzyClusterNodeModel extends NodeModel {
             clusters = m_clusters;
         }
         if (clusters == null) {
-            assert (clusters != null);
             return;
         }
         File f = new File(internDir, "FuzzyCMeans");

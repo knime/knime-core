@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   09.02.2006 (gabriel): created
  */
@@ -70,18 +70,18 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Dialog pane used to specify colors by minimum and maximum bounds.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class ColorManager2DialogRange extends JPanel {
-    private class DataCellColorEntry {
+    private static class DataCellColorEntry {
         private final DataCell m_cell;
 
         private Color m_color;
 
         /**
          * Create new cell and color entry.
-         * 
+         *
          * @param cell the cell
          * @param color the color
          */
@@ -123,7 +123,7 @@ public class ColorManager2DialogRange extends JPanel {
     private final DefaultListModel m_columnModel;
 
     private final ColorManager2RangeIcon m_rangeLabel;
-    
+
     private int m_alpha = 255;
 
     /**
@@ -154,7 +154,7 @@ public class ColorManager2DialogRange extends JPanel {
     /**
      * Select new color for the selected attribute value of the the selected
      * column.
-     * 
+     *
      * @param column the selected column
      * @param color the new color
      */
@@ -183,7 +183,7 @@ public class ColorManager2DialogRange extends JPanel {
 
     /**
      * Called if the column selection has changed.
-     * 
+     *
      * @param column the new selected column
      * @return <code>true</code>, if this call caused any changes
      */
@@ -215,7 +215,7 @@ public class ColorManager2DialogRange extends JPanel {
 
     /**
      * Add new column with lower and upper bound.
-     * 
+     *
      * @param column the column to add
      * @param low the lower bound
      * @param upp the upper bound
@@ -237,24 +237,24 @@ public class ColorManager2DialogRange extends JPanel {
 
     /**
      * Writes the color settings.
-     * 
+     *
      * @param settings to write to
      */
     void saveSettings(final NodeSettingsWO settings) {
         assert m_columnModel.getSize() == 2;
         ColorManager2Icon i0 = (ColorManager2Icon)m_columnModel.getElementAt(0);
-        Color c0 = new Color(i0.getColor().getRed(), i0.getColor().getGreen(), 
+        Color c0 = new Color(i0.getColor().getRed(), i0.getColor().getGreen(),
                 i0.getColor().getBlue(), getAlpha());
         settings.addInt(ColorManager2NodeModel.MIN_COLOR, c0.getRGB());
         ColorManager2Icon i1 = (ColorManager2Icon)m_columnModel.getElementAt(1);
-        Color c1 = new Color(i1.getColor().getRed(), i1.getColor().getGreen(), 
+        Color c1 = new Color(i1.getColor().getRed(), i1.getColor().getGreen(),
                 i1.getColor().getBlue(), m_alpha);
         settings.addInt(ColorManager2NodeModel.MAX_COLOR, c1.getRGB());
     }
 
     /**
      * Reads color settings.
-     * 
+     *
      * @param settings to read from
      * @param column the selected column
      */
@@ -277,19 +277,19 @@ public class ColorManager2DialogRange extends JPanel {
         ex[0].setColor(new Color(c0.getRGB(), false));
         ex[1].setColor(new Color(c1.getRGB(), false));
     }
-    
+
     /**
      * @return intermediate alpha value as read from the current settings
      */
     final int getAlpha() {
         return m_alpha;
     }
-    
+
     /**
      * @param alpha the new alpha value as set by the alpha color panel
      */
     final void setAlpha(final int alpha) {
         m_alpha = alpha;
     }
-    
+
 }

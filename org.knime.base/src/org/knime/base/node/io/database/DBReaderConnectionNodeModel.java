@@ -176,8 +176,7 @@ final class DBReaderConnectionNodeModel extends DBNodeModel
      *         their actual value
      */
     private String parseQuery(final String query) {
-        String command = new String(query);
-        return DBVariableSupportNodeModel.Resolver.parse(command, this);
+        return DBVariableSupportNodeModel.Resolver.parse(query, this);
     }
 
     /**

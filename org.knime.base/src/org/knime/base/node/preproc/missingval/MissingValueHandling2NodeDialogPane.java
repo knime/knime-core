@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.preproc.missingval;
 
@@ -92,7 +92,7 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
 /**
  * Dialog to the missing value handling node.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
@@ -104,7 +104,7 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
 
     private final JPanel m_defaultsPanel;
     private final JPanel m_individualsPanel;
-    
+
     private final JButton m_addButton;
 
     /**
@@ -126,7 +126,7 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
             @Override
             public void valueChanged(final ListSelectionEvent e) {
                checkButtonStatus();
-           } 
+           }
         });
         m_colList.addMouseListener(new MouseAdapter() {
             /** {@inheritDoc} */
@@ -136,17 +136,17 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
                     if (!m_addButton.isEnabled()) {
                         return;
                     }
-                    DataColumnSpec selected = 
+                    DataColumnSpec selected =
                         (DataColumnSpec)m_colList.getSelectedValue();
                     onAdd(selected);
                 }
-            } 
+            }
         });
         m_colList.setCellRenderer(new DataColumnSpecListCellRenderer() {
             /** {@inheritDoc} */
             @Override
             public Component getListCellRendererComponent(final JList list,
-                    final Object value, final int index, 
+                    final Object value, final int index,
                     final boolean isSelected, final boolean cellHasFocus) {
                 final Component comp = super.getListCellRendererComponent(
                         list, value, index, isSelected, cellHasFocus);
@@ -166,10 +166,10 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
                         comp.setEnabled(false);
                     }
                 }
-                return comp; 
-            } 
+                return comp;
+            }
         });
-        
+
         final JTextField searchField = new JTextField(8);
         final ActionListener actionListener = new ActionListener() {
             /** {@inheritDoc} */
@@ -182,10 +182,10 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
                     // nothing to select
                     return;
                 }
-                final ArrayList<Integer> hitList = new ArrayList<Integer>(); 
+                final ArrayList<Integer> hitList = new ArrayList<Integer>();
                 for (int i = 0; i < searchHits.length; i++) {
                     int hit = searchHits[i];
-                    DataColumnSpec cspec = (DataColumnSpec) 
+                    DataColumnSpec cspec = (DataColumnSpec)
                             m_colListModel.getElementAt(hit);
                     final Component[] c = m_individualsPanel.getComponents();
                     for (int j = 0; j < c.length; j++) {
@@ -221,13 +221,13 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
         searchPanel.setBorder(BorderFactory.createTitledBorder(
                 " Column Search "));
         searchPanel.add(searchField, BorderLayout.CENTER);
-        
+
         final JPanel colPanel = new JPanel(new BorderLayout());
         colPanel.add(searchPanel, BorderLayout.NORTH);
         colPanel.add(new JScrollPane(m_colList), BorderLayout.CENTER);
         final JPanel tabPanel = new JPanel(new BorderLayout());
-        tabPanel.add(colPanel, BorderLayout.CENTER);        
-        
+        tabPanel.add(colPanel, BorderLayout.CENTER);
+
         m_individualsPanel = new IndividualsPanel();
         JScrollPane scroller = new JScrollPane(m_individualsPanel);
         tabPanel.add(scroller, BorderLayout.EAST);
@@ -238,7 +238,7 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
             @Override
             public void actionPerformed(final ActionEvent e) {
                 final Object[] selectedCols = m_colList.getSelectedValues();
-                final List<DataColumnSpec> selectList = 
+                final List<DataColumnSpec> selectList =
                         new ArrayList<DataColumnSpec>();
                 for (Object o : selectedCols) {
                     final DataColumnSpec dcs = (DataColumnSpec) o;
@@ -299,10 +299,10 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
             DataColumnSpec spec = specs[0].getColumnSpec(i);
             m_colListModel.addElement(spec);
         }
-        MissingValueHandling2ColSetting[] defaults = new MissingValueHandling2ColSetting[0];
-        MissingValueHandling2ColSetting[] individuals = new MissingValueHandling2ColSetting[0];
-        defaults = MissingValueHandling2ColSetting.loadMetaColSettings(settings, specs[0]);
-        individuals = MissingValueHandling2ColSetting.loadIndividualColSettings(settings, specs[0]);
+        MissingValueHandling2ColSetting[] defaults =
+            MissingValueHandling2ColSetting.loadMetaColSettings(settings, specs[0]);
+        MissingValueHandling2ColSetting[] individuals =
+            MissingValueHandling2ColSetting.loadIndividualColSettings(settings, specs[0]);
 
         m_defaultsPanel.removeAll();
         for (int i = 0; i < defaults.length; i++) {
@@ -318,7 +318,7 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
                 final DataColumnSpec cspec = specs[0].getColumnSpec(names[j]);
                 if (cspec == null) {
                     LOGGER.debug("No such column in spec: " + names[j]);
-                } else { 
+                } else {
                     colSpecs.add(cspec);
                 }
             }
@@ -379,7 +379,7 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
         addToIndividualPanel(p);
         checkButtonStatus();
     }
-    
+
     private void onAdd(final List<DataColumnSpec> specs) {
         if (specs == null || specs.isEmpty()) {
             return;
@@ -418,7 +418,7 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
         m_individualsPanel.add(panel);
         m_individualsPanel.revalidate();
     }
-    
+
     private void selectColumns(final MissingValueHandling2ColSetting setting) {
         if (setting.isMetaConfig()) {
             return;
@@ -436,16 +436,16 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
         m_colList.setSelectedIndices(hits);
         m_colList.scrollRectToVisible(
                 m_colList.getCellBounds(hits[0], hits[0]));
-        
+
     }
-    
+
     /** Panel hosting the individual panels. It implements {@link Scrollable}
      * to allow for correct jumping to the next enclosed panel. It allows
      * overwrites getPreferredSize() to return the sum of all individual
-     * heights. 
+     * heights.
      */
     private static class IndividualsPanel extends JPanel implements Scrollable {
-        
+
         /** Set box layout. */
         public IndividualsPanel() {
             BoxLayout layout = new BoxLayout(this, BoxLayout.Y_AXIS);
@@ -455,16 +455,16 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
         /** {@inheritDoc} */
         @Override
         public Dimension getPreferredScrollableViewportSize() {
-            return getPreferredSize(); 
+            return getPreferredSize();
         }
 
         /** {@inheritDoc} */
         @Override
-        public int getScrollableBlockIncrement(final Rectangle visibleRect, 
+        public int getScrollableBlockIncrement(final Rectangle visibleRect,
                 final int orientation, final int direction) {
-            int rh = getComponentCount() > 0 
+            int rh = getComponentCount() > 0
                 ? getComponent(0).getHeight() : 0;
-            return (rh > 0) ? Math.max(rh, (visibleRect.height / rh) * rh) 
+            return (rh > 0) ? Math.max(rh, (visibleRect.height / rh) * rh)
                     : visibleRect.height;
         }
 
@@ -482,11 +482,11 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
 
         /** {@inheritDoc} */
         @Override
-        public int getScrollableUnitIncrement(final Rectangle visibleRect, 
+        public int getScrollableUnitIncrement(final Rectangle visibleRect,
                 final int orientation, final int direction) {
             return getComponentCount() > 0 ? getComponent(0).getHeight() : 100;
         }
-        
+
         /** {@inheritDoc} */
         @Override
         public Dimension getPreferredSize() {
@@ -498,6 +498,6 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
             int width = super.getPreferredSize().width;
             return new Dimension(width, height);
         }
-        
+
     }
 }

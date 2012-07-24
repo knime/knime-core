@@ -317,7 +317,7 @@ public class AscendingNumericTickPolicyStrategy extends PolicyStrategy {
 
         List<CoordinateMapping> mapping = new LinkedList<CoordinateMapping>();
         for (int i = 0; minDomainValue + i * diff <= maxDomainValue; i++) {
-            int domValue = Math.round(minDomainValue + i * diff);
+            int domValue = minDomainValue + i * diff;
             if (domValue + diff > maxDomainValue) {
                 domValue = maxDomainValue;
             }

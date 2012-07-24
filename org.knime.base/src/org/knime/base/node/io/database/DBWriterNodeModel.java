@@ -259,7 +259,7 @@ final class DBWriterNodeModel extends NodeModel {
             throw new InvalidSettingsException("No columns in input data.");
         }
 
-        if (!m_append && m_table != null) {
+        if (!m_append) {
             super.setWarningMessage("Existing table \""
                     + m_table + "\" will be dropped!");
         }

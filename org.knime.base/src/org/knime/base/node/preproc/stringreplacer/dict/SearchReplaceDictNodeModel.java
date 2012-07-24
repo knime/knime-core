@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Jun 16, 2007 (wiswedel): created
  */
@@ -80,7 +80,7 @@ import org.knime.core.node.NodeSettingsWO;
  * @author wiswedel, University of Konstanz
  */
 final class SearchReplaceDictNodeModel extends NodeModel {
-    
+
     /** Config key for dictionary location. */
     static final String CFG_DICT_LOCATION = "dictionary_location";
     /** Config key for target column selection. */
@@ -89,7 +89,7 @@ final class SearchReplaceDictNodeModel extends NodeModel {
     static final String CFG_APPEND_COLUMN = "appended_column";
     /** Config key for delimiter in dictionary. */
     static final String CFG_DELIMITER_IN_DICT = "delimiter_in_dict";
-    
+
 
     private String m_dictFileURLString;
     private String m_targetColumnName;
@@ -117,12 +117,12 @@ final class SearchReplaceDictNodeModel extends NodeModel {
                     "No file at \"" + m_dictFileURLString + "\"");
         }
         if (!inSpecs[0].containsName(m_targetColumnName)) {
-            throw new InvalidSettingsException("No such column \"" 
+            throw new InvalidSettingsException("No such column \""
                     + m_targetColumnName + "\" in input table");
         }
-        if (m_newColumnName != null 
+        if (m_newColumnName != null
                 && inSpecs[0].containsName(m_newColumnName)) {
-            throw new InvalidSettingsException("Column \"" + m_newColumnName 
+            throw new InvalidSettingsException("Column \"" + m_newColumnName
                     + "\" already exists");
         }
         ColumnRearranger result = createColumnRearranger(inSpecs[0]);
@@ -144,7 +144,7 @@ final class SearchReplaceDictNodeModel extends NodeModel {
         m_replacementMap = null;
         return new BufferedDataTable[]{result};
     }
-    
+
     private ColumnRearranger createColumnRearranger(final DataTableSpec spec) {
         ColumnRearranger result = new ColumnRearranger(spec);
         final int targetColIndex = spec.findColumnIndex(m_targetColumnName);
@@ -184,18 +184,18 @@ final class SearchReplaceDictNodeModel extends NodeModel {
         }
         return result;
     }
-    
+
     private HashMap<String, String> readDictionary(final ExecutionMonitor exec)
         throws IOException {
         File f = new File(m_dictFileURLString);
         BufferedReader reader = new BufferedReader(new FileReader(f));
         HashMap<String, String> result = new HashMap<String, String>();
         String line;
-        final long size = f.length();
+        final double size = f.length();
         long prog = 0;
         try {
             while ((line = reader.readLine()) != null) {
-                StringTokenizer tokenizer = new StringTokenizer(line, 
+                StringTokenizer tokenizer = new StringTokenizer(line,
                         Character.toString(m_delimInDictCharacter));
                 if (!tokenizer.hasMoreTokens()) {
                     continue;
@@ -206,8 +206,8 @@ final class SearchReplaceDictNodeModel extends NodeModel {
                     result.put(key, value);
                 }
                 // ignores line breaks and such, hope it's ok
-                prog += line.length(); 
-                exec.setProgress(prog / size, 
+                prog += line.length();
+                exec.setProgress(prog / size,
                         "Read dictionary entry for value \"" + value + "\"");
             }
         } finally {
@@ -215,7 +215,7 @@ final class SearchReplaceDictNodeModel extends NodeModel {
         }
         return result;
     }
-    
+
     /** Removes leading and trailing white spaces. If the argument consists
      * only of white spaces, it will be returned as-is. */
     private static String trimIfNecessary(final String arg) {
@@ -285,11 +285,11 @@ final class SearchReplaceDictNodeModel extends NodeModel {
         }
         char delim = settings.getChar(CFG_DELIMITER_IN_DICT);
         if (delim < ' ' && delim != '\t') {
-            throw new InvalidSettingsException("Can't use '" + delim 
-                    + "' (hex code " + Integer.toHexString(delim) 
+            throw new InvalidSettingsException("Can't use '" + delim
+                    + "' (hex code " + Integer.toHexString(delim)
                     + ") as delimiter");
         }
     }
-    
+
 
 }

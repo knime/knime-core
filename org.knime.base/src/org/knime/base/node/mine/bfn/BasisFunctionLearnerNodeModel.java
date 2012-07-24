@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   02.03.2006 (gabriel): created
  */
@@ -90,7 +90,7 @@ import org.knime.core.node.property.hilite.HiLiteTranslator;
 
 /**
  * Abstract basisfunction model holding the trained rule table.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
@@ -111,7 +111,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
 
     /** NodeSettings key for <i>max_class_coverage</i>. */
     public static final String MAX_CLASS_COVERAGE = "max_class_coverage";
-    
+
     /** Key of the target column. */
     public static final String TARGET_COLUMNS = "target_column";
 
@@ -119,19 +119,19 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
      * Keeps names of all columns used to make classification during training.
      */
     private String[] m_targetColumns = null;
-    
+
     /** Keeps a value for missing replacement function index. */
     private int m_missing = 0;
 
     /** The <i>shrink_after_commit</i> flag. */
     private boolean m_shrinkAfterCommit = true;
-    
+
     /** The <i>max_class_coverage</i> flag. */
     private boolean m_maxCoverage = true;
-    
+
     /** Config key for maximum number of epochs. */
     public static final String MAX_EPOCHS = "max_epochs";
-    
+
     /** Maximum number of epochs to train. */
     private int m_maxEpochs = -1;
 
@@ -146,13 +146,13 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
      * @param model the port type of the generated basisfunction model
      */
     protected BasisFunctionLearnerNodeModel(final PortType model) {
-        super(new PortType[]{BufferedDataTable.TYPE},  
+        super(new PortType[]{BufferedDataTable.TYPE},
               new PortType[]{BufferedDataTable.TYPE, model});
     }
 
     /**
      * Reset the trained model.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -160,17 +160,17 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         m_modelInfo = null;
         m_translator.setMapper(null);
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void setInHiLiteHandler(final int inIndex, 
+    protected void setInHiLiteHandler(final int inIndex,
             final HiLiteHandler hiLiteHdl) {
         m_translator.removeAllToHiliteHandlers();
         m_translator.addToHiLiteHandler(hiLiteHdl);
     }
-    
+
 
     /**
      * {@inheritDoc}
@@ -213,19 +213,19 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
                     if (!inSpec.getColumnSpec(target).getType().isCompatible(
                             DoubleValue.class)) {
                         throw new InvalidSettingsException(
-                                "Target \"" + target 
+                                "Target \"" + target
                                 + "\" column not of type DoubleValue.");
                     }
                 }
             }
         }
-        
+
         // check if double type column available
         if (!inSpec.containsCompatibleType(DoubleValue.class)) {
             throw new InvalidSettingsException(
                     "No data column of type DoubleValue found.");
         }
-        
+
         List<String> targetHash = Arrays.asList(m_targetColumns);
         // if only one double type column, check if not the target column
         for (int i = 0; i < inSpec.getNumColumns(); i++) {
@@ -238,11 +238,11 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
             // if last column was tested
             if (i + 1 == inSpec.getNumColumns()) {
                 throw new InvalidSettingsException("Found only one column of"
-                        + " type DoubleValue: " 
+                        + " type DoubleValue: "
                         + Arrays.toString(m_targetColumns));
             }
         }
-        
+
         // if no data columns are found, use all numeric columns
         String[] dataCols = BasisFunctionFactory.findDataColumns(
                 inSpec, targetHash);
@@ -250,12 +250,12 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
                 dataCols, m_targetColumns, getModelType());
         return new DataTableSpec[]{modelSpec, modelSpec};
     }
-    
+
     /**
      * @return the type of the learned model cells
      */
     public abstract DataType getModelType();
-    
+
     /**
      * Creates a new basisfunction port object given the model content.
      * @param content basisfunction rules and spec
@@ -266,7 +266,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
 
     /**
      * Starts the learning algorithm in the learner.
-     * 
+     *
      * @param inData the input training data at index 0
      * @param exec the execution monitor
      * @return the output fuzzy rule model
@@ -297,7 +297,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         columns.addAll(Arrays.asList(dataCols));
         // add target columns at the end
         columns.addAll(Arrays.asList(m_targetColumns));
-        
+
         // filter selected columns from input data
         String[] cols = columns.toArray(new String[]{});
         ColumnRearranger colRe = new ColumnRearranger(tSpec);
@@ -308,7 +308,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         // print settings info
         LOGGER.debug("distance      : " + getDistance());
         LOGGER.debug("missing       : " + getMissingFct());
-        LOGGER.debug("target columns: " + m_targetColumns);
+        LOGGER.debug("target columns: " + Arrays.toString(m_targetColumns));
         LOGGER.debug("shrink commit : " + isShrinkAfterCommit());
         LOGGER.debug("max coverage  : " + isMaxClassCoverage());
         LOGGER.debug("max no. epochs: " + m_maxEpochs);
@@ -322,10 +322,10 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
                 BasisFunctionLearnerTable.MISSINGS[m_missing],
                 m_shrinkAfterCommit, m_maxCoverage, m_maxEpochs, exec);
         DataTableSpec modelSpec = table.getDataTableSpec();
-        DataColumnSpec[] modelSpecs = 
+        DataColumnSpec[] modelSpecs =
             new DataColumnSpec[modelSpec.getNumColumns()];
         for (int i = 0; i < modelSpecs.length; i++) {
-            DataColumnSpecCreator creator = 
+            DataColumnSpecCreator creator =
                 new DataColumnSpecCreator(modelSpec.getColumnSpec(i));
             creator.removeAllHandlers();
             modelSpecs[i] = creator.createSpec();
@@ -346,7 +346,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
 
     /**
      * Create factory to generate BasisFunctions.
-     * 
+     *
      * @param spec the cleaned data for training
      * @return factory to create special basis function rules
      */
@@ -375,7 +375,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
             }
         } catch (InvalidSettingsException ise) {
             // try to read only one target ref. to KNIME 1.2.0 and before
-            targetColumns = 
+            targetColumns =
                 new String[]{settings.getString("target_column", null)};
         }
         if (targetColumns == null || targetColumns.length == 0) {
@@ -388,7 +388,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
         }
         // missing replacement method
         int missing = settings.getInt(BasisFunctionLearnerTable.MISSING, 0);
-        if (missing < 0 
+        if (missing < 0
                 || missing > BasisFunctionLearnerTable.MISSINGS.length) {
             msg.append("Missing replacement function index out of range: "
                     + missing);
@@ -451,7 +451,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
     public static final String MODEL_INFO_FILE_NAME = MODEL_INFO + ".pmml.gz";
 
     /** File name for hilite mapping. */
-    public static final String HILITE_MAPPING_FILE_NAME = 
+    public static final String HILITE_MAPPING_FILE_NAME =
         "hilite_mapping.pmml.gz";
 
     /**
@@ -459,7 +459,7 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
      */
     @Override
     protected void loadInternals(final File internDir,
-            final ExecutionMonitor exec) 
+            final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         // load model info
         exec.checkCanceled();
@@ -535,19 +535,19 @@ public abstract class BasisFunctionLearnerNodeModel extends NodeModel {
     public final boolean isMaxClassCoverage() {
         return m_maxCoverage;
     }
-    
+
     /**
      * @return the choice of distance function
      */
     public final int getDistance() {
         return m_distance;
     }
-    
+
     /**
      * @return maximum number of epochs to train
      */
     public final int getMaxNrEpochs() {
         return m_maxEpochs;
     }
-    
+
 }

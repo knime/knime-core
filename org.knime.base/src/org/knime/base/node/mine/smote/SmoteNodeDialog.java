@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.mine.smote;
 
@@ -61,12 +61,12 @@ import javax.swing.JButton;
 import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JFormattedTextField;
+import javax.swing.JFormattedTextField.AbstractFormatter;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JSpinner;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.JFormattedTextField.AbstractFormatter;
 import javax.swing.border.Border;
 
 import org.knime.core.data.DataTableSpec;
@@ -92,7 +92,7 @@ import org.knime.core.node.util.ColumnSelectionPanel;
  * </ul>
  * </li>
  * </ul>
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class SmoteNodeDialog extends NodeDialogPane {
@@ -105,11 +105,11 @@ public class SmoteNodeDialog extends NodeDialogPane {
     private final JRadioButton m_smoteMinorityButton;
 
     private final JSpinner m_rateSpinner;
-    
+
     private final JFormattedTextField m_seedField;
     private final JButton m_drawNewSeedButton;
     private final JCheckBox m_enableStaticSeedChecker;
-    
+
     /**
      * Builds up the dialog.
      */
@@ -168,15 +168,15 @@ public class SmoteNodeDialog extends NodeDialogPane {
             }
         });
         m_seedField.setColumns(8);
-        
+
         m_drawNewSeedButton = new JButton("Draw new seed");
         m_drawNewSeedButton.addActionListener(new ActionListener() {
            public void actionPerformed(final ActionEvent e) {
                long l = Double.doubleToLongBits(Math.random());
                m_seedField.setText(Long.toString(l));
-            } 
+            }
         });
-        
+
         m_enableStaticSeedChecker = new JCheckBox("Enable static seed");
         m_enableStaticSeedChecker.addItemListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
@@ -197,7 +197,7 @@ public class SmoteNodeDialog extends NodeDialogPane {
         tab.add(getInFlowLayout(m_seedField, m_drawNewSeedButton));
         addTab("Settings", tab);
     }
-    
+
     private void checkEnableState() {
         boolean enabled = m_enableStaticSeedChecker.isSelected();
         m_drawNewSeedButton.setEnabled(enabled);
@@ -216,7 +216,7 @@ public class SmoteNodeDialog extends NodeDialogPane {
         double rate = settings.getDouble(SmoteNodeModel.CFG_RATE, 2.0);
         String clas = settings.getString(SmoteNodeModel.CFG_CLASS, null);
         m_selectionPanel.update(specs[0], clas);
-        m_kNNSpinner.setValue(new Integer(kNN));
+        m_kNNSpinner.setValue(Integer.valueOf(kNN));
         m_rateSpinner.setValue(new Double(rate));
         if (SmoteNodeModel.METHOD_MAJORITY.equals(method)) {
             m_smoteMinorityButton.doClick();
@@ -267,7 +267,7 @@ public class SmoteNodeDialog extends NodeDialogPane {
         settings.addString(SmoteNodeModel.CFG_METHOD, method);
         settings.addDouble(SmoteNodeModel.CFG_RATE, rate);
         settings.addString(SmoteNodeModel.CFG_CLASS, clas);
-        settings.addString(SmoteNodeModel.CFG_SEED, seed);        
+        settings.addString(SmoteNodeModel.CFG_SEED, seed);
     }
 
     private static JPanel getInFlowLayout(final JComponent... comps) {

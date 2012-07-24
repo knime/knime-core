@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   22.09.2006 (Fabian Dill): created
  */
@@ -89,50 +89,50 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.property.hilite.KeyEvent;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class ParallelCoordinatesPlotter extends BasicPlotter {
-    
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(
             ParallelCoordinatesPlotter.class);
-    
+
     private List<ParallelAxis> m_axes;
-    
+
     private List<LineInfo> m_lines;
-    
+
     private Set<RowKey> m_selected;
-    
+
     private List<String>m_columnNames;
-    
+
     /** Constant for the sensitivity area around the axis for selection. */
     public static final int SENSITIVITY = 15;
-    
+
     private boolean m_skipMissingValues = true;
-    
+
     private boolean m_hide;
-    
+
     private boolean m_curve;
-    
+
     /** Constant for a missing value. */
     public static final int MISSING = -1;
-    
+
     private static final int DEFAULT_NR_COLS = 5;
-    
-    
+
+
     /**
-     * Registers listeners to the control elements of the 
+     * Registers listeners to the control elements of the
      * {@link org.knime.base.node.viz.plotter.parcoord
      * .ParallelCoordinatePlotterProperties}.
      */
     public ParallelCoordinatesPlotter() {
-        super(new ParallelCoordinateDrawingPane(), 
+        super(new ParallelCoordinateDrawingPane(),
                 new ParallelCoordinatePlotterProperties());
         m_selected = new HashSet<RowKey>();
         addMouseListener(new TransformationMouseListener());
         // column selection
         if (getProperties() instanceof MultiColumnPlotterProperties) {
-            final MultiColumnPlotterProperties props = 
+            final MultiColumnPlotterProperties props =
             ((MultiColumnPlotterProperties)getProperties());
             props.getColumnFilter()
                     .addChangeListener(new ChangeListener() {
@@ -145,7 +145,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                             if (incl.size() < m_columnNames.size()) {
                                 m_columnNames.retainAll(incl);
                             } else {
-                                Set<String> newOnes 
+                                Set<String> newOnes
                                     = new LinkedHashSet<String>(incl);
                                 newOnes.removeAll(m_columnNames);
                                 m_columnNames.addAll(newOnes);
@@ -155,7 +155,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                     });
         }
         if (getProperties() instanceof ParallelCoordinatePlotterProperties) {
-            final JCheckBox showBox = 
+            final JCheckBox showBox =
             ((ParallelCoordinatePlotterProperties)getProperties())
                 .getShowDotsBox();
             showBox.addItemListener(new ItemListener() {
@@ -176,14 +176,14 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                  */
                 public void itemStateChanged(final ItemEvent e) {
                     boolean changed = (m_skipMissingValues != skipRow.
-                            isSelected()); 
+                            isSelected());
                     m_skipMissingValues = skipRow.isSelected();
                     if (changed) {
                         updatePaintModel();
                     }
                 }
             });
-            final JRadioButton skipValue = 
+            final JRadioButton skipValue =
                    ((ParallelCoordinatePlotterProperties)getProperties())
                    .getSkipValueButton();
             skipValue.addItemListener(new ItemListener() {
@@ -202,7 +202,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                 /**
                  * {@inheritDoc}
                  */
-                public void itemStateChanged(final ItemEvent e) { 
+                public void itemStateChanged(final ItemEvent e) {
                     ((ParallelCoordinateDrawingPane)getDrawingPane())
                     .setShowMissingValues(showBtn.isSelected());
                 updatePaintModel();
@@ -235,17 +235,17 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
             });
         }
     }
-    
+
     private ParallelCoordinateDrawingPane getParCoordDrawinPane() {
         return (ParallelCoordinateDrawingPane)getDrawingPane();
     }
-    
+
     /**
-     * Sets the axes, the selected data points, the selected columns and the 
-     * calculated lines <code>null</code>, triggers a repaint in the 
+     * Sets the axes, the selected data points, the selected columns and the
+     * calculated lines <code>null</code>, triggers a repaint in the
      * {@link org.knime.base.node.viz.plotter.parcoord
      * .ParallelCoordinateDrawingPane}.
-     * 
+     *
      * @see org.knime.base.node.viz.plotter.AbstractPlotter#reset()
      */
     @Override
@@ -257,11 +257,11 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
         ((ParallelCoordinateDrawingPane)getDrawingPane()).setAxes(null);
         ((ParallelCoordinateDrawingPane)getDrawingPane()).setLines(null);
     }
-    
+
     // ---------- menu -------------
-    
+
     /**
-     * 
+     *
      * @return the menu item for show all.
      */
     public Action getShowAllAction() {
@@ -274,15 +274,15 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                 if (getDrawingPane() instanceof ParallelCoordinateDrawingPane) {
                     getParCoordDrawinPane().setFadeUnhilited(false);
                     getParCoordDrawinPane().setHideUnhilited(false);
-                }   
+                }
                 updatePaintModel();
             }
         };
         return show;
     }
-    
+
     /**
-     * 
+     *
      * @return the menu item for hide unhilited.
      */
     public Action getHideAction() {
@@ -297,13 +297,13 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                     getParCoordDrawinPane().setHideUnhilited(true);
                 }
                 updatePaintModel();
-            } 
+            }
         };
         return hide;
     }
-    
+
     /**
-     * 
+     *
      * @return the menu item for fade unhilited.
      */
     public Action getFadeAction() {
@@ -322,10 +322,10 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
         };
         return fade;
     }
-    
+
 
     /**
-     * 
+     *
      * @return an additional menu for the NodeView's menu bar containing
      * the actions for show, fade and hide unhilited dots.
      */
@@ -347,10 +347,10 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
         popupMenu.add(getShowAllAction());
         popupMenu.add(getHideAction());
         popupMenu.add(getFadeAction());
-    }   
-    
+    }
+
     // ------------ selection -------------------
-    
+
     /**
      * {@inheritDoc}
      */
@@ -377,7 +377,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
         }
         getDrawingPane().repaint();
     }
-    
+
 
 
     /**
@@ -398,7 +398,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     }
 
     // ---------- hilite ---------------
-    
+
     /**
      * {@inheritDoc}
      */
@@ -406,13 +406,13 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     public void hiLite(final KeyEvent event) {
         Set<RowKey>hilited = event.keys();
         for (LineInfo line : m_lines) {
-            if (hilited.contains(line.getRowKey().getString())) {
+            if (hilited.contains(line.getRowKey())) {
                 line.setHilite(true);
             }
         }
         updatePaintModel();
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -426,7 +426,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
         }
         updatePaintModel();
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -436,7 +436,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
         }
         updatePaintModel();
     }
-    
+
 
     /**
      * {@inheritDoc}
@@ -445,7 +445,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
     public void hiLiteSelected() {
         changeHiLiteState(true);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -465,26 +465,26 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
             if (line.isSelected()) {
                 line.setHilite(hilite);
             }
-        } 
+        }
         updatePaintModel();
     }
-    
+
     // ----------- painting ----------------
 
     /**
      * Creates a nominal x axis with the names of the selected columns,
-     * the referring 
+     * the referring
      * {@link org.knime.base.node.viz.plotter.parcoord.ParallelAxis} for each
      * column and calculates the lines with the mapped values which are passed
-     * together with the axes to the 
+     * together with the axes to the
      * {@link org.knime.base.node.viz.plotter.parcoord
      * .ParallelCoordinateDrawingPane}.
-     * 
+     *
      * @see org.knime.base.node.viz.plotter.AbstractPlotter#updatePaintModel()
      */
     @Override
     public synchronized void updatePaintModel() {
-        if (getDataProvider() != null 
+        if (getDataProvider() != null
                 && getDataProvider().getDataArray(getDataArrayIdx()) != null) {
             DataArray array = getDataProvider().getDataArray(getDataArrayIdx());
             Set<DataCell>columns = new LinkedHashSet<DataCell>();
@@ -524,10 +524,10 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
         }
         getDrawingPane().repaint();
     }
-    
+
     /**
      * The initial columns are the first five columns.
-     * 
+     *
      * @param array data to visualize
      */
     private void initColumnNames(final DataArray array) {
@@ -541,14 +541,14 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                 break;
             }
             colNr++;
-        } 
+        }
     }
 
     /**
      * Calculates the lines, containing the mapped data points.
      */
     private synchronized List<LineInfo> calculateLines() {
-        if (getDataProvider() == null 
+        if (getDataProvider() == null
                 || getDataProvider().getDataArray(getDataArrayIdx()) == null
                 || m_axes == null) {
             return new ArrayList<LineInfo>();
@@ -568,11 +568,11 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                 }
                 domainValues.add(value);
                 int x = (int)getXAxis().getCoordinate().calculateMappedValue(
-                        new StringCell(axis.getName()), 
+                        new StringCell(axis.getName()),
                         getDrawingPaneDimension().width);
                 int y = MISSING;
                 if (!value.isMissing()) {
-                    y = getDrawingPaneDimension().height 
+                    y = getDrawingPaneDimension().height
                         - ParallelCoordinateDrawingPane.BOTTOM_SPACE
                         - (int)axis.getMappedValue(value);
                 }
@@ -582,18 +582,18 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
             boolean isHilite = delegateIsHiLit(row.getKey());
             if (!m_hide || (m_hide && isHilite)) {
                 LineInfo line = new LineInfo(points, domainValues,
-                        m_selected.contains(row.getKey()), 
+                        m_selected.contains(row.getKey()),
                         isHilite, array.getDataTableSpec().getRowColor(row),
-                        array.getDataTableSpec().getRowSizeFactor(row), 
+                        array.getDataTableSpec().getRowSizeFactor(row),
                         row.getKey());
-                
+
                 line.setShape(array.getDataTableSpec().getRowShape(row));
                 lines.add(line);
             }
         }
         return lines;
     }
-    
+
     /**
      * Updates the x position and the height of the parallel axes.
      *
@@ -604,7 +604,7 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
                 - ParallelCoordinateDrawingPane.TOP_SPACE
                 - ParallelCoordinateDrawingPane.BOTTOM_SPACE;
         if (getDrawingPane() instanceof ParallelCoordinateDrawingPane) {
-            List<ParallelAxis> axes 
+            List<ParallelAxis> axes
                 = ((ParallelCoordinateDrawingPane)getDrawingPane()).getAxes();
 //            LOGGER.debug("axes from drawing pane: " + axes);
             // set the x positions
@@ -629,24 +629,24 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
         super.updateSize();
         LOGGER.debug("update size");
         updateAxesPosition();
-        m_lines = calculateLines(); 
+        m_lines = calculateLines();
         ((ParallelCoordinateDrawingPane)getDrawingPane()).setLines(
                 m_lines);
         getDrawingPane().repaint();
     }
-    
+
     /**
-     * MouseListener to change the order of the 
+     * MouseListener to change the order of the
      * {@link org.knime.base.node.viz.plotter.parcoord.ParallelAxis}.
-     * 
+     *
      * @author Fabian Dill, University of Konstanz
      */
     public class TransformationMouseListener extends PlotterMouseListener {
-        
+
         private ParallelAxis m_axis;
-        
+
         private boolean m_dragged;
-        
+
         private int m_oldX;
 
         /**
@@ -669,10 +669,10 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
         public void mousePressed(final MouseEvent e) {
             m_oldX = e.getX();
             Rectangle selectionRectangle = new Rectangle(
-                    e.getX() - (SENSITIVITY / 2), 
+                    e.getX() - (SENSITIVITY / 2),
                     e.getY() - (SENSITIVITY / 2),
                     SENSITIVITY, SENSITIVITY);
-            ParallelCoordinateDrawingPane drawingPane 
+            ParallelCoordinateDrawingPane drawingPane
             = (ParallelCoordinateDrawingPane)getDrawingPane();
             List<ParallelAxis> axes = drawingPane.getAxes();
             for (ParallelAxis axis : axes) {
@@ -701,13 +701,13 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
             }
             // update x axis and axis xpos
             m_axis.setXPosition(e.getX());
-            int width = getDrawingPaneDimension().width; 
+            int width = getDrawingPaneDimension().width;
 //            int tickSpace = (int)getXAxis().getCoordinate()
 //                .getUnusedDistBetweenTicks(width);
 //            int index = (int)(e.getX() / tickSpace);
             CoordinateMapping[] mappings = getXAxis().getCoordinate()
                 .getTickPositions(width);
-            // 
+            //
             int index = -1;
             for (int i = 0; i < mappings.length - 1; i++) {
                 double x1 = mappings[i].getMappingValue();
@@ -745,8 +745,8 @@ public class ParallelCoordinatesPlotter extends BasicPlotter {
             }
             updateSize();
             }
-        }  
-        
+        }
+
         /**
          * {@inheritDoc}
          */

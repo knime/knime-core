@@ -402,7 +402,7 @@ public class DecTreeToImageNodeDialog extends NodeDialogPane {
             final PortObjectSpec[] specs) throws NotConfigurableException {
         m_settings.loadSettingsForDialog(settings);
 
-        m_unfoldToLevel.setValue(new Integer(m_settings.getUnfoldToLevel()));
+        m_unfoldToLevel.setValue(Integer.valueOf(m_settings.getUnfoldToLevel()));
         m_unfoldWithCoverage.setText(
                 format.format(m_settings.getUnfoldWithCoverage()));
         if (m_settings.getUnfoldMethod().equals(UnfoldMethod.level)) {

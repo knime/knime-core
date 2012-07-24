@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   15.06.2007 (cebron): created
  */
@@ -72,7 +72,7 @@ import org.knime.core.node.util.ColumnFilterPanel;
 /**
  * Dialog for the {@link CaseConvertNodeModel}. Lets the user choose the
  * columns to use and the convert mode.
- * 
+ *
  * @author cebron, University of Konstanz
  */
 public class CaseConvertNodeDialog extends NodeDialogPane {
@@ -92,7 +92,7 @@ public class CaseConvertNodeDialog extends NodeDialogPane {
         BoxLayout blayout = new BoxLayout(contentpanel, BoxLayout.Y_AXIS);
         contentpanel.setLayout(blayout);
 
-        
+
 
         ButtonGroup buttongroup = new ButtonGroup();
         m_uppercase = new JRadioButton("Convert to UPPERCASE", true);
@@ -112,8 +112,9 @@ public class CaseConvertNodeDialog extends NodeDialogPane {
         blayout = new BoxLayout(radiocontent, BoxLayout.X_AXIS);
         radiocontent.add(radiopanel);
         radiocontent.add(Box.createHorizontalGlue());
-        
-        contentpanel.add(radiocontent);        
+        radiocontent.setLayout(blayout);
+
+        contentpanel.add(radiocontent);
         contentpanel.add(Box.createVerticalStrut(20));
         m_filterpanel = new ColumnFilterPanel(StringValue.class);
         contentpanel.add(m_filterpanel);

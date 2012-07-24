@@ -80,13 +80,13 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 final class EqualSizeSamplingNodeDialogPane extends NodeDialogPane {
-
     private final JTextField m_seedField;
     private final JCheckBox m_seedEnableChecker;
     private final JRadioButton m_exactSamplingChecker;
     private final JRadioButton m_approximateSamplingChecker;
     private final ColumnSelectionComboxBox m_classColumnBox;
     private final JButton m_newSeedButton;
+    private final Random m_random = new Random();
 
     /**  */
     public EqualSizeSamplingNodeDialogPane() {
@@ -95,10 +95,9 @@ final class EqualSizeSamplingNodeDialogPane extends NodeDialogPane {
         m_seedField = new JTextField(20);
         m_newSeedButton = new JButton("New Seed");
         m_newSeedButton.addActionListener(new ActionListener() {
-
             @Override
             public void actionPerformed(final ActionEvent e) {
-                m_seedField.setText(Long.toString(new Random().nextLong()));
+                m_seedField.setText(Long.toString(m_random.nextLong()));
             }
         });
         m_seedEnableChecker = new JCheckBox("Enable static seed");

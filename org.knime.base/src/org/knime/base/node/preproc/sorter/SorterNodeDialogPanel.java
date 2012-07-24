@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   08.02.2005 (cebron): created
  */
@@ -75,13 +75,14 @@ import javax.swing.event.ListSelectionListener;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.def.StringCell;
 
 
 /**
  * Extension to serve the purpose of Column Sorting.
- * 
+ *
  * @see SorterNodeDialogPanel
- * 
+ *
  * @author Nicolas Cebron, University of Konstanz
  */
 
@@ -115,9 +116,9 @@ public final class SorterNodeDialogPanel extends JPanel {
     /*
      * Entries for m_sortorderComboBox
      */
-    private final String m_asc = "Ascending";
+    private static final String ASC = "Ascending";
 
-    private final String m_desc = "Descending";
+    private static final String DESC = "Descending";
 
     /*
      * Data table spec used to keep initial column ordering.
@@ -140,7 +141,7 @@ public final class SorterNodeDialogPanel extends JPanel {
      * </ul>
      * The communication between the {@link SorterNodeDialogPanel} and the
      * {@link SorterNodeDialog} is implemented with update and getter-methods.
-     * 
+     *
      * @see #update(DataTableSpec, List, boolean[])
      * @see #getIncludedColumnList()
      * @see #getSortOrder()
@@ -212,8 +213,8 @@ public final class SorterNodeDialogPanel extends JPanel {
 
         // Sorting order list
         m_comboModel = new DefaultComboBoxModel();
-        m_comboModel.addElement(m_asc);
-        m_comboModel.addElement(m_desc);
+        m_comboModel.addElement(ASC);
+        m_comboModel.addElement(DESC);
         m_sortorderComboBox = new JComboBox(m_comboModel);
         m_sortorderComboBox.addActionListener(new ActionListener() {
             public void actionPerformed(final ActionEvent ae) {
@@ -230,7 +231,7 @@ public final class SorterNodeDialogPanel extends JPanel {
         m_inclList.addListSelectionListener(new ListSelectionListener() {
             /**
              * Listener method for list selection changes
-             * 
+             *
              * @param e the ListSelectionEvent
              * @see javax.swing.event.ListSelectionListener#valueChanged
              *      (javax.swing.event.ListSelectionEvent)
@@ -344,7 +345,7 @@ public final class SorterNodeDialogPanel extends JPanel {
     /*
      * Called by the ' < < add all' button to include all elements from the
      * exclude list.
-     * 
+     *
      */
     private void onAddAll() {
         m_inclMdl.removeAllElements();
@@ -404,7 +405,7 @@ public final class SorterNodeDialogPanel extends JPanel {
         int[] changeMe = m_inclList.getSelectedIndices();
         if ((m_inclMdl.getSize() > 0) && (changeMe.length > 0)) {
             for (int i = 0; i < changeMe.length; i++) {
-                if (m_comboModel.getSelectedItem().equals(m_asc)) {
+                if (m_comboModel.getSelectedItem().equals(ASC)) {
                     m_sortOrder.set(changeMe[i], true);
                 } else {
                     m_sortOrder.set(changeMe[i], false);
@@ -424,9 +425,9 @@ public final class SorterNodeDialogPanel extends JPanel {
             int selectedIndex = m_inclList.getSelectedIndex();
             Boolean bool = m_sortOrder.get(selectedIndex);
             if (bool.booleanValue()) {
-                m_comboModel.setSelectedItem(m_asc);
+                m_comboModel.setSelectedItem(ASC);
             } else {
-                m_comboModel.setSelectedItem(m_desc);
+                m_comboModel.setSelectedItem(DESC);
             }
         }
     }
@@ -458,7 +459,7 @@ public final class SorterNodeDialogPanel extends JPanel {
      * If the include list is null, all column names from the
      * {@link DataTableSpec} are added to the include list and the sort order is
      * set to 'ascending' for each column.
-     * 
+     *
      * @param spec the spec to retrieve the column names from
      * @param incl the list of columns to include
      * @param sortOrder ascending/descending order for the included columns
@@ -481,7 +482,7 @@ public final class SorterNodeDialogPanel extends JPanel {
             } else {
                 for (int i = 0; i < m_spec.getNumColumns(); i++) {
                     final String c = spec.getColumnSpec(i).getName();
-                    if (incl.contains(c)) {
+                    if (incl.contains(new StringCell(c))) {
                         m_inclMdl.addElement(c);
                         if (sortOrder[interncounter]) {
                             m_sortOrder.add(true);
@@ -500,7 +501,7 @@ public final class SorterNodeDialogPanel extends JPanel {
 
     /**
      * Returns all columns from the include list.
-     * 
+     *
      * @return a list of all columns from the include list
      */
     public List<DataCell> getIncludedColumnList() {
@@ -513,7 +514,7 @@ public final class SorterNodeDialogPanel extends JPanel {
 
     /**
      * Returns the sortOrder array.
-     * 
+     *
      * @return m_sortOrder
      */
     public boolean[] getSortOrder() {

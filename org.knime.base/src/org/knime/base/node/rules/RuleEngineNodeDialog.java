@@ -138,7 +138,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
 
     private DataTableSpec m_spec;
 
-    private JTextField m_lastUsedTextfield = m_ruleEditor;
+    private JTextField m_lastUsedTextfield;
 
     private JCheckBox m_outcomeIsColumn;
 
@@ -350,6 +350,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
                 m_lastUsedTextfield = m_ruleLabelEditor;
             }
         });
+        m_lastUsedTextfield = m_ruleEditor;
         /*
          * Add Button
          */
@@ -505,8 +506,8 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
         edit.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent arg0) {
-                if (m_ruleEditor.getText() != RULE_LABEL
-                        && m_ruleEditor.getText().trim() != "") {
+                if ((m_ruleEditor.getText() != RULE_LABEL)
+                        && (m_ruleEditor.getText().trim().length() > 0)) {
                     if (JOptionPane.showConfirmDialog(getPanel(),
                             "Override currently edited rule?", "Confirm...",
                             JOptionPane.OK_CANCEL_OPTION) == JOptionPane.CANCEL_OPTION) {

@@ -591,7 +591,7 @@ class GroupLoopStartNodeModel extends NodeModel implements
      *
      * @author Kilian Thiel, KNIME.com, Berlin, Germany
      */
-    private class GroupingState {
+    private static class GroupingState {
         private String m_groupIdentifier;
         private boolean m_groupEnd;
         private DataCell[] m_cells;

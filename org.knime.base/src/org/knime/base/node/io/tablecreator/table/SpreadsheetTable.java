@@ -536,7 +536,7 @@ class SpreadsheetTable extends JTable {
 
             Map<Integer, ColProperty> props = model.getColumnProperties();
             for (int col :  m_table.getColumnModel().getSelectedColumns()) {
-                if (null != props && props.containsKey(col)) {
+                if (props.containsKey(col)) {
                     DataType colType = props.get(col).getColumnSpec().getType();
                     if (!colType.equals(type)) {
                         ColProperty newProp =

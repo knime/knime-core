@@ -133,7 +133,7 @@ public class SamplingNodeDialogPanel extends JPanel {
                 .setToolTipText("Check this to allow deterministic sampling.");
         m_useSeedChecker.setHorizontalTextPosition(SwingConstants.RIGHT);
         m_seedField =
-                new JFormattedTextField(new Long(System.currentTimeMillis()));
+                new JFormattedTextField(Long.valueOf(System.currentTimeMillis()));
         m_seedField.setColumns(10);
         m_useSeedChecker.addItemListener(new ItemListener() {
             public void itemStateChanged(final ItemEvent e) {
@@ -271,7 +271,7 @@ public class SamplingNodeDialogPanel extends JPanel {
         }
 
         m_relativeSpinner.setValue(new Double(sets.fraction() * 100));
-        m_absoluteSpinner.setValue(new Integer(sets.count()));
+        m_absoluteSpinner.setValue(Integer.valueOf(sets.count()));
         m_randomSampling.setSelected(sets.samplingMethod().equals(
                 SamplingMethods.Random));
         m_stratifiedSampling.setSelected(sets.samplingMethod().equals(

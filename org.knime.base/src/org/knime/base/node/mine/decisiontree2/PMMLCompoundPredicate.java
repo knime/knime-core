@@ -190,7 +190,7 @@ public class PMMLCompoundPredicate extends PMMLPredicate {
             }
         }
         if (m_op == PMMLBooleanOperator.XOR) {
-            eval = (count % 2 == 1);
+            eval = (count % 2 != 0);
         }
         return eval;
     }

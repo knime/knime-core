@@ -98,7 +98,7 @@ class FileRowIterator extends RowIterator {
     private final HashMap<String, Number> m_rowIDhash;
 
     // Used in the above hash to indicate that duplicate of that row was found.
-    private static final Integer NOSUFFIX = new Integer(0);
+    private static final Integer NOSUFFIX = 0;
 
     // The junk size after which a new progress is reported. (yet 512 KByte)
     private static final long PROGRESS_JUNK_SIZE = 1024 * 512;
@@ -590,7 +590,7 @@ class FileRowIterator extends RowIterator {
 
             idx++;
 
-            if (oldSuffix == NOSUFFIX) {
+            if (oldSuffix.equals(NOSUFFIX)) {
                 // until now the NOSUFFIX placeholder was in the hash
                 assert idx - 1 == NOSUFFIX.intValue();
                 m_rowIDhash.put(result, new MutableInteger(idx));

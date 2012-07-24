@@ -50,16 +50,6 @@
  */
 package org.knime.base.node.mine.sota.view;
 
-import org.knime.base.node.mine.sota.logic.SotaManager;
-import org.knime.base.node.mine.sota.logic.SotaTreeCell;
-import org.knime.base.node.mine.sota.view.interaction.SotaTreeCellLocations;
-import org.knime.base.node.util.DataArray;
-import org.knime.core.data.DataRow;
-import org.knime.core.data.RowKey;
-import org.knime.core.data.property.ColorAttr;
-import org.knime.core.node.property.hilite.HiLiteHandler;
-import org.knime.core.node.property.hilite.HiLiteListener;
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -81,6 +71,16 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JToolTip;
 import javax.swing.ToolTipManager;
+
+import org.knime.base.node.mine.sota.logic.SotaManager;
+import org.knime.base.node.mine.sota.logic.SotaTreeCell;
+import org.knime.base.node.mine.sota.view.interaction.SotaTreeCellLocations;
+import org.knime.base.node.util.DataArray;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.property.ColorAttr;
+import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.property.hilite.HiLiteListener;
 
 /**
  *
@@ -110,7 +110,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
 
     private int m_pixelWidth = 6;
 
-    private final int m_defPixelWidth = 3;
+    private static int DEF_PIXEL_WIDTH = 3;
 
     // Line height and rectangle width of cluster lines and rectangles
     private int m_clusterLineHeight = 50;
@@ -305,7 +305,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
                         factor = 5;
                     }
                 }
-                m_jpWidth = m_data.size() * m_defPixelWidth * factor;
+                m_jpWidth = m_data.size() * DEF_PIXEL_WIDTH * factor;
 
                 // resize to optimal size
                 setSize(m_jpWidth, m_jpHeight);
@@ -316,7 +316,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
             if (m_data.size() == 0) {
                 m_pixelWidth = 0;
             } else  {
-                m_pixelWidth = (int)Math.floor(m_jpWidth / m_data.size());
+                m_pixelWidth = m_jpWidth / m_data.size();
             }
 
             // get all cells
@@ -331,8 +331,8 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
 
             // compute maxmimum tree level
             m_maxLevel = getMaxLevel(m_maxLevel, m_root);
-            m_clusterLineHeight = (int)Math.floor((m_jpHeight - PIXEL_HEIGHT)
-                    / m_maxLevel);
+            m_clusterLineHeight = (m_jpHeight - PIXEL_HEIGHT)
+                    / m_maxLevel;
 
             // store max Level in each hierarchy if data is hierarchical
             if (m_isHierarchicalFuzzyData && m_drawHierarchicalFuzzyData) {
@@ -479,8 +479,8 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
 
                 // save position of data and its index in DataArray
                 // to access the data later via position.
-                m_dataCoordIndex.put(new Integer(count), new Integer(m_cells
-                        .get(j).getDataIds().get(i)));
+                m_dataCoordIndex.put(count, m_cells
+                        .get(j).getDataIds().get(i));
                 count++;
             }
         }
@@ -624,7 +624,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
 
         for (int j = 0; j < m_cells.size(); j++) {
             int ids = m_cells.get(j).getDataIds().size();
-            int x = (int)Math.floor(ids * m_pixelWidth / 2);
+            int x = ids * m_pixelWidth / 2;
             x += startX;
 
             // save coordinates
@@ -815,7 +815,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
      */
     private void getHierarchicalMaxLevels() {
         for (int i = 0; i <= m_maxHLevel; i++) {
-            m_hierarchicalMaxLevels.put(new Integer(i), getMaxLevelOfHLevel(0,
+            m_hierarchicalMaxLevels.put(i, getMaxLevelOfHLevel(0,
                     m_root, i));
         }
     }
@@ -835,7 +835,7 @@ public class SotaDrawingPane extends JPanel implements HiLiteListener {
 
             if (x <= maxX && x >= 0 && y <= m_jpHeight
                     && y >= (m_jpHeight - PIXEL_HEIGHT)) {
-                int place = (int)Math.floor(x / m_pixelWidth);
+                int place = x / m_pixelWidth;
 
                 Integer index = m_dataCoordIndex.get(place);
                 if (index != null) {

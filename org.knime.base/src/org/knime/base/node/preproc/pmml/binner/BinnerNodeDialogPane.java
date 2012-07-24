@@ -218,8 +218,7 @@ final class BinnerNodeDialogPane extends NodeDialogPane {
 
     private SpinnerNumberModel createNumberModel(final DataType type) {
         if (IntCell.TYPE.equals(type)) {
-            return new SpinnerNumberModel(new Integer(0), null, null,
-                    new Integer(1));
+            return new SpinnerNumberModel(0, null, null, 1);
         }
         return new SpinnerNumberModel(0.0, NEGATIVE_INFINITY,
                 POSITIVE_INFINITY, 0.1);

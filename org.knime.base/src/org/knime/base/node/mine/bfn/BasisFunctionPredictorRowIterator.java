@@ -59,7 +59,7 @@ import org.knime.core.data.RowKey;
  * Class wraps a row iterator in order to exents the given
  * {@link org.knime.core.data.DataRow} elements by on cell (resp. column
  * for the {@link org.knime.core.data.DataTable}).
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 final class BasisFunctionPredictorRowIterator extends RowIterator {
@@ -76,7 +76,7 @@ final class BasisFunctionPredictorRowIterator extends RowIterator {
     /**
      * Creates a new row iterator used for the basisfunction predictor node
      * which extends the input rows by a new, additional class label column.
-     * 
+     *
      * @param rowIt the row iterator of the input data
      * @param map maps the row keys to class labels
      */
@@ -102,7 +102,7 @@ final class BasisFunctionPredictorRowIterator extends RowIterator {
     @Override
     public DataRow next() {
         DataRow row = m_rowIt.next();
-        DataCell classInfo = m_map.get(row.getKey().getString());
+        DataCell classInfo = m_map.get(row.getKey());
         return new AppendedColumnRow(row, classInfo);
     }
 }

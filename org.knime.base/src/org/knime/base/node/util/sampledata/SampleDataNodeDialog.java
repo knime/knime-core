@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.util.sampledata;
 
@@ -69,7 +69,7 @@ import org.knime.core.node.NotConfigurableException;
 
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class SampleDataNodeDialog extends NodeDialogPane {
@@ -107,7 +107,7 @@ public class SampleDataNodeDialog extends NodeDialogPane {
         editor = (JSpinner.DefaultEditor)m_noiseSpinner.getEditor();
         editor.getTextField().setColumns(8);
         JPanel panel = new JPanel(new GridLayout(0, 1));
-        m_seedField = new JFormattedTextField(new Integer(1));
+        m_seedField = new JFormattedTextField(Integer.valueOf(1));
         m_seedField.setColumns(8);
         panel.add(getInFlowLayout(m_clusterCountField, " Cluster Count "));
         panel.add(getInFlowLayout(m_universeSizeField, " Universe Sizes "));
@@ -135,8 +135,8 @@ public class SampleDataNodeDialog extends NodeDialogPane {
         int seed = settings.getInt(SampleDataNodeModel.CFGKEY_SEED, 1);
         m_noiseSpinner.setValue(new Double(no));
         m_devSpinner.setValue(new Double(dev));
-        m_patternCountSpinner.setValue(new Integer(patCount));
-        m_seedField.setValue(new Integer(seed));
+        m_patternCountSpinner.setValue(Integer.valueOf(patCount));
+        m_seedField.setValue(Integer.valueOf(seed));
         StringBuffer buf = new StringBuffer();
         for (int i = 0; i < uniSizes.length; i++) {
             buf.append((i > 0 ? ", " : "") + uniSizes[i]);

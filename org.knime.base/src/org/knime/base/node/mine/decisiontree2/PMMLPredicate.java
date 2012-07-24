@@ -213,7 +213,7 @@ public abstract class PMMLPredicate {
      * @param spec the spec to be stored
      */
     protected void cacheSpec(final DataTableSpec spec) {
-        assert m_splitAttribute != null && m_splitAttribute != "";
+        assert m_splitAttribute != null && m_splitAttribute.length() > 0;
         if (spec != m_previousSpec) {
             m_previousIndex = spec.findColumnIndex(m_splitAttribute);
             if (m_previousIndex == -1) {

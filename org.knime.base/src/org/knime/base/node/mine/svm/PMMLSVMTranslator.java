@@ -201,7 +201,7 @@ public class PMMLSVMTranslator implements PMMLTranslator {
             m_kernel.setParameter(0, sigma);
         } else {
             LOGGER.error("No supported kernel type found. Supported types are "
-                    + KernelType.values());
+                    + Arrays.toString(KernelType.values()));
         }
     }
 

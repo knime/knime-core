@@ -385,7 +385,7 @@ public class AccuracyScorerNodeModel extends NodeModel implements DataProvider {
         List<String> classIds = Arrays.asList(m_values);
         RowKey overallID = new RowKey("Overall");
         int uniquifier = 1;
-        while (classIds.contains(overallID)) {
+        while (classIds.contains(overallID.getString())) {
             overallID = new RowKey("Overall (#" + (uniquifier++) + ")");
         }
         // append additional row for overall accuracy

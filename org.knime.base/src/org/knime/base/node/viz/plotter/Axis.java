@@ -248,8 +248,8 @@ public class Axis extends JComponent {
             pivot = event.getX() - m_startTickOffset;
             for (int i = 0; i < m_coordMap.length; i++) {
                 CoordinateMapping mapping = m_coordMap[i];
-                if (pivot > mapping.getMappingValue() - m_tickDist / 3
-                        && pivot < mapping.getMappingValue() + m_tickDist / 3) {
+                if (pivot > mapping.getMappingValue() - m_tickDist / 3.0
+                        && pivot < mapping.getMappingValue() + m_tickDist / 3.0) {
                     return createToolTip(mapping);
                 }
             }
@@ -257,8 +257,8 @@ public class Axis extends JComponent {
             // map the y value to screen coordinates
             pivot = m_fullLength - event.getY();
             for (CoordinateMapping mapping : m_coordMap) {
-                if (pivot > mapping.getMappingValue() - m_tickDist / 3
-                        && pivot < mapping.getMappingValue() + m_tickDist / 3) {
+                if (pivot > mapping.getMappingValue() - m_tickDist / 3.0
+                        && pivot < mapping.getMappingValue() + m_tickDist / 3.0) {
                     return createToolTip(mapping);
                 }
             }

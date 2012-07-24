@@ -119,7 +119,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
 
     private final SettingsModelIntegerBounded m_maxNumCoveredPattern =
             createMaxNumPatternSettings();
-    
+
     /** @return a new settings models for the maximum number of pattern stored
      *          for hiliting within the dec tree view.
      */
@@ -218,7 +218,6 @@ public class DecTreePredictorNodeModel extends NodeModel {
 
         m_decTree.resetColorInformation();
         BufferedDataTable inData = (BufferedDataTable)inPorts[INDATAPORT];
-        assert m_decTree != null;
         // get column with color information
         String colorColumn = null;
         for (DataColumnSpec s : inData.getDataTableSpec()) {
@@ -227,9 +226,7 @@ public class DecTreePredictorNodeModel extends NodeModel {
                 break;
             }
         }
-        if (null != m_decTree) {
-            m_decTree.setColorColumn(colorColumn);
-        }
+        m_decTree.setColorColumn(colorColumn);
         exec.setMessage("Decision Tree Predictor: start execution.");
         PortObjectSpec[] inSpecs = new PortObjectSpec[] {
                 inPorts[0].getSpec(), inPorts[1].getSpec() };

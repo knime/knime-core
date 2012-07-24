@@ -59,6 +59,7 @@ import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataType;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -160,7 +161,7 @@ public class ColProperty {
             posValues = new HashSet<DataCell>();
             for (String key : posVcfg.keySet()) {
                 DataCell pV = posVcfg.getDataCell(key);
-                if (posValues.contains(key)) {
+                if (posValues.contains(new StringCell(key))) {
                     throw new InvalidSettingsException("Possible value '"
                             + pV.toString() + "' specified twice for column '"
                             + colName + "'.");

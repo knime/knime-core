@@ -178,9 +178,7 @@ public class DecTreeToImageNodeModel extends NodeModel {
                     break;
                 }
             }
-            if (null != m_decTree) {
-                m_decTree.setColorColumn(colorColumn);
-            }
+            m_decTree.setColorColumn(colorColumn);
 
             for (DataRow thisRow : inData) {
                 m_decTree.addCoveredColor(thisRow, inData

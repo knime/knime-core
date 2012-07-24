@@ -256,7 +256,7 @@ public class NumberToStringNodeModel extends NodeModel {
      *
      * @author cebron, University of Konstanz
      */
-    private class ConverterFactory implements CellFactory {
+    private static class ConverterFactory implements CellFactory {
 
         /*
          * Column indices to use.
