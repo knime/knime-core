@@ -166,8 +166,8 @@ public class LeveneTest {
                 }
                 int gIndex = m_groups.indexOf(group);
                 if (gIndex == -1) {
-                    throw new RuntimeException("Unepected value \""
-                            + group + "\" in group column. Allowe values are "
+                    throw new RuntimeException("Unexpected value \""
+                            + group + "\" in group column. Allowed values are "
                             + m_groups);
                 }
                 DataCell cell = row.getCell(testColumnsIndex[i]);
