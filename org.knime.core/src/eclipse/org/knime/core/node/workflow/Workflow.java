@@ -1173,7 +1173,7 @@ class Workflow {
         /** {@inheritDoc} */
         @Override
         public int compareTo(final NodeAndInports o2) {
-            return (new Integer(this.m_depth).compareTo(o2.m_depth));
+            return (Integer.valueOf(this.m_depth).compareTo(o2.m_depth));
         }
     }
 
