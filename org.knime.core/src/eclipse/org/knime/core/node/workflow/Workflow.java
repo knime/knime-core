@@ -620,7 +620,7 @@ class Workflow {
      *
      * @param startID id of first node (or id of WFM)
      * @param startPorts indices of inports (use all ports if null)
-     * @param endID if of last node (or id of WFM)
+     * @param endID id of last node (or id of WFM)
      * @return set of nodes with used inports
      */
     private ArrayList<NodeAndInports> findAllNodesInbetween(
@@ -1328,10 +1328,12 @@ class Workflow {
             return tempOutput;
         }
         // check that no connection from within the loop leaves workflow:
-        if (tempOutput.contains(this.getID())) {
-            // if any branch leaves this WFM, complain!
-            throw new IllegalLoopException(
-                "Loops are not permitted to leave workflows!");
+        for (NodeAndInports nai : tempOutput) {
+            if (nai.getID().equals(this.getID())) {
+                // if any branch leaves this WFM, complain!
+                throw new IllegalLoopException(
+                    "Loops are not permitted to leave workflows!");
+            }
         }
         // make sure we have no branches from within the loop body reconnecting
         // to the flow after the loop end node (= skipping over loop end)
