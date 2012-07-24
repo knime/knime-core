@@ -3192,7 +3192,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /* Little helper class to enable vertical sorting of collapsed meta
      * node in- and outports.
      */
-    private class VerticalPortIndex implements Comparable<VerticalPortIndex> {
+    private static class VerticalPortIndex implements Comparable<VerticalPortIndex> {
         private int m_index = -1;
         private final int m_yPos;
         public VerticalPortIndex(final int y) {

@@ -51,6 +51,18 @@
 
 package org.knime.base.node.viz.histogram.datamodel;
 
+import java.awt.Color;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.util.BinningUtil;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -60,19 +72,6 @@ import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.NodeLogger;
-
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.histogram.HistogramLayout;
-import org.knime.base.node.viz.histogram.util.BinningUtil;
-import org.knime.base.node.viz.histogram.util.ColorColumn;
-
-import java.awt.Color;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
 
 
 /**
@@ -89,7 +88,7 @@ public class InteractiveHistogramVizModel extends AbstractHistogramVizModel {
      * {@link DataValueComparator} of to rows.
      * @author Tobias Koetter, University of Konstanz
      */
-    private class RowComparator implements Comparator<DataRow> {
+    private static class RowComparator implements Comparator<DataRow> {
 
         private DataValueComparator m_colComparator;
 

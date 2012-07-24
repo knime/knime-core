@@ -51,6 +51,18 @@
 
 package org.knime.base.node.preproc.setoperator;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+
+import org.knime.base.data.sort.SortedTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -66,21 +78,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.util.ThreadPool;
-
-import org.knime.base.data.sort.SortedTable;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 
 /**
@@ -90,10 +88,7 @@ import java.util.concurrent.Future;
  * @author Tobias Koetter, University of Konstanz
  */
 public class SetOperationTable {
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(SetOperationTable.class);
-
-    private class CellIterator implements Iterator<RowKeyCellMap> {
+    private static class CellIterator implements Iterator<RowKeyCellMap> {
 
         private final RowIterator m_iterator;
 

@@ -1142,7 +1142,7 @@ class Workflow {
 
     /** Helper class for lists of nodes with their inports and the depth
      * in the list. */
-    class NodeAndInports implements Comparable<NodeAndInports> {
+    static class NodeAndInports implements Comparable<NodeAndInports> {
         private NodeID m_nodeId;
         private int m_depth;  // indicates max depth from start node(s)
         private Set<Integer> m_inports;

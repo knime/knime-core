@@ -100,7 +100,7 @@ public class EigenValue implements Comparable<EigenValue> {
      */
     @Override
     public int compareTo(final EigenValue o) {
-        return -Double.compare(Math.abs(m_value), Math.abs(o.m_value));
+        return Double.compare(Math.abs(o.m_value), Math.abs(m_value));
     }
 
     /**

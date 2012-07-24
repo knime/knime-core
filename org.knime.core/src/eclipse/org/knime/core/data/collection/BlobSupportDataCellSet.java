@@ -401,7 +401,7 @@ public class BlobSupportDataCellSet
         }
     }
 
-    private final class WrapperIterator implements BlobSupportDataCellIterator {
+    private static final class WrapperIterator implements BlobSupportDataCellIterator {
 
         private final Iterator<Wrapper> m_iter;
 
