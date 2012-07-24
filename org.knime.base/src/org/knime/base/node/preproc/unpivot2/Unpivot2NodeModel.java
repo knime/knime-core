@@ -320,6 +320,10 @@ final class Unpivot2NodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        if (m_retainedColumns == null) {
+            m_retainedColumns = Unpivot2NodeDialogPane.createColumnFilterRetainedColumns();
+            m_valueColumns = Unpivot2NodeDialogPane.createColumnFilterValueColumns();
+        }
         m_retainedColumns.loadSettingsFrom(settings);
         m_valueColumns.loadSettingsFrom(settings);
         m_enableHilite.loadSettingsFrom(settings);
@@ -335,10 +339,12 @@ final class Unpivot2NodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_retainedColumns.saveSettingsTo(settings);
-        m_valueColumns.saveSettingsTo(settings);
-        m_enableHilite.saveSettingsTo(settings);
-        m_missingValues.saveSettingsTo(settings);
+        if (m_retainedColumns != null) {
+            m_retainedColumns.saveSettingsTo(settings);
+            m_valueColumns.saveSettingsTo(settings);
+            m_enableHilite.saveSettingsTo(settings);
+            m_missingValues.saveSettingsTo(settings);
+        }
     }
 
     /**
@@ -347,8 +353,13 @@ final class Unpivot2NodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_retainedColumns.validateSettings(settings);
-        m_valueColumns.validateSettings(settings);
+        // ugly, admitted. we use null assignment to indicate whether node has settings
+        final SettingsModelColumnFilter2 retainedColumns = m_retainedColumns == null
+            ? Unpivot2NodeDialogPane.createColumnFilterRetainedColumns() : m_retainedColumns;
+        retainedColumns.validateSettings(settings);
+        final SettingsModelColumnFilter2 valueColumns = m_valueColumns == null
+            ? Unpivot2NodeDialogPane.createColumnFilterValueColumns() : m_valueColumns;
+        valueColumns.validateSettings(settings);
         m_enableHilite.validateSettings(settings);
     }
 

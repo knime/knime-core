@@ -144,7 +144,7 @@ final class DataColumnSpecFilterNodeModel extends NodeModel {
             m_conf = new DataColumnSpecFilterConfiguration(CFG_KEY_FILTER);
             // auto-configure
             m_conf.loadDefaults(spec, true);
-        } 
+        }
         final FilterResult filter = m_conf.applyTo(spec);
 
         final String[] incls = filter.getIncludes();
@@ -189,7 +189,9 @@ final class DataColumnSpecFilterNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_conf.saveConfiguration(settings);
+        if (m_conf != null) {
+            m_conf.saveConfiguration(settings);
+        }
     }
 
     /**

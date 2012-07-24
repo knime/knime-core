@@ -88,7 +88,7 @@ final class CorrelationComputeNodeModel extends NodeModel
         NodeLogger.getLogger(CorrelationComputeNodeModel.class);
 
     private SettingsModelColumnFilter2 m_columnFilterModel;
-    
+
     private final SettingsModelIntegerBounded m_maxPossValueCountModel;
 
     private BufferedDataTable m_correlationTable;
@@ -205,8 +205,10 @@ final class CorrelationComputeNodeModel extends NodeModel
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_columnFilterModel.saveSettingsTo(settings);
-        m_maxPossValueCountModel.saveSettingsTo(settings);
+        if (m_columnFilterModel != null) {
+            m_columnFilterModel.saveSettingsTo(settings);
+            m_maxPossValueCountModel.saveSettingsTo(settings);
+        }
     }
 
     /**
@@ -215,7 +217,7 @@ final class CorrelationComputeNodeModel extends NodeModel
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_columnFilterModel.validateSettings(settings);
+        createColumnFilterModel().validateSettings(settings);
         m_maxPossValueCountModel.validateSettings(settings);
     }
 
@@ -225,6 +227,9 @@ final class CorrelationComputeNodeModel extends NodeModel
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        if (m_columnFilterModel == null) {
+            m_columnFilterModel = createColumnFilterModel();
+        }
         m_columnFilterModel.loadSettingsFrom(settings);
         m_maxPossValueCountModel.loadSettingsFrom(settings);
     }

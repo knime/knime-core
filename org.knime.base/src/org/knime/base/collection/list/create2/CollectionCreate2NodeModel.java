@@ -237,6 +237,9 @@ public class CollectionCreate2NodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        if (m_includeModel == null) {
+            m_includeModel = createSettingsModel();
+        }
         m_includeModel.loadSettingsFrom(settings);
         m_createSet.loadSettingsFrom(settings);
         m_removeCols.loadSettingsFrom(settings);
@@ -266,18 +269,22 @@ public class CollectionCreate2NodeModel extends NodeModel {
     /** {@inheritDoc} */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_includeModel.saveSettingsTo(settings);
-        m_createSet.saveSettingsTo(settings);
-        m_removeCols.saveSettingsTo(settings);
-        m_newColName.saveSettingsTo(settings);
-        m_ignoreMissing.saveSettingsTo(settings);
+        if (m_includeModel != null) {
+            m_includeModel.saveSettingsTo(settings);
+            m_createSet.saveSettingsTo(settings);
+            m_removeCols.saveSettingsTo(settings);
+            m_newColName.saveSettingsTo(settings);
+            m_ignoreMissing.saveSettingsTo(settings);
+        }
     }
 
     /** {@inheritDoc} */
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_includeModel.validateSettings(settings);
+        SettingsModelColumnFilter2 includeModel =
+            m_includeModel == null ? createSettingsModel() : m_includeModel;
+        includeModel.validateSettings(settings);
         m_createSet.validateSettings(settings);
         m_removeCols.validateSettings(settings);
         m_newColName.validateSettings(settings);
