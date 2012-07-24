@@ -53,9 +53,10 @@ package org.knime.base.node.stats.testing.ttest;
 import org.knime.base.node.stats.testing.ttest.Grouping.Group;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 
@@ -87,8 +88,8 @@ public class TwoSampleTTest {
 
 
 
-    public TwoSampleTTestStatistics[] execute(final DataTable table,
-            final ExecutionContext exec) throws InvalidSettingsException {
+    public TwoSampleTTestStatistics[] execute(final BufferedDataTable table,
+            final ExecutionContext exec) throws InvalidSettingsException, CanceledExecutionException {
 
         DataTableSpec spec = table.getDataTableSpec();
         int groupingIndex = spec.findColumnIndex(m_grouping.getColumn());
@@ -108,7 +109,12 @@ public class TwoSampleTTest {
                     m_grouping.getGroupLabels(), m_confidenceIntervalProb);
         }
 
+        final int rowCount = table.getRowCount();
+        int rowIndex = 0;
         for (DataRow row : table) {
+            exec.checkCanceled();
+            exec.setProgress(rowIndex++ / (double)rowCount,
+                    rowIndex + "/" + rowCount + " (\"" + row.getKey() + "\")");
             Group group = m_grouping.getGroup(row.getCell(groupingIndex));
             for (int i = 0; i < testColumnCount; i++) {
                 if (group == null) {

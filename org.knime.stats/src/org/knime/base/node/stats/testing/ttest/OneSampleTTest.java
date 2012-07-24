@@ -52,9 +52,10 @@ package org.knime.base.node.stats.testing.ttest;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
+import org.knime.core.node.BufferedDataTable;
+import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 
@@ -92,9 +93,11 @@ public class OneSampleTTest {
      * @param exec execution context
      * @return results for each performed t-test
      * @throws InvalidSettingsException
+     * @throws CanceledExecutionException
      */
-    public OneSampleTTestStatistics[] execute(final DataTable table,
-            final ExecutionContext exec) throws InvalidSettingsException {
+    public OneSampleTTestStatistics[] execute(final BufferedDataTable table,
+            final ExecutionContext exec) throws InvalidSettingsException,
+            CanceledExecutionException {
 
         DataTableSpec spec = table.getDataTableSpec();
 
@@ -110,7 +113,12 @@ public class OneSampleTTest {
                     m_testValue, m_confidenceIntervalProb);
         }
 
+        final int rowCount = table.getRowCount();
+        int rowIndex = 0;
         for (DataRow row : table) {
+            exec.checkCanceled();
+            exec.setProgress(rowIndex++ / (double)rowCount,
+                    rowIndex + "/" + rowCount + " (\"" + row.getKey() + "\")");
             for (int i = 0; i < colCount; i++) {
                 DataCell cell = row.getCell(columnsIndex[i]);
 
