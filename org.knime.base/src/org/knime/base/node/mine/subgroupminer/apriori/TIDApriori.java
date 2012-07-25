@@ -358,7 +358,9 @@ public class TIDApriori implements AprioriAlgorithm {
             // rule with the rest of them in them in the antecendent
             // support = dbsize, confidence = 1
             List<Integer> rest = new ArrayList<Integer>(alwaysFrequentIds);
-            rest.remove(item.getId());
+            // we want to remove the object with the value and not at position
+            // thus we the argument needs to be an object!
+            rest.remove(Integer.valueOf(item.getId()));
             List<Integer>itemList = new ArrayList<Integer>();
             itemList.add(item.getId());
             AssociationRule rule = new AssociationRule(
