@@ -620,7 +620,7 @@ public class FileReaderSettings extends TokenizerSettings {
              * don't override a (possibly user set) name if it's not a new
              * location
              */
-            if ((m_dataFileLocation != null) && !dataFileLocation.toExternalForm().equals(
+            if ((m_dataFileLocation == null) || !dataFileLocation.toExternalForm().equals(
                     m_dataFileLocation.toExternalForm())) {
                 setTableName(getPureFileNameWithExtension(dataFileLocation));
             }
