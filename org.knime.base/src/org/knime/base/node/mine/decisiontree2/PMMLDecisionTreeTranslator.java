@@ -307,6 +307,9 @@ public class PMMLDecisionTreeTranslator implements PMMLTranslator {
             } else if (splitNode.getIndex(node)
                     == SplitNominalBinary.RIGHT_PARTITION) {
                 indices = splitNode.getRightChildIndices();
+            } else {
+                throw new IllegalArgumentException("Split node is neither "
+                        + "contained in the right nor in the left partition.");
             }
             StringBuilder classSet = new StringBuilder();
             for (Integer i : indices) {

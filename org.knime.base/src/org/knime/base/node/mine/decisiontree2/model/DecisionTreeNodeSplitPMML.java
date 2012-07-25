@@ -299,7 +299,9 @@ public class DecisionTreeNodeSplitPMML extends DecisionTreeNodeSplit {
     @Override
     public LinkedHashMap<DataCell, Double> getClassCounts(final DataCell cell,
             final DataRow row, final DataTableSpec spec) {
-        return getClassCounts(null, row, spec);
+        throw new UnsupportedOperationException("This method is not applicable "
+                 + "for PMML split node. Please call getClassCounts(row, spec) "
+                + "instead.");
     }
 
     /**

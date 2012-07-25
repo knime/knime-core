@@ -342,7 +342,11 @@ public class PMMLPreprocPortObject extends AbstractPortObject {
          */
         @Override
         public boolean equals(final Object obj) {
-            return m_zipOut.equals(obj);
+            if (!(obj instanceof PortObjectZipOutputStreamAndString)) {
+                return false;
+            }
+            return m_zipOut.equals(
+                    ((PortObjectZipOutputStreamAndString)obj).m_zipOut);
         }
 
         /**
