@@ -280,6 +280,7 @@ final class CorrelationComputer {
         final int numColumns = m_tableSpec.getNumColumns();
         HalfDoubleMatrix nominatorMatrix = new HalfDoubleMatrix(
                 numColumns, /*includeDiagonal=*/false);
+        nominatorMatrix.fill(Double.NaN);
         int rowIndex = 0;
         DataCell[] cells = new DataCell[numColumns];
         final int rowCount = table.getRowCount();
@@ -294,6 +295,8 @@ final class CorrelationComputer {
                         m_numericColIndexMap[i], null));
             } else {
                 for (int j = i + 1; j < m_numericColIndexMap.length; j++) {
+                    nominatorMatrix.set(m_numericColIndexMap[i],
+                            m_numericColIndexMap[j], 0.0);
                     final double stdDevJ = m_numericStdDevMatrix[j][j];
                     if (stdDevJ == 0.0) {
                         // reported later (when j is i in the outer loop)
