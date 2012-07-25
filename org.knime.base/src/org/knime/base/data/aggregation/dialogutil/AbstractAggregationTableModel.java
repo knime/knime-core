@@ -51,18 +51,15 @@
 
 package org.knime.base.data.aggregation.dialogutil;
 
-import org.knime.base.data.aggregation.AggregationMethodDecorator;
-import org.knime.base.data.aggregation.ColumnAggregator;
-
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableModel;
+import org.knime.base.data.aggregation.AggregationMethodDecorator;
+import org.knime.base.data.aggregation.ColumnAggregator;
 
 
 /**
@@ -349,11 +346,11 @@ public abstract class AbstractAggregationTableModel
      * {@inheritDoc}
      */
     @Override
-    public void add(final O... operators) {
-        if (operators == null || operators.length < 1) {
+    public void add(final List<O> operators) {
+        if (operators == null || operators.isEmpty()) {
             return;
         }
-        if (m_operators.addAll(Arrays.asList(operators))) {
+        if (m_operators.addAll(operators)) {
             //notify the rest if the rows have changed
             fireTableDataChanged();
         }

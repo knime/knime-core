@@ -51,13 +51,12 @@
 
 package org.knime.base.data.aggregation.dialogutil;
 
-import org.knime.base.data.aggregation.NamedAggregationOperator;
-
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
 import javax.swing.table.DefaultTableModel;
+import org.knime.base.data.aggregation.NamedAggregationOperator;
 
 
 /**
@@ -204,19 +203,14 @@ public class ColumnAggregationTableModel
         }
     }
 
-
     /**
      * {@inheritDoc}
      */
     @Override
-    public void add(final NamedAggregationOperator... operators) {
-        if (operators == null || operators.length < 1) {
-            return;
-        }
+    public void add(final List<NamedAggregationOperator> operators) {
         final Set<String> names = getOperatorNames();
-        final NamedAggregationOperator[] uniqueOperators =
-            new NamedAggregationOperator[operators.length];
-        int i = 0;
+        final List<NamedAggregationOperator> uniqueOperators =
+            new ArrayList<NamedAggregationOperator>(operators.size());
         for (final NamedAggregationOperator op : operators) {
             //check if the name of the operator is already used and
             //make it unique
@@ -227,7 +221,7 @@ public class ColumnAggregationTableModel
                 op.setName(uniqueName);
             }
             names.add(op.getName());
-            uniqueOperators[i++] = op;
+            uniqueOperators.add(op);
         }
         //add the operators also to the super class after making them unique
         super.add(uniqueOperators);

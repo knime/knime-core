@@ -51,21 +51,19 @@
 
 package org.knime.base.data.aggregation.dialogutil;
 
-import org.knime.base.data.aggregation.AggregationMethod;
-import org.knime.base.data.aggregation.AggregationMethods;
-import org.knime.base.data.aggregation.ColumnAggregator;
-
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.DoubleValue;
-
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-
 import javax.swing.table.DefaultTableModel;
+import org.knime.base.data.aggregation.AggregationMethod;
+import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.DoubleValue;
 
 
 /**
@@ -253,17 +251,20 @@ public class AggregationColumnTableModel
 
     /**
      * @param specs the {@link DataColumnSpec}s of the columns to add
-     * @see #add(ColumnAggregator...)
+     * @see #add(List)
      */
     @Deprecated
     protected void addColumn(final DataColumnSpec... specs) {
         if (specs == null || specs.length < 1) {
             return;
         }
+        final List<ColumnAggregator> aggregators =
+            new ArrayList<ColumnAggregator>(specs.length);
         for (final DataColumnSpec spec : specs) {
             final AggregationMethod defaultMethod =
                 AggregationMethods.getDefaultMethod(spec);
-            add(new ColumnAggregator(spec, defaultMethod));
+            aggregators.add(new ColumnAggregator(spec, defaultMethod));
         }
+        add(aggregators);
     }
 }

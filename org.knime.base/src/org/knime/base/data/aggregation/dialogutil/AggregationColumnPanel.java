@@ -60,12 +60,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
-
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.table.TableColumnModel;
-
 import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.ColumnAggregator;
@@ -364,7 +362,7 @@ ColumnAggregator, DataColumnSpec> {
                 AggregationMethods.getMethod4Id(methodId));
         final Collection<Integer> idxs = new LinkedList<Integer>();
         for (final int i : selectedRows) {
-            idxs.add(i);
+            idxs.add(new Integer(i));
         }
         updateSelection(idxs);
     }
@@ -508,15 +506,6 @@ ColumnAggregator, DataColumnSpec> {
         final List<Entry<String, List<AggregationMethod>>> list =
                 AggregationMethods.getCompatibleMethodGroupList(superType);
         return list;
-    }
-
-    /**
-     * {@inheritDoc}
-     * @since 2.6
-     */
-    @Override
-    protected ColumnAggregator[] createEmptyOperatorArray(final int size) {
-        return new ColumnAggregator[size];
     }
 
     /**

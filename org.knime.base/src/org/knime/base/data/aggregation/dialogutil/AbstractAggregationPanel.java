@@ -51,20 +51,17 @@
 
 package org.knime.base.data.aggregation.dialogutil;
 
-import org.knime.base.data.aggregation.AggregationMethodDecorator;
-
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.LinkedList;
-import java.util.List;
-
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Enumeration;
+import java.util.LinkedList;
+import java.util.List;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -81,6 +78,7 @@ import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
+import org.knime.base.data.aggregation.AggregationMethodDecorator;
 
 
 /**
@@ -237,13 +235,6 @@ public abstract class AbstractAggregationPanel
      * @return the {@link JPopupMenu} or <code>null</code> for no popup menu
      */
     protected abstract JPopupMenu createTablePopupMenu();
-
-    /**
-     * @param size the size of the array to create
-     * @return an array of the given size that can store objects of the
-     * used {@link AggregationMethodDecorator} class
-     */
-    protected abstract O[] createEmptyOperatorArray(int size);
 
     /**
      * @param selectedListElement the list element to create the
@@ -461,7 +452,7 @@ public abstract class AbstractAggregationPanel
         if (values == null || values.length < 1) {
             return;
         }
-        final O[] methods = getOperators(values);
+        final List<O> methods = getOperators(values);
         getTableModel().add(methods);
     }
 
@@ -469,7 +460,7 @@ public abstract class AbstractAggregationPanel
      *  Adds all columns to the aggregation column table.
      */
     protected void onAddAll() {
-        final O[] methods = getOperators(getListModel());
+        final List<O> methods = getOperators(getListModel());
         getTableModel().add(methods);
     }
 
@@ -487,14 +478,14 @@ public abstract class AbstractAggregationPanel
         getTableModel().removeAll();
     }
 
-    private O[] getOperators(
+    private List<O> getOperators(
             final DefaultListModel listModel) {
-      final O[] methods = createEmptyOperatorArray(listModel.size());
+      final List<O> methods = new ArrayList<O>(listModel.size());
       for (int i = 0, size = listModel.getSize(); i < size; i++) {
           @SuppressWarnings("unchecked")
           final L listEntry = (L)listModel.get(i);
           final O operator = getOperator(listEntry);
-          methods[i] = operator;
+          methods.add(operator);
       }
       return methods;
     }
@@ -503,10 +494,10 @@ public abstract class AbstractAggregationPanel
      * @param values the user selected values to add
      * @return the wrapped objects to add to the table model
      */
-    private O[] getOperators(final L[] values) {
-        final O[] methods = createEmptyOperatorArray(values.length);
-        for (int i = 0, length = values.length; i < length; i++) {
-            methods[i] = getOperator(values[i]);
+    private List<O> getOperators(final L[] values) {
+        final List<O> methods = new ArrayList<O>(values.length);
+        for (final L value : values) {
+            methods.add(getOperator(value));
         }
         return methods;
     }

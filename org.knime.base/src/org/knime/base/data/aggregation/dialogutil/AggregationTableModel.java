@@ -48,11 +48,9 @@
 
 package org.knime.base.data.aggregation.dialogutil;
 
-import org.knime.base.data.aggregation.AggregationMethodDecorator;
-
 import java.util.List;
-
 import javax.swing.table.TableModel;
+import org.knime.base.data.aggregation.AggregationMethodDecorator;
 
 
 /**
@@ -78,9 +76,9 @@ public interface AggregationTableModel<O extends AggregationMethodDecorator>
     public void remove(int... idxs);
 
     /**
-     * @param operator the {@link AggregationMethodDecorator}s to add
+     * @param operators the {@link AggregationMethodDecorator}s to add
      */
-    public void add(O... operator);
+    public void add(List<O> operators);
 
     /**
      * @param idxs the row indices to toggle the missing cell option for

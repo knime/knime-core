@@ -51,23 +51,19 @@
 
 package org.knime.base.data.aggregation.dialogutil;
 
-import org.knime.base.data.aggregation.AggregationMethod;
-import org.knime.base.data.aggregation.AggregationMethods;
-import org.knime.base.data.aggregation.NamedAggregationOperator;
-
-import org.knime.core.data.DataType;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.config.Config;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.table.TableColumnModel;
+import org.knime.base.data.aggregation.AggregationMethod;
+import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.NamedAggregationOperator;
+import org.knime.core.data.DataType;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.config.Config;
 
 
 /**
@@ -229,15 +225,6 @@ public class ColumnAggregationPanel extends AbstractAggregationPanel<
      */
     protected DataType getType() {
         return m_type;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected NamedAggregationOperator[] createEmptyOperatorArray(
-            final int size) {
-        return new NamedAggregationOperator[size];
     }
 
     /**
