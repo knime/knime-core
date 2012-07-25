@@ -3897,7 +3897,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         // also means it is set in the LoopContextObject):
                         SingleNodeContainer lsnc = (SingleNodeContainer)m_workflow.getNode(lsid);
                         FlowLoopContext flc = lsnc.getOutgoingFlowObjectStack().peek(FlowLoopContext.class);
-                        if ((flc.getTailNode() != null)
+                        if (flc.needsCompleteResetOnLoopBodyChanges()
                             && (State.EXECUTED.equals(lsnc.getState()))) {
                             // this is ugly but necessary: we need to make
                             // sure we don't go into an infinite loop here,

@@ -97,6 +97,15 @@ public class FlowLoopContext extends FlowObject {
         return ++m_iterationIndex;
     }
 
+    /** Whether the entire loop needs to be reset when changes to the body are made.
+     * True if at least one iteration has been run (that is, the tail node is assigned)
+     * or the loop is restored from disk (overwritten in {@link RestoredFlowLoopContext}).
+     * @return Whether to reset body on changes.
+     */
+    boolean needsCompleteResetOnLoopBodyChanges() {
+        return m_tailNode != null;
+    }
+
     /** {@inheritDoc} */
     @Override
     protected FlowObject cloneAndUnsetOwner() {
@@ -149,6 +158,12 @@ public class FlowLoopContext extends FlowObject {
         @Override
         String getClassSummary() {
             return "Restored Loop Context";
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        boolean needsCompleteResetOnLoopBodyChanges() {
+            return true;
         }
 
     }

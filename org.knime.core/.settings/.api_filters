@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<component id="org.knime.core" version="2">
+<?xml version="1.0" encoding="UTF-8"?><component id="org.knime.core" version="2">
     <resource path="META-INF/MANIFEST.MF" type="org.dmg.pmml40.ACTIVATIONFUNCTION">
         <filter id="305426566">
             <message_arguments>
@@ -3950,14 +3949,6 @@
                 <message_argument value="FileStoreHandler"/>
                 <message_argument value="NodePersistorVersion1xx"/>
                 <message_argument value="getFileStoreHandler()"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/FlowLoopContext.java" type="org.knime.core.node.workflow.FlowLoopContext">
-        <filter id="354463860">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.FlowLoopContext"/>
-                <message_argument value="FlowLoopContext()"/>
             </message_arguments>
         </filter>
     </resource>
