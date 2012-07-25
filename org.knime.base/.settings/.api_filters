@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?><component id="org.knime.base" version="2">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.knime.base" version="2">
     <resource path="META-INF/MANIFEST.MF" type="Jama.CholeskyDecomposition">
         <filter id="305365105">
             <message_arguments>
@@ -508,13 +509,6 @@
             <message_arguments>
                 <message_argument value="org.knime.base.node.switches.emtpytablereplacer.EmptyTableReplacerNodeModel"/>
                 <message_argument value="org.knime.base_2.6.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/org/knime/base/data/aggregation/dialogutil/AggregationColumnTableModel.java" type="org.knime.base.data.aggregation.dialogutil.AggregationColumnTableModel">
-        <filter id="338849923">
-            <message_arguments>
-                <message_argument value="org.knime.base.data.aggregation.dialogutil.AggregationColumnTableModel"/>
             </message_arguments>
         </filter>
     </resource>
