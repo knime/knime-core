@@ -119,12 +119,12 @@ class RoundDoubleNodeModel extends NodeModel {
      */
     public static final String DEF_ROUNDING_MODE =
         RoundingMode.HALF_UP.name();
-    
+
     /**
      * Default number mode.
      */
-    public static final String DEF_NUMBER_MODE = 
-        NumberMode.DECIMAL_PLACES.name();
+    public static final String DEF_NUMBER_MODE =
+        NumberMode.DECIMAL_PLACES.description();
 
     /**
      * Possible rounding modes.
@@ -136,7 +136,7 @@ class RoundDoubleNodeModel extends NodeModel {
      * Possible number modes.
      */
     public static final String[] NUMBER_MODES = NumberMode.getDescriptions();
-    
+
     /**
      * The default value of the "output as string" setting.
      */
@@ -160,8 +160,8 @@ class RoundDoubleNodeModel extends NodeModel {
 
     private SettingsModelBoolean m_outputAsString =
         RoundDoubleNodeDialog.getOutputAsStringModel();
-    
-    private SettingsModelString m_numberModeModel = 
+
+    private SettingsModelString m_numberModeModel =
         RoundDoubleNodeDialog.getNumberModeStringModel();
 
     /**
@@ -249,7 +249,7 @@ class RoundDoubleNodeModel extends NodeModel {
         // Pass all necessary parameters to the cell factory, which rounds
         // the values and creates new cells to replace or append.
         RoundDoubleCellFactory cellFac = new RoundDoubleCellFactory(precision,
-                numberMode, roundingMode, outputAsString, includedColIndices, 
+                numberMode, roundingMode, outputAsString, includedColIndices,
                 newColsSpecs);
 
         // replace or append columns
@@ -388,7 +388,7 @@ class RoundDoubleNodeModel extends NodeModel {
         } catch (Exception e) {
             errMsgBuffer.append("Specified number mode is not valid!\n");
             err = true;
-            
+
         // throw exception when at least one settings is invalid
         } finally {
             if (err) {

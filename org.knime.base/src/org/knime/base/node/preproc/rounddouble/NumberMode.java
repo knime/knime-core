@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   14.07.2012 (kilian): created
  */
@@ -57,7 +57,7 @@ import java.util.List;
 
 /**
  * Number mode for round double node.
- * 
+ *
  * @author Kilian Thiel, KNIME.com AG, Zurich
  */
 public enum NumberMode {
@@ -76,7 +76,7 @@ public enum NumberMode {
 
     /**
      * Constructor.
-     * 
+     *
      * @param description The modes description.
      */
     private NumberMode(final String description) {
@@ -85,7 +85,7 @@ public enum NumberMode {
 
     /**
      * Returns the number mode value for the given description. If there exists
-     * no mode for description an <code>IllegalArgumentException</code> is 
+     * no mode for description an <code>IllegalArgumentException</code> is
      * thrown.
      * @param description The description to get the number mode value for.
      * @return Number mode value for given description
@@ -96,16 +96,16 @@ public enum NumberMode {
                 return mode;
             }
         }
-        throw new IllegalArgumentException("argument out of range");
+        throw new IllegalArgumentException("argument out of range: " + description);
     }
-    
+
     /**
      * @return The description of the mode.
      */
     public String description() {
         return m_description;
     }
-    
+
     /**
      * @return An array of all descriptions.
      */
