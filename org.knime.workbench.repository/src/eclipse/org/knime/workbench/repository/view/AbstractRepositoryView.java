@@ -338,7 +338,7 @@ public abstract class AbstractRepositoryView extends ViewPart implements
      *
      * @author Florian Georg, University of Konstanz
      */
-    private class PropertyProvider implements IPropertySourceProvider {
+    private static class PropertyProvider implements IPropertySourceProvider {
         /**
          * Delegates the request, if the object is an IAdaptable.
          *

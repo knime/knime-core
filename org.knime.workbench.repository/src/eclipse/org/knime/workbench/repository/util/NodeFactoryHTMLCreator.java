@@ -132,10 +132,10 @@ public final class NodeFactoryHTMLCreator {
     }
 
     private String getXMLDescriptionHowTo() {
+        BufferedReader buffer = null;
         try {
             InputStream is = getClass().getResourceAsStream(HOWTO_FILE);
-            BufferedReader buffer =
-                    new BufferedReader(new InputStreamReader(is));
+            buffer = new BufferedReader(new InputStreamReader(is));
             StringBuilder result = new StringBuilder();
             result.append(DynamicNodeDescriptionCreator.instance().getHeader());
             String line;
@@ -147,6 +147,13 @@ public final class NodeFactoryHTMLCreator {
         } catch (IOException io) {
             LOGGER.error(io);
             return "No description available. Please add an XML description";
+        } finally {
+            if (buffer != null) {
+                try {
+                    buffer.close();
+                } catch (IOException ex) {
+                }
+            }
         }
     }
 

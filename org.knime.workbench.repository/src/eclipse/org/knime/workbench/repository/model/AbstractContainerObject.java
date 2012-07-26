@@ -388,8 +388,55 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
 
         @Override
         public int compareTo(final TreeEntry o) {
-
             return m_repositoryObject.compareTo(o.m_repositoryObject);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + getOuterType().hashCode();
+            result =
+                    prime
+                            * result
+                            + ((m_repositoryObject == null) ? 0
+                                    : m_repositoryObject.hashCode());
+            return result;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(final Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            TreeEntry other = (TreeEntry)obj;
+            if (!getOuterType().equals(other.getOuterType())) {
+                return false;
+            }
+            if (m_repositoryObject == null) {
+                if (other.m_repositoryObject != null) {
+                    return false;
+                }
+            } else if (!m_repositoryObject.equals(other.m_repositoryObject)) {
+                return false;
+            }
+            return true;
+        }
+
+        private AbstractContainerObject getOuterType() {
+            return AbstractContainerObject.this;
         }
     }
 

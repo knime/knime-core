@@ -190,13 +190,13 @@ public final class NodeUsageRegistry {
         List<NodeTemplateFrequency> mostFrequent =
                 new ArrayList<NodeTemplateFrequency>(FREQUENCIES.values());
         Collections.sort(mostFrequent);
-        cachedFrequent = new ArrayList<NodeTemplate>();
+        List<NodeTemplate> temp = new ArrayList<NodeTemplate>();
 
         int max = Math.min(maxMostFrequent, mostFrequent.size());
         for (int i = 0; i < max; i++) {
-            cachedFrequent.add(mostFrequent.get(i).getNode());
+            temp.add(mostFrequent.get(i).getNode());
         }
-        return cachedFrequent;
+        return (cachedFrequent = temp);
     }
 
     /**
@@ -258,22 +258,42 @@ public final class NodeUsageRegistry {
             return m_node;
         }
 
-        /**
-         *
-         * {@inheritDoc}
-         */
-        @Override
-        public boolean equals(final Object obj) {
-            return m_node.equals(((NodeTemplateFrequency)obj).m_node);
-        }
 
         /**
-         *
          * {@inheritDoc}
          */
         @Override
         public int hashCode() {
-            return m_node.hashCode();
+            final int prime = 31;
+            int result = 1;
+            result =
+                    prime * result + ((m_node == null) ? 0 : m_node.hashCode());
+            return result;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(final Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            NodeTemplateFrequency other = (NodeTemplateFrequency)obj;
+            if (m_node == null) {
+                if (other.m_node != null) {
+                    return false;
+                }
+            } else if (!m_node.equals(other.m_node)) {
+                return false;
+            }
+            return true;
         }
 
         /**
