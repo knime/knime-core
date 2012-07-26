@@ -89,7 +89,7 @@ public class KNIMEApplication implements IApplication {
      * A special return code that will be recognized by the launcher and used to
      * restart the workbench.
      */
-    private static final Integer EXIT_RELAUNCH = new Integer(24);
+    private static final Integer EXIT_RELAUNCH = Integer.valueOf(24);
 
     /**
      * {@inheritDoc}
