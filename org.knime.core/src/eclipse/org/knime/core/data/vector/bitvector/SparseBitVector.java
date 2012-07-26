@@ -569,7 +569,11 @@ public class SparseBitVector {
         }
         // all numbers from startAddr are continuously stored (i.e. set to one)
         assert (idx == m_idxStorage[m_lastIdx]);
-        return idx++;
+        idx++;
+        if (idx >= m_length) {
+            return -1;
+        }
+        return idx;
     }
 
     /**

@@ -491,7 +491,11 @@ public class SparseByteVector {
         }
         // all numbers from startAddr are continuously stored
         assert (idx == m_idxStorage[m_lastIdx]);
-        return idx++;
+        idx++;
+        if (idx >= m_length) {
+            return -1;
+        }
+        return idx;
     }
 
     /**
