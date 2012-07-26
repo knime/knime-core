@@ -1503,14 +1503,14 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                 logger.info("TestOwners=" + s.substring(1, s.length() - 1));
             } else {
                 logger.info("TestOwners=" + REGRESSIONS_OWNER);
-                // Fail if no owner is set!
-                logger.error("No owner set in test '"
+                String msg = "No owner set in test '"
                         + m_knimeWorkFlow.getParentFile().getName()
                         + "'. Please create an owner file in the test directory"
                         + " or add a Testflow Configuration node to the "
-                        + "workflow.");
+                        + "workflow.";
+                logger.error(msg);
                 wrapUp();
-                fail();
+                fail(msg);
             }
 
             // remember the executed nodes (before executing) to not
@@ -1521,25 +1521,27 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
             File optionsFile =
                     new File(m_knimeWorkFlow.getParentFile(), OPTIONS_FILE);
             applySettings(optionsFile);
+        } catch (AssertionError err) {
+            throw err;
         } catch (IOException ex) {
             String msg = ex.getMessage();
             logger.error("I/O Error during workflow loading:"
                     + (msg == null ? "<no details>" : msg));
             wrapUp();
-            fail();
+            fail(msg);
         } catch (InvalidSettingsException ise) {
             String msg = ise.getMessage();
             logger.error("Invalid settings: "
                     + (msg == null ? "<no details>" : msg));
             wrapUp();
-            fail();
+            fail(msg);
         } catch (Throwable t) {
             String msg = t.getMessage();
             logger.error("Caught a throwable during test setup: "
                     + t.getClass().getSimpleName() + ", msg: "
                     + (msg == null ? "<no details>" : msg), t);
             wrapUp();
-            fail();
+            fail(msg);
         }
     }
 
