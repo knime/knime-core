@@ -32,7 +32,7 @@ import org.eclipse.ui.ISelectionService;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.ide.IDE;
-import org.knime.core.node.NodeLogger;
+import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.metainfo.model.MetaInfoFile;
@@ -57,7 +57,7 @@ public class EditMetaInfoAction extends Action {
     @Override
     public ImageDescriptor getImageDescriptor() {
         if (icon == null) {
-            icon = KNIMEUIPlugin.imageDescriptorFromPlugin(
+            icon = AbstractUIPlugin.imageDescriptorFromPlugin(
                     KNIMEUIPlugin.PLUGIN_ID, "icons/meta_info_edit.png");
         }
         return icon;
@@ -101,10 +101,6 @@ public class EditMetaInfoAction extends Action {
                             ((IContainer)element).getLocation());
         } else if (element instanceof IFileStore) {
             m_parent = ((IFileStore)element);
-            if (m_parent == null) {
-                NodeLogger.getLogger(EditMetaInfoAction.class).debug(
-                        "Only local meta info files can be opened");
-            }
         }
         if (m_parent == null) {
             return false;

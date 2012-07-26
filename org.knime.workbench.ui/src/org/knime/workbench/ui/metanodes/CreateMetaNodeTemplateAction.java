@@ -132,7 +132,7 @@ public class CreateMetaNodeTemplateAction extends Action {
         }
     }
 
-    private class MetaNodeTemplateNameValidator implements IInputValidator {
+    private static class MetaNodeTemplateNameValidator implements IInputValidator {
 
         /**
          *

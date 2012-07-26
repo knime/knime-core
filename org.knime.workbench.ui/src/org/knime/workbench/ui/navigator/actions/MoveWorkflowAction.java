@@ -258,7 +258,7 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
             return;
         }
 
-        if (source != null && !source.isLinked()) {
+        if (!source.isLinked()) {
             // check if the source is an opened workflow
             if (containsOpenWorkflows(source)) {
                 showWorkflowIsOpenMessage();

@@ -31,27 +31,27 @@ import org.eclipse.swt.widgets.Display;
 /**
  * Utility class for managing OS resources associated with SWT controls such as
  * colors, fonts, images, etc.
- * 
+ *
  * !!! IMPORTANT !!! Application code must explicitly invoke the
  * <code>dispose()</code> method to release the operating system resources
  * managed by cached objects when those objects and OS resources are no longer
  * needed (e.g. on application shutdown)
- * 
+ *
  * Note: if you need to use this class in an environment without JFace, you will
  * need to create a stub for the org.eclipse.jface.resource.ImageDescriptor
  * class. The following should work fine:
- * 
+ *
  * package org.eclipse.jface.resource; import java.net.URL; public abstract
  * class ImageDescriptor { protected ImageDescriptor() { } public static
  * ImageDescriptor createFromFile(Class location, String filename) { return
  * null; } public static ImageDescriptor createFromURL(URL url) { return null; }
  * public Image createImage() { return null; } }
- * 
+ *
  * This class may be freely distributed as part of any application or plugin.
  * <p>
  * Copyright (c) 2003 - 2005, Instantiations, Inc. <br>
  * All Rights Reserved
- * 
+ *
  * @version $Revision$
  * @author scheglov_ke
  * @author Dan Rubel
@@ -85,7 +85,7 @@ public final class ResourceManager {
 
     /**
      * Returns the system color matching the specific ID.
-     * 
+     *
      * @param systemColorID int The ID value for the color
      * @return Color The system color matching the specific ID
      */
@@ -96,7 +96,7 @@ public final class ResourceManager {
 
     /**
      * Returns a color given its red, green and blue component values.
-     * 
+     *
      * @param r int The red component of the color
      * @param g int The green component of the color
      * @param b int The blue component of the color
@@ -109,7 +109,7 @@ public final class ResourceManager {
 
     /**
      * Returns a color given its RGB value.
-     * 
+     *
      * @param rgb RGB The RGB value of the color
      * @return Color The color matching the RGB value
      */
@@ -154,7 +154,7 @@ public final class ResourceManager {
 
     /**
      * Returns an image encoded by the specified input stream.
-     * 
+     *
      * @param is InputStream The input stream encoding the image data
      * @return Image The image encoded by the specified input stream
      */
@@ -169,7 +169,7 @@ public final class ResourceManager {
 
     /**
      * Returns an image stored in the file at the specified path.
-     * 
+     *
      * @param path String The path to the image file
      * @return Image The image stored in the file at the specified path
      */
@@ -179,7 +179,7 @@ public final class ResourceManager {
 
     /**
      * Returns an image stored in the file at the specified path.
-     * 
+     *
      * @param section The section to which belongs specified image
      * @param path String The path to the image file
      * @return Image The image stored in the file at the specified path
@@ -204,7 +204,7 @@ public final class ResourceManager {
     /**
      * Returns an image stored in the file at the specified path relative to the
      * specified class.
-     * 
+     *
      * @param clazz Class The class relative to which to find the image
      * @param path String The path to the image file
      * @return Image The image stored in the file at the specified path
@@ -228,7 +228,7 @@ public final class ResourceManager {
     /**
      * Returns an image descriptor stored in the file at the specified path
      * relative to the specified class.
-     * 
+     *
      * @param clazz Class The class relative to which to find the image
      *            descriptor
      * @param path String The path to the image file
@@ -242,7 +242,7 @@ public final class ResourceManager {
 
     /**
      * Returns an image descriptor stored in the file at the specified path.
-     * 
+     *
      * @param path String The path to the image file
      * @return ImageDescriptor The image descriptor stored in the file at the
      *         specified path
@@ -258,7 +258,7 @@ public final class ResourceManager {
 
     /**
      * Returns an image based on the specified image descriptor.
-     * 
+     *
      * @param descriptor ImageDescriptor The image descriptor for the image
      * @return Image The image based on the specified image descriptor
      */
@@ -300,7 +300,7 @@ public final class ResourceManager {
 
     /**
      * Returns an image composed of a base image decorated by another image.
-     * 
+     *
      * @param baseImage Image The base image that should be decorated
      * @param decorator Image The image to decorate the base image
      * @return Image The resulting decorated image
@@ -312,7 +312,7 @@ public final class ResourceManager {
 
     /**
      * Returns an image composed of a base image decorated by another image.
-     * 
+     *
      * @param baseImage Image The base image that should be decorated
      * @param decorator Image The image to decorate the base image
      * @param corner The corner to place decorator image
@@ -375,7 +375,7 @@ public final class ResourceManager {
 
     /**
      * Dispose cached images in specified section.
-     * 
+     *
      * @param section the section do dispose
      */
     public static void disposeImages(final String section) {
@@ -401,7 +401,7 @@ public final class ResourceManager {
 
     /**
      * Retuns an image based on a plugin and file path.
-     * 
+     *
      * @param plugin Object The plugin containing the image
      * @param name String The path to th eimage within the plugin
      * @return Image The image stored in the file at the specified path
@@ -433,7 +433,7 @@ public final class ResourceManager {
 
     /**
      * Retuns an image descriptor based on a plugin and file path.
-     * 
+     *
      * @param plugin Object The plugin containing the image
      * @param name String The path to th eimage within the plugin
      * @return ImageDescriptor The image descriptor stored in the file at the
@@ -456,7 +456,7 @@ public final class ResourceManager {
 
     /**
      * Retuns an URL based on a plugin and file path.
-     * 
+     *
      * @param plugin Object The plugin containing the file path
      * @param name String The file path
      * @return URL The URL representing the file at the specified path
@@ -496,7 +496,7 @@ public final class ResourceManager {
 
     /**
      * Returns a font based on its name, height and style.
-     * 
+     *
      * @param name String The name of the font
      * @param height int The height of the font
      * @param style int The style of the font
@@ -515,7 +515,7 @@ public final class ResourceManager {
 
     /**
      * Return a bold version of the give font.
-     * 
+     *
      * @param baseFont Font The font for whoch a bold version is desired
      * @return Font The bold version of the give font
      */
@@ -547,7 +547,7 @@ public final class ResourceManager {
 
     /**
      * Fix the layout of the specified CoolBar.
-     * 
+     *
      * @param bar CoolBar The CoolBar that shgoud be fixed
      */
     public static void fixCoolBarSize(final CoolBar bar) {
@@ -586,12 +586,12 @@ public final class ResourceManager {
 
     /**
      * Returns the system cursor matching the specific ID.
-     * 
+     *
      * @param id int The ID value for the cursor
      * @return Cursor The system cursor matching the specific ID
      */
     public static Cursor getCursor(final int id) {
-        Integer key = new Integer(id);
+        Integer key = Integer.valueOf(id);
         Cursor cursor = (Cursor) idToCursorMap.get(key);
         if (cursor == null) {
             cursor = new Cursor(Display.getDefault(), id);

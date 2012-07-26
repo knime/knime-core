@@ -630,35 +630,33 @@ public class WorkflowExportPage extends WizardPage {
             // children than this one...
             // get all checked
             // but due to the fact that always the direct child is also checked
-            IResource parent = element.getParent();
+            IContainer parent = element.getParent();
             while (parent != null) {
                 // since we change the checked elements in this while loop we
                 // have to retrieve the currently checked elements in each
                 // iteration
                 List allChecked = Arrays.asList(viewer.getCheckedElements());
                 Collection children = new ArrayList();
-                if (parent instanceof IContainer) {
-                    try {
-                        for (IResource c : ((IContainer)parent).members()) {
-                            // do not add files, since they are not
-                            // displayed in the tree -> see #retainAll below
-                            if (c instanceof IContainer) {
-                                children.add(c);
-                            }
+                try {
+                    for (IResource c : parent.members()) {
+                        // do not add files, since they are not
+                        // displayed in the tree -> see #retainAll below
+                        if (c instanceof IContainer) {
+                            children.add(c);
                         }
-                    } catch (CoreException ce) {
-                        // nothing to do -> simply skip it
                     }
-                    // if there are no common elements between
-                    // the parent's children and the uncheck elements ->
-                    // no other checked children
-                    // -> then we can uncheck it
-                    children.retainAll(allChecked);
-                    if (children.isEmpty()) {
-                        viewer.setChecked(parent, state);
-                    } else {
-                        break;
-                    }
+                } catch (CoreException ce) {
+                    // nothing to do -> simply skip it
+                }
+                // if there are no common elements between
+                // the parent's children and the uncheck elements ->
+                // no other checked children
+                // -> then we can uncheck it
+                children.retainAll(allChecked);
+                if (children.isEmpty()) {
+                    viewer.setChecked(parent, state);
+                } else {
+                    break;
                 }
                 parent = parent.getParent();
             }
