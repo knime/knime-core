@@ -1,8 +1,8 @@
 instructions.configure=\
-  org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type:0,location:http${#58}//www.knime.org/update/2.5);\
-  org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type:1,location:http${#58}//www.knime.org/update/2.5);\
-  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type:0,location:http${#58}//www.knime.org/update/2.5,enabled:true);\
-  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type:1,location:http${#58}//www.knime.org/update/2.5,enabled:true);
+  org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type:0,location:http${#58}//www.knime.org/update/2.6);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type:1,location:http${#58}//www.knime.org/update/2.6);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type:0,location:http${#58}//www.knime.org/update/2.6,enabled:true);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type:1,location:http${#58}//www.knime.org/update/2.6,enabled:true);
 provides.1.namespace = org.eclipse.equinox.p2.iu
 provides.1.name = org.knime.features.explorer.feature.group
 provides.1.version = 2.5.2.99999
