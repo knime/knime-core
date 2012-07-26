@@ -78,6 +78,8 @@ public class AutoLayoutCommand extends Command {
 
     private long m_seed;
 
+    private final Random m_random = new Random();
+
     /**
      * @param wfm
      * @param nodes if null, all nodes are laid out
@@ -93,7 +95,7 @@ public class AutoLayoutCommand extends Command {
      */
     @Override
     public void execute() {
-        m_seed = new Random().nextLong();
+        m_seed = m_random.nextLong();
         doLayout(m_seed);
     }
 

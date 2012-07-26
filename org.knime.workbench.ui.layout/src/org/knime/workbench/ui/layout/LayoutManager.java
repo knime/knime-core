@@ -67,7 +67,6 @@ import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
-import org.knime.core.node.workflow.UIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.ui.layout.Graph.Edge;
@@ -312,23 +311,22 @@ public class LayoutManager {
         }
         for (NodeContainer nc : allNodes) {
 
-            UIInformation uiInfo = nc.getUIInformation();
-            if (uiInfo != null && uiInfo instanceof NodeUIInformation) {
+            NodeUIInformation uiInfo = nc.getUIInformation();
+            if (uiInfo != null) {
                 Node gNode = m_workbenchToGraphNodes.get(nc);
-                NodeUIInformation nui = (NodeUIInformation)uiInfo;
-                int[] b = nui.getBounds();
+                int[] b = uiInfo.getBounds();
                 int x = (int)Math.round((m_g.getX(gNode) - coordOffsetX)
                         * X_STRETCH) + minX;
                 int y = (int)Math.round((m_g.getY(gNode) - coordOffsetY)
                         * Y_STRETCH) + minY;
                 NodeUIInformation newCoord =
                         new NodeUIInformation(x, y, b[2], b[3],
-                                nui.hasAbsoluteCoordinates());
+                                uiInfo.hasAbsoluteCoordinates());
                 newCoord.setSnapToGrid(WorkflowEditor.getActiveEditorSnapToGrid());
                 LOGGER.debug("Node " + nc + " gets auto-layout coordinates "
                         + newCoord);
                 // save old coordinates for undo
-                m_oldCoordinates.put(nc.getID(), nui);
+                m_oldCoordinates.put(nc.getID(), uiInfo);
                 // triggers gui update
                 nc.setUIInformation(newCoord);
             }
@@ -338,10 +336,9 @@ public class LayoutManager {
         for (ConnectionContainer conn : allConns.keySet()) {
 
             // store old bendpoint for undo
-            UIInformation ui = conn.getUIInfo();
-            if (ui != null && ui instanceof ConnectionUIInformation) {
-                ConnectionUIInformation cui = (ConnectionUIInformation)ui;
-                m_oldBendpoints.put(conn.getID(), cui);
+            ConnectionUIInformation ui = conn.getUIInfo();
+            if (ui != null) {
+                m_oldBendpoints.put(conn.getID(), ui);
             } else {
                 m_oldBendpoints.put(conn.getID(), null);
             }
@@ -390,16 +387,15 @@ public class LayoutManager {
      * @return
      */
     private Node createGraphNodeForNC(final NodeContainer nc) {
-        UIInformation uiInfo = nc.getUIInformation();
+        NodeUIInformation uiInfo = nc.getUIInformation();
         int x = 0;
         int y = 0;
         String label = nc.getCustomName();
         if (label == null || label.isEmpty()) {
             label = "Node " + nc.getID().toString();
         }
-        if (uiInfo != null && uiInfo instanceof NodeUIInformation) {
-            NodeUIInformation nui = (NodeUIInformation)uiInfo;
-            int[] bounds = nui.getBounds();
+        if (uiInfo != null) {
+            int[] bounds = uiInfo.getBounds();
             x = bounds[0];
             y = bounds[1];
             return m_g.createNode(label, x, y);
