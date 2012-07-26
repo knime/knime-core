@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   ${date} (${user}): created
  */
@@ -55,9 +55,9 @@ import org.eclipse.core.runtime.Status;
 
 /**
  * Utility class for logging messages to the Eclipse Workbench log.
- * 
+ *
  * Note: This introduces dependency to JFace.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public final class WorkbenchErrorLogger {
@@ -68,7 +68,7 @@ public final class WorkbenchErrorLogger {
 
     /**
      * Logs a message with the plugin ID of the KNIMECorePlugin.
-     * 
+     *
      * @param severity Severity code e.g. <code>IStatus.WARN</code>
      * @param code Status code e.g. <code>IStatus.OK</code>
      * @param message The message
@@ -85,7 +85,7 @@ public final class WorkbenchErrorLogger {
 
     /**
      * Logs a simple information message.
-     * 
+     *
      * @param message The message to log
      */
     public static void info(final String message) {
@@ -94,29 +94,20 @@ public final class WorkbenchErrorLogger {
 
     /**
      * Logs an error with a throwable.
-     * 
+     *
      * @param message The message to log
      * @param throwable The throwable
      */
     public static void error(final String message, final Throwable throwable) {
         log(IStatus.ERROR, IStatus.OK, message, throwable);
         KNIMEErrorDialog.openError(message, createStatus(IStatus.ERROR,
-                KNIMECorePlugin.PLUGIN_ID, IStatus.OK, throwable.getMessage(), 
+                KNIMECorePlugin.PLUGIN_ID, IStatus.OK, throwable.getMessage(),
                 throwable));
     }
 
     /**
-     * Logs an error.
-     * 
-     * @param message The message to log
-     */
-    public static void error(final String message) {
-        error(message, null);
-    }
-
-    /**
      * Logs a warning.
-     * 
+     *
      * @param message The message to log
      */
     public static void warning(final String message) {
@@ -125,7 +116,7 @@ public final class WorkbenchErrorLogger {
 
     /**
      * Creates a Status-Object.
-     * 
+     *
      * @param severity The severity
      * @param pluginID the plugin ID
      * @param code The code

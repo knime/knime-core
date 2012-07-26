@@ -35,8 +35,7 @@ import org.knime.core.node.workflow.WorkflowManager;
  */
 public final class WorkflowManagerTransfer extends SimpleObjectTransfer {
     private static final String TYPE_NAME
-            = "workflow-manager-transfer-format"
-                + (new Long(System.currentTimeMillis())).toString();
+            = "workflow-manager-transfer-format" + System.currentTimeMillis();
 
     private static final WorkflowManagerTransfer INSTANCE
             = new WorkflowManagerTransfer();
