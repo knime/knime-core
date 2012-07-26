@@ -61,7 +61,6 @@ public class PairedTTestNodeDialog extends NodeDialogPane {
         Insets leftInsets = new Insets(3, 8, 3, 8);
         Insets rightInsets = new Insets(3, 0, 3, 8);
         Insets leftCategoryInsets = new Insets(11, 8, 3, 8);
-        Insets rightCategoryInsets = new Insets(11, 0, 3, 8);
 
         c.gridx = 0;
         c.insets = leftCategoryInsets;
