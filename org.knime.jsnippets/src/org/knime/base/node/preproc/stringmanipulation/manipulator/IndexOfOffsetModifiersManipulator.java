@@ -75,8 +75,7 @@ public class IndexOfOffsetModifiersManipulator implements Manipulator {
     public static int indexOf(final CharSequence str,
             final CharSequence needle, final int start,
             final String modifiers) {
-        String opt = null != modifiers.toLowerCase(Locale.ENGLISH)
-                ? modifiers : "";
+        String opt = (null != modifiers) ? modifiers.toLowerCase(Locale.ENGLISH) : "";
         boolean ignoreCase = StringUtils.contains(opt, 'i');
         boolean backward = StringUtils.contains(opt, 'b');
         boolean words = StringUtils.contains(opt, 'w');

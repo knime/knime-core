@@ -80,8 +80,7 @@ public class ReplaceCharsModifiersManipulator implements Manipulator {
                 || replaceChars == null) {
             return str;
         }
-        String opt = null != modifiers.toLowerCase(Locale.ENGLISH)
-            ? modifiers : "";
+        String opt = (null != modifiers) ? modifiers.toLowerCase(Locale.ENGLISH) : "";
         boolean ignoreCase = StringUtils.contains(opt, 'i');
         // create new modifiers string with allowed options
         String mdfrs = "";

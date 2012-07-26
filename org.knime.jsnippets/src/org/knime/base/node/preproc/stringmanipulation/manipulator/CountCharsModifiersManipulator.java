@@ -75,9 +75,8 @@ public class CountCharsModifiersManipulator implements Manipulator {
         if (str == null || str.isEmpty()) {
             return 0;
         }
-        String c = null != chars ? chars : "";
-        String opt = null != modifiers.toLowerCase(Locale.ENGLISH)
-            ? modifiers : "";
+        String c = (null != chars) ? chars : "";
+        String opt = (null != modifiers) ? modifiers.toLowerCase(Locale.ENGLISH) : "";
         boolean ignoreCase = StringUtils.contains(opt, 'i');
         boolean matchOpposite = StringUtils.contains(opt, 'v');
         int sum = 0;

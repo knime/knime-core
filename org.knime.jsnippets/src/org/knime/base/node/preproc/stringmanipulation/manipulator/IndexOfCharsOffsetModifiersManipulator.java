@@ -79,8 +79,7 @@ public class IndexOfCharsOffsetModifiersManipulator
         if (StringUtils.isEmpty(str) || StringUtils.isEmpty(searchChars)) {
             return StringUtils.INDEX_NOT_FOUND;
         }
-        String opt = null != modifiers.toLowerCase(Locale.ENGLISH)
-            ? modifiers : "";
+        String opt = (null != modifiers) ? modifiers.toLowerCase(Locale.ENGLISH) : "";
         return indexOfAny(str, start, opt, searchChars.toCharArray());
     }
 

@@ -79,8 +79,7 @@ public class ReplaceModifiersManipulator implements Manipulator {
                 || replace == null) {
             return str;
         }
-        String opt = null != modifiers.toLowerCase(Locale.ENGLISH)
-            ? modifiers : "";
+        String opt = (null != modifiers) ? modifiers.toLowerCase(Locale.ENGLISH) : "";
         boolean ignoreCase = StringUtils.contains(opt, 'i');
         boolean words = StringUtils.contains(opt, 'w');
         // create new modifiers string with allowed options

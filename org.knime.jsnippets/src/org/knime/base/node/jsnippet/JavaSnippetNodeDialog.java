@@ -62,6 +62,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
@@ -454,7 +455,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
                 m_autoCompletionJars = m_snippet.getClassPath();
                 doUpdate = true;
             } else {
-                if (!m_autoCompletionJars.equals(m_snippet.getClassPath())) {
+                if (!Arrays.equals(m_autoCompletionJars, m_snippet.getClassPath())) {
                     m_autoCompletionJars = m_snippet.getClassPath();
                     doUpdate = true;
                 }

@@ -139,7 +139,7 @@ public class JavaSnippetCompiler {
         throws IOException {
         File[] classpaths = m_snippet.getClassPath();
         URL[] urls = new URL[classpaths.length + 1];
-        if (classpaths != null && classpaths.length > 0) {
+        if (classpaths.length > 0) {
             for (int i = 0; i < classpaths.length; i++) {
                 try {
                     urls[i] = classpaths[i].toURI().toURL();

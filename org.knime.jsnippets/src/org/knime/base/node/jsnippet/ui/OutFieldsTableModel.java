@@ -277,7 +277,7 @@ public class OutFieldsTableModel extends FieldsTableModel {
             if (getFieldType(row).equals(FieldType.FlowVariable)) {
                 return "Please select a flow variable type.";
             }
-        } else if (null == value || value instanceof String) {
+        } else if (value instanceof String) {
             return "Please select a valid type.";
         }
         // no errors found
