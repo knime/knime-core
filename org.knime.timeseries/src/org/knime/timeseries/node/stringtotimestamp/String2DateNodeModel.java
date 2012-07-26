@@ -158,8 +158,9 @@ public class String2DateNodeModel extends
         if (m_formatModel.getStringValue() == null) {
             throw new InvalidSettingsException("No format selected.");
         }
-        m_dateFormat = new SimpleDateFormat(m_formatModel.getStringValue());
-        if (m_dateFormat == null) {
+        try {
+            m_dateFormat = new SimpleDateFormat(m_formatModel.getStringValue());
+        } catch (IllegalArgumentException ex) {
             throw new InvalidSettingsException("Invalid format: "
                     + m_formatModel.getStringValue());
         }
