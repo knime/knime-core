@@ -98,8 +98,7 @@ public class DropNodeCommand extends AbstractKNIMECommand {
             m_container.setUIInformation(info);
 
             // Open the dialog. Some times.
-            if (m_container != null
-                    && m_container instanceof SingleNodeContainer
+            if (m_container instanceof SingleNodeContainer
                     && m_container.getState().equals(State.IDLE)
                     && m_container.hasDialog()
                     // and has only a variable in port

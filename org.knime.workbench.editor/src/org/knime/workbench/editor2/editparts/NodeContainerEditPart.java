@@ -87,6 +87,7 @@ import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
@@ -256,7 +257,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         addEditPartListener(this);
 
         // set the job manager icon
-        if (cont != null && cont.findJobManager() != null) {
+        if (cont.findJobManager() != null) {
             URL iconURL = cont.findJobManager().getIcon();
             setJobManagerIcon(iconURL);
         }
@@ -769,7 +770,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                         + "Upstream nodes will now be executed.",
                         "Don't prompt me again", false, store,
                         key).getReturnCode();
-                if (returnCode == MessageDialogWithToggle.CANCEL) {
+                if (returnCode == Window.CANCEL) {
                     return;
                 }
             }

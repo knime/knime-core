@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   ${date} (${user}): created
  */
@@ -82,10 +82,10 @@ import org.knime.workbench.editor2.editparts.snap.ConnectionBendpointMoveHandel;
  * neccessary to return a Bendpoint tracker that makes it possible to change the
  * update method to change bendpoint locations during dragging. This all is done
  * for snapping functionality of bendpoints.
- * 
+ *
  * Bendpoint policy, needed for creation of the add/delete/move commands of the
  * connections bendpoints.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
@@ -104,7 +104,7 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
     /**
      * <code>activate()</code> is extended to add a listener to the
      * <code>Connection</code> figure.
-     * 
+     *
      * @see org.eclipse.gef.EditPolicy#activate()
      */
     @Override
@@ -115,7 +115,7 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
     }
 
     private List createHandlesForAutomaticBendpoints() {
-        List<ConnectionBendpointCreationHandel> list = 
+        List<ConnectionBendpointCreationHandel> list =
             new ArrayList<ConnectionBendpointCreationHandel>();
         ConnectionEditPart connEP = (ConnectionEditPart)getHost();
         PointList points = getConnection().getPoints();
@@ -173,12 +173,12 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
      * created by the {@link org.eclipse.draw2d.AutomaticRouter}) are used, one
      * {@link org.eclipse.gef.handles.BendpointCreationHandle} is placed in the
      * middle of the Connection.
-     * 
+     *
      * @see SelectionHandlesEditPolicy#createSelectionHandles()
      */
     @Override
     protected List createSelectionHandles() {
-        List list = new ArrayList();
+        List list;
         if (isAutomaticallyBending()) {
             list = createHandlesForAutomaticBendpoints();
         } else {
@@ -190,7 +190,7 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
     /**
      * <code>deactivate()</code> is extended to remove the property change
      * listener on the <code>Connection</code> figure.
-     * 
+     *
      * @see org.eclipse.gef.EditPolicy#deactivate()
      */
     @Override
@@ -204,7 +204,7 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
      * Erases all bendpoint feedback. Since the original <code>Connection</code>
      * figure is used for feedback, we just restore the original constraint that
      * was saved before feedback started to show.
-     * 
+     *
      * @param request the BendpointRequest
      */
     protected void eraseConnectionFeedback(final BendpointRequest request) {
@@ -226,7 +226,7 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
     /**
      * Factors the Request into either a MOVE, a DELETE, or a CREATE of a
      * bendpoint.
-     * 
+     *
      * @see org.eclipse.gef.EditPolicy#getCommand(Request)
      */
     @Override
@@ -246,7 +246,7 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
     /**
      * Convenience method for obtaining the host's <code>Connection</code>
      * figure.
-     * 
+     *
      * @return the Connection figure
      */
     protected Connection getConnection() {
@@ -296,7 +296,7 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
 
     /**
      * If the number of bendpoints changes, handles are updated.
-     * 
+     *
      * @see java.beans.PropertyChangeListener
      *      #propertyChange(PropertyChangeEvent)
      */
@@ -370,7 +370,7 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
      * Shows feedback when a bendpoint is being created. The original figure is
      * used for feedback and the original constraint is saved, so that it can be
      * restored when feedback is erased.
-     * 
+     *
      * @param request the BendpointRequest
      */
     protected void showCreateBendpointFeedback(final BendpointRequest request) {
@@ -394,7 +394,7 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
      * called once when the bendpoint is first deleted, not every mouse move.
      * The original figure is used for feedback and the original constraint is
      * saved, so that it can be restored when feedback is erased.
-     * 
+     *
      * @param request the BendpointRequest
      */
     protected void showDeleteBendpointFeedback(final BendpointRequest request) {
@@ -412,7 +412,7 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
      * {@link #showDeleteBendpointFeedback(BendpointRequest)} if needed. The
      * original figure is used for feedback and the original constraint is
      * saved, so that it can be restored when feedback is erased.
-     * 
+     *
      * @param request the BendpointRequest
      */
     protected void showMoveBendpointFeedback(final BendpointRequest request) {
@@ -447,7 +447,7 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
     /**
      * Shows feedback when appropriate. Calls a different method depending on
      * the request type.
-     * 
+     *
      * @see #showCreateBendpointFeedback(BendpointRequest)
      * @see #showMoveBendpointFeedback(BendpointRequest)
      * @param request the Request
@@ -460,7 +460,7 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
             showCreateBendpointFeedback((BendpointRequest)request);
         }
     }
-    
+
     /** @return The workflow manager associated with the host. */
     public WorkflowManager getWorkflowManager() {
         // we need the workflow manager
@@ -477,13 +477,13 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
     protected Command getCreateBendpointCommand(final BendpointRequest req) {
         int index = req.getIndex();
         Point loc = req.getLocation();
-        ConnectionContainerEditPart editPart 
+        ConnectionContainerEditPart editPart
             = (ConnectionContainerEditPart)getHost();
 
         ZoomManager zoomManager = (ZoomManager)getHost().getRoot().getViewer()
                 .getProperty(ZoomManager.class.toString());
 
-        return new NewBendpointCreateCommand(editPart, getWorkflowManager(), 
+        return new NewBendpointCreateCommand(editPart, getWorkflowManager(),
                 index, loc, zoomManager);
     }
 
@@ -493,7 +493,7 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
     protected Command getDeleteBendpointCommand(final BendpointRequest req) {
         // get the index of the bendpoint to delete
         int index = req.getIndex();
-        ConnectionContainerEditPart editPart 
+        ConnectionContainerEditPart editPart
             = (ConnectionContainerEditPart)getHost();
         WorkflowManager wfm = getWorkflowManager();
         return new NewBendpointDeleteCommand(editPart, wfm, index);
@@ -506,7 +506,7 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
         // index of the bendpoint to move
         int index = request.getIndex();
         Point loc = request.getLocation();
-        ConnectionContainerEditPart edit 
+        ConnectionContainerEditPart edit
             = (ConnectionContainerEditPart)getHost();
 
         ZoomManager zoomManager = (ZoomManager)getHost().getRoot().getViewer()

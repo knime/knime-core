@@ -165,7 +165,7 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
         }
         NodeContainer nc = hostWFM.getNodeContainer(m_newNode);
         Map<Integer, Integer> matchingPorts = getMatchingPorts(sourceNode, nc);
-        if (matchingPorts == null) {
+        if (matchingPorts.size() == 0) {
             LOGGER.info("Can't auto-connect new node (" + m_newNode + "): "
                     + "no matching port type found at node "
                     + sourceNode.getNameWithID());

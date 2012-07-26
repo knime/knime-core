@@ -1057,7 +1057,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         // Snap to Geometry property
         GraphicalViewer graphicalViewer = getGraphicalViewer();
         graphicalViewer.setProperty(SnapToGeometry.PROPERTY_SNAP_ENABLED,
-                new Boolean(true));
+                Boolean.TRUE);
 
         if (getWorkflowManager() != null) {
             applyEditorSettingsFromWorkflowManager();

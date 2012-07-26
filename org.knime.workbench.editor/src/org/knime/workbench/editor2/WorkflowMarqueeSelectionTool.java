@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.draw2d.ColorConstants;
+import org.eclipse.draw2d.Cursors;
 import org.eclipse.draw2d.Figure;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.IFigure;
@@ -33,7 +34,6 @@ import org.eclipse.gef.GraphicalViewer;
 import org.eclipse.gef.KeyHandler;
 import org.eclipse.gef.Request;
 import org.eclipse.gef.RequestConstants;
-import org.eclipse.gef.SharedCursors;
 import org.eclipse.gef.tools.AbstractTool;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
@@ -70,16 +70,14 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
      *
      * @since 3.1
      */
-    public static final int BEHAVIOR_NODES_CONTAINED =
-            new Integer(1).intValue();
+    public static final int BEHAVIOR_NODES_CONTAINED = 1;
 
     /**
      * This behaviour selects connections that intersect the marquee rectangle.
      *
      * @since 3.1
      */
-    public static final int BEHAVIOR_CONNECTIONS_TOUCHED =
-            new Integer(2).intValue();
+    public static final int BEHAVIOR_CONNECTIONS_TOUCHED = 2;
 
     /**
      * This behaviour selects nodes completely encompassed by the marquee
@@ -87,8 +85,7 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
      *
      * @since 3.1
      */
-    public static final int BEHAVIOR_NODES_AND_CONNECTIONS =
-            new Integer(3).intValue();
+    public static final int BEHAVIOR_NODES_AND_CONNECTIONS = 3;
 
     /**
      * This behaviour selects nodes completely encompassed by the marquee
@@ -96,8 +93,7 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
      *
      * @since KNIME development (knime 1.2.2)
      */
-    public static final int BEHAVIOR_NODES_AND_CONNECTIONS_TOUCHED =
-            new Integer(3).intValue();
+    public static final int BEHAVIOR_NODES_AND_CONNECTIONS_TOUCHED = 3;
 
     static final int DEFAULT_MODE = 0;
 
@@ -129,7 +125,7 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
      * {@link #BEHAVIOR_NODES_CONTAINED}.
      */
     public WorkflowMarqueeSelectionTool() {
-        setDefaultCursor(SharedCursors.CROSS);
+        setDefaultCursor(Cursors.CROSS);
         setUnloadWhenFinished(false);
     }
 
@@ -140,8 +136,9 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
     @Override
     protected void applyProperty(final Object key, final Object value) {
         if (PROPERTY_MARQUEE_BEHAVIOR.equals(key)) {
-            if (value instanceof Integer)
+            if (value instanceof Integer) {
                 setMarqueeBehavior(((Integer)value).intValue());
+            }
             return;
         }
         super.applyProperty(key, value);
@@ -159,8 +156,9 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
             while (iter.hasNext()) {
                 EditPart selected = (EditPart)iter.next();
                 if (!(selected instanceof ConnectionEditPart)
-                        && !deselections.contains(selected))
+                        && !deselections.contains(selected)) {
                     currentNodes.add(selected);
+                }
             }
         }
         // add new connections to be selected to newSelections
@@ -172,16 +170,18 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
                 ConnectionEditPart sourceConn = (ConnectionEditPart)itr.next();
                 if (sourceConn.getSelected() == EditPart.SELECTED_NONE
                         && (newSelections.contains(sourceConn.getTarget()) || currentNodes
-                                .contains(sourceConn.getTarget())))
+                                .contains(sourceConn.getTarget()))) {
                     connections.add(sourceConn);
+                }
             }
             for (Iterator itr = node.getTargetConnections().iterator(); itr
                     .hasNext();) {
                 ConnectionEditPart targetConn = (ConnectionEditPart)itr.next();
                 if (targetConn.getSelected() == EditPart.SELECTED_NONE
                         && (newSelections.contains(targetConn.getSource()) || currentNodes
-                                .contains(targetConn.getSource())))
+                                .contains(targetConn.getSource()))) {
                     connections.add(targetConn);
+                }
             }
         }
         newSelections.addAll(connections);
@@ -193,14 +193,16 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
             for (Iterator itr = node.getSourceConnections().iterator(); itr
                     .hasNext();) {
                 ConnectionEditPart sourceConn = (ConnectionEditPart)itr.next();
-                if (sourceConn.getSelected() != EditPart.SELECTED_NONE)
+                if (sourceConn.getSelected() != EditPart.SELECTED_NONE) {
                     connections.add(sourceConn);
+                }
             }
             for (Iterator itr = node.getTargetConnections().iterator(); itr
                     .hasNext();) {
                 ConnectionEditPart targetConn = (ConnectionEditPart)itr.next();
-                if (targetConn.getSelected() != EditPart.SELECTED_NONE)
+                if (targetConn.getSelected() != EditPart.SELECTED_NONE) {
                     connections.add(targetConn);
+                }
             }
         }
         deselections.addAll(connections);
@@ -214,8 +216,9 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
             IFigure figure = child.getFigure();
             if (!child.isSelectable()
                     || child.getTargetEditPart(MARQUEE_REQUEST) != child
-                    || !isFigureVisible(figure) || !figure.isShowing())
+                    || !isFigureVisible(figure) || !figure.isShowing()) {
                 continue;
+            }
             if (!(child instanceof NodeContainerEditPart
                     || child instanceof ConnectionContainerEditPart
                     || child instanceof AbstractWorkflowPortBarEditPart
@@ -271,8 +274,9 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
         }
 
         if (marqueeBehavior == BEHAVIOR_NODES_AND_CONNECTIONS
-                || marqueeBehavior == BEHAVIOR_NODES_AND_CONNECTIONS_TOUCHED)
+                || marqueeBehavior == BEHAVIOR_NODES_AND_CONNECTIONS_TOUCHED) {
             calculateConnections(newSelections, deselections);
+        }
     }
 
     private boolean wasSelected(final EditPart part) {
@@ -310,8 +314,9 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
     }
 
     private void eraseTargetFeedback() {
-        if (selectedEditParts == null)
+        if (selectedEditParts == null) {
             return;
+        }
         Iterator oldEditParts = selectedEditParts.iterator();
         while (oldEditParts.hasNext()) {
             EditPart editPart = (EditPart)oldEditParts.next();
@@ -320,8 +325,9 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
     }
 
     private Set getAllChildren() {
-        if (allChildren.isEmpty())
+        if (allChildren.isEmpty()) {
             getAllChildren(getCurrentViewer().getRootEditPart(), allChildren);
+        }
         return allChildren;
     }
 
@@ -331,8 +337,9 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
             GraphicalEditPart child = (GraphicalEditPart)children.get(i);
             if (marqueeBehavior == BEHAVIOR_NODES_CONTAINED
                     || marqueeBehavior == BEHAVIOR_NODES_AND_CONNECTIONS
-                    || marqueeBehavior == BEHAVIOR_NODES_AND_CONNECTIONS_TOUCHED)
+                    || marqueeBehavior == BEHAVIOR_NODES_AND_CONNECTIONS_TOUCHED) {
                 allChildren.add(child);
+            }
             if (marqueeBehavior == BEHAVIOR_CONNECTIONS_TOUCHED
                     || marqueeBehavior == BEHAVIOR_NODES_AND_CONNECTIONS_TOUCHED) {
                 allChildren.addAll(child.getSourceConnections());
@@ -375,8 +382,9 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
     }
 
     private Request getTargetRequest() {
-        if (targetRequest == null)
+        if (targetRequest == null) {
             targetRequest = createTargetRequest();
+        }
         return targetRequest;
     }
 
@@ -385,19 +393,21 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
      */
     @Override
     protected boolean handleButtonDown(final int button) {
-        if (!isGraphicalViewer())
+        if (!isGraphicalViewer()) {
             return true;
+        }
         if (button != 1) {
             setState(STATE_INVALID);
             handleInvalidInput();
         }
         if (stateTransition(STATE_INITIAL, STATE_DRAG_IN_PROGRESS)) {
-            if (getCurrentInput().isModKeyDown(SWT.MOD1))
+            if (getCurrentInput().isModKeyDown(SWT.MOD1)) {
                 setSelectionMode(TOGGLE_MODE);
-            else if (getCurrentInput().isShiftKeyDown())
+            } else if (getCurrentInput().isShiftKeyDown()) {
                 setSelectionMode(APPEND_MODE);
-            else
+            } else {
                 setSelectionMode(DEFAULT_MODE);
+            }
         }
         alreadySelectedEditParts = new ArrayList();
         alreadySelectedEditParts.addAll(getCurrentViewer()
@@ -466,10 +476,11 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
             ArrayList previousSelection = new ArrayList();
             ArrayList previousDeselection = new ArrayList();
             try {
-                if (selectedEditParts != null)
+                if (selectedEditParts != null) {
                     previousSelection.addAll(selectedEditParts);
-                else
+                } else {
                     performMarqueeSelect();
+                }
                 if (isToggle() && deselectedEditParts != null) {
                     previousDeselection.addAll(deselectedEditParts);
                 }
@@ -534,10 +545,12 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
      */
     @Override
     protected boolean handleKeyDown(final KeyEvent e) {
-        if (super.handleKeyDown(e))
+        if (super.handleKeyDown(e)) {
             return true;
-        if (getCurrentViewer().getKeyHandler() != null)
+        }
+        if (getCurrentViewer().getKeyHandler() != null) {
             return getCurrentViewer().getKeyHandler().keyPressed(e);
+        }
         return false;
     }
 
@@ -592,8 +605,10 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
         if (type != BEHAVIOR_CONNECTIONS_TOUCHED
                 && type != BEHAVIOR_NODES_CONTAINED
                 && type != BEHAVIOR_NODES_AND_CONNECTIONS)
+         {
             throw new IllegalArgumentException(
                     "Invalid marquee behaviour specified."); //$NON-NLS-1$
+        }
         marqueeBehavior = type;
     }
 
@@ -606,17 +621,20 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
      */
     @Override
     public void setViewer(final EditPartViewer viewer) {
-        if (viewer == getCurrentViewer())
+        if (viewer == getCurrentViewer()) {
             return;
+        }
         super.setViewer(viewer);
-        if (viewer instanceof GraphicalViewer)
-            setDefaultCursor(SharedCursors.CROSS);
-        else
-            setDefaultCursor(SharedCursors.NO);
+        if (viewer instanceof GraphicalViewer) {
+            setDefaultCursor(Cursors.CROSS);
+        }
+        else {
+            setDefaultCursor(Cursors.NO);
         // if (selectedEditParts == null) {
         // if (mode == TOGGLE_MODE)
         // selectedEditParts = getCurrentViewer().getSelectedEditParts();
         // }
+        }
     }
 
     private void showMarqueeFeedback() {
@@ -632,7 +650,7 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
         }
     }
 
-    class MarqueeRectangleFigure extends Figure {
+    static class MarqueeRectangleFigure extends Figure {
 
         private static final int DELAY = 110; // animation delay in
 
@@ -681,8 +699,9 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
                 Display.getCurrent().timerExec(DELAY, new Runnable() {
                     public void run() {
                         offset++;
-                        if (offset > 5)
+                        if (offset > 5) {
                             offset = 0;
+                        }
 
                         schedulePaint = true;
                         repaint();

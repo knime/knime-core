@@ -1133,7 +1133,7 @@ public class NodeContainerFigure extends RectangleFigure {
     /**
      * Subfigure, contains the "traffic light".
      */
-    private class StatusFigure extends Figure {
+    private static class StatusFigure extends Figure {
 
         private final Label m_label;
 

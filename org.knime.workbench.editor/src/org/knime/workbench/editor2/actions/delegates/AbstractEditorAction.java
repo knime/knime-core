@@ -138,19 +138,17 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
 
         if (m_editor != null) {
             m_decoratedAction = createAction(m_editor);
-            if (m_decoratedAction instanceof AbstractNodeAction) {
-                StructuredSelection sel = ((StructuredSelection)selection);
-                if (sel != null) {
-                    // register to new selection
-                    for (Iterator itr = sel.iterator(); itr.hasNext();) {
-                        Object o = itr.next();
-                        if (o instanceof NodeContainerEditPart) {
-                            NodeContainerEditPart ncEP
-                                = (NodeContainerEditPart)o;
-                            m_currentSelection.add(ncEP);
-                            ncEP.getNodeContainer().addNodeStateChangeListener(
-                                    this);
-                        }
+            StructuredSelection sel = ((StructuredSelection)selection);
+            if (sel != null) {
+                // register to new selection
+                for (Iterator itr = sel.iterator(); itr.hasNext();) {
+                    Object o = itr.next();
+                    if (o instanceof NodeContainerEditPart) {
+                        NodeContainerEditPart ncEP
+                            = (NodeContainerEditPart)o;
+                        m_currentSelection.add(ncEP);
+                        ncEP.getNodeContainer().addNodeStateChangeListener(
+                                this);
                     }
                 }
             }

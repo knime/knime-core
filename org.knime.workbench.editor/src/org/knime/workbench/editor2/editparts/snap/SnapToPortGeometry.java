@@ -389,21 +389,21 @@ public class SnapToPortGeometry extends SnapToHelper {
                 if (magnitude < resultMag) {
                     resultMag = magnitude;
                     result = entry.m_offset - value;
-                    extendedData.put(property, new Integer(entry.m_offset));
+                    extendedData.put(property, entry.m_offset);
                 }
             } else if (entry.m_side == 0 && side == 0) {
                 magnitude = Math.abs(value - entry.m_offset);
                 if (magnitude < resultMag) {
                     resultMag = magnitude;
                     result = entry.m_offset - value;
-                    extendedData.put(property, new Integer(entry.m_offset));
+                    extendedData.put(property, entry.m_offset);
                 }
             } else if (entry.m_side == 1 && side != 0) {
                 magnitude = Math.abs(value - entry.m_offset);
                 if (magnitude < resultMag) {
                     resultMag = magnitude;
                     result = entry.m_offset - value;
-                    extendedData.put(property, new Integer(entry.m_offset));
+                    extendedData.put(property, entry.m_offset);
                 }
             }
         }

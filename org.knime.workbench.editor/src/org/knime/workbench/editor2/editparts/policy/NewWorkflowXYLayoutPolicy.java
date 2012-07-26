@@ -178,7 +178,7 @@ public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
      *
      * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
      */
-    class NonResizeNoHandlesEditPolicy extends NonResizableEditPolicy {
+    static class NonResizeNoHandlesEditPolicy extends NonResizableEditPolicy {
 
         private final GraphicalEditPart m_child;
 
