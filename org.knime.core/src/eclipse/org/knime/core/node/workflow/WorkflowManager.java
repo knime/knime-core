@@ -7542,9 +7542,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             if (prefix.equals(getID())) {
                 return getNodeContainer(id);
             } else if (id.hasPrefix(getID())) {
-                WorkflowManager parent =
-                    (WorkflowManager)findNodeContainer(prefix);
-                return parent.getNodeContainer(id);
+                NodeContainer parentNC = findNodeContainer(prefix);
+                if (!(parentNC instanceof WorkflowManager)) {
+                    throw new IllegalArgumentException("NodeID " + id + " is not contained in workflow "
+                            + getNameWithID() + " - parent node is not meta node");
+                }
+                return ((WorkflowManager)parentNC).getNodeContainer(id);
             } else {
                 throw new IllegalArgumentException("NodeID " + id
                         + " is not contained in workflow " + getNameWithID());
