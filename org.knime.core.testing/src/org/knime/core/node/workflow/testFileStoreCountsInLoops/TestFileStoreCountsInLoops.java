@@ -140,7 +140,7 @@ public class TestFileStoreCountsInLoops extends WorkflowTestCase {
 
         mgr.addConnection(m_testFS31, 1, m_testFS88, 1);
         executeAndWait(m_testFS88);
-        checkState(m_testFS88, State.IDLE, State.CONFIGURED); // failure
+        checkState(m_testFS88, State.CONFIGURED); // failure
         final NodeMessage msg = mgr.getNodeContainer(m_testFS88).getNodeMessage();
         assertEquals(NodeMessage.Type.ERROR, msg.getMessageType());
         assertTrue(msg.getMessage().contains("was restored"));

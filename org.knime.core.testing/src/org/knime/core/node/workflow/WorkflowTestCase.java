@@ -380,6 +380,12 @@ public abstract class WorkflowTestCase extends TestCase {
             m_lock.unlock();
             nc.removeNodeStateChangeListener(l);
         }
+        // ugly workaround: The state changes happen in the wfm which does it synchronized on
+        // m_workflowMutex. The conditions above only check for "executionInProgress", it does
+        // not wait until the WFM has released the mutex (state change events from idle -> configured
+        // in one synchronized block). the canResetNode method will acquire the lock and
+        // hence will wait until the WFM is done with all state transitions...
+        nc.getParent().canResetNode(nc.getID());
     }
 
 
