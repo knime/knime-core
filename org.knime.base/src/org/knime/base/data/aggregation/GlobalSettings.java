@@ -48,14 +48,14 @@
 
 package org.knime.base.data.aggregation;
 
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.ExecutionContext;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.filestore.FileStore;
+import org.knime.core.data.filestore.FileStoreFactory;
 
 
 /**
@@ -93,7 +93,7 @@ public class GlobalSettings {
 
     private final List<String> m_groupColNames;
 
-    private final ExecutionContext m_exec;
+    private final FileStoreFactory m_fileStoreFactory;
 
     /**Constructor for class GlobalSettings.
      * This constructor is used to create a dummy object that contains
@@ -107,6 +107,8 @@ public class GlobalSettings {
      * value delimiter.
      *
      * @param maxUniqueValues the maximum number of unique values to consider
+     * @see #GlobalSettings(FileStoreFactory, List, int, String,
+     * DataTableSpec, int)
      */
     @Deprecated
     public GlobalSettings(final int maxUniqueValues) {
@@ -119,7 +121,7 @@ public class GlobalSettings {
      * @param valueDelimiter the delimiter to use for value separation
      * @param spec the {@link DataTableSpec} of the input table
      * @param noOfRows the number of rows of the input table
-     * @see #GlobalSettings(ExecutionContext, List, int, String,
+     * @see #GlobalSettings(FileStoreFactory, List, int, String,
      * DataTableSpec, int)
      */
     @SuppressWarnings("unchecked")
@@ -127,8 +129,8 @@ public class GlobalSettings {
     public GlobalSettings(final int maxUniqueValues,
             final String valueDelimiter, final DataTableSpec spec,
             final int noOfRows) {
-        this(null, Collections.EMPTY_LIST, maxUniqueValues, valueDelimiter,
-                spec, noOfRows);
+        this((FileStoreFactory)null, Collections.EMPTY_LIST, maxUniqueValues,
+                valueDelimiter, spec, noOfRows);
     }
 
     /**Constructor for class GlobalSettings.
@@ -139,13 +141,13 @@ public class GlobalSettings {
      */
     public GlobalSettings(final DataTableSpec newSpec,
             final GlobalSettings oldSettings) {
-        this(oldSettings.m_exec, true, oldSettings.m_groupColNames,
+        this(oldSettings.m_fileStoreFactory, oldSettings.m_groupColNames,
                 oldSettings.m_maxUniqueValues, oldSettings.m_valueDelimiter,
                 newSpec, oldSettings.m_noOfRows, oldSettings.m_keyValueMap);
     }
 
     /**Constructor for class GlobalSettings.
-     * @param exec the {@link ExecutionContext}
+     * @param fileStoreFactory the {@link FileStoreFactory}
      * @param groupColNames the names of the columns to group by
      * @param maxUniqueValues the maximum number of unique values to consider
      * @param valueDelimiter the delimiter to use for value separation
@@ -153,17 +155,16 @@ public class GlobalSettings {
      * @param noOfRows the number of rows of the input table
      * @since 2.6
      */
-    public GlobalSettings(final ExecutionContext exec,
+    public GlobalSettings(final FileStoreFactory fileStoreFactory,
             final List<String> groupColNames, final int maxUniqueValues,
             final String valueDelimiter, final DataTableSpec spec,
             final int noOfRows) {
-        this(exec, false, groupColNames, maxUniqueValues, valueDelimiter, spec,
-                noOfRows, new HashMap<String, Object>());
+        this(fileStoreFactory, groupColNames, maxUniqueValues, valueDelimiter,
+                spec, noOfRows, new HashMap<String, Object>());
     }
+
     /**Constructor for class GlobalSettings.
-     * @param exec the {@link ExecutionContext}
-     * @param silent <code>true</code> if the {@link ExecutionContext} ignores
-     * any progress and message updates
+     * @param fileStoreFactory the {@link FileStoreFactory}
      * @param groupColNames the names of the columns to group by
      * @param maxUniqueValues the maximum number of unique values to consider
      * @param valueDelimiter the delimiter to use for value separation
@@ -171,7 +172,7 @@ public class GlobalSettings {
      * @param noOfRows the number of rows of the input table
      * @since 2.6
      */
-    private GlobalSettings(final ExecutionContext exec, final boolean silent,
+    private GlobalSettings(final FileStoreFactory fileStoreFactory,
             final List<String> groupColNames, final int maxUniqueValues,
             final String valueDelimiter, final DataTableSpec spec,
             final int noOfRows, final Map<String, Object> keyValueMap) {
@@ -195,11 +196,7 @@ public class GlobalSettings {
         if (keyValueMap == null) {
             throw new NullPointerException("keyValueMap must not be null");
         }
-        if (!silent && exec != null) {
-            m_exec = exec.createSilentSubExecutionContext(0);
-        } else {
-            m_exec = exec;
-        }
+        m_fileStoreFactory = fileStoreFactory;
         m_groupColNames = groupColNames;
         m_maxUniqueValues = maxUniqueValues;
         m_valueDelimiter = valueDelimiter;
@@ -280,18 +277,17 @@ public class GlobalSettings {
 
 
     /**
-     * Returns the {@link ExecutionContext} the aggregation is performed in.
-     * The method returns <code>null</code> if the {@link ExecutionContext} is
-     * not available. The returned {@link ExecutionContext} can not be used
-     * for any progress or message updates.
+     * Returns the {@link FileStoreFactory} that can be used to create.
+     * The method returns <code>null</code> if the {@link FileStoreFactory} is
+     * not available.
      *
-     * @return the exec the {@link ExecutionContext} the aggregation is
-     * performed in. The method might return <code>null</code> if the
-     * {@link ExecutionContext} is not available
+     * @return the {@link FileStoreFactory} to create new {@link FileStore}
+     * objects. The method might return <code>null</code> if the
+     * {@link FileStoreFactory} is not available
      * @since 2.6
      */
-    public ExecutionContext getExecutionContext() {
-        return m_exec;
+    public FileStoreFactory getFileStoreFactory() {
+        return m_fileStoreFactory;
     }
 
     /**

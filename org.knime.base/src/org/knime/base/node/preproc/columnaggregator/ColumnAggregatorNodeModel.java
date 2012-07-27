@@ -48,12 +48,19 @@
 
 package org.knime.base.node.preproc.columnaggregator;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.NamedAggregationOperator;
-
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
+import org.knime.core.data.filestore.FileStoreFactory;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -68,15 +75,6 @@ import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import java.io.File;
-import java.io.IOException;
 
 
 /**
@@ -204,8 +202,9 @@ public class ColumnAggregatorNodeModel extends NodeModel {
         final List<String> selectedCols =
             Arrays.asList(filterResult.getIncludes());
         final AggregationCellFactory cellFactory = new AggregationCellFactory(
-                origSpec, selectedCols, new GlobalSettings(exec, selectedCols, 
-                        m_maxUniqueValues.getIntValue(), 
+                origSpec, selectedCols, new GlobalSettings(
+                        new FileStoreFactory(exec), selectedCols,
+                        m_maxUniqueValues.getIntValue(),
                         m_valueDelimiter.getStringValue(), origSpec,
                         table.getRowCount()), m_methods);
         final ColumnRearranger cr =

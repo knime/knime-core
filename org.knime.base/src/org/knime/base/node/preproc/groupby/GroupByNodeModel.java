@@ -50,13 +50,24 @@
  */
 package org.knime.base.node.preproc.groupby;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
 import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.ColumnAggregator;
 import org.knime.base.data.aggregation.GlobalSettings;
-
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.filestore.FileStoreFactory;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -77,19 +88,6 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
 
 /**
  * The {@link NodeModel} implementation of the group by node which uses the
@@ -173,7 +171,7 @@ public class GroupByNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_enableHilite =
         new SettingsModelBoolean(CFG_ENABLE_HILITE, false);
-    
+
     //This setting was used prior KNNIME 2.6
     private final SettingsModelBoolean m_sortInMemory =
         new SettingsModelBoolean(CFG_SORT_IN_MEMORY, false);
@@ -713,7 +711,7 @@ public class GroupByNodeModel extends NodeModel {
     protected GlobalSettings createGlobalSettings(final ExecutionContext exec,
             final BufferedDataTable table, final List<String> groupByCols,
             final int maxUniqueVals) {
-        return new GlobalSettings(exec, groupByCols,
+        return new GlobalSettings(new FileStoreFactory(exec), groupByCols,
                 maxUniqueVals, m_valueDelimiter.getStringValue(),
                 table.getDataTableSpec(), table.getRowCount());
     }
