@@ -50,7 +50,7 @@ public class FailSideBranchInLoop extends WorkflowTestCase {
         m_loopEnd4 = new NodeID(baseID, 4);
     }
 
-    public void testExecuteFlowWithUnconfiguredCSVWriter() throws Exception {
+    public void disabledBug3292testExecuteFlowWithUnconfiguredCSVWriter() throws Exception {
         checkState(m_dataGen2, State.CONFIGURED);
         checkState(m_loopEnd4, State.CONFIGURED);
         checkState(m_csvWriterInLoop13, State.IDLE);
