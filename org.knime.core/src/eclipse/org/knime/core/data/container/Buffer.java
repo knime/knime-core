@@ -1777,9 +1777,15 @@ class Buffer implements KNIMEStreamConstants {
         }
     }
 
+    /** Temporarily added to find bug in clear vs iterator, group loop start test shortly before 2.6 release. */
+    private Thread m_threadCallingClear;
+    private StackTraceElement[] m_stackTrace;
+
     /** Clears the temp file. Any subsequent iteration will fail! */
     synchronized void clear() {
         m_list = null;
+        m_threadCallingClear = Thread.currentThread();
+        m_stackTrace = m_threadCallingClear.getStackTrace();
         if (m_binFile != null) {
             synchronized (m_openIteratorSet) {
                 for (FromFileIterator f : m_openIteratorSet.keySet()) {
@@ -1923,6 +1929,19 @@ class Buffer implements KNIMEStreamConstants {
             synchronized (semaphore) {
             	// need to synchronize access to the list as the list is
             	// potentially modified by the backIntoMemoryIterator
+                if (m_list == null) {
+                    LOGGER.error("List with rows is null");
+                    if (m_threadCallingClear != null) {
+                        LOGGER.error("Buffer was cleared by thread " + m_threadCallingClear.getName());
+                        LOGGER.error("Stacktrace during clear() -- START");
+                        for (StackTraceElement ste : m_stackTrace) {
+                            LOGGER.error("  " + ste);
+                        }
+                        LOGGER.error("Stacktrace during clear() -- END");
+                    } else {
+                        LOGGER.error("clear was not called");
+                    }
+                }
             	if (m_nextIndex < m_list.size()) {
             		return m_list.get(m_nextIndex++);
             	}
