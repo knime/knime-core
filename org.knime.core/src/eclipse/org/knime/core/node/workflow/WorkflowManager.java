@@ -3754,9 +3754,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // if there are outgoing connections:
         LinkedHashMap<NodeID, Set<Integer>> nodes
             = m_workflow.getBreadthFirstListOfNodeAndSuccessors(nodeID, false);
+        // make sure we only consider successors, not node itself!
+        // (would result in strange effects when we step out of the metanode with
+        //  executing predecessors of the original node)
+        nodes.remove(nodeID);
         for (NodeID id : nodes.keySet()) {
             if (this.getID().equals(id)) {
-                // skip outgoing connections for now
+                // skip outgoing connections for now (handled below)
             } else {
                 NodeContainer currentNC = getNodeContainer(id);
                 if (currentNC.getState().executionInProgress()) {
@@ -3773,7 +3777,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         return false;
     }
-
     //////////////////////////////////////////////////////////
     // NodeContainer implementations (WFM acts as meta node)
     //////////////////////////////////////////////////////////
