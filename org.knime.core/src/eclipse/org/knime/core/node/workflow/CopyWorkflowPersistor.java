@@ -135,7 +135,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
         if (m_isProject) {
             assert m_outportTemplates.length == 0
                     && m_inportTemplates.length == 0;
-            m_tableRep = new HashMap<Integer, ContainerTable>();
+            m_tableRep = new GlobalTableRepository();
             m_fileStoreHandlerRepository = new WorkflowFileStoreHandlerRepository();
         } else {
             m_fileStoreHandlerRepository = null;

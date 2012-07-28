@@ -300,7 +300,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         if (isProject) {
             // we can start a new table repository since there can not
             // be any dependencies to parent
-            m_globalTableRepository = new HashMap<Integer, ContainerTable>();
+            m_globalTableRepository = new GlobalTableRepository();
             m_fileStoreHandlerRepository = new WorkflowFileStoreHandlerRepository();
             // ...and we do not need to synchronize across unconnected workflows
             m_workflowMutex = new Object();
@@ -6150,8 +6150,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         boolean isProject = !loadHelper.isTemplateFlow();
         WorkflowPersistorVersion1xx persistor;
         // TODO only create new hash map if workflow is a project?
-        HashMap<Integer, ContainerTable> tableRep =
-            new HashMap<Integer, ContainerTable>();
+        HashMap<Integer, ContainerTable> tableRep = new GlobalTableRepository();
         WorkflowFileStoreHandlerRepository fileStoreHandlerRepository =
             new WorkflowFileStoreHandlerRepository();
         LoadVersion version;
