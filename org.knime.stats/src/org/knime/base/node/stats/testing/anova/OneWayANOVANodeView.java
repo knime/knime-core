@@ -175,8 +175,15 @@ public class OneWayANOVANodeView extends NodeView<OneWayANOVANodeModel> {
      */
     @Override
     protected void modelChanged() {
-        updateHeader();
-        updateStatistics();
+        if (getNodeModel().getDescritiveStatistics() == null) {
+            m_headerPane.setText("");
+            m_descrStatPane.setText("");
+            m_leveneStatPane.setText("");
+            m_statPane.setText("");
+        } else {
+            updateHeader();
+            updateStatistics();
+        }
     }
 
 

@@ -174,8 +174,14 @@ public class TwoSampleTTestNodeView extends NodeView<TwoSampleTTestNodeModel> {
      */
     @Override
     protected void modelChanged() {
-        updateHeader();
-        updateStatistics();
+        if (getNodeModel().getDescritiveStatistics() == null) {
+            m_headerPane.setText("");
+            m_descrStatPane.setText("");
+            m_statPane.setText("");
+        } else {
+            updateHeader();
+            updateStatistics();
+        }
     }
 
 

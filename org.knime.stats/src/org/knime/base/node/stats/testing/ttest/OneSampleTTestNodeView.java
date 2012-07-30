@@ -130,7 +130,6 @@ public class OneSampleTTestNodeView extends NodeView<OneSampleTTestNodeModel> {
     /** Convenient method to create GridBagConstraints. */
     private GridBagConstraints createGridBagConstraints() {
         GridBagConstraints c = new GridBagConstraints();
-
         c.fill = GridBagConstraints.NONE;
         c.anchor = GridBagConstraints.WEST;
         c.insets = new Insets(8, 3, 3, 3);
@@ -164,8 +163,14 @@ public class OneSampleTTestNodeView extends NodeView<OneSampleTTestNodeModel> {
      */
     @Override
     protected void modelChanged() {
-        updateHeader();
-        updateStatistics();
+        if (getNodeModel().getDescritiveStatistics() == null) {
+            m_headerPane.setText("");
+            m_descrStatPane.setText("");
+            m_statPane.setText("");
+        } else {
+            updateHeader();
+            updateStatistics();
+        }
     }
 
 
