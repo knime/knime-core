@@ -532,6 +532,16 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
+        ViewUtils.invokeAndWaitInEDT(new Runnable() {
+            @Override
+            public void run() {
+                loadSettingsFromInternal(settings, specs);
+            }
+        });
+    }
+
+    private void loadSettingsFromInternal(final NodeSettingsRO settings,
+            final DataTableSpec[] specs) {
         m_settings.loadSettingsForDialog(settings);
 
         m_colList.setSpec(specs[0]);
