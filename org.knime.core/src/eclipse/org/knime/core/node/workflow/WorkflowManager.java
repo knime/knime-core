@@ -3813,6 +3813,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // Now perform the actual reset!
         // a) Reset all successors first
         resetSuccessors(id);
+        if (!nc.isResetable()) {
+            // if the above led to an implicit reset of our node
+            // (contained in loop): stop here.
+            return;
+        }
         // b) and then reset node itself
         if (nc instanceof SingleNodeContainer) {
             invokeResetOnSingleNodeContainer(
