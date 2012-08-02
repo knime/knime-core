@@ -70,6 +70,10 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
 
 
     protected AbstractRepositoryObject(final String id, final String name) {
+        if (name == null) {
+            throw new IllegalArgumentException("Name must not be null");
+        }
+
         m_id = id;
         m_name = name;
     }
@@ -151,6 +155,10 @@ public abstract class AbstractRepositoryObject implements IRepositoryObject,
     }
 
     public void setName(final String newName) {
+        if (newName == null) {
+            throw new IllegalArgumentException("Name must not be null");
+        }
+
         if (m_parent != null) {
             for (IRepositoryObject o : m_parent.getChildren()) {
                 if (!(o == this) && (o instanceof AbstractRepositoryObject) &&
