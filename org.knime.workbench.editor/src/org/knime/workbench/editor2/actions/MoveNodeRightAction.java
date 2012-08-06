@@ -60,6 +60,7 @@ import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.ChangeAnnotationBoundsCommand;
 import org.knime.workbench.editor2.commands.ChangeNodeBoundsCommand;
 import org.knime.workbench.editor2.editparts.AnnotationEditPart;
+import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.snap.SnapIconToGrid;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
@@ -189,10 +190,13 @@ public class MoveNodeRightAction extends AbstractNodeAction {
         }
         // apply to all selected annotations
         for (AnnotationEditPart anno : selectedAnnos) {
-            Rectangle bounds = anno.getFigure().getBounds().getCopy();
-            bounds.x += offset;
-            ChangeAnnotationBoundsCommand cmd = new ChangeAnnotationBoundsCommand(getManager(), anno, bounds);
-            cc.add(cmd);
+            if (!(anno instanceof NodeAnnotationEditPart)) {
+                // only move workflow annotations
+                Rectangle bounds = anno.getFigure().getBounds().getCopy();
+                bounds.x += offset;
+                ChangeAnnotationBoundsCommand cmd = new ChangeAnnotationBoundsCommand(getManager(), anno, bounds);
+                cc.add(cmd);
+            }
         }
         getCommandStack().execute(cc);
     }
