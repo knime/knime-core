@@ -52,6 +52,7 @@ package org.knime.testing.node.config;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -74,6 +75,7 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
+import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.border.BevelBorder;
 import javax.swing.event.ListSelectionEvent;
@@ -113,9 +115,9 @@ public class TestConfigNodeDialog extends NodeDialogPane {
 
     private final JCheckBox m_mustFail = new JCheckBox();
 
-    private final JTextField m_requiredError = new JTextField();
+    private final JTextArea m_requiredError = new JTextArea(3, 20);
 
-    private final JTextField m_requiredWarning = new JTextField();
+    private final JTextArea m_requiredWarning = new JTextArea(3, 20);
 
     private int m_lastSelectedIndex = -1;
 
@@ -256,7 +258,7 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         p2.setBorder(BorderFactory.createBevelBorder(BevelBorder.LOWERED));
         GridBagConstraints c2 = new GridBagConstraints();
 
-        c2.anchor = GridBagConstraints.WEST;
+        c2.anchor = GridBagConstraints.NORTHWEST;
         c2.insets = new Insets(2, 2, 2, 2);
         c2.gridx = 0;
         c2.gridy = 0;
@@ -270,7 +272,7 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         c2.gridx = 1;
         c2.fill = GridBagConstraints.HORIZONTAL;
         c2.weightx = 1;
-        p2.add(m_requiredError, c2);
+        p2.add(new JScrollPane(m_requiredError), c2);
 
         c2.gridx = 0;
         c2.gridy++;
@@ -280,7 +282,9 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         c2.gridx = 1;
         c2.fill = GridBagConstraints.HORIZONTAL;
         c2.weightx = 1;
-        p2.add(m_requiredWarning, c2);
+        JScrollPane sp = new JScrollPane(m_requiredWarning);
+        sp.setMinimumSize(new Dimension(100, 100));
+        p2.add(sp, c2);
 
         m_allNodes.addListSelectionListener(new ListSelectionListener() {
             @Override
