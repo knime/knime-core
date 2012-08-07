@@ -82,6 +82,8 @@ public class ColumnListLoopStartNodeModel extends NodeModel implements
 
     private boolean m_lastIteration;
 
+    private int m_iteration;
+
     /**
      * Creates a new model with one data out- and inport, respectively.
      */
@@ -109,6 +111,9 @@ public class ColumnListLoopStartNodeModel extends NodeModel implements
                 }
             }
         }
+
+        assert m_iteration == 0;
+        pushFlowVariableInt("currentIteration", m_iteration);
 
         ColumnRearranger crea = createRearranger(inSpecs[0]);
 
@@ -169,6 +174,10 @@ public class ColumnListLoopStartNodeModel extends NodeModel implements
                     m_currentColIndex >= m_settings.iterateOverColumns().size();
         }
 
+        pushFlowVariableInt("currentIteration", m_iteration);
+        // increment counter for next iteration
+        m_iteration++;
+
         return new BufferedDataTable[]{exec.createColumnRearrangeTable(
                 inData[0], crea, exec)};
     }
@@ -179,6 +188,7 @@ public class ColumnListLoopStartNodeModel extends NodeModel implements
     @Override
     protected void reset() {
         m_currentColIndex = 0;
+        m_iteration = 0;
         m_lastIteration = false;
     }
 
