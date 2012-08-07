@@ -1,15 +1,24 @@
 package org.knime.product;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExtension;
+import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.Status;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Point;
@@ -20,16 +29,88 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.eclipse.ui.splash.BasicSplashHandler;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.FrameworkUtil;
 
 /**
  * This is the dynamic splash screen for KNIME that offers 3rd party vendors to
  * add their own little icons to it via the extension point
  * <code>org.knime.product.splashExtension</code>.
+ * The order of the splash icons can be configured by a file <tt>splash.config</tt> in the installation directory.
+ * The file is expected to contains the plug-in symbolic names in the desired order. Plug-in not mentioned in the
+ * file are sorted by the standard sort order.
  *
  * @since 2.0
  * @author Thorsten Meinl, University of Konstanz
  */
 public class KNIMESplashHandler extends BasicSplashHandler {
+    private static class DefaultComparator implements Comparator<IConfigurationElement> {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int compare(final IConfigurationElement o1, final IConfigurationElement o2) {
+            String name1 = o1.getContributor().getName();
+            String name2 = o2.getContributor().getName();
+            if (name1.startsWith("com.knime.")) {
+                if (name2.startsWith("com.knime.")) {
+                    return name1.compareTo(name2);
+                } else {
+                    return -1;
+                }
+            } else if (name2.startsWith("com.knime")) {
+                return 1;
+            } else if (name1.startsWith("org.knime.")) {
+                if (name2.startsWith("org.knime.")) {
+                    return name1.compareTo(name2);
+                } else {
+                    return -1;
+                }
+            } else if (name2.startsWith("org.knime.")) {
+                return 1;
+            } else {
+                return name1.compareTo(name2);
+            }
+        }
+    }
+
+    private static class ConfiguredComparator extends DefaultComparator {
+        private final Map<String, Integer> m_weights = new HashMap<String, Integer>();
+
+        ConfiguredComparator(final File configFile) throws IOException {
+            BufferedReader in = new BufferedReader(new FileReader(configFile));
+            String line;
+            int count = 0;
+            while ((line = in.readLine()) != null) {
+                m_weights.put(line, count++);
+            }
+            in.close();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int compare(final IConfigurationElement o1, final IConfigurationElement o2) {
+            String name1 = o1.getContributor().getName();
+            String name2 = o2.getContributor().getName();
+
+            Integer weight1 = m_weights.get(name1);
+            Integer weight2 = m_weights.get(name2);
+
+            if ((weight1 != null) && (weight2 != null)) {
+                return weight1.compareTo(weight2);
+            } else if (weight1 != null) {
+                return -1;
+            } else if (weight2 != null) {
+                return 1;
+            } else {
+                return super.compare(o1, o2);
+            }
+        }
+    }
+
+
     private final ArrayList<Image> m_images = new ArrayList<Image>();
 
     private final ArrayList<String> m_tooltips = new ArrayList<String>();
@@ -97,34 +178,23 @@ public class KNIMESplashHandler extends BasicSplashHandler {
             }
         }
 
-        // sort genuine KNIME extensions to the front
-        Collections.sort(configElements, new Comparator<IConfigurationElement>() {
-            @Override
-            public int compare(final IConfigurationElement o1, final IConfigurationElement o2) {
-                String name1 = o1.getContributor().getName();
-                String name2 = o2.getContributor().getName();
-                if (name1.startsWith("com.knime.")) {
-                    if (name2.startsWith("com.knime.")) {
-                        return name1.compareTo(name2);
-                    } else {
-                        return -1;
-                    }
-                } else if (name2.startsWith("com.knime")) {
-                    return 1;
-                } else if (name1.startsWith("org.knime.")) {
-                    if (name2.startsWith("org.knime.")) {
-                        return name1.compareTo(name2);
-                    } else {
-                        return -1;
-                    }
-                } else if (name2.startsWith("org.knime.")) {
-                    return 1;
-                } else {
-                    return name1.compareTo(name2);
+        // sort splash icons by name or by config file
+        Comparator<IConfigurationElement> comparator = new DefaultComparator();
+        Location loc = Platform.getInstallLocation();
+        if ((loc != null) && "file".equals(loc.getURL().getProtocol())) {
+            File instDir = new File(loc.getURL().getPath());
+            File splashConfig = new File(instDir, "splash.config");
+            if (splashConfig.exists()) {
+                try {
+                    comparator = new ConfiguredComparator(splashConfig);
+                } catch (IOException ex) {
+                    Bundle thisBundle = FrameworkUtil.getBundle(getClass());
+                    Platform.getLog(thisBundle).log(new Status(IStatus.ERROR, thisBundle.getSymbolicName(),
+                                                               "Error while reading splash config file", ex));
                 }
             }
-        });
-
+        }
+        Collections.sort(configElements, comparator);
 
 
         // Process all splash handler extensions
@@ -151,6 +221,7 @@ public class KNIMESplashHandler extends BasicSplashHandler {
         initProgressBar();
         doEventLoop();
     }
+
 
     private void initProgressBar() {
         setProgressRect(PROGRESS_RECT);
