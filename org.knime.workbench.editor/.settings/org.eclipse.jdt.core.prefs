@@ -1,4 +1,4 @@
-#Fri Aug 03 14:15:39 CEST 2012
+#Wed Aug 08 14:37:13 CEST 2012
 eclipse.preferences.version=1
 org.eclipse.jdt.core.compiler.codegen.inlineJsrBytecode=enabled
 org.eclipse.jdt.core.compiler.codegen.targetPlatform=1.6
@@ -135,11 +135,11 @@ org.eclipse.jdt.core.formatter.brace_position_for_switch=end_of_line
 org.eclipse.jdt.core.formatter.brace_position_for_type_declaration=end_of_line
 org.eclipse.jdt.core.formatter.comment.clear_blank_lines_in_block_comment=true
 org.eclipse.jdt.core.formatter.comment.clear_blank_lines_in_javadoc_comment=false
-org.eclipse.jdt.core.formatter.comment.format_block_comments=true
-org.eclipse.jdt.core.formatter.comment.format_header=true
+org.eclipse.jdt.core.formatter.comment.format_block_comments=false
+org.eclipse.jdt.core.formatter.comment.format_header=false
 org.eclipse.jdt.core.formatter.comment.format_html=true
 org.eclipse.jdt.core.formatter.comment.format_javadoc_comments=true
-org.eclipse.jdt.core.formatter.comment.format_line_comments=true
+org.eclipse.jdt.core.formatter.comment.format_line_comments=false
 org.eclipse.jdt.core.formatter.comment.format_source_code=true
 org.eclipse.jdt.core.formatter.comment.indent_parameter_description=true
 org.eclipse.jdt.core.formatter.comment.indent_root_tags=true
