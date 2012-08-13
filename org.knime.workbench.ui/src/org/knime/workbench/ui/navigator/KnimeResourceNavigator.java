@@ -307,9 +307,16 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                                 ((StructuredSelection)getSelection())
                                         .getFirstElement();
                         if (isWorkflow(sel)) {
-                            KnimeResourceNavigator.this
-                                    .handleOpen(new OpenEvent(this,
-                                            getSelection()));
+                            // this is issued asynchronously, in order to avoid bug #3478
+                            final TreeViewer myself = this;
+                            Display.getCurrent().asyncExec(new Runnable() {
+                                @Override
+                                public void run() {
+                                    KnimeResourceNavigator.this.handleOpen(
+                                            new OpenEvent(myself,
+                                                    getSelection()));
+                                }
+                            });
                         } else {
                             // expand the double-clicked element one level down
                             KnimeResourceNavigator.super
