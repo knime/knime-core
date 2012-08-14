@@ -52,6 +52,7 @@ package org.knime.core.node;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Properties;
 
@@ -70,6 +71,7 @@ import org.knime.node2012.KnimeNodeDocument;
  */
 public abstract class DynamicNodeFactory<T extends NodeModel> extends
         NodeFactory<T> {
+    private static final Charset UTF8 = Charset.forName("UTF-8");
 
     /**
      * Creates a new dynamic node factory. Additional properties should be set
@@ -93,13 +95,13 @@ public abstract class DynamicNodeFactory<T extends NodeModel> extends
         properties.setDoctypePublicId("-//UNIKN//DTD KNIME Node 2.0//EN");
         properties.setDoctypeSystemId("http://www.knime.org/Node.dtd");
         addNodeDescription(doc);
-        
+
         /* Remove the namespace as the XML parser cannot handle it validating
          * the Node.dtd.
          * FIXME The conversion from DOM document to text and subsequent
-         *      parsing as document should be avoided.  
+         *      parsing as document should be avoided.
          */
-        
+
         XmlOptions xmlOptions = new XmlOptions();
         xmlOptions.setUseDefaultNamespace();
         HashMap<String, String> defNS = new HashMap<String, String>();
@@ -109,7 +111,7 @@ public abstract class DynamicNodeFactory<T extends NodeModel> extends
         String xmlText = doc.xmlText(xmlOptions);
 
         return new ByteArrayInputStream(
-                xmlText.replaceAll("xmlns=\"\"", "").getBytes());
+                xmlText.replaceAll("xmlns=\"\"", "").getBytes(UTF8));
     }
 
     /**
