@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   29.04.2011 (hofer): created
  */
@@ -108,15 +108,15 @@ public class DifferFileNodeDialog extends NodeDialogPane {
         c.gridy++;
         m_referenceUrlFlowVar = new JComboBox();
         m_referenceUrlFlowVar.setEditable(false);
-        m_referenceUrlFlowVar.setRenderer(new FlowVariableListCellRenderer());        
+        m_referenceUrlFlowVar.setRenderer(new FlowVariableListCellRenderer());
         m_referenceUrlFlowVar.setBorder(BorderFactory.createTitledBorder(
         		"Reference File"));
-        p.add(m_referenceUrlFlowVar, c);     
-        
+        p.add(m_referenceUrlFlowVar, c);
+
         c.gridy++;
         c.weighty = 1;
         p.add(new JPanel(), c);
-        
+
         return p;
     }
 
@@ -130,12 +130,12 @@ public class DifferFileNodeDialog extends NodeDialogPane {
         DifferFileNodeSettings s = new DifferFileNodeSettings();
 
         FlowVariable urlFlow = (FlowVariable)m_urlFlowVar.getSelectedItem();
-        String url = urlFlow != null ? urlFlow.getName() : null;     
+        String url = urlFlow != null ? urlFlow.getName() : null;
         s.setTestFileFlowVar(url);
-        FlowVariable referenceUrlFlow = 
+        FlowVariable referenceUrlFlow =
         	(FlowVariable)m_referenceUrlFlowVar.getSelectedItem();
-        String referenceUrl = referenceUrlFlow != null ? 
-        		referenceUrlFlow.getName() : null;     
+        String referenceUrl = referenceUrlFlow != null ?
+        		referenceUrlFlow.getName() : null;
         s.setReferenceFileFlowVar(referenceUrl);
 
         s.saveSettings(settings);
@@ -150,6 +150,7 @@ public class DifferFileNodeDialog extends NodeDialogPane {
     	DifferFileNodeSettings s = new DifferFileNodeSettings();
         s.loadSettingsDialog(settings);
 
+        m_urlFlowVar.removeAllItems();
         Map<String, FlowVariable> scopeVars = getAvailableFlowVariables();
         for (FlowVariable v : scopeVars.values()) {
         	if (v.getType().equals(FlowVariable.Type.STRING)) {
@@ -158,15 +159,17 @@ public class DifferFileNodeDialog extends NodeDialogPane {
 	        		m_urlFlowVar.setSelectedItem(v);
 	        	}
         	}
-        }        
+        }
+
+        m_referenceUrlFlowVar.removeAllItems();
         for (FlowVariable v : scopeVars.values()) {
-        	if (v.getType().equals(FlowVariable.Type.STRING)) {        	
+        	if (v.getType().equals(FlowVariable.Type.STRING)) {
 	        	m_referenceUrlFlowVar.addItem(v);
 	        	if (v.getName().equals(s.getReferenceFileFlowVar())) {
 	        		m_referenceUrlFlowVar.setSelectedItem(v);
 	        	}
         	}
-        }        
+        }
     }
 
 }

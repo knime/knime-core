@@ -185,7 +185,7 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
                 writer.write("</em> - ");
                 try {
                     Element nodeXML
-                            = t.getFactory().newInstance().getXMLDescription();
+                            = t.createFactoryInstance().getXMLDescription();
                     writer.append(readShortDescriptionFromXML(
                             nodeXML, indent));
                     if (m_createDir) {
