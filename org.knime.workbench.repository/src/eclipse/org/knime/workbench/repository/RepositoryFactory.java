@@ -62,6 +62,7 @@ import org.eclipse.core.runtime.Platform;
 import org.eclipse.swt.graphics.Image;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.DynamicNodeFactory;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
@@ -136,6 +137,10 @@ public final class RepositoryFactory {
                             + element.getAttribute("factory-class"), e);
         } finally {
             GlobalClassCreator.lock.unlock();
+        }
+        if (factory instanceof DynamicNodeFactory) {
+            throw new IllegalArgumentException("Dynamic node factory '" + element.getAttribute("factory-class") + "'"
+                    + " registered as normal node factory.");
         }
 
         NodeTemplate node = new NodeTemplate(id, factory.getNodeName());

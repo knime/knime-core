@@ -218,7 +218,7 @@ public final class JavaSnippet {
             return m_jarFileCache;
         }
         // Add lock since jSnippetJar is used across all JavaSnippets
-        synchronized (this) {
+        synchronized (JavaSnippet.class) {
             if (jSnippetJar == null) {
                 jSnippetJar = createJSnippetJarFile();
             }

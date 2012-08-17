@@ -47,17 +47,22 @@
  */
 package org.knime.core.util;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.PriorityQueue;
 import java.util.Set;
 
@@ -79,6 +84,102 @@ import org.knime.core.node.KNIMEConstants;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class DuplicateChecker {
+    private static class Chunk {
+        private final File m_file;
+        private DataOutputStream m_out;
+        private long m_count = 0;
+
+        public Chunk() throws IOException {
+            m_file = File.createTempFile("KNIME_DuplicateChecker", ".bin");
+            m_out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(m_file)));
+        }
+
+        public void addKeys(final Set<String> keys) throws IOException {
+            if (m_out == null) {
+                throw new IllegalStateException("Chunck has already been closed");
+            }
+
+            String[] sorted = keys.toArray(new String[keys.size()]);
+            Arrays.sort(sorted);
+
+            for (String s : sorted) {
+                m_out.writeUTF(s);
+                m_count++;
+            }
+        }
+
+        public void addKey(final String key) throws IOException {
+            if (m_out == null) {
+                throw new IllegalStateException("Chunck has already been closed");
+            }
+
+            m_out.writeUTF(key);
+            m_count++;
+        }
+
+        public void close() throws IOException {
+            if (m_out == null) {
+                throw new IllegalStateException("Chunck has already been closed");
+            }
+            m_out.close();
+            m_out = null;
+        }
+
+        public Iterator<String> iterator() throws FileNotFoundException {
+            if (m_out != null) {
+                throw new IllegalStateException("Bucket has not been closed yet");
+            }
+            return new Iterator<String>() {
+                private DataInputStream m_in;
+                private long m_read;
+
+                {
+                    m_in = new DataInputStream(new BufferedInputStream(new FileInputStream(m_file)));
+                }
+
+                @Override
+                public boolean hasNext() {
+                    boolean b = (m_read < m_count);
+                    if (!b && (m_in != null)) {
+                        try {
+                            m_in.close();
+                            m_in = null;
+                        } catch (IOException ex) {
+                            throw new RuntimeException(ex);
+                        }
+                    }
+                    return b;
+                }
+
+                @Override
+                public String next() {
+                    if (!hasNext()) {
+                        throw new NoSuchElementException();
+                    }
+                    try {
+                        m_read++;
+                        return m_in.readUTF();
+                    } catch (IOException ex) {
+                        throw new RuntimeException(ex);
+                    }
+                }
+
+                @Override
+                public void remove() {
+                    throw new UnsupportedOperationException("remove is not supported");
+                }
+            };
+        }
+
+        public long size() {
+            return m_count;
+        }
+
+        public boolean dispose() {
+            return m_file.delete();
+        }
+    }
+
     /** The default chunk size. */
     public static final int MAX_CHUNK_SIZE = 100000;
 
@@ -89,9 +190,9 @@ public class DuplicateChecker {
 
     private final int m_maxStreams;
 
-    private Set<String> m_chunk = new HashSet<String>();
+    private Set<String> m_currentChunk = new HashSet<String>();
 
-    private List<File> m_storedChunks = new ArrayList<File>();
+    private List<Chunk> m_storedChunks = new ArrayList<Chunk>();
 
     private static final boolean DISABLE_DUPLICATE_CHECK =
         Boolean.getBoolean(
@@ -101,7 +202,7 @@ public class DuplicateChecker {
      * "DuplicateChecker always writes to disc (even for small tables) + temp
      * file names are hashed in core java (increased mem consumption for loops)"
      * for details. */
-    private static final Collection<File> TEMP_FILES = new HashSet<File>();
+    private static final Collection<Chunk> ALL_CHUNKS = new ArrayList<Chunk>();
 
     static {
         Runtime.getRuntime().addShutdownHook(new Thread() {
@@ -116,11 +217,11 @@ public class DuplicateChecker {
     }
 
     private static void removeTempFiles() {
-        synchronized (TEMP_FILES) {
-            for (File f : TEMP_FILES) {
-                f.delete();
+        synchronized (ALL_CHUNKS) {
+            for (Chunk c : ALL_CHUNKS) {
+                c.dispose();
             }
-            TEMP_FILES.clear();
+            ALL_CHUNKS.clear();
         }
     }
 
@@ -137,9 +238,12 @@ public class DuplicateChecker {
      * @param maxChunkSize the size of each chunk, i.e. the maximum number of
      *            elements kept in memory
      * @param maxStreams the maximum number of streams that are kept open during
-     *            the merge process
+     *            the merge process, must be at least 2
      */
     public DuplicateChecker(final int maxChunkSize, final int maxStreams) {
+        if (maxStreams < 2) {
+            throw new IllegalArgumentException("The number of streams must be at least 2");
+        }
         m_maxChunkSize = maxChunkSize;
         m_maxStreams = maxStreams;
     }
@@ -160,10 +264,10 @@ public class DuplicateChecker {
         }
         // bug fix #1737: keys may be just wrappers of very large strings ...
         // we make a copy, which consist of the important characters only
-        if (!m_chunk.add(new String(s))) {
+        if (!m_currentChunk.add(new String(s))) {
             throw new DuplicateKeyException(s);
         }
-        if (m_chunk.size() >= m_maxChunkSize) {
+        if (m_currentChunk.size() >= m_maxChunkSize) {
             writeChunk();
         }
     }
@@ -190,12 +294,12 @@ public class DuplicateChecker {
      * memory.
      */
     public void clear() {
-        for (File f : m_storedChunks) {
-            f.delete();
+        for (Chunk c : m_storedChunks) {
+            c.dispose();
         }
-        synchronized (TEMP_FILES) { TEMP_FILES.removeAll(m_storedChunks); }
+        synchronized (ALL_CHUNKS) { ALL_CHUNKS.removeAll(m_storedChunks); }
         m_storedChunks.clear();
-        m_chunk.clear();
+        m_currentChunk.clear();
     }
 
     /**
@@ -206,16 +310,17 @@ public class DuplicateChecker {
      * @throws IOException if an I/O error occurs
      * @throws DuplicateKeyException if a duplicate key has been detected
      */
-    private void checkForDuplicates(final List<File> storedChunks)
+    private void checkForDuplicates(final List<Chunk> storedChunks)
             throws NumberFormatException, IOException, DuplicateKeyException {
         final int nrChunks =
                 (int)Math.ceil(storedChunks.size() / (double)m_maxStreams);
-        List<File> newChunks = new ArrayList<File>(nrChunks);
+        List<Chunk> newChunks = new ArrayList<Chunk>(nrChunks);
 
         int chunkCount = 0;
         for (int i = 0; i < nrChunks; i++) {
-            BufferedReader[] in =
-                new BufferedReader[Math.min(
+            @SuppressWarnings("unchecked")
+            Iterator<String>[] in =
+                new Iterator[Math.min(
                         m_maxStreams, storedChunks.size() - chunkCount)];
             if (in.length == 1) {
                 // only one (remaining) chunk => no need to merge anything
@@ -223,77 +328,51 @@ public class DuplicateChecker {
                 break;
             }
 
-            int entries = 0;
+            long entries = 0;
             PriorityQueue<Helper> heap = new PriorityQueue<Helper>(in.length);
             for (int j = 0; j < in.length; j++) {
-                in[j] = new BufferedReader(new FileReader(
-                        storedChunks.get(chunkCount++)));
-                int count = Integer.parseInt(in[j].readLine());
-                entries += count;
+                Chunk c = storedChunks.get(chunkCount++);
+                entries += c.size();
+                in[j] = c.iterator();
 
-                if (count > 0) {
-                    String s = in[j].readLine();
-                    heap.add(new Helper(s, j));
+                if (in[j].hasNext()) {
+                    heap.add(new Helper(in[j].next(), j));
                 }
             }
 
-            final File f =
-                File.createTempFile("KNIME_DuplicateChecker", ".txt");
-            synchronized (TEMP_FILES) { TEMP_FILES.add(f); }
-            newChunks.add(f);
-            BufferedWriter out = new BufferedWriter(new FileWriter(f));
-            out.write(Integer.toString(entries));
-            out.newLine();
+            Chunk chunk = new Chunk();
+            synchronized (ALL_CHUNKS) { ALL_CHUNKS.add(chunk); }
+            newChunks.add(chunk);
 
             String lastKey = null;
-
             while (entries-- > 0) {
                 Helper top = heap.poll();
                 if (top.m_s.equals(lastKey)) {
-                    out.close();
-                    StringBuilder b = new StringBuilder(top.m_s.length());
-                    for (int k = 0; k < lastKey.length(); k++) {
-                        char c = lastKey.charAt(k);
-                        switch (c) {
-                        // all sequences starting with '%' are encoded
-                        // special characters
-                        case '%' :
-                            char[] array = new char[2];
-                            array[0] = lastKey.charAt(++k);
-                            array[1] = lastKey.charAt(++k);
-                            int toHex = Integer.parseInt(new String(array), 16);
-                            b.append((char)(toHex));
-                            break;
-                        default :
-                            b.append(c);
-                        }
-                    }
-                    throw new DuplicateKeyException(b.toString());
+                    chunk.close();
+                    throw new DuplicateKeyException(top.m_s);
                 }
                 lastKey = top.m_s;
 
                 if (nrChunks > 1) {
-                    out.write(top.m_s);
-                    out.newLine();
+                    chunk.addKey(top.m_s);
                 }
 
-                String next = in[top.m_streamIndex].readLine();
-                if (next != null) {
-                    top.m_s = next;
+                if (in[top.m_streamIndex].hasNext()) {
+                    top.m_s = in[top.m_streamIndex].next();
                     heap.add(top);
                 }
             }
 
-            out.close();
+            chunk.close();
         }
 
         if (newChunks.size() > 1) {
             checkForDuplicates(newChunks);
         }
-        for (File f : newChunks) {
-            f.delete();
+        for (Chunk c : newChunks) {
+            c.dispose();
         }
-        synchronized (TEMP_FILES) { TEMP_FILES.removeAll(newChunks); }
+        synchronized (ALL_CHUNKS) { ALL_CHUNKS.removeAll(newChunks); }
     }
 
     /**
@@ -302,38 +381,14 @@ public class DuplicateChecker {
      * @throws IOException if an I/O error occurs
      */
     private void writeChunk() throws IOException {
-        if (m_chunk.isEmpty()) {
+        if (m_currentChunk.isEmpty()) {
             return;
         }
-        String[] sorted = m_chunk.toArray(new String[m_chunk.size()]);
-        m_chunk.clear();
-        Arrays.sort(sorted);
-
-        File f = File.createTempFile("KNIME_DuplicateChecker", ".txt");
-        synchronized (TEMP_FILES) { TEMP_FILES.add(f); }
-
-        BufferedWriter out = new BufferedWriter(new FileWriter(f));
-        out.write(Integer.toString(sorted.length));
-        out.newLine();
-        for (String s : sorted) {
-            // line breaking characters need to be escaped in order for
-            // readLine to work correctly
-            StringBuilder buf = new StringBuilder(s.length() + 20);
-            for (int i = 0; i < s.length(); i++) {
-                char c = s.charAt(i);
-                switch (c) {
-                case '%':  buf.append("%25"); break;
-                case '\n': buf.append("%0A"); break;
-                case '\r': buf.append("%0D"); break;
-                default: buf.append(c);
-                }
-            }
-            out.write(buf.toString());
-            out.newLine();
-        }
-        out.close();
-
-        m_storedChunks.add(f);
+        Chunk c = new Chunk();
+        c.addKeys(m_currentChunk);
+        c.close();
+        m_storedChunks.add(c);
+        m_currentChunk.clear();
     }
 
     /**
