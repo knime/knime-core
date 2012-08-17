@@ -4,15 +4,15 @@
     <name>PMML Writer</name>
     
     <shortDescription>
-        Reads a model from a PMML port and writes it into a PMML v3.1 compliant file.
+        Reads a model from a PMML port and writes it into a PMML v4.0 compliant file.
     </shortDescription>
     
     <fullDescription>
-        <intro>Writes a model from a PMML model port into a PMML v3.1 compliant 
+        <intro>Writes a model from a PMML model port into a PMML v4.0 compliant 
         file. Select a file to write to. If the file already exist it is 
         silently overwritten! Be sure to have write access to the entered file.
         If a PMML file from another version is read by the PMML Reader and 
-        directly written by this node, it is converted into PMML v3.1. 
+        directly written by this node, it is converted into PMML v4.0. 
         If the model is not valid (unknown data types, etc.) an exception is 
         thrown during execution.  
         </intro>
