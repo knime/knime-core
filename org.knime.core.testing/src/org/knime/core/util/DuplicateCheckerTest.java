@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 28, 2007 (wiswedel): created
  */
@@ -28,15 +28,17 @@ import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.Random;
 
-import junit.framework.TestCase;
+import junit.framework.Assert;
+
+import org.junit.Test;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
-public class DuplicateCheckerTest extends TestCase {
-    
-    public void testNoDuplicateManyRows() {
+public class DuplicateCheckerTest {
+    @Test
+    public void testNoDuplicateManyRows() throws IOException {
         long t = System.currentTimeMillis();
         DuplicateChecker dc = new DuplicateChecker();
 
@@ -58,39 +60,41 @@ public class DuplicateCheckerTest extends TestCase {
             dc.checkForDuplicates();
         } catch (DuplicateKeyException ex) {
             ex.printStackTrace();
-            fail("No duplicates inserted but exception was thrown");
-        } catch (IOException ioe) {
-            ioe.printStackTrace();
-            fail("Unexpected io exception" + ioe.getMessage());
+            Assert.fail("No duplicates inserted but exception was thrown");
         }
         dc.clear();
         System.out.println((System.currentTimeMillis() - t) + "ms");
     }
-    
-    public void testNoStringsAtAll() {
+
+    @Test
+    public void testNoStringsAtAll() throws DuplicateKeyException, IOException {
         DuplicateChecker dc = new DuplicateChecker();
-        try {
-            dc.checkForDuplicates();
-        } catch (Exception dke) {
-            dke.printStackTrace();
-            fail();
-        }
+        dc.checkForDuplicates();
     }
-    
-    public void testArbitraryStringsNoDuplicates() {
-        internalTestArbitraryStrings(false);
-    }
-    
-    public void testArbitraryStringsDuplicates() {
-        internalTestArbitraryStrings(true);
-    }
-    
-    
-    
-    private void internalTestArbitraryStrings(final boolean isAddDuplicates) {
-        LinkedHashSet<String> hash = new LinkedHashSet<String>();
+
+    @Test
+    public void testArbitraryStringsNoDuplicates() throws IOException {
         long seed = System.currentTimeMillis();
         System.out.println("Using seed " + seed);
+        internalTestArbitraryStrings(false, seed);
+    }
+
+    @Test
+    public void testArbitraryStringsDuplicates() throws IOException {
+        long seed = System.currentTimeMillis();
+        System.out.println("Using seed " + seed);
+        internalTestArbitraryStrings(true, seed);
+
+        // this one generates invalid UTF-16 strings
+        seed = 1343253055319L;
+        System.out.println("Using seed " + seed);
+        internalTestArbitraryStrings(true, seed);
+    }
+
+
+
+    private void internalTestArbitraryStrings(final boolean isAddDuplicates, final long seed) throws IOException {
+        LinkedHashSet<String> hash = new LinkedHashSet<String>();
         Random r = new Random(seed);
         while (hash.size() < 300000) {
             int length = 5 + r.nextInt(30);
@@ -133,19 +137,22 @@ public class DuplicateCheckerTest extends TestCase {
             }
             dc.checkForDuplicates();
         } catch (DuplicateKeyException e) {
+            dc.clear();
             if (isAddDuplicates) {
-                assertEquals(dupl, e.getKey());
+                Assert.assertEquals(dupl, e.getKey());
+                return;
             } else {
                 e.printStackTrace();
-                fail("No duplicates were added");
+                Assert.fail("Duplicate detected even though no duplicates are present");
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            fail();
         }
+
         dc.clear();
+        if (isAddDuplicates) {
+            Assert.fail("No duplicate detected even though at least one is present");
+        }
     }
-    
+
     private static char getRandomSpecialChar(final Random rand) {
         switch (rand.nextInt(3)) {
         case 0 : return '%';
@@ -154,11 +161,11 @@ public class DuplicateCheckerTest extends TestCase {
         default: throw new RuntimeException("Invalid random number");
         }
     }
-    
+
     private static char getRandomArbitraryChar(final Random rand) {
-        return (char)rand.nextInt(Character.MAX_VALUE + 1); 
+        return (char)rand.nextInt(Character.MAX_VALUE + 1);
     }
-    
+
     private static char getRandomASCIIChar(final Random rand) {
         return (char)(' ' + rand.nextInt(Byte.MAX_VALUE - ' '));
     }
