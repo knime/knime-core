@@ -48,13 +48,20 @@
 
 package org.knime.base.node.preproc.groupby;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.ColumnAggregator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.sort.SortedTable;
 import org.knime.base.node.preproc.sorter.SorterNodeDialogPanel2;
-
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -70,15 +77,6 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.util.MutableInteger;
 import org.knime.core.util.Pair;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  *
@@ -178,13 +176,14 @@ public abstract class GroupByTable {
         }
         m_groupCols = groupByCols;
         m_colNamePolicy = colNamePolicy;
-        m_retainOrder = retainOrder;
+        //retain the row order only if the input table contains more than 1 row
+        m_retainOrder = retainOrder && inDataTable.getRowCount() > 1;
         final Set<String> workingCols =
             getWorkingCols(groupByCols, colAggregators);
         final BufferedDataTable dataTable;
         final ColumnAggregator[] aggrs;
         final ExecutionContext subExec;
-        if (m_retainOrder && inDataTable.getRowCount() > 1) {
+        if (m_retainOrder) {
             exec.setMessage("Memorize row order...");
             final String retainOrderCol = DataTableSpec.getUniqueColumnName(
                     inDataTable.getDataTableSpec(), RETAIN_ORDER_COL_NAME);
