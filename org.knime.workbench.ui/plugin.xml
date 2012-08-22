@@ -330,6 +330,7 @@
                    icon="icons/open_logfile.png"
                    id="org.knime.workbench.ui.openLogfile"
                    label="Open KNIME log"
+                   menubarPath="view/knimelog"
                    toolbarPath="Normal/knime"
                    tooltip="Opens KNIME&apos;s log file in a text editor">
              </action>
