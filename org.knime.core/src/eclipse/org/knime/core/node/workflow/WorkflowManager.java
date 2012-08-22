@@ -3904,19 +3904,20 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         // End loop was executed at least once already - which
                         // also means it is set in the LoopContextObject):
                         SingleNodeContainer lsnc = (SingleNodeContainer)m_workflow.getNode(lsid);
-                        FlowLoopContext flc = lsnc.getOutgoingFlowObjectStack().peek(FlowLoopContext.class);
-                        if (flc.needsCompleteResetOnLoopBodyChanges()
-                            && (State.EXECUTED.equals(lsnc.getState()))) {
-                            // this is ugly but necessary: we need to make
-                            // sure we don't go into an infinite loop here,
-                            // trying to reset this part over and over again.
-                            // so reset this node "out of the order" first
-                            // as a "flag" that we have already done it:
-                            invokeResetOnSingleNodeContainer(lsnc);
-                            configureSingleNodeContainer(lsnc, true);
-                            // and now launch the proper reset (&configure!)
-                            // for this branch:
-                            resetAndConfigureNode(lsid);
+                        if (State.EXECUTED.equals(lsnc.getState())) {
+                            FlowLoopContext flc = lsnc.getOutgoingFlowObjectStack().peek(FlowLoopContext.class);
+                            if (flc.needsCompleteResetOnLoopBodyChanges()) {
+                                // this is ugly but necessary: we need to make
+                                // sure we don't go into an infinite loop here,
+                                // trying to reset this part over and over again.
+                                // so reset this node "out of the order" first
+                                // as a "flag" that we have already done it:
+                                invokeResetOnSingleNodeContainer(lsnc);
+                                configureSingleNodeContainer(lsnc, true);
+                                // and now launch the proper reset (&configure!)
+                                // for this branch:
+                                resetAndConfigureNode(lsid);
+                            }
                         }
                     }
                 }
