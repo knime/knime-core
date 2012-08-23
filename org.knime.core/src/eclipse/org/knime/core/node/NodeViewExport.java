@@ -198,10 +198,11 @@ public final class NodeViewExport {
      * @since 2.6
      */
     public static JMenuItem createNewMenu(final NodeView<?> view) {
+        final Container exportComponent = view.getExportComponent();
         return createNewMenu(new ViewContainerProvider() {
             @Override
             public Container getContainer() {
-                return view.getExportComponent();
+                return exportComponent;
             }
         });
     }
