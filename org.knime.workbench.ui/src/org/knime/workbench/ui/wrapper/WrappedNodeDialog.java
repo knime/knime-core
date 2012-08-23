@@ -646,7 +646,6 @@ public class WrappedNodeDialog extends Dialog {
      */
     @Override
     public boolean close() {
-        HelpWindow.instance.close();
         return super.close();
     }
 
