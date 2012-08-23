@@ -121,6 +121,14 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
      * stay on top all the time */
     private boolean m_alwaysOnTop = false;
 
+    // Menu item 'Always on top' with corresponding listener, unregistered during #onClose
+    private final JMenuItem m_alwaysOnTopMenu;
+    private final ActionListener m_alwaysOnTopActionListener;
+
+    // Menu item 'Close' with corresponding listener, unregistered during #onClose
+    private final JMenuItem m_closeMenu;
+    private final ActionListener m_closeActionListener;
+
     private final WindowListener m_windowListener = new WindowAdapter() {
         /**
          * {@inheritDoc}
@@ -174,9 +182,9 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
         menu.setMnemonic('F');
 
         // create always on top entry
-        JMenuItem item = new JCheckBoxMenuItem("Always on top", m_alwaysOnTop);
-        item.setMnemonic('T');
-        item.addActionListener(new ActionListener() {
+        m_alwaysOnTopMenu = new JCheckBoxMenuItem("Always on top", m_alwaysOnTop);
+        m_alwaysOnTopMenu.setMnemonic('T');
+        m_alwaysOnTopActionListener = new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent event) {
 
@@ -185,22 +193,24 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
                 m_alwaysOnTop = selected;
                 m_frame.setAlwaysOnTop(m_alwaysOnTop);
             }
-        });
-        menu.add(item);
+        };
+        m_alwaysOnTopMenu.addActionListener(m_alwaysOnTopActionListener);
+        menu.add(m_alwaysOnTopMenu);
 
-        item = NodeViewExport.createNewMenu(this);
-        menu.add(item);
+        final JMenuItem exportMenu = NodeViewExport.createNewMenu(this);
+        menu.add(exportMenu);
 
         // create close entry
-        item = new JMenuItem("Close");
-        item.setMnemonic('C');
-        item.addActionListener(new ActionListener() {
+        m_closeMenu = new JMenuItem("Close");
+        m_closeMenu.setMnemonic('C');
+        m_closeActionListener = new ActionListener() {
             @Override
             public void actionPerformed(final ActionEvent event) {
                 NodeView.super.closeView();
             }
-        });
-        menu.add(item);
+        };
+        m_closeMenu.addActionListener(m_closeActionListener);
+        menu.add(m_closeMenu);
         menuBar.add(menu);
         m_frame.setJMenuBar(menuBar);
 
@@ -357,6 +367,8 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
             public void run() {
                 m_frame.setVisible(false);
                 m_frame.removeWindowListener(m_windowListener);
+                m_alwaysOnTopMenu.removeActionListener(m_alwaysOnTopActionListener);
+                m_closeMenu.removeActionListener(m_closeActionListener);
                 m_frame.getContentPane().removeAll();
                 m_frame.dispose();
             }
