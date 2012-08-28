@@ -48,17 +48,16 @@
 
 package org.knime.base.data.aggregation.date;
 
+import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.data.def.LongCell;
-
-import org.knime.base.data.aggregation.AggregationOperator;
-import org.knime.base.data.aggregation.GlobalSettings;
-import org.knime.base.data.aggregation.OperatorColumnSettings;
-import org.knime.base.data.aggregation.OperatorData;
 
 
 /**
@@ -197,7 +196,7 @@ public class MillisRangeOperator extends AggregationOperator {
      */
     @Override
     public String getDescription() {
-        return "Calculates the range between the first and lsat date "
+        return "Calculates the range between the first and last date "
             + "in milliseconds.";
     }
 
