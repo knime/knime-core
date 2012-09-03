@@ -63,6 +63,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeMessage;
+import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -145,6 +146,13 @@ public class SimpleWorkflowTest implements WorkflowTest {
                     error += "\n" + nodeMessage.getMessage();
                 }
                 result.addFailure(this, new AssertionFailedError(error));
+            } else if (node instanceof SingleNodeContainer) {
+                SingleNodeContainer snc = (SingleNodeContainer)node;
+
+                if ("true".equals(snc.getXMLDescription().getAttribute("deprecated"))) {
+                    result.addFailure(this, new AssertionFailedError("Node '"
+                            + node.getName() + "' is deprecated."));
+                }
             }
         }
     }
