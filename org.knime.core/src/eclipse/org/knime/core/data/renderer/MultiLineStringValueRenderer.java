@@ -60,6 +60,8 @@ import javax.swing.SwingConstants;
  */
 public class MultiLineStringValueRenderer extends
         DefaultDataValueRenderer {
+    private final boolean m_monoSpaceFont;
+
     private Font m_currentFont;
 
     private final String m_description;
@@ -72,11 +74,27 @@ public class MultiLineStringValueRenderer extends
      * @param description description for the renderer shown in the popup menu
      */
     public MultiLineStringValueRenderer(final String description) {
+        this(description, true);
+    }
+
+    /**
+     * Instantiates new renderer.
+     *
+     * @param description description for the renderer shown in the popup menu
+     * @param monoSpaceFont true if a monospace font should be used,
+     *            <code>false</code> if the standard font of the parent component
+     *            should be used
+     * @since 2.7
+     */
+    public MultiLineStringValueRenderer(final String description, final boolean monoSpaceFont) {
         m_description = description == null ? "Multi Line String" : description;
         setVerticalAlignment(SwingConstants.TOP);
         m_currentFont =
             new Font("Monospaced", getFont().getStyle(), getFont().getSize());
-        super.setFont(m_currentFont);
+        m_monoSpaceFont = monoSpaceFont;
+        if (m_monoSpaceFont) {
+            super.setFont(m_currentFont);
+        }
         setBackground(Color.WHITE);
         setUI(new MultiLineBasicLabelUI());
     }
@@ -131,12 +149,16 @@ public class MultiLineStringValueRenderer extends
             super.setFont(m_currentFont);
         } else if (font.equals(m_currentFont)) {
             return;
-        } else {
+        } else if (m_monoSpaceFont){
             m_currentFont =
                     new Font("Monospaced", font.getStyle(), font.getSize());
             super.setFont(m_currentFont);
+        } else {
+            super.setFont(font);
         }
     }
+
+
 
     /**
      * {@inheritDoc}

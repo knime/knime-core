@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   07.07.2005 (mb): created
  */
@@ -54,17 +54,18 @@ import javax.swing.Icon;
 
 import org.knime.core.data.renderer.DataValueRendererFamily;
 import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
+import org.knime.core.data.renderer.MultiLineStringValueRenderer;
 import org.knime.core.data.renderer.StringValueRenderer;
 
 
 /**
  * Interface of a {@link org.knime.core.data.def.StringCell}, forces method to
  * return string value.
- * 
+ *
  * @author M. Berthold, University of Konstanz
  */
 public interface StringValue extends DataValue {
-    
+
     /** Meta information to this value type.
      * @see DataValue#UTILITY
      */
@@ -74,16 +75,16 @@ public interface StringValue extends DataValue {
      * @return A String value.
      */
     String getStringValue();
-    
+
     /** Implementations of the meta information of this value class. */
     public static class StringUtilityFactory extends UtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON = 
+        private static final Icon ICON =
             loadIcon(StringValue.class, "/icon/stringicon.png");
 
-        private static final StringValueComparator STRING_COMPARATOR = 
+        private static final StringValueComparator STRING_COMPARATOR =
             new StringValueComparator();
-        
+
         /** Only subclasses are allowed to instantiate this class. */
         protected StringUtilityFactory() {
         }
@@ -103,7 +104,7 @@ public interface StringValue extends DataValue {
         protected DataValueComparator getComparator() {
             return STRING_COMPARATOR;
         }
-        
+
         /**
          * {@inheritDoc}
          */
@@ -111,7 +112,8 @@ public interface StringValue extends DataValue {
         protected DataValueRendererFamily getRendererFamily(
                 final DataColumnSpec spec) {
             return new DefaultDataValueRendererFamily(
-                    StringValueRenderer.INSTANCE);
+                    StringValueRenderer.INSTANCE,
+                    new MultiLineStringValueRenderer("Multi-line String", false));
         }
 
     }
