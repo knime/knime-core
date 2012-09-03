@@ -204,6 +204,7 @@ public class RuleEngineNodeModel extends NodeModel {
                             DataCell cell =
                                     row.getCell(((ColumnReference)outcome).index);
                             if (outType.equals(StringCell.TYPE)
+                                    && !cell.isMissing()
                                     && !cell.getType().equals(StringCell.TYPE)) {
                                 return new StringCell(cell.toString());
                             } else {
