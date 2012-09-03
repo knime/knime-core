@@ -6783,6 +6783,12 @@
                 <message_argument value="org.knime.core_2.6.0"/>
             </message_arguments>
         </filter>
+        <filter id="305426566">
+            <message_arguments>
+                <message_argument value="schemaorg_apache_xmlbeans.system.s401A87426FAA35C4072086675CF0C468.TypeSystemHolder"/>
+                <message_argument value="org.knime.core_2.6.1"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/data/container/DataContainer.java" type="org.knime.core.data.container.DataContainer">
         <filter id="338792546">
