@@ -27,9 +27,11 @@ package org.knime.testing.core;
 
 import java.io.File;
 import java.io.FileFilter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Locale;
 
 import junit.framework.Test;
@@ -37,6 +39,7 @@ import junit.framework.TestSuite;
 
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.util.FileUtil;
 
 /**
  *
@@ -51,7 +54,7 @@ public class KnimeTestRegistry {
      */
     private final String m_pattern;
 
-    private final File m_testRootDir;
+    private final Collection<File> m_testRootDirs = new ArrayList<File>();
 
     private final File m_saveRootDir;
 
@@ -63,12 +66,23 @@ public class KnimeTestRegistry {
      */
     public KnimeTestRegistry(final String testNamePattern,
             final File testRootDir, final File saveRoot) {
-        if (testRootDir == null) {
-            throw new NullPointerException("Root dir for tests can't be null");
+        this(testNamePattern, Collections.singleton(testRootDir), saveRoot);
+    }
+
+    /**
+     * Constructor. Isn't it?
+     *
+     * @param testNamePattern the pattern test names are matched against
+     *            (regular expression). If null (or empty) all tests are run.
+     */
+    public KnimeTestRegistry(final String testNamePattern,
+            final Collection<File> testRootDirs, final File saveRoot) {
+        if (testRootDirs == null) {
+            throw new NullPointerException("Root dir for tests must not be null");
         }
-        if (!testRootDir.isDirectory() || !testRootDir.exists()) {
-            throw new IllegalArgumentException("Root dir for tests must"
-                    + " be an existing directory");
+        for (File dir : testRootDirs) {
+            if (!dir.isDirectory()) { throw new IllegalArgumentException("Root dir '" + dir
+                    + "' for tests must be an existing directory"); }
         }
 
         if ((testNamePattern != null) && (testNamePattern.length() == 0)) {
@@ -77,7 +91,7 @@ public class KnimeTestRegistry {
             m_pattern = testNamePattern;
         }
 
-        m_testRootDir = testRootDir;
+        m_testRootDirs.addAll(testRootDirs);
         String saveSubDir = "savedTestFlows_";
         Calendar now = Calendar.getInstance();
 
@@ -118,10 +132,15 @@ public class KnimeTestRegistry {
     /**
      * @param factory a factory for creating workflow tests
      * @return all registered test cases.
+     * @throws IOException if an I/O error occurs
      */
-    public Test collectTestCases(final WorkflowTestFactory factory) {
+    public Test collectTestCases(final WorkflowTestFactory factory) throws IOException {
         Collection<WorkflowTest> workflowTests = new ArrayList<WorkflowTest>();
-        searchDirectory(m_testRootDir, workflowTests, factory);
+        Collection<File> rootDirSnapshot = new ArrayList<File>(m_testRootDirs);
+        // m_testRootDirs may be changed during search for zipped workflows
+        for (File dir : rootDirSnapshot) {
+            searchDirectory(dir, workflowTests, factory);
+        }
 
         if ((m_pattern != null) && (workflowTests.size() == 0)) {
             System.out.println("Found no matching tests. "
@@ -142,10 +161,11 @@ public class KnimeTestRegistry {
      *
      * @param dir - the basedir for the search
      * @param saveRoot - the baseDir executed flows will be saved to (or null).
+     * @throws IOException if an I/O error occurs
      */
     private void searchDirectory(final File dir,
             final Collection<WorkflowTest> tests,
-            final WorkflowTestFactory factory) {
+            final WorkflowTestFactory factory) throws IOException {
         if (m_pattern == null) {
             // null pattern matches nothing!
             return;
@@ -164,19 +184,34 @@ public class KnimeTestRegistry {
                 m_logger.info("Skipping testcase '" + name + "' (doesn't match"
                         + "pattern '" + m_pattern + "').");
             }
-
         } else {
-            dir.listFiles();
-            File[] fileList = dir.listFiles(new DirectoryFilter());
-            if (fileList == null) {
+            // recursivly search directories
+            File[] dirList = dir.listFiles(directoryFilter);
+            if (dirList == null) {
                 m_logger.error("I/O error accessing '" + dir
                         + "'. Does it exist?!?");
                 return;
             }
-            for (int i = 0; i < fileList.length; i++) {
-                searchDirectory(fileList[i], tests, factory);
+            for (int i = 0; i < dirList.length; i++) {
+                searchDirectory(dirList[i], tests, factory);
             }
 
+            // check for zipped workflow(group)s
+            File[] zipList = dir.listFiles(zipFilter);
+            if (zipList == null) {
+                m_logger.error("I/O error accessing '" + dir
+                        + "'. Does it exist?!?");
+                return;
+            }
+            for (int i = 0; i < zipList.length; i++) {
+                String name = zipList[i].getName();
+                if (name.matches(m_pattern)) {
+                    File tempDir = FileUtil.createTempDir("UnzippedTestflows");
+                    m_testRootDirs.add(tempDir);
+                    FileUtil.unzip(zipList[i], tempDir);
+                    searchDirectory(tempDir, tests, factory);
+                }
+            }
         }
     }
 
@@ -188,9 +223,12 @@ public class KnimeTestRegistry {
 
         File testName = workflowDir.getParentFile();
         // path from root to current flow dir
-        String postfix =
-                testName.getAbsolutePath().substring(
-                        m_testRootDir.getAbsolutePath().length());
+        String postfix = "";
+        for (File dir : m_testRootDirs) {
+            if (testName.getAbsolutePath().contains(dir.getAbsolutePath())) {
+                postfix = testName.getAbsolutePath().substring(dir.getAbsolutePath().length());
+            }
+        }
         if (postfix.isEmpty()) {
             // seems the test was in the testRoot dir
             postfix = testName.getName();
@@ -200,7 +238,7 @@ public class KnimeTestRegistry {
 
     }
 
-    private class DirectoryFilter implements FileFilter {
+    private static final FileFilter directoryFilter =  new FileFilter() {
         /**
          * {@inheritDoc}
          */
@@ -208,5 +246,15 @@ public class KnimeTestRegistry {
         public boolean accept(final File pathname) {
             return pathname.isDirectory();
         }
-    }
+    };
+
+    private static final FileFilter zipFilter =  new FileFilter() {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean accept(final File pathname) {
+            return pathname.getName().endsWith(".zip");
+        }
+    };
 }

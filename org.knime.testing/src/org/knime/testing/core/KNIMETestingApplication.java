@@ -239,8 +239,9 @@ public class KNIMETestingApplication implements IApplication {
      * Runs the tests from the repository that match the specified pattern. If
      * the pattern is null (or empty) it pops open a dialog asking the user for
      * the tests to run.
+     * @throws IOException if an I/O error occurs
      */
-    private void runRegressionTests(final String testPattern) {
+    private void runRegressionTests(final String testPattern) throws IOException {
         // override current encryption key supplier
         KnimeEncryption.setEncryptionKeySupplier(new EncryptionKeySupplier() {
             /**
