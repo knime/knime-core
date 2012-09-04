@@ -90,11 +90,11 @@ public abstract class StreamableOperator {
      *
      * @param inputs The input handles.
      * @param outputs The output handles (may contain null, see above).
-     * @param ctx The context for cancelation, progress reporting.
+     * @param exec The context for cancelation, progress reporting.
      * @throws Exception Any exception to indicate an error, cancelation.
      */
     public abstract void runFinal(final PortInput[] inputs,
-            final PortOutput[] outputs, final ExecutionContext ctx)
+            final PortOutput[] outputs, final ExecutionContext exec)
     throws Exception;
 
     /**
@@ -111,11 +111,11 @@ public abstract class StreamableOperator {
      * The default implementation is empty.
      *
      * @param inputs The input handles.
-     * @param ctx The execution context (progress/cancelation)
+     * @param exec The execution context (progress/cancelation)
      * @throws Exception Any exception to abort the calculation.
      */
     public void runIntermediate(final PortInput[] inputs,
-            final ExecutionContext ctx) throws Exception {
+            final ExecutionContext exec) throws Exception {
         // possibly overwritten
     }
 
