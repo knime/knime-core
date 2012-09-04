@@ -522,7 +522,7 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
                     m_ruleLabelEditor.setText(r.getOutcome().toString());
                     m_outcomeIsColumn.setSelected(true);
                 } else if (outcome instanceof Number) {
-                    m_ruleEditor.setText(outcome.toString());
+                    m_ruleLabelEditor.setText(outcome.toString());
                     m_outcomeIsColumn.setSelected(false);
                 } else {
                     String s = r.getOutcome().toString();
@@ -585,7 +585,13 @@ public class RuleEngineNodeDialog extends NodeDialogPane {
 
             if (!m_outcomeIsColumn.isSelected()) {
                 if (!consequent.startsWith("\"") && ! consequent.endsWith("\"")) {
-                    consequent = "\"" + consequent + "\"";
+                    try {
+                        Double.parseDouble(consequent);
+                        // a number => no need for quotes
+                    } catch (NumberFormatException ex) {
+                        // not a number => text => quote it
+                        consequent = "\"" + consequent + "\"";
+                    }
                 }
             } else if (!consequent.startsWith("$") || !consequent.endsWith("$")) {
                 m_error.setText("Column references must be enclosed in $");
