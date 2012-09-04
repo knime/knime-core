@@ -700,7 +700,7 @@ public final class FileUtil {
             if (e.isDirectory()) {
                 if (!name.isEmpty() && !name.equals("/")) {
                     File d = new File(dir, name);
-                    if (!d.mkdirs()) {
+                    if (!d.mkdirs() && !d.exists()) {
                         throw new IOException("Could not create directory '"
                                 + d.getAbsolutePath() + "'.");
                     }
