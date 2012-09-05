@@ -68,7 +68,7 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 /**
  * Adjusts the default <code>DragEditPartsTracker</code> to create commands
  * that also move bendpoints.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker {
@@ -76,7 +76,7 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
     /**
      * Constructs a new WorkflowSelectionDragEditPartsTracker with the given
      * source edit part.
-     * 
+     *
      * @param sourceEditPart the source edit part
      */
     public WorkflowSelectionDragEditPartsTracker(final EditPart sourceEditPart) {
@@ -90,10 +90,10 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
      * request type to either {@link org.eclipse.gef.RequestConstants#REQ_MOVE}
      * or {@link org.eclipse.gef.RequestConstants#REQ_ORPHAN}, depending on the
      * result of {@link #isMove()}.
-     * 
-     * Aditionally the method creats a command to adapt connections where both
+     *
+     * Additionally the method creates a command to adapt connections where both
      * node container are include in the drag operation.
-     * 
+     *
      * @see org.eclipse.gef.tools.AbstractTool#getCommand()
      */
     @Override
@@ -145,8 +145,12 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
         return command;
     }
 
-    // TODO: rewrite to handle also workflow ports!
-    private ConnectionContainerEditPart[] getEmbracedConnections(
+    /**
+     * Returns the connections whose source and target is contained in the argument list.
+     * @param parts list of selected nodes
+     * @return the connections whose source and target is contained in the argument list.
+     */
+    public static ConnectionContainerEditPart[] getEmbracedConnections(
             final List<EditPart> parts) {
 
         // result list
@@ -154,17 +158,16 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
                 new ArrayList<ConnectionContainerEditPart>();
 
         for (EditPart part : parts) {
-            if (part instanceof NodeContainerEditPart 
+            if (part instanceof NodeContainerEditPart
                     || part instanceof AbstractWorkflowPortBarEditPart) {
-                EditPart containerPart =
-                        (EditPart)part;
+                EditPart containerPart = part;
 
                 ConnectionContainerEditPart[] outPortConnectionParts =
                         getOutportConnections(containerPart);
 
                 // if one of the connections in-port-node is included in the
                 // selected list, the connections bendpoints must be adapted
-                for (ConnectionContainerEditPart connectionPart 
+                for (ConnectionContainerEditPart connectionPart
                             : outPortConnectionParts) {
 
                     // get the in-port-node part of the connection and check
@@ -192,7 +195,8 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
         return result.toArray(new ConnectionContainerEditPart[result.size()]);
     }
 
-    private ConnectionContainerEditPart[] getOutportConnections(
+    @SuppressWarnings("unchecked")
+    private static ConnectionContainerEditPart[] getOutportConnections(
             final EditPart containerPart) {
 
         // result list

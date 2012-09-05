@@ -52,7 +52,6 @@ package org.knime.workbench.editor2.commands;
 
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.editparts.ZoomManager;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionUIInformation;
 import org.knime.core.node.workflow.NodeID;
@@ -84,7 +83,7 @@ public class ChangeBendPointLocationCommand extends AbstractKNIMECommand {
      * @param container The connection container to change
      * @param locationShift the values (x,y) to change the location of all
      *            bendpoints
-     * @param zoomManager The zoom manager
+     * @param zoomManager The zoom manager, if null, no adaption of the shift is performed.
      */
     public ChangeBendPointLocationCommand(
             final ConnectionContainerEditPart container,
@@ -116,8 +115,6 @@ public class ChangeBendPointLocationCommand extends AbstractKNIMECommand {
      */
     @Override
     public void execute() {
-        NodeLogger.getLogger(ChangeBendPointLocationCommand.class).debug(
-                " execute change bendpoint location command...");
         changeBendpointsUIInfo(false);
     }
 
@@ -149,8 +146,9 @@ public class ChangeBendPointLocationCommand extends AbstractKNIMECommand {
 
         Point locationShift = m_locationShift.getCopy();
 
-        WorkflowEditor.adaptZoom(m_zoomManager, locationShift, false);
-
+        if (m_zoomManager != null) {
+            WorkflowEditor.adaptZoom(m_zoomManager, locationShift, false);
+        }
         int length = bendpoints.length;
         int shiftX = shiftBack ? locationShift.x * -1 : locationShift.x;
         int shiftY = shiftBack ? locationShift.y * -1 : locationShift.y;

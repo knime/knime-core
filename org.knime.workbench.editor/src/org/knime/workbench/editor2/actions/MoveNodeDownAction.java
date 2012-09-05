@@ -51,26 +51,14 @@
 package org.knime.workbench.editor2.actions;
 
 import org.eclipse.draw2d.geometry.Point;
-import org.eclipse.draw2d.geometry.Rectangle;
-import org.eclipse.gef.commands.CompoundCommand;
-import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
-import org.knime.workbench.editor2.commands.ChangeAnnotationBoundsCommand;
-import org.knime.workbench.editor2.commands.ChangeNodeBoundsCommand;
-import org.knime.workbench.editor2.editparts.AnnotationEditPart;
-import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
-import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
-import org.knime.workbench.editor2.editparts.snap.SnapIconToGrid;
-import org.knime.workbench.editor2.figures.NodeContainerFigure;
 
 /**
- * Action to move the selected node(s) up a bit.
+ * Action to move the selected node(s) down a bit.
  *
  * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
  */
-public class MoveNodeDownAction extends AbstractNodeAction {
+public class MoveNodeDownAction extends MoveNodeAbstractAction {
 
     private static final int STEP = 1;
 
@@ -105,101 +93,16 @@ public class MoveNodeDownAction extends AbstractNodeAction {
      * {@inheritDoc}
      */
     @Override
-    public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/move.png");
-    }
-
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/move_dis.png");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public String getToolTipText() {
-        return "Move the selected node(s) down";
+        return "Move the selected item(s) down";
     }
 
     /**
-     * @return true if at least one node is selected
-     * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
+     * {@inheritDoc}
      */
     @Override
-    protected boolean calculateEnabled() {
-        if (getManager().isWriteProtected()) {
-            return false;
-        }
-        return getSelectedParts(NodeContainerEditPart.class).length > 0;
-
+    public Point getMoveDirection() {
+        // positive y coordinate moves down
+        return new Point(0, STEP);
     }
-
-    /**
-     *
-     * @see org.knime.workbench.editor2.actions.AbstractNodeAction
-     *      #runOnNodes(org.knime.workbench.editor2.
-     *      editparts.NodeContainerEditPart[])
-     */
-    @Override
-    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        // should be initialized from the pref page
-        int offset = STEP;
-        CompoundCommand cc = new CompoundCommand();
-        NodeContainerEditPart[] selectedNodes = getSelectedParts(NodeContainerEditPart.class);
-        AnnotationEditPart[] selectedAnnos = getSelectedParts(AnnotationEditPart.class);
-        if (selectedNodes.length < 1) {
-            return;
-        }
-
-        if (getEditor().getEditorSnapToGrid()) {
-            // adjust offset to grid size
-            if (selectedNodes.length > 1) {
-                // if we have multiple nodes, the step size is always the grid size
-                // to maintain the inner distances in the selected chunk
-                offset = getEditor().getEditorGridYOffset(offset);
-            } else {
-                // with one node we move the node onto the grid if it is off
-                NodeContainerFigure figure = (NodeContainerFigure)selectedNodes[0].getFigure();
-                Point iconOffset = SnapIconToGrid.getGridRefPointOffset(figure);
-                Point refLoc = new Point(figure.getBounds().x, figure.getBounds().y);
-                refLoc.translate(iconOffset);
-                Point gridLoc = getEditor().getNextGridLocation(refLoc);
-                if (gridLoc.y != refLoc.y) {
-                    // node is off the grid: place node on next grid line
-                    offset = gridLoc.y - refLoc.y;
-                } else {
-                    // node already on the grid: step grid size
-                    offset = getEditor().getEditorGridYOffset(offset);
-                }
-            }
-        }
-        // apply the offset to all selected nodes
-        for (NodeContainerEditPart ep : selectedNodes) {
-            NodeContainer nc = ep.getNodeContainer();
-            NodeContainerFigure figure = (NodeContainerFigure)ep.getFigure();
-            Rectangle bounds = figure.getBounds().getCopy();
-            bounds.y += offset;
-            ChangeNodeBoundsCommand cmd = new ChangeNodeBoundsCommand(nc, figure, bounds);
-            cc.add(cmd);
-        }
-        // apply to all selected annotations
-        for (AnnotationEditPart anno : selectedAnnos) {
-            if (!(anno instanceof NodeAnnotationEditPart)) {
-                // only move workflow annotations
-                Rectangle bounds = anno.getFigure().getBounds().getCopy();
-                bounds.y += offset;
-                ChangeAnnotationBoundsCommand cmd = new ChangeAnnotationBoundsCommand(getManager(), anno, bounds);
-                cc.add(cmd);
-            }
-        }
-        getCommandStack().execute(cc);
-    }
-
-
 }
