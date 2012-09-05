@@ -119,7 +119,8 @@ public class EndmodelcaseNodeModel extends NodeModel
             i++;
         }
         if (activeI < 0) {
-            throw new InvalidSettingsException("No active branch found!");
+            // tolerate zero active incoming branches (switches can be nested!)
+            return new PortObjectSpec[]{InactiveBranchPortObjectSpec.INSTANCE};
         }
         return new PortObjectSpec[]{inSpecs[activeI]};
     }
@@ -148,7 +149,8 @@ public class EndmodelcaseNodeModel extends NodeModel
             i++;
         }
         if (activeI < 0) {
-            throw new InvalidSettingsException("No active branch found!");
+            // tolerate zero active incoming branches (switches can be nested!)
+            return new PortObject[]{InactiveBranchPortObject.INSTANCE};
         }
         return new PortObject[]{inData[activeI]};
     }
