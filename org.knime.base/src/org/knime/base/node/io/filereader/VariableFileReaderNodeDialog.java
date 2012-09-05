@@ -160,6 +160,12 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
 
     private JComboBox m_delimField;
 
+    /*
+     * to determine whether the entered delimiter was applied we store the last
+     * delim (problem: we don't get focus lost events (or similar events).
+     */
+    private String m_delimApplied;
+
     private JCheckBox m_cStyleComment;
 
     private JTextField m_singleLineComment;
@@ -823,26 +829,26 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
 
         m_insideDelimChange = true;
 
-        m_frSettings.setDelimiterUserSet(true);
-
         // to avoid unnecessary re-analyzing of the file, find out if the
         // delimiter actually changed.
         String newDelim = null;
-        if (m_delimField.getSelectedIndex() > -1) {
-            newDelim =
-                    ((Delimiter)m_delimField.getSelectedItem()).getDelimiter();
+
+        Object o = m_delimField.getEditor().getItem();
+        if (o instanceof Delimiter) {
+            newDelim = ((Delimiter)o).getDelimiter();
         } else {
-            newDelim =
-                    TokenizerSettings.unescapeString((String)m_delimField
-                            .getSelectedItem());
+            newDelim = TokenizerSettings.unescapeString((String)o);
         }
-        for (Delimiter delim : m_frSettings.getAllDelimiters()) {
-            if (delim.getDelimiter().equals(newDelim)) {
-                // the entered pattern is already a delimiter. Nothing changed.
-                m_insideDelimChange = false;
-                return;
-            }
+        if (newDelim.equals(m_delimApplied)) {
+            // m_delimApplied is the delimiter stored in the settings or <none>
+            // if none is selected.
+            m_insideDelimChange = false;
+            return;
         }
+
+        m_frSettings.setDelimiterUserSet(true);
+        m_delimApplied = null; // clear it in case things go wrong
+
 
         // remove all delimiters except row delimiters
         for (Delimiter delim : m_frSettings.getAllDelimiters()) {
@@ -856,19 +862,21 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
         // now set the selected one
 
         // index 0 is the <none> placeholder
-        if (m_delimField.getSelectedIndex() != 0) {
+        if (o != DEFAULT_DELIMS[0]) {
 
             String delimStr = null;
-            if (m_delimField.getSelectedIndex() > -1) {
+            if (o instanceof Delimiter) {
                 // user selected one from the list (didn't edit a new one)
                 try {
                     // add that delimiter:
-                    Delimiter selDelim =
-                            (Delimiter)m_delimField.getSelectedItem();
+                    Delimiter selDelim = (Delimiter)o;
                     delimStr = selDelim.getDelimiter();
-                    m_frSettings.addDelimiterPattern(delimStr, selDelim
-                            .combineConsecutiveDelims(), selDelim
-                            .returnAsToken(), selDelim.includeInToken());
+                    m_frSettings
+                            .addDelimiterPattern(delimStr,
+                                    selDelim.combineConsecutiveDelims(),
+                                    selDelim.returnAsToken(),
+                                    selDelim.includeInToken());
+                    m_delimApplied = delimStr;
                 } catch (IllegalArgumentException iae) {
                     setErrorLabelText(iae.getMessage());
                     m_insideDelimChange = false;
@@ -876,13 +884,14 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
                 }
 
             } else {
-                delimStr = (String)m_delimField.getSelectedItem();
+                delimStr = (String)o;
                 delimStr = TokenizerSettings.unescapeString(delimStr);
 
                 if ((delimStr != null) && (!delimStr.equals(""))) {
                     try {
                         m_frSettings.addDelimiterPattern(delimStr, false,
                                 false, false);
+                        m_delimApplied = delimStr;
                     } catch (IllegalArgumentException iae) {
                         setErrorLabelText(iae.getMessage());
                         m_insideDelimChange = false;
@@ -902,6 +911,8 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
                 }
             }
 
+        } else {
+            m_delimApplied = DEFAULT_DELIMS[0].getDelimiter();
         }
 
         // make sure \n is always a row delimiter
@@ -928,6 +939,8 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
 
         m_delimField.setModel(new DefaultComboBoxModel(DEFAULT_DELIMS));
         // the above selects the first in the list - which is the <none>.
+        m_delimApplied = DEFAULT_DELIMS[0].getDelimiter();
+
         for (Delimiter delim : m_frSettings.getAllDelimiters()) {
             if (m_frSettings.isRowDelimiter(delim.getDelimiter())) {
                 continue;
@@ -939,6 +952,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
                 m_delimField.addItem(delim);
             }
             m_delimField.setSelectedItem(delim);
+            m_delimApplied = delim.getDelimiter();
 
         }
         m_insideLoadDelim = false;
@@ -1122,7 +1136,10 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
             m_frSettings = new VariableFileReaderNodeSettings();
         }
 
-        String loadedLocation = m_frSettings.getDataFileLocation().toString();
+        String loadedLocation = null;
+        if (m_frSettings.getDataFileLocation() != null) {
+            loadedLocation = m_frSettings.getDataFileLocation().toString();
+        }
 
         // check the specified variable
         if (stack.get(m_frSettings.getVariableName()) == null) {
@@ -1184,7 +1201,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
         /*
          * TODO: We need to synchronize the NodeSettings object
          */
-        // make sure the filename entered gets commited
+        // make sure the filename entered gets committed
         fileLocationChanged();
 
         // make sure the delimiter is committed in case user entered a new one
@@ -1259,6 +1276,20 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
         }
 
         settingsToSave.saveToConfiguration(settings);
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onCancel() {
+        // bug 1482: if an analysis is currently running stop it
+        synchronized (m_analysisRunning) {
+            if (m_analysisRunning.booleanValue()) {
+                m_analysisExecMonitor.setExecuteInterrupted();
+            }
+        }
 
     }
 
@@ -1667,6 +1698,8 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
      */
     private void setPreviewTable(final FileReaderPreviewTable table) {
 
+        final FileReaderPreviewTable oldTable = m_previewTable;
+
         // register a listener for error messages with the new table
         if (table != null) {
             table.addChangeListener(new ChangeListener() {
@@ -1679,16 +1712,22 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
             });
         }
 
-        // set the new table in the view
-        m_previewTableView.setDataTable(table);
-
-        // properly dispose of the old table
-        if (m_previewTable != null) {
-            m_previewTable.removeAllChangeListeners();
-            m_previewTable.dispose();
-        }
-
+        // set this - even before displaying it
         m_previewTable = table;
+
+        ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+            @Override
+            public void run() {
+                // set the new table in the view
+                m_previewTableView.setDataTable(table);
+
+                // properly dispose of the old table
+                if (oldTable != null) {
+                    oldTable.removeAllChangeListeners();
+                    oldTable.dispose();
+                }
+            }
+        });
 
     }
 
@@ -1764,6 +1803,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
                 .getDataFileLocation());
         newSettings.setVariableName(m_frSettings.getVariableName());
         m_frSettings = newSettings;
+        m_firstColProp = null;
         // don't load location - don't trigger analysis
         loadSettings(false);
     }
@@ -1954,4 +1994,12 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
         getPanel().repaint();
     }
 
+    @Override
+    public void onClose() {
+    	if (m_previewTable != null) {
+    	    m_previewTableView.setDataTable(null);
+    		m_previewTable.dispose();
+    		m_previewTable = null;
+    	}
+    }
 }
