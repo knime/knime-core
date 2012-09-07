@@ -751,8 +751,13 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
 
         // name of sub-directory container node/sub-workflow settings
         // all chars which are not letter or number are replaced by '_'
-        String nodeDirID = container.getName().replaceAll("[^a-zA-Z0-9 ]", "_")
-            + " (#" + idSuffix + ")";
+        String nodeDirID = container.getName().replaceAll("[^a-zA-Z0-9 ]", "_");
+        int maxLength = 12;
+        // bug fix 3576 -- long meta node names are problematic on windows file system
+        if (container instanceof WorkflowManager && nodeDirID.length() > maxLength) {
+            nodeDirID = nodeDirID.substring(0, maxLength).trim();
+        }
+        nodeDirID = nodeDirID.concat(" (#" + idSuffix + ")");
 
         // try to re-use previous node dir (might be different from calculated
         // one above in case node was renamed between releases)
