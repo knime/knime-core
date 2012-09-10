@@ -65,6 +65,7 @@ import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
+import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
@@ -1309,25 +1310,25 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
          * See also KNIME bug 2562: Enable NodeViews in test cases (disabled due
          * to java bug in SyntheticImageGenerator)
          */
-        // for (NodeContainer nodeCont : m_manager.getNodeContainers()) {
-        // for (int i = 0; i < nodeCont.getNrViews(); i++) {
-        // logger.debug("opening view nr. " + i + " for node "
-        // + nodeCont.getName());
-        // final AbstractNodeView<? extends NodeModel> view =
-        // nodeCont.getView(i);
-        // final int index = i;
-        // // store the view in order to close is after the test finishes
-        // allViews.add(view);
-        // // open it now.
-        // ViewUtils.invokeAndWaitInEDT(new Runnable() {
-        // /** {@inheritDoc} */
-        // @Override
-        // public void run() {
-        // Node.invokeOpenView(view, "View #" + index);
-        // }
-        // });
-        // }
-        // }
+        for (NodeContainer nodeCont : m_manager.getNodeContainers()) {
+            for (int i = 0; i < nodeCont.getNrViews(); i++) {
+                logger.debug("opening view nr. " + i + " for node "
+                        + nodeCont.getName());
+                final AbstractNodeView<? extends NodeModel> view =
+                        nodeCont.getView(i);
+                final int index = i;
+                // store the view in order to close is after the test finishes
+                allViews.add(view);
+                // open it now.
+                ViewUtils.invokeAndWaitInEDT(new Runnable() {
+                    /** {@inheritDoc} */
+                    @Override
+                    public void run() {
+                        Node.invokeOpenView(view, "View #" + index);
+                    }
+                });
+            }
+        }
         TimerTask timeout = new TimerTask() {
             @Override
             public void run() {
