@@ -58,6 +58,7 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -198,11 +199,15 @@ public final class NodeViewExport {
      * @since 2.6
      */
     public static JMenuItem createNewMenu(final NodeView<?> view) {
-        final Container exportComponent = view.getExportComponent();
+        // keep in Reference object to allow for GC. AWT keeps references to menu entries
+        // so the returned JMenuItem keeps a reference to the view, which can't be gc'ed
+        // see bugs 3567 and 3509
+        final WeakReference<NodeView<?>> viewRef = new WeakReference<NodeView<?>>(view);
         return createNewMenu(new ViewContainerProvider() {
             @Override
             public Container getContainer() {
-                return exportComponent;
+                NodeView<?> referent = viewRef.get();
+                return referent != null ? referent.getExportComponent() : null;
             }
         });
     }
