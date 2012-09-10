@@ -29,7 +29,8 @@ Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.6.0,4.0.0)",
  org.apache.ant;bundle-version="[1.7.1,1.9.0)",
  org.eclipse.ant.core;bundle-version="[3.2.200,4.0.0)",
  org.junit;bundle-version="[4.8.0,5.0.0)",
- org.apache.commons.lang;bundle-version="2.4.0"
+ org.apache.commons.lang;bundle-version="2.4.0",
+ org.knime.workbench.ui;bundle-version="[2.5.0,3.0.0)"
 Eclipse-RegisterBuddy: org.knime.base
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Bundle-ActivationPolicy: lazy

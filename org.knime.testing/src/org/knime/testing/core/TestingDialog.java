@@ -78,6 +78,13 @@ class TestingDialog extends JDialog {
     private final JCheckBox m_anal =
             new JCheckBox("Analyze log file after run");
 
+    private final JCheckBox m_testDialogs =
+        new JCheckBox("Test dialogs (load and save settings)");
+
+    private final JCheckBox m_testViews =
+        new JCheckBox("Test views (open all view prior to execution)");
+
+
     private final JCheckBox m_saveTests =
         new JCheckBox("Save tests after execution in runtime workspace");
 
@@ -288,6 +295,16 @@ class TestingDialog extends JDialog {
         saveBox.add(Box.createHorizontalGlue());
         analBox.add(saveBox);
 
+        Box dialogBox = Box.createHorizontalBox();
+        dialogBox.add(m_testDialogs);
+        dialogBox.add(Box.createHorizontalGlue());
+        analBox.add(dialogBox);
+
+        Box viewBox = Box.createHorizontalBox();
+        viewBox.add(m_testViews);
+        viewBox.add(Box.createHorizontalGlue());
+        analBox.add(viewBox);
+
         return analBox;
     }
 
@@ -387,6 +404,24 @@ class TestingDialog extends JDialog {
      */
     String getTestRootDir() {
         return m_testRootDir;
+    }
+
+    /**
+     * Returns if dialogs for all nodes in the workflow should be tested, i.e. load settings and save settings.
+     *
+     * @return <code>true</code> if dialogs should be tested, <code>false</code> otherwise
+     */
+    boolean getTestDialogs() {
+        return m_testDialogs.isSelected();
+    }
+
+    /**
+     * Returns if all views should be opened prior to running the workflow.
+     *
+     * @return <code>true</code> if views should be opened, <code>false</code> otherwise
+     */
+    boolean getTestViews() {
+        return m_testViews.isSelected();
     }
 
     /**

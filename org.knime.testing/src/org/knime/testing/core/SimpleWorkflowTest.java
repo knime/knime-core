@@ -217,4 +217,20 @@ public class SimpleWorkflowTest implements WorkflowTest {
     public String getName() {
         return m_knimeWorkFlow.getParentFile().getName();
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setTestDialogs(final boolean b) {
+        // not applicable for simple tests
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setTestViews(final boolean b) {
+        // not applicable for simple tests
+    }
 }

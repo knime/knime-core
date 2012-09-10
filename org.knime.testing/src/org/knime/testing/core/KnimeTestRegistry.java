@@ -46,7 +46,7 @@ import org.knime.core.util.FileUtil;
  * @author Fabian Dill, University of Konstanz
  */
 public class KnimeTestRegistry {
-    private static NodeLogger m_logger = NodeLogger
+    private static NodeLogger logger = NodeLogger
             .getLogger(KnimeTestRegistry.class);
 
     /**
@@ -58,25 +58,47 @@ public class KnimeTestRegistry {
 
     private final File m_saveRootDir;
 
+    private final boolean m_testDialogs;
+
+    private final boolean m_testViews;
+
     /**
-     * Constructor. Isn't it?
+     * Registry for all testing workflows.
      *
      * @param testNamePattern the pattern test names are matched against
-     *            (regular expression). If null (or empty) all tests are run.
+     *            (regular expression). If <code>null</code> (or empty) all
+     *            tests are run.
+     * @param testRootDir a directory that is recursively searched for workflows
+     * @param saveRoot directory where the executed workflows should be saved
+     *            to. If <code>null</code> workflows are not saved.
+     * @param testDialogs <code>true</code> if dialogs should be tested, too,
+     *            <code>false</code> otherwise
+     * @param testViews <code>true</code> if all views should be opended prior
+     *            to running the workflow, <code>false</code> otherwise
      */
     public KnimeTestRegistry(final String testNamePattern,
-            final File testRootDir, final File saveRoot) {
-        this(testNamePattern, Collections.singleton(testRootDir), saveRoot);
+            final File testRootDir, final File saveRoot, final boolean testDialogs, final boolean testViews) {
+        this(testNamePattern, Collections.singleton(testRootDir), saveRoot, testDialogs, testViews);
     }
 
     /**
-     * Constructor. Isn't it?
+     * Registry for all testing workflows.
      *
      * @param testNamePattern the pattern test names are matched against
-     *            (regular expression). If null (or empty) all tests are run.
+     *            (regular expression). If <code>null</code> (or empty) all
+     *            tests are run.
+     * @param testRootDirs a collection of directories that are recursively
+     *            searched for workflows
+     * @param saveRoot directory where the executed workflows should be saved
+     *            to. If <code>null</code> workflows are not saved.
+     * @param testDialogs <code>true</code> if dialogs should be tested, too,
+     *            <code>false</code> otherwise
+     * @param testViews <code>true</code> if all views should be opended prior
+     *            to running the workflow, <code>false</code> otherwise
      */
     public KnimeTestRegistry(final String testNamePattern,
-            final Collection<File> testRootDirs, final File saveRoot) {
+            final Collection<File> testRootDirs, final File saveRoot, final boolean testDialogs,
+            final boolean testViews) {
         if (testRootDirs == null) {
             throw new NullPointerException("Root dir for tests must not be null");
         }
@@ -121,12 +143,15 @@ public class KnimeTestRegistry {
             // if specified is must be a existing dir
             if (!saveRoot.exists() || !saveRoot.isDirectory()) {
                 throw new IllegalArgumentException("Location to save workflows"
-                        + " must be na existing directory");
+                        + " must be an existing directory");
             }
             m_saveRootDir = new File(saveRoot, saveSubDir);
         } else {
             m_saveRootDir = null;
         }
+
+        m_testDialogs = testDialogs;
+        m_testViews = testViews;
     }
 
     /**
@@ -149,7 +174,7 @@ public class KnimeTestRegistry {
 
         TestSuite suite = new TestSuite();
         for (WorkflowTest test : workflowTests) {
-            m_logger.debug("adding: " + test.getName());
+            logger.debug("adding: " + test.getName());
             suite.addTest(test);
         }
         return suite;
@@ -179,16 +204,18 @@ public class KnimeTestRegistry {
                 File saveLoc = createSaveLocation(workflowFile);
                 WorkflowTest testCase =
                         factory.createTestcase(workflowFile, saveLoc);
+                testCase.setTestDialogs(m_testDialogs);
+                testCase.setTestViews(m_testViews);
                 tests.add(testCase);
             } else {
-                m_logger.info("Skipping testcase '" + name + "' (doesn't match"
+                logger.info("Skipping testcase '" + name + "' (doesn't match"
                         + "pattern '" + m_pattern + "').");
             }
         } else {
             // recursivly search directories
             File[] dirList = dir.listFiles(directoryFilter);
             if (dirList == null) {
-                m_logger.error("I/O error accessing '" + dir
+                logger.error("I/O error accessing '" + dir
                         + "'. Does it exist?!?");
                 return;
             }
@@ -199,7 +226,7 @@ public class KnimeTestRegistry {
             // check for zipped workflow(group)s
             File[] zipList = dir.listFiles(zipFilter);
             if (zipList == null) {
-                m_logger.error("I/O error accessing '" + dir
+                logger.error("I/O error accessing '" + dir
                         + "'. Does it exist?!?");
                 return;
             }

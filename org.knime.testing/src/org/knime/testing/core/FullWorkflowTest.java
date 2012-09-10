@@ -62,6 +62,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
+import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
@@ -76,6 +77,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.KNIMETimer;
+import org.knime.core.util.Pointer;
 import org.knime.testing.node.config.TestConfigNodeModel;
 import org.knime.testing.node.config.TestConfigSettings;
 
@@ -396,6 +398,10 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
 
     // if not null, the executed workflow si saved here.
     private final File m_saveLoc;
+
+    private boolean m_testDialogs;
+
+    private boolean m_testViews;
 
     /**
      *
@@ -1296,13 +1302,21 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
     }
 
     @Override
-    public void runTest() {
+    public void runTest() throws Throwable {
+        final Pointer<Throwable> uncaughtException = new Pointer<Throwable>();
+
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(final Thread t, final Throwable e) {
+                uncaughtException.set(e);
+            }
+        });
+
         final Set<AbstractNodeView<? extends NodeModel>> allViews =
                 new HashSet<AbstractNodeView<? extends NodeModel>>();
 
         /*
-         * disabling node views to workaround problems with
-         * SyntheticImageGenerator:
+         * Opening views can be problematic, see
          * http://bugs.sun.com/bugdatabase/view_bug.do;jsessionid
          * =d544ef8157d74565d9f7aee881430?bug_id=6967484
          * http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6419354
@@ -1310,23 +1324,25 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
          * See also KNIME bug 2562: Enable NodeViews in test cases (disabled due
          * to java bug in SyntheticImageGenerator)
          */
-        for (NodeContainer nodeCont : m_manager.getNodeContainers()) {
-            for (int i = 0; i < nodeCont.getNrViews(); i++) {
-                logger.debug("opening view nr. " + i + " for node "
-                        + nodeCont.getName());
-                final AbstractNodeView<? extends NodeModel> view =
-                        nodeCont.getView(i);
-                final int index = i;
-                // store the view in order to close is after the test finishes
-                allViews.add(view);
-                // open it now.
-                ViewUtils.invokeAndWaitInEDT(new Runnable() {
-                    /** {@inheritDoc} */
-                    @Override
-                    public void run() {
-                        Node.invokeOpenView(view, "View #" + index);
-                    }
-                });
+        if (m_testViews) {
+            for (NodeContainer nodeCont : m_manager.getNodeContainers()) {
+                for (int i = 0; i < nodeCont.getNrViews(); i++) {
+                    logger.debug("opening view nr. " + i + " for node "
+                            + nodeCont.getName());
+                    final AbstractNodeView<? extends NodeModel> view =
+                            nodeCont.getView(i);
+                    final int index = i;
+                    // store the view in order to close is after the test finishes
+                    allViews.add(view);
+                    // open it now.
+                    ViewUtils.invokeAndWaitInEDT(new Runnable() {
+                        /** {@inheritDoc} */
+                        @Override
+                        public void run() {
+                            Node.invokeOpenView(view, "View #" + index);
+                        }
+                    });
+                }
             }
         }
         TimerTask timeout = new TimerTask() {
@@ -1400,8 +1416,24 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                         + (msg == null ? "<no details>" : msg), t);
                 throw t;
             }
-        } catch (Throwable t) {
-            // message was printed already
+
+            // Test dialogs (load settings & save settings)
+            try {
+                if (m_testDialogs) {
+                    for (NodeContainer nodeCont : m_manager.getNodeContainers()) {
+                        NodeDialogPane dlg = nodeCont.getDialogPaneWithSettings();
+                        NodeSettings settings = new NodeSettings("bla");
+                        dlg.finishEditingAndSaveSettingsTo(settings);
+                        dlg.callOnClose();
+                    }
+                }
+            } catch (Throwable t) {
+                String msg = t.getMessage();
+                logger.error("Caught a " + t.getClass().getSimpleName()
+                        + " during dialog tests:"
+                        + (msg == null ? "<no details>" : msg), t);
+                throw t;
+            }
         } finally {
             timeout.cancel();
 
@@ -1411,6 +1443,10 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
             }
 
             wrapUp();
+            Thread.setDefaultUncaughtExceptionHandler(null);
+            if (uncaughtException.get() != null) {
+                throw uncaughtException.get();
+            }
         }
     }
 
@@ -1574,5 +1610,25 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                     + m_knimeWorkFlow.getParentFile().getName()
                     + "' ----------------------------------------------------");
         }
+    }
+
+    /**
+     * Sets if dialogs for all nodes in the workflow should be tested, i.e. load settings and save settings.
+     *
+     * @param b <code>true</code> if dialogs should be tested, <code>false</code> otherwise
+     */
+    @Override
+    public void setTestDialogs(final boolean b) {
+        m_testDialogs = b;
+    }
+
+    /**
+     * Sets if all views should be opened prior to running the workflow.
+     *
+     * @param b <code>true</code> if views should be opened, <code>false</code> otherwise
+     */
+    @Override
+    public void setTestViews(final boolean b) {
+        m_testViews = b;
     }
 }
