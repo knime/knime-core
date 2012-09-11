@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Workbench Flow-Editor
 Bundle-SymbolicName: org.knime.workbench.editor;singleton:=true
-Bundle-Version: 2.6.1.qualifier
+Bundle-Version: 2.6.2.qualifier
 Bundle-Activator: org.knime.workbench.KNIMEEditorPlugin
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: org.knime.workbench,
@@ -18,19 +18,32 @@ Export-Package: org.knime.workbench,
  org.knime.workbench.editor2.figures,
  org.knime.workbench.editor2.meta,
  org.knime.workbench.editor2.model
-Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.6.0,4.0.0)",
- org.eclipse.core.filesystem;bundle-version="[1.3.1,2.0.0)",
- org.eclipse.draw2d;bundle-version="[3.6.1,4.0.0)",
- org.eclipse.gef;bundle-version="[3.6.1,4.0.0)",
- org.eclipse.ui.ide;bundle-version="[3.6.1,4.0.0)",
- org.eclipse.ui.views;bundle-version="[3.5.0,4.0.0)",
- org.knime.workbench.core;bundle-version="[2.5.0,3.0.0)",
- org.knime.workbench.repository;bundle-version="[2.5.0,3.0.0)",
- org.knime.workbench.ui;bundle-version="[2.5.0,3.0.0)",
- org.knime.base;bundle-version="[2.5.0,3.0.0)",
- org.knime.workbench.help;bundle-version="[2.5.0,3.0.0)",
- org.eclipse.core.resources;bundle-version="[3.6.0,4.0.0)",
- org.knime.workbench.explorer.view;bundle-version="[3.0.0,4.0.0)"
+Require-Bundle: org.eclipse.core.runtime;bundle-version="[3.6.0,
+ 4.0.0)",
+ org.eclipse.core.filesystem;bundle-version="[1.3.1,
+ 2.0.0)",
+ org.eclipse.draw2d;bundle-version="[3.6.1,
+ 4.0.0)",
+ org.eclipse.gef;bundle-version="[3.6.1,
+ 4.0.0)",
+ org.eclipse.ui.ide;bundle-version="[3.6.1,
+ 4.0.0)",
+ org.eclipse.ui.views;bundle-version="[3.5.0,
+ 4.0.0)",
+ org.knime.workbench.core;bundle-version="[2.5.0,
+ 3.0.0)",
+ org.knime.workbench.repository;bundle-version="[2.5.0,
+ 3.0.0)",
+ org.knime.workbench.ui;bundle-version="[2.5.0,
+ 3.0.0)",
+ org.knime.base;bundle-version="[2.5.0,
+ 3.0.0)",
+ org.knime.workbench.help;bundle-version="[2.5.0,
+ 3.0.0)",
+ org.eclipse.core.resources;bundle-version="[3.6.0,
+ 4.0.0)",
+ org.knime.workbench.explorer.view;bundle-version="[3.0.0,
+ 4.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
 Eclipse-RegisterBuddy: org.knime.base
 Bundle-ActivationPolicy: lazy

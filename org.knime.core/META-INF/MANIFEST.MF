@@ -2,15 +2,14 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Core API
 Bundle-SymbolicName: org.knime.core;singleton:=true
-Bundle-Version: 2.6.1.qualifier
+Bundle-Version: 2.6.2.qualifier
 Bundle-ClassPath: knime-core.jar,
  lib/saxon-he-9.2.0.5.jar,
  lib/stax-1.2.0.jar,
  lib/schemas.jar
 Bundle-Activator: org.knime.core.internal.CorePlugin
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Export-Package: 
- log4j,
+Export-Package: log4j,
  org.knime.core,
  org.knime.core.data,
  org.knime.core.data.collection,
@@ -94,16 +93,26 @@ Export-Package:
  schemaorg_apache_xmlbeans.modelgroup.http_3A_2F_2Fwww_2Edmg_2Eorg_2FPMML_2D4_5F0,
  schemaorg_apache_xmlbeans.system.s3B82E2FB9AF537F6FF8B321C34E0C68C,
  schemaorg_apache_xmlbeans.system.s401A87426FAA35C4072086675CF0C468
-Require-Bundle: org.eclipse.osgi;bundle-version="[3.6.0,4.0.0)";visibility:=reexport,
- org.eclipse.core.runtime;bundle-version="[3.6.0,4.0.0)";resolution:=optional;visibility:=reexport,
- org.apache.log4j;bundle-version="[1.2.15,1.3.0)",
- org.eclipse.core.resources;bundle-version="[3.6.0,4.0.0)";resolution:=optional,
- org.knime.core.util;bundle-version="[2.5.0,5.0.0)";visibility:=reexport,
- org.eclipse.ecf.filetransfer;bundle-version="[4.0.0,6.0.0)";resolution:=optional,
- org.apache.xerces;bundle-version="[2.9.0,3.0.0)",
- org.apache.xalan;bundle-version="[2.7.1,2.8.0)",
- org.knime.core.pmml;bundle-version="[2.5.0,3.0.0)";visibility:=reexport,
- org.apache.commons.httpclient;bundle-version="[3.1.0,3.2.0)"
+Require-Bundle: org.eclipse.osgi;bundle-version="[3.6.0,
+ 4.0.0)";visibility:=reexport,
+ org.eclipse.core.runtime;bundle-version="[3.6.0,
+ 4.0.0)";resolution:=optional;visibility:=reexport,
+ org.apache.log4j;bundle-version="[1.2.15,
+ 1.3.0)",
+ org.eclipse.core.resources;bundle-version="[3.6.0,
+ 4.0.0)";resolution:=optional,
+ org.knime.core.util;bundle-version="[2.5.0,
+ 5.0.0)";visibility:=reexport,
+ org.eclipse.ecf.filetransfer;bundle-version="[4.0.0,
+ 6.0.0)";resolution:=optional,
+ org.apache.xerces;bundle-version="[2.9.0,
+ 3.0.0)",
+ org.apache.xalan;bundle-version="[2.7.1,
+ 2.8.0)",
+ org.knime.core.pmml;bundle-version="[2.5.0,
+ 3.0.0)";visibility:=reexport,
+ org.apache.commons.httpclient;bundle-version="[3.1.0,
+ 3.2.0)"
 Eclipse-RegisterBuddy: org.apache.log4j
 Eclipse-BuddyPolicy: dependent
 Bundle-ActivationPolicy: lazy

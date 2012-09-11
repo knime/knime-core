@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?pde version="3.5"?>
-
-<product name="KNIME Desktop Product" uid="org.knime.product.desktop" id="org.knime.product.KNIME_PRODUCT" application="org.knime.product.KNIME_APPLICATION" version="2.6.1.qualifier" useFeatures="true" includeLaunchers="true">
+<product name="KNIME Desktop Product" uid="org.knime.product.desktop" id="org.knime.product.KNIME_PRODUCT" application="org.knime.product.KNIME_APPLICATION" version="2.6.2.qualifier" useFeatures="true" includeLaunchers="true">
 
    <aboutInfo>
       <image path="/org.knime.product/icons/gif/knime64.gif"/>
       <text>
-         Welcome to KNIME v2.6.0
+         Welcome to KNIME v2.6.2
 the Konstanz Information Miner
-Copyright, 2003 - 2011
+Copyright, 2003 - 2012
 email: contact@knime.org
 
 This version of KNIME is licensed under the GNU General Public License, Version 3.
