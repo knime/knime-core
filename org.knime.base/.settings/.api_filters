@@ -85,6 +85,12 @@
                 <message_argument value="org.knime.base_2.6.1"/>
             </message_arguments>
         </filter>
+        <filter id="305426566">
+            <message_arguments>
+                <message_argument value="schemaorg_apache_xmlbeans.system.s3B82E2FB9AF537F6FF8B321C34E0C68C.TypeSystemHolder"/>
+                <message_argument value="org.knime.base_2.6.2"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/org/knime/base/node/io/filereader/VariableFileReaderNodeDialog.java" type="org.knime.base.node.io.filereader.VariableFileReaderNodeDialog">
         <filter id="1143996420">
