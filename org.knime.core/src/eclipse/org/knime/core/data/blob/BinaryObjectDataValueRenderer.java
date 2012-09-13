@@ -97,7 +97,7 @@ final class BinaryObjectDataValueRenderer extends DefaultDataValueRenderer {
             int i = 0;
             InputStream in = null;
             try {
-                in = bValue.getInputStream();
+                in = bValue.openInputStream();
                 while (i < l) {
                     i += in.read(bs, i, l - i);
                 }

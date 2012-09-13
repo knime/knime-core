@@ -54,6 +54,9 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.knime.core.data.DataCellDataInput;
+import org.knime.core.data.DataCellDataOutput;
+import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
 
@@ -63,12 +66,35 @@ import org.knime.core.data.filestore.FileStoreCell;
  */
 public final class BinaryObjectFileStoreDataCell extends FileStoreCell implements BinaryObjectDataValue {
 
+    public static final DataCellSerializer<BinaryObjectFileStoreDataCell> getCellSerializer() {
+        return new DataCellSerializer<BinaryObjectFileStoreDataCell>() {
+
+            /** {@inheritDoc} */
+            @Override
+            public BinaryObjectFileStoreDataCell deserialize(final DataCellDataInput input)
+                    throws IOException {
+                return new BinaryObjectFileStoreDataCell();
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public void serialize(final BinaryObjectFileStoreDataCell cell, final DataCellDataOutput output)
+                    throws IOException {
+            }
+        };
+    }
+
     /**
      *
      */
     BinaryObjectFileStoreDataCell(final FileStore fs) {
         super(fs);
 
+    }
+
+    /** Restore from disk. */
+    BinaryObjectFileStoreDataCell() {
+        super(); // deserialization constructor
     }
 
     /**
@@ -84,7 +110,7 @@ public final class BinaryObjectFileStoreDataCell extends FileStoreCell implement
      * {@inheritDoc}
      */
     @Override
-    public InputStream getInputStream() throws IOException {
+    public InputStream openInputStream() throws IOException {
         return new FileInputStream(getFileStore().getFile());
     }
 

@@ -55,6 +55,9 @@ import java.io.InputStream;
 import java.util.Arrays;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellDataInput;
+import org.knime.core.data.DataCellDataOutput;
+import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 
 /**
@@ -66,6 +69,29 @@ public final class BinaryObjectDataCell extends DataCell implements BinaryObject
     public static final DataType TYPE = DataType.getType(BinaryObjectDataCell.class);
 
     private final byte[] m_bytes;
+
+    public static final DataCellSerializer<BinaryObjectDataCell> getCellSerializer() {
+        return new DataCellSerializer<BinaryObjectDataCell>() {
+
+            /** {@inheritDoc} */
+            @Override
+            public BinaryObjectDataCell deserialize(final DataCellDataInput input)
+                    throws IOException {
+                int length = input.readInt();
+                byte[] bytes = new byte[length];
+                input.readFully(bytes);
+                return new BinaryObjectDataCell(bytes);
+            }
+
+            /** {@inheritDoc} */
+            @Override
+            public void serialize(final BinaryObjectDataCell cell, final DataCellDataOutput output)
+                    throws IOException {
+                output.writeInt(cell.m_bytes.length);
+                output.write(cell.m_bytes);
+            }
+        };
+    }
 
     /**
      *
@@ -111,7 +137,7 @@ public final class BinaryObjectDataCell extends DataCell implements BinaryObject
      * {@inheritDoc}
      */
     @Override
-    public InputStream getInputStream() throws IOException {
+    public InputStream openInputStream() throws IOException {
         return new ByteArrayInputStream(m_bytes);
     }
 

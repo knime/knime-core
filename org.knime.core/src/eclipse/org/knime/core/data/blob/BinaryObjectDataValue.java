@@ -69,7 +69,7 @@ public interface BinaryObjectDataValue extends DataValue {
 
     public long length();
 
-    public InputStream getInputStream() throws IOException;
+    public InputStream openInputStream() throws IOException;
 
     /** Implementations of the meta information of this value class. */
     public static class BinaryObjectUtilityFactory extends UtilityFactory {
