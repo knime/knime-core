@@ -67,6 +67,8 @@ import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
  */
 public interface BinaryObjectDataValue extends DataValue {
 
+    public static final UtilityFactory UTILITY = new BinaryObjectUtilityFactory();
+
     public long length();
 
     public InputStream openInputStream() throws IOException;
