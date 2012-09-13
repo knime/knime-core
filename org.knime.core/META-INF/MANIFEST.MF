@@ -13,6 +13,7 @@ Export-Package:
  log4j,
  org.knime.core,
  org.knime.core.data,
+ org.knime.core.data.blob,
  org.knime.core.data.collection,
  org.knime.core.data.container,
  org.knime.core.data.date,
