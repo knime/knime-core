@@ -60,16 +60,23 @@ import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 
-/**
+/** Cell implementation of {@link BinaryObjectDataValue} that keeps the binary content in a byte array.
  *
- * @author wiswedel
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 2.7
  */
+@SuppressWarnings("serial")
 public final class BinaryObjectDataCell extends DataCell implements BinaryObjectDataValue {
 
+    /** Type associated with this cells implementing {@link BinaryObjectDataValue}. */
     public static final DataType TYPE = DataType.getType(BinaryObjectDataCell.class);
 
     private final byte[] m_bytes;
 
+    /** Serializer as required by {@link DataCell} class.
+     * @return A serializer.
+     * @noreference This method is not intended to be referenced by clients.
+     */
     public static final DataCellSerializer<BinaryObjectDataCell> getCellSerializer() {
         return new DataCellSerializer<BinaryObjectDataCell>() {
 
@@ -93,19 +100,24 @@ public final class BinaryObjectDataCell extends DataCell implements BinaryObject
         };
     }
 
-    /**
-     *
-     */
+    /** Constructor used by factory.
+     * @param bytes Bytes to wrap.
+     * @throws NullPointerException If argument is null. */
     BinaryObjectDataCell(final byte[] bytes) {
+        if (bytes == null) {
+            throw new NullPointerException("Argument must not be null.");
+        }
         m_bytes = bytes;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public String toString() {
-        return null;
+        try {
+            return BinaryObjectCellFactory.getHexDump(openInputStream(), 1024);
+        } catch (IOException e) {
+            return "Failed rendering: " + e.getMessage();
+        }
     }
 
     /**

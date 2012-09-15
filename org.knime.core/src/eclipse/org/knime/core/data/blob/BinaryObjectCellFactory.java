@@ -50,50 +50,136 @@
 package org.knime.core.data.blob;
 
 import java.io.ByteArrayInputStream;
-import java.io.FileOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.HexDump;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.node.ExecutionContext;
-import org.knime.core.util.FileUtil;
+import org.knime.core.node.util.ConvenienceMethods;
 
 /**
+ * Factory to create {@link DataCell} objects implementing the {@link BinaryObjectDataValue} interface.
+ * There should be only one instance of this class per node execution (as files created in the workflow
+ * follow a certain naming schema.)
  *
- * @author wiswedel
+ * <p>The cells created by this factory are either instances of {@link BinaryObjectDataCell} or
+ * {@link BinaryObjectFileStoreDataCell}, depending on their size.
+ *
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 2.7
  */
 public final class BinaryObjectCellFactory {
+
+    /** System property to adjust the memory limit for "small" binary object.
+     * Default is {@value #DEFAULT_MEMORY_LIMIT} bytes. Valid values are count in bytes or values like "1M" */
+    public static final String PROPERTY_MEMORY_LIMIT = "org.knime.binaryobject.memorylimit";
+    /** Default memory limit for small cells ({@value #DEFAULT_MEMORY_LIMIT} bytes). */
+    public static final int DEFAULT_MEMORY_LIMIT = 4 * 1024; // 4kB
+
+    private static final int MEMORY_LIMIT;
+    private static final File TMP_DIR_FOLDER;
+
+    static {
+        long l = ConvenienceMethods.readSizeSystemProperty(PROPERTY_MEMORY_LIMIT, DEFAULT_MEMORY_LIMIT);
+        if (l > Integer.MAX_VALUE) {
+            MEMORY_LIMIT = DEFAULT_MEMORY_LIMIT;
+        } else {
+            MEMORY_LIMIT = (int)l;
+        }
+        TMP_DIR_FOLDER = new File(System.getProperty("java.io.tmpdir"));
+    }
 
     private final ExecutionContext m_exec;
     private int m_fileNameIndex;
 
-    /**
-     *
+    /** Create new cell factory based on a node's execution context. The argument object is used to
+     * create an extension of {@link org.knime.core.data.filestore.FileStoreCell} that is used to keep the data
+     * for large binary objects.
+     * @param exec The execution context used to create file store cells
+     * (using {@link ExecutionContext#createFileStore(String)}.
      */
     public BinaryObjectCellFactory(final ExecutionContext exec) {
+        if (exec == null) {
+            throw new NullPointerException("Argument must not be null.");
+        }
         m_exec = exec;
         m_fileNameIndex = 0;
     }
 
+    /** Creates a new cell given a byte array.
+     * @param bytes The byte array to wrap. Argument must not be null and must not be changed
+     * after the call (data is not copied).
+     * @return A new data cell wrapping the byte array content.
+     * @throws IOException In case of IO problems when large byte arrays are written to a file store.
+     * @throws NullPointerException If argument is null
+     */
     public DataCell create(final byte[] bytes) throws IOException {
-        if (bytes.length < 4 * 1024) {
+        if (bytes.length < MEMORY_LIMIT) {
             return new BinaryObjectDataCell(bytes);
         }
         return create(new ByteArrayInputStream(bytes));
     }
 
+    /** Creates cell given by reading from an input stream. The stream will be closed by this method.
+     * @param input To read from.
+     * @return A cell with a copy of the byte content.
+     * @throws IOException If that fails (stream not readable, file store not writable, close problems, ...)
+     * @throws NullPointerException If argument is null.
+     */
     public DataCell create(final InputStream input) throws IOException {
-        FileStore fs;
-        synchronized (this) {
-            fs = m_exec.createFileStore("binaryObject-" + m_fileNameIndex++);
-        }
-        OutputStream output = new FileOutputStream(fs.getFile());
-        FileUtil.copy(input, output);
+        String uniqueFileName = "knime-binary-copy-";
+        String suffix = ".bin";
+        DeferredFileOutputStream outStream = new DeferredFileOutputStream(
+            MEMORY_LIMIT, uniqueFileName, suffix, TMP_DIR_FOLDER);
+        IOUtils.copy(input, outStream);
         input.close();
-        output.close();
-        return new BinaryObjectFileStoreDataCell(fs);
+        outStream.close();
+        if (outStream.isInMemory()) {
+            return new BinaryObjectDataCell(outStream.getData());
+        } else {
+            FileStore fs;
+            synchronized (this) {
+                fs = m_exec.createFileStore("binaryObject-" + m_fileNameIndex++);
+            }
+            File f = outStream.getFile();
+            assert f.exists() : "File " + f.getAbsolutePath() + " not created by file output stream";
+            FileUtils.moveFile(f, fs.getFile());
+            return new BinaryObjectFileStoreDataCell(fs);
+        }
     }
+
+    /** Utility method to get a hex dump of a binary input stream. Used in the value renderer.
+     * @param in The input stream to read from (close will be called!)
+     * @param length The maximum length to read (e.g. 1024 * 1024 * 1024 for a MB)
+     * @return The hex dump, possible with a new line that the dump is truncated
+     * @throws IOException If reading the stream fails.
+     */
+    public static String getHexDump(final InputStream in, final int length) throws IOException {
+        byte[] bs = new byte[length];
+        int i = 0;
+        while (i < length) {
+            int read = in.read(bs, i, length - i);
+            if (read < 0) {
+                break;
+            }
+            i += read;
+        }
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        HexDump.dump(bs, 0, out, 0);
+        String s = new String(out.toByteArray());
+        if (in.read() >= 0) {
+            s = s.concat("...");
+        }
+        in.close();
+        return s;
+    }
+
 
 }

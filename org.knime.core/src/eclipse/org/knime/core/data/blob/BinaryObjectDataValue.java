@@ -61,39 +61,41 @@ import org.knime.core.data.StringValue;
 import org.knime.core.data.renderer.DataValueRendererFamily;
 import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
 
-/**
+/** Implemented by cell elements that are binary objects (BLOB).
  *
- * @author wiswedel
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 2.7
  */
 public interface BinaryObjectDataValue extends DataValue {
 
+    /** Meta information to type. */
     public static final UtilityFactory UTILITY = new BinaryObjectUtilityFactory();
 
+    /** Length in bytes of the binary object. It's only a hint on how many bytes are returned by the
+     * {@link #openInputStream()} method.
+     * @return The number of bytes in the stream.
+     */
     public long length();
 
+    /** Opens a new input stream on the byte content.
+     * @return A new input stream on the byte content, not null.
+     * @throws IOException If that fails for whatever I/O problems.
+     */
     public InputStream openInputStream() throws IOException;
 
     /** Implementations of the meta information of this value class. */
-    public static class BinaryObjectUtilityFactory extends UtilityFactory {
+    static final class BinaryObjectUtilityFactory extends UtilityFactory {
         /** Singleton icon to be used to display this cell type. */
         private static final Icon ICON =
-            loadIcon(StringValue.class, "/icon/stringicon.png");
+            loadIcon(StringValue.class, "/icon/binaryobjecticon.png");
 
-        /** Only subclasses are allowed to instantiate this class. */
-        protected BinaryObjectUtilityFactory() {
-        }
-
-        /**
-         * {@inheritDoc}
-         */
+        /** {@inheritDoc} */
         @Override
         public Icon getIcon() {
             return ICON;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        /** {@inheritDoc} */
         @Override
         protected DataValueComparator getComparator() {
             return new DataValueComparator() {
@@ -109,13 +111,14 @@ public interface BinaryObjectDataValue extends DataValue {
             };
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        /** {@inheritDoc} */
         @Override
         protected DataValueRendererFamily getRendererFamily(
                 final DataColumnSpec spec) {
-            return new DefaultDataValueRendererFamily(new BinaryObjectDataValueRenderer(-1));
+            return new DefaultDataValueRendererFamily(
+                new BinaryObjectDataValueRenderer(128, "Hex Dump (short)"),     // 128 bytes
+                new BinaryObjectDataValueRenderer(8 * 1024, "Hex Dump (long)"), // 8 kB
+                new BinaryObjectDataValueMetaRenderer("Blob information"));
         }
 
     }

@@ -60,12 +60,18 @@ import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
 
-/**
+/** Cell implementation of {@link BinaryObjectDataValue} that keeps the binary content in a KNIME file store object.
  *
- * @author wiswedel
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 2.7
  */
+@SuppressWarnings("serial")
 public final class BinaryObjectFileStoreDataCell extends FileStoreCell implements BinaryObjectDataValue {
 
+    /** Serializer as required by framework.
+     * @return New serializer
+     * @noreference This method is not intended to be referenced by clients.
+     */
     public static final DataCellSerializer<BinaryObjectFileStoreDataCell> getCellSerializer() {
         return new DataCellSerializer<BinaryObjectFileStoreDataCell>() {
 
@@ -84,8 +90,8 @@ public final class BinaryObjectFileStoreDataCell extends FileStoreCell implement
         };
     }
 
-    /**
-     *
+    /** Create new object based on file store with exiting file.
+     * @param fs The file store object with the file to represent.
      */
     BinaryObjectFileStoreDataCell(final FileStore fs) {
         super(fs);
@@ -97,21 +103,33 @@ public final class BinaryObjectFileStoreDataCell extends FileStoreCell implement
         super(); // deserialization constructor
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public long length() {
         File file = getFileStore().getFile();
         return file.length(); // may be 0L if file does not exist
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        try {
+            return BinaryObjectCellFactory.getHexDump(openInputStream(), 1024);
+        } catch (IOException e) {
+            return "Failed rendering: " + e.getMessage();
+        }
+    }
+
+    /** {@inheritDoc} */
     @Override
     public InputStream openInputStream() throws IOException {
         return new FileInputStream(getFileStore().getFile());
     }
 
+    /** Get file name path (shown in renderer).
+     * @return file name path.
+     */
+    String getFilePath() {
+        return getFileStore().getFile().getAbsolutePath();
+    }
 }
