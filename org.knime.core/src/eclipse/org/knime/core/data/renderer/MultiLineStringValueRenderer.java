@@ -64,8 +64,6 @@ public class MultiLineStringValueRenderer extends
 
     private Font m_currentFont;
 
-    private final String m_description;
-
     private static final int MAX_DEFAULT_HEIGHT = 90;
 
     /**
@@ -87,7 +85,7 @@ public class MultiLineStringValueRenderer extends
      * @since 2.7
      */
     public MultiLineStringValueRenderer(final String description, final boolean monoSpaceFont) {
-        m_description = description == null ? "Multi Line String" : description;
+        super(description == null ? "Multi Line String" : description);
         setVerticalAlignment(SwingConstants.TOP);
         m_currentFont =
             new Font("Monospaced", getFont().getStyle(), getFont().getSize());
@@ -120,14 +118,6 @@ public class MultiLineStringValueRenderer extends
      * {@inheritDoc}
      */
     @Override
-    public String getDescription() {
-        return m_description;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public Dimension getPreferredSize() {
         Dimension dim = super.getPreferredSize();
 
@@ -149,7 +139,7 @@ public class MultiLineStringValueRenderer extends
             super.setFont(m_currentFont);
         } else if (font.equals(m_currentFont)) {
             return;
-        } else if (m_monoSpaceFont){
+        } else if (m_monoSpaceFont) {
             m_currentFont =
                     new Font("Monospaced", font.getStyle(), font.getSize());
             super.setFont(m_currentFont);
@@ -165,7 +155,7 @@ public class MultiLineStringValueRenderer extends
      */
     @Override
     public int hashCode() {
-        return getClass().hashCode() ^ m_description.hashCode();
+        return getClass().hashCode() ^ getDescription().hashCode();
     }
 
     /**
@@ -181,6 +171,6 @@ public class MultiLineStringValueRenderer extends
         }
         MultiLineStringValueRenderer other = (MultiLineStringValueRenderer)obj;
         return other.getClass().equals(getClass())
-            && m_description.equals(other.m_description);
+            && getDescription().equals(other.getDescription());
     }
 }

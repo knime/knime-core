@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.core.data.renderer;
 
@@ -58,51 +58,75 @@ import org.knime.core.data.DataColumnSpec;
 
 
 /**
- * Default implementation for a renderer for 
+ * Default implementation for a renderer for
  * {@link org.knime.core.data.DataValue} objects. This class should be used
  * (better: derived from) when the rendering is only a string representation
  * of the <code>DataValue</code> object. It's recommended to derive this class
  * and overwrite the {@link DefaultTableCellRenderer#setValue(Object)} and
- * the {@link #getDescription()} methods. A correct implementation of 
- * <code>setValue(Object)</code> will test if the argument object is of the 
- * expected <code>DataValue</code> class and call 
+ * the {@link #getDescription()} methods. A correct implementation of
+ * <code>setValue(Object)</code> will test if the argument object is of the
+ * expected <code>DataValue</code> class and call
  * <code>super.setValue(Object)</code> with the desired string representation.
- *   
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class DefaultDataValueRenderer 
+public class DefaultDataValueRenderer
     extends DefaultTableCellRenderer implements DataValueRenderer {
-    
+
     /** The spec to the column for which this renderer is being used. */
     private final DataColumnSpec m_colSpec;
-    
-    /** Creates new instance given a null column spec. */
+    /** Returned in {@link #getDescription()}, not null. */
+    private final String m_description;
+
+    /** Creates new instance given a null column spec. and a default description. */
     public DefaultDataValueRenderer() {
-        this(null);
+        this((String)null);
     }
-    
+
+    /** Creates instance with null column spec and the given description.
+     * @param description The value returned in {@link #getDescription()} (if null a default is used).
+     * @since 2.7
+     */
+    public DefaultDataValueRenderer(final String description) {
+        this(null, description);
+    }
+
     /**
      * Creates new renderer and memorizes the column spec. The argument may
      * be, however, null.
-     * @param spec The column spec of the column for which this renderer is 
-     * used. 
+     * @param spec The column spec of the column for which this renderer is
+     * used.
      */
     public DefaultDataValueRenderer(final DataColumnSpec spec) {
+        this(spec, null);
+    }
+
+    /** Create new instance with given arguments. Both arguments may be null.
+     * Creates new renderer and keeps the column spec.
+     * @param spec The column spec of the column for which this renderer is
+     * used.
+     * @param description The description shown in {@link #getDescription()} (if null a default is used).
+     * @since 2.7
+     */
+    public DefaultDataValueRenderer(final DataColumnSpec spec, final String description) {
         m_colSpec = spec;
+        m_description = description == null ? "Default" : description;
     }
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getDescription() {
-        return "Default";
+        return m_description;
     }
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public Component getListCellRendererComponent(
-            final JList list, final Object value, final int index, 
+            final JList list, final Object value, final int index,
             final boolean isSelected, final boolean cellHasFocus) {
         /* Copied almost all code from DefaultListCellRenderer */
         setComponentOrientation(list.getComponentOrientation());
@@ -117,20 +141,21 @@ public class DefaultDataValueRenderer
         setValue(value);
         setEnabled(list.isEnabled());
         setFont(list.getFont());
-        setBorder((cellHasFocus) 
-                ? UIManager.getBorder("List.focusCellHighlightBorder") 
+        setBorder((cellHasFocus)
+                ? UIManager.getBorder("List.focusCellHighlightBorder")
                 : noFocusBorder);
         return this;
     }
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public Component getRendererComponent(final Object val) {
         setValue(val);
         return this;
     }
-    
+
     /**
      * Get reference to the constructor's argument. The return value may be
      * null (in particular if the empty constructor has been used).
@@ -144,8 +169,9 @@ public class DefaultDataValueRenderer
      * Returns always <code>true</code>.
      * {@inheritDoc}
      */
+    @Override
     public boolean accepts(final DataColumnSpec spec) {
         return true;
     }
-    
+
 }
