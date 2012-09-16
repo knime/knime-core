@@ -275,8 +275,9 @@ public final class SingleNodeContainer extends NodeContainer {
      * ExecutionContext when the derived NodeModel is executing.
      *
      * @return The memory policy to use.
+     * @noreference This method is not intended to be referenced by clients.
      */
-    final MemoryPolicy getOutDataMemoryPolicy() {
+    public final MemoryPolicy getOutDataMemoryPolicy() {
         return m_settings.getMemoryPolicy();
     }
 
