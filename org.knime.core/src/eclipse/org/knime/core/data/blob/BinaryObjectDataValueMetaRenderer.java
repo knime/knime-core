@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2012
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -43,79 +43,48 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
- * History
- *   07.07.2005 (mb): created
+ * Created on Sep 14, 2012 by wiswedel
  */
-package org.knime.core.data;
+package org.knime.core.data.blob;
 
-import javax.swing.Icon;
+import org.apache.commons.io.FileUtils;
+import org.knime.core.data.renderer.DefaultDataValueRenderer;
 
-import org.knime.core.data.renderer.DataValueRendererFamily;
-import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
-import org.knime.core.data.renderer.MultiLineStringValueRenderer;
-import org.knime.core.data.renderer.StringValueRenderer;
-
-
-/**
- * Interface of a {@link org.knime.core.data.def.StringCell}, forces method to
- * return string value.
+/** Shows size of {@link BinaryObjectDataValue}. For instance:
+ * 11MB (12383389 bytes) -- /tmp/knime_fs-Files_to_Binary_Objects-12349183/000/000/binaryObject-0
  *
- * @author M. Berthold, University of Konstanz
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public interface StringValue extends DataValue {
+@SuppressWarnings("serial")
+final class BinaryObjectDataValueMetaRenderer extends DefaultDataValueRenderer {
 
-    /** Meta information to this value type.
-     * @see DataValue#UTILITY
-     */
-    public static final UtilityFactory UTILITY = new StringUtilityFactory();
+    /** @param description ... forwarded to super */
+    BinaryObjectDataValueMetaRenderer(final String description) {
+        super(description);
+    }
 
-    /**
-     * @return A String value.
-     */
-    String getStringValue();
-
-    /** Implementations of the meta information of this value class. */
-    public static class StringUtilityFactory extends UtilityFactory {
-        /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON =
-            loadIcon(StringValue.class, "/icon/stringicon.png");
-
-        private static final StringValueComparator STRING_COMPARATOR =
-            new StringValueComparator();
-
-        /** Only subclasses are allowed to instantiate this class. */
-        protected StringUtilityFactory() {
+    /** {@inheritDoc} */
+    @Override
+    protected void setValue(final Object value) {
+        if (value instanceof BinaryObjectDataValue) {
+            BinaryObjectDataValue bv = (BinaryObjectDataValue)value;
+            long length = bv.length();
+            StringBuilder b = new StringBuilder();
+            b.append(FileUtils.byteCountToDisplaySize(length));
+            if (length > 1024) {
+                b.append(" (").append(length).append(" bytes)");
+            }
+            if (bv instanceof BinaryObjectDataCell) {
+                b.append(" -- in memory");
+            } else if (bv instanceof BinaryObjectFileStoreDataCell) {
+                b.append(" -- ").append(((BinaryObjectFileStoreDataCell)bv).getFilePath());
+            }
+            super.setValue(b.toString());
+        } else {
+            super.setValue("?");
         }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Icon getIcon() {
-            return ICON;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataValueComparator getComparator() {
-            return STRING_COMPARATOR;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataValueRendererFamily getRendererFamily(
-                final DataColumnSpec spec) {
-            return new DefaultDataValueRendererFamily(
-                    StringValueRenderer.INSTANCE,
-                    new MultiLineStringValueRenderer("Multi-line String", false));
-        }
-
     }
 
 }

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2012
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -43,77 +43,82 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
- * History
- *   07.07.2005 (mb): created
+ * Created on Sep 12, 2012 by wiswedel
  */
-package org.knime.core.data;
+package org.knime.core.data.blob;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 import javax.swing.Icon;
 
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.DataValueComparator;
+import org.knime.core.data.StringValue;
 import org.knime.core.data.renderer.DataValueRendererFamily;
 import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
-import org.knime.core.data.renderer.MultiLineStringValueRenderer;
-import org.knime.core.data.renderer.StringValueRenderer;
 
-
-/**
- * Interface of a {@link org.knime.core.data.def.StringCell}, forces method to
- * return string value.
+/** Implemented by cell elements that are binary objects (BLOB).
  *
- * @author M. Berthold, University of Konstanz
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 2.7
  */
-public interface StringValue extends DataValue {
+public interface BinaryObjectDataValue extends DataValue {
 
-    /** Meta information to this value type.
-     * @see DataValue#UTILITY
-     */
-    public static final UtilityFactory UTILITY = new StringUtilityFactory();
+    /** Meta information to type. */
+    public static final UtilityFactory UTILITY = new BinaryObjectUtilityFactory();
 
-    /**
-     * @return A String value.
+    /** Length in bytes of the binary object. It's only a hint on how many bytes are returned by the
+     * {@link #openInputStream()} method.
+     * @return The number of bytes in the stream.
      */
-    String getStringValue();
+    public long length();
+
+    /** Opens a new input stream on the byte content.
+     * @return A new input stream on the byte content, not null.
+     * @throws IOException If that fails for whatever I/O problems.
+     */
+    public InputStream openInputStream() throws IOException;
 
     /** Implementations of the meta information of this value class. */
-    public static class StringUtilityFactory extends UtilityFactory {
+    static final class BinaryObjectUtilityFactory extends UtilityFactory {
         /** Singleton icon to be used to display this cell type. */
         private static final Icon ICON =
-            loadIcon(StringValue.class, "/icon/stringicon.png");
+            loadIcon(StringValue.class, "/icon/binaryobjecticon.png");
 
-        private static final StringValueComparator STRING_COMPARATOR =
-            new StringValueComparator();
-
-        /** Only subclasses are allowed to instantiate this class. */
-        protected StringUtilityFactory() {
-        }
-
-        /**
-         * {@inheritDoc}
-         */
+        /** {@inheritDoc} */
         @Override
         public Icon getIcon() {
             return ICON;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        /** {@inheritDoc} */
         @Override
         protected DataValueComparator getComparator() {
-            return STRING_COMPARATOR;
+            return new DataValueComparator() {
+
+                @Override
+                protected int compareDataValues(final DataValue v1, final DataValue v2) {
+                    BinaryObjectDataValue b1 = (BinaryObjectDataValue)v1;
+                    BinaryObjectDataValue b2 = (BinaryObjectDataValue)v2;
+                    long b1Length = b1.length();
+                    long b2Length = b2.length();
+                    return b1Length < b2Length ? -1 : (b1Length == b2Length ? 0 : 1);
+                }
+            };
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        /** {@inheritDoc} */
         @Override
         protected DataValueRendererFamily getRendererFamily(
                 final DataColumnSpec spec) {
             return new DefaultDataValueRendererFamily(
-                    StringValueRenderer.INSTANCE,
-                    new MultiLineStringValueRenderer("Multi-line String", false));
+                new BinaryObjectDataValueRenderer(128, "Hex Dump (short)"),     // 128 bytes
+                new BinaryObjectDataValueRenderer(8 * 1024, "Hex Dump (long)"), // 8 kB
+                new BinaryObjectDataValueMetaRenderer("Blob information"));
         }
 
     }

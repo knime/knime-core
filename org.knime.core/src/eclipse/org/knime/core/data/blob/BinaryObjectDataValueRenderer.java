@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2012
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -43,79 +43,73 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
- * History
- *   07.07.2005 (mb): created
+ * Created on Sep 13, 2012 by wiswedel
  */
-package org.knime.core.data;
+package org.knime.core.data.blob;
 
-import javax.swing.Icon;
+import java.io.IOException;
+import java.io.InputStream;
 
-import org.knime.core.data.renderer.DataValueRendererFamily;
-import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
 import org.knime.core.data.renderer.MultiLineStringValueRenderer;
-import org.knime.core.data.renderer.StringValueRenderer;
 
-
-/**
- * Interface of a {@link org.knime.core.data.def.StringCell}, forces method to
- * return string value.
+/** Displays a hex dump for binary objects. For instance:
+ * <pre>
+ * 00000000 1F 8B 08 00 00 00 00 00 00 03 EC BD 6B 73 DB B6 ............ks..
+ * 00000010 D6 C7 FB BE 9F 42 2F CE 0B 69 B6 A9 10 77 70 E6 .....B/..i...wp.
+ * 00000020 EC 3D 0F 45 CB 96 1C 5B 8A ED DC 9C 4C A7 93 3A .=.E...[....L..:
+ * 00000030 D9 B6 1B 27 4E 93 F4 24 EE A7 3F 04 78 27 17 24 ...'N..$..?.x'.$
+ * 00000040 12 40 D2 EC 56 7D DA 67 33 8C B4 08 80 17 11 BF .@..V}.g3.......
+ * 00000050 F5 C7 7F 21 2A 58 18 A2 9F 46 A3 60 3D 4F AE DF ...!*X...F.`=O..
+ * 00000060 BC 0B 10 46 12 85 A1 C0 21 DE FF E9 A7 11 41 23 ...F....!.....A#
+ * 00000070 82 47 A3 70 A4 FE 09 5B FF 46 51 34 7A 8A C3 30 .G.p...[.FQ4z..0
+ * ...
+ * </pre>
  *
- * @author M. Berthold, University of Konstanz
+ * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public interface StringValue extends DataValue {
+@SuppressWarnings("serial")
+final class BinaryObjectDataValueRenderer extends MultiLineStringValueRenderer {
 
-    /** Meta information to this value type.
-     * @see DataValue#UTILITY
+    private final int m_length;
+
+    /** Create new instance.
+     * @param lengthToShow Number bytes to show.
+     * @param description ...
      */
-    public static final UtilityFactory UTILITY = new StringUtilityFactory();
-
-    /**
-     * @return A String value.
-     */
-    String getStringValue();
-
-    /** Implementations of the meta information of this value class. */
-    public static class StringUtilityFactory extends UtilityFactory {
-        /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON =
-            loadIcon(StringValue.class, "/icon/stringicon.png");
-
-        private static final StringValueComparator STRING_COMPARATOR =
-            new StringValueComparator();
-
-        /** Only subclasses are allowed to instantiate this class. */
-        protected StringUtilityFactory() {
+    BinaryObjectDataValueRenderer(final int lengthToShow, final String description) {
+        super(description, true);
+        if (lengthToShow <= 0) {
+            throw new IllegalArgumentException("Size <= 0: " + lengthToShow);
         }
+        m_length = lengthToShow;
+    }
 
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Icon getIcon() {
-            return ICON;
+    /** {@inheritDoc} */
+    @Override
+    protected void setValue(final Object value) {
+        if (value instanceof BinaryObjectDataValue) {
+            BinaryObjectDataValue bValue = (BinaryObjectDataValue)value;
+            InputStream in = null;
+            try {
+                in = bValue.openInputStream();
+                String s = BinaryObjectCellFactory.getHexDump(in, m_length);
+                super.setValue(s);
+            } catch (Exception e) {
+                super.setText(String.format("<Unable to read bytes: \"%s\">", e.getMessage()));
+            } finally {
+                if (in != null) {
+                    try {
+                        in.close();
+                    } catch (IOException e) {
+                        // ignore;
+                    }
+                }
+            }
+        } else {
+            super.setValue("?");
         }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataValueComparator getComparator() {
-            return STRING_COMPARATOR;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        protected DataValueRendererFamily getRendererFamily(
-                final DataColumnSpec spec) {
-            return new DefaultDataValueRendererFamily(
-                    StringValueRenderer.INSTANCE,
-                    new MultiLineStringValueRenderer("Multi-line String", false));
-        }
-
     }
 
 }

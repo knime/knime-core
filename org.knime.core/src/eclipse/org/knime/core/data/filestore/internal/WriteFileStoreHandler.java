@@ -125,8 +125,10 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
     /** {@inheritDoc} */
     @Override
     public void clearAndDispose() {
-        m_fileStoreHandlerRepository.removeFileStoreHandler(this);
-        m_fileStoreHandlerRepository = null;
+        if (m_fileStoreHandlerRepository != null) {
+            m_fileStoreHandlerRepository.removeFileStoreHandler(this);
+            m_fileStoreHandlerRepository = null;
+        }
         if (m_baseDir != null) {
             StringBuilder b = new StringBuilder("Disposing file store \"");
             b.append(toString()).append("\"");

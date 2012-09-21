@@ -60,9 +60,9 @@ import javax.swing.SwingConstants;
  */
 public class MultiLineStringValueRenderer extends
         DefaultDataValueRenderer {
-    private Font m_currentFont;
+    private final boolean m_monoSpaceFont;
 
-    private final String m_description;
+    private Font m_currentFont;
 
     private static final int MAX_DEFAULT_HEIGHT = 90;
 
@@ -72,11 +72,27 @@ public class MultiLineStringValueRenderer extends
      * @param description description for the renderer shown in the popup menu
      */
     public MultiLineStringValueRenderer(final String description) {
-        m_description = description == null ? "Multi Line String" : description;
+        this(description, true);
+    }
+
+    /**
+     * Instantiates new renderer.
+     *
+     * @param description description for the renderer shown in the popup menu
+     * @param monoSpaceFont true if a monospace font should be used,
+     *            <code>false</code> if the standard font of the parent component
+     *            should be used
+     * @since 2.7
+     */
+    public MultiLineStringValueRenderer(final String description, final boolean monoSpaceFont) {
+        super(description == null ? "Multi Line String" : description);
         setVerticalAlignment(SwingConstants.TOP);
         m_currentFont =
             new Font("Monospaced", getFont().getStyle(), getFont().getSize());
-        super.setFont(m_currentFont);
+        m_monoSpaceFont = monoSpaceFont;
+        if (m_monoSpaceFont) {
+            super.setFont(m_currentFont);
+        }
         setBackground(Color.WHITE);
         setUI(new MultiLineBasicLabelUI());
     }
@@ -96,14 +112,6 @@ public class MultiLineStringValueRenderer extends
         } else {
             super.setValue("?");
         }
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return m_description;
     }
 
     /**
@@ -131,19 +139,23 @@ public class MultiLineStringValueRenderer extends
             super.setFont(m_currentFont);
         } else if (font.equals(m_currentFont)) {
             return;
-        } else {
+        } else if (m_monoSpaceFont) {
             m_currentFont =
                     new Font("Monospaced", font.getStyle(), font.getSize());
             super.setFont(m_currentFont);
+        } else {
+            super.setFont(font);
         }
     }
+
+
 
     /**
      * {@inheritDoc}
      */
     @Override
     public int hashCode() {
-        return getClass().hashCode() ^ m_description.hashCode();
+        return getClass().hashCode() ^ getDescription().hashCode();
     }
 
     /**
@@ -159,6 +171,6 @@ public class MultiLineStringValueRenderer extends
         }
         MultiLineStringValueRenderer other = (MultiLineStringValueRenderer)obj;
         return other.getClass().equals(getClass())
-            && m_description.equals(other.m_description);
+            && getDescription().equals(other.getDescription());
     }
 }
