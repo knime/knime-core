@@ -70,6 +70,10 @@ public class KNIMETestingApplication implements IApplication {
 
     private boolean m_saveTests = false;
 
+    private boolean m_testViews;
+
+    private boolean m_testDialogs;
+
     private File m_saveLocation = null;
 
     /**
@@ -166,6 +170,8 @@ public class KNIMETestingApplication implements IApplication {
         m_saveTests = dlg.getSaveTests();
         m_rootDir = dlg.getTestRootDir();
         m_analyzeLogFile = dlg.getAnalyzeLogFile();
+        m_testDialogs = dlg.getTestDialogs();
+        m_testViews = dlg.getTestViews();
         String outDir = dlg.getAnalysisOutputDir();
         if ((outDir == null) || (outDir.length() == 0)) {
             m_analyzeOutputDir = null; // use Java temp
@@ -255,7 +261,7 @@ public class KNIMETestingApplication implements IApplication {
 
         KnimeTestRegistry registry =
                 new KnimeTestRegistry(testPattern, new File(m_rootDir),
-                        m_saveLocation);
+                        m_saveLocation, m_testDialogs, m_testViews);
         Test tests = registry.collectTestCases(FullWorkflowTest.factory);
 
         System.out.println("=============  Running...  ==================");
