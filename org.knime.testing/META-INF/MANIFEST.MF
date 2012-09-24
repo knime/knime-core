@@ -3,7 +3,8 @@ Bundle-ManifestVersion: 2
 Bundle-Name: Test-Node extension for KNIME Workbench
 Bundle-SymbolicName: org.knime.testing; singleton:=true
 Bundle-Version: 2.6.2.qualifier
-Bundle-ClassPath: .
+Bundle-ClassPath: knime-testing.jar,
+ lib/jfcunit.jar
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: org.knime.testing,
  org.knime.testing.core,
