@@ -132,7 +132,9 @@ public class DataTableDiffer implements TestEvaluator {
             for (int c = 0; c < row1.getNumCells(); c++) {
                 DataCell c1 = row1.getCell(c);
                 DataCell c2 = row2.getCell(c);
-                if (c1.getType().isCompatible(DoubleValue.class) && c2.getType().isCompatible(DoubleValue.class)) {
+                if (!c1.isMissing() && !c2.isMissing()
+                        && c1.getType().isCompatible(DoubleValue.class)
+                        && c2.getType().isCompatible(DoubleValue.class)) {
                     double diff =
                             ((DoubleValue)c1).getDoubleValue()
                                     / ((DoubleValue)c2).getDoubleValue();
@@ -209,8 +211,10 @@ public class DataTableDiffer implements TestEvaluator {
                     currentCell2 = cellIt2.next();
                     if (currentCell1.equals(currentCell2)) {
                         cells[pos] = currentCell1;
-                    } else if (currentCell1.getType().isCompatible(
-                            DoubleValue.class)
+                    } else if (!currentCell1.isMissing()
+                            && !currentCell2.isMissing()
+                            && currentCell1.getType().isCompatible(
+                                    DoubleValue.class)
                             && currentCell2.getType().isCompatible(
                                     DoubleValue.class)) {
                         double diff =
