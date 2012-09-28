@@ -22,8 +22,11 @@
 		</intro>
 		<option name="TableDiffer">The node succeeds if the two input tables are
 		        equal. Each data cell of each row is compared with the corresponding
-		        cell of the other table using the 
-		        <tt>DataCell.equalsDataCell()</tt> method.
+		        cell of the other table using the <tt>DataCell.equalsDataCell()</tt> method.
+                For floating point numbers a maximum relative deviation from the reference value can be set,
+                in order to cope with small rounding errors. A value of 0 means that two values must
+                be identical, a value of 1 allows for 100% deviation, i.e. one value may be
+                twice as large as the other.
 		</option>		
 		<option name="EmptyTableTest">
 		  Fails if an input table is not empty.
