@@ -51,16 +51,15 @@
 
 package org.knime.base.node.viz.histogram.util;
 
+import java.util.List;
+
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
+import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
-
-import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel;
-import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
-
-import java.util.List;
 
 /**
  * This class is a helper class of the {@link BinningUtil} class to create the
@@ -139,7 +138,7 @@ public abstract class IntervalBinCreator <E extends BinDataModel> {
         double leftBoundary = calculatedLowerBound;
         final double lastBoundary = BinningUtil.myRoundedBorders(
                 upperBound, binInterval,
-                AbstractHistogramVizModel.INTERVAL_DIGITS);
+                AbstractHistogramVizModel.INTERVAL_DIGITS, isInteger);
         // increase bin interval if we have rounding problems
         while (leftBoundary + (binInterval * noOfBins) < lastBoundary) {
             binInterval = binInterval + binInterval * 0.001;
@@ -157,7 +156,7 @@ public abstract class IntervalBinCreator <E extends BinDataModel> {
             } else {
                 rightBoundary = BinningUtil.myRoundedBorders(
                     leftBoundary + binInterval, binInterval,
-                    AbstractHistogramVizModel.INTERVAL_DIGITS);
+                    AbstractHistogramVizModel.INTERVAL_DIGITS, isInteger);
             }
             final String binCaption = BinningUtil.createBarName(
                     firstBar, leftBoundary, rightBoundary);

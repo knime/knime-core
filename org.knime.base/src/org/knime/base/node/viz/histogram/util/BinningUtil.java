@@ -50,6 +50,17 @@
  */
 package org.knime.base.node.viz.histogram.util;
 
+import java.awt.Color;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+
+import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
+import org.knime.base.node.viz.histogram.datamodel.BinDataModelComparator;
+import org.knime.base.node.viz.histogram.datamodel.InteractiveBinDataModel;
+import org.knime.base.node.viz.histogram.impl.AbstractHistogramPlotter;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
@@ -58,18 +69,6 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.IntCell;
-
-import org.knime.base.node.viz.histogram.datamodel.BinDataModel;
-import org.knime.base.node.viz.histogram.datamodel.BinDataModelComparator;
-import org.knime.base.node.viz.histogram.datamodel.InteractiveBinDataModel;
-import org.knime.base.node.viz.histogram.impl.AbstractHistogramPlotter;
-
-import java.awt.Color;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
 
 /**
  * This class provides methods to create the bins of numerical bars.
@@ -211,9 +210,27 @@ public final class BinningUtil {
      *            counter
      * @param noOfDigits the number of decimal places to display
      * @return the rounded value
+     * @see #myRoundedBorders(double, double, int, boolean) for integer values
      */
     public static double myRoundedBorders(final double doubleVal,
             final double increment, final int noOfDigits) {
+        return myRoundedBorders(doubleVal, increment, noOfDigits, false);
+    }
+
+    /**
+     * Returns the rounded value which contains the given number of decimal
+     * places after the last 0 in the given increment.
+     *
+     * @param doubleVal the value to round
+     * @param increment the increment which defines the start index of the digit
+     *            counter
+     * @param noOfDigits the number of decimal places to display
+     * @param isInteger <code>true</code> if the column contains integers
+     * @return the rounded value
+     * @since 2.6
+     */
+    public static double myRoundedBorders(final double doubleVal,
+            final double increment, final int noOfDigits, final boolean isInteger) {
         if (increment <= 0) {
             throw new IllegalArgumentException("Increment should be positive");
         }
@@ -242,6 +259,9 @@ public final class BinningUtil {
         // Shift the decimal the correct number of places
         // back to the left.
         final double increaseInterval = tmp / factor;
+        if (isInteger) {
+            return Math.floor(increaseInterval);
+        }
         return increaseInterval;
     }
 
