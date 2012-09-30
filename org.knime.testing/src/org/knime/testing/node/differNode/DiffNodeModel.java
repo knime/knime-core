@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   May 10, 2006 (ritmeier): created
  */
@@ -37,11 +37,10 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-
 import org.knime.testing.node.differNode.DiffNodeDialog.Evaluators;
 
 /**
- * 
+ *
  * @author ritmeier, University of Konstanz
  */
 public class DiffNodeModel extends NodeModel {
@@ -55,6 +54,10 @@ public class DiffNodeModel extends NodeModel {
     /** Config key for the upper tolerance. */
     public static final String CFGKEY_UPPERERTOLERANCEKEY = "UPPERTOLLERANCE";
 
+    /** Config key for the epsilon for numeric values. */
+    public static final String CFGKEY_EPSILON = "EPSILON";
+
+
     private DataTable m_diffTable;
 
     private Evaluators m_evaluator = Evaluators.TableDiffer;
@@ -63,10 +66,12 @@ public class DiffNodeModel extends NodeModel {
 
     private int m_upperTolerance;
 
+    private double m_epsilon;
+
     /**
      * Creates a model with two data inports. The first port for the new table,
      * the second forr the original ("golden") table.
-     * 
+     *
      */
     public DiffNodeModel() {
         super(2, 0);
@@ -86,7 +91,7 @@ public class DiffNodeModel extends NodeModel {
             settings.addInt(DiffNodeModel.CFGKEY_UPPERERTOLERANCEKEY,
                     m_upperTolerance);
         }
-
+        settings.addDouble(CFGKEY_EPSILON, m_epsilon);
     }
 
     /**
@@ -110,7 +115,6 @@ public class DiffNodeModel extends NodeModel {
             settings.getInt(CFGKEY_LOWERTOLERANCEKEY);
             settings.getInt(CFGKEY_UPPERERTOLERANCEKEY);
         }
-
     }
 
     /**
@@ -126,7 +130,7 @@ public class DiffNodeModel extends NodeModel {
             m_lowerTolerance = settings.getInt(CFGKEY_LOWERTOLERANCEKEY);
             m_upperTolerance = settings.getInt(CFGKEY_UPPERERTOLERANCEKEY);
         }
-
+        m_epsilon = settings.getDouble(CFGKEY_EPSILON, 0);
     }
 
     /**
@@ -140,6 +144,8 @@ public class DiffNodeModel extends NodeModel {
         if (eval instanceof LearnerScoreComperator) {
             ((LearnerScoreComperator)eval).setTolerance(m_lowerTolerance,
                     m_upperTolerance);
+        } else if (eval instanceof DataTableDiffer) {
+            ((DataTableDiffer) eval).setEpsilon(m_epsilon);
         }
         eval.compare(inData[0], inData[1]);
 
@@ -164,7 +170,7 @@ public class DiffNodeModel extends NodeModel {
 
     /**
      * Returns the result of the table differ.
-     * 
+     *
      * @return - the result of the table differ.
      */
     public DataTable getDiffTable() {
@@ -175,24 +181,19 @@ public class DiffNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) throws IOException, 
+    protected void loadInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        // TODO Auto-generated method stub
-        
+        // nothing to do
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
-            final ExecutionMonitor exec) throws IOException, 
+    protected void saveInternals(final File nodeInternDir,
+            final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
-        // TODO Auto-generated method stub
-        
+        // nothing todo
     }
-    
-    
-
 }

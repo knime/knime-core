@@ -31,6 +31,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DefaultTable;
@@ -48,6 +49,8 @@ public class DataTableDiffer implements TestEvaluator {
 
     private DataTable m_DiffTable;
 
+    private double m_epsilon = 0.0;
+
     /**
      * default Constructor.
      */
@@ -56,11 +59,23 @@ public class DataTableDiffer implements TestEvaluator {
     }
 
     /**
+     * Sets the maximum allowed relative deviation of reference and actual value
+     * for numbers.
+     *
+     * @param eps the relative deviation; 0 means two values must be identical,
+     *            1 means the deviation can be 100% (twice or half as large)
+     */
+    public void setEpsilon(final double eps) {
+        m_epsilon = eps;
+    }
+
+    /**
      *
      * @throws TestEvaluationException
      * @see org.knime.testing.node.differNode.TestEvaluator#compare(
      *      org.knime.core.data.DataTable, org.knime.core.data.DataTable)
      */
+    @Override
     public void compare(final DataTable table1, final DataTable table2)
             throws TestEvaluationException {
 
@@ -117,7 +132,30 @@ public class DataTableDiffer implements TestEvaluator {
             for (int c = 0; c < row1.getNumCells(); c++) {
                 DataCell c1 = row1.getCell(c);
                 DataCell c2 = row2.getCell(c);
-                if (!c1.equals(c2)) {
+                if (!c1.isMissing() && !c2.isMissing()
+                        && c1.getType().isCompatible(DoubleValue.class)
+                        && c2.getType().isCompatible(DoubleValue.class)) {
+                    double diff =
+                            ((DoubleValue)c1).getDoubleValue()
+                                    / ((DoubleValue)c2).getDoubleValue();
+                    if (diff < 1) {
+                        diff = 1 / diff;
+                    }
+                    if ((diff - 1) > m_epsilon) {
+                        throw new TestEvaluationException("Cell content differs more than " + m_epsilon
+                                + " in row #"
+                                + rowNum
+                                + "('"
+                                + row1.getKey()
+                                + "')"
+                                + " column #"
+                                + c
+                                + "('"
+                                + table1.getDataTableSpec().getColumnSpec(c)
+                                        .getName() + "'): CellPort0='" + c1
+                                + "' vs. CellPort1='" + c2 + "'");
+                    }
+                } else if (!c1.equals(c2)) {
                     throw new TestEvaluationException("Cell content differs"
                             + " in row #"
                             + rowNum
@@ -173,6 +211,27 @@ public class DataTableDiffer implements TestEvaluator {
                     currentCell2 = cellIt2.next();
                     if (currentCell1.equals(currentCell2)) {
                         cells[pos] = currentCell1;
+                    } else if (!currentCell1.isMissing()
+                            && !currentCell2.isMissing()
+                            && currentCell1.getType().isCompatible(
+                                    DoubleValue.class)
+                            && currentCell2.getType().isCompatible(
+                                    DoubleValue.class)) {
+                        double diff =
+                                ((DoubleValue)currentCell1).getDoubleValue()
+                                        / ((DoubleValue)currentCell2)
+                                                .getDoubleValue();
+                        if (diff < 1) {
+                            diff = 1/ diff;
+                        }
+                        if ((diff - 1) > m_epsilon) {
+                            cells[pos] =
+                                new StringCell("CELL DIFFERS:"
+                                        + currentCell1.toString() + " <> "
+                                        + currentCell2.toString());
+                        } else {
+                            cells[pos] = currentCell1;
+                        }
                     } else {
                         // TODO tg rowDiffers = true;
                         cells[pos] =

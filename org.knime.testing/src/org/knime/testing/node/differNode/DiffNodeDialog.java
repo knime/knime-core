@@ -24,13 +24,6 @@
  */
 package org.knime.testing.node.differNode;
 
-import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.NotConfigurableException;
-
 import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.GridLayout;
@@ -41,8 +34,16 @@ import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
+import javax.swing.JSpinner.NumberEditor;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
+
+import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
 
 
 /**
@@ -69,9 +70,15 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
 
     private int m_loadedUpperTolerance = 0;
 
+    private double m_loadedEpsilon = 0;
+
     private JLabel m_lowerToleranceLable;
 
     private JLabel m_upperToleranceLable;
+
+    private JLabel m_epsilonLabel = new JLabel("Relative deviation for floating point values   ");
+
+    private final JSpinner m_epsilonSpinner = new JSpinner(new SpinnerNumberModel(0.001, 0, 1, 0.001));
 
     /**
      * enumeration of different evaluators for the test results
@@ -149,6 +156,7 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
         final JComboBox combo = getEvalCombo();
         m_content.add(combo, BorderLayout.NORTH);
         m_content.add(m_tolerancePanel, BorderLayout.SOUTH);
+        m_content.add(buildEpsilonPanel(), BorderLayout.SOUTH);
 
         return m_content;
     }
@@ -180,19 +188,33 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
         m_upperToleranceSpinner = new JSpinner(smax);
         panel.add(m_upperToleranceSpinner);
 
-        showSpinners(getEvalCombo().getSelectedItem().equals(
+        showToleranceSpinners(getEvalCombo().getSelectedItem().equals(
                 Evaluators.LearnerScoreComperator));
 
         return panel;
     }
 
-    private void showSpinners(final boolean b) {
+    private JPanel buildEpsilonPanel() {
+        final JPanel panel = new JPanel();
+        panel.setLayout(new GridLayout(1, 2));
 
+        ((NumberEditor) m_epsilonSpinner.getEditor()).getFormat().applyPattern("#0.000");
+        panel.add(m_epsilonLabel);
+        panel.add(m_epsilonSpinner);
+        return panel;
+    }
+    private void showToleranceSpinners(final boolean b) {
         m_lowerToleranceLable.setVisible(b);
         m_upperToleranceLable.setVisible(b);
         m_lowerToleranceSpinner.setVisible(b);
         m_upperToleranceSpinner.setVisible(b);
     }
+
+    private void showEpsilonSpinner(final boolean b) {
+        m_epsilonLabel.setVisible(b);
+        m_epsilonSpinner.setVisible(b);
+    }
+
 
     private JComboBox getEvalCombo() {
         if (m_differCombo == null) {
@@ -242,8 +264,11 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
                 m_loadedUpperTolerance = settings
                         .getInt(DiffNodeModel.CFGKEY_UPPERERTOLERANCEKEY);
             }
-            m_lowerToleranceSpinner.setValue(new Integer(m_loadedLowerTolerance));
-            m_upperToleranceSpinner.setValue(new Integer(m_loadedUpperTolerance));
+            m_loadedEpsilon = settings.getDouble(DiffNodeModel.CFGKEY_EPSILON, 0);
+
+            m_lowerToleranceSpinner.setValue(m_loadedLowerTolerance);
+            m_upperToleranceSpinner.setValue(m_loadedUpperTolerance);
+            m_epsilonSpinner.setValue(m_loadedEpsilon);
         } catch (final IllegalArgumentException e) {
             eval = Evaluators.TableDiffer;
         } catch (final InvalidSettingsException e) {
@@ -268,6 +293,8 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
             settings.addInt(DiffNodeModel.CFGKEY_UPPERERTOLERANCEKEY,
                     getUpperTollerance());
         }
+        settings.addDouble(DiffNodeModel.CFGKEY_EPSILON,
+                (Double)m_epsilonSpinner.getValue());
     }
 
     /**
@@ -275,8 +302,10 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
      */
     @Override
     public void actionPerformed(final ActionEvent e) {
-        showSpinners(getEvalCombo().getSelectedItem().equals(
+        showToleranceSpinners(getEvalCombo().getSelectedItem().equals(
                 Evaluators.LearnerScoreComperator));
+        showEpsilonSpinner(getEvalCombo().getSelectedItem().equals(
+                Evaluators.TableDiffer));
 
     }
 }
