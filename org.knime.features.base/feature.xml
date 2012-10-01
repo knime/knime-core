@@ -2,7 +2,7 @@
 <feature
       id="org.knime.features.base"
       label="KNIME Core"
-      version="2.6.2.qualifier"
+      version="2.7.0.qualifier"
       provider-name="KNIME GmbH, Konstanz, Germany"
       plugin="org.knime.product"
       image="icons/knime64.gif">
@@ -730,10 +730,6 @@ interoperation with KNIME.  The owner of a Node may freely choose the
 license terms applicable to such Node, including when such Node is
 propagated with or for interoperation with KNIME.
    </license>
-
-   <url>
-      <update label="KNIME Update Site" url="http://www.knime.org/update/2.6"/>
-   </url>
 
    <requires>
       <import feature="org.eclipse.gef" version="3.4.2.v20090218-1145-67728084A56B4I233613552" match="compatible"/>

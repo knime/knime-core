@@ -9,8 +9,7 @@ Bundle-ClassPath: knime-core.jar,
  lib/schemas.jar
 Bundle-Activator: org.knime.core.internal.CorePlugin
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Export-Package: 
- log4j,
+Export-Package: log4j,
  org.knime.core,
  org.knime.core.data,
  org.knime.core.data.blob,

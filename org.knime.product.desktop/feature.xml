@@ -2,7 +2,7 @@
 <feature
       id="org.knime.product.desktop"
       label="KNIME Desktop"
-      version="2.6.2.qualifier"
+      version="2.7.0.qualifier"
       provider-name="KNIME GmbH, Konstanz, Germany">
 
    <description>
@@ -728,10 +728,6 @@ interoperation with KNIME.  The owner of a Node may freely choose the
 license terms applicable to such Node, including when such Node is
 propagated with or for interoperation with KNIME.
    </license>
-
-   <url>
-      <update label="KNIME Update Site" url="http://www.knime.org/update/2.6"/>
-   </url>
 
    <includes
          id="org.knime.features.base"
