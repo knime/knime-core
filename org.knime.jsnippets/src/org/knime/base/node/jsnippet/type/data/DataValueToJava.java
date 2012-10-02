@@ -134,13 +134,35 @@ public abstract class DataValueToJava {
 
     /**
      * Get the value of the given data cell as a java object of the given class.
+     * It does the same as getValue without the need of checking for missing
+     * values and compatibility of the given type.
      * @param cell the data cell
      * @param c the class
      * @return an object of the given class
+     */
+    protected abstract Object getValueUnchecked(final DataCell cell,
+                                                final Class c);
+
+    /**
+     * Get the value of the given data cell as a java object of the given class.
+     * @param cell the data cell
+     * @param c the class
+     * @return an object of the given class or null if the cell is a missing value
      * @throws TypeException in case of incompatibility
      */
-    public abstract Object getValue(final DataCell cell, final Class c)
-        throws TypeException;
-
+    public Object getValue(final DataCell cell, final Class c)
+        throws TypeException {
+        if (cell.isMissing()) {
+            return null;
+        }
+        if (isCompatibleTo(cell, c)) {
+            return getValueUnchecked(cell, c);
+        } else {
+            throw new TypeException("The data cell of type "
+                    + cell.getType()
+                    + " cannot provide a value of type "
+                    + c.getSimpleName());
+        }
+    }
 }
 

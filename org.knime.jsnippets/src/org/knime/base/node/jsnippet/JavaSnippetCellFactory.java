@@ -189,7 +189,7 @@ public class JavaSnippetCellFactory implements CellFactory {
                         inCol.getJavaName());
                 Cell cell = cellsMap.get(inCol.getKnimeName());
                 Object v = cell.getValueOfType(inCol.getJavaType());
-                if (inCol.getKnimeType().isCollectionType()) {
+                if (inCol.getKnimeType().isCollectionType() && v != null) {
                     field.set(m_jsnippet,
                             Arrays.copyOf((Object[]) v, ((Object[]) v).length,
                                     inCol.getJavaType()));

@@ -113,21 +113,13 @@ public class ListCellToJava extends DataValueToJava {
      */
     @SuppressWarnings({"rawtypes", "unchecked" })
     @Override
-    public Object getValue(final DataCell cell, final Class c)
-            throws TypeException {
-        if (isCompatibleTo(cell, c)) {
-            List values = new ArrayList();
-            for (DataCell element : ((CollectionDataValue)cell)) {
-                values.add(m_elementToJava.getValue(element,
-                        c.getComponentType()));
-            }
-            return values.toArray();
-        } else {
-            throw new TypeException("The data cell of type "
-                    + cell.getType()
-                    + " cannot provide a value of type "
-                    + c.getSimpleName());
+    public Object getValueUnchecked(final DataCell cell, final Class c) {
+        List values = new ArrayList();
+        for (DataCell element : ((CollectionDataValue)cell)) {
+            values.add(m_elementToJava.getValue(element,
+                    c.getComponentType()));
         }
+        return values.toArray();
     }
 
 }

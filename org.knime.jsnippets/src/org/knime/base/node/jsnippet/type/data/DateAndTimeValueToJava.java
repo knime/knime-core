@@ -87,20 +87,11 @@ public class DateAndTimeValueToJava extends DataValueToJava {
      */
     @Override
     @SuppressWarnings("rawtypes")
-    public Object getValue(final DataCell cell, final Class c)
-            throws TypeException {
-        if (isCompatibleTo(cell, c)) {
-            if (c.equals(Date.class)) {
-                return new Date(((DateAndTimeValue)cell).getUTCTimeInMillis());
-            } else { // case: c.equals(Calendar.class)
-                return ((DateAndTimeValue)cell).getUTCCalendarClone();
-            }
-
-        } else {
-            throw new TypeException("The data cell of type "
-                    + cell.getType()
-                    + " cannot provide a value of type "
-                    + c.getSimpleName());
+    public Object getValueUnchecked(final DataCell cell, final Class c) {
+        if (c.equals(Date.class)) {
+            return new Date(((DateAndTimeValue)cell).getUTCTimeInMillis());
+        } else { // case: c.equals(Calendar.class)
+            return ((DateAndTimeValue)cell).getUTCCalendarClone();
         }
     }
 }

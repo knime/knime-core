@@ -84,15 +84,7 @@ public class DoubleValueToJava extends DataValueToJava {
      */
     @Override
     @SuppressWarnings("rawtypes")
-    public Object getValue(final DataCell cell, final Class c)
-            throws TypeException {
-        if (isCompatibleTo(cell, c)) {
-            return ((DoubleValue)cell).getDoubleValue();
-        } else {
-            throw new TypeException("The data cell of type "
-                    + cell.getType()
-                    + " cannot provide a value of type "
-                    + c.getSimpleName());
-        }
+    public Object getValueUnchecked(final DataCell cell, final Class c) {
+        return ((DoubleValue)cell).getDoubleValue();
     }
 }
