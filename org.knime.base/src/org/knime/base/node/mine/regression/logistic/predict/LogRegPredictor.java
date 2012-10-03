@@ -54,6 +54,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -85,8 +86,12 @@ import Jama.Matrix;
 public final class LogRegPredictor extends AbstractCellFactory {
     private PMMLGeneralRegressionContent m_content;
     private PPMatrix m_ppMatrix;
-    private Map<String, Integer> m_parameterI;
-    private List<String> m_parameters;
+    /** The parameters. A mapping of the parameter name to its index of the
+     * associated column in the input table or -1 if the parameter is not
+     * associated with a column (e.g. intercept).
+     */
+    private Map<String, Integer> m_parameters;
+
     private List<String> m_predictors;
     private DataTableSpec m_trainingSpec;
     private Set<String> m_factors;
@@ -230,14 +235,12 @@ public final class LogRegPredictor extends AbstractCellFactory {
         m_includeProbs = includeProbabilites;
         m_content = content;
         m_ppMatrix = new PPMatrix(m_content.getPPMatrix());
-        m_parameters = new ArrayList<String>();
         m_predictors = new ArrayList<String>();
-        m_parameterI = new HashMap<String, Integer>();
+        m_parameters = new LinkedHashMap<String, Integer>();
         for (PMMLParameter parameter : m_content.getParameterList()) {
-            m_parameters.add(parameter.getName());
             String predictor = m_ppMatrix.getPredictor(parameter.getName());
             m_predictors.add(predictor);
-            m_parameterI.put(parameter.getName(),
+            m_parameters.put(parameter.getName(),
                     inSpec.findColumnIndex(predictor));
         }
 
@@ -279,8 +282,9 @@ public final class LogRegPredictor extends AbstractCellFactory {
                                 : new DataCell[1];
         // column vector
         Matrix x = new Matrix(1, m_parameters.size());
+        Iterator<String> paramIter = m_parameters.keySet().iterator();
         for (int i = 0; i < m_parameters.size(); i++) {
-            String parameter = m_parameters.get(i);
+            String parameter = paramIter.next();
             String predictor = null;
             String value = null;
             boolean rowIsEmpty = true;
@@ -300,15 +304,15 @@ public final class LogRegPredictor extends AbstractCellFactory {
                 if (m_factors.contains(predictor)) {
                     List<DataCell> values = m_values.get(predictor);
                     DataCell cell =
-                        row.getCell(m_parameterI.get(parameter));
+                        row.getCell(m_parameters.get(parameter));
                     int index = values.indexOf(cell);
                     // these are design variables
-                    /* When building ageneral regression model, for each 
-                    categorical fields, there is one category used as the 
-                    default baseline and therefore it didn't show in the 
-                    ParameterList in PMML. This design for the training is fine, 
-                    but in the prediction, when the input of Employment is 
-                    the default baseline, the parameters should all be 0. 
+                    /* When building ageneral regression model, for each
+                    categorical fields, there is one category used as the
+                    default baseline and therefore it didn't show in the
+                    ParameterList in PMML. This design for the training is fine,
+                    but in the prediction, when the input of Employment is
+                    the default baseline, the parameters should all be 0.
                     See the commit message for an example and more details.
                     */
                     if (index > 0) {
@@ -317,7 +321,7 @@ public final class LogRegPredictor extends AbstractCellFactory {
                     }
                 } else {
                     DataCell cell =
-                        row.getCell(m_parameterI.get(parameter));
+                        row.getCell(m_parameters.get(parameter));
                     double radix = ((DoubleValue)cell).getDoubleValue();
                     double exponent = Integer.valueOf(value);
                     x.set(0, i, Math.pow(radix, exponent));
@@ -366,9 +370,12 @@ public final class LogRegPredictor extends AbstractCellFactory {
 
 
     private boolean hasMissingValues(final DataRow row) {
-        for (DataCell cell : row) {
-            if (cell.isMissing()) {
-                return true;
+        for (int i : m_parameters.values()) {
+             if (i > -1) {
+                DataCell cell = row.getCell(i);
+                if (cell.isMissing()) {
+                    return true;
+                }
             }
         }
         return false;
@@ -391,9 +398,11 @@ public final class LogRegPredictor extends AbstractCellFactory {
             new ParamMatrix(m_content.getParamMatrix());
         Matrix beta = new Matrix(m_parameters.size(),
                 m_targetCategories.size());
+        Iterator<String> paramIter = m_parameters.keySet().iterator();
         for (int i = 0; i < m_parameters.size(); i++) {
+            String parameter = paramIter.next();
             for (int k = 0; k < m_targetCategories.size() - 1; k++) {
-                double value = paramMatrix.getBeta(m_parameters.get(i),
+                double value = paramMatrix.getBeta(parameter,
                         m_targetCategories.get(k).toString());
                 beta.set(i, k, value);
             }
