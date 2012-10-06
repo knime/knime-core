@@ -109,19 +109,14 @@ public class MultiValueToJava extends DataValueToJava {
      */
     @SuppressWarnings("rawtypes")
     @Override
-    public Object getValue(final DataCell cell, final Class c)
-            throws TypeException {
-        if (isCompatibleTo(cell, c)) {
-            for (DataValueToJava dvtj : m_converters) {
-                if (dvtj.isCompatibleTo(cell, c)) {
-                    return dvtj.getValue(cell, c);
-                }
+    public Object getValueUnchecked(final DataCell cell, final Class c) {
+        for (DataValueToJava dvtj : m_converters) {
+            if (dvtj.isCompatibleTo(cell, c)) {
+                return dvtj.getValue(cell, c);
             }
         }
-        throw new TypeException("The data cell of type "
-                    + cell.getType()
-                    + " cannot provide a value of type "
-                    + c.getSimpleName());
+        // no compatible converter found
+        return null;
     }
 
 
