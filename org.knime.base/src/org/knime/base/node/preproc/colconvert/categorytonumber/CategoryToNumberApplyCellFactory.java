@@ -54,9 +54,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.xmlbeans.XmlObject;
-import org.dmg.pmml40.InlineTableDocument.InlineTable;
-import org.dmg.pmml40.MapValuesDocument.MapValues;
-import org.dmg.pmml40.RowDocument.Row;
+import org.dmg.pmml.InlineTableDocument.InlineTable;
+import org.dmg.pmml.MapValuesDocument.MapValues;
+import org.dmg.pmml.RowDocument.Row;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;

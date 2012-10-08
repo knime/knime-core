@@ -26,12 +26,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import org.dmg.pmml40.DATATYPE.Enum;
-import org.dmg.pmml40.DerivedFieldDocument.DerivedField;
-import org.dmg.pmml40.FieldRefDocument.FieldRef;
-import org.dmg.pmml40.LocalTransformationsDocument.LocalTransformations;
-import org.dmg.pmml40.OPTYPE;
-import org.dmg.pmml40.TransformationDictionaryDocument.TransformationDictionary;
+import org.dmg.pmml.DATATYPE.Enum;
+import org.dmg.pmml.DerivedFieldDocument.DerivedField;
+import org.dmg.pmml.FieldRefDocument.FieldRef;
+import org.dmg.pmml.LocalTransformationsDocument.LocalTransformations;
+import org.dmg.pmml.OPTYPE;
+import org.dmg.pmml.TransformationDictionaryDocument.TransformationDictionary;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;

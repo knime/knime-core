@@ -67,22 +67,22 @@ import javax.xml.transform.stream.StreamResult;
 import org.apache.xmlbeans.SchemaType;
 import org.apache.xmlbeans.XmlCursor;
 import org.apache.xmlbeans.XmlObject;
-import org.dmg.pmml40.AssociationModelDocument.AssociationModel;
-import org.dmg.pmml40.ClusteringModelDocument.ClusteringModel;
-import org.dmg.pmml40.GeneralRegressionModelDocument.GeneralRegressionModel;
-import org.dmg.pmml40.MiningModelDocument.MiningModel;
-import org.dmg.pmml40.MiningSchemaDocument.MiningSchema;
-import org.dmg.pmml40.NaiveBayesModelDocument.NaiveBayesModel;
-import org.dmg.pmml40.NeuralNetworkDocument.NeuralNetwork;
-import org.dmg.pmml40.PMMLDocument;
-import org.dmg.pmml40.PMMLDocument.PMML;
-import org.dmg.pmml40.RegressionModelDocument.RegressionModel;
-import org.dmg.pmml40.RuleSetModelDocument.RuleSetModel;
-import org.dmg.pmml40.SequenceModelDocument.SequenceModel;
-import org.dmg.pmml40.SupportVectorMachineModelDocument.SupportVectorMachineModel;
-import org.dmg.pmml40.TextModelDocument.TextModel;
-import org.dmg.pmml40.TimeSeriesModelDocument.TimeSeriesModel;
-import org.dmg.pmml40.TreeModelDocument.TreeModel;
+import org.dmg.pmml.AssociationModelDocument.AssociationModel;
+import org.dmg.pmml.ClusteringModelDocument.ClusteringModel;
+import org.dmg.pmml.GeneralRegressionModelDocument.GeneralRegressionModel;
+import org.dmg.pmml.MiningModelDocument.MiningModel;
+import org.dmg.pmml.MiningSchemaDocument.MiningSchema;
+import org.dmg.pmml.NaiveBayesModelDocument.NaiveBayesModel;
+import org.dmg.pmml.NeuralNetworkDocument.NeuralNetwork;
+import org.dmg.pmml.PMMLDocument;
+import org.dmg.pmml.PMMLDocument.PMML;
+import org.dmg.pmml.RegressionModelDocument.RegressionModel;
+import org.dmg.pmml.RuleSetModelDocument.RuleSetModel;
+import org.dmg.pmml.SequenceModelDocument.SequenceModel;
+import org.dmg.pmml.SupportVectorMachineModelDocument.SupportVectorMachineModel;
+import org.dmg.pmml.TextModelDocument.TextModel;
+import org.dmg.pmml.TimeSeriesModelDocument.TimeSeriesModel;
+import org.dmg.pmml.TreeModelDocument.TreeModel;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -97,8 +97,9 @@ import org.w3c.dom.NodeList;
 public class PMMLUtils {
     private static final String PMML_V3_NS_PREFIX = "http://www.dmg.org/PMML-3";
     private static final String PMML_V4_NS = "http://www.dmg.org/PMML-4_0";
+    private static final String PMML_V41_NS = "http://www.dmg.org/PMML-4_1";
 
-    private static final String PMML_V4 = "4.0";
+    private static final String PMML_V41 = "4.1";
 
     private PMMLUtils() {
         // hiding constructor of utility class
@@ -236,7 +237,7 @@ public class PMMLUtils {
     }
 
     /**
-     * Update the namespace and version of the document to PMML 4.0.
+     * Update the namespace and version of the document to PMML 4.1.
      *
      * @param document the document to update the namespace
      */
@@ -251,11 +252,11 @@ public class PMMLUtils {
                     "Invalid PMML document without a PMML element encountered.");
         }
         Node version = pmmlNode.getAttributes().getNamedItem("version");
-        version.setNodeValue(PMML_V4);
+        version.setNodeValue(PMML_V41);
     }
 
     /**
-     * Update the namespace and version of the document to PMML 4.0.
+     * Update the namespace and version of the document to PMML 4.1.
      *
      * @param xmlDoc the {@link XmlObject} to update the namespace
      * @return the updated PMML
@@ -303,10 +304,12 @@ public class PMMLUtils {
             Node att = atts.item(i);
             if ((att.getNodeName().equals("xmlns") || att.getNodeName()
                     .startsWith("xmlns:"))
-                    && att.getNodeValue().startsWith(PMML_V3_NS_PREFIX)) {
-                att.setNodeValue(PMML_V4_NS);
+                    && (att.getNodeValue().startsWith(PMML_V3_NS_PREFIX)
+                            || att.getNodeValue().equals(PMML_V4_NS))) {
+                att.setNodeValue(PMML_V41_NS);
             } else if (att.getNodeName().equals("xsi:schemaLocation")
-                    && att.getNodeValue().startsWith(PMML_V3_NS_PREFIX)) {
+                    && (att.getNodeValue().startsWith(PMML_V3_NS_PREFIX)
+                            || att.getNodeValue().equals(PMML_V4_NS))) {
                 element.removeAttribute(att.getNodeName());
             }
         }
@@ -322,7 +325,8 @@ public class PMMLUtils {
 
     /**
      * @param xmlDoc the {@link XmlObject} to verify
-     * @return true if the xmlDoc is a 3.x PMML document produced by KNIME
+     * @return true if the xmlDoc is a 3.x or 4.0 PMML document produced by
+     *      KNIME
      */
     public static boolean isOldKNIMEPMML(final XmlObject xmlDoc) {
         // Insert a cursor and move it to the PMML element.
@@ -352,7 +356,9 @@ public class PMMLUtils {
             application = appCursor.getAttributeText(new QName("name"));
         }
         appCursor.dispose();
-        return version.startsWith("3.") && "KNIME".equals(application);
+        return (version.startsWith("3.") || "4.0".equals(version))
+                && ("KNIME".equals(application) // learned by KNIME
+                        || "Rattle/PMML".equals(application)); // learned in R
     }
 
 

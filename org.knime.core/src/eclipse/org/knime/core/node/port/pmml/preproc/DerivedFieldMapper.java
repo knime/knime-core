@@ -59,11 +59,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 
-import org.dmg.pmml40.DerivedFieldDocument.DerivedField;
-import org.dmg.pmml40.LocalTransformationsDocument.LocalTransformations;
-import org.dmg.pmml40.PMMLDocument;
-import org.dmg.pmml40.PMMLDocument.PMML;
-import org.dmg.pmml40.TransformationDictionaryDocument.TransformationDictionary;
+import org.dmg.pmml.DerivedFieldDocument.DerivedField;
+import org.dmg.pmml.LocalTransformationsDocument.LocalTransformations;
+import org.dmg.pmml.PMMLDocument;
+import org.dmg.pmml.PMMLDocument.PMML;
+import org.dmg.pmml.TransformationDictionaryDocument.TransformationDictionary;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 

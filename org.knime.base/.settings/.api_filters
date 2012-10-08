@@ -1,5 +1,48 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.base" version="2">
+    <resource path="META-INF/MANIFEST.MF">
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="923795461">
+            <message_arguments>
+                <message_argument value="2.7.0.qualifier"/>
+                <message_argument value="2.6.2.0034909"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/data/normalize/PMMLNormalizeTranslator.java" type="org.knime.base.data.normalize.PMMLNormalizeTranslator">
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.normalize.PMMLNormalizeTranslator"/>
+                <message_argument value="exportToLocalTrans()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.normalize.PMMLNormalizeTranslator"/>
+                <message_argument value="exportToTransDict()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.normalize.PMMLNormalizeTranslator"/>
+                <message_argument value="initializeFrom(DerivedFieldDocument.DerivedField[])"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="exportToLocalTrans()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="exportToTransDict()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="initializeFrom(DerivedFieldDocument.DerivedField[])"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/node/io/filereader/VariableFileReaderNodeDialog.java" type="org.knime.base.node.io.filereader.VariableFileReaderNodeDialog">
         <filter id="1143996420">
             <message_arguments>
@@ -12,7 +55,339 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/node/mine/cluster/PMMLClusterTranslator.java" type="org.knime.base.node.mine.cluster.PMMLClusterTranslator">
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.cluster.PMMLClusterTranslator"/>
+                <message_argument value="exportTo(PMMLDocument, PMMLPortObjectSpec)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.cluster.PMMLClusterTranslator"/>
+                <message_argument value="initializeFrom(PMMLDocument)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="exportTo(PMMLDocument, PMMLPortObjectSpec)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="initializeFrom(PMMLDocument)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/decisiontree2/PMMLDecisionTreeTranslator.java" type="org.knime.base.node.mine.decisiontree2.PMMLDecisionTreeTranslator">
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.decisiontree2.PMMLDecisionTreeTranslator"/>
+                <message_argument value="exportTo(PMMLDocument, PMMLPortObjectSpec)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.decisiontree2.PMMLDecisionTreeTranslator"/>
+                <message_argument value="initializeFrom(PMMLDocument)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.decisiontree2.PMMLDecisionTreeTranslator"/>
+                <message_argument value="parseDecTreeFromModel(TreeModelDocument.TreeModel)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="exportTo(PMMLDocument, PMMLPortObjectSpec)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="initializeFrom(PMMLDocument)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="parseDecTreeFromModel(TreeModelDocument.TreeModel)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/decisiontree2/PMMLPredicateTranslator.java" type="org.knime.base.node.mine.decisiontree2.PMMLPredicateTranslator">
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.decisiontree2.PMMLPredicateTranslator"/>
+                <message_argument value="exportTo(PMMLPredicate, CompoundPredicateDocument.CompoundPredicate)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.decisiontree2.PMMLPredicateTranslator"/>
+                <message_argument value="exportTo(PMMLPredicate, CompoundRuleDocument.CompoundRule)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.decisiontree2.PMMLPredicateTranslator"/>
+                <message_argument value="exportTo(PMMLPredicate, NodeDocument.Node)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.decisiontree2.PMMLPredicateTranslator"/>
+                <message_argument value="exportTo(PMMLPredicate, SimpleRuleDocument.SimpleRule)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="exportTo(PMMLPredicate, CompoundPredicateDocument.CompoundPredicate)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="exportTo(PMMLPredicate, CompoundRuleDocument.CompoundRule)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="exportTo(PMMLPredicate, NodeDocument.Node)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="exportTo(PMMLPredicate, SimpleRuleDocument.SimpleRule)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/neural/mlp/PMMLNeuralNetworkTranslator.java" type="org.knime.base.node.mine.neural.mlp.PMMLNeuralNetworkTranslator">
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.neural.mlp.PMMLNeuralNetworkTranslator"/>
+                <message_argument value="addInputLayer(NeuralNetworkDocument.NeuralNetwork, MultiLayerPerceptron)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.neural.mlp.PMMLNeuralNetworkTranslator"/>
+                <message_argument value="addLayer(NeuralNetworkDocument.NeuralNetwork, MultiLayerPerceptron, int)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.neural.mlp.PMMLNeuralNetworkTranslator"/>
+                <message_argument value="addOutputLayer(NeuralNetworkDocument.NeuralNetwork, MultiLayerPerceptron, PMMLPortObjectSpec)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.neural.mlp.PMMLNeuralNetworkTranslator"/>
+                <message_argument value="exportTo(PMMLDocument, PMMLPortObjectSpec)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.neural.mlp.PMMLNeuralNetworkTranslator"/>
+                <message_argument value="initializeFrom(PMMLDocument)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="addInputLayer(NeuralNetworkDocument.NeuralNetwork, MultiLayerPerceptron)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="addLayer(NeuralNetworkDocument.NeuralNetwork, MultiLayerPerceptron, int)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="addOutputLayer(NeuralNetworkDocument.NeuralNetwork, MultiLayerPerceptron, PMMLPortObjectSpec)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="exportTo(PMMLDocument, PMMLPortObjectSpec)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="initializeFrom(PMMLDocument)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/regression/PMMLRegressionTranslator.java" type="org.knime.base.node.mine.regression.PMMLRegressionTranslator">
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.PMMLRegressionTranslator"/>
+                <message_argument value="exportTo(PMMLDocument, PMMLPortObjectSpec)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.PMMLRegressionTranslator"/>
+                <message_argument value="initializeFrom(PMMLDocument)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="exportTo(PMMLDocument, PMMLPortObjectSpec)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="initializeFrom(PMMLDocument)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/regression/pmmlgreg/PMMLGeneralRegressionTranslator.java" type="org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionTranslator">
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionTranslator"/>
+                <message_argument value="exportTo(PMMLDocument, PMMLPortObjectSpec)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionTranslator"/>
+                <message_argument value="initializeFrom(PMMLDocument)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="exportTo(PMMLDocument, PMMLPortObjectSpec)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="initializeFrom(PMMLDocument)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/mine/svm/PMMLSVMTranslator.java" type="org.knime.base.node.mine.svm.PMMLSVMTranslator">
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.svm.PMMLSVMTranslator"/>
+                <message_argument value="exportTo(PMMLDocument, PMMLPortObjectSpec)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.mine.svm.PMMLSVMTranslator"/>
+                <message_argument value="initializeFrom(PMMLDocument)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="exportTo(PMMLDocument, PMMLPortObjectSpec)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="initializeFrom(PMMLDocument)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/colconvert/categorytonumber/CategoryToNumberApplyCellFactory.java" type="org.knime.base.node.preproc.colconvert.categorytonumber.CategoryToNumberApplyCellFactory">
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338722907">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.colconvert.categorytonumber.CategoryToNumberApplyCellFactory"/>
+                <message_argument value="CategoryToNumberApplyCellFactory(DataTableSpec, String, CategoryToNumberApplyNodeSettings, MapValuesDocument.MapValues)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="CategoryToNumberApplyCellFactory(DataTableSpec, String, CategoryToNumberApplyNodeSettings, MapValuesDocument.MapValues)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/colconvert/categorytonumber/CategoryToNumberConfiguration.java" type="org.knime.base.node.preproc.colconvert.categorytonumber.CategoryToNumberConfiguration">
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.colconvert.categorytonumber.CategoryToNumberConfiguration"/>
+                <message_argument value="getOpType()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.colconvert.categorytonumber.CategoryToNumberConfiguration"/>
+                <message_argument value="getOutDataType()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/colconvert/categorytonumber/MapValuesConfiguration.java" type="org.knime.base.node.preproc.colconvert.categorytonumber.MapValuesConfiguration">
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="336695337">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.colconvert.categorytonumber.MapValuesConfiguration"/>
+                <message_argument value="getOutDataType()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.colconvert.categorytonumber.MapValuesConfiguration"/>
+                <message_argument value="getOpType()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.colconvert.categorytonumber.MapValuesConfiguration"/>
+                <message_argument value="getOutDataType()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="getOpType()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="getOutDataType()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/colconvert/categorytonumber/PMMLMapValuesTranslator.java" type="org.knime.base.node.preproc.colconvert.categorytonumber.PMMLMapValuesTranslator">
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.colconvert.categorytonumber.PMMLMapValuesTranslator"/>
+                <message_argument value="exportToLocalTrans()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.colconvert.categorytonumber.PMMLMapValuesTranslator"/>
+                <message_argument value="exportToTransDict()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.colconvert.categorytonumber.PMMLMapValuesTranslator"/>
+                <message_argument value="initializeFrom(DerivedFieldDocument.DerivedField[])"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="exportToLocalTrans()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="exportToTransDict()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="initializeFrom(DerivedFieldDocument.DerivedField[])"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/node/preproc/filter/row/RowFilterNodeModel.java" type="org.knime.base.node.preproc.filter.row.RowFilterNodeModel">
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="571519004">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.filter.row.RowFilterNodeModel.createStreamableOperator(PartitionInfo, PortObjectSpec[])"/>
+                <message_argument value="StreamableOperator"/>
+            </message_arguments>
+        </filter>
         <filter id="642777099">
             <message_arguments>
                 <message_argument value="NodeModel"/>
@@ -32,6 +407,146 @@
                 <message_argument value="NodeModel"/>
                 <message_argument value="RowFilterNodeModel"/>
                 <message_argument value="getOutputPortRoles()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/pmml/PMMLStringConversionTranslator.java" type="org.knime.base.node.preproc.pmml.PMMLStringConversionTranslator">
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.pmml.PMMLStringConversionTranslator"/>
+                <message_argument value="exportToLocalTrans()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.pmml.PMMLStringConversionTranslator"/>
+                <message_argument value="exportToTransDict()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.pmml.PMMLStringConversionTranslator"/>
+                <message_argument value="initializeFrom(DerivedFieldDocument.DerivedField[])"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="exportToLocalTrans()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="exportToTransDict()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="initializeFrom(DerivedFieldDocument.DerivedField[])"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/pmml/binner/PMMLBinningTranslator.java" type="org.knime.base.node.preproc.pmml.binner.PMMLBinningTranslator">
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.pmml.binner.PMMLBinningTranslator"/>
+                <message_argument value="exportToLocalTrans()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.pmml.binner.PMMLBinningTranslator"/>
+                <message_argument value="exportToTransDict()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.pmml.binner.PMMLBinningTranslator"/>
+                <message_argument value="initializeFrom(DerivedFieldDocument.DerivedField[])"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="exportToLocalTrans()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="exportToTransDict()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="initializeFrom(DerivedFieldDocument.DerivedField[])"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/pmml/columnTrans/PMMLOne2ManyTranslator.java" type="org.knime.base.node.preproc.pmml.columnTrans.PMMLOne2ManyTranslator">
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.pmml.columnTrans.PMMLOne2ManyTranslator"/>
+                <message_argument value="exportToLocalTrans()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.pmml.columnTrans.PMMLOne2ManyTranslator"/>
+                <message_argument value="exportToTransDict()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.pmml.columnTrans.PMMLOne2ManyTranslator"/>
+                <message_argument value="initializeFrom(DerivedFieldDocument.DerivedField[])"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="exportToLocalTrans()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="exportToTransDict()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="initializeFrom(DerivedFieldDocument.DerivedField[])"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/pmml/stringtonumber/PMMLStringConversionTranslator.java" type="org.knime.base.node.preproc.pmml.stringtonumber.PMMLStringConversionTranslator">
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.pmml.stringtonumber.PMMLStringConversionTranslator"/>
+                <message_argument value="exportToLocalTrans()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.pmml.stringtonumber.PMMLStringConversionTranslator"/>
+                <message_argument value="exportToTransDict()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.pmml.stringtonumber.PMMLStringConversionTranslator"/>
+                <message_argument value="initializeFrom(DerivedFieldDocument.DerivedField[])"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="exportToLocalTrans()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="exportToTransDict()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="1143996420">
+            <message_arguments>
+                <message_argument value="initializeFrom(DerivedFieldDocument.DerivedField[])"/>
             </message_arguments>
         </filter>
     </resource>

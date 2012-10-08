@@ -52,9 +52,9 @@ package org.knime.base.node.preproc.colconvert.categorytonumber;
 
 import java.util.Map;
 
-import org.dmg.pmml40.DATATYPE;
-import org.dmg.pmml40.OPTYPE;
-import org.dmg.pmml40.OPTYPE.Enum;
+import org.dmg.pmml.DATATYPE;
+import org.dmg.pmml.OPTYPE;
+import org.dmg.pmml.OPTYPE.Enum;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.def.IntCell;
 

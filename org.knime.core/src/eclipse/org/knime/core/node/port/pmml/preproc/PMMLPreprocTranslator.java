@@ -53,9 +53,9 @@ package org.knime.core.node.port.pmml.preproc;
 
 import java.util.List;
 
-import org.dmg.pmml40.DerivedFieldDocument.DerivedField;
-import org.dmg.pmml40.LocalTransformationsDocument.LocalTransformations;
-import org.dmg.pmml40.TransformationDictionaryDocument.TransformationDictionary;
+import org.dmg.pmml.DerivedFieldDocument.DerivedField;
+import org.dmg.pmml.LocalTransformationsDocument.LocalTransformations;
+import org.dmg.pmml.TransformationDictionaryDocument.TransformationDictionary;
 
 /**
  *

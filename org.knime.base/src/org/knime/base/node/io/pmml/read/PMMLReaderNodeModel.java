@@ -54,7 +54,7 @@ import java.net.URL;
 import java.util.List;
 
 import org.apache.xmlbeans.XmlException;
-import org.dmg.pmml40.TransformationDictionaryDocument.TransformationDictionary;
+import org.dmg.pmml.TransformationDictionaryDocument.TransformationDictionary;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;

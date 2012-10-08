@@ -58,8 +58,8 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import org.dmg.pmml40.DerivedFieldDocument.DerivedField;
-import org.dmg.pmml40.MapValuesDocument.MapValues;
+import org.dmg.pmml.DerivedFieldDocument.DerivedField;
+import org.dmg.pmml.MapValuesDocument.MapValues;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.StringValue;

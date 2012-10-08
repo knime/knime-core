@@ -55,11 +55,11 @@ import java.util.Collections;
 import java.util.List;
 
 import org.apache.xmlbeans.SchemaType;
-import org.dmg.pmml40.MININGFUNCTION;
-import org.dmg.pmml40.NumericPredictorDocument;
-import org.dmg.pmml40.PMMLDocument;
-import org.dmg.pmml40.RegressionModelDocument.RegressionModel;
-import org.dmg.pmml40.RegressionTableDocument;
+import org.dmg.pmml.MININGFUNCTION;
+import org.dmg.pmml.NumericPredictorDocument;
+import org.dmg.pmml.PMMLDocument;
+import org.dmg.pmml.RegressionModelDocument.RegressionModel;
+import org.dmg.pmml.RegressionTableDocument;
 import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLMiningSchemaTranslator;

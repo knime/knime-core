@@ -52,7 +52,7 @@
 package org.knime.core.node.port.pmml;
 
 import org.apache.xmlbeans.SchemaType;
-import org.dmg.pmml40.PMMLDocument;
+import org.dmg.pmml.PMMLDocument;
 
 
 

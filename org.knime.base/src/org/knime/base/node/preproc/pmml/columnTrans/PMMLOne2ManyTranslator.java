@@ -54,12 +54,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.dmg.pmml40.DATATYPE;
-import org.dmg.pmml40.DerivedFieldDocument.DerivedField;
-import org.dmg.pmml40.LocalTransformationsDocument.LocalTransformations;
-import org.dmg.pmml40.NormDiscreteDocument.NormDiscrete;
-import org.dmg.pmml40.OPTYPE;
-import org.dmg.pmml40.TransformationDictionaryDocument.TransformationDictionary;
+import org.dmg.pmml.DATATYPE;
+import org.dmg.pmml.DerivedFieldDocument.DerivedField;
+import org.dmg.pmml.LocalTransformationsDocument.LocalTransformations;
+import org.dmg.pmml.NormDiscreteDocument.NormDiscrete;
+import org.dmg.pmml.OPTYPE;
+import org.dmg.pmml.TransformationDictionaryDocument.TransformationDictionary;
 import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 import org.knime.core.node.port.pmml.preproc.PMMLPreprocTranslator;
 import org.knime.core.util.Pair;
@@ -130,8 +130,8 @@ public class PMMLOne2ManyTranslator implements PMMLPreprocTranslator {
             for (Pair<String, String> nameValue : entry.getValue()) {
                 DerivedField derivedField = DerivedField.Factory.newInstance();
                 derivedField.setName(nameValue.getFirst());
-                derivedField.setOptype(OPTYPE.CONTINUOUS);
-                derivedField.setDataType(DATATYPE.DOUBLE);
+                derivedField.setOptype(OPTYPE.ORDINAL);
+                derivedField.setDataType(DATATYPE.INTEGER);
                 NormDiscrete normDiscrete = derivedField.addNewNormDiscrete();
                 normDiscrete.setField(derivedName);
                 normDiscrete.setValue(nameValue.getSecond());

@@ -58,9 +58,9 @@ import java.util.zip.ZipEntry;
 import javax.swing.JComponent;
 import javax.xml.transform.sax.TransformerHandler;
 
-import org.dmg.pmml40.ApplicationDocument.Application;
-import org.dmg.pmml40.HeaderDocument.Header;
-import org.dmg.pmml40.PMMLDocument.PMML;
+import org.dmg.pmml.ApplicationDocument.Application;
+import org.dmg.pmml.HeaderDocument.Header;
+import org.dmg.pmml.PMMLDocument.PMML;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.util.NonClosableInputStream;
@@ -455,4 +455,70 @@ public class PMMLPortObjectSpec implements PortObjectSpec {
         }
         handler.endElement(null, null, MINING_SCHEMA);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((m_dataTableSpec == null) ? 0
+                : m_dataTableSpec.hashCode());
+        result = prime * result + ((m_learningFields == null) ? 0
+                : m_learningFields.hashCode());
+        result = prime * result + ((m_predictedFields == null) ? 0
+                : m_predictedFields.hashCode());
+        result = prime * result + ((m_preprocFields == null) ? 0
+                : m_preprocFields.hashCode());
+        return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        PMMLPortObjectSpec other = (PMMLPortObjectSpec)obj;
+        if (m_dataTableSpec == null) {
+            if (other.m_dataTableSpec != null) {
+                return false;
+            }
+        } else if (!m_dataTableSpec.equalStructure(other.m_dataTableSpec)) {
+            return false;
+        }
+        if (m_learningFields == null) {
+            if (other.m_learningFields != null) {
+                return false;
+            }
+        } else if (!m_learningFields.equals(other.m_learningFields)) {
+            return false;
+        }
+        if (m_predictedFields == null) {
+            if (other.m_predictedFields != null) {
+                return false;
+            }
+        } else if (!m_predictedFields.equals(other.m_predictedFields)) {
+            return false;
+        }
+        if (m_preprocFields == null) {
+            if (other.m_preprocFields != null) {
+                return false;
+            }
+        } else if (!m_preprocFields.equals(other.m_preprocFields)) {
+            return false;
+        }
+        return true;
+    }
+
+
 }

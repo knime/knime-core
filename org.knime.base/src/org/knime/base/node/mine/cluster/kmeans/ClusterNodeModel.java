@@ -518,8 +518,7 @@ public class ClusterNodeModel extends NodeModel {
         if (inPMMLPort != null) {
             inPMMLSpec = inPMMLPort.getSpec();
         }
-        PMMLPortObjectSpec pmmlOutSpec = createPMMLSpec(inPMMLSpec,
-                outData.getSpec());
+        PMMLPortObjectSpec pmmlOutSpec = createPMMLSpec(inPMMLSpec);
         PMMLPortObject outPMMLPort
                 = new PMMLPortObject(pmmlOutSpec, inPMMLPort, m_spec);
         Set<String> columns = new LinkedHashSet<String>();
@@ -674,7 +673,7 @@ public class ClusterNodeModel extends NodeModel {
         // return spec for data and model outport!
         PMMLPortObjectSpec pmmlSpec = (PMMLPortObjectSpec)inSpecs[1];
         return new PortObjectSpec[]{appendedSpec,
-                createPMMLSpec(pmmlSpec, m_spec)};
+                createPMMLSpec(pmmlSpec)};
     }
 
     private DataTableSpec createAppendedSpec() {
@@ -728,13 +727,12 @@ public class ClusterNodeModel extends NodeModel {
         }
     }
 
-    private PMMLPortObjectSpec createPMMLSpec(final PMMLPortObjectSpec pmmlSpec,
-            final DataTableSpec tableSpec)
+    private PMMLPortObjectSpec createPMMLSpec(final PMMLPortObjectSpec pmmlSpec)
             throws InvalidSettingsException {
         List<String> includes;
         if (m_usedColumns.isKeepAllSelected()) {
             includes = new ArrayList<String>();
-            for (DataColumnSpec col : tableSpec) {
+            for (DataColumnSpec col : m_spec) {
                 if (col.getType().isCompatible(DoubleValue.class)) {
                     includes.add(col.getName());
                 }
@@ -746,7 +744,7 @@ public class ClusterNodeModel extends NodeModel {
         // the order in this list is important, need to use the order defined
         // by DTS, not m_usedColumns
         List<String> activeCols = new LinkedList<String>();
-        for (DataColumnSpec colSpec : tableSpec) {
+        for (DataColumnSpec colSpec : m_spec) {
             String name = colSpec.getName();
             if (colNameHash.remove(name)) {
                 activeCols.add(name);
@@ -759,7 +757,7 @@ public class ClusterNodeModel extends NodeModel {
         }
 
         PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(
-                pmmlSpec, tableSpec);
+                pmmlSpec, m_spec);
         creator.setLearningColsNames(activeCols);
         return creator.createSpec();
     }

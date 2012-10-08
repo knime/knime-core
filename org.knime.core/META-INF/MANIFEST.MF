@@ -91,9 +91,8 @@ Export-Package: log4j,
  schemaorg_apache_xmlbeans.javaname.org.knime.node2012.UlDocument,
  schemaorg_apache_xmlbeans.javaname.org.knime.node2012.ViewDocument,
  schemaorg_apache_xmlbeans.javaname.org.knime.node2012.ViewsDocument,
- schemaorg_apache_xmlbeans.modelgroup.http_3A_2F_2Fwww_2Edmg_2Eorg_2FPMML_2D4_5F0,
- schemaorg_apache_xmlbeans.system.s3B82E2FB9AF537F6FF8B321C34E0C68C,
- schemaorg_apache_xmlbeans.system.s401A87426FAA35C4072086675CF0C468
+ schemaorg_apache_xmlbeans.system.s2514633B0C2CA1387ACB8CCA02ABE658,
+ schemaorg_apache_xmlbeans.system.s3B82E2FB9AF537F6FF8B321C34E0C68C
 Require-Bundle: org.eclipse.osgi;bundle-version="[3.6.0,4.0.0)";visibility:=reexport,
  org.eclipse.core.runtime;bundle-version="[3.6.0,4.0.0)";resolution:=optional;visibility:=reexport,
  org.apache.log4j;bundle-version="[1.2.15,1.3.0)",

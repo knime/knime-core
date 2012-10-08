@@ -59,7 +59,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.xmlbeans.XmlError;
 import org.apache.xmlbeans.XmlOptions;
-import org.dmg.pmml40.PMMLDocument;
+import org.dmg.pmml.PMMLDocument;
 
 /**
  *

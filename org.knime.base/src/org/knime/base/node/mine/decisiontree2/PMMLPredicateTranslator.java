@@ -54,13 +54,13 @@ package org.knime.base.node.mine.decisiontree2;
 import java.math.BigInteger;
 
 import org.apache.xmlbeans.XmlCursor;
-import org.dmg.pmml40.ArrayType;
-import org.dmg.pmml40.CompoundPredicateDocument.CompoundPredicate;
-import org.dmg.pmml40.CompoundRuleDocument.CompoundRule;
-import org.dmg.pmml40.NodeDocument.Node;
-import org.dmg.pmml40.SimplePredicateDocument.SimplePredicate;
-import org.dmg.pmml40.SimpleRuleDocument.SimpleRule;
-import org.dmg.pmml40.SimpleSetPredicateDocument.SimpleSetPredicate;
+import org.dmg.pmml.ArrayType;
+import org.dmg.pmml.CompoundPredicateDocument.CompoundPredicate;
+import org.dmg.pmml.CompoundRuleDocument.CompoundRule;
+import org.dmg.pmml.NodeDocument.Node;
+import org.dmg.pmml.SimplePredicateDocument.SimplePredicate;
+import org.dmg.pmml.SimpleRuleDocument.SimpleRule;
+import org.dmg.pmml.SimpleSetPredicateDocument.SimpleSetPredicate;
 
 /**
  *

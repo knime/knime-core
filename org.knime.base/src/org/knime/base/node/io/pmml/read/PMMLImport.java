@@ -49,13 +49,15 @@ package org.knime.base.node.io.pmml.read;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlObject;
-import org.dmg.pmml40.PMMLDocument;
+import org.dmg.pmml.PMMLDocument;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.pmml.PMMLDataDictionaryTranslator;
@@ -81,7 +83,7 @@ public class PMMLImport {
      * {@link PMMLPortObjectSpec} from the content of the file.
      *
      * @param file containing the PMML model
-     * @param update try to update the PMML to version 4.0 if an older version
+     * @param update try to update the PMML to version 4.1 if an older version
      *      is imported
      * @throws IOException if something goes wrong reading the file
      * @throws XmlException if an invalid PMML file is passed
@@ -115,24 +117,25 @@ public class PMMLImport {
                     pmmlDoc = PMMLDocument.Factory.parse(updatedPMML);
                 } catch (Exception e) {
                     throw new RuntimeException(
-                            "Parsing of PMML v 3.x document failed.", e);
+                            "Parsing of PMML v 3.x/4.0 document failed.", e);
                 }
                 if (!update) {
-                    LOGGER.info("KNIME produced PMML 3.x updated to PMML 4.0.");
+                    LOGGER.info(
+                            "KNIME produced PMML 3.x/4.0 updated to PMML 4.1.");
                 } else {
-                    LOGGER.info("Older PMML version updated to PMML 4.0.");
+                    LOGGER.info("Older PMML version updated to PMML 4.1.");
                 }
             }
         }
         if (pmmlDoc == null) {
             throw new IllegalArgumentException("File \"" + file
-                    + "\" is not a valid PMML 4.0 file." );
+                    + "\" is not a valid PMML 4.1 file.");
         }
         Map<String, String> msg = PMMLValidator.validatePMML(pmmlDoc);
         if (!msg.isEmpty()) {
             StringBuffer sb = new StringBuffer();
             sb.append("File \"" + file
-                    + "\" is not a valid PMML 4.0 file. Errors:\n");
+                    + "\" is not a valid PMML 4.1 file. Errors:\n");
             for (Map.Entry<String, String> entry : msg.entrySet()) {
                 String location = entry.getKey();
                 String message = entry.getValue();
@@ -177,13 +180,14 @@ public class PMMLImport {
                 = new PMMLMiningSchemaTranslator();
         miningTrans.initializeFrom(pmmlDoc);
 
-        List<String> activeFields = new ArrayList<String>();
+        Set<String> activeFields = new LinkedHashSet<String>();
         List<String> miningFields = miningTrans.getActiveFields();
         /* If we have a model all active fields of the data dictionary
          * are passed through the mining schema. */
         activeFields.addAll(miningFields);
         activeFields.addAll(activeDerivedFields);
-        specCreator.setLearningColsNames(activeFields);
+        specCreator.setLearningColsNames(new LinkedList<String>(activeFields));
+        specCreator.addPreprocColNames(activeDerivedFields);
         specCreator.setTargetColsNames(miningTrans.getTargetFields());
 
         PMMLPortObjectSpec portObjectSpec = specCreator.createSpec();
@@ -209,7 +213,7 @@ public class PMMLImport {
         PMMLDocument pmmlDoc = PMMLDocument.Factory.parse(doc);
         if (!pmmlDoc.validate()) {
             throw new IllegalArgumentException("Document \"" + doc
-                    + "\" is not a valid PMML 4.0 file.");
+                    + "\" is not a valid PMML 4.1 file.");
         }
         init(pmmlDoc);
     }

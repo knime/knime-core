@@ -1,0 +1,7 @@
+<xb:config xmlns:xb="http://xml.apache.org/xmlbeans/2004/02/xbean/config">
+  <!-- Setting the java package for the current PMML Namespace to org.dmg.pmml 
+  		(without version number, which makes upgrades much easier) -->
+  <xb:namespace uri="http://www.dmg.org/PMML-4_1">
+    <xb:package>org.dmg.pmml</xb:package>
+  </xb:namespace>
+</xb:config>

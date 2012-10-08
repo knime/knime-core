@@ -53,7 +53,6 @@ import java.io.OutputStream;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -69,31 +68,31 @@ import org.apache.xmlbeans.SchemaType;
 import org.apache.xmlbeans.XmlCursor;
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlObject;
-import org.dmg.pmml40.ApplicationDocument.Application;
-import org.dmg.pmml40.AssociationModelDocument.AssociationModel;
-import org.dmg.pmml40.ClusteringModelDocument.ClusteringModel;
-import org.dmg.pmml40.DataDictionaryDocument.DataDictionary;
-import org.dmg.pmml40.DataFieldDocument.DataField;
-import org.dmg.pmml40.DerivedFieldDocument.DerivedField;
-import org.dmg.pmml40.ExtensionDocument;
-import org.dmg.pmml40.GeneralRegressionModelDocument.GeneralRegressionModel;
-import org.dmg.pmml40.INVALIDVALUETREATMENTMETHOD;
-import org.dmg.pmml40.LocalTransformationsDocument.LocalTransformations;
-import org.dmg.pmml40.MiningFieldDocument.MiningField;
-import org.dmg.pmml40.MiningModelDocument.MiningModel;
-import org.dmg.pmml40.MiningSchemaDocument.MiningSchema;
-import org.dmg.pmml40.NaiveBayesModelDocument.NaiveBayesModel;
-import org.dmg.pmml40.NeuralNetworkDocument.NeuralNetwork;
-import org.dmg.pmml40.PMMLDocument;
-import org.dmg.pmml40.PMMLDocument.PMML;
-import org.dmg.pmml40.RegressionModelDocument.RegressionModel;
-import org.dmg.pmml40.RuleSetModelDocument.RuleSetModel;
-import org.dmg.pmml40.SequenceModelDocument.SequenceModel;
-import org.dmg.pmml40.SupportVectorMachineModelDocument.SupportVectorMachineModel;
-import org.dmg.pmml40.TextModelDocument.TextModel;
-import org.dmg.pmml40.TimeSeriesModelDocument.TimeSeriesModel;
-import org.dmg.pmml40.TransformationDictionaryDocument.TransformationDictionary;
-import org.dmg.pmml40.TreeModelDocument.TreeModel;
+import org.dmg.pmml.ApplicationDocument.Application;
+import org.dmg.pmml.AssociationModelDocument.AssociationModel;
+import org.dmg.pmml.ClusteringModelDocument.ClusteringModel;
+import org.dmg.pmml.DataDictionaryDocument.DataDictionary;
+import org.dmg.pmml.DataFieldDocument.DataField;
+import org.dmg.pmml.DerivedFieldDocument.DerivedField;
+import org.dmg.pmml.ExtensionDocument;
+import org.dmg.pmml.GeneralRegressionModelDocument.GeneralRegressionModel;
+import org.dmg.pmml.INVALIDVALUETREATMENTMETHOD;
+import org.dmg.pmml.LocalTransformationsDocument.LocalTransformations;
+import org.dmg.pmml.MiningFieldDocument.MiningField;
+import org.dmg.pmml.MiningModelDocument.MiningModel;
+import org.dmg.pmml.MiningSchemaDocument.MiningSchema;
+import org.dmg.pmml.NaiveBayesModelDocument.NaiveBayesModel;
+import org.dmg.pmml.NeuralNetworkDocument.NeuralNetwork;
+import org.dmg.pmml.PMMLDocument;
+import org.dmg.pmml.PMMLDocument.PMML;
+import org.dmg.pmml.RegressionModelDocument.RegressionModel;
+import org.dmg.pmml.RuleSetModelDocument.RuleSetModel;
+import org.dmg.pmml.SequenceModelDocument.SequenceModel;
+import org.dmg.pmml.SupportVectorMachineModelDocument.SupportVectorMachineModel;
+import org.dmg.pmml.TextModelDocument.TextModel;
+import org.dmg.pmml.TimeSeriesModelDocument.TimeSeriesModel;
+import org.dmg.pmml.TransformationDictionaryDocument.TransformationDictionary;
+import org.dmg.pmml.TreeModelDocument.TreeModel;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.util.NonClosableInputStream;
 import org.knime.core.data.xml.PMMLCellFactory;
@@ -155,6 +154,8 @@ public final class PMMLPortObject implements PortObject {
     public static final String PMML_V3_2 = "3.2";
     /** Constant for version 4.0.*/
     public static final String PMML_V4_0 = "4.0";
+    /** Constant for version 4.1.*/
+    public static final String PMML_V4_1 = "4.1";
 
     /** Static initialization of all expressions needed for XPath.*/
     private static final String NAMESPACE_DECLARATION =
@@ -189,18 +190,7 @@ public final class PMMLPortObject implements PortObject {
     /* ------------------------------------------------------ */
 
 
-    private static final Map<String, String> VERSION_NAMESPACE_MAP
-            = new HashMap<String, String>();
-
     private PMMLDocument m_pmmlDoc;
-
-    static {
-        VERSION_NAMESPACE_MAP.put(PMML_V3_0, "http://www.dmg.org/PMML-3_0");
-        VERSION_NAMESPACE_MAP.put(PMML_V3_1, "http://www.dmg.org/PMML-3_1");
-        VERSION_NAMESPACE_MAP.put(PMML_V3_2, "http://www.dmg.org/PMML-3_2");
-        VERSION_NAMESPACE_MAP.put(PMML_V4_0, "http://www.dmg.org/PMML-4_0");
-    }
-
 
     private PMMLPortObjectSpec m_spec;
 
@@ -372,7 +362,7 @@ public final class PMMLPortObject implements PortObject {
         m_pmmlDoc = PMMLDocument.Factory.newInstance(
                 PMMLFormatter.getOptions());
         PMML pmml = m_pmmlDoc.addNewPMML();
-        pmml.setVersion(PMML_V4_0);
+        pmml.setVersion(PMML_V4_1);
         PMMLPortObjectSpec.writeHeader(pmml);
         new PMMLDataDictionaryTranslator().exportTo(m_pmmlDoc, inData);
         /** No model is written yet. It has to be added by the responsible
@@ -666,7 +656,7 @@ public final class PMMLPortObject implements PortObject {
         if (xmlDoc instanceof PMMLDocument) {
             m_pmmlDoc = (PMMLDocument)xmlDoc;
         } else {
-            /* Try to recover when reading a PMML 3.x document that
+            /* Try to recover when reading a PMML 3.x/4.0 document that
              * was produced by KNIME by just replacing the PMML version and
              * namespace. */
             if (PMMLUtils.isOldKNIMEPMML(xmlDoc)) {
@@ -678,12 +668,13 @@ public final class PMMLPortObject implements PortObject {
                     m_pmmlDoc = PMMLDocument.Factory.parse(updatedPMML);
                 } catch (Exception e) {
                     throw new RuntimeException(
-                            "Parsing of PMML v 3.x document failed.", e);
+                            "Parsing of PMML v 3.x/4.0 document failed.", e);
                 }
-                LOGGER.info("KNIME produced PMML 3.x  converted to PMML 4.0.");
+                LOGGER.info(
+                        "KNIME produced PMML 3.x/4.0  converted to PMML 4.1.");
             } else {
                 throw new RuntimeException(
-                        "Parsing of PMML v 3.x document failed.");
+                        "Parsing of PMML v 3.x/4.0 document failed.");
             }
         }
         m_spec = spec;
@@ -953,6 +944,51 @@ public final class PMMLPortObject implements PortObject {
             }
         }
         return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        PMMLPortObject other = (PMMLPortObject)obj;
+        if (m_pmmlDoc == null) {
+            if (other.m_pmmlDoc != null) {
+                return false;
+            }
+        } else if (!m_pmmlDoc.valueEquals(other.m_pmmlDoc)) {
+            return false;
+        }
+        if (m_spec == null) {
+            if (other.m_spec != null) {
+                return false;
+            }
+        } else if (!m_spec.equals(other.m_spec)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result
+                + ((m_pmmlDoc == null) ? 0 : m_pmmlDoc.hashCode());
+        result = prime * result + ((m_spec == null) ? 0 : m_spec.hashCode());
+        return result;
     }
 
 }
