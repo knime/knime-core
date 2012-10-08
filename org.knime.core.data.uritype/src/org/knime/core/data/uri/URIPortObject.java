@@ -64,7 +64,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class URIPortObject extends AbstractSimplePortObject {
@@ -85,8 +85,8 @@ public class URIPortObject extends AbstractSimplePortObject {
 
     /**
      * Constructor for new URI port objects.
-     * 
-     * 
+     *
+     *
      * @param uriContents The contend for this object. Must not be null or
      *            contain null.
      */
@@ -134,7 +134,7 @@ public class URIPortObject extends AbstractSimplePortObject {
         List<URIContent> list = new ArrayList<URIContent>();
         for (String key : model.keySet()) {
             ModelContentRO child = model.getModelContent(key);
-            list.add(URIContent.loadURIContent(child));
+            list.add(URIContent.load(child));
         }
         m_uriContents = Collections.unmodifiableList(list);
     }
@@ -148,7 +148,7 @@ public class URIPortObject extends AbstractSimplePortObject {
         int i = 0;
         for (URIContent uri : m_uriContents) {
             ModelContentWO child = model.addModelContent("child-" + i);
-            URIContent.saveURIContent(uri, child);
+            uri.save(child);
             i++;
         }
     }

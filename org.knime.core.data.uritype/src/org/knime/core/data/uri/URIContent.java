@@ -50,8 +50,10 @@
  */
 package org.knime.core.data.uri;
 
+import java.io.DataInput;
+import java.io.DataOutput;
+import java.io.IOException;
 import java.io.Serializable;
-import java.lang.reflect.Constructor;
 import java.net.URI;
 import java.net.URISyntaxException;
 
@@ -60,10 +62,11 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 
 /**
- * 
+ * Content object wrapping an {@link URI} and an extension (e.g. ".csv", or ".xml").
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class URIContent implements Serializable {
+public final class URIContent implements Serializable {
 
     /**
      * Serial id.
@@ -75,30 +78,11 @@ public class URIContent implements Serializable {
     private final String m_extension;
 
     /**
-     * Framework constructor, <b>do not use in client code</b>. Subclasses must
-     * inherit this constructor.
-     * 
-     * 
-     * @param model The model to read from
-     * @throws InvalidSettingsException If the model contains invalid
-     *             information.
-     */
-    public URIContent(final ModelContentRO model)
-            throws InvalidSettingsException {
-        try {
-            m_uri = new URI(model.getString("uri"));
-        } catch (URISyntaxException e) {
-            throw new InvalidSettingsException(e);
-        }
-        m_extension = model.getString("extension");
-    }
-
-    /**
      * Constructor for new URI content.
-     * 
-     * 
+     *
+     *
      * @param uri URI of this object
-     * @param extension File extension of this object
+     * @param extension File extension of this object, e.g. ".csv"
      */
     public URIContent(final URI uri, final String extension) {
         if (uri == null || extension == null) {
@@ -116,7 +100,7 @@ public class URIContent implements Serializable {
     }
 
     /**
-     * @return The file extension
+     * @return The file extension as provided in the constructor (e.g. ".csv" or "").
      */
     public String getExtension() {
         return m_extension;
@@ -148,22 +132,9 @@ public class URIContent implements Serializable {
     /**
      * @param output The model to save in
      */
-    protected void save(final ModelContentWO output) {
+    public void save(final ModelContentWO output) {
         output.addString("uri", m_uri.toString());
         output.addString("extension", m_extension);
-    }
-
-    /**
-     * @param uri The URI content to save
-     * @param model The model to save in
-     */
-    public static final void saveURIContent(final URIContent uri,
-            final ModelContentWO model) {
-        String className = uri.getClass().getName();
-        // possibly a sub-class of URIContent
-        model.addString("className", className);
-        ModelContentWO contentChild = model.addModelContent("content");
-        uri.save(contentChild);
     }
 
     /**
@@ -171,24 +142,43 @@ public class URIContent implements Serializable {
      * @return URIContent object
      * @throws InvalidSettingsException If the model contains invalid
      *             information.
+     * @noreference Not to be called by client.
      */
-    public static final URIContent loadURIContent(final ModelContentRO model)
-            throws InvalidSettingsException {
-        String className = model.getString("className");
-        ModelContentRO contentChild = model.getModelContent("content");
-        if (className == null) {
-            throw new InvalidSettingsException("Class name is null.");
-        }
+    public static URIContent load(final ModelContentRO model) throws InvalidSettingsException {
+        URI uri;
         try {
-            // possibly a sub-class of URIContent
-            Class<?> cl = Class.forName(className);
-            Constructor<?> constr = cl.getConstructor(ModelContentRO.class);
-            return (URIContent)constr.newInstance(contentChild);
-        } catch (Exception e) {
-            throw new InvalidSettingsException(
-                    "Failed to instantiate URIContent class \"" + className
-                            + "\" using ModelContentRO constructor", e);
+            uri = new URI(model.getString("uri"));
+        } catch (URISyntaxException e) {
+            throw new InvalidSettingsException(e);
         }
+        String extension = model.getString("extension");
+        return new URIContent(uri, extension);
     }
 
+    /**
+     * @param output The model to save in
+     * @throws IOException ...
+     * @noreference Not to be called by client.
+     */
+    public void save(final DataOutput output) throws IOException {
+        output.writeUTF(m_uri.toString());
+        output.writeUTF(m_extension);
+    }
+
+    /** Load from stream (e.g. inline data stream).
+     * @param input ...
+     * @return ...
+     * @throws IOException ...
+     * @noreference Not to be called by client.
+     */
+    public static URIContent load(final DataInput input) throws IOException {
+        URI uri;
+        try {
+            uri = new URI(input.readUTF());
+        } catch (URISyntaxException e) {
+            throw new IOException(e);
+        }
+        String extension = input.readUTF();
+        return new URIContent(uri, extension);
+    }
 }

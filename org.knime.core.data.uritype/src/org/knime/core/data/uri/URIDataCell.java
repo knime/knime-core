@@ -50,8 +50,6 @@
  */
 package org.knime.core.data.uri;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import org.knime.core.data.DataCell;
@@ -60,12 +58,9 @@ import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.ModelContent;
-import org.knime.core.node.ModelContentRO;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class URIDataCell extends DataCell implements URIDataValue {
@@ -78,7 +73,7 @@ public class URIDataCell extends DataCell implements URIDataValue {
     /**
      * Convenience access member for
      * <code>DataType.getType(URIDataValue.class)</code>.
-     * 
+     *
      * @see DataType#getType(Class)
      */
     public static final DataType TYPE = DataType.getType(URIDataCell.class);
@@ -87,8 +82,8 @@ public class URIDataCell extends DataCell implements URIDataValue {
      * Returns the preferred value class of this cell implementation. This
      * method is called per reflection to determine which is the preferred
      * renderer, comparator, etc.
-     * 
-     * 
+     *
+     *
      * @return URIDataValue.class;
      */
     public static final Class<? extends DataValue> getPreferredValueClass() {
@@ -157,13 +152,7 @@ public class URIDataCell extends DataCell implements URIDataValue {
                 final DataCellDataOutput output) throws IOException {
             output.writeInt(0); // version
             URIContent cnt = cell.getURIContent();
-            ModelContent model = new ModelContent("uri_content");
-            URIContent.saveURIContent(cnt, model);
-            ByteArrayOutputStream outStream = new ByteArrayOutputStream();
-            model.saveToXML(outStream);
-            byte[] bytes = outStream.toByteArray();
-            output.write(bytes.length);
-            output.write(bytes);
+            cnt.save(output);
         }
 
         /**
@@ -173,17 +162,7 @@ public class URIDataCell extends DataCell implements URIDataValue {
         public URIDataCell deserialize(final DataCellDataInput input)
                 throws IOException {
             input.readInt(); // version
-            int byteLength = input.readInt();
-            byte[] bytes = new byte[byteLength];
-            input.readFully(bytes);
-            ModelContentRO model =
-                    ModelContent.loadFromXML(new ByteArrayInputStream(bytes));
-            URIContent cnt;
-            try {
-                cnt = URIContent.loadURIContent(model);
-            } catch (InvalidSettingsException e) {
-                throw new IOException(e);
-            }
+            URIContent cnt = URIContent.load(input);
             return new URIDataCell(cnt);
         }
 
