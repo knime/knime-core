@@ -11,7 +11,7 @@
 			<or>
 			    <os family="windows" /><!-- Windows cannot create classes for the PMML schema -->
         		<uptodate property="schemas.notRequired" targetfile="lib/schemas.jar">
-        			<srcfiles dir="src" includes="**/*.xsd" />
+        			<srcfiles dir="src" includes="**/*.xsd*" />
         		</uptodate>
 			</or>
 		</condition>
