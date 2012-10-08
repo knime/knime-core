@@ -26,7 +26,10 @@
 	<target name="build" depends="schemas.check,init" unless="schemas.notRequired">
 		<antcall target="clean" />
 		<xmlbean destfile="lib/schemas.jar" srcgendir="src/xmlbeans" javasource="1.5" optimize="on" debug="on" classpath="${xbean.jar}">
-			<fileset dir="src" includes="**/*.xsd **/*.xsdconfig" />
+			<fileset dir="src">
+				<include name="**/*.xsd"/>
+				<include name="**/*.xsdconfig" />
+			</fileset>
 		</xmlbean>
 		<eclipse.convertPath fileSystemPath="${basedir}" property="projectName" />
 		<eclipse.refreshLocal resource="${projectName}" depth="infinite" />
