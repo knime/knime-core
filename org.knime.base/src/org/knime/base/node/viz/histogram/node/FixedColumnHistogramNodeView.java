@@ -103,12 +103,11 @@ public class FixedColumnHistogramNodeView
             m_plotter = new FixedHistogramPlotter(props,
                     model.getInHiLiteHandler(0));
             // hiliting is not supported in the fixed column histogram
-            setComponent(m_plotter);
         }
         m_plotter.setHiLiteHandler(model.getInHiLiteHandler(0));
         m_plotter.setHistogramVizModel(tableSpec, vizModel);
         m_plotter.updatePaintModel();
-        if (getComponent() == null) {
+        if (getComponent() != m_plotter) {
             setComponent(m_plotter);
         }
         if (m_plotter != null) {
