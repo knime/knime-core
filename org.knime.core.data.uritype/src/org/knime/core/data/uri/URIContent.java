@@ -62,7 +62,7 @@ import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.ModelContentWO;
 
 /**
- * Content object wrapping an {@link URI} and an extension (e.g. ".csv", or ".xml").
+ * Content object wrapping an {@link URI} and an extension (e.g. "csv", or "xml").
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
@@ -82,7 +82,7 @@ public final class URIContent implements Serializable {
      *
      *
      * @param uri URI of this object
-     * @param extension File extension of this object, e.g. ".csv"
+     * @param extension File extension of this object, e.g. "csv"
      */
     public URIContent(final URI uri, final String extension) {
         if (uri == null || extension == null) {
@@ -100,7 +100,7 @@ public final class URIContent implements Serializable {
     }
 
     /**
-     * @return The file extension as provided in the constructor (e.g. ".csv" or "").
+     * @return The file extension as provided in the constructor (e.g. "csv" or "").
      */
     public String getExtension() {
         return m_extension;
@@ -154,7 +154,7 @@ public final class URIContent implements Serializable {
         String extension = model.getString("extension");
         return new URIContent(uri, extension);
     }
-    
+
     /**
      * {@inheritDoc}
      */
