@@ -71,6 +71,12 @@ public final class BinaryObjectDataCell extends DataCell implements BinaryObject
     /** Type associated with this cells implementing {@link BinaryObjectDataValue}. */
     public static final DataType TYPE = DataType.getType(BinaryObjectDataCell.class);
 
+    /** Preferred value type is {@link BinaryObjectDataValue}. See {@link DataCell} API for details.
+     * @return Class of {@link BinaryObjectDataValue} */
+    public static final Class<BinaryObjectDataValue> getPreferredValueClass() {
+        return BinaryObjectDataValue.class;
+    }
+
     private final byte[] m_bytes;
 
     /** Serializer as required by {@link DataCell} class.

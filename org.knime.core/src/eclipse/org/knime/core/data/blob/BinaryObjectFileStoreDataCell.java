@@ -90,6 +90,12 @@ public final class BinaryObjectFileStoreDataCell extends FileStoreCell implement
         };
     }
 
+    /** Preferred value type is {@link BinaryObjectDataValue}. See {@link org.knime.core.data.DataCell} API for details.
+     * @return Class of {@link BinaryObjectDataValue} */
+    public static final Class<BinaryObjectDataValue> getPreferredValueClass() {
+        return BinaryObjectDataValue.class;
+    }
+
     /** Create new object based on file store with exiting file.
      * @param fs The file store object with the file to represent.
      */
