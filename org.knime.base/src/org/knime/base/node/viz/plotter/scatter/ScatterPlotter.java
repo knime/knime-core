@@ -70,6 +70,7 @@ import org.knime.base.node.util.DataArray;
 import org.knime.base.node.viz.plotter.AbstractDrawingPane;
 import org.knime.base.node.viz.plotter.AbstractPlotter;
 import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
+import org.knime.base.node.viz.plotter.DataProvider;
 import org.knime.base.node.viz.plotter.columns.TwoColumnPlotter;
 import org.knime.base.util.coordinate.Coordinate;
 import org.knime.core.data.DataCell;
@@ -189,7 +190,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
      * {@inheritDoc}
      */
     @Override
-    public void dispose() {
+    public synchronized void dispose() {
         getScatterPlotterDrawingPane().setDotInfoArray(
                 new DotInfoArray(new DotInfo[0]));
         super.dispose();
@@ -466,8 +467,9 @@ public class ScatterPlotter extends TwoColumnPlotter {
      *
      * @param dotsArray the array containing the dots.
      */
-    protected void calculateCoordinates(final DotInfoArray dotsArray) {
-        if (!isScatterPlotterDrawingPane()) {
+    protected synchronized void calculateCoordinates(final DotInfoArray dotsArray) {
+        final DataProvider provider = getDataProvider();
+        if ((provider == null) || !isScatterPlotterDrawingPane()) {
             // doesn't make sense to calculate the coordinates
             // TODO: maybe return the calculated dot info array???
             return;
@@ -748,9 +750,9 @@ public class ScatterPlotter extends TwoColumnPlotter {
             getDrawingPane().repaint();
         }
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -763,9 +765,9 @@ public class ScatterPlotter extends TwoColumnPlotter {
         mappedX += m_dotSize;
         return mappedX;
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -775,7 +777,7 @@ public class ScatterPlotter extends TwoColumnPlotter {
         int mappedY = (int)getYAxis().getCoordinate().calculateMappedValue(
                 y, height);
         // for coordinate origin down there in the left lower
-        // corner:        
+        // corner:
         mappedY = height - mappedY;
         // move it up, since we have dotsize offset at the bottom
         mappedY += m_dotSize;
