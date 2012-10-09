@@ -7,3 +7,4 @@ Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Require-Bundle: org.knime.core
 Bundle-ActivationPolicy: lazy
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Export-Package: org.knime.core.data.uri
