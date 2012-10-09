@@ -154,6 +154,14 @@ public final class URIContent implements Serializable {
         String extension = model.getString("extension");
         return new URIContent(uri, extension);
     }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return "URI: " + m_uri.toString() + "; EXT: " + m_extension;
+    }
 
     /**
      * @param output The model to save in
