@@ -49,10 +49,11 @@ package org.knime.core.node.util.filter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
@@ -70,6 +71,8 @@ import org.knime.core.node.NodeSettingsWO;
  * @since 2.6
  */
 public class NameFilterConfiguration implements Cloneable {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(NameFilterConfiguration.class);
 
     private String[] m_includeList = new String[0];
     private String[] m_excludeList = new String[0];
@@ -150,11 +153,13 @@ public class NameFilterConfiguration implements Cloneable {
         public String[] getRemovedFromExcludes() {
             return m_removedFromExcludes;
         }
-        /** @return an array of included names. */
+        /** @return an array of included names. The list is sorted according to
+         * the order provided in {@link NameFilterConfiguration#applyTo(String[])}. */
         public String[] getIncludes() {
             return m_incls;
         }
-        /** @return an array of excluded names. */
+        /** @return an array of excluded names. The list is sorted according to
+         * the order provided in {@link NameFilterConfiguration#applyTo(String[])}. */
         public String[] getExcludes() {
             return m_excls;
         }
@@ -207,56 +212,36 @@ public class NameFilterConfiguration implements Cloneable {
     protected FilterResult applyTo(final String[] names) {
 
         final EnforceOption enforceOption = getEnforceOption();
-        final List<String> nameList = Arrays.asList(names);
-        final List<String> incls = new ArrayList<String>(
-                Arrays.asList(getIncludeList()));
-        final List<String> excls = new ArrayList<String>(
-                Arrays.asList(getExcludeList()));
+        final LinkedHashSet<String> inclsHash = new LinkedHashSet<String>(Arrays.asList(getIncludeList()));
+        final LinkedHashSet<String> exclsHash = new LinkedHashSet<String>(Arrays.asList(getExcludeList()));
+        final List<String> incls = new ArrayList<String>();
+        final List<String> excls = new ArrayList<String>();
 
         for (String name : names) {
-            if (!incls.contains(name) && !excls.contains(name)) {
+            if (inclsHash.remove(name)) { // also remove from hash so that it contains only orphan items
+                incls.add(name);
+                if (exclsHash.remove(name)) {
+                    LOGGER.coding("Item \"" + name + "\" appears in both the include and exclude list");
+                }
+            } else if (exclsHash.remove(name)) {
+                excls.add(name);
+            } else {
                 switch (enforceOption) {
-                    case EnforceInclusion:
-                        excls.add(name);
-                        break;
-                    case EnforceExclusion:
-                        incls.add(name);
-                        break;
+                case EnforceExclusion:
+                    incls.add(name);
+                    break;
+                case EnforceInclusion:
+                    excls.add(name);
+                    break;
+                default:
+                    throw new IllegalStateException("Option not implemented: " + enforceOption);
                 }
             }
-            if (incls.contains(name) && excls.contains(name)) {
-                // weird case, non-disjoint sets
-                switch (enforceOption) {
-                    case EnforceInclusion:
-                        excls.remove(name);
-                        break;
-                    case EnforceExclusion:
-                        incls.remove(name);
-                        break;
-                }
-            }
         }
+        final List<String> orphanedIncludes = new ArrayList<String>(inclsHash);
+        final List<String> orphanedExcludes = new ArrayList<String>(exclsHash);
 
-        final List<String> removedFromIncludes = new ArrayList<String>();
-        final List<String> removedFromExcludes = new ArrayList<String>();
-
-        for (Iterator<String> it = incls.iterator(); it.hasNext();) {
-            String in = it.next();
-            if (!nameList.contains(in)) {
-                removedFromIncludes.add(in);
-                it.remove();
-            }
-        }
-
-        for (Iterator<String> it = excls.iterator(); it.hasNext();) {
-            String ex = it.next();
-            if (!nameList.contains(ex)) {
-                removedFromExcludes.add(ex);
-                it.remove();
-            }
-        }
-        return new FilterResult(incls, excls,
-                removedFromIncludes, removedFromExcludes);
+        return new FilterResult(incls, excls, orphanedIncludes, orphanedExcludes);
     }
 
     /**
