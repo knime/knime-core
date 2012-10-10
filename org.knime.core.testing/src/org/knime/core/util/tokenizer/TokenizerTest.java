@@ -1205,6 +1205,118 @@ public final class TokenizerTest extends TestCase {
         System.out.println("Tokenizer GetLineContinuationCharacter: Done.");
 
     }
+    
+    public void testNewLineInQuotes() {
+        TokenizerSettings fts = new TokenizerSettings();
+        fts.addDelimiterPattern(",", false, false, false);
+        fts.addDelimiterPattern("\n", false, true, false);
+        fts.addQuotePattern("\"", "\"");
+        String inputString = "A,B,\"C\"\n\"\",\"first\nsecond\"\n\"\n\",\"KNIME\n\",\"\nData\",\"\nfoo\n\",D,F";
+        
+        StringReader stringReader = new StringReader(inputString);
+        Tokenizer ft = new Tokenizer(stringReader);
+        ft.setSettings(fts);
+
+        // new line in a quoted string is not allowed by default
+        String token = ft.nextToken();
+        assertEquals(token, "A");
+        token = ft.nextToken();
+        assertEquals(token, "B");
+        token = ft.nextToken();
+        assertEquals(token, "C");
+        token = ft.nextToken();
+        assertEquals(token, "\n");        
+        token = ft.nextToken();
+        assertEquals(token, "");
+        try {
+            token = ft.nextToken();
+            // error: NL character in quoted string
+            fail("new line character in a quoted string should cause an error by default");
+        } catch (TokenizerException te) {
+        	// required exception
+        }
+
+        // allow LF in quotes
+        fts.allowLFinQuotes(true);
+        stringReader = new StringReader(inputString);
+        ft = new Tokenizer(stringReader);
+        ft.setSettings(fts);
+        token = ft.nextToken();
+        assertEquals(token, "A");
+        token = ft.nextToken();
+        assertEquals(token, "B");
+        token = ft.nextToken();
+        assertEquals(token, "C");
+        token = ft.nextToken();
+        assertEquals(token, "\n");        
+        token = ft.nextToken();
+        assertEquals(token, "");
+        token = ft.nextToken();
+        assertEquals(token, "first\nsecond");
+        token = ft.nextToken();
+        assertEquals(token, "\n");  // delimiter
+        assertFalse(ft.lastTokenWasQuoted());
+        assertTrue(ft.lastTokenWasDelimiter());
+        token = ft.nextToken();
+        assertEquals(token, "\n");  // quoted NL
+        assertTrue(ft.lastTokenWasQuoted());
+        assertFalse(ft.lastTokenWasDelimiter());
+        token = ft.nextToken();
+        assertEquals(token, "KNIME\n");
+        token = ft.nextToken();
+        assertEquals(token, "\nData");
+        token = ft.nextToken();
+        assertEquals(token, "\nfoo\n");
+        token = ft.nextToken();
+        assertEquals(token, "D");
+        token = ft.nextToken();
+        assertEquals(token, "F");
+
+        inputString = "A,B,C\r\n\",\", zweiter, \"\tA\tB\"\r\n\"erster\", zweiter, \"AB\"\r\n\"erster\", zweiter, \"\nA\nB\"\r\n";
+        stringReader = new StringReader(inputString);
+        ft = new Tokenizer(stringReader);
+        ft.setSettings(fts);
+        token = ft.nextToken();
+        assertEquals(token, "A");
+        token = ft.nextToken();
+        assertEquals(token, "B");
+        token = ft.nextToken();
+        assertEquals(token, "C");
+        token = ft.nextToken();
+        assertEquals(token, "\n");  // delimiter
+        assertTrue(ft.lastTokenWasDelimiter());        
+        token = ft.nextToken();
+        assertEquals(token, ",");
+        assertFalse(ft.lastTokenWasDelimiter());  // not the delimiter
+        assertTrue(ft.lastTokenWasQuoted());
+        token = ft.nextToken();
+        assertEquals(token, " zweiter");
+        token = ft.nextToken();
+        assertEquals(token, " \tA\tB");
+        token = ft.nextToken();
+        assertEquals(token, "\n");  // delimiter
+        assertTrue(ft.lastTokenWasDelimiter());        
+        token = ft.nextToken();
+        assertEquals(token, "erster");
+        token = ft.nextToken();
+        assertEquals(token, " zweiter");
+        token = ft.nextToken();
+        assertEquals(token, " AB");
+        token = ft.nextToken();
+        assertEquals(token, "\n");  // delimiter
+        assertTrue(ft.lastTokenWasDelimiter());        
+        token = ft.nextToken();
+        assertEquals(token, "erster");
+        token = ft.nextToken();
+        assertEquals(token, " zweiter");
+        token = ft.nextToken();
+        assertEquals(token, " \nA\nB");
+        token = ft.nextToken();
+        assertEquals(token, "\n");  // delimiter
+        assertTrue(ft.lastTokenWasDelimiter());        
+
+        System.out.println("Tokenizer NewLinesInQuotes: Done.");
+    }
 
     /**
      * tests if multiple different, but consecutive, delimiters are combined

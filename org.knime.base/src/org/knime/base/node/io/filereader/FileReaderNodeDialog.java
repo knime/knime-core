@@ -891,7 +891,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
 
         // remove all delimiters except row delimiters
         for (Delimiter delim : m_frSettings.getAllDelimiters()) {
-            if (m_frSettings.isRowDelimiter(delim.getDelimiter())) {
+            if (m_frSettings.isRowDelimiter(delim.getDelimiter(), false)) {
                 continue;
             }
             m_frSettings.removeDelimiterPattern(delim.getDelimiter());
@@ -955,7 +955,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         }
 
         // make sure \n is always a row delimiter
-        if (!m_frSettings.isRowDelimiter("\n")) {
+        if (!m_frSettings.isRowDelimiter("\n", false)) {
             m_frSettings.addRowDelimiter("\n", true);
         }
 
@@ -982,7 +982,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
         m_delimApplied = DEFAULT_DELIMS[0].getDelimiter();
 
         for (Delimiter delim : m_frSettings.getAllDelimiters()) {
-            if (m_frSettings.isRowDelimiter(delim.getDelimiter())) {
+            if (m_frSettings.isRowDelimiter(delim.getDelimiter(), false)) {
                 continue;
             }
 

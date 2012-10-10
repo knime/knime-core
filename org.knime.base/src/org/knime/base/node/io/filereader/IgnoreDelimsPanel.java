@@ -153,7 +153,7 @@ public class IgnoreDelimsPanel extends JPanel {
             // (!)
             for (Delimiter delim : settings.getAllDelimiters()) {
                 String delStr = delim.getDelimiter();
-                if (!settings.isRowDelimiter(delStr)) {
+                if (!settings.isRowDelimiter(delStr, false)) {
                     if (delStr.equals(" ") || delStr.equals("\t")) {
                         settings.setIgnoreEmptyTokensAtEndOfRow(ignoreEm);
                         break;

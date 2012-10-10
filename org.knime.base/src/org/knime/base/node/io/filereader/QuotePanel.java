@@ -108,6 +108,10 @@ public class QuotePanel extends JPanel {
 
     private JPanel m_textPanel;
 
+    private JPanel m_allowLFPanel;
+
+    private JCheckBox m_allowLFCheckbox = null;
+
     private JPanel m_qErrorPanel;
 
     private JLabel m_qErrorLabel;
@@ -135,9 +139,11 @@ public class QuotePanel extends JPanel {
         this.setSize(520, 375);
         this.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         add(getTextPanel());
-        add(Box.createVerticalStrut(30));
-        add(getQuoteEditPanel());
         add(Box.createVerticalStrut(15));
+        add(getQuoteEditPanel());
+        add(Box.createVerticalStrut(5));
+        add(getAllowLFPanel());
+        add(Box.createVerticalStrut(5));
         add(getQErrorPanel());
 
     }
@@ -169,7 +175,7 @@ public class QuotePanel extends JPanel {
                     + "patterns (for example: <quote> )."));
             textBox.add(new JLabel("Escape character (if checked) is always"
                     + " the backslash ('\\')."));
-            m_textPanel.add(Box.createHorizontalGlue());
+            m_textPanel.add(Box.createHorizontalStrut(5));
             m_textPanel.add(textBox);
             m_textPanel.add(Box.createHorizontalGlue());
         }
@@ -237,6 +243,25 @@ public class QuotePanel extends JPanel {
     }
 
     /**
+     * @return the panel for the allow new lines in quoted strings option
+     */
+    private JPanel getAllowLFPanel() {
+        if (m_allowLFPanel == null) {
+            m_allowLFPanel = new JPanel();
+            m_allowLFPanel.setBorder(BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+                                                                      "Allow multi line quoted strings:"));
+            m_allowLFPanel.setLayout(new BoxLayout(m_allowLFPanel, BoxLayout.Y_AXIS));
+            Box hBox = Box.createHorizontalBox();
+            m_allowLFCheckbox = new JCheckBox("Quoted strings can extend over multiple lines");
+            m_allowLFCheckbox.setToolTipText("If not checked, quotes must be closed within the same line");
+            hBox.add(m_allowLFCheckbox);
+            hBox.add(Box.createHorizontalGlue());
+            m_allowLFPanel.add(hBox);
+        }
+        return m_allowLFPanel;
+    }
+
+    /**
      * @return the panel containing the error message display
      */
     private JPanel getQErrorPanel() {
@@ -264,6 +289,7 @@ public class QuotePanel extends JPanel {
      */
     private void setErrorText(final String errMsg) {
         m_qErrorLabel.setText(errMsg);
+        m_qErrorLabel.setToolTipText(errMsg);
     }
 
     /**
@@ -271,6 +297,7 @@ public class QuotePanel extends JPanel {
      */
     private void clearErrorText() {
         m_qErrorLabel.setText("");
+        m_qErrorLabel.setToolTipText(null);
     }
 
     /**
@@ -523,6 +550,9 @@ public class QuotePanel extends JPanel {
         // fix the settings.
         settings.setQuoteUserSet(true);
 
+        // LF support
+        settings.allowLFinQuotes(m_allowLFCheckbox.isSelected());
+
         // decide whether we need to re-analyze the file (whether we have
         // new quote settings)
         Vector<Quote> newQuotes = settings.getAllQuotes();
@@ -567,5 +597,7 @@ public class QuotePanel extends JPanel {
         getQEditField().setText("");
 
         clearErrorText();
+
+        m_allowLFCheckbox.setSelected(settings.allowLFinQuotes());
     }
 }

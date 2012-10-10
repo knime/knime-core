@@ -98,6 +98,8 @@ public class TokenizerSettings {
 
     private long m_skipFirstLines;
 
+    private boolean m_allowLFinQuotes;
+
     /* keys used to store parameters in a config object */
     private static final String CFGKEY_DELIMS = "Delimiters";
 
@@ -120,6 +122,9 @@ public class TokenizerSettings {
     private static final String CFGKEY_COMBMULTI = "CombineMultDelims";
 
     private static final String CFGKEY_SKIPLINES = "SkipFirstLines";
+
+    private static final String CFGKEY_LFINQUOTES = "NewLineInQuotes";
+
     /**
      * Creates a new Settings for FileTokenizer object with default settings.
      *
@@ -135,6 +140,7 @@ public class TokenizerSettings {
         m_lineContChar = null;
         m_combineMultiple = false;
         m_skipFirstLines = 0;
+        m_allowLFinQuotes = false;
     }
 
     /**
@@ -151,7 +157,7 @@ public class TokenizerSettings {
         m_lineContChar = clonee.m_lineContChar;
         m_combineMultiple = clonee.m_combineMultiple;
         m_skipFirstLines = clonee.m_skipFirstLines;
-
+        m_allowLFinQuotes = clonee.m_allowLFinQuotes;
     }
 
     /**
@@ -209,7 +215,8 @@ public class TokenizerSettings {
                     false));
             // since v2.6. - be backward compatible
             setSkipFirstLines(settings.getLong(CFGKEY_SKIPLINES, 0));
-
+            // since v2.7.0 - be backward compatible
+            allowLFinQuotes(settings.getBoolean(CFGKEY_LFINQUOTES, false));
         } // if (settings != null)
     }
 
@@ -251,8 +258,8 @@ public class TokenizerSettings {
 
         // add the flag for combining multiple delimiters
         cfg.addBoolean(CFGKEY_COMBMULTI, getCombineMultipleDelimiters());
-
         cfg.addLong(CFGKEY_SKIPLINES, m_skipFirstLines);
+        cfg.addBoolean(CFGKEY_LFINQUOTES, m_allowLFinQuotes);
     }
 
     /*
@@ -1152,6 +1159,28 @@ public class TokenizerSettings {
     }
 
     /**
+     * If true is passed, line breaks in quoted string are allowed and stored as part of
+     * the string, if the argument is false, an exception is thrown if a new line character
+     * is read inside a quoted string (and no line continuation character (backslash) is used).
+     * @param allow set true to allow LF in quoted string, false, to force an error if quotes are
+     * not closed within one line.
+     */
+    public void allowLFinQuotes(final boolean allow) {
+        m_allowLFinQuotes = allow;
+    }
+
+    /**
+     * Returns true if line breaks in quoted string are allowed and stored as part of
+     * the string, or false, if a new line character in a quoted string causes an error (unless
+     * the line continuation character (backslash) is used).
+     * @return true if line breaks in quoted string are allowed and stored as part of
+     * the string, or false, if a new line character in a quoted string causes an error
+     */
+    public boolean allowLFinQuotes() {
+        return m_allowLFinQuotes;
+    }
+
+    /**
      * @return a new vector, with items of type <code>Comment</code>, containing
      *         all currently defined comment patterns. Could be emtpy, but never
      *         null. The vector is your's if you want it to change.
@@ -1304,6 +1333,9 @@ public class TokenizerSettings {
         if (m_skipFirstLines > 0) {
             result.append("\nThe first " + m_skipFirstLines
                     + " lines will be skipped.");
+        }
+        if (m_allowLFinQuotes) {
+            result.append("\nLF in quotes is supported.");
         }
         return result.toString();
     }

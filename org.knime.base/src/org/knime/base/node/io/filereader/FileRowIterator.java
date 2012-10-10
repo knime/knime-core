@@ -210,7 +210,7 @@ class FileRowIterator extends RowIterator {
         if (frSettings.getFileHasColumnHeaders()) {
             if (hasNext()) { // call this first to eat up empty lines
                 String token = m_tokenizer.nextToken();
-                while (!frSettings.isRowDelimiter(token)) {
+                while (!frSettings.isRowDelimiter(token, m_tokenizer.lastTokenWasQuoted())) {
                     token = m_tokenizer.nextToken();
                 }
             }
@@ -271,7 +271,7 @@ class FileRowIterator extends RowIterator {
                 }
 
                 if (m_frSettings.getIgnoreEmtpyLines()
-                        && m_frSettings.isRowDelimiter(token)) {
+                        && m_frSettings.isRowDelimiter(token, m_tokenizer.lastTokenWasQuoted())) {
                     // get the next token.
                     continue;
                 }
@@ -347,7 +347,7 @@ class FileRowIterator extends RowIterator {
                         + "')", m_tokenizer.getLineNumber(), rowHeader, row);
             }
             // row delims are returned as token
-            if ((token == null) || m_frSettings.isRowDelimiter(token)) {
+            if ((token == null) || m_frSettings.isRowDelimiter(token, m_tokenizer.lastTokenWasQuoted())) {
                 // line ended early.
                 m_tokenizer.pushBack();
                 // we need the row delim in the file, for after the loop
@@ -408,8 +408,8 @@ class FileRowIterator extends RowIterator {
 
         // eat all empty tokens til the end of the row, if we're supposed to
         while (m_frSettings.ignoreEmptyTokensAtEndOfRow()
-                && !m_frSettings.isRowDelimiter(token) && token.equals("")
-                && (!m_tokenizer.lastTokenWasQuoted())) {
+                && !m_frSettings.isRowDelimiter(token, m_tokenizer.lastTokenWasQuoted())
+                && token.equals("") && (!m_tokenizer.lastTokenWasQuoted())) {
             try {
                 token = m_tokenizer.nextToken();
             } catch (TokenizerException fte) {
@@ -421,7 +421,7 @@ class FileRowIterator extends RowIterator {
         }
         // now read the row delimiter from the file, and in case there are more
         // data items in the file than we needed for one row: barf and die.
-        if (!m_frSettings.isRowDelimiter(token)) {
+        if (!m_frSettings.isRowDelimiter(token, m_tokenizer.lastTokenWasQuoted())) {
             FileReaderException ex =
                     prepareForException("Too many data elements " + "(line: "
                             + lineNr + " (" + rowHeader + "), source: '"
@@ -533,7 +533,7 @@ class FileRowIterator extends RowIterator {
                 return null; // seen EOF
             }
 
-            if (m_frSettings.isRowDelimiter(fileHeader)) {
+            if (m_frSettings.isRowDelimiter(fileHeader, m_tokenizer.lastTokenWasQuoted())) {
                 // Oops, we've read an empty line. Push the delimiter back,
                 // others need to see it too.
                 m_tokenizer.pushBack();

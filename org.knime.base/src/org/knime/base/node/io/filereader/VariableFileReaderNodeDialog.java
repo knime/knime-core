@@ -852,7 +852,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
 
         // remove all delimiters except row delimiters
         for (Delimiter delim : m_frSettings.getAllDelimiters()) {
-            if (m_frSettings.isRowDelimiter(delim.getDelimiter())) {
+            if (m_frSettings.isRowDelimiter(delim.getDelimiter(), false)) {
                 continue;
             }
             m_frSettings.removeDelimiterPattern(delim.getDelimiter());
@@ -916,7 +916,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
         }
 
         // make sure \n is always a row delimiter
-        if (!m_frSettings.isRowDelimiter("\n")) {
+        if (!m_frSettings.isRowDelimiter("\n", false)) {
             m_frSettings.addRowDelimiter("\n", true);
         }
         analyzeDataFileAndUpdatePreview(true); // force re-analyze
@@ -942,7 +942,7 @@ public class VariableFileReaderNodeDialog extends NodeDialogPane implements
         m_delimApplied = DEFAULT_DELIMS[0].getDelimiter();
 
         for (Delimiter delim : m_frSettings.getAllDelimiters()) {
-            if (m_frSettings.isRowDelimiter(delim.getDelimiter())) {
+            if (m_frSettings.isRowDelimiter(delim.getDelimiter(), false)) {
                 continue;
             }
 

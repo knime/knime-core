@@ -165,6 +165,7 @@ public final class FileAnalyzer {
             result.setMaximumNumberOfRowsToRead(userSettings
                     .getMaximumNumberOfRowsToRead());
             result.setSkipFirstLines(userSettings.getSkipFirstLines());
+            result.allowLFinQuotes(userSettings.allowLFinQuotes());
             result.setCharsetName(userSettings.getCharsetName());
             result.setAnalyzeUsedAllRows(true);
             result.setMissValuePatternStrCols(userSettings
@@ -401,7 +402,7 @@ public final class FileAnalyzer {
                 // end of file... already?!?
                 break;
             }
-            if (result.isRowDelimiter(token)) {
+            if (result.isRowDelimiter(token, tokenizer.lastTokenWasQuoted())) {
                 // end of line - a bit early, huh??
                 scndLineRowHeader = tokenizer.nextToken();
                 break;
@@ -576,7 +577,7 @@ public final class FileAnalyzer {
                     break;
                 }
 
-                if (firstTokenInRow && settings.isRowDelimiter(token)) {
+                if (firstTokenInRow && settings.isRowDelimiter(token, tokenizer.lastTokenWasQuoted())) {
                     // ignore empty rows
                     continue;
                 }
@@ -603,7 +604,7 @@ public final class FileAnalyzer {
                     }
                 } else {
                     // swallow all tokens except new line delimiters
-                    if (settings.isRowDelimiter(token)) {
+                    if (settings.isRowDelimiter(token, tokenizer.lastTokenWasQuoted())) {
                         firstTokenInRow = true; // the next token is the first
                         linesRead++;
                         if (cutItShort(exec)) {
@@ -836,7 +837,7 @@ public final class FileAnalyzer {
                 }
                 colIdx++;
                 if (result.getFileHasRowHeaders() && (colIdx == 0)
-                        && (!result.isRowDelimiter(token))) {
+                        && (!result.isRowDelimiter(token, tokenizer.lastTokenWasQuoted()))) {
                     // ignore the row header - get the next token/column
                     token = tokenizer.nextToken();
                     if (token == null) { // EOF
@@ -845,7 +846,7 @@ public final class FileAnalyzer {
                 }
                 checkInterrupt(exec);
 
-                if (result.isRowDelimiter(token)) {
+                if (result.isRowDelimiter(token, tokenizer.lastTokenWasQuoted())) {
                     // it's a row delimiter.
                     // we could check if we got enough tokens for the row from
                     // the file. But if not - what would we do...
@@ -1354,7 +1355,7 @@ public final class FileAnalyzer {
         } else {
             // user provided delimiters copy them
             for (Delimiter delim : userSettings.getAllDelimiters()) {
-                if (userSettings.isRowDelimiter(delim.getDelimiter())) {
+                if (userSettings.isRowDelimiter(delim.getDelimiter(), false)) {
                     result.addRowDelimiter(delim.getDelimiter(), delim
                             .combineConsecutiveDelims());
                 } else {
@@ -1431,7 +1432,7 @@ public final class FileAnalyzer {
                 exec.setProgress(reader.getNumberOfBytesRead()
                         / (double)fileSize);
             }
-            if (!settings.isRowDelimiter(token)) {
+            if (!settings.isRowDelimiter(token, tokenizer.lastTokenWasQuoted())) {
 
                 columns++;
 
@@ -1566,7 +1567,7 @@ public final class FileAnalyzer {
 
                 String token = tokenizer.nextToken();
 
-                if (!settings.isRowDelimiter(token)) {
+                if (!settings.isRowDelimiter(token, tokenizer.lastTokenWasQuoted())) {
 
                     colCount++;
 

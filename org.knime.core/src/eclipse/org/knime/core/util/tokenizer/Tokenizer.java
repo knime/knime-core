@@ -109,6 +109,11 @@ public class Tokenizer {
     // counts the lines already skipped.
     private long m_linesSkipped;
 
+    /** if true, quoted string can extend across multiple lines in the file. Otherwise it
+     * is an error if a new line character is read inside quotes.
+     */
+    private boolean m_allowLFinQuotes;
+
     /**
      * The maximum ASCII code for the first character of patterns (like
      * delimiter, comment, and quote patterns.
@@ -228,6 +233,7 @@ public class Tokenizer {
         m_combineMultipleDelimiters = false;
         m_linesToSkip = 0;
         m_linesSkipped = 0;
+        m_allowLFinQuotes = false;
 
         m_newToken = new StringBuffer();
         m_lastToken = null;
@@ -268,6 +274,7 @@ public class Tokenizer {
 
         m_combineMultipleDelimiters = false;
         m_linesToSkip = 0;
+        m_allowLFinQuotes = false;
     }
 
     /**
@@ -300,6 +307,7 @@ public class Tokenizer {
             m_lastDelimiter = null;
             m_lastToken = tmp;
             m_tokenWasDelimiter = true;
+            m_lastQuotes = null; // delimiters are not quoted
             return tmp;
         }
         while (m_linesSkipped < m_linesToSkip) {
@@ -965,8 +973,8 @@ public class Tokenizer {
                     putBackChar(tmp);
                 }
             }
-            if (nextChar == LF) {
-                // read a LF within quotes: that is illegal!
+            if (nextChar == LF && !m_allowLFinQuotes) {
+                // read a LF within quotes: only legal if permitted by user!
                 throw new TokenizerException("New line in quoted string"
                          + " (or closing quote missing). In line " + (getLineNumber() - 1) + ".");
             }
@@ -1186,7 +1194,8 @@ public class Tokenizer {
         m_combineMultipleDelimiters = ftSettings.getCombineMultipleDelimiters();
         // and the flag to skip first lines in the stream
         m_linesToSkip = ftSettings.getSkipFirstLines();
-
+        // the flag to allow new lines in quoted strings
+        m_allowLFinQuotes = ftSettings.allowLFinQuotes();
     }
 
     /**
@@ -1212,7 +1221,7 @@ public class Tokenizer {
 
         result.setCombineMultipleDelimiters(m_combineMultipleDelimiters);
         result.setSkipFirstLines(m_linesToSkip);
-
+        result.allowLFinQuotes(m_allowLFinQuotes);
         return result;
     }
 

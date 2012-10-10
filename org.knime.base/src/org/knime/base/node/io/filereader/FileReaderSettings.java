@@ -852,7 +852,7 @@ public class FileReaderSettings extends TokenizerSettings {
             throw new NullPointerException(
                     "Can't remove <null> as row delimiter.");
         }
-        if (isRowDelimiter(pattern)) {
+        if (isRowDelimiter(pattern, false)) {
             m_rowDelimiters.remove(pattern);
             return removeDelimiterPattern(pattern);
         }
@@ -874,7 +874,9 @@ public class FileReaderSettings extends TokenizerSettings {
      * @param pattern the pattern to test
      * @return <code>true</code> if the pattern is a row delimiter.
      *         <code>null</code> is always a row delimiter.
+     * @deprecated use {@link #isRowDelimiter(String, boolean) instead.}
      */
+    @Deprecated
     public boolean isRowDelimiter(final String pattern) {
         if (pattern == null) {
             return true;
@@ -882,7 +884,26 @@ public class FileReaderSettings extends TokenizerSettings {
         assert (!m_rowDelimiters.contains(pattern))
                 || (getDelimiterPattern(pattern) != null);
         return m_rowDelimiters.contains(pattern);
+    }
 
+    /**
+     * @param pattern the pattern to test
+     * @param wasQuoted true, if this token was surrounded by delimiters in the input file
+     * @return <code>true</code> if the pattern is a row delimiter.
+     *         <code>null</code> is always a row delimiter.
+     * @since 2.7
+     */
+    public boolean isRowDelimiter(final String pattern, final boolean wasQuoted) {
+        if (pattern == null) {
+            return true;
+        }
+        if (wasQuoted) {
+            // row delimiters are not quoted.
+            return false;
+        }
+        assert (!m_rowDelimiters.contains(pattern))
+                || (getDelimiterPattern(pattern) != null);
+        return m_rowDelimiters.contains(pattern);
     }
 
     /**
