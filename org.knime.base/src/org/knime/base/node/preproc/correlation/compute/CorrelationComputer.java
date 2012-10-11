@@ -299,7 +299,10 @@ final class CorrelationComputer {
                             m_numericColIndexMap[j], 0.0);
                     final double stdDevJ = m_numericStdDevMatrix[j][j];
                     if (stdDevJ == 0.0) {
-                        // reported later (when j is i in the outer loop)
+                        nominatorMatrix.set(m_numericColIndexMap[i],
+                                m_numericColIndexMap[j], Double.NaN);
+                        // rest is fixed when j becomes the current value
+                        // in the outer loop
                     } else {
                         double stdDevIUnderJ = m_numericStdDevMatrix[i][j];
                         double stdDevJUnderI = m_numericStdDevMatrix[j][i];
