@@ -1164,6 +1164,7 @@ public class TokenizerSettings {
      * is read inside a quoted string (and no line continuation character (backslash) is used).
      * @param allow set true to allow LF in quoted string, false, to force an error if quotes are
      * not closed within one line.
+     * @since 2.7
      */
     public void allowLFinQuotes(final boolean allow) {
         m_allowLFinQuotes = allow;
@@ -1175,6 +1176,7 @@ public class TokenizerSettings {
      * the line continuation character (backslash) is used).
      * @return true if line breaks in quoted string are allowed and stored as part of
      * the string, or false, if a new line character in a quoted string causes an error
+     * @since 2.7
      */
     public boolean allowLFinQuotes() {
         return m_allowLFinQuotes;
