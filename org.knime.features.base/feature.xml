@@ -738,6 +738,7 @@ propagated with or for interoperation with KNIME.
       <import plugin="org.eclipse.jdt.core"/>
       <import plugin="org.apache.log4j"/>
       <import plugin="org.knime.workbench.explorer.view" version="3.0.0" match="compatible"/>
+      <import plugin="org.knime.core.util" version="4.1.2" match="greaterOrEqual"/>
    </requires>
 
    <plugin

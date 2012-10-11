@@ -391,11 +391,7 @@ public abstract class NodeDialogPane {
                 }
             }
         };
-        if (Node.DIALOG_IN_EDT) {
-            ViewUtils.invokeAndWaitInEDT(r);
-        } else {
-            r.run();
-        }
+        ViewUtils.invokeAndWaitInEDT(r);
 
         if (exRef.get() instanceof NotConfigurableException) {
             throw (NotConfigurableException)exRef.get();
@@ -662,11 +658,7 @@ public abstract class NodeDialogPane {
                 }
             }
         };
-        if (Node.DIALOG_IN_EDT) {
-            ViewUtils.invokeAndWaitInEDT(r);
-        } else {
-            r.run();
-        }
+        ViewUtils.invokeAndWaitInEDT(r);
         if (exRef.get() instanceof InvalidSettingsException) {
             throw (InvalidSettingsException) exRef.get();
         } else if (exRef.get() instanceof RuntimeException) {

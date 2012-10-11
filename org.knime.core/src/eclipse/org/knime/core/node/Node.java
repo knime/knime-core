@@ -1814,11 +1814,7 @@ public final class Node implements NodeModelWarningListener {
                         }
                     };
 
-                    if (DIALOG_IN_EDT) {
-                        ViewUtils.invokeAndWaitInEDT(r);
-                    } else {
-                        r.run();
-                    }
+                    ViewUtils.invokeAndWaitInEDT(r);
                     if (exRef.get() instanceof Error) {
                         throw (Error)exRef.get();
                     } else if (exRef.get() instanceof RuntimeException) {

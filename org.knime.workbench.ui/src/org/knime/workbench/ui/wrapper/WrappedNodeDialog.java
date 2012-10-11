@@ -706,7 +706,7 @@ public class WrappedNodeDialog extends Dialog {
                         + widthDialog - widthButtonBar + EXTRA_WIDTH);
         height =
                 Math.max(Math.max(heightButtonBar, heightDialog), height
-                        + heightDialog - heightButtonBar + EXTRA_HEIGHT);
+                        + heightDialog + EXTRA_HEIGHT);
 
         // set the size of the container composite
         Point size = new Point(width, height);

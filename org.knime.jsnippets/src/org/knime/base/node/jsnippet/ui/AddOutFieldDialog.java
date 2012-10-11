@@ -95,7 +95,6 @@ import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 import org.knime.core.node.util.DataTypeListCellRenderer;
 import org.knime.core.node.util.FlowVariableListCellRenderer;
 import org.knime.core.node.workflow.FlowVariable;
-import org.knime.core.node.workflow.FlowVariable.Type;
 
 /**
  * A dialog with most basic settings for an output field.
@@ -364,7 +363,7 @@ public final class AddOutFieldDialog extends JDialog {
             m_knimeType.setRenderer(new DataTypeListCellRenderer());
         } else {
             TypeProvider typeProvider = TypeProvider.getDefault();
-            for (Type type : typeProvider.getTypes()) {
+            for (FlowVariable.Type type : typeProvider.getTypes()) {
                 m_knimeType.addItem(type);
             }
             m_knimeType.setRenderer(new TypeListCellRender());
@@ -435,7 +434,7 @@ public final class AddOutFieldDialog extends JDialog {
             String javaName = FieldsTableUtil.createUniqueJavaIdentifier(
                     colName, taken, "out_");
 
-            Type type = (Type)m_knimeType.getSelectedItem();
+            FlowVariable.Type type = (FlowVariable.Type)m_knimeType.getSelectedItem();
             TypeProvider typeProvider = TypeProvider.getDefault();
             Class javaType = typeProvider.getTypeConverter(
                     type).getPreferredJavaType();
@@ -526,13 +525,13 @@ public final class AddOutFieldDialog extends JDialog {
     /** Renders the flow variable type. */
     private static class TypeListCellRender extends
             FlowVariableListCellRenderer {
-        private Map<Type, FlowVariable> m_flowVars;
+        private Map<FlowVariable.Type, FlowVariable> m_flowVars;
 
         public TypeListCellRender() {
             m_flowVars = new HashMap<FlowVariable.Type, FlowVariable>();
-            m_flowVars.put(Type.DOUBLE, new FlowVariable("double", 1.0));
-            m_flowVars.put(Type.INTEGER, new FlowVariable("int", 1));
-            m_flowVars.put(Type.STRING, new FlowVariable("string", "1.0"));
+            m_flowVars.put(FlowVariable.Type.DOUBLE, new FlowVariable("double", 1.0));
+            m_flowVars.put(FlowVariable.Type.INTEGER, new FlowVariable("int", 1));
+            m_flowVars.put(FlowVariable.Type.STRING, new FlowVariable("string", "1.0"));
         }
 
         /**

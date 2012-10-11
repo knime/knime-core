@@ -26,8 +26,6 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
 
-import javax.swing.JOptionPane;
-
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.OperationCanceledException;
@@ -133,19 +131,6 @@ public class KNIMEApplication implements IApplication {
             if (returnCode != PlatformUI.RETURN_RESTART) {
                 return EXIT_OK;
             }
-            boolean isWin64 =
-                    Platform.OS_WIN32.equals(Platform.getOS())
-                            && Platform.ARCH_X86_64
-                                    .equals(Platform.getOSArch());
-            if (isWin64) {
-                JOptionPane.showMessageDialog(null,
-                        "\nDue to a known issue with Windows 64bit the "
-                                + "automatic restart is disabled.\n\n"
-                                + "Please restart KNIME manually.\n\n",
-                        "Manually restart KNIME", JOptionPane.WARNING_MESSAGE);
-                return EXIT_OK;
-            }
-
             // if the exit code property has been set to the relaunch code, then
             // return that code now, otherwise this is a normal restart
             return EXIT_RELAUNCH.equals(Integer.getInteger(PROP_EXIT_CODE)) ? EXIT_RELAUNCH
