@@ -75,7 +75,6 @@ Description:
         <module name="AvoidInlineConditionals">
             <property name="severity" value="ignore"/>
         </module>
-        <module name="DoubleCheckedLocking"/>
         <module name="EmptyStatement"/>
         <module name="EqualsHashCode"/>
         <module name="HiddenField"/>
