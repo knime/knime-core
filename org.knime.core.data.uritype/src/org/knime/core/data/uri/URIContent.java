@@ -89,7 +89,7 @@ public final class URIContent implements Serializable {
             throw new NullPointerException("Arguments must not be null.");
         }
         m_uri = uri;
-        m_extension = extension;
+        m_extension = extension.toLowerCase();
     }
 
     /**
