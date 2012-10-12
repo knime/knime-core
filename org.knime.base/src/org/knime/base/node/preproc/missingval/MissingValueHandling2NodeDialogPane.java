@@ -114,7 +114,7 @@ public class MissingValueHandling2NodeDialogPane extends NodeDialogPane {
         super();
         // Default handling, first tab
         m_defaultsPanel = new JPanel(new GridLayout(0, 1));
-        addTab("Default", m_defaultsPanel);
+        addTab("Default", new JScrollPane(m_defaultsPanel));
 
         // Individual Handling, second tab
         m_colListModel = new DefaultListModel();
