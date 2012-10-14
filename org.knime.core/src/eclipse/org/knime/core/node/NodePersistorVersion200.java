@@ -65,8 +65,8 @@ import java.util.UUID;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.EmptyFileStoreHandler;
-import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
@@ -94,6 +94,9 @@ import org.knime.core.util.FileUtil;
  * @noextend
  */
 public class NodePersistorVersion200 extends NodePersistorVersion1xx {
+
+    /** @noreference Not public API. */
+    public static final String FILESTORE_FOLDER_PREFIX = "filestore";
 
     /** Prefix of associated port folders.
      * (Also used in export wizard, public declaration here.) */
@@ -408,7 +411,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             final WriteFileStoreHandler defFileStoreHandler =
                 (WriteFileStoreHandler)fileStoreHandler;
             File baseDir = defFileStoreHandler.getBaseDir();
-            dirNameInFlow = baseDir == null ? null : "filestore";
+            dirNameInFlow = baseDir == null ? null : FILESTORE_FOLDER_PREFIX;
             if (dirNameInFlow != null) {
                 File saveLocation = new File(
                         nodeDirRef.getFile(), dirNameInFlow);

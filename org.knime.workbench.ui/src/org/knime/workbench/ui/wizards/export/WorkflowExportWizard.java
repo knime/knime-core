@@ -277,6 +277,10 @@ public class WorkflowExportWizard extends ExportWizard
                         NodePersistorVersion200.INTERNAL_TABLE_FOLDER_PREFIX)) {
                     return true;
                 }
+                if (name.startsWith(
+                        NodePersistorVersion200.FILESTORE_FOLDER_PREFIX)) {
+                    return true;
+                }
                 if (name.startsWith(NodePersistor.INTERN_FILE_DIR)) {
                     return true;
                 }
