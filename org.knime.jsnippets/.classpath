@@ -5,8 +5,5 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/Apache Commons Lang"/>
-	<classpathentry kind="lib" path="lib/autocomplete_2.0.3.jar"/>
-	<classpathentry kind="lib" path="lib/rsyntaxtextarea_2.0.3.jar"/>
-	<classpathentry kind="lib" path="lib/rsta-language-support_2.0.3.jar" sourcepath="/media/disk/heiko_netbeans/org.fife.rsyntaxtextarea_rev507/RSTALanguageSupport/tags/0.8.0/src"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

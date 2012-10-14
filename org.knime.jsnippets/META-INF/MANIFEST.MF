@@ -4,14 +4,12 @@ Bundle-Name: KNIME Java Snippet Nodes (draft)
 Bundle-SymbolicName: org.knime.jsnippets;singleton:=true
 Bundle-Version: 2.7.0.qualifier
 Bundle-ClassPath: knime-jsnippets.jar,
- lib/autocomplete_2.0.3.jar,
- lib/rsyntaxtextarea_2.0.3.jar,
- lib/rsta-language-support_2.0.3.jar,
  lib/snippet_inc/commons-lang3-3.0.1.jar
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: org.knime.base.node.preproc.stringmanipulation.manipulator,
  org.knime.base.node.util
-Require-Bundle: org.knime.base;bundle-version="[2.5.0,3.0.0)",
+Require-Bundle: org.fife.rsyntaxtextarea;bundle-version="[2.0.3,2.1.0)",
+ org.knime.base;bundle-version="[2.5.0,3.0.0)",
  org.eclipse.jdt.core;bundle-version="[3.6.1,4.0.0)",
  org.eclipse.core.resources;bundle-version="[3.6.0,4.0.0)",
  org.knime.ext.sun;bundle-version="[2.5.3,3.0.0)";visibility:=reexport
