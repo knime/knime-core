@@ -106,7 +106,7 @@ public final class FavoriteNodesManager {
      *
      * @return singleton instance
      */
-    public static final FavoriteNodesManager getInstance() {
+    public synchronized static final FavoriteNodesManager getInstance() {
         if (instance == null) {
             instance = new FavoriteNodesManager();
         }
