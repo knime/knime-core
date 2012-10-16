@@ -58,12 +58,13 @@ import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.StringValue;
 
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class URIDataCell extends DataCell implements URIDataValue {
+public class URIDataCell extends DataCell implements URIDataValue, StringValue {
 
     /**
      * Serial id.
@@ -114,6 +115,11 @@ public class URIDataCell extends DataCell implements URIDataValue {
     @Override
     public URIContent getURIContent() {
         return m_uriContent;
+    }
+    
+    @Override
+    public String getStringValue() {
+    	return m_uriContent.getURI().toString();
     }
 
     /**
