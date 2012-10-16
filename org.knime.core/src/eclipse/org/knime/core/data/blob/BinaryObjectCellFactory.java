@@ -53,6 +53,8 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.HexDump;
@@ -122,7 +124,8 @@ public final class BinaryObjectCellFactory {
      */
     public DataCell create(final byte[] bytes) throws IOException {
         if (bytes.length < MEMORY_LIMIT) {
-            return new BinaryObjectDataCell(bytes);
+            byte[] md5sum = newMD5Digest().digest(bytes);
+            return new BinaryObjectDataCell(bytes, md5sum);
         }
         return create(new ByteArrayInputStream(bytes));
     }
@@ -136,13 +139,16 @@ public final class BinaryObjectCellFactory {
     public DataCell create(final InputStream input) throws IOException {
         String uniqueFileName = "knime-binary-copy-";
         String suffix = ".bin";
+        MessageDigest md5MessageDigest = newMD5Digest();
         DeferredFileOutputStream outStream = new DeferredFileOutputStream(
             MEMORY_LIMIT, uniqueFileName, suffix, TMP_DIR_FOLDER);
-        IOUtils.copy(input, outStream);
-        input.close();
+        DigestInputStream digestInputStream = new DigestInputStream(input, md5MessageDigest);
+        IOUtils.copy(digestInputStream, outStream);
+        digestInputStream.close();
         outStream.close();
+        byte[] md5sum = md5MessageDigest.digest();
         if (outStream.isInMemory()) {
-            return new BinaryObjectDataCell(outStream.getData());
+            return new BinaryObjectDataCell(outStream.getData(), md5sum);
         } else {
             FileStore fs;
             synchronized (this) {
@@ -151,8 +157,22 @@ public final class BinaryObjectCellFactory {
             File f = outStream.getFile();
             assert f.exists() : "File " + f.getAbsolutePath() + " not created by file output stream";
             FileUtils.moveFile(f, fs.getFile());
-            return new BinaryObjectFileStoreDataCell(fs);
+            return new BinaryObjectFileStoreDataCell(fs, md5sum);
         }
+    }
+
+    /** Get new MD5 digest from system.
+     * @return ...
+     * @throws IOException ...
+     */
+    private MessageDigest newMD5Digest() throws IOException {
+        MessageDigest md5MessageDigest;
+        try {
+            md5MessageDigest = MessageDigest.getInstance("MD5");
+        } catch (Exception e) {
+            throw new IOException("Couldn't get MD5 digest from system", e);
+        }
+        return md5MessageDigest;
     }
 
     /** Utility method to get a hex dump of a binary input stream. Used in the value renderer.

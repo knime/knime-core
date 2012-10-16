@@ -78,6 +78,7 @@ public final class BinaryObjectDataCell extends DataCell implements BinaryObject
     }
 
     private final byte[] m_bytes;
+    private final byte[] m_md5sum;
 
     /** Serializer as required by {@link DataCell} class.
      * @return A serializer.
@@ -93,7 +94,10 @@ public final class BinaryObjectDataCell extends DataCell implements BinaryObject
                 int length = input.readInt();
                 byte[] bytes = new byte[length];
                 input.readFully(bytes);
-                return new BinaryObjectDataCell(bytes);
+                int md5Length = input.readInt();
+                byte[] md5sum = new byte[md5Length];
+                input.readFully(md5sum);
+                return new BinaryObjectDataCell(bytes, md5sum);
             }
 
             /** {@inheritDoc} */
@@ -102,18 +106,23 @@ public final class BinaryObjectDataCell extends DataCell implements BinaryObject
                     throws IOException {
                 output.writeInt(cell.m_bytes.length);
                 output.write(cell.m_bytes);
+                output.writeInt(cell.m_md5sum.length);
+                output.write(cell.m_md5sum);
             }
         };
     }
 
     /** Constructor used by factory.
      * @param bytes Bytes to wrap.
-     * @throws NullPointerException If argument is null. */
-    BinaryObjectDataCell(final byte[] bytes) {
+     * @param md5sum The MD5 of the byte array -- needed for hash code and equality check
+     * @throws NullPointerException If argument is null.
+     */
+    BinaryObjectDataCell(final byte[] bytes, final byte[] md5sum) {
         if (bytes == null) {
             throw new NullPointerException("Argument must not be null.");
         }
         m_bytes = bytes;
+        m_md5sum = md5sum;
     }
 
     /** {@inheritDoc} */
@@ -131,8 +140,8 @@ public final class BinaryObjectDataCell extends DataCell implements BinaryObject
      */
     @Override
     protected boolean equalsDataCell(final DataCell dc) {
-        byte[] otherBytes = ((BinaryObjectDataCell)dc).m_bytes;
-        return Arrays.equals(otherBytes, m_bytes);
+        BinaryObjectDataCell odc = (BinaryObjectDataCell)dc;
+        return odc.length() == length() && Arrays.equals(odc.m_md5sum, m_md5sum);
     }
 
     /**
@@ -140,7 +149,8 @@ public final class BinaryObjectDataCell extends DataCell implements BinaryObject
      */
     @Override
     public int hashCode() {
-        return Arrays.hashCode(m_bytes);
+        long length = length();
+        return (int)(length ^ (length >>> 32)) ^ Arrays.hashCode(m_md5sum);
     }
 
     /**

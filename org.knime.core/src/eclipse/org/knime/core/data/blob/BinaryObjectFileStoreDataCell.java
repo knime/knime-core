@@ -53,7 +53,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataCellDataInput;
 import org.knime.core.data.DataCellDataOutput;
 import org.knime.core.data.DataCellSerializer;
@@ -68,6 +70,7 @@ import org.knime.core.data.filestore.FileStoreCell;
 @SuppressWarnings("serial")
 public final class BinaryObjectFileStoreDataCell extends FileStoreCell implements BinaryObjectDataValue {
 
+
     /** Serializer as required by framework.
      * @return New serializer
      * @noreference This method is not intended to be referenced by clients.
@@ -79,13 +82,18 @@ public final class BinaryObjectFileStoreDataCell extends FileStoreCell implement
             @Override
             public BinaryObjectFileStoreDataCell deserialize(final DataCellDataInput input)
                     throws IOException {
-                return new BinaryObjectFileStoreDataCell();
+                byte[] md5sum = new byte[input.readInt()];
+                input.readFully(md5sum);
+                return new BinaryObjectFileStoreDataCell(md5sum);
             }
 
             /** {@inheritDoc} */
             @Override
             public void serialize(final BinaryObjectFileStoreDataCell cell, final DataCellDataOutput output)
                     throws IOException {
+                byte[] md5sum = cell.m_md5sum;
+                output.writeInt(md5sum.length);
+                output.write(md5sum);
             }
         };
     }
@@ -96,17 +104,23 @@ public final class BinaryObjectFileStoreDataCell extends FileStoreCell implement
         return BinaryObjectDataValue.class;
     }
 
+    private final byte[] m_md5sum;
+
     /** Create new object based on file store with exiting file.
      * @param fs The file store object with the file to represent.
+     * @param md5sum The MD5 sum of the corresponding file (needed for equals & hashcode)
      */
-    BinaryObjectFileStoreDataCell(final FileStore fs) {
+    BinaryObjectFileStoreDataCell(final FileStore fs, final byte[] md5sum) {
         super(fs);
-
+        m_md5sum = md5sum;
     }
 
-    /** Restore from disk. */
-    BinaryObjectFileStoreDataCell() {
+    /** Restore from disk.
+     * @param md5sum The MD5 sum of the corresponding file (needed for equals & hashcode)
+     */
+    BinaryObjectFileStoreDataCell(final byte[] md5sum) {
         super(); // deserialization constructor
+        m_md5sum = md5sum;
     }
 
     /** {@inheritDoc} */
@@ -124,6 +138,25 @@ public final class BinaryObjectFileStoreDataCell extends FileStoreCell implement
         } catch (IOException e) {
             return "Failed rendering: " + e.getMessage();
         }
+    }
+
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean equalsDataCell(final DataCell dc) {
+        BinaryObjectFileStoreDataCell odc = (BinaryObjectFileStoreDataCell)dc;
+        return odc.length() == length() && Arrays.equals(odc.m_md5sum, m_md5sum);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        long length = length();
+        return (int)(length ^ (length >>> 32)) ^ Arrays.hashCode(m_md5sum);
     }
 
     /** {@inheritDoc} */
