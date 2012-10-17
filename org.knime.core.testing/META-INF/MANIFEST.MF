@@ -4,7 +4,7 @@ Bundle-Name: Unit-Tests for org.knime.core
 Bundle-SymbolicName: org.knime.core.testing;singleton:=true
 Bundle-Version: 2.7.0.qualifier
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
-Fragment-Host: org.knime.core;bundle-version="2.3.0"
+Fragment-Host: org.knime.core;bundle-version="2.7.0"
 Export-Package: org.knime.core,
  org.knime.core.data.container,
  org.knime.core.data.def,
@@ -24,6 +24,11 @@ Export-Package: org.knime.core,
  org.knime.core.node.workflow.simplechainofnodes,
  org.knime.core.util,
  org.knime.core.util.tokenizer
-Require-Bundle: org.knime.testing;bundle-version="2.3.0",
- org.junit;bundle-version="4.8.1"
+Require-Bundle: org.knime.testing;bundle-version="[2.5.0,3.0.0)",
+ org.junit;bundle-version="4.8.1",
+ com.knime.explorer.sharedspace;bundle-version="[3.0.1,4.0.0)";resolution:=optional,
+ com.knime.licenses;bundle-version="[4.1.1,5.0.0)";resolution:=optional,
+ org.knime.workbench.explorer.view;bundle-version="[3.0.1,4.0.0)";resolution:=optional,
+ org.knime.ext.sun;bundle-version="[2.7.0,3.0.0)"
 Bundle-RequiredExecutionEnvironment: JavaSE-1.6
+Bundle-ClassPath: core-testing.jar

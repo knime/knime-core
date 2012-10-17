@@ -1,0 +1,11 @@
+<License version="20110809">
+	<Field name="name" value="Team Space" />
+	<Field name="customer" value="Testing" />
+	<Field name="company" value="KNIME.com" />
+	<Field name="number of users" value="0" />
+	<Field name="expiration date" value="2013-12-31" />
+	<Field name="host ips" value="134.34.0.0/255.255.0.0" />
+	<Field name="grace period" value="30" />
+	<Field name="warning period" value="45" />
+	<Signature value="6878E7EE08A89FF0A1CCA5D21CA423DA32259B1F5B4839A373B0B486CC0B0D82920202B0E68CFB9E4DB357E07EB9748AEEA5E1785D6501E7902F5218628B0DAF" />
+</License>
