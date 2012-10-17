@@ -10,6 +10,9 @@
 			K-means performs a crisp clustering that assigns a data
 			vector to exactly one cluster. The algorithm terminates when the
 			cluster assignments do not change anymore.<br />
+			The clustering algorithm uses the Euclidean distance on the selected
+			attributes. The data is not normalized by the node (if required,
+			you should consider to use the "Normalizer" as a preprocessing step).<br/>  
 			If the optional PMML inport is connected and contains 
             preprocessing operations in the TransformationDictionary those are 
             added to the learned model.
