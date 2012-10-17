@@ -58,11 +58,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URL;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.ZipFile;
@@ -86,6 +83,7 @@ import com.knime.explorer.sharedspace.SharedSpaceContentProviderFactory;
 import com.knime.licenses.LicenseStore;
 
 /**
+ * Testcases for the BatchExecutor
  *
  * @author Thorsten Meinl, University of Konstanz
  */
@@ -104,12 +102,22 @@ public class BatchExecutorTestcase {
         standardTestWorkflowZip = findInPlugin("/files/BatchExecutorTestflow.zip");
     }
 
+    /**
+     * Creates a temporary file for the output file of the standard workflow.
+     *
+     * @throws IOException if an I/O error occurs
+     */
     @Before
     public void beforeEachTest() throws IOException {
         m_csvOut = File.createTempFile("BatchExecutorTest", ".csv");
         m_csvOut.deleteOnExit();
     }
 
+    /**
+     * Test if (in)valid arguments are correctly recognized.
+     *
+     * @throws Exception if an error occurs
+     */
     @Test
     public void testArguments() throws Exception {
         assertEquals("Non-zero return value for 0 arguments", 0, BatchExecutor.mainRun(new String[0]));
@@ -183,6 +191,11 @@ public class BatchExecutorTestcase {
                      BatchExecutor.mainRun(new String[]{"-nosave"}));
     }
 
+    /**
+     * Test if loading a workflow from a ZIP file works.
+     *
+     * @throws Exception if an error occurs
+     */
     @Test
     public void testLoadOnlyFromZip() throws Exception {
         int ret =
@@ -191,6 +204,11 @@ public class BatchExecutorTestcase {
         assertEquals("Non-zero return value", 0, ret);
     }
 
+    /**
+     * Test if loading a workflow from a directory works.
+     *
+     * @throws Exception if an error occurs
+     */
     @Test
     public void testLoadOnlyFromDir() throws Exception {
         File tempDir = FileUtil.createTempDir("BatchExecutorTest");
@@ -208,7 +226,7 @@ public class BatchExecutorTestcase {
     }
 
     /**
-     * Simple test if workflows in a ZIP file can be executed.
+     * Test if workflows in a ZIP file can be executed.
      *
      * @throws Exception if something goes wrong
      */
@@ -222,7 +240,7 @@ public class BatchExecutorTestcase {
     }
 
     /**
-     * Simple test if workflows from a directory can be executed.
+     * Test if workflows from a directory can be executed.
      *
      * @throws Exception if something goes wrong
      */
@@ -245,6 +263,11 @@ public class BatchExecutorTestcase {
         assertEquals("Wrong number of lines in written CSV file", 1001, countWrittenLines(m_csvOut));
     }
 
+    /**
+     * Test if changing workflow variables from command line works.
+     *
+     * @throws Exception if an error occurs
+     */
     @Test
     public void testWorkflowVariables() throws Exception {
         final int maxRows = 100;
@@ -279,6 +302,11 @@ public class BatchExecutorTestcase {
         assertEquals("Non-zero return value", 0, ret);
     }
 
+    /**
+     * Test if settings node options via command line works.
+     *
+     * @throws Exception if an error occurs
+     */
     @Test
     public void testSetOption() throws Exception {
         int ret =
@@ -314,22 +342,25 @@ public class BatchExecutorTestcase {
         assertEquals("Wrong option type not reported", BatchExecutor.EXIT_ERR_PRESTART, ret);
     }
 
+    /**
+     * Test if loading preferences works (no real test of they are actually applied).
+     *
+     * @throws Exception if an error occurs
+     */
     @Test
     public void testPreferences() throws Exception {
-        File tempPrefs = File.createTempFile("batch", ".prefs");
-        tempPrefs.deleteOnExit();
-        InputStream in = BatchExecutor.class.getResourceAsStream("batch.prefs");
-        OutputStream out = new FileOutputStream(tempPrefs);
-        FileUtil.copy(in, out);
-        in.close();
-        out.close();
-
+        File prefs = findInPlugin("/files/batch.prefs");
         int ret =
                 BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(),
-                        "-noexecute", "-nosave", "-preferences=" + tempPrefs.getAbsolutePath()});
+                        "-noexecute", "-nosave", "-preferences=" + prefs.getAbsolutePath()});
         assertEquals("Loading preferences failed", 0, ret);
     }
 
+    /**
+     * Test if load errors are reported correctly.
+     *
+     * @throws Exception if an error occurs
+     */
     @Test
     public void testFailOnLoadError() throws Exception {
         File testflowZip = findInPlugin("/files/BatchExecutorTestflowLoadError.zip");
@@ -340,6 +371,12 @@ public class BatchExecutorTestcase {
 
     }
 
+
+    /**
+     * Test if canceling using the .cancel-file works.
+     *
+     * @throws Exception if an error occurs
+     */
     @Test
     public void testCancel() throws Exception {
         final MutableInteger ret = new MutableInteger(-1);
@@ -373,6 +410,11 @@ public class BatchExecutorTestcase {
         t.interrupt();
     }
 
+    /**
+     * Test if saving the executed workflow to a zip file works.
+     *
+     * @throws Exception if an error occurs
+     */
     @Test
     public void testSaveToZip() throws Exception {
         File destFile = File.createTempFile("BatchExecutorTest", ".zip");
@@ -403,6 +445,11 @@ public class BatchExecutorTestcase {
         assertTrue("Workflow not altered after in-place save", tempZip.lastModified() > timestamp);
     }
 
+    /**
+     * Test if saving the executed workflow to a directory works.
+     *
+     * @throws Exception if an error occurs
+     */
     @Test
     public void testSaveToDir() throws Exception {
         File destDir = FileUtil.createTempDir("BatchExecutorTest");
@@ -432,6 +479,11 @@ public class BatchExecutorTestcase {
         assertTrue("Workflow not altered after in-place save", workflowFile.lastModified() > timestamp);
     }
 
+    /**
+     * Test if loading credentials works.
+     *
+     * @throws Exception if an error occurs
+     */
     @Test
     public void testLoadCredentials() throws Exception {
         File credentialsFlow = findInPlugin("/files/BatchExecutorTestflowCredentials.zip");
@@ -452,6 +504,11 @@ public class BatchExecutorTestcase {
         // does not need credentials and currently there is no node besides database nodes that uses credentials.
     }
 
+    /**
+     * Test if metanode links are updated correctly.
+     *
+     * @throws Exception if an error occurs
+     */
     @Test
     public void testUpdateMetanodeLinks() throws Exception {
         Assume.assumeTrue(isTeamspaceAvailable());
