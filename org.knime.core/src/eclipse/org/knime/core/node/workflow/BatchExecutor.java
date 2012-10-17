@@ -55,7 +55,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -64,7 +63,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TimerTask;
 
-import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.Platform;
@@ -373,29 +371,26 @@ public final class BatchExecutor {
                                 .println("Credential name must not be empty.");
                         return EXIT_ERR_PRESTART;
                     }
-                    String credential = parts[1];
-                    String[] credParts = credential.split(";", 3);
-                    if (credParts.length > 0) {
-                        String credName = credParts[0].trim();
-                        if (credName.length() == 0) {
-                            System.err
-                                    .println("Credentials must not be empty.");
-                            return EXIT_ERR_PRESTART;
+                    String[] credParts = parts[1].split(";", 3);
+                    String credName = credParts[0].trim();
+                    if (credName.length() == 0) {
+                        System.err
+                                .println("Credentials must not be empty.");
+                        return EXIT_ERR_PRESTART;
+                    }
+                    if (credParts.length > 1) {
+                        String credLogin = null;
+                        String credPassword = null;
+                        if (credParts[1].trim().length() > 0) {
+                            credLogin = credParts[1].trim();
                         }
-                        if (credParts.length > 1) {
-                            String credLogin = null;
-                            String credPassword = null;
-                            if (credParts[1].trim().length() > 0) {
-                                credLogin = credParts[1].trim();
-                            }
-                            if (credParts.length > 2) {
-                                credPassword = credParts[2];
-                            }
-                            credentialMap.put(credName, new Credentials(
-                                    credName, credLogin, credPassword));
-                        } else {
-                            credentialMap.put(credName, null);
+                        if (credParts.length > 2) {
+                            credPassword = credParts[2];
                         }
+                        credentialMap.put(credName, new Credentials(
+                                credName, credLogin, credPassword));
+                    } else {
+                        credentialMap.put(credName, null);
                     }
                 } else {
                     System.err.println("Couldn't parse -credential argument: "
@@ -503,7 +498,8 @@ public final class BatchExecutor {
             try {
                 setPreferences(preferenceFile);
             } catch (CoreException e) {
-                throw new IOException("Unable to import preferences", e);
+                System.err.println("Unable to import preferences: " + e.getMessage());
+                return EXIT_ERR_PRESTART;
             }
         }
         setupEncryptionKey(isPromptForPassword, masterKey);
@@ -524,7 +520,13 @@ public final class BatchExecutor {
         // if run on a archived workflow (typical scenario if workflow is
         // exported to a zip using the wizard)
         if (!new File(workflowDir, WorkflowPersistor.WORKFLOW_FILE).exists()) {
-            workflowDir = workflowDir.listFiles()[0];
+            File[] children = workflowDir.listFiles();
+            if (children.length == 0) {
+                System.err.println("No workflow directory at " + workflowDir.getAbsolutePath());
+                return EXIT_ERR_LOAD;
+            } else {
+                workflowDir = workflowDir.listFiles()[0];
+            }
         }
 
         WorkflowLoadResult loadResult;
@@ -538,6 +540,9 @@ public final class BatchExecutor {
             return EXIT_ERR_LOAD;
         } catch (LockFailedException lfe) {
             System.err.println("Failed to lock workflow: " + lfe.getMessage());
+            return EXIT_ERR_LOAD;
+        } catch (IOException ex) {
+            System.err.println("Failed to load workflow: " + ex.getMessage());
             return EXIT_ERR_LOAD;
         }
         if (failOnLoadError && loadResult.hasErrors()) {
@@ -577,7 +582,12 @@ public final class BatchExecutor {
             LOGGER.debug("Workflow reset done.");
         }
 
-        setNodeOptions(options, wfm);
+        try {
+            setNodeOptions(options, wfm);
+        } catch (IllegalArgumentException ex) {
+            System.err.println(ex.getMessage());
+            return EXIT_ERR_PRESTART;
+        }
 
         LOGGER.debug("Status of workflow before execution:");
         LOGGER.debug("------------------------------------");
@@ -587,31 +597,28 @@ public final class BatchExecutor {
         final MutableBoolean executionCanceled = new MutableBoolean(false);
         if (!noExecute) {
             // get workspace dir
-            IWorkspace ws = ResourcesPlugin.getWorkspace();
-            URI uri = ws.getRoot().getLocationURI();
-            // if exists check for ".cancel" file
-            if (uri != null) {
-                File wsFile = new File(uri);
-                // file to be checked for
-                final File cancelFile = new File(wsFile, ".cancel");
-                // create new timer task
-                KNIMETimer.getInstance().schedule(new TimerTask() {
-                    /** {@inheritDoc} */
-                    @Override
-                    public void run() {
-                        if (cancelFile.exists()) {
-                            // CANCEL workflow manager
-                            wfm.cancelExecution();
-                            // delete cancel file
-                            cancelFile.delete();
-                            executionCanceled.setValue(true);
-                            // cancel this timer
-                            this.cancel();
-                        }
+            File wsFile = ResourcesPlugin.getWorkspace().getRoot().getLocation().toFile();
+            // file to be checked for
+            final File cancelFile = new File(wsFile, ".cancel");
+            // create new timer task
+            TimerTask task = new TimerTask() {
+                /** {@inheritDoc} */
+                @Override
+                public void run() {
+                    if (cancelFile.exists()) {
+                        // CANCEL workflow manager
+                        wfm.cancelExecution();
+                        // delete cancel file
+                        cancelFile.delete();
+                        executionCanceled.setValue(true);
+                        // cancel this timer
+                        this.cancel();
                     }
-                }, 1000, 1000);
-            }
+                }
+            };
+            KNIMETimer.getInstance().schedule(task, 1000, 1000);
             successful = wfm.executeAllAndWaitUntilDone();
+            task.cancel();
         }
 
         // only save when execution has not been canceled
@@ -697,6 +704,8 @@ public final class BatchExecutor {
         LOGGER.debug("------------------------------------");
         dumpWorkflowToDebugLog(wfm);
         LOGGER.debug("------------------------------------");
+        wfm.shutdown();
+        wfm.getParent().removeProject(wfm.getID());
         return successful ? EXIT_SUCCESS : EXIT_ERR_EXECUTION;
     }
 
@@ -745,15 +754,21 @@ public final class BatchExecutor {
         for (Option o : options) {
             int[] idPath = o.m_nodeIDs;
             NodeID subID = new NodeID(wfm.getID(), idPath[0]);
-            NodeContainer cont = wfm.getNodeContainer(subID);
-            for (int i = 1; i < idPath.length; i++) {
-                if (cont instanceof WorkflowManager) {
-                    WorkflowManager subWM = (WorkflowManager)cont;
-                    subID = new NodeID(subID, idPath[i]);
-                    cont = subWM.getNodeContainer(subID);
-                } else {
-                    cont = null;
+            NodeContainer cont = null;
+            try {
+                cont = wfm.getNodeContainer(subID);
+                for (int i = 1; i < idPath.length; i++) {
+                    if (cont instanceof WorkflowManager) {
+                        WorkflowManager subWM = (WorkflowManager)cont;
+                        subID = new NodeID(subID, idPath[i]);
+                        cont = subWM.getNodeContainer(subID);
+                    } else {
+                        cont = null;
+                    }
                 }
+            } catch (IllegalArgumentException ex) {
+                // throw by getNodeContainer if no node with the id exists
+                cont = null;
             }
             if (cont == null) {
                 LOGGER.warn("No node with id " + Arrays.toString(idPath)
