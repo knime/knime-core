@@ -90,7 +90,7 @@ import com.knime.licenses.LicenseStore;
 public class BatchExecutorTestcase {
     private static File standardTestWorkflowZip;
 
-    private File m_csvOut;
+    private static File csvOut;
 
     /**
      * Copy the test workflow zip into a temporary file.
@@ -100,6 +100,8 @@ public class BatchExecutorTestcase {
     @BeforeClass
     public static void setup() throws Exception {
         standardTestWorkflowZip = findInPlugin("/files/BatchExecutorTestflow.zip");
+        csvOut = File.createTempFile("BatchExecutorTest", ".csv");
+        csvOut.deleteOnExit();
     }
 
     /**
@@ -109,8 +111,7 @@ public class BatchExecutorTestcase {
      */
     @Before
     public void beforeEachTest() throws IOException {
-        m_csvOut = File.createTempFile("BatchExecutorTest", ".csv");
-        m_csvOut.deleteOnExit();
+        csvOut.delete();
     }
 
     /**
@@ -234,9 +235,9 @@ public class BatchExecutorTestcase {
     public void testExecuteFromZip() throws Exception {
         int ret =
                 BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(),
-                        "-nosave", "-workflow.variable=destinationFile," + m_csvOut.getAbsolutePath() + ",String"});
+                        "-nosave", "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String"});
         assertEquals("Non-zero return value", 0, ret);
-        assertEquals("Wrong number of lines in written CSV file", 1001, countWrittenLines(m_csvOut));
+        assertEquals("Wrong number of lines in written CSV file", 1001, countWrittenLines(csvOut));
     }
 
     /**
@@ -251,16 +252,16 @@ public class BatchExecutorTestcase {
 
         int ret =
                 BatchExecutor.mainRun(new String[]{"-workflowDir=" + tempDir.getAbsolutePath(), "-nosave",
-                        "-workflow.variable=destinationFile," + m_csvOut.getAbsolutePath() + ",String"});
+                        "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String"});
         assertEquals("Non-zero return value", 0, ret);
-        assertEquals("Wrong number of lines in written CSV file", 1001, countWrittenLines(m_csvOut));
+        assertEquals("Wrong number of lines in written CSV file", 1001, countWrittenLines(csvOut));
 
-        m_csvOut.delete();
+        csvOut.delete();
         ret =
                 BatchExecutor.mainRun(new String[]{"-workflowDir=" + tempDir.listFiles()[0].getAbsolutePath(),
-                        "-nosave", "-workflow.variable=destinationFile," + m_csvOut.getAbsolutePath() + ",String"});
+                        "-nosave", "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String"});
         assertEquals("Non-zero return value", 0, ret);
-        assertEquals("Wrong number of lines in written CSV file", 1001, countWrittenLines(m_csvOut));
+        assertEquals("Wrong number of lines in written CSV file", 1001, countWrittenLines(csvOut));
     }
 
     /**
@@ -274,30 +275,30 @@ public class BatchExecutorTestcase {
         int ret =
                 BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(),
                         "-nosave", "-reset",
-                        "-workflow.variable=destinationFile," + m_csvOut.getAbsolutePath() + ",String",
+                        "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String",
                         "-workflow.variable=maxRows," + maxRows + ",int"});
         assertEquals("Non-zero return value", 0, ret);
-        assertEquals("Wrong number of lines in written CSV file", maxRows + 1, countWrittenLines(m_csvOut));
+        assertEquals("Wrong number of lines in written CSV file", maxRows + 1, countWrittenLines(csvOut));
 
         ret =
                 BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(),
                         "-nosave", "-reset",
-                        "-workflow.variable=destinationFile," + m_csvOut.getAbsolutePath() + ",String",
+                        "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String",
                         "-workflow.variable=minimumValue,0.5,double"});
         assertEquals("Non-zero return value", 0, ret);
-        assertEquals("Wrong number of lines in written CSV file", 439, countWrittenLines(m_csvOut));
+        assertEquals("Wrong number of lines in written CSV file", 439, countWrittenLines(csvOut));
 
         // unknown workflow variables only issue a warning but are ignored otherwise
         ret =
                 BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(),
                         "-nosave", "-reset",
-                        "-workflow.variable=destinationFile," + m_csvOut.getAbsolutePath() + ",String",
+                        "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String",
                         "-workflow.variable=unknown,0.5,double"});
         assertEquals("Non-zero return value", 0, ret);
         ret =
                 BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(),
                         "-nosave", "-reset",
-                        "-workflow.variable=destinationFile," + m_csvOut.getAbsolutePath() + ",String",
+                        "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String",
                         "-workflow.variable=unknown,0.5,double", "-workflow.variable=unknown2,nix,String"});
         assertEquals("Non-zero return value", 0, ret);
     }
@@ -312,15 +313,15 @@ public class BatchExecutorTestcase {
         int ret =
                 BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(),
                         "-nosave", "-reset",
-                        "-workflow.variable=destinationFile," + m_csvOut.getAbsolutePath() + ",String",
+                        "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String",
                         "-option=0/5,rowFilter/RowRangeStart,1000,int"});
         assertEquals("Non-zero return value", 0, ret);
-        assertEquals("Wrong number of lines in written CSV file", 1, countWrittenLines(m_csvOut));
+        assertEquals("Wrong number of lines in written CSV file", 1, countWrittenLines(csvOut));
 
         ret =
                 BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(),
                         "-nosave", "-reset",
-                        "-workflow.variable=destinationFile," + m_csvOut.getAbsolutePath() + ",String",
+                        "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String",
                         "-option=0/5,rowFilter/RowRangeStart,1000,int", "-option=0/5,rowFilter/longValue,1000,long",
                         "-option=0/5,rowFilter/shortValue,1000,short", "-option=0/5,rowFilter/byteValue,100,byte",
                         "-option=0/5,rowFilter/booleanValue,true,boolean", "-option=0/5,rowFilter/charValue,X,char",
@@ -337,7 +338,7 @@ public class BatchExecutorTestcase {
         ret =
                 BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(),
                         "-nosave", "-reset",
-                        "-workflow.variable=destinationFile," + m_csvOut.getAbsolutePath() + ",String",
+                        "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String",
                         "-option=0/5,rowFilter/RowRangeStart,1000,unknownType"});
         assertEquals("Wrong option type not reported", BatchExecutor.EXIT_ERR_PRESTART, ret);
     }
@@ -369,8 +370,12 @@ public class BatchExecutorTestcase {
                         "-nosave", "-failonloaderror"});
         assertEquals("Fail-on-load-error does not work", BatchExecutor.EXIT_ERR_LOAD, ret);
 
+        testflowZip = findInPlugin("/files/BatchExecutorTestflowUnsupportedVersion.zip");
+        ret =
+                BatchExecutor.mainRun(new String[]{"-workflowFile=" + testflowZip.getAbsolutePath(), "-noexecute",
+                        "-nosave", "-failonloaderror"});
+        assertEquals("Unsupported workflow version not handled correctly", BatchExecutor.EXIT_ERR_LOAD, ret);
     }
-
 
     /**
      * Test if canceling using the .cancel-file works.
@@ -380,7 +385,7 @@ public class BatchExecutorTestcase {
     @Test
     public void testCancel() throws Exception {
         final MutableInteger ret = new MutableInteger(-1);
-        final AtomicReference<Exception> exception = new AtomicReference<>();
+        final AtomicReference<Exception> exception = new AtomicReference<Exception>();
 
         Thread t = new Thread() {
             @Override
@@ -422,7 +427,7 @@ public class BatchExecutorTestcase {
 
         int ret =
                 BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(),
-                        "-workflow.variable=destinationFile," + m_csvOut.getAbsolutePath() + ",String",
+                        "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String",
                         "-destFile=" + destFile.getAbsolutePath()});
         assertEquals("Non-zero return value", 0, ret);
         assertTrue("ZIP file is too small", destFile.length() > standardTestWorkflowZip.length());
@@ -430,19 +435,17 @@ public class BatchExecutorTestcase {
         new ZipFile(destFile);
 
         // save in place
-        File tempZip = File.createTempFile("BatchExecutorTest", ".zip");
-        tempZip.deleteOnExit();
-        FileUtil.copy(standardTestWorkflowZip, tempZip);
-        long timestamp = tempZip.lastModified();
+        FileUtil.copy(standardTestWorkflowZip, destFile);
+        long timestamp = destFile.lastModified();
         Thread.sleep(1000);
         ret =
-                BatchExecutor.mainRun(new String[]{"-workflowFile=" + tempZip.getAbsolutePath(),
-                        "-workflow.variable=destinationFile," + m_csvOut.getAbsolutePath() + ",String"});
+                BatchExecutor.mainRun(new String[]{"-workflowFile=" + destFile.getAbsolutePath(),
+                        "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String"});
         assertEquals("Non-zero return value", 0, ret);
-        assertTrue("ZIP file is too small", tempZip.length() > standardTestWorkflowZip.length());
+        assertTrue("ZIP file is too small", destFile.length() > standardTestWorkflowZip.length());
         // check if it is really a zip file
         new ZipFile(destFile);
-        assertTrue("Workflow not altered after in-place save", tempZip.lastModified() > timestamp);
+        assertTrue("Workflow not altered after in-place save", destFile.lastModified() > timestamp);
     }
 
     /**
@@ -456,26 +459,26 @@ public class BatchExecutorTestcase {
 
         int ret =
                 BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(),
-                        "-workflow.variable=destinationFile," + m_csvOut.getAbsolutePath() + ",String",
+                        "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String",
                         "-destDir=" + destDir.getAbsolutePath()});
         assertEquals("Non-zero return value", 0, ret);
         assertTrue("Not enough file in destination directory", destDir.list().length > 5);
         assertTrue("No workflow in destination directory", new File(destDir, WorkflowPersistor.WORKFLOW_FILE).isFile());
 
         // save in place
-        File sourceDir = FileUtil.createTempDir("BatchExecutorTest");
-        FileUtil.unzip(standardTestWorkflowZip, sourceDir);
-        sourceDir = sourceDir.listFiles()[0]; // workflow is in a subdirectory of the zip
-        File workflowFile = new File(sourceDir, WorkflowPersistor.WORKFLOW_FILE);
+        FileUtil.deleteRecursively(destDir);
+        destDir.mkdir();
+        FileUtil.unzip(standardTestWorkflowZip, destDir);
+        destDir = destDir.listFiles()[0]; // workflow is in a subdirectory of the zip
+        File workflowFile = new File(destDir, WorkflowPersistor.WORKFLOW_FILE);
         long timestamp = workflowFile.lastModified();
         Thread.sleep(1000);
         ret =
-                BatchExecutor.mainRun(new String[]{"-workflowDir=" + sourceDir.getAbsolutePath(),
-                        "-workflow.variable=destinationFile," + m_csvOut.getAbsolutePath() + ",String"});
+                BatchExecutor.mainRun(new String[]{"-workflowDir=" + destDir.getAbsolutePath(),
+                        "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String"});
         assertEquals("Non-zero return value", 0, ret);
         assertTrue("Not enough file in workflow directory after save", destDir.list().length > 5);
-        assertTrue("No workflow in destination directory",
-                   new File(sourceDir, WorkflowPersistor.WORKFLOW_FILE).isFile());
+        assertTrue("No workflow in destination directory", new File(destDir, WorkflowPersistor.WORKFLOW_FILE).isFile());
         assertTrue("Workflow not altered after in-place save", workflowFile.lastModified() > timestamp);
     }
 
@@ -524,12 +527,12 @@ public class BatchExecutorTestcase {
         int ret =
                 BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(),
                         "-nosave", "-reset", "-updateLinks",
-                        "-workflow.variable=destinationFile," + m_csvOut.getAbsolutePath() + ",String"});
+                        "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String"});
         assertEquals("Non-zero return value", 0, ret);
-        assertEquals("Wrong number of lines in written CSV file", 1001, countWrittenLines(m_csvOut));
+        assertEquals("Wrong number of lines in written CSV file", 1001, countWrittenLines(csvOut));
 
         // point teamspace to updated metanode
-        m_csvOut.delete();
+        csvOut.delete();
         ExplorerMountTable.unmount("org.knime.core.testing");
         teamspaceLocation = findInPlugin("/files/updatedMetanode");
         ExplorerMountTable.mount("org.knime.core.testing", providerId, teamspaceLocation.getAbsolutePath());
@@ -537,12 +540,12 @@ public class BatchExecutorTestcase {
         ret =
                 BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(),
                         "-nosave", "-reset", "-updateLinks",
-                        "-workflow.variable=destinationFile," + m_csvOut.getAbsolutePath() + ",String"});
+                        "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String"});
         assertEquals("Non-zero return value", 0, ret);
-        assertEquals("Wrong number of lines in written CSV file", 1, countWrittenLines(m_csvOut));
+        assertEquals("Wrong number of lines in written CSV file", 1, countWrittenLines(csvOut));
 
         // point teamspace to broken metanode
-        m_csvOut.delete();
+        csvOut.delete();
         ExplorerMountTable.unmount("org.knime.core.testing");
         teamspaceLocation = findInPlugin("/files/brokenMetanode");
         ExplorerMountTable.mount("org.knime.core.testing", providerId, teamspaceLocation.getAbsolutePath());
@@ -550,24 +553,25 @@ public class BatchExecutorTestcase {
         ret =
                 BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(),
                         "-nosave", "-reset", "-updateLinks",
-                        "-workflow.variable=destinationFile," + m_csvOut.getAbsolutePath() + ",String"});
+                        "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String"});
         assertEquals("Unexpected return value on updating broken metanode without immediate load failure",
                      BatchExecutor.EXIT_ERR_EXECUTION, ret);
 
         ret =
                 BatchExecutor.mainRun(new String[]{"-workflowFile=" + standardTestWorkflowZip.getAbsolutePath(),
                         "-nosave", "-reset", "-updateLinks", "-failonloaderror",
-                        "-workflow.variable=destinationFile," + m_csvOut.getAbsolutePath() + ",String"});
+                        "-workflow.variable=destinationFile," + csvOut.getAbsolutePath() + ",String"});
         assertEquals("Unexpected return value on updating broken metanode with immediate load failure",
                      BatchExecutor.EXIT_ERR_LOAD, ret);
 
         // no links to update
         File testflowZip = findInPlugin("/files/BatchExecutorTestflowEmpty.zip");
         ret =
-                BatchExecutor.mainRun(new String[]{"-workflowFile=" + testflowZip.getAbsolutePath(),
-                        "-nosave", "-failonloaderror", "-updateLinks"});
+                BatchExecutor.mainRun(new String[]{"-workflowFile=" + testflowZip.getAbsolutePath(), "-nosave",
+                        "-failonloaderror", "-updateLinks"});
         assertEquals("Non-zero return value", 0, ret);
     }
+
 
     private int countWrittenLines(final File outputFile) throws IOException {
         BufferedReader in = new BufferedReader(new FileReader(outputFile));
