@@ -141,11 +141,6 @@ final class DBConnectionWriterNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        String table = m_tableName.getStringValue();
-        if (table == null || table.trim().isEmpty()) {
-            throw new InvalidSettingsException(
-                    "Configure node and enter a valid table name.");
-        }
         try {
             DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
             DatabaseQueryConnectionSettings conn =
@@ -157,6 +152,7 @@ final class DBConnectionWriterNodeModel extends NodeModel {
         } catch (Throwable t) {
             throw new InvalidSettingsException(t);
         }
+        String table = m_tableName.getStringValue();
         setWarningMessage("Existing table \"" + table + "\" will be dropped!");
         return new DataTableSpec[0];
     }
@@ -170,9 +166,9 @@ final class DBConnectionWriterNodeModel extends NodeModel {
         SettingsModelString tableName =
             m_tableName.createCloneWithValidatedValue(settings);
         String tableString = tableName.getStringValue();
-        if (tableString == null || tableString.contains("<table_name>")) {
-            throw new InvalidSettingsException("Database table place holder"
-                    + " is not replaced!");
+        if (tableString == null || tableString.trim().isEmpty()) {
+            throw new InvalidSettingsException(
+                "Configure node and enter a valid table name.");
         }
     }
 

@@ -66,7 +66,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.database.DatabaseConnectionSettings;
-import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
 import org.knime.core.node.port.database.DatabaseWriterConnection;
 
 /**
@@ -154,13 +153,12 @@ final class DBWriterNodeModel extends NodeModel {
             throws InvalidSettingsException {
         boolean append = settings.getBoolean("append_data", false);
         String table = settings.getString("table");
+        if (table != null && table.trim().isEmpty()) {
+            throw new InvalidSettingsException(
+                "Configure node and enter a valid table name.");
+        }
         // write settings or skip it
         if (write) {
-            if (table != null && table.contains(
-                    DatabaseQueryConnectionSettings.TABLE_PLACEHOLDER)) {
-                throw new InvalidSettingsException(
-                    "Database table place holder not replaced.");
-            }
             m_table = table;
             m_append = append;
             // load SQL type for each column
@@ -227,10 +225,6 @@ final class DBWriterNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        if (m_table == null || m_table.trim().isEmpty()) {
-            throw new InvalidSettingsException(
-                    "Configure node and enter a valid table name.");
-        }
         // copy map to ensure only columns which are with the data
         Map<String, String> map = new LinkedHashMap<String, String>();
         // check that each column has a assigned type
@@ -260,8 +254,7 @@ final class DBWriterNodeModel extends NodeModel {
         }
 
         if (!m_append) {
-            super.setWarningMessage("Existing table \""
-                    + m_table + "\" will be dropped!");
+            super.setWarningMessage("Existing table \"" + m_table + "\" will be dropped!");
         }
 
         return new DataTableSpec[0];
