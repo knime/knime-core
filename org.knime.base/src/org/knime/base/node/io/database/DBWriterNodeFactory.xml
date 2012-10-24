@@ -6,7 +6,6 @@
 	<shortDescription>
 	    Establishes and opens a database access connection to which the entire
 	    input table is written to.
-	    be written.
 	</shortDescription>
 	
 	<fullDescription>
