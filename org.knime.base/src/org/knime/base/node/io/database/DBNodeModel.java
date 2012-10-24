@@ -53,7 +53,6 @@ import java.io.IOException;
 
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -67,10 +66,6 @@ import org.knime.core.node.port.database.DatabaseQueryConnectionSettings;
  * @author Thomas Gabriel, University of Konstanz
  */
 abstract class DBNodeModel extends NodeModel {
-
-    /** The logger instance used for this and all derived classes. */
-    protected final NodeLogger m_logger =
-        NodeLogger.getLogger(DBNodeModel.class);
 
     /**
      * Creates a new database reader.
