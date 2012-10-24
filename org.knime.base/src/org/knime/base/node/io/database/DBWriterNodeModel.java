@@ -83,7 +83,7 @@ final class DBWriterNodeModel extends NodeModel {
 
     private final DatabaseConnectionSettings m_conn;
 
-    private String m_table = null;
+    private String m_tableName;
 
     private boolean m_append = false;
 
@@ -119,7 +119,7 @@ final class DBWriterNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_conn.saveConnection(settings);
-        settings.addString("table", m_table);
+        settings.addString("table", m_tableName);
         settings.addBoolean("append_data", m_append);
         // save sql type mapping
         NodeSettingsWO typeSett = settings.addNodeSettings(CFG_SQL_TYPES);
@@ -152,14 +152,14 @@ final class DBWriterNodeModel extends NodeModel {
             final NodeSettingsRO settings, final boolean write)
             throws InvalidSettingsException {
         boolean append = settings.getBoolean("append_data", false);
-        String table = settings.getString("table");
-        if (table != null && table.trim().isEmpty()) {
+        final String table = settings.getString("table");
+        if (table == null || table.trim().isEmpty()) {
             throw new InvalidSettingsException(
                 "Configure node and enter a valid table name.");
         }
         // write settings or skip it
         if (write) {
-            m_table = table;
+            m_tableName = table;
             m_append = append;
             // load SQL type for each column
             m_types.clear();
@@ -185,7 +185,7 @@ final class DBWriterNodeModel extends NodeModel {
         exec.setProgress("Opening database connection to write data...");
         // write entire data
         String error = DatabaseWriterConnection.writeData(
-                m_conn, m_table, inData[0], m_append, exec, m_types,
+                m_conn, m_tableName, inData[0], m_append, exec, m_types,
                 getCredentialsProvider());
         if (error != null) {
             super.setWarningMessage(error);
@@ -225,6 +225,11 @@ final class DBWriterNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
+        // check table name
+        if (m_tableName == null || m_tableName.trim().isEmpty()) {
+            throw new InvalidSettingsException(
+                "Configure node and enter a valid table name.");
+        }
         // copy map to ensure only columns which are with the data
         Map<String, String> map = new LinkedHashMap<String, String>();
         // check that each column has a assigned type
@@ -254,7 +259,7 @@ final class DBWriterNodeModel extends NodeModel {
         }
 
         if (!m_append) {
-            super.setWarningMessage("Existing table \"" + m_table + "\" will be dropped!");
+            super.setWarningMessage("Existing table \"" + m_tableName + "\" will be dropped!");
         }
 
         return new DataTableSpec[0];

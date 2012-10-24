@@ -141,6 +141,12 @@ final class DBConnectionWriterNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
+        // check table name
+        final String table = m_tableName.getStringValue();
+        if (table == null || table.trim().isEmpty()) {
+            throw new InvalidSettingsException(
+                "Configure node and enter a valid table name.");
+        }
         try {
             DatabasePortObjectSpec spec = (DatabasePortObjectSpec) inSpecs[0];
             DatabaseQueryConnectionSettings conn =
@@ -152,7 +158,6 @@ final class DBConnectionWriterNodeModel extends NodeModel {
         } catch (Throwable t) {
             throw new InvalidSettingsException(t);
         }
-        String table = m_tableName.getStringValue();
         setWarningMessage("Existing table \"" + table + "\" will be dropped!");
         return new DataTableSpec[0];
     }
