@@ -598,6 +598,8 @@ public class BatchExecutorTestcase {
             Class.forName(LicenseStore.class.getName());
             Class.forName(ExplorerMountTable.class.getName());
             return true;
+        } catch (NoClassDefFoundError err) {
+            return false;
         } catch (ClassNotFoundException ex) {
             return false;
         }
