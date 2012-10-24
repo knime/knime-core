@@ -140,8 +140,7 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
         } finally {
             setQuery(oQuery);
         }
-        return new DataTableSpec[]{createSpec(spec,
-                inSpecs[0].getColumnSpec(column))};
+        return new DataTableSpec[]{createSpec(spec, inSpecs[0].getColumnSpec(column))};
     }
 
     /**
@@ -201,10 +200,14 @@ final class DatabaseLoopingNodeModel extends DBReaderNodeModel {
                 }
             }
         } finally {
-            if (buf != null) {
-                buf.close();
-            }
+            // reset query to original
             setQuery(oQuery);
+            if (buf == null) {
+                // create empty dummy container with spec generated during #configure
+                final DataTableSpec outSpec = this.configure(new DataTableSpec[]{inData[0].getSpec()})[0];
+                buf = exec.createDataContainer(outSpec);
+            }
+            buf.close();
         }
         return new BufferedDataTable[]{buf.getTable()};
     }
