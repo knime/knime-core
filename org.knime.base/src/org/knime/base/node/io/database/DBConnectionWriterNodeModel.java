@@ -157,10 +157,7 @@ final class DBConnectionWriterNodeModel extends NodeModel {
         } catch (Throwable t) {
             throw new InvalidSettingsException(t);
         }
-        if (table != null) {
-            super.setWarningMessage("Existing table \""
-                    + table + "\" will be dropped!");
-        }
+        setWarningMessage("Existing table \"" + table + "\" will be dropped!");
         return new DataTableSpec[0];
     }
 
