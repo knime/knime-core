@@ -63,6 +63,7 @@ All other trademarks are the property of their respective owners.
       <windows include="true">org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6</windows>
    </vm>
 
+
    <plugins>
    </plugins>
 
@@ -78,6 +79,7 @@ All other trademarks are the property of their respective owners.
       <plugin id="org.eclipse.equinox.p2.reconciler.dropins" autoStart="true" startLevel="4" />
       <plugin id="org.eclipse.equinox.simpleconfigurator" autoStart="true" startLevel="1" />
       <plugin id="org.eclipse.update.configurator" autoStart="true" startLevel="3" />
+      <property name="osgi.instance.area.default" value="@user.dir/workspace" />
    </configurations>
 
 </product>
