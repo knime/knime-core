@@ -71,7 +71,7 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.knime.core.node.port.database.DatabaseDriverLoader;
+import org.knime.base.dbdrivers.Activator;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.MutableInteger;
 import org.knime.workbench.explorer.ExplorerMountTable;
@@ -102,6 +102,7 @@ public class BatchExecutorTestcase {
         standardTestWorkflowZip = findInPlugin("/files/BatchExecutorTestflow.zip");
         csvOut = File.createTempFile("BatchExecutorTest", ".csv");
         csvOut.deleteOnExit();
+        Activator.registerJDBCDrivers();
     }
 
     /**
@@ -490,8 +491,6 @@ public class BatchExecutorTestcase {
     @Test
     public void testLoadCredentials() throws Exception {
         File credentialsFlow = findInPlugin("/files/BatchExecutorTestflowCredentials.zip");
-        File jdbcDriver = findInPlugin("/lib/sqlite-jdbc-3.7.2.jar");
-        DatabaseDriverLoader.loadDriver(jdbcDriver);
 
         File database = File.createTempFile("BatchExecutorTest", ".db");
         database.deleteOnExit();
