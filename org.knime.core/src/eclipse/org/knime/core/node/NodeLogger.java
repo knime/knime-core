@@ -128,10 +128,6 @@ public final class NodeLogger {
     /** Default log file appender. */
     private static final Appender FILE_APPENDER;
 
-    private static final String LATEST_LOG4J_CONFIG =
-            "log4j/log4j-" + KNIMEConstants.MAJOR + "." + KNIMEConstants.MINOR
-                    + "." + KNIMEConstants.REV + ".xml";
-
     /**
      * Inits Log4J logger and appends <code>System.out</code>,
      * <code>System.err</code>, and <i>knime.log</i> to it.
@@ -173,9 +169,10 @@ public final class NodeLogger {
     private static void initLog4J() throws IOException {
         final String file = System.getProperty("log4j.configuration");
         if (file == null) {
+            String latestLog4jConfig = getLatestLog4jConfig();
             assert (NodeLogger.class.getClassLoader().getResourceAsStream(
-                    LATEST_LOG4J_CONFIG) != null) : "log4j-configuration for "
-                    + "version " + KNIMEConstants.VERSION + " does not exist yet";
+                    latestLog4jConfig) != null) : "latest log4j-configuration "
+                        + " could not be found";
             File knimeDir = new File(KNIMEConstants.getKNIMEHomeDir());
             File log4j = new File(knimeDir, "log4j.xml");
 
@@ -192,8 +189,8 @@ public final class NodeLogger {
                             + " 'log4j-1.1.0.xml' to get rid of this message.");
                 }
             }
-            if (!log4j.exists() || checkPreviousLog4j(log4j)) {
-                copyCurrentLog4j(log4j);
+            if (!log4j.exists() || checkPreviousLog4j(log4j, latestLog4jConfig)) {
+                copyCurrentLog4j(log4j, latestLog4jConfig);
             }
             DOMConfigurator.configure(log4j.toURI().toURL());
         } else {
@@ -205,13 +202,13 @@ public final class NodeLogger {
         }
     }
 
-    private static void copyCurrentLog4j(final File dest) throws IOException {
+    private static void copyCurrentLog4j(final File dest, final String latestLog4jConfig) throws IOException {
         InputStream in =
                 NodeLogger.class.getClassLoader().getResourceAsStream(
-                        LATEST_LOG4J_CONFIG);
+                        latestLog4jConfig);
         if (in == null) {
             throw new IOException("Latest log4j-config '"
-                    + LATEST_LOG4J_CONFIG + "' not found");
+                    + latestLog4jConfig + "' not found");
         }
         FileOutputStream out = new FileOutputStream(dest);
         FileUtil.copy(in, out);
@@ -219,15 +216,31 @@ public final class NodeLogger {
         out.close();
     }
 
+    private static String getLatestLog4jConfig() throws IOException {
+        ClassLoader cl = NodeLogger.class.getClassLoader();
+
+        for (int i = 1; i < Integer.MAX_VALUE; i++) {
+            String file = "log4j/log4j-" + i + ".xml";
+            InputStream in = cl.getResourceAsStream(file);
+            if (in == null) {
+                return "log4j/log4j-" + (i - 1) + ".xml";
+            }
+            in.close();
+        }
+        // should not happen since log4j-0.xml must exist
+        return null;
+    }
+
     /**
      * Checks if any of the previous shipped log4j-XMLs matches the current one
      * the user has in its local KNIME directory.
      *
      * @param current the user's current file
+     * @param latestLog4jConfig the latest log4j template file
      * @return <code>true</code> if it matches, <code>false</code> otherwise
      * @throws IOException if an I/O error occurs
      */
-    private static boolean checkPreviousLog4j(final File current)
+    private static boolean checkPreviousLog4j(final File current, final String latestLog4jConfig)
             throws IOException {
         FileInputStream reader = new FileInputStream(current);
         byte[] currentContents = new byte[(int)current.length()];
@@ -236,56 +249,41 @@ public final class NodeLogger {
 
         ClassLoader cl = NodeLogger.class.getClassLoader();
 
-        for (int maj = KNIMEConstants.MAJOR; maj >= 1; maj--) {
-            outer: for (int min = 0;; min++) {
-                for (int rev = 0;; rev++) {
-                    if ((maj == KNIMEConstants.MAJOR)
-                            && (min == KNIMEConstants.MINOR)
-                            && (rev == KNIMEConstants.REV)) {
-                        continue;
-                    }
-                    InputStream in =
-                            cl.getResourceAsStream("log4j/log4j-" + maj + "."
-                                    + min + "." + rev + ".xml");
-                    if (in == null) {
-                        if (rev == 0) {
-                            break outer;
-                        } else {
-                            break;
-                        }
-                    }
+        for (int k = 0; k < Integer.MAX_VALUE; k++) {
+            String file = "log4j/log4j-" + k + ".xml";
+            if (latestLog4jConfig.equals(file)) {
+                break;
+            }
 
-                    // compare the two files
-                    in = new BufferedInputStream(in);
-                    int i = 0;
-                    boolean match = true;
-                    while (true) {
-                        byte b = (byte) in.read();
-                        if ((i >= currentContents.length) && (b == -1)) {
-                            break;
-                        }
-
-                        if (i >= currentContents.length) {
-                            match = false;
-                            break;
-                        }
-
-                        if (b == -1) {
-                            match = false;
-                            break;
-                        }
-
-                        if (currentContents[i] != b) {
-                            match = false;
-                            break;
-                        }
-                        i++;
-                    }
-                    in.close();
-                    if (match) {
-                        return true;
-                    }
+            // compare the two files
+            InputStream in = new BufferedInputStream(cl.getResourceAsStream(file));
+            int i = 0;
+            boolean match = true;
+            while (true) {
+                byte b = (byte) in.read();
+                if ((i >= currentContents.length) && (b == -1)) {
+                    break;
                 }
+
+                if (i >= currentContents.length) {
+                    match = false;
+                    break;
+                }
+
+                if (b == -1) {
+                    match = false;
+                    break;
+                }
+
+                if (currentContents[i] != b) {
+                    match = false;
+                    break;
+                }
+                i++;
+            }
+            in.close();
+            if (match) {
+                return true;
             }
         }
         return false;
