@@ -842,15 +842,6 @@ propagated with or for interoperation with KNIME.
          version="0.0.0"/>
 
    <plugin
-         id="org.knime.xulrunner.linux"
-         os="linux"
-         download-size="0"
-         install-size="0"
-         version="0.0.0"
-         fragment="true"
-         unpack="false"/>
-
-   <plugin
          id="org.apache.xmlbeans"
          download-size="0"
          install-size="0"
@@ -880,6 +871,15 @@ propagated with or for interoperation with KNIME.
          download-size="0"
          install-size="0"
          version="0.0.0"
+         unpack="false"/>
+
+   <plugin
+         id="org.knime.workbench.ui.browser"
+         os="linux"
+         download-size="0"
+         install-size="0"
+         version="0.0.0"
+         fragment="true"
          unpack="false"/>
 
 </feature>
