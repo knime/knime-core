@@ -49,7 +49,6 @@ package org.knime.core.node.port.database;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.math.BigDecimal;
@@ -72,6 +71,7 @@ import java.sql.Timestamp;
 import java.sql.Types;
 import java.util.Arrays;
 
+import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
@@ -82,9 +82,13 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
+import org.knime.core.data.blob.BinaryObjectCellFactory;
+import org.knime.core.data.blob.BinaryObjectDataCell;
+import org.knime.core.data.blob.BinaryObjectDataValue;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.data.date.DateAndTimeValue;
+import org.knime.core.data.def.BooleanCell;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
@@ -244,7 +248,7 @@ public final class DatabaseReaderConnection {
                         oQueries[selectIndex] += " LIMIT 0";
                     } else {
                         final int hashAlias = System.identityHashCode(this);
-                        oQueries[selectIndex] = "SELECT * FROM (" + oQueries[selectIndex] + ") " 
+                        oQueries[selectIndex] = "SELECT * FROM (" + oQueries[selectIndex] + ") "
                             + "table_" + hashAlias + " WHERE 1 = 0";
                     }
                 }
@@ -303,6 +307,9 @@ public final class DatabaseReaderConnection {
         return m_spec;
     }
 
+    // internal execution context used to create blob/binary objects
+    private BinaryObjectCellFactory m_blobFactory = new BinaryObjectCellFactory();
+
     /**
      * Read data from database.
      * @param exec used for progress info
@@ -315,6 +322,7 @@ public final class DatabaseReaderConnection {
             final CredentialsProvider cp)
             throws CanceledExecutionException, SQLException {
         initStatement(cp);
+        m_blobFactory = new BinaryObjectCellFactory(exec);
         Object sync = m_conn.syncConnection(m_stmt.getConnection());
         synchronized (sync) {
             try {
@@ -458,11 +466,14 @@ public final class DatabaseReaderConnection {
             DataType newType;
             switch (type) {
                 // all types that can be interpreted as integer
+                case Types.BIT:
+                case Types.BOOLEAN:
+                    newType = BooleanCell.TYPE;
+                    break;
+                // all types that can be interpreted as integer
                 case Types.TINYINT:
                 case Types.SMALLINT:
                 case Types.INTEGER:
-                case Types.BIT:
-                case Types.BOOLEAN:
                     newType = IntCell.TYPE;
                     break;
                 // all types that can be interpreted as double
@@ -474,11 +485,19 @@ public final class DatabaseReaderConnection {
                 case Types.BIGINT:
                     newType = DoubleCell.TYPE;
                     break;
+                // all types that can be interpreted as data-and-time
                 case Types.TIME:
                 case Types.DATE:
                 case Types.TIMESTAMP:
                     newType = DateAndTimeCell.TYPE;
                     break;
+                // all types that can be interpreted as binary object
+                case Types.BLOB:
+                case Types.LONGNVARCHAR:
+                case Types.LONGVARBINARY:
+                    newType = BinaryObjectDataCell.TYPE;
+                    break;
+                // fallback string
                 default:
                     newType = StringCell.TYPE;
             }
@@ -556,7 +575,16 @@ public final class DatabaseReaderConnection {
                 final DataCell cell;
                 try {
                     dbType = m_result.getMetaData().getColumnType(i + 1);
-                    if (type.isCompatible(IntValue.class)) {
+                    if (type.isCompatible(BooleanValue.class)) {
+                        switch (dbType) {
+                            // all types that can be interpreted as boolean
+                            case Types.BIT:
+                            case Types.BOOLEAN:
+                                cell = readBoolean(i);
+                                break;
+                            default: cell = readBoolean(i);
+                        }
+                    } else if (type.isCompatible(IntValue.class)) {
                         switch (dbType) {
                             // all types that can be interpreted as integer
                             case Types.TINYINT:
@@ -567,10 +595,6 @@ public final class DatabaseReaderConnection {
                                 break;
                             case Types.INTEGER:
                                 cell = readInt(i);
-                                break;
-                            case Types.BIT:
-                            case Types.BOOLEAN:
-                                cell = readBoolean(i);
                                 break;
                             default: cell = readInt(i);
                         }
@@ -603,24 +627,28 @@ public final class DatabaseReaderConnection {
                                 cell = readTimestamp(i); break;
                             default: cell = readString(i);
                         }
+                    } else if (type.isCompatible(BinaryObjectDataValue.class)) {
+                        switch (dbType) {
+                            case Types.BLOB:
+                                cell = readBlob(i); break;
+                            case Types.LONGVARCHAR:
+                                cell = readAsciiStream(i); break;
+                            case Types.LONGVARBINARY:
+                                cell = readBinaryStream(i); break;
+                            default: cell = readString(i);
+                        }
                     } else {
                         switch (dbType) {
                             case Types.CLOB:
                                 cell = readClob(i); break;
-                            case Types.BLOB:
-                                cell = readBlob(i); break;
                             case Types.ARRAY:
                                 cell = readArray(i); break;
                             case Types.CHAR:
                             case Types.VARCHAR:
                                 cell = readString(i); break;
-                            case Types.LONGVARCHAR:
-                                cell = readAsciiStream(i); break;
                             case Types.BINARY:
                             case Types.VARBINARY:
                                 cell = readBytes(i); break;
-                            case Types.LONGVARBINARY:
-                                cell = readBinaryStream(i); break;
                             case Types.REF:
                                 cell = readRef(i); break;
                             case Types.NCHAR:
@@ -696,25 +724,30 @@ public final class DatabaseReaderConnection {
             }
         }
 
-        private DataCell readBlob(final int i)
-                throws IOException, SQLException {
-           Blob blob = m_result.getBlob(i + 1);
-           if (wasNull() || blob == null) {
-               return DataType.getMissingCell();
-           } else {
-               InputStreamReader reader =
-                   // TODO: using default encoding
-                   new InputStreamReader(blob.getBinaryStream());
-               StringWriter writer = new StringWriter();
-               FileUtil.copy(reader, writer);
-               reader.close();
-               writer.close();
-               return new StringCell(writer.toString());
-           }
+        private DataCell readBlob(final int i) throws IOException, SQLException {
+            if (m_streamException[i]) {
+                return readString(i);
+            }
+            Blob blob = m_result.getBlob(i + 1);
+            if (wasNull() || blob == null) {
+                return DataType.getMissingCell();
+            }
+            try {
+                InputStream is = blob.getBinaryStream();
+                if (wasNull() || is == null) {
+                    return DataType.getMissingCell();
+                } else {
+                    return m_blobFactory.create(is);
+                }
+            } catch (SQLException sql) {
+                m_streamException[i] = true;
+                handlerException("Can't read from BLOB stream, trying to read string... ", sql);
+                StringCell cell = (StringCell) readString(i);
+                return m_blobFactory.create(cell.getStringValue().getBytes());
+            }
         }
 
-        private DataCell readAsciiStream(final int i)
-                throws IOException, SQLException {
+        private DataCell readAsciiStream(final int i) throws IOException, SQLException {
             if (m_streamException[i]) {
                 return readString(i);
             }
@@ -723,20 +756,32 @@ public final class DatabaseReaderConnection {
                 if (wasNull() || is == null) {
                     return DataType.getMissingCell();
                 } else {
-                    InputStreamReader reader =
-                    // TODO: using default encoding
-                            new InputStreamReader(is);
-                    StringWriter writer = new StringWriter();
-                    FileUtil.copy(reader, writer);
-                    reader.close();
-                    writer.close();
-                    return new StringCell(writer.toString());
+                    return m_blobFactory.create(is);
                 }
             } catch (SQLException sql) {
                 m_streamException[i] = true;
-                handlerException("Can't read from ASCII stream, "
-                        + "trying to read string... ", sql);
+                handlerException("Can't read from ASCII stream, trying to read string... ", sql);
+                StringCell cell = (StringCell) readString(i);
+                return m_blobFactory.create(cell.getStringValue().getBytes());
+            }
+        }
+
+        private DataCell readBinaryStream(final int i) throws IOException, SQLException {
+            if (m_streamException[i]) {
                 return readString(i);
+            }
+            try {
+                InputStream is = m_result.getBinaryStream(i + 1);
+                if (wasNull() || is == null) {
+                    return DataType.getMissingCell();
+                } else {
+                    return m_blobFactory.create(is);
+                }
+            } catch (SQLException sql) {
+                m_streamException[i] = true;
+                handlerException("Can't read from BINARY stream, trying to read string... ", sql);
+                StringCell cell = (StringCell) readString(i);
+                return m_blobFactory.create(cell.getStringValue().getBytes());
             }
         }
 
@@ -772,7 +817,7 @@ public final class DatabaseReaderConnection {
             if (wasNull()) {
                 return DataType.getMissingCell();
             } else {
-                return new IntCell(b ? 1 : 0);
+                return (b ? BooleanCell.TRUE : BooleanCell.FALSE);
             }
         }
 
@@ -827,34 +872,6 @@ public final class DatabaseReaderConnection {
                 return DataType.getMissingCell();
             } else {
                 return new DoubleCell(bc.doubleValue());
-            }
-
-        }
-
-        private DataCell readBinaryStream(final int i)
-                throws IOException, SQLException {
-            if (m_streamException[i]) {
-                return readString(i);
-            }
-            try {
-                InputStream is = m_result.getBinaryStream(i + 1);
-                if (wasNull() || is == null) {
-                    return DataType.getMissingCell();
-                } else {
-                    InputStreamReader reader =
-                    // TODO: using default encoding
-                            new InputStreamReader(is);
-                    StringWriter writer = new StringWriter();
-                    FileUtil.copy(reader, writer);
-                    reader.close();
-                    writer.close();
-                    return new StringCell(writer.toString());
-                }
-            } catch (SQLException sql) {
-                m_streamException[i] = true;
-                handlerException("Can't read from binary stream, "
-                        + "trying to read string... ", sql);
-                return readString(i);
             }
         }
 

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Sink" icon="./db_update.png">
+	<name>Database Update</name>
+	
+	<shortDescription>
+	    Writes the input table into a database while updating the given rows in the database. 
+	</shortDescription>
+	
+	<fullDescription>
+		<intro>		
+	     Writes the input table into a database while updating the given rows in the database.
+	     All selected column names need to exactly match the column names inside the database.
+	     <br/>
+	     Make sure you have your vendor-specific database driver registered in
+         the KNIME preference page (section Database Driver). By default, the 
+         sun.jdbc.odbc.JdbcOdbcDriver (Windows and Linux) is only available.
+		</intro>
+
+    <tab name="Settings">
+	  <option name="Database Driver">
+		Enter the database driver here; it is a Java class (including the
+		package path), for example: sun.jdbc.odbc.JdbcOdbcDriver
+		Additional driver can be registered via KNIME's preference page
+        (Database Driver).
+	  </option>
+	  <option name="Database URL">
+        Enter the database name here, for example: 
+        jdbc:odbc:database_name or jdbc:mysql://host:port/database_name
+	  </option>
+	  <option name="Workflow Credentials">
+        If checked, the credentials (user and password) are used as defined on 
+        the workflow. The credential name links to the specified user and 
+        password. Those can be replaced or edit using the 'Workflow Credentials'
+        menu available in the workflow context menu.
+      </option>
+	  <option name="User Name">
+        Your log-in user name for the database.
+	  </option>
+	  <option name="Password">
+        Your log-in password for the database. Note, the password is
+        de- and encrypted before handling it internally and is not 
+        stored inside the settings.
+	  </option>
+	  <option name="Table Name">
+        Enter the name of the table in which the data should be updated.
+	  </option>
+    </tab>
+    <tab name="Column Selection">
+	  <option name="SET columns">
+        Select all columns used for the SET clause of the UPDATE statement; 
+        those column values are changing the data in the database. 
+	  </option>
+	  <option name="WHERE columns">
+        Select all columns used for the WHERE clause of the UPDATE statement; 
+        those column values need to match the corresponding value in the database 
+        in order to make the update. 
+      </option>
+    </tab>
+	</fullDescription>
+	
+	<ports>
+		<inPort index="0" name="Data to update Database">
+			Table with data to be updated in the database
+		</inPort>
+		<outPort index="0" name="Input Data with Update Status">
+            Input table with additional column providing update status received from the database
+        </outPort>
+	</ports>	
+</knimeNode>

@@ -47,6 +47,8 @@
  */
 package org.knime.core.node.port.database;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -58,6 +60,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -65,6 +68,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
 import org.knime.core.data.RowIterator;
+import org.knime.core.data.blob.BinaryObjectDataValue;
 import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
@@ -167,12 +171,22 @@ public final class DatabaseWriterConnection {
                         DataColumnSpec cspec = spec.getColumnSpec(mapping[i]);
                         int type = rsmd.getColumnType(i + 1);
                         switch (type) {
+                            // check all boolean compatible types
+                            case Types.BIT:
+                            case Types.BOOLEAN:
+                                // types must be compatible to BooleanValue
+                                if (!cspec.getType().isCompatible(BooleanValue.class)) {
+                                    throw new RuntimeException("Column \"" + name
+                                        + "\" of type \"" + cspec.getType()
+                                        + "\" from input does not match type "
+                                        + "\"" + rsmd.getColumnTypeName(i + 1)
+                                        + "\" in database at position " + i);
+                                }
+                                break;
                             // check all int compatible types
                             case Types.TINYINT:
                             case Types.SMALLINT:
                             case Types.INTEGER:
-                            case Types.BIT:
-                            case Types.BOOLEAN:
                                 // types must be compatible to IntValue
                                 if (!cspec.getType().isCompatible(IntValue.class)) {
                                     throw new RuntimeException("Column \"" + name
@@ -198,13 +212,25 @@ public final class DatabaseWriterConnection {
                                         + "\" in database at position " + i);
                                 }
                                 break;
-                            // check for data compatible types
+                            // check for date-and-time compatible types
                             case Types.DATE:
                             case Types.TIME:
                             case Types.TIMESTAMP:
                                 // types must also be compatible to DataValue
-                                if (!cspec.getType().isCompatible(
-                                        DateAndTimeValue.class)) {
+                                if (!cspec.getType().isCompatible(DateAndTimeValue.class)) {
+                                    throw new RuntimeException("Column \"" + name
+                                        + "\" of type \"" + cspec.getType()
+                                        + "\" from input does not match type "
+                                        + "\"" + rsmd.getColumnTypeName(i + 1)
+                                        + "\" in database at position " + i);
+                                }
+                                break;
+                            // check for blob compatible types
+                            case Types.BLOB:
+                            case Types.LONGVARCHAR:
+                            case Types.LONGVARBINARY:
+                                // types must also be compatible to DataValue
+                                if (!cspec.getType().isCompatible(BinaryObjectDataValue.class)) {
                                     throw new RuntimeException("Column \"" + name
                                         + "\" of type \"" + cspec.getType()
                                         + "\" from input does not match type "
@@ -288,63 +314,14 @@ public final class DatabaseWriterConnection {
                     exec.setProgress(1.0 * cnt / rowCount, "Row " + "#" + cnt);
                     final DataRow row = it.next();
                     for (int i = 0; i < mapping.length; i++) {
-                        int dbIdx = i + 1;
+                        final int dbIdx = i + 1;
                         if (mapping[i] < 0) {
                             stmt.setNull(dbIdx, Types.NULL);
                             continue;
                         }
-                        DataColumnSpec cspec = spec.getColumnSpec(mapping[i]);
-                        DataCell cell = row.getCell(mapping[i]);
-                        if (cspec.getType().isCompatible(IntValue.class)) {
-                            if (cell.isMissing()) {
-                                stmt.setNull(dbIdx, Types.INTEGER);
-                            } else {
-                                int integer = ((IntValue) cell).getIntValue();
-                                stmt.setInt(dbIdx, integer);
-                            }
-                        } else if (cspec.getType().isCompatible(
-                                DoubleValue.class)) {
-                            if (cell.isMissing()) {
-                                stmt.setNull(dbIdx, Types.DOUBLE);
-                            } else {
-                                double dbl =
-                                    ((DoubleValue) cell).getDoubleValue();
-                                if (Double.isNaN(dbl)) {
-                                    stmt.setNull(dbIdx, Types.DOUBLE);
-                                } else {
-                                    stmt.setDouble(dbIdx, dbl);
-                                }
-                            }
-                        } else if (cspec.getType().isCompatible(
-                                DateAndTimeValue.class)) {
-                            if (cell.isMissing()) {
-                                stmt.setNull(dbIdx, Types.DATE);
-                            } else {
-                                DateAndTimeValue dateCell =
-                                    (DateAndTimeValue) cell;
-                                if (!dateCell.hasTime()
-                                        && !dateCell.hasMillis()) {
-                                    java.sql.Date date = new java.sql.Date(
-                                            dateCell.getUTCTimeInMillis());
-                                    stmt.setDate(dbIdx, date);
-                                } else if (!dateCell.hasDate()) {
-                                    java.sql.Time time = new java.sql.Time(
-                                            dateCell.getUTCTimeInMillis());
-                                    stmt.setTime(dbIdx, time);
-                                } else {
-                                    java.sql.Timestamp timestamp =
-                                        new java.sql.Timestamp(
-                                                dateCell.getUTCTimeInMillis());
-                                    stmt.setTimestamp(dbIdx, timestamp);
-                                }
-                            }
-                        } else {
-                            if (cell.isMissing()) {
-                                stmt.setNull(dbIdx, Types.VARCHAR);
-                            } else {
-                                stmt.setString(dbIdx, cell.toString());
-                            }
-                        }
+                        final DataColumnSpec cspec = spec.getColumnSpec(mapping[i]);
+                        final DataCell cell = row.getCell(mapping[i]);
+                        fillStatement(stmt, dbIdx, cspec, cell);
                     }
                     // if batch mode
                     if (batchSize > 1) {
@@ -399,6 +376,226 @@ public final class DatabaseWriterConnection {
                 }
             } finally {
                 stmt.close();
+            }
+        }
+    }
+
+    /** Create connection to update table in database.
+     * @param dbConn a database connection object
+     * @param data The data to write.
+     * @param setColumns columns part of the SET clause
+     * @param whereColumns columns part of the WHERE clause
+     * @param updateStatus int array of length data#getRowCount; will be filled with
+     *             update info from the database
+     * @param table name of table to write
+     * @param exec Used the cancel writing.
+     * @param cp {@link CredentialsProvider} providing user/password
+     * @return error string or null, if non
+     * @throws Exception if connection could not be established
+     * @since 2.7
+     */
+    public static final String updateTable(
+            final DatabaseConnectionSettings dbConn,
+            final String table, final BufferedDataTable data,
+            final String[] setColumns, final String[] whereColumns,
+            final int[] updateStatus,
+            final ExecutionMonitor exec,
+            final CredentialsProvider cp) throws Exception {
+        final Connection conn = dbConn.createConnection(cp);
+        synchronized (dbConn.syncConnection(conn)) {
+            final DataTableSpec spec = data.getDataTableSpec();
+
+            // create query connection object
+            final StringBuilder query = new StringBuilder("UPDATE " + table + " SET");
+            for (int i = 0; i < setColumns.length; i++) {
+                if (i > 0) {
+                    query.append(",");
+                }
+                final String newColumnName = replaceColumnName(setColumns[i]);
+                query.append(" " + newColumnName + " = ?");
+            }
+            query.append(" WHERE");
+            for (int i = 0; i < whereColumns.length; i++) {
+                if (i > 0) {
+                    query.append(",");
+                }
+                final String newColumnName = replaceColumnName(whereColumns[i]);
+                query.append(" " + newColumnName + " = ?");
+            }
+
+
+            // problems writing more than 13 columns. the prepare statement
+            // ensures that we can set the columns directly row-by-row, the
+            // database will handle the commit
+            int rowCount = data.getRowCount();
+            int cnt = 1;
+            int errorCnt = 0;
+            int allErrors = 0;
+
+            // number of rows written to the database in one chunk/batch
+            final int batchSize = DatabaseConnectionSettings.BATCH_WRITE_SIZE;
+            // count number of rows added to current batch
+            int curBatchSize = 0;
+
+            LOGGER.debug("Executing SQL statement \"" + query + "\"");
+            final PreparedStatement stmt = conn.prepareStatement(query.toString());
+            try {
+                conn.setAutoCommit(false);
+                for (RowIterator it = data.iterator(); it.hasNext(); cnt++) {
+                    exec.checkCanceled();
+                    exec.setProgress(1.0 * cnt / rowCount, "Row " + "#" + cnt);
+                    final DataRow row = it.next();
+                    // SET columns
+                    for (int i = 0; i < setColumns.length; i++) {
+                        final int dbIdx = i + 1;
+                        final int columnIndex = spec.findColumnIndex(setColumns[i]);
+                        final DataColumnSpec cspec = spec.getColumnSpec(columnIndex);
+                        final DataCell cell = row.getCell(columnIndex);
+                        fillStatement(stmt, dbIdx, cspec, cell);
+                    }
+                    // WHERE columns
+                    for (int i = 0; i < whereColumns.length; i++) {
+                        final int dbIdx = i + 1 + setColumns.length;
+                        final int columnIndex = spec.findColumnIndex(whereColumns[i]);
+                        final DataColumnSpec cspec = spec.getColumnSpec(columnIndex);
+                        final DataCell cell = row.getCell(columnIndex);
+                        fillStatement(stmt, dbIdx, cspec, cell);
+                    }
+
+                    // if batch mode
+                    if (batchSize > 1) {
+                        // a new row will be added
+                        stmt.addBatch();
+                    }
+                    curBatchSize++;
+                    // if batch size equals number of row in batch or input table at end
+                    if ((curBatchSize == batchSize) || !it.hasNext()) {
+                        curBatchSize = 0;
+                        try {
+                            // write batch
+                            if (batchSize > 1) {
+                                int[] status = stmt.executeBatch();
+                                for (int i = 0; i < status.length; i++) {
+                                    updateStatus[cnt - 1 - status.length] = status[i];
+                                }
+                            } else { // or write single row
+                                int status = stmt.executeUpdate();
+                                updateStatus[cnt - 1] = status;
+                            }
+                        } catch (Throwable t) {
+                            allErrors++;
+                            if (errorCnt > -1) {
+                                final String errorMsg;
+                                if (batchSize > 1) {
+                                    errorMsg = "Error while updating rows #" + (cnt - batchSize) + " - #" + cnt
+                                        + ", reason: " + t.getMessage();
+                                } else {
+                                    errorMsg = "Error while updating row #" + cnt + " (" + row.getKey() + "), reason: "
+                                        + t.getMessage();
+                                }
+                                exec.setMessage(errorMsg);
+                                if (errorCnt++ < 10) {
+                                    LOGGER.warn(errorMsg);
+                                } else {
+                                    errorCnt = -1;
+                                    LOGGER.warn(errorMsg + " - more errors...", t);
+                                }
+                            }
+                        } finally {
+                            // clear batch if in batch mode
+                            if (batchSize > 1) {
+                                stmt.clearBatch();
+                            }
+                        }
+                    }
+                }
+                conn.commit();
+                conn.setAutoCommit(true);
+                if (allErrors == 0) {
+                    return null;
+                } else {
+                    return "Errors \"" + allErrors + "\" updating " + rowCount + " rows.";
+                }
+            } finally {
+                stmt.close();
+            }
+        }
+    }
+
+    /**
+     * Set given column value into SQL statement.
+     * @param stmt statement used
+     * @param dbIdx database index to update/write
+     * @param cspec column spec to check type
+     * @param cell the data cell to write into the statement
+     * @throws SQLException if the value can't be set
+     */
+    private static void fillStatement(final PreparedStatement stmt, final int dbIdx,
+            final DataColumnSpec cspec, final DataCell cell)
+            throws SQLException {
+        if (cspec.getType().isCompatible(BooleanValue.class)) {
+            if (cell.isMissing()) {
+                stmt.setNull(dbIdx, Types.BOOLEAN);
+            } else {
+                boolean bool = ((BooleanValue) cell).getBooleanValue();
+                stmt.setBoolean(dbIdx, bool);
+            }
+        } else if (cspec.getType().isCompatible(IntValue.class)) {
+            if (cell.isMissing()) {
+                stmt.setNull(dbIdx, Types.INTEGER);
+            } else {
+                int integer = ((IntValue) cell).getIntValue();
+                stmt.setInt(dbIdx, integer);
+            }
+        } else if (cspec.getType().isCompatible(DoubleValue.class)) {
+            if (cell.isMissing()) {
+                stmt.setNull(dbIdx, Types.DOUBLE);
+            } else {
+                double dbl = ((DoubleValue) cell).getDoubleValue();
+                if (Double.isNaN(dbl)) {
+                    stmt.setNull(dbIdx, Types.DOUBLE);
+                } else {
+                    stmt.setDouble(dbIdx, dbl);
+                }
+            }
+        } else if (cspec.getType().isCompatible(DateAndTimeValue.class)) {
+            if (cell.isMissing()) {
+                stmt.setNull(dbIdx, Types.DATE);
+            } else {
+                DateAndTimeValue dateCell = (DateAndTimeValue) cell;
+                if (!dateCell.hasTime() && !dateCell.hasMillis()) {
+                    java.sql.Date date = new java.sql.Date(dateCell.getUTCTimeInMillis());
+                    stmt.setDate(dbIdx, date);
+                } else if (!dateCell.hasDate()) {
+                    java.sql.Time time = new java.sql.Time(dateCell.getUTCTimeInMillis());
+                    stmt.setTime(dbIdx, time);
+                } else {
+                    java.sql.Timestamp timestamp = new java.sql.Timestamp(
+                        dateCell.getUTCTimeInMillis());
+                    stmt.setTimestamp(dbIdx, timestamp);
+                }
+            }
+        } else if (cspec.getType().isCompatible(BinaryObjectDataValue.class)) {
+            if (cell.isMissing()) {
+                stmt.setNull(dbIdx, Types.BLOB);
+            } else {
+                try {
+                    BinaryObjectDataValue value = (BinaryObjectDataValue) cell;
+                    InputStream is = value.openInputStream();
+                    if (is == null) {
+                        stmt.setNull(dbIdx, Types.BLOB);
+                    } else {
+                        stmt.setBinaryStream(dbIdx, is, (int) value.length());
+                    }
+                } catch (IOException ioe) {
+                    stmt.setNull(dbIdx, Types.BLOB);
+                }
+            }
+        } else {
+            if (cell.isMissing()) {
+                stmt.setNull(dbIdx, Types.VARCHAR);
+            } else {
+                stmt.setString(dbIdx, cell.toString());
             }
         }
     }

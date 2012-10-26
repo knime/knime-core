@@ -93,14 +93,20 @@ final class DBWriterNodeModel extends NodeModel {
     /** Default SQL-type for Strings. */
     static final String SQL_TYPE_STRING = "varchar(255)";
 
+    /** Default SQL-type for Booleans. */
+    static final String SQL_TYPE_BOOLEAN = "boolean";
+
     /** Default SQL-type for Integers. */
     static final String SQL_TYPE_INTEGER = "integer";
 
     /** Default SQL-type for Doubles. */
     static final String SQL_TYPE_DOUBLE = "numeric(30,10)";
 
+    /** Default SQL-type for Timestamps. */
+    static final String SQL_TYPE_DATEANDTIME = "timestamp";
+
     /** Default SQL-type for Date. */
-    static final String SQL_TYPE_DATEANDTIME = "datetime";
+    static final String SQL_TYPE_BLOB = "blob";
 
     /** Config key for column to SQL-type mapping. */
     static final String CFG_SQL_TYPES = "sql_types";

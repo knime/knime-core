@@ -57,10 +57,12 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
+import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.IntValue;
+import org.knime.core.data.blob.BinaryObjectDataValue;
 import org.knime.core.data.date.DateAndTimeValue;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
@@ -115,12 +117,16 @@ final class DBSQLTypesPanel extends JPanel {
             }
             if (type != null) {
                 textFld.setText(type);
+            } else if (cspec.getType().isCompatible(BooleanValue.class)) {
+                textFld.setText(DBWriterNodeModel.SQL_TYPE_BOOLEAN);
             } else if (cspec.getType().isCompatible(IntValue.class)) {
                 textFld.setText(DBWriterNodeModel.SQL_TYPE_INTEGER);
             } else if (cspec.getType().isCompatible(DoubleValue.class)) {
                 textFld.setText(DBWriterNodeModel.SQL_TYPE_DOUBLE);
             } else if (cspec.getType().isCompatible(DateAndTimeValue.class)) {
                 textFld.setText(DBWriterNodeModel.SQL_TYPE_DATEANDTIME);
+            } else if (cspec.getType().isCompatible(BinaryObjectDataValue.class)) {
+                textFld.setText(DBWriterNodeModel.SQL_TYPE_BLOB);
             } else {
                 textFld.setText(DBWriterNodeModel.SQL_TYPE_STRING);
             }

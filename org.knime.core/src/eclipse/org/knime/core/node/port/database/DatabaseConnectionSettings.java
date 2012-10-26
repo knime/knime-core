@@ -214,6 +214,19 @@ public class DatabaseConnectionSettings {
     }
 
     /**
+     * Creates and inits a new database configuration.
+     * @param config to load
+     * @param cp <code>CredentialProvider</code> used to get user name/password
+     * @throws InvalidSettingsException if settings are invalid
+     * @since 2.7
+     */
+    public DatabaseConnectionSettings(final ConfigRO config, final CredentialsProvider cp)
+            throws InvalidSettingsException {
+        this();
+        loadValidatedConnection(config, cp);
+    }
+
+    /**
      * Creates a new <code>DBConnection</code> based on the given connection
      * object.
      * @param conn connection used to copy settings from
