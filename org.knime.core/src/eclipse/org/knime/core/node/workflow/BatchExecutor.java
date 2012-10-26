@@ -555,7 +555,7 @@ public class BatchExecutor {
      * @since 2.7
      */
     protected void usage() {
-        System.err.println(getOptionsString() + getPropertiesString());
+        System.err.println(getOptionsString() + getPropertiesString() + "\n" + getReturnCodesHelp());
     }
 
     /**
@@ -582,7 +582,21 @@ public class BatchExecutor {
                 + "                      if omitted the workflow is only saved in place\n"
                 + " -workflow.variable=name,value,type => define or overwrite workflow variable\n"
                 + "                      'name' with value 'value' (possibly enclosed by quotes). The\n"
-                + "                      'type' must be one of \"String\", \"int\" or \"double\".\n";
+                + "                      'type' must be one of \"String\", \"int\" or \"double\".";
+    }
+
+    /**
+     * Returns a short description of the defined exit codes.
+     *
+     * @return a string
+     * @since 2.7
+     */
+    protected String getReturnCodesHelp() {
+        return "The following return codes are defined:\n"
+                + "\t" + EXIT_SUCCESS + "\tupon successful execution\n"
+                + "\t" + EXIT_ERR_PRESTART + "\tif paramaters are wrong or missing\n"
+                + "\t" + EXIT_ERR_LOAD + "\twhen an error occurs during loading a workflow\n"
+                + "\t" + EXIT_ERR_EXECUTION + "\tif an error during execution occured\n";
     }
 
     /**
