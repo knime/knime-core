@@ -100,8 +100,10 @@ public final class BinaryObjectCellFactory {
         TMP_DIR_FOLDER = new File(System.getProperty("java.io.tmpdir"));
     }
 
+    /* only one of the two is non-null. */
     private final ExecutionContext m_exec;
     private final NotInWorkflowWriteFileStoreHandler m_notInWorkflowWriteFileStoreHandler;
+
     private int m_fileNameIndex;
 
     /** Create new cell factory based on a node's execution context. The argument object is used to
