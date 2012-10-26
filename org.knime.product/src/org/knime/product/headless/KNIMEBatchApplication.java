@@ -54,10 +54,10 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.workflow.BatchExecutor;
 import org.knime.workbench.repository.RepositoryManager;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleException;
 
 /**
- * The run method of this class is executed when KNIME is run headless, that is
- * in batch mode.
+ * The run method of this class is executed when KNIME is run headless, that is in batch mode.
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
@@ -66,7 +66,7 @@ public class KNIMEBatchApplication implements IApplication {
      * {@inheritDoc}
      */
     @Override
-    public Object start(final IApplicationContext context) throws Exception {
+    public Object start(final IApplicationContext context) throws BundleException {
         // unless the user specified this property, we set it to true here
         // (true means no icons etc will be loaded, if it is false, the
         // loading of the repository manager is likely to print many errors
@@ -75,8 +75,7 @@ public class KNIMEBatchApplication implements IApplication {
             System.setProperty("java.awt.headless", "true");
         }
         // load the ui plugin to read the preferences
-        Platform.getBundle("org.knime.workbench.core").start(
-                Bundle.START_TRANSIENT);
+        Platform.getBundle("org.knime.workbench.core").start(Bundle.START_TRANSIENT);
 
         if (!Boolean.getBoolean(KNIMEConstants.PROPERTY_ENABLE_FAST_LOADING)) {
             // load all nodes so that all plug-ins get initialized
@@ -86,26 +85,18 @@ public class KNIMEBatchApplication implements IApplication {
         String[] stringArgs = retrieveApplicationArguments(context);
         // this actually returns with a non-0 value when failed,
         // we ignore it here
-        try {
-            return BatchExecutor.mainRun(stringArgs);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
+
+        return runBatchExecutor(stringArgs);
     }
 
     /**
-     * Returns the application's arguments as String array with the pdelaunch
-     * argument removed if applicable.
+     * Returns the application's arguments as String array with the pdelaunch argument removed if applicable.
      *
      * @param context the application context
      * @return the arguments the application was called with as string array
      */
-    protected String[] retrieveApplicationArguments(
-            final IApplicationContext context) {
-        Object args =
-                context.getArguments()
-                        .get(IApplicationContext.APPLICATION_ARGS);
+    protected String[] retrieveApplicationArguments(final IApplicationContext context) {
+        Object args = context.getArguments().get(IApplicationContext.APPLICATION_ARGS);
         String[] stringArgs;
         if (args instanceof String[]) {
             stringArgs = (String[])args;
@@ -115,16 +106,23 @@ public class KNIMEBatchApplication implements IApplication {
                 stringArgs = copy;
             }
         } else if (args != null) {
-            System.err
-                    .println("Unable to cast class "
-                            + args.getClass().getName()
-                            + " to string array, toString() returns "
-                            + args.toString());
+            System.err.println("Unable to cast class " + args.getClass().getName()
+                    + " to string array, toString() returns " + args.toString());
             stringArgs = new String[0];
         } else {
             stringArgs = new String[0];
         }
         return stringArgs;
+    }
+
+    /**
+     * Execute the batch executor. Subclasses may override this method in order to invoke a special executor.
+     *
+     * @param args the command line arguments
+     * @return the return value
+     */
+    protected int runBatchExecutor(final String[] args) {
+        return BatchExecutor.mainRun(args);
     }
 
     /**
