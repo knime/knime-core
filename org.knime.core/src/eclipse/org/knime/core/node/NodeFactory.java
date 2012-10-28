@@ -887,7 +887,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      *
      * @return the node's icon
      */
-    public final URL getIcon() {
+    public URL getIcon() {
         return m_icon;
     }
 
