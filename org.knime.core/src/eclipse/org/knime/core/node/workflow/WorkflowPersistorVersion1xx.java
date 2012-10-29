@@ -74,6 +74,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
+import org.knime.core.node.NodeAndBundleInformation;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
@@ -85,7 +86,7 @@ import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
  *
  * @author wiswedel, University of Konstanz
  */
-public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
+public class WorkflowPersistorVersion1xx implements WorkflowPersistor, FromFileNodeContainerPersistor {
 
     /** The node logger for this class. */
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
@@ -97,8 +98,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         new NodeSettings("<<empty>>");
 
     private final LoadVersion m_versionString;
-    private final TreeMap<Integer, NodeContainerPersistor>
-        m_nodeContainerLoaderMap;
+    private final TreeMap<Integer, FromFileNodeContainerPersistor> m_nodeContainerLoaderMap;
 
     private final HashSet<ConnectionContainerTemplate> m_connectionSet;
     private final NodeContainerMetaPersistorVersion1xx m_metaPersistor;
@@ -172,7 +172,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
         m_versionString = version;
         m_metaPersistor = metaPersistor;
         m_nodeContainerLoaderMap =
-            new TreeMap<Integer, NodeContainerPersistor>();
+            new TreeMap<Integer, FromFileNodeContainerPersistor>();
         m_connectionSet = new HashSet<ConnectionContainerTemplate>();
         m_obsoleteNodeDirectories = new ArrayList<ReferencedFile>();
         m_isProject = isProject;
@@ -220,7 +220,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public Map<Integer, NodeContainerPersistor> getNodeLoaderMap() {
+    public Map<Integer, ? extends NodeContainerPersistor> getNodeLoaderMap() {
         return m_nodeContainerLoaderMap;
     }
 
@@ -749,9 +749,11 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             // stop loading here
             return;
         }
-        // ids of nodes that failed to load. Used to suppress superfluous
-        // errors when reading the connections
+        // ids of nodes that failed to load. Used to suppress superfluous errors when reading the connections
         Set<Integer> failingNodeIDSet = new HashSet<Integer>();
+        // ids of nodes whose factory can't be loaded (e.g. node extension not installed)
+        Map<Integer, NodeFactoryUnknownException> missingNodeIDMap =
+                new HashMap<Integer, NodeFactoryUnknownException>();
         exec.setMessage("node information");
         final ReferencedFile workflowDirRef = workflowKNIMEFile.getParent();
         /* Load nodes */
@@ -848,7 +850,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 failingNodeIDSet.add(nodeIDSuffix);
                 continue;
             }
-            NodeContainerPersistor persistor;
+            FromFileNodeContainerPersistor persistor;
             if (isMeta) {
                 persistor = createWorkflowPersistorLoad(nodeFile);
             } else {
@@ -876,12 +878,17 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 } else {
                     getLogger().error(error, e);
                 }
-                // node directory is the parent of the settings.xml
-                m_obsoleteNodeDirectories.add(nodeFile.getParent());
-                setDirtyAfterLoad();
                 loadResult.addError(loadErrorString);
-                failingNodeIDSet.add(nodeIDSuffix);
-                continue;
+                if (e instanceof NodeFactoryUnknownException) {
+                    missingNodeIDMap.put(nodeIDSuffix, (NodeFactoryUnknownException)e);
+                    // don't set dirty
+                } else {
+                    setDirtyAfterLoad();
+                    failingNodeIDSet.add(nodeIDSuffix);
+                    // node directory is the parent of the settings.xml
+                    m_obsoleteNodeDirectories.add(nodeFile.getParent());
+                    continue;
+                }
             }
             NodeContainerMetaPersistor meta = persistor.getMetaPersistor();
             if (m_nodeContainerLoaderMap.containsKey(nodeIDSuffix)) {
@@ -909,8 +916,7 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
                 connections = EMPTY_SETTINGS;
             }
         } catch (InvalidSettingsException e) {
-            String error = "Can't load workflow connections, config not found: "
-                + e.getMessage();
+            String error = "Can't load workflow connections, config not found: " + e.getMessage();
             getLogger().debug(error, e);
             setDirtyAfterLoad();
             loadResult.addError(error);
@@ -921,34 +927,29 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             try {
                 c = loadConnection(connections.getNodeSettings(connectionKey));
             } catch (InvalidSettingsException e) {
-                String error = "Can't load connection with internal ID \""
-                    + connectionKey + "\": " + e.getMessage();
+                String error = "Can't load connection with internal ID \"" + connectionKey + "\": " + e.getMessage();
                 getLogger().debug(error, e);
                 setDirtyAfterLoad();
                 loadResult.addError(error);
                 continue;
             }
             int sourceIDSuffix = c.getSourceSuffix();
-            NodeContainerPersistor sourceNodePersistor =
-                m_nodeContainerLoaderMap.get(sourceIDSuffix);
+            NodeContainerPersistor sourceNodePersistor = m_nodeContainerLoaderMap.get(sourceIDSuffix);
             if (sourceNodePersistor == null && sourceIDSuffix != -1) {
                 setDirtyAfterLoad();
                 if (!failingNodeIDSet.contains(sourceIDSuffix)) {
-                    loadResult.addError("Unable to load node connection " + c
-                            + ", source node does not exist");
+                    loadResult.addError("Unable to load node connection " + c + ", source node does not exist");
                 }
                 continue;
             }
             fixSourcePortIfNecessary(sourceNodePersistor, c);
 
             int destIDSuffix = c.getDestSuffix();
-            NodeContainerPersistor destNodePersistor =
-                m_nodeContainerLoaderMap.get(destIDSuffix);
+            NodeContainerPersistor destNodePersistor = m_nodeContainerLoaderMap.get(destIDSuffix);
             if (destNodePersistor == null && destIDSuffix != -1) {
                 setDirtyAfterLoad();
                 if (!failingNodeIDSet.contains(destIDSuffix)) {
-                    loadResult.addError("Unable to load node connection " + c
-                            + ", destination node does not exist");
+                    loadResult.addError("Unable to load node connection " + c + ", destination node does not exist");
                 }
                 continue;
             }
@@ -956,12 +957,61 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
 
             if (!m_connectionSet.add(c)) {
                 setDirtyAfterLoad();
-                loadResult.addError(
-                        "Duplicate connection information: " + c);
+                loadResult.addError("Duplicate connection information: " + c);
             }
         }
 
+        for (Map.Entry<Integer, NodeFactoryUnknownException> missingNode : missingNodeIDMap.entrySet()) {
+            int missingNodeSuffix = missingNode.getKey();
+            NodeAndBundleInformation nodeInfo = missingNode.getValue().getNodeAndBundleInformation();
+            NodeSettingsRO additionalFactorySettings = missingNode.getValue().getAdditionalFactorySettings();
+            ArrayList<PersistorWithPortIndex> upstreamNodes = new ArrayList<PersistorWithPortIndex>();
+            ArrayList<List<PersistorWithPortIndex>> downstreamNodes = new ArrayList<List<PersistorWithPortIndex>>();
+            for (ConnectionContainerTemplate t : m_connectionSet) {
+                // check upstream nodes
+                int sourceSuffix = t.getSourceSuffix();
+                int destSuffix = t.getDestSuffix();
+                int sourcePort = t.getSourcePort();
+                int destPort = t.getDestPort();
+                if (destSuffix == missingNodeSuffix) {
+                    FromFileNodeContainerPersistor persistor;
+                    if (sourceSuffix == -1) { // connected to this meta node's input port bar
+                        persistor = this;
+                    } else {
+                        persistor = m_nodeContainerLoaderMap.get(sourceSuffix);
+                    }
+                    ensureArrayListIndexValid(upstreamNodes, destPort);
+                    upstreamNodes.set(destPort, new PersistorWithPortIndex(persistor, sourcePort));
+                }
+                // check downstream nodes
+                if (sourceSuffix == missingNodeSuffix) {
+                    FromFileNodeContainerPersistor persistor;
+                    if (destSuffix == -1) { // connect to this meta node's output port bar
+                        persistor = this;
+                    } else {
+                        persistor = m_nodeContainerLoaderMap.get(destSuffix);
+                    }
+                    ensureArrayListIndexValid(downstreamNodes, sourcePort);
+                    List<PersistorWithPortIndex> downstreamNodesAtPort = downstreamNodes.get(sourcePort);
+                    if (downstreamNodesAtPort == null) {
+                        downstreamNodesAtPort = new ArrayList<PersistorWithPortIndex>();
+                        downstreamNodes.set(sourcePort, downstreamNodesAtPort);
+                    }
+                    downstreamNodesAtPort.add(new PersistorWithPortIndex(persistor, destPort));
+                }
+            }
+            FromFileNodeContainerPersistor failingNodePersistor = m_nodeContainerLoaderMap.get(missingNodeSuffix);
+            failingNodePersistor.guessPortTypesFromConnectedNodes(
+                  nodeInfo, additionalFactorySettings, upstreamNodes, downstreamNodes);
+        }
         exec.setProgress(1.0);
+    }
+
+    /** Fills the list with null so that list.get(index) doesn't throw an exception. */
+    private static void ensureArrayListIndexValid(final ArrayList<?> list, final int index) {
+        for (int i = list.size(); i <= index; i++) {
+            list.add(null);
+        }
     }
 
     /** Fixes source port index if necessary. Fixes the mandatory
@@ -1420,6 +1470,39 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor {
             nodeIDSuffix += 1;
         }
         return nodeIDSuffix;
+    }
+
+
+    /**
+     * {@inheritDoc}
+     * @since 2.7
+     */
+    @Override
+    public void guessPortTypesFromConnectedNodes(final NodeAndBundleInformation nodeInfo,
+             final NodeSettingsRO additionalFactorySettings,
+             final ArrayList<PersistorWithPortIndex> upstreamNodes,
+             final ArrayList<List<PersistorWithPortIndex>> downstreamNodes) {
+        // not applicable for meta nodes
+    }
+
+    /** {@inheritDoc}
+     * @since 2.7 */
+    @Override
+    public PortType getDownstreamPortType(final int index) {
+        if (m_outPortTemplates != null && index < m_outPortTemplates.length) {
+            return m_outPortTemplates[index].getPortType();
+        }
+        return null;
+    }
+
+    /** {@inheritDoc}
+     * @since 2.7 */
+    @Override
+    public PortType getUpstreamPortType(final int index) {
+        if (m_inPortTemplates != null && index < m_inPortTemplates.length) {
+            return m_inPortTemplates[index].getPortType();
+        }
+        return null;
     }
 
 }

@@ -57,6 +57,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -79,10 +81,14 @@ import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
 import org.knime.core.node.NodePersistorVersion1xx;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.missing.MissingNodeFactory;
+import org.knime.core.node.port.PortObject;
+import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.NodeFactoryUnknownException;
 import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
@@ -93,7 +99,7 @@ import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
 public class SingleNodeContainerPersistorVersion1xx
-    implements SingleNodeContainerPersistor {
+    implements SingleNodeContainerPersistor, FromFileNodeContainerPersistor {
 
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
@@ -228,8 +234,8 @@ public class SingleNodeContainerPersistorVersion1xx
         return new SingleNodeContainer(wm, id, this);
     }
 
-    NodePersistorVersion1xx createNodePersistor() {
-        return new NodePersistorVersion1xx(this, null);
+    NodePersistorVersion1xx createNodePersistor(final ReferencedFile nodeConfigFile) {
+        return new NodePersistorVersion1xx(this, null, nodeConfigFile);
     }
 
     /** {@inheritDoc} */
@@ -256,6 +262,17 @@ public class SingleNodeContainerPersistorVersion1xx
             setDirtyAfterLoad();
             throw ioe;
         }
+
+        boolean resetRequired = meta.load(settings, parentSettings, result);
+        m_nodeSettings = settings;
+        if (resetRequired) {
+            setNeedsResetAfterLoad();
+            setDirtyAfterLoad();
+        }
+        if (meta.isDirtyAfterLoad()) {
+            setDirtyAfterLoad();
+        }
+
         NodeAndBundleInformation nodeInfo;
         try {
             nodeInfo = loadNodeFactoryInfo(parentSettings, settings);
@@ -269,34 +286,32 @@ public class SingleNodeContainerPersistorVersion1xx
             setDirtyAfterLoad();
             throw new InvalidSettingsException(error, e);
         }
+        NodeSettingsRO additionalFactorySettings;
+        try {
+            additionalFactorySettings = loadAdditionalFactorySettings(settings);
+        } catch (Throwable e) {
+            error =  "Unable to load additional factory settings for \"" + nodeInfo + "\"";
+            setDirtyAfterLoad();
+            throw new InvalidSettingsException(error, e);
+        }
         NodeFactory<NodeModel> nodeFactory;
-
         try {
             nodeFactory = loadNodeFactory(nodeInfo.getFactoryClass());
         } catch (Throwable e) {
-            error = nodeInfo.getErrorMessageWhenNodeIsMissing();
-            setDirtyAfterLoad();
-            throw new NodeFactoryUnknownException(error, e);
+            // setDirtyAfterLoad(); // don't set dirty, missing node placeholder will be used instead
+            throw new NodeFactoryUnknownException(nodeInfo, additionalFactorySettings, e);
         }
 
         try {
-            loadAdditionalFactorySettings(nodeFactory, settings);
+            if (additionalFactorySettings != null) {
+                nodeFactory.loadAdditionalFactorySettings(additionalFactorySettings);
+            }
         } catch (Throwable e) {
-            error =  "Unable to load additional factory settings for \""
-                + nodeInfo + "\"";
+            error =  "Unable to load additional factory settings into node factory (node \"" + nodeInfo + "\")";
             setDirtyAfterLoad();
             throw new InvalidSettingsException(error, e);
         }
         m_node = new Node(nodeFactory);
-        boolean resetRequired = meta.load(settings, parentSettings, result);
-        m_nodeSettings = settings;
-        if (resetRequired) {
-            setNeedsResetAfterLoad();
-            setDirtyAfterLoad();
-        }
-        if (meta.isDirtyAfterLoad()) {
-            setDirtyAfterLoad();
-        }
     }
 
     /** {@inheritDoc} */
@@ -304,34 +319,26 @@ public class SingleNodeContainerPersistorVersion1xx
     public void loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep,
             final ExecutionMonitor exec, final LoadResult result)
     throws InvalidSettingsException, CanceledExecutionException, IOException {
-        String nodeFileName;
+        ReferencedFile nodeFile;
         try {
-            nodeFileName = loadNodeFile(m_nodeSettings);
+            nodeFile = loadNodeFile(m_nodeSettings);
         } catch (InvalidSettingsException e) {
-            String error =
-                "Unable to load node settings file for node with ID suffix "
-                    + m_metaPersistor.getNodeIDSuffix() + " (node \""
-                    + m_node.getName() + "\"): " + e.getMessage();
+            String error = "Unable to load node settings file for node with ID suffix "
+                    + m_metaPersistor.getNodeIDSuffix() + " (node \"" + m_node.getName() + "\"): " + e.getMessage();
             result.addError(error);
             getLogger().debug(error, e);
             setDirtyAfterLoad();
             return;
         }
-        ReferencedFile nodeDir = getMetaPersistor().getNodeContainerDirectory();
-        ReferencedFile nodeFile = new ReferencedFile(nodeDir, nodeFileName);
-        m_settingsFailPolicy =
-            translateToFailPolicy(m_metaPersistor.getState());
-        NodePersistorVersion1xx nodePersistor = createNodePersistor();
+        m_settingsFailPolicy = translateToFailPolicy(m_metaPersistor.getState());
+        NodePersistorVersion1xx nodePersistor = createNodePersistor(nodeFile);
         try {
-            WorkflowPersistorVersion1xx wfmPersistor =
-                getWorkflowManagerPersistor();
-            HashMap<Integer, ContainerTable> globalTableRepository =
-                wfmPersistor.getGlobalTableRepository();
+            WorkflowPersistorVersion1xx wfmPersistor = getWorkflowManagerPersistor();
+            HashMap<Integer, ContainerTable> globalTableRepository = wfmPersistor.getGlobalTableRepository();
             WorkflowFileStoreHandlerRepository fileStoreHandlerRepository =
-                wfmPersistor.getFileStoreHandlerRepository();
-            nodePersistor.load(m_node, nodeFile, m_parentPersistor,
-                    exec, tblRep, globalTableRepository,
-                    fileStoreHandlerRepository, result);
+                    wfmPersistor.getFileStoreHandlerRepository();
+            nodePersistor.load(m_node, m_parentPersistor, exec, tblRep, globalTableRepository,
+                               fileStoreHandlerRepository, result);
         } catch (final Exception e) {
             String error = "Error loading node content: " + e.getMessage();
             getLogger().warn(error, e);
@@ -426,26 +433,24 @@ public class SingleNodeContainerPersistorVersion1xx
         }
     }
 
-    /** Calls {@link NodeFactory#loadAdditionalFactorySettings(
-     * org.knime.core.node.config.ConfigRO)}
-     * @param factory ...
+    /** Reads sub settings object.
      * @param settings ...
-     * @throws InvalidSettingsException ..
-     * @noreference This method is not intended to be referenced by clients.
+     * @return child settings (here: null)
+     * @throws InvalidSettingsException ...
      */
-    void loadAdditionalFactorySettings(final NodeFactory factory,
-            final NodeSettingsRO settings) throws InvalidSettingsException {
-        // overwritten in subclass
+    NodeSettingsRO loadAdditionalFactorySettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        return null;
     }
 
-    /** Load Name of file containing node settings.
+    /** Load file containing node settings.
      * @param settings to load from, used in sub-classes, ignored here.
-     * @return "settings.xml"
+     * @return pointer to "settings.xml"
      * @throws InvalidSettingsException If that fails for any reason.
      */
-    String loadNodeFile(final NodeSettingsRO settings)
+    ReferencedFile loadNodeFile(final NodeSettingsRO settings)
         throws InvalidSettingsException {
-        return SETTINGS_FILE_NAME;
+        ReferencedFile nodeDir = getMetaPersistor().getNodeContainerDirectory();
+        return new ReferencedFile(nodeDir, SETTINGS_FILE_NAME);
     }
 
     /** Load configuration of node.
@@ -520,8 +525,7 @@ public class SingleNodeContainerPersistorVersion1xx
         return m_settingsFailPolicy;
     }
 
-    static final LoadNodeModelSettingsFailPolicy translateToFailPolicy(
-            final State nodeState) {
+    static final LoadNodeModelSettingsFailPolicy translateToFailPolicy(final State nodeState) {
         switch (nodeState) {
         case IDLE:
             return LoadNodeModelSettingsFailPolicy.IGNORE;
@@ -530,5 +534,102 @@ public class SingleNodeContainerPersistorVersion1xx
         default:
             return LoadNodeModelSettingsFailPolicy.FAIL;
         }
+    }
+
+    /** {@inheritDoc}
+     * @since 2.7 */
+    @Override
+    public void guessPortTypesFromConnectedNodes(final NodeAndBundleInformation nodeInfo,
+             final NodeSettingsRO additionalFactorySettings,
+             final ArrayList<PersistorWithPortIndex> upstreamNodes,
+             final ArrayList<List<PersistorWithPortIndex>> downstreamNodes) {
+        if (m_node == null) {
+            /* Input ports from the connection table. */
+            // first is flow var port
+            PortType[] inPortTypes = new PortType[Math.max(upstreamNodes.size() - 1, 0)];
+            Arrays.fill(inPortTypes, BufferedDataTable.TYPE); // default to BDT for unconnected ports
+            for (int i = 0; i < inPortTypes.length; i++) {
+                PersistorWithPortIndex p = upstreamNodes.get(i + 1); // first is flow var port
+                if (p != null) {
+                    PortType portTypeFromUpstreamNode = p.getPersistor().getUpstreamPortType(p.getPortIndex());
+                    if (portTypeFromUpstreamNode != null) { // null if upstream is missing, too
+                        inPortTypes[i] = portTypeFromUpstreamNode;
+                    }
+                }
+            }
+
+            /* Output ports from node settings (saved ports) -- if possible (executed) */
+            String nodeName = nodeInfo.getNodeNameNotNull();
+            PortType[] outPortTypes;
+            try {
+                NodePersistorVersion1xx nodePersistor = createNodePersistor(loadNodeFile(m_nodeSettings));
+                LoadResult guessLoadResult = new LoadResult("Port type guessing for missing node \"" + nodeName + "\"");
+                outPortTypes = nodePersistor.guessOutputPortTypes(m_parentPersistor, guessLoadResult, nodeName);
+                if (guessLoadResult.hasErrors()) {
+                    getLogger().debug("Errors guessing port types for missing node \"" + nodeName + "\": "
+                          + guessLoadResult.getFilteredError("", LoadResultEntryType.Error));
+                }
+            } catch (Exception e) {
+                getLogger().debug("Unable to guess port types for missing node \"" + nodeName + "\"", e);
+                outPortTypes = null;
+            }
+            if (outPortTypes == null) { // couldn't guess port types from looking at node settings (e.g. not executed)
+                // default to BDT for unconnected ports
+                outPortTypes = new PortType[Math.max(downstreamNodes.size() - 1, 0)];
+            }
+            for (int i = 0; i < outPortTypes.length; i++) {
+                PortType type = outPortTypes[i];
+                // output types may be partially filled by settings guessing above, list may be empty or too short
+                List<PersistorWithPortIndex> list = i < downstreamNodes.size() - 1 ? downstreamNodes.get(i + 1) : null;
+                if (list != null) {
+                    assert !list.isEmpty();
+                    for (PersistorWithPortIndex p : list) {
+                        PortType current = p.getPersistor().getDownstreamPortType(p.getPortIndex());
+                        if (current == null) {
+                            // ignore, downstream node is also missing
+                        } else if (type == null) {
+                            type = current;
+                        } else if (type.equals(current)) {
+                            // keep type
+                        } else {
+                            // this shouldn't really happen - someone changed port types between versions
+                            type = new PortType(PortObject.class);
+                        }
+                    }
+                    outPortTypes[i] = type;
+                }
+                if (outPortTypes[i] == null) {
+                    // might still be null if missing node is only connected to missing node, fallback: BDT
+                    outPortTypes[i] = BufferedDataTable.TYPE;
+                }
+            }
+            MissingNodeFactory nodefactory = new MissingNodeFactory(
+                    nodeInfo, additionalFactorySettings, inPortTypes, outPortTypes);
+            if (getLoadVersion().ordinal() < WorkflowPersistorVersion200.VERSION_LATEST.ordinal()) {
+                nodefactory.setCopyInternDirForWorkflowVersionChange(true);
+            }
+            nodefactory.init();
+            m_node = new Node((NodeFactory)nodefactory); // unclear why this needs a cast
+        }
+    }
+
+    /** {@inheritDoc}
+     * @since 2.7 */
+    @Override
+    public PortType getDownstreamPortType(final int index) {
+        if (m_node != null && index < m_node.getNrInPorts()) {
+            return m_node.getInputType(index);
+        }
+        return null;
+    }
+
+    /** {@inheritDoc}
+     * @since 2.7 */
+    @Override
+    public PortType getUpstreamPortType(final int index) {
+        if (m_node != null && index < m_node.getNrOutPorts()) {
+            return m_node.getOutputType(index);
+        }
+        return null;
     }
 }

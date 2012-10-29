@@ -125,6 +125,22 @@ public final class NodeAndBundleInformation {
         return m_bundleVendor;
     }
 
+    /** @return non null node name.
+     * @since 2.7 */
+    public String getNodeNameNotNull() {
+        if (m_nodeName != null) {
+            return m_nodeName;
+        }
+        int dotIndex = m_factoryClass.lastIndexOf('.');
+        String name = m_factoryClass.substring(dotIndex + 1);
+        if (name.length() > "NodeFactory".length() && name.endsWith("NodeFactory")) {
+            name = name.substring(0, name.length() - "NodeFactory".length());
+        } else if (name.length() > "Factory".length() && name.endsWith("Factory")) {
+            name = name.substring(0, name.length() - "Factory".length());
+        }
+        return name;
+    }
+
     /** @return the nodeName */
     public String getNodeName() {
         return m_nodeName;

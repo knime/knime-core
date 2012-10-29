@@ -50,7 +50,6 @@
  */
 package org.knime.core.node.workflow;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.HashMap;
@@ -63,8 +62,6 @@ import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
 /**
@@ -244,14 +241,6 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
     @Override
     public boolean needsResetAfterLoad() {
         return false;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void preLoadNodeContainer(final WorkflowPersistor parentPersistor,
-            final NodeSettingsRO parentSettings, final LoadResult loadResult)
-            throws InvalidSettingsException, IOException {
-        throw new IllegalStateException("root can't be loaded");
     }
 
     /** {@inheritDoc} */

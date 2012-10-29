@@ -3899,11 +3899,29 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/NodePersistorVersion1xx.java" type="org.knime.core.node.NodePersistorVersion1xx">
+        <filter comment="added missing node placeholder" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.NodePersistorVersion1xx"/>
+                <message_argument value="load(Node, ReferencedFile, WorkflowPersistor, ExecutionMonitor, Map&lt;Integer,BufferedDataTable&gt;, HashMap&lt;Integer,ContainerTable&gt;, WorkflowFileStoreHandlerRepository, WorkflowPersistor.LoadResult)"/>
+            </message_arguments>
+        </filter>
         <filter id="643842064">
             <message_arguments>
                 <message_argument value="IFileStoreHandler"/>
                 <message_argument value="NodePersistorVersion1xx"/>
                 <message_argument value="getFileStoreHandler()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="added missing node placeholder" id="1143996420">
+            <message_arguments>
+                <message_argument value="NodePersistorVersion1xx(SingleNodeContainerPersistorVersion1xx, WorkflowPersistorVersion200.LoadVersion, ReferencedFile)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/NodePersistorVersion200.java" type="org.knime.core.node.NodePersistorVersion200">
+        <filter comment="added missing node placeholder" id="1143996420">
+            <message_arguments>
+                <message_argument value="NodePersistorVersion200(SingleNodeContainerPersistorVersion200, WorkflowPersistorVersion200.LoadVersion, ReferencedFile)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -4310,7 +4328,21 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainerPersistor.java" type="org.knime.core.node.workflow.NodeContainerPersistor">
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeContainerPersistor"/>
+                <message_argument value="preLoadNodeContainer(WorkflowPersistor, NodeSettingsRO, WorkflowPersistor.LoadResult)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/PasteWorkflowContentPersistor.java" type="org.knime.core.node.workflow.PasteWorkflowContentPersistor">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.PasteWorkflowContentPersistor"/>
+                <message_argument value="preLoadNodeContainer(WorkflowPersistor, NodeSettingsRO, WorkflowPersistor.LoadResult)"/>
+            </message_arguments>
+        </filter>
         <filter id="643842064">
             <message_arguments>
                 <message_argument value="WorkflowFileStoreHandlerRepository"/>

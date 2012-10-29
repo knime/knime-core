@@ -66,7 +66,6 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeAndBundleInformation;
-import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodePersistorVersion1xx;
 import org.knime.core.node.NodePersistorVersion200;
@@ -108,10 +107,12 @@ public class SingleNodeContainerPersistorVersion200 extends
                 nodeSettingsFile, loadHelper, version), version);
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    NodePersistorVersion200 createNodePersistor() {
-        return new NodePersistorVersion200(this, getLoadVersion());
+    NodePersistorVersion200 createNodePersistor(final ReferencedFile nodeConfigFile) {
+        return new NodePersistorVersion200(this, getLoadVersion(), nodeConfigFile);
     }
 
     /** {@inheritDoc} */
@@ -123,20 +124,20 @@ public class SingleNodeContainerPersistorVersion200 extends
 
     /** {@inheritDoc} */
     @Override
-    void loadAdditionalFactorySettings(final NodeFactory factory,
-            final NodeSettingsRO settings) throws InvalidSettingsException {
+    NodeSettingsRO loadAdditionalFactorySettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         // added in v2.6 (during hittisau 2012) without changing the version
         // number (current load version is V250("2.5.0"))
         if (settings.containsKey("factory_settings")) {
-            NodeSettingsRO s = settings.getNodeSettings("factory_settings");
-            factory.loadAdditionalFactorySettings(s);
+            return settings.getNodeSettings("factory_settings");
         }
+        return null;
     }
 
+    /** {@inheritDoc} */
     @Override
-    String loadNodeFile(final NodeSettingsRO settings)
-        throws InvalidSettingsException {
-        return settings.getString("node_file");
+    ReferencedFile loadNodeFile(final NodeSettingsRO settings) throws InvalidSettingsException {
+        ReferencedFile nodeDir = getMetaPersistor().getNodeContainerDirectory();
+        return new ReferencedFile(nodeDir, settings.getString("node_file"));
     }
 
     /** {@inheritDoc} */
@@ -305,6 +306,7 @@ public class SingleNodeContainerPersistorVersion200 extends
     protected static void saveNodeFactory(final NodeSettingsWO settings,
             final SingleNodeContainer nc) {
         final Node node = nc.getNode();
+        // node info to missing node is the info to the actual instance, not MissingNodeFactory
         NodeAndBundleInformation nodeInfo = node.getNodeAndBundleInformation();
         nodeInfo.save(settings);
 

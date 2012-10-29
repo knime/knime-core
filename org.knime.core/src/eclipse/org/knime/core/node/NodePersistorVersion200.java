@@ -65,8 +65,8 @@ import java.util.UUID;
 
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.EmptyFileStoreHandler;
-import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
+import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
@@ -84,6 +84,8 @@ import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObject;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200;
+import org.knime.core.node.workflow.WorkflowPersistor;
+import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 import org.knime.core.util.FileUtil;
 
@@ -105,11 +107,12 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
 
     /** Invokes super constructor.
      * @param sncPersistor Forwarded.
-     * @param loadVersion Version, must not be null. */
+     * @param loadVersion Version, must not be null.
+     * @param configFileRef node.xml */
     public NodePersistorVersion200(
             final SingleNodeContainerPersistorVersion200 sncPersistor,
-            final LoadVersion loadVersion) {
-        super(sncPersistor, loadVersion);
+            final LoadVersion loadVersion, final ReferencedFile configFileRef) {
+        super(sncPersistor, loadVersion, configFileRef);
         if (loadVersion == null) {
             throw new NullPointerException("Version arg must not be null.");
         }
@@ -495,6 +498,47 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
 
     /** {@inheritDoc} */
     @Override
+    public PortType[] guessOutputPortTypes(final WorkflowPersistor parentPersistor,
+               final LoadResult loadResult, final String nodeName) throws IOException, InvalidSettingsException {
+        NodeSettingsRO settings = loadSettingsFromConfigFile(parentPersistor, loadResult, nodeName);
+        if (!loadHasContent(settings)) {
+            return null;
+        }
+        NodeSettingsRO portsSettings = loadPortsSettings(settings);
+        Set<String> keySet = portsSettings.keySet();
+        PortType[] outTypes = new PortType[keySet.size()];
+        for (String key : keySet) {
+            NodeSettingsRO singlePortSetting = portsSettings.getNodeSettings(key);
+            // the 0 index is omitted in settings (flow variable port)
+            int index = loadPortIndex(singlePortSetting) - 1;
+            String portObjectClass = loadPortObjectClassName(singlePortSetting);
+            if (BufferedDataTable.TYPE.getPortObjectClass().getName().equals(portObjectClass)) {
+                outTypes[index] = BufferedDataTable.TYPE;
+            } else {
+                Class<?> cl;
+                try {
+                    cl = Class.forName(portObjectClass);
+                } catch (ClassNotFoundException e) {
+                    String msg = "Can't load port object class \"" + portObjectClass + "\"";
+                    loadResult.addError(msg);
+                    getLogger().debug(msg, e);
+                    cl = PortObject.class;
+                }
+                if (!PortObject.class.isAssignableFrom(cl)) {
+                    String msg = "Class \"" + cl.getSimpleName() + "\" is not a sub-class \""
+                            + PortObject.class.getSimpleName() + "\"";
+                    loadResult.addError(msg);
+                    cl = PortObject.class;
+                }
+                outTypes[index] = new PortType(cl.asSubclass(PortObject.class));
+            }
+        }
+        return outTypes;
+    }
+
+
+    /** {@inheritDoc} */
+    @Override
     boolean loadHasContent(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         return settings.getBoolean("hasContent");
@@ -531,8 +575,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         }
         NodeSettingsRO subSettings = settings.getNodeSettings("internalTables");
         String subDirName = subSettings.getString("location");
-        ReferencedFile subDirFile =
-            new ReferencedFile(getNodeDirectory(), subDirName);
+        ReferencedFile subDirFile = new ReferencedFile(getNodeDirectory(), subDirName);
         NodeSettingsRO portSettings = subSettings.getNodeSettings("content");
         Set<String> keySet = portSettings.keySet();
         BufferedDataTable[] result = new BufferedDataTable[keySet.size()];
@@ -604,17 +647,14 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             // only the mandatory flow variable port
             return;
         }
-        NodeSettingsRO portSettings = settings.getNodeSettings("ports");
+        NodeSettingsRO portsSettings = loadPortsSettings(settings);
         exec.setMessage("Reading outport data");
-        for (String key : portSettings.keySet()) {
-            NodeSettingsRO singlePortSetting =
-                    portSettings.getNodeSettings(key);
-            ExecutionMonitor subProgress =
-                exec.createSubProgress(1 / (double)nrOutPorts);
+        for (String key : portsSettings.keySet()) {
+            NodeSettingsRO singlePortSetting = portsSettings.getNodeSettings(key);
+            ExecutionMonitor subProgress = exec.createSubProgress(1 / (double)nrOutPorts);
             int index = loadPortIndex(singlePortSetting);
             if (index < 0 || index >= nrOutPorts) {
-                throw new InvalidSettingsException(
-                        "Invalid outport index in settings: " + index);
+                throw new InvalidSettingsException("Invalid outport index in settings: " + index);
             }
             String portDirN = singlePortSetting.getString("port_dir_location");
             if (portDirN != null) {
@@ -628,6 +668,15 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         }
     }
 
+    /**
+     * @param settings
+     * @return
+     * @throws InvalidSettingsException
+     */
+    NodeSettingsRO loadPortsSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        return settings.getNodeSettings("ports");
+    }
+
     int loadPortIndex(final NodeSettingsRO singlePortSetting)
         throws InvalidSettingsException {
         int index = singlePortSetting.getInt("index");
@@ -639,6 +688,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         return index;
     }
 
+
     void loadPort(final Node node, final ReferencedFile portDir,
             final NodeSettingsRO settings, final ExecutionMonitor exec,
             final int portIdx,
@@ -647,15 +697,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             final FileStoreHandlerRepository fileStoreHandlerRepository)
     throws IOException, InvalidSettingsException, CanceledExecutionException {
         String specClass = settings.getString("port_spec_class");
-        String objectClass = settings.getString("port_object_class");
-
-        /* In versions < V230 different PMMLPortObject classes existed which
-         * got all replaced by a general PMMLPortObject. To stay backward
-         * compatible we have to load the new object for them. */
-        if (getLoadVersion().ordinal() <= LoadVersion.V230.ordinal()
-                && PMML_PORTOBJECT_CLASSES.contains(objectClass)) {
-            objectClass = PMMLPortObject.class.getName();
-        }
+        String objectClass = loadPortObjectClassName(settings);
 
         PortType designatedType = node.getOutputType(portIdx);
         PortObjectSpec spec = null;
@@ -708,7 +750,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                 }
                 if (!PortObjectSpec.class.isAssignableFrom(cl)) {
                     throw new IOException("Class \"" + cl.getSimpleName()
-                            + "\" does not a sub-class \""
+                            + "\" is not a sub-class \""
                             + PortObjectSpec.class.getSimpleName() + "\"");
                 }
                 ReferencedFile specDirRef =
@@ -744,7 +786,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                 }
                 if (!PortObject.class.isAssignableFrom(cl)) {
                     throw new IOException("Class \"" + cl.getSimpleName()
-                            + "\" does not a sub-class \""
+                            + "\" is not a sub-class \""
                             + PortObject.class.getSimpleName() + "\"");
                 }
                 ReferencedFile objectFileRef =
@@ -811,6 +853,24 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         setPortObjectSummary(portIdx, summary);
     }
 
+    /**
+     * @param singlePortSettings ...
+     * @return ...
+     * @throws InvalidSettingsException ...
+     */
+    String loadPortObjectClassName(final NodeSettingsRO singlePortSettings) throws InvalidSettingsException {
+        String objectClass = singlePortSettings.getString("port_object_class");
+
+        /* In versions < V230 different PMMLPortObject classes existed which
+         * got all replaced by a general PMMLPortObject. To stay backward
+         * compatible we have to load the new object for them. */
+        if (getLoadVersion().ordinal() <= LoadVersion.V230.ordinal()
+                && PMML_PORTOBJECT_CLASSES.contains(objectClass)) {
+            objectClass = PMMLPortObject.class.getName();
+        }
+        return objectClass;
+    }
+
     private BufferedDataTable loadBufferedDataTable(
             final ReferencedFile objectDir, final ExecutionMonitor exec,
             final Map<Integer, BufferedDataTable> loadTblRep,
@@ -821,5 +881,4 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         return BufferedDataTable.loadFromFile(objectDir, /* ignored in 1.2+ */
         null, exec, loadTblRep, tblRep, fileStoreHandlerRepository);
     }
-
 }

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2012
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -43,48 +43,65 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * --------------------------------------------------------------------- *
+ * ---------------------------------------------------------------------
  *
- * History
- *   Sep 24, 2007 (wiswedel): created
+ * Created on Oct 27, 2012 by wiswedel
  */
-package org.knime.core.node.workflow;
+package org.knime.core.node.missing;
 
-import java.io.IOException;
-import java.util.Map;
+import javax.swing.JScrollPane;
+import javax.swing.JTree;
+import javax.swing.tree.DefaultTreeModel;
 
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeSettings;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
- *
- * @author Bernd Wiswedel, University of Konstanz
- * @noextend This interface is not intended to be extended by clients.
+ * Dialog to missing node placeholder. Shows original node's config in a tree.
+ * @author wiswedel
  */
-public interface NodeContainerPersistor {
+final class MissingNodeDialog extends NodeDialogPane {
 
-    NodeContainer getNodeContainer(final WorkflowManager parent, final NodeID id);
+    private final JTree m_tree;
+    private NodeSettings m_settings;
 
-    NodeContainerMetaPersistor getMetaPersistor();
+    /** ... */
+    MissingNodeDialog() {
+        m_tree = new JTree();
+        m_tree.setRootVisible(false);
+        addTab("Settings", new JScrollPane(m_tree));
+    }
 
-    boolean needsResetAfterLoad();
+    /** {@inheritDoc} */
+    @Override
+    protected void loadSettingsFrom(final NodeSettingsRO settings,
+        final PortObjectSpec[] specs) throws NotConfigurableException {
+        m_settings = new NodeSettings("ignored");
+        settings.copyTo(m_settings);
+        m_tree.setModel(new DefaultTreeModel(settings));
+        for (int i = m_tree.getRowCount() - 1; i >= 0; i--) {
+            m_tree.expandRow(i);
+        }
+    }
 
-    boolean isDirtyAfterLoad();
+    /** {@inheritDoc} */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+        m_settings.copyTo(settings);
+    }
 
-    /** Does this persistor complain if its persisted state
-     * {@link NodeContainer#getState() state} does not match the state after
-     * loading (typically all non-executed nodes are configured after load).
-     * This is true for all SingleNodeContainer and newer meta nodes,
-     * but it will be false for meta nodes, which are loaded from 1.x workflow.
-     * @return Such a property.
+    /**
+     * {@inheritDoc}
      */
-    boolean mustComplainIfStateDoesNotMatch();
-
-    void loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep,
-            final ExecutionMonitor exec, final LoadResult loadResult)
-            throws InvalidSettingsException, CanceledExecutionException,
-            IOException;
+    @Override
+    public void onClose() {
+        super.onClose();
+        m_settings = null;
+        m_tree.setModel(new DefaultTreeModel(new NodeSettings("ignored")));
+    }
 }

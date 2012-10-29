@@ -78,6 +78,7 @@ import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
 import org.knime.core.node.config.ConfigEditTreeModel;
 import org.knime.core.node.interrupt.InterruptibleNodeModel;
+import org.knime.core.node.missing.MissingNodeModel;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortObjectSpecZipInputStream;
@@ -1989,6 +1990,9 @@ public final class Node implements NodeModelWarningListener {
      * @since 2.6
      * @noreference This method is not intended to be referenced by clients. */
     public NodeAndBundleInformation getNodeAndBundleInformation() {
+        if (m_model instanceof MissingNodeModel) {
+            return ((MissingNodeModel)m_model).getNodeAndBundleInformation();
+        }
         return new NodeAndBundleInformation(this);
     }
 

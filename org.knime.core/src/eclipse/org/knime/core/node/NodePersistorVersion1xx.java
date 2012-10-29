@@ -100,7 +100,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
 
     private boolean m_isConfigured;
 
-    private ReferencedFile m_nodeDirectory;
+    private ReferencedFile m_nodeConfigFileRef;
 
     private ReferencedFile m_nodeInternDirectory;
 
@@ -141,14 +141,14 @@ public class NodePersistorVersion1xx implements NodePersistor {
 
     /** Creates persistor for both load and save.
      * @param sncPersistor The corresponding SNC persistor.
-     * @param version The version string, see
-     * {@link #getLoadVersion()} for details
+     * @param version The version string, see {@link #getLoadVersion()} for details
+     * @param configFileRef The configuration file for the node (node.xml)
      */
-    public NodePersistorVersion1xx(
-            final SingleNodeContainerPersistorVersion1xx sncPersistor,
-            final LoadVersion version) {
+    public NodePersistorVersion1xx(final SingleNodeContainerPersistorVersion1xx sncPersistor,
+           final LoadVersion version, final ReferencedFile configFileRef) {
         m_sncPersistor = sncPersistor;
         m_loadVersion = version;
+        m_nodeConfigFileRef = configFileRef;
     }
 
     protected NodeLogger getLogger() {
@@ -160,6 +160,30 @@ public class NodePersistorVersion1xx implements NodePersistor {
      * enforced in constructor of subclass. */
     public LoadVersion getLoadVersion() {
         return m_loadVersion;
+    }
+
+    /** Parse node.xml file.
+     * @param parentPersistor for deciphering encrypted nodes
+     * @param loadResult reporting errors
+     * @param nodeName only for possible error message
+     * @return The NodeSettings from the config file
+     * @throws IOException ...
+     */
+    NodeSettingsRO loadSettingsFromConfigFile(final WorkflowPersistor parentPersistor, final LoadResult loadResult,
+              final String nodeName) throws IOException {
+        NodeSettingsRO settings;
+        File configFile = m_nodeConfigFileRef.getFile();
+        if (!configFile.isFile() || !configFile.canRead()) {
+            String error = "Unable to load \"" + nodeName + "\": " + "Can't read config file \"" + configFile + "\"";
+            loadResult.addError(error);
+            settings = new NodeSettings("empty");
+            setNeedsResetAfterLoad(); // also implies dirty
+        } else {
+            InputStream in = new FileInputStream(configFile);
+            in = parentPersistor.decipherInput(in);
+            settings = NodeSettings.loadFromXML(new BufferedInputStream(in));
+        }
+        return settings;
     }
 
     boolean loadIsExecuted(final NodeSettingsRO settings)
@@ -251,6 +275,21 @@ public class NodePersistorVersion1xx implements NodePersistor {
         }
     }
 
+    /** Called on "missing" nodes to guess their output port types (only possible for executed nodes).
+     * This implementation returns null; subclasses overwrite it.
+     * @param parentPersistor ...
+     * @param loadResult ...
+     * @param nodeName ...
+     * @return ...
+     * @throws InvalidSettingsException ...
+     * @throws IOException ...
+     * @since 2.7
+     */
+    public PortType[] guessOutputPortTypes(final WorkflowPersistor parentPersistor,
+           final LoadResult loadResult, final String nodeName) throws IOException, InvalidSettingsException {
+        return null;
+    }
+
     /** Subtracts one from the argument. As of v2.2 KNIME has an additional
      * output port (index 0) carrying flow variables.
      * @param loaded Index of port in current version
@@ -312,6 +351,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
         // the spec is saved in data/data_0/spec.xml
         boolean isVersion11x = settings.containsKey(CFG_SPEC_FILES);
         ExecutionMonitor execSubData = execMon.createSubProgress(0.25);
+        ReferencedFile nodeDirectory = getNodeDirectory();
         if (isVersion11x) {
             /* In version 1.1.x the data was stored in a different way. The
              * data.xml that is now contained in the data/data_x/ directory was
@@ -319,7 +359,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
              * spec was located at a different location.
              */
             String dataConfigFileName = settings.getString(CFG_DATA_FILE);
-            File nodeDir = m_nodeDirectory.getFile();
+            File nodeDir = nodeDirectory.getFile();
             // dataConfigFile = data.xml in node dir
             File dataConfigFile = new File(nodeDir, dataConfigFileName);
             NodeSettingsRO dataSettings = NodeSettings
@@ -327,8 +367,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
                             dataConfigFile)));
             String dataPath = dataSettings.getString(CFG_DATA_FILE_DIR);
             // dataDir = /data
-            ReferencedFile dataDirRef =
-                new ReferencedFile(m_nodeDirectory, dataPath);
+            ReferencedFile dataDirRef = new ReferencedFile(nodeDirectory, dataPath);
             // note: we do not check for existence here - in some cases
             // this directory may not exist (when exported and empty
             // directories are pruned)
@@ -349,7 +388,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
                     .getNodeSettings(CFG_DATA_FILE);
             String dataDirStr = dataSettings.getString(CFG_DATA_FILE_DIR);
             ReferencedFile dataDirRef =
-                new ReferencedFile(m_nodeDirectory, dataDirStr);
+                new ReferencedFile(nodeDirectory, dataDirStr);
             NodeSettingsRO portSettings = dataSettings
                     .getNodeSettings(CFG_OUTPUT_PREFIX + index);
             String dataName = portSettings.getString(CFG_DATA_FILE_DIR);
@@ -382,11 +421,12 @@ public class NodePersistorVersion1xx implements NodePersistor {
         // of the data table specs file (spec_0.xml, e.g.). From 1.2.0 on,
         // the spec is saved in data/data_0/spec.xml
         boolean isVersion11x = settings.containsKey(CFG_SPEC_FILES);
+        ReferencedFile nodeDirectory = getNodeDirectory();
         if (isVersion11x) {
             NodeSettingsRO spec = settings.getNodeSettings(CFG_SPEC_FILES);
             String specName = spec.getString(CFG_OUTPUT_PREFIX + index);
             ReferencedFile targetFileRef =
-                new ReferencedFile(m_nodeDirectory, specName);
+                new ReferencedFile(nodeDirectory, specName);
             File targetFile = targetFileRef.getFile();
             DataTableSpec outSpec = null;
             if (targetFile.exists()) {
@@ -400,8 +440,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
             NodeSettingsRO dataSettings = settings
                     .getNodeSettings(CFG_DATA_FILE);
             String dataDirStr = dataSettings.getString(CFG_DATA_FILE_DIR);
-            ReferencedFile dataDirRef =
-                new ReferencedFile(m_nodeDirectory, dataDirStr);
+            ReferencedFile dataDirRef = new ReferencedFile(nodeDirectory, dataDirStr);
             NodeSettingsRO portSettings = dataSettings
                     .getNodeSettings(CFG_OUTPUT_PREFIX + index);
             String dataName = portSettings.getString(CFG_DATA_FILE_DIR);
@@ -496,7 +535,6 @@ public class NodePersistorVersion1xx implements NodePersistor {
      * @param node The target node, used for meta info (#ports, e.g) and to
      *  invoke the
      *  {@link Node#load(NodePersistor, ExecutionMonitor, LoadResult)} on
-     * @param configFileRef The configuration file for the node.
      * @param parentPersistor workflow persistor for decryption
      * @param exec For progress/cancelation
      * @param loadTblRep The table repository used during load
@@ -508,10 +546,8 @@ public class NodePersistorVersion1xx implements NodePersistor {
      * @noreference This method is not intended to be referenced by clients.
      * @nooverride
      */
-    public void load(final Node node, final ReferencedFile configFileRef,
-            final WorkflowPersistor parentPersistor,
-            final ExecutionMonitor exec,
-            final Map<Integer, BufferedDataTable> loadTblRep,
+    public final void load(final Node node, final WorkflowPersistor parentPersistor,
+            final ExecutionMonitor exec, final Map<Integer, BufferedDataTable> loadTblRep,
             final HashMap<Integer, ContainerTable> tblRep,
             final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository,
             final LoadResult loadResult)
@@ -525,26 +561,14 @@ public class NodePersistorVersion1xx implements NodePersistor {
         m_portObjects = new PortObject[node.getNrOutPorts()];
         m_portObjectSpecs = new PortObjectSpec[node.getNrOutPorts()];
         m_portObjectSummaries = new String[node.getNrOutPorts()];
-        m_nodeDirectory = configFileRef.getParent();
-        if (m_nodeDirectory == null) {
-            throw new IOException("parent of config file \"" + configFileRef
+        String nodeName = node.getName();
+        ReferencedFile nodeDirectory = m_nodeConfigFileRef.getParent();
+        if (nodeDirectory == null) {
+            throw new IOException("parent of config file \"" + m_nodeConfigFileRef
                     + "\" is not represented as an object of class "
                     + ReferencedFile.class.getSimpleName());
         }
-        File configFile = configFileRef.getFile();
-        NodeSettingsRO settings;
-        if (!configFile.isFile() || !configFile.canRead()) {
-            String error = "Unable to load \"" + node.getName() + "\": "
-                    + "Can't read config file \"" + configFile + "\"";
-            loadResult.addError(error);
-            settings = new NodeSettings("empty");
-            setNeedsResetAfterLoad(); // also implies dirty
-        } else {
-            InputStream in = new FileInputStream(configFile);
-            in = parentPersistor.decipherInput(in);
-            settings = NodeSettings.loadFromXML(new BufferedInputStream(in));
-        }
-
+        NodeSettingsRO settings = loadSettingsFromConfigFile(parentPersistor, loadResult, nodeName);
         m_modelSettings = settings;
 
         try {
@@ -604,8 +628,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
         // load internals
         if (m_hasContent) {
             try {
-                m_nodeInternDirectory =
-                    loadNodeInternDirectory(settings, m_nodeDirectory);
+                m_nodeInternDirectory = loadNodeInternDirectory(settings, getNodeDirectory());
             } catch (InvalidSettingsException ise) {
                 String e = "Unable to load internals directory";
                 loadResult.addError(e);
@@ -628,7 +651,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
                         + "\" encountered");
             }
             String err = "Unable to load file store handler for node \""
-                + node.getName() + "\": " + e.getMessage();
+                + nodeName + "\": " + e.getMessage();
             loadResult.addError(err, true);
             if (mustWarnOnDataLoadError()) {
                 getLogger().warn(err, e);
@@ -641,8 +664,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
         exec.setMessage("ports");
         try {
             if (!loadHelper.isTemplateFlow()) {
-                loadPorts(node, loadExec, settings, loadTblRep,
-                        tblRep, fileStoreHandlerRepository);
+                loadPorts(node, loadExec, settings, loadTblRep, tblRep, fileStoreHandlerRepository);
             }
         } catch (Exception e) {
             if (!(e instanceof InvalidSettingsException)
@@ -651,7 +673,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
                         + "\" encountered");
             }
             String err = "Unable to load port content for node \""
-                + node.getName() + "\": " + e.getMessage();
+                + nodeName + "\": " + e.getMessage();
             loadResult.addError(err, true);
             if (mustWarnOnDataLoadError()) {
                 getLogger().warn(err, e);
@@ -674,7 +696,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
                         + "\" encountered");
             }
             String err = "Unable to load internally held tables for node \""
-                + node.getName() + "\": " + e.getMessage();
+                + nodeName + "\": " + e.getMessage();
             loadResult.addError(err, true);
             if (mustWarnOnDataLoadError()) {
                 getLogger().warn(err, e);
@@ -717,7 +739,7 @@ public class NodePersistorVersion1xx implements NodePersistor {
     }
 
     protected ReferencedFile getNodeDirectory() {
-        return m_nodeDirectory;
+        return m_nodeConfigFileRef.getParent();
     }
 
     /** {@inheritDoc} */

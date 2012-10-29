@@ -62,6 +62,8 @@ import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeAndBundleInformation;
+import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
@@ -104,7 +106,7 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
 
     /** The map of node ID suffix to persistor.
      * @return The persistor map. */
-    Map<Integer, NodeContainerPersistor> getNodeLoaderMap();
+    Map<Integer, ? extends NodeContainerPersistor> getNodeLoaderMap();
 
     /** The connections between the nodes that are loaded. The set only contains
      * connections between nodes of the loader map, it does not contain
@@ -620,21 +622,34 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
      * @since 2.6
      */
     @SuppressWarnings("serial")
-    static final class NodeFactoryUnknownException
-        extends InvalidSettingsException {
+    static final class NodeFactoryUnknownException extends InvalidSettingsException {
+
+        private final NodeAndBundleInformation m_nodeAndBundleInformation;
+        private final NodeSettingsRO m_additionalFactorySettings;
 
         /**
-         * @param message
-         * @param cause */
-        NodeFactoryUnknownException(final String message,
-                final Throwable cause) {
-            super(message, cause);
+         * @param nodeAndBundleInformation ...
+         * @param additionalFactorySettings ...
+         * @param cause ... */
+        NodeFactoryUnknownException(final NodeAndBundleInformation nodeAndBundleInformation,
+                final NodeSettingsRO additionalFactorySettings, final Throwable cause) {
+            super(nodeAndBundleInformation.getErrorMessageWhenNodeIsMissing(), cause);
+            m_nodeAndBundleInformation = nodeAndBundleInformation;
+            m_additionalFactorySettings = additionalFactorySettings;
         }
 
         /**
-         * @param message */
-        NodeFactoryUnknownException(final String message) {
-            super(message);
+         * @return the nodeAndBundleInformation
+         */
+        NodeAndBundleInformation getNodeAndBundleInformation() {
+            return m_nodeAndBundleInformation;
+        }
+
+        /**
+         * @return the additionalFactorySettings (or null)
+         */
+        NodeSettingsRO getAdditionalFactorySettings() {
+            return m_additionalFactorySettings;
         }
 
     }

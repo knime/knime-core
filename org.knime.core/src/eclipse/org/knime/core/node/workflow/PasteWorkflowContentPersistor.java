@@ -67,7 +67,6 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
 /**
@@ -294,14 +293,6 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
     @Override
     public boolean needsResetAfterLoad() {
         return false;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void preLoadNodeContainer(final WorkflowPersistor parentPersistor,
-            final NodeSettingsRO parentSettings, final LoadResult loadResult)
-            throws InvalidSettingsException, IOException {
-        throwUnsupportedOperationException();
     }
 
     /** {@inheritDoc} */

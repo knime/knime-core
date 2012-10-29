@@ -6391,8 +6391,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         : "ROOT workflow has no connections: " + persistor.getConnectionSet();
         LinkedHashMap<NodeID, NodeContainerPersistor> persistorMap =
             new LinkedHashMap<NodeID, NodeContainerPersistor>();
-        Map<Integer, NodeContainerPersistor> nodeLoaderMap =
-            persistor.getNodeLoaderMap();
+        Map<Integer, ? extends NodeContainerPersistor> nodeLoaderMap = persistor.getNodeLoaderMap();
         exec.setMessage("annotations");
         List<WorkflowAnnotation> annos = persistor.getWorkflowAnnotations();
         for (WorkflowAnnotation w : annos) {
@@ -6659,7 +6658,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     private Map<Integer, NodeID> loadNodesAndConnections(
-            final Map<Integer, NodeContainerPersistor> loaderMap,
+            final Map<Integer, ? extends NodeContainerPersistor> loaderMap,
             final Set<ConnectionContainerTemplate> connections,
             final LoadResult loadResult) {
         // id suffix are made unique by using the entries in this map
@@ -6677,8 +6676,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
         };
 
-        for (Map.Entry<Integer, NodeContainerPersistor> nodeEntry
-                : loaderMap.entrySet()) {
+        for (Map.Entry<Integer, ? extends NodeContainerPersistor> nodeEntry : loaderMap.entrySet()) {
             int suffix = nodeEntry.getKey();
             NodeID subId = new NodeID(getID(), suffix);
             // the mutex may be already held here. It is not held if we load

@@ -1,7 +1,11 @@
-/*
- * ------------------------------------------------------------------------
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+
+<!--
+========================================================================
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2012
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -43,48 +47,14 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * --------------------------------------------------------------------- *
- *
- * History
- *   Sep 24, 2007 (wiswedel): created
- */
-package org.knime.core.node.workflow;
+====================================================================
+-->
+</head>
 
-import java.io.IOException;
-import java.util.Map;
 
-import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
+<body>
 
-/**
- *
- * @author Bernd Wiswedel, University of Konstanz
- * @noextend This interface is not intended to be extended by clients.
- */
-public interface NodeContainerPersistor {
+Non-API: A placeholder node for nodes that can't be loaded (extension not installed).
 
-    NodeContainer getNodeContainer(final WorkflowManager parent, final NodeID id);
-
-    NodeContainerMetaPersistor getMetaPersistor();
-
-    boolean needsResetAfterLoad();
-
-    boolean isDirtyAfterLoad();
-
-    /** Does this persistor complain if its persisted state
-     * {@link NodeContainer#getState() state} does not match the state after
-     * loading (typically all non-executed nodes are configured after load).
-     * This is true for all SingleNodeContainer and newer meta nodes,
-     * but it will be false for meta nodes, which are loaded from 1.x workflow.
-     * @return Such a property.
-     */
-    boolean mustComplainIfStateDoesNotMatch();
-
-    void loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep,
-            final ExecutionMonitor exec, final LoadResult loadResult)
-            throws InvalidSettingsException, CanceledExecutionException,
-            IOException;
-}
+</body>
+</html>

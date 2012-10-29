@@ -61,7 +61,6 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -176,13 +175,6 @@ final class CopySingleNodeContainerPersistor implements
     @Override
     public SingleNodeContainerSettings getSNCSettings() {
         return m_sncSettings;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void preLoadNodeContainer(final WorkflowPersistor parentPersistor,
-            final NodeSettingsRO parentSettings, final LoadResult loadResult) {
-        // no op
     }
 
 }
