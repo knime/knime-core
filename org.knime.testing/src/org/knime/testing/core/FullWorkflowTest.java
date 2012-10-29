@@ -392,7 +392,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
      */
     public static final int TIMEOUT = 300;
 
-    private File m_knimeWorkFlow;
+    private final File m_knimeWorkFlow;
 
     private WorkflowManager m_manager;
 
@@ -1519,10 +1519,6 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                 default:
                     mustReportErrors = true;
             }
-            if (mustReportErrors) {
-                logger.error(loadRes.getFilteredError("",
-                        LoadResultEntryType.Warning));
-            }
             m_manager = loadRes.getWorkflowManager();
             logger.debug("Workflow loaded ----------------------------"
                     + "--------------");
@@ -1532,6 +1528,10 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                 readConfigFromNode(configNode);
             } else {
                 readConfigFromFiles(m_knimeWorkFlow.getParentFile());
+            }
+            if (mustReportErrors) { // send to log AFTER config has been read (included expected errors)
+                logger.error(loadRes.getFilteredError("",
+                        LoadResultEntryType.Warning));
             }
 
             // be sure to always add an owner to the log file
