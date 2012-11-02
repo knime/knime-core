@@ -79,6 +79,8 @@ public class URIDataCell extends DataCell implements URIDataValue, StringValue {
      */
     public static final DataType TYPE = DataType.getType(URIDataCell.class);
 
+    private static final URIDataCellSerializer SERIALIZER = new URIDataCellSerializer();
+
     /**
      * Returns the preferred value class of this cell implementation. This
      * method is called per reflection to determine which is the preferred
@@ -91,11 +93,10 @@ public class URIDataCell extends DataCell implements URIDataValue, StringValue {
         return URIDataValue.class;
     }
 
-    /**
-     * Serializer for this class.
-     */
-    public static final URIDataCellSerializer SERIALIZER =
-            new URIDataCellSerializer();
+    /**Serializer for this class (see {@link DataCell} description. */
+    public static final DataCellSerializer<URIDataCell> getCellSerializer() {
+    	return SERIALIZER;
+    }
 
     private final URIContent m_uriContent;
 
