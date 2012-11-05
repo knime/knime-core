@@ -29,19 +29,24 @@
       <perspectiveExtension
             targetID="org.knime.workbench.ui.ModellerPerspective">
          <view
-               closeable="false"
-               id="org.knime.workbench.ui.navigator.KnimeResourceNavigator"
-               moveable="true"
+               id="org.knime.workbench.explorer.view"
+               minimized="false"
                ratio="0.3"
                relationship="left"
-               relative="org.eclipse.ui.editorss"/>
+               relative="org.eclipse.ui.editorss">
+         </view>
+         <view
+               id="org.knime.workbench.ui.navigator.KnimeResourceNavigator"
+               relationship="stack"
+               relative="org.knime.workbench.explorer.view"
+               visible="false"/>
          <view
                closeable="false"
                id="org.knime.workbench.repository.view.RepositoryView"
                moveable="true"
                ratio="0.3"
                relationship="bottom"
-               relative="org.knime.workbench.ui.navigator.KnimeResourceNavigator"/>
+               relative="org.knime.workbench.explorer.view"/>
          <view
                closeable="true"
                visible="true"
@@ -71,7 +76,8 @@
                id="com.knime.enterprise.client.repositoryview.views.RemoteRepositoryView"
                ratio="0.55"
                relationship="bottom"
-               relative="org.knime.workbench.helpview">
+               relative="org.knime.workbench.helpview"
+               visible="false">
          </view>
          <view
                closeable="true"
@@ -82,25 +88,17 @@
                relative="org.knime.workbench.repository.view.RepositoryView"
                visible="true">
          </view>
-         <view
-               closeable="true"
-               id="org.knime.workbench.explorer.view"
-               minimized="false"
-               moveable="true"
-               ratio="0.3"
-               relationship="stack"
-               relative="org.knime.workbench.ui.navigator.KnimeResourceNavigator"
-               standalone="false"
-               visible="false">
-         </view>         
       </perspectiveExtension>
       <perspectiveExtension
             targetID="org.knime.workbench.ui.ModellerPerspective">
-         <viewShortcut id="org.eclipse.ui.console.ConsoleView"/>
-         <!--viewShortcut id="org.eclipse.ui.views.ProgressView"/-->
          <viewShortcut
                id="org.eclipse.ui.views.ContentOutline">
          </viewShortcut>
+         <viewShortcut
+               id="org.knime.workbench.explorer.view">
+         </viewShortcut>
+         <viewShortcut id="org.eclipse.ui.console.ConsoleView"/>
+         <!--viewShortcut id="org.eclipse.ui.views.ProgressView"/-->
          <viewShortcut id="org.knime.workbench.helpview"/>
          <viewShortcut
                id="org.eclipse.pde.runtime.LogView">
