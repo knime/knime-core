@@ -67,6 +67,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 
@@ -75,6 +76,7 @@ import javax.swing.event.DocumentListener;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Document;
 import javax.swing.tree.DefaultMutableTreeNode;
+import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileObject;
@@ -166,8 +168,8 @@ public final class JavaSnippet {
      */
     public void setSettings(final JavaSnippetSettings settings) {
         m_settings = settings;
-           m_fields = settings.getJavaSnippetFields();
-           m_jarFiles = settings.getJarFiles();
+        setJavaSnippetFields(settings.getJavaSnippetFields());
+        setJarFiles(settings.getJarFiles());
         init();
     }
 
@@ -853,7 +855,9 @@ public final class JavaSnippet {
      */
     public void setJavaSnippetFields(final JavaSnippetFields fields) {
         m_fields = fields;
-        initGuardedSections(m_document);
+        if (null != m_document) {
+            initGuardedSections(m_document);
+        }
     }
 
     /**
@@ -898,7 +902,21 @@ public final class JavaSnippet {
                         "Could not load jar files.", e);
             }
         } else {
-            throw new IllegalStateException("Compile with errors");
+            StringBuilder msg = new StringBuilder();
+            msg.append("Compile with errors:\n");
+            for (Diagnostic<? extends JavaFileObject> d
+                    : digsCollector.getDiagnostics()) {
+                boolean isSnippet = this.isSnippetSource(d.getSource());
+                if (isSnippet) {
+                    if (d.getKind().equals(javax.tools.Diagnostic.Kind.ERROR)) {
+                        msg.append("Error: ");
+                        msg.append(d.getMessage(Locale.US));
+                        msg.append('\n');
+                    }
+                }
+            }
+
+            throw new IllegalStateException(msg.toString());
         }
     }
 
