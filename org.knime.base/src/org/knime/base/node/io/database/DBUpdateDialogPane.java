@@ -50,9 +50,11 @@
 package org.knime.base.node.io.database;
 
 import java.awt.BorderLayout;
+import java.awt.GridLayout;
 
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 
 import org.knime.core.data.DataTableSpec;
@@ -80,13 +82,13 @@ final class DBUpdateDialogPane extends NodeDialogPane {
 
     /** Creates new dialog. */
     DBUpdateDialogPane() {
-        final JPanel columnPanel = new JPanel(new BorderLayout());
+        final JPanel columnPanel = new JPanel(new GridLayout(2, 1));
         m_columnsInSetClause = new DataColumnSpecFilterPanel();
         m_columnsInSetClause.setBorder(BorderFactory.createTitledBorder(" Select SET Columns "));
-        columnPanel.add(m_columnsInSetClause, BorderLayout.NORTH);
+        columnPanel.add(m_columnsInSetClause);
         m_columnsInWhereClause = new DataColumnSpecFilterPanel();
         m_columnsInWhereClause.setBorder(BorderFactory.createTitledBorder(" Select WHERE Columns "));
-        columnPanel.add(m_columnsInWhereClause, BorderLayout.SOUTH);
+        columnPanel.add(m_columnsInWhereClause);
 
         m_loginPanel = new DBDialogPane();
         final JPanel tablePanel = new JPanel(new BorderLayout());
@@ -99,7 +101,8 @@ final class DBUpdateDialogPane extends NodeDialogPane {
         final JPanel panel = new JPanel(new BorderLayout());
         panel.add(m_loginPanel, BorderLayout.NORTH);
         panel.add(columnPanel, BorderLayout.CENTER);
-        super.addTab("Settings", panel);
+        final JScrollPane scroll = new JScrollPane(panel);
+        super.addTab("Settings", scroll);
 
     }
 
