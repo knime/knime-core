@@ -97,6 +97,7 @@ public final class DatabaseWriterConnection {
      * @param exec Used the cancel writing.
      * @param sqlTypes A mapping from column name to SQL-type.
      * @param cp {@link CredentialsProvider} providing user/password
+     * @param batchSize number of rows written in one batch
      * @return error string or null, if non
      * @throws Exception if connection could not be established
      */
@@ -105,7 +106,8 @@ public final class DatabaseWriterConnection {
             final String table, final BufferedDataTable data,
             final boolean appendData, final ExecutionMonitor exec,
             final Map<String, String> sqlTypes,
-            final CredentialsProvider cp) throws Exception {
+            final CredentialsProvider cp,
+            final int batchSize) throws Exception {
         final Connection conn = dbConn.createConnection(cp);
         synchronized (dbConn.syncConnection(conn)) {
             DataTableSpec spec = data.getDataTableSpec();
@@ -297,8 +299,6 @@ public final class DatabaseWriterConnection {
             int errorCnt = 0;
             int allErrors = 0;
 
-            // number of rows written to the database in one chunk/batch
-            final int batchSize = DatabaseConnectionSettings.BATCH_WRITE_SIZE;
             // count number of rows added to current batch
             int curBatchSize = 0;
 
@@ -390,6 +390,7 @@ public final class DatabaseWriterConnection {
      * @param table name of table to write
      * @param exec Used the cancel writing.
      * @param cp {@link CredentialsProvider} providing user/password
+     * @param batchSize number of rows updated in one batch
      * @return error string or null, if non
      * @throws Exception if connection could not be established
      * @since 2.7
@@ -400,7 +401,8 @@ public final class DatabaseWriterConnection {
             final String[] setColumns, final String[] whereColumns,
             final int[] updateStatus,
             final ExecutionMonitor exec,
-            final CredentialsProvider cp) throws Exception {
+            final CredentialsProvider cp,
+            final int batchSize) throws Exception {
         final Connection conn = dbConn.createConnection(cp);
         synchronized (dbConn.syncConnection(conn)) {
             final DataTableSpec spec = data.getDataTableSpec();
@@ -432,8 +434,6 @@ public final class DatabaseWriterConnection {
             int errorCnt = 0;
             int allErrors = 0;
 
-            // number of rows written to the database in one chunk/batch
-            final int batchSize = DatabaseConnectionSettings.BATCH_WRITE_SIZE;
             // count number of rows added to current batch
             int curBatchSize = 0;
 
@@ -476,7 +476,7 @@ public final class DatabaseWriterConnection {
                             if (batchSize > 1) {
                                 int[] status = stmt.executeBatch();
                                 for (int i = 0; i < status.length; i++) {
-                                    updateStatus[cnt - 1 - status.length] = status[i];
+                                    updateStatus[cnt - status.length + i] = status[i];
                                 }
                             } else { // or write single row
                                 int status = stmt.executeUpdate();
@@ -515,6 +515,131 @@ public final class DatabaseWriterConnection {
                     return null;
                 } else {
                     return "Errors \"" + allErrors + "\" updating " + rowCount + " rows.";
+                }
+            } finally {
+                stmt.close();
+            }
+        }
+    }
+
+    /** Create connection to update table in database.
+     * @param dbConn a database connection object
+     * @param data The data to write.
+     * @param whereColumns columns part of the WHERE clause
+     * @param deleteStatus int array of length data#getRowCount; will be filled with
+     *             the number of rows effected
+     * @param table name of table to write
+     * @param exec Used the cancel writing.
+     * @param cp {@link CredentialsProvider} providing user/password
+     * @param batchSize number of rows deleted in one batch
+     * @return error string or null, if non
+     * @throws Exception if connection could not be established
+     * @since 2.7
+     */
+    public static final String deleteRows(
+            final DatabaseConnectionSettings dbConn,
+            final String table, final BufferedDataTable data,
+            final String[] whereColumns,
+            final int[] deleteStatus,
+            final ExecutionMonitor exec,
+            final CredentialsProvider cp,
+            final int batchSize) throws Exception {
+        final Connection conn = dbConn.createConnection(cp);
+        synchronized (dbConn.syncConnection(conn)) {
+            final DataTableSpec spec = data.getDataTableSpec();
+
+            // create query connection object
+            final StringBuilder query = new StringBuilder("DELETE FROM " + table + " WHERE");
+            for (int i = 0; i < whereColumns.length; i++) {
+                if (i > 0) {
+                    query.append(",");
+                }
+                final String newColumnName = replaceColumnName(whereColumns[i]);
+                query.append(" " + newColumnName + " = ?");
+            }
+
+
+            // problems writing more than 13 columns. the prepare statement
+            // ensures that we can set the columns directly row-by-row, the
+            // database will handle the commit
+            int rowCount = data.getRowCount();
+            int cnt = 1;
+            int errorCnt = 0;
+            int allErrors = 0;
+
+            // count number of rows added to current batch
+            int curBatchSize = 0;
+
+            LOGGER.debug("Executing SQL statement \"" + query + "\"");
+            final PreparedStatement stmt = conn.prepareStatement(query.toString());
+            try {
+                conn.setAutoCommit(false);
+                for (RowIterator it = data.iterator(); it.hasNext(); cnt++) {
+                    exec.checkCanceled();
+                    exec.setProgress(1.0 * cnt / rowCount, "Row " + "#" + cnt);
+                    final DataRow row = it.next();
+                    // WHERE columns
+                    for (int i = 0; i < whereColumns.length; i++) {
+                        final int dbIdx = i + 1;
+                        final int columnIndex = spec.findColumnIndex(whereColumns[i]);
+                        final DataColumnSpec cspec = spec.getColumnSpec(columnIndex);
+                        final DataCell cell = row.getCell(columnIndex);
+                        fillStatement(stmt, dbIdx, cspec, cell);
+                    }
+
+                    // if batch mode
+                    if (batchSize > 1) {
+                        // a new row will be added
+                        stmt.addBatch();
+                    }
+                    curBatchSize++;
+                    // if batch size equals number of row in batch or input table at end
+                    if ((curBatchSize == batchSize) || !it.hasNext()) {
+                        curBatchSize = 0;
+                        try {
+                            // write batch
+                            if (batchSize > 1) {
+                                int[] status = stmt.executeBatch();
+                                for (int i = 0; i < status.length; i++) {
+                                    deleteStatus[cnt - status.length + i] = status[i];
+                                }
+                            } else { // or write single row
+                                int status = stmt.executeUpdate();
+                                deleteStatus[cnt - 1] = status;
+                            }
+                        } catch (Throwable t) {
+                            allErrors++;
+                            if (errorCnt > -1) {
+                                final String errorMsg;
+                                if (batchSize > 1) {
+                                    errorMsg = "Error while deleting rows #" + (cnt - batchSize) + " - #" + cnt
+                                        + ", reason: " + t.getMessage();
+                                } else {
+                                    errorMsg = "Error while deleting row #" + cnt + " (" + row.getKey() + "), reason: "
+                                        + t.getMessage();
+                                }
+                                exec.setMessage(errorMsg);
+                                if (errorCnt++ < 10) {
+                                    LOGGER.warn(errorMsg);
+                                } else {
+                                    errorCnt = -1;
+                                    LOGGER.warn(errorMsg + " - more errors...", t);
+                                }
+                            }
+                        } finally {
+                            // clear batch if in batch mode
+                            if (batchSize > 1) {
+                                stmt.clearBatch();
+                            }
+                        }
+                    }
+                }
+                conn.commit();
+                conn.setAutoCommit(true);
+                if (allErrors == 0) {
+                    return null;
+                } else {
+                    return "Errors \"" + allErrors + "\" deleting " + rowCount + " rows.";
                 }
             } finally {
                 stmt.close();

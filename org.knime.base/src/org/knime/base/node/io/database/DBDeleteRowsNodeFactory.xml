@@ -1,24 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode type="Sink" icon="./db_update.png">
-	<name>Database Update</name>
+<knimeNode type="Sink" icon="./db_delete.png">
+	<name>Database Delete</name>
 	
 	<shortDescription>
-	    Updates the selected rows in the database with the data values from the input tables. 
+	    Deletes the selected rows in the database based on the selected columns from the input table. 
 	</shortDescription>
 	
 	<fullDescription>
 		<intro>		
-	     Updates the data rows in the database with the data values from the input tables.
-	     All selected column names need to exactly match the column names from the database. 
-	     The WHERE column values need to match the row to update; whereas the SET column values 
-	     are replaced by the input row values. 
+	     Deletes data rows in the database based on the selected columns from the input table.
+	     All selected column names need to exactly match the column names inside the database. Only the rows matching
+	     the values of the selected column will be deleted. The output table contains an additional column with the 
+	     number of rows affected by the DELETE statement.
 	     <br/>
-	     The output table contains an additional column with the number of rows affected by the UPDATE statement. 
-	     A number greater than or equal to zero -- indicates that the command was processed successfully and is 
-	     an update count giving the number of rows in the database that were affected by the command's execution
+         The output table contains an additional column with the number of rows affected by the UPDATE statement. 
+         A number greater than or equal to zero -- indicates that the command was processed successfully and is 
+         an update count giving the number of rows in the database that were affected by the command's execution
          A value of -2 -- indicates that the command was processed successfully but that the number of rows affected 
-         is unknown.	     
+         is unknown.    
 	     <br/>
 	     Make sure you have your vendor-specific database driver registered in
          the KNIME preference page (section Database Driver). By default, the 
@@ -51,32 +51,28 @@
         stored inside the settings.
 	  </option>
 	  <option name="Table Name">
-        Enter the name of the table in which the data should be updated.
+        Enter the name of the table in which rows should be deleted.
 	  </option>
     </tab>
     <tab name="Column Selection">
-	  <option name="SET columns">
-        Select all columns used for the SET clause of the UPDATE statement; 
-        those column values are changing the data in the database. 
-	  </option>
 	  <option name="WHERE columns">
-        Select all columns used for the WHERE clause of the UPDATE statement; 
+        Select all columns used for the WHERE clause of the DELETE statement; 
         those column values need to match the corresponding value in the database 
-        in order to make the update. 
+        in order to run the delete. 
       </option>
     </tab>
     <tab name="Advance">
         <option name="Batch Size">
-           Enter a number greater than 0 for the number of rows updated in one batch job; 1 means on row at a time.
+           Enter a number greater than 0 for the number of rows deleted in one batch job; 1 means on row at a time.
         </option>
     </tab>
 	</fullDescription>
 	
 	<ports>
-		<inPort index="0" name="Data to update Database">
-			Table with data to be updated in the database
+		<inPort index="0" name="Data to delete row in Database">
+			Table with data rows to be deleted in the database
 		</inPort>
-		<outPort index="0" name="Input Data with Update Status">
+		<outPort index="0" name="Input Data with Delete Status">
             Input table with additional column providing number of affected rows in the database.
         </outPort>
 	</ports>	

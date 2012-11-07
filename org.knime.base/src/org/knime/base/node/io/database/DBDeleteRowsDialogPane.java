@@ -52,10 +52,9 @@ package org.knime.base.node.io.database;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
-import java.util.Collection;
+import java.awt.GridLayout;
 
 import javax.swing.BorderFactory;
-import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -67,54 +66,46 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.port.database.DatabaseConnectionSettings;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
+import org.knime.core.node.util.filter.column.DataColumnSpecFilterPanel;
 
 /**
- * Dialog pane of the database writer.
+ * Dialog pane of the Database Delete node.
  *
- * @author Thomas Gabriel, University of Konstanz
+ * @author Thomas Gabriel, KNIME.com AG, Zurich
+ * @since 2.7
  */
-final class DBWriterDialogPane extends NodeDialogPane {
+final class DBDeleteRowsDialogPane extends NodeDialogPane {
 
-    private final DBDialogPane m_loginPane = new DBDialogPane();
+    private final DataColumnSpecFilterPanel m_columnsInWhereClause;
 
-    private final JTextField m_table = new JTextField("");
+    private final DBDialogPane m_loginPanel;
 
-    private final JCheckBox m_append = new JCheckBox("... to existing table (if any!)");
-
-    private final DBSQLTypesPanel m_typePanel;
+    private final JTextField m_tableName;
 
     private final JTextField m_batchSize;
 
-    /**
-     * Creates new dialog.
-     */
-    DBWriterDialogPane() {
-// add login and table name tab
+    /** Creates new dialog. */
+    DBDeleteRowsDialogPane() {
+// tab with database login and column selection
+        final JPanel columnPanel = new JPanel(new GridLayout(1, 1));
+        m_columnsInWhereClause = new DataColumnSpecFilterPanel();
+        m_columnsInWhereClause.setBorder(BorderFactory.createTitledBorder(" Select WHERE Columns "));
+        columnPanel.add(m_columnsInWhereClause);
+
+        m_loginPanel = new DBDialogPane();
         final JPanel tablePanel = new JPanel(new BorderLayout());
         tablePanel.setBorder(BorderFactory.createTitledBorder(" Table Name "));
-        m_table.setFont(DBDialogPane.FONT);
-        tablePanel.add(m_table, BorderLayout.CENTER);
-        m_loginPane.add(tablePanel);
+        tablePanel.setFont(DBDialogPane.FONT);
+        m_tableName = new JTextField("");
+        tablePanel.add(m_tableName, BorderLayout.CENTER);
+        m_loginPanel.add(tablePanel);
 
-        final JPanel appendPanel = new JPanel(new BorderLayout());
-        appendPanel.setBorder(
-                BorderFactory.createTitledBorder(" Append Data "));
-        m_append.setFont(DBDialogPane.FONT);
-        m_append.setToolTipText("Table structure from input and database table"
-                + " must match!");
-        appendPanel.add(m_append, BorderLayout.CENTER);
-        m_loginPane.add(appendPanel);
-
-        final JPanel p = new JPanel(new BorderLayout());
-        p.add(m_loginPane, BorderLayout.NORTH);
-        super.addTab("Settings", p);
-
-// add SQL Types tab
-        m_typePanel = new DBSQLTypesPanel();
-        final JScrollPane scroll = new JScrollPane(m_typePanel);
-        scroll.setPreferredSize(m_loginPane.getPreferredSize());
-        super.addTab("SQL Types", scroll);
+        final JPanel panel = new JPanel(new BorderLayout());
+        panel.add(m_loginPanel, BorderLayout.NORTH);
+        panel.add(columnPanel, BorderLayout.CENTER);
+        final JScrollPane scroll = new JScrollPane(panel);
+        super.addTab("Settings", scroll);
 
 // advanced tab with batch size
         final JPanel batchSizePanel = new JPanel(new FlowLayout());
@@ -123,6 +114,7 @@ final class DBWriterDialogPane extends NodeDialogPane {
         m_batchSize.setPreferredSize(new Dimension(100, 20));
         batchSizePanel.add(m_batchSize);
         super.addTab("Advance", batchSizePanel);
+
     }
 
     /**
@@ -131,25 +123,17 @@ final class DBWriterDialogPane extends NodeDialogPane {
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
-        // get workflow credentials
-        Collection<String> creds = super.getCredentialsNames();
-        m_loginPane.loadSettingsFrom(settings, specs, creds);
-        // table name
-        m_table.setText(settings.getString(DBWriterNodeModel.KEY_TABLE_NAME, ""));
-        // append data flag
-        m_append.setSelected(settings.getBoolean(DBWriterNodeModel.KEY_APPEND_DATA, false));
-
-        // load SQL Types for each column
-        try {
-            NodeSettingsRO typeSett = settings.getNodeSettings(DBWriterNodeModel.CFG_SQL_TYPES);
-            m_typePanel.loadSettingsFrom(typeSett, specs);
-        } catch (InvalidSettingsException ise) {
-            m_typePanel.loadSettingsFrom(null, specs);
-        }
-
+        // load login setting
+        m_loginPanel.loadSettingsFrom(settings, specs, getCredentialsNames());
+        // load table name
+        m_tableName.setText(settings.getString(DBDeleteRowsNodeModel.KEY_TABLE_NAME, ""));
+        // load WHERE column panel
+        DataColumnSpecFilterConfiguration configWhere = new DataColumnSpecFilterConfiguration(
+            DBDeleteRowsNodeModel.KEY_WHERE_FILTER_COLUMN);
+        configWhere.loadConfigurationInDialog(settings, specs[0]);
+        m_columnsInWhereClause.loadConfiguration(configWhere, specs[0]);
         // load batch size
-        final int batchSize = settings.getInt(DBWriterNodeModel.KEY_BATCH_SIZE,
-                                              DatabaseConnectionSettings.BATCH_WRITE_SIZE);
+        final int batchSize = settings.getInt(DBDeleteRowsNodeModel.KEY_BATCH_SIZE, 1);
         m_batchSize.setText(Integer.toString(batchSize));
     }
 
@@ -157,17 +141,16 @@ final class DBWriterDialogPane extends NodeDialogPane {
      * {@inheritDoc}
      */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings)
-            throws InvalidSettingsException {
-        m_loginPane.saveSettingsTo(settings);
-
-        settings.addString(DBWriterNodeModel.KEY_TABLE_NAME, m_table.getText().trim());
-        settings.addBoolean(DBWriterNodeModel.KEY_APPEND_DATA, m_append.isSelected());
-
-        // save SQL Types for each column
-        NodeSettingsWO typeSett = settings.addNodeSettings(DBWriterNodeModel.CFG_SQL_TYPES);
-        m_typePanel.saveSettingsTo(typeSett);
-
+    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+        // save login settings
+        m_loginPanel.saveSettingsTo(settings);
+        // save table name
+        settings.addString(DBDeleteRowsNodeModel.KEY_TABLE_NAME, m_tableName.getText().trim());
+        // save WHERE columns
+        DataColumnSpecFilterConfiguration configWHERE = new DataColumnSpecFilterConfiguration(
+            DBDeleteRowsNodeModel.KEY_WHERE_FILTER_COLUMN);
+        m_columnsInWhereClause.saveConfiguration(configWHERE);
+        configWHERE.saveConfiguration(settings);
         // save batch size
         final String strBatchSite = m_batchSize.getText().trim();
         if (strBatchSite.isEmpty()) {
@@ -175,7 +158,7 @@ final class DBWriterDialogPane extends NodeDialogPane {
         }
         try {
             final int intBatchSize = Integer.parseInt(strBatchSite);
-            settings.addInt(DBWriterNodeModel.KEY_BATCH_SIZE, intBatchSize);
+            settings.addInt(DBDeleteRowsNodeModel.KEY_BATCH_SIZE, intBatchSize);
         } catch (final NumberFormatException nfe) {
             throw new InvalidSettingsException("Can't parse batch size \"" + strBatchSite
                                                + "\", reason: " + nfe.getMessage(), nfe);

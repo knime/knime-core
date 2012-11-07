@@ -83,8 +83,16 @@ final class DBWriterNodeModel extends NodeModel {
 
     private final DatabaseConnectionSettings m_conn;
 
+    /** Config key for the table name. */
+    static final String KEY_TABLE_NAME = "table";
     private String m_tableName;
 
+    /** Config key for the batch size. */
+    static final String KEY_BATCH_SIZE = "batch_size";
+    private int m_batchSize = DatabaseConnectionSettings.BATCH_WRITE_SIZE;
+
+    /** Config key for the append data. */
+    static final String KEY_APPEND_DATA = "append_data";
     private boolean m_append = false;
 
     private final Map<String, String> m_types =
@@ -125,13 +133,15 @@ final class DBWriterNodeModel extends NodeModel {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_conn.saveConnection(settings);
-        settings.addString("table", m_tableName);
-        settings.addBoolean("append_data", m_append);
-        // save sql type mapping
+        settings.addString(KEY_TABLE_NAME, m_tableName);
+        settings.addBoolean(KEY_APPEND_DATA, m_append);
+        // save SQL Types mapping
         NodeSettingsWO typeSett = settings.addNodeSettings(CFG_SQL_TYPES);
         for (Map.Entry<String, String> e : m_types.entrySet()) {
             typeSett.addString(e.getKey(), e.getValue());
         }
+        // save batch size
+        settings.addInt(KEY_BATCH_SIZE, m_batchSize);
     }
 
     /**
@@ -157,17 +167,22 @@ final class DBWriterNodeModel extends NodeModel {
     private void loadSettings(
             final NodeSettingsRO settings, final boolean write)
             throws InvalidSettingsException {
-        boolean append = settings.getBoolean("append_data", false);
-        final String table = settings.getString("table");
+        boolean append = settings.getBoolean(KEY_APPEND_DATA, false);
+        final String table = settings.getString(KEY_TABLE_NAME);
         if (table == null || table.trim().isEmpty()) {
             throw new InvalidSettingsException(
                 "Configure node and enter a valid table name.");
+        }
+        // read and validate batch size
+        final int batchSize = settings.getInt(KEY_BATCH_SIZE, m_batchSize);
+        if (batchSize <= 0) {
+            throw new InvalidSettingsException("Batch size must be greater than 0, is " + batchSize);
         }
         // write settings or skip it
         if (write) {
             m_tableName = table;
             m_append = append;
-            // load SQL type for each column
+            // load SQL Types for each column
             m_types.clear();
             try {
                 NodeSettingsRO typeSett =
@@ -178,6 +193,8 @@ final class DBWriterNodeModel extends NodeModel {
             } catch (InvalidSettingsException ise) {
                 // ignore, will be determined during configure
             }
+            // load batch size
+            m_batchSize = batchSize;
         }
     }
 
@@ -190,9 +207,8 @@ final class DBWriterNodeModel extends NodeModel {
             Exception {
         exec.setProgress("Opening database connection to write data...");
         // write entire data
-        String error = DatabaseWriterConnection.writeData(
-                m_conn, m_tableName, inData[0], m_append, exec, m_types,
-                getCredentialsProvider());
+        String error = DatabaseWriterConnection.writeData(m_conn, m_tableName, inData[0], m_append, exec, m_types,
+                getCredentialsProvider(), m_batchSize);
         if (error != null) {
             super.setWarningMessage(error);
         }

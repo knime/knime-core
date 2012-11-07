@@ -77,16 +77,12 @@ import org.knime.core.node.port.database.DatabaseWriterConnection;
 import org.knime.core.node.util.filter.column.DataColumnSpecFilterConfiguration;
 
 /**
- * NodeModel of the Database Update node.
+ * NodeModel of the Database Delete node.
  *
  * @author Thomas Gabriel, KNIME.com AG, Zurich
  * @since 2.7
  */
-final class DBUpdateNodeModel extends NodeModel {
-
-    /** Config key for the set columns. */
-    static final String KEY_SET_FILTER_COLUMN = "set_columns";
-    private DataColumnSpecFilterConfiguration m_configSET;
+final class DBDeleteRowsNodeModel extends NodeModel {
 
     /** Config key for the where columns. */
     static final String KEY_WHERE_FILTER_COLUMN = "where_columns";
@@ -103,7 +99,7 @@ final class DBUpdateNodeModel extends NodeModel {
     private int m_batchSize = 1;
 
     /** Create a new database UPDATE node model. */
-    DBUpdateNodeModel() {
+    DBDeleteRowsNodeModel() {
         super(1, 1);
     }
 
@@ -118,30 +114,20 @@ final class DBUpdateNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                 "Configure node and enter a valid table name.");
         }
-        // check SET and WHERE for overlapping columns
-        final List<String> setIncludes = new ArrayList<String>(
-                Arrays.asList(m_configSET.applyTo(inSpecs[0]).getIncludes()));
-        if (setIncludes.isEmpty()) {
-            throw new InvalidSettingsException("No SET column selected.");
-        }
         final List<String> whereIncludes = new ArrayList<String>(
                 Arrays.asList(m_configWHERE.applyTo(inSpecs[0]).getIncludes()));
         if (whereIncludes.isEmpty()) {
             throw new InvalidSettingsException("No WHERE column selected.");
-        }
-        if (!setIncludes.retainAll(whereIncludes)) {
-            throw new InvalidSettingsException(
-                "SET and WHERE column list contain duplicate columns.");
         }
         // forward input spec with one additional update (=int) column
         final ColumnRearranger colre = createColumnRearranger(inSpecs[0], new int[]{});
         return new DataTableSpec[]{colre.createSpec()};
     }
 
-    private static final String UPDATE_COLUMN = "UpdateStatus";
+    private static final String DELETE_ROWS_COLUMN = "DeleteStatus";
 
     private ColumnRearranger createColumnRearranger(final DataTableSpec inSpec, final int[] updateStatus) {
-        final String updateColumn = DataTableSpec.getUniqueColumnName(inSpec, UPDATE_COLUMN);
+        final String updateColumn = DataTableSpec.getUniqueColumnName(inSpec, DELETE_ROWS_COLUMN);
         final DataColumnSpec cspec = new DataColumnSpecCreator(updateColumn, IntCell.TYPE).createSpec();
         final ColumnRearranger rearr = new ColumnRearranger(inSpec);
         rearr.append(new SingleCellFactory(cspec) {
@@ -162,14 +148,13 @@ final class DBUpdateNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         final BufferedDataTable inTable = inData[0];
         final DataTableSpec inSpec = inTable.getSpec();
-        final String[] setIncludes = m_configSET.applyTo(inSpec).getIncludes();
         final String[] whereIncludes = m_configWHERE.applyTo(inSpec).getIncludes();
-        // UPDATE table
-        final int[] updateStatus = new int[inTable.getRowCount()];
-        DatabaseWriterConnection.updateTable(m_loginConfig, m_tableName, inTable,
-            setIncludes, whereIncludes, updateStatus, exec, getCredentialsProvider(), m_batchSize);
+        // DELETE rows
+        final int[] deleteStatus = new int[inTable.getRowCount()];
+        DatabaseWriterConnection.deleteRows(m_loginConfig, m_tableName, inTable,
+            whereIncludes, deleteStatus, exec, getCredentialsProvider(), m_batchSize);
         // create out table with update column
-        final ColumnRearranger colre = createColumnRearranger(inTable.getSpec(), updateStatus);
+        final ColumnRearranger colre = createColumnRearranger(inTable.getSpec(), deleteStatus);
         final BufferedDataTable outTable = exec.createColumnRearrangeTable(inTable,
           colre, exec.createSubProgress(1.0));
         return new BufferedDataTable[]{outTable};
@@ -184,10 +169,6 @@ final class DBUpdateNodeModel extends NodeModel {
         }
         // save table name
         settings.addString(KEY_TABLE_NAME, m_tableName);
-        // save SET columns
-        if (m_configSET != null) {
-            m_configSET.saveConfiguration(settings);
-        }
         // save WHERE columns
         if (m_configWHERE != null) {
             m_configWHERE.saveConfiguration(settings);
@@ -199,11 +180,6 @@ final class DBUpdateNodeModel extends NodeModel {
     /** {@inheritDoc} */
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
-        // load SET columns
-        final DataColumnSpecFilterConfiguration confSET =
-            new DataColumnSpecFilterConfiguration(KEY_SET_FILTER_COLUMN);
-        confSET.loadConfigurationInModel(settings);
-        m_configSET = confSET;
         // load WHERE columns
         final DataColumnSpecFilterConfiguration confWHERE =
             new DataColumnSpecFilterConfiguration(KEY_WHERE_FILTER_COLUMN);
@@ -228,10 +204,6 @@ final class DBUpdateNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                  "Configure node and enter a valid table name.");
         }
-        // validate SET columns
-        final DataColumnSpecFilterConfiguration confSET =
-            new DataColumnSpecFilterConfiguration(KEY_SET_FILTER_COLUMN);
-        confSET.loadConfigurationInModel(settings);
         // validate WHERE columns
         final DataColumnSpecFilterConfiguration confWHERE =
             new DataColumnSpecFilterConfiguration(KEY_WHERE_FILTER_COLUMN);

@@ -881,6 +881,11 @@
             factory-class="org.knime.base.node.io.database.DBUpdateNodeFactory"
             id="org.knime.base.node.io.database.DBUpdateNodeFactory"/>
       <node
+            after="org.knime.base.node.io.database.DBUpdateNodeFactory"
+            category-path="/database"
+            factory-class="org.knime.base.node.io.database.DBDeleteRowsNodeFactory"
+            id="org.knime.base.node.io.database.DBDeleteRowsNodeFactory"/>
+      <node
             category-path="/manipulation/column/column-split+combine"
             factory-class="org.knime.base.node.preproc.cellsplitbypos.CellSplitterByPosNodeFactory"
             id="org.knime.base.node.preproc.cellsplitbypos.CellSplitterByPositionNodeFactory">

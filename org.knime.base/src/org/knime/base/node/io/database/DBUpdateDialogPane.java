@@ -50,9 +50,12 @@
 package org.knime.base.node.io.database;
 
 import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.FlowLayout;
 import java.awt.GridLayout;
 
 import javax.swing.BorderFactory;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
@@ -79,9 +82,11 @@ final class DBUpdateDialogPane extends NodeDialogPane {
 
     private final DBDialogPane m_loginPanel;
     private final JTextField m_tableName;
+    private final JTextField m_batchSize;
 
     /** Creates new dialog. */
     DBUpdateDialogPane() {
+// settings tab with database login and column selections
         final JPanel columnPanel = new JPanel(new GridLayout(2, 1));
         m_columnsInSetClause = new DataColumnSpecFilterPanel();
         m_columnsInSetClause.setBorder(BorderFactory.createTitledBorder(" Select SET Columns "));
@@ -104,6 +109,14 @@ final class DBUpdateDialogPane extends NodeDialogPane {
         final JScrollPane scroll = new JScrollPane(panel);
         super.addTab("Settings", scroll);
 
+// advanced tab with batch size
+        final JPanel batchSizePanel = new JPanel(new FlowLayout());
+        batchSizePanel.add(new JLabel("Batch Size: "));
+        m_batchSize = new JTextField();
+        m_batchSize.setPreferredSize(new Dimension(100, 20));
+        batchSizePanel.add(m_batchSize);
+        super.addTab("Advance", batchSizePanel);
+
     }
 
     /**
@@ -115,7 +128,7 @@ final class DBUpdateDialogPane extends NodeDialogPane {
         // load login setting
         m_loginPanel.loadSettingsFrom(settings, specs, getCredentialsNames());
         // load table name
-        m_tableName.setText(settings.getString("table_name", ""));
+        m_tableName.setText(settings.getString(DBUpdateNodeModel.KEY_TABLE_NAME, ""));
         // load SET column panel
         DataColumnSpecFilterConfiguration configSet = new DataColumnSpecFilterConfiguration(
             DBUpdateNodeModel.KEY_SET_FILTER_COLUMN);
@@ -126,6 +139,9 @@ final class DBUpdateDialogPane extends NodeDialogPane {
             DBUpdateNodeModel.KEY_WHERE_FILTER_COLUMN);
         configWhere.loadConfigurationInDialog(settings, specs[0]);
         m_columnsInWhereClause.loadConfiguration(configWhere, specs[0]);
+        // load batch size
+        final int batchSize = settings.getInt(DBUpdateNodeModel.KEY_BATCH_SIZE, 1);
+        m_batchSize.setText(Integer.toString(batchSize));
     }
 
     /**
@@ -136,7 +152,7 @@ final class DBUpdateDialogPane extends NodeDialogPane {
         // save login settings
         m_loginPanel.saveSettingsTo(settings);
         // save table name
-        settings.addString("table_name", m_tableName.getText().trim());
+        settings.addString(DBUpdateNodeModel.KEY_TABLE_NAME, m_tableName.getText().trim());
         // save SET columns
         DataColumnSpecFilterConfiguration configSET = new DataColumnSpecFilterConfiguration(
             DBUpdateNodeModel.KEY_SET_FILTER_COLUMN);
@@ -147,5 +163,17 @@ final class DBUpdateDialogPane extends NodeDialogPane {
             DBUpdateNodeModel.KEY_WHERE_FILTER_COLUMN);
         m_columnsInWhereClause.saveConfiguration(configWHERE);
         configWHERE.saveConfiguration(settings);
+        // save batch size
+        final String strBatchSite = m_batchSize.getText().trim();
+        if (strBatchSite.isEmpty()) {
+            throw new InvalidSettingsException("Batch size must not be empty.");
+        }
+        try {
+            final int intBatchSize = Integer.parseInt(strBatchSite);
+            settings.addInt(DBUpdateNodeModel.KEY_BATCH_SIZE, intBatchSize);
+        } catch (final NumberFormatException nfe) {
+            throw new InvalidSettingsException("Can't parse batch size \"" + strBatchSite
+                                               + "\", reason: " + nfe.getMessage(), nfe);
+        }
     }
 }
