@@ -146,36 +146,7 @@ final class DataColumnSpecFilterNodeModel extends NodeModel {
             m_conf.loadDefaults(spec, true);
         }
         final FilterResult filter = m_conf.applyTo(spec);
-
         final String[] incls = filter.getIncludes();
-        final String[] excls = filter.getExcludes();
-        if (incls.length == 0) {
-            if (excls.length > 0) {
-                setWarningMessage("All columns removed.");
-            }
-        } else {
-            if (excls.length == 0) {
-                setWarningMessage("All columns retained.");
-            }
-        }
-
-        final String[] unknowns = filter.getRemovedFromIncludes();
-        if (unknowns.length > 0) {
-            StringBuilder b = new StringBuilder(
-                    "Some of the included columns are no longer available: ");
-            int maxToReport = 3;
-            for (int i = 0; i < unknowns.length; i++) {
-                b.append(i > 0 ? ", " : "");
-                if (i < maxToReport) {
-                    b.append("\"").append(unknowns[i]).append("\"");
-                } else {
-                    b.append("...<").append(unknowns.length - maxToReport).append(" more>");
-                    break;
-                }
-            }
-            setWarningMessage(b.toString());
-        }
-
         final ColumnRearranger c = new ColumnRearranger(spec);
         c.keepOnly(incls);
         return c;

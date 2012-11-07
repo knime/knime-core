@@ -77,9 +77,7 @@ final class DataColumnSpecFilterNodeDialogPane extends NodeDialogPane {
     }
 
     /**
-     * Calls the update method of the underlying filter panel using the input
-     * data table spec from this {@link FilterColumnNodeModel}.
-     *
+     * Calls the update method of the underlying filter panel.
      * @param settings the node settings to read from
      * @param specs the input specs
      * @throws NotConfigurableException if no columns are available for
@@ -101,8 +99,8 @@ final class DataColumnSpecFilterNodeDialogPane extends NodeDialogPane {
     }
 
     /**
-     * Sets the list of columns to exclude inside the underlying
-     * {@link DataColumnSpecFilterNodeModel} retrieving them from the filter panel.
+     * Sets the list of columns to exclude inside the corresponding
+     * <code>NodeModel</code> which are retrieved from the filter panel.
      * @param settings the node settings to write into
      * @throws InvalidSettingsException if one of the settings is not valid
      */
