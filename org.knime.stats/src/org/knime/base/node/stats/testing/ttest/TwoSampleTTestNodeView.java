@@ -54,7 +54,7 @@ import java.awt.Color;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -65,6 +65,10 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 import org.knime.base.node.stats.testing.levene.LeveneTestStatistics;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.IntValue;
+import org.knime.core.data.container.CloseableRowIterator;
+import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.NodeView;
 
 /**
@@ -204,9 +208,34 @@ public class TwoSampleTTestNodeView extends NodeView<TwoSampleTTestNodeModel> {
         buffer.append("<h3>Independent Samples Statistics</h3>");
         NodeViewUtil.renderDataTable(getNodeModel().getDescritiveStatistics(),
                 TwoSampleTTestStatistics.TEST_COLUMN,
-                Collections.singleton(TwoSampleTTestStatistics.TEST_COLUMN),
+                Arrays.asList(new String[] {
+                    TwoSampleTTestStatistics.TEST_COLUMN
+                    , TwoSampleTTestStatistics.IGNORED_COUNT_GROUP_COL
+                }),
                 new HashMap<String, String>(),
                 buffer);
+        BufferedDataTable descStats = getNodeModel().getDescritiveStatistics();
+        if (descStats.getRowCount() > 0) {
+            CloseableRowIterator iter = descStats.iterator();
+            int ignoredIndex = descStats.getSpec().findColumnIndex(
+                TwoSampleTTestStatistics.IGNORED_COUNT_GROUP_COL);
+            DataCell ignoredCell = iter.next().getCell(ignoredIndex);
+            int ignoredCount = ((IntValue)ignoredCell).getIntValue();
+            if (ignoredCount > 0) {
+                buffer.append("<p>");
+                buffer.append(ignoredCount);
+                buffer.append(ignoredCount > 1
+                             ? " rows have been ignored. Their "
+                             : " row has been ignored. Its ");
+                buffer.append("value in the grouping column is neither \"");
+                buffer.append(getNodeModel().getSettings().getGroupOne());
+                buffer.append("\" nor \"");
+                buffer.append(getNodeModel().getSettings().getGroupTwo());
+                buffer.append("\".");
+                buffer.append("</p>");
+            }
+            iter.close();
+        }
 
         buffer.append("</body>\n");
         buffer.append("</html>\n");

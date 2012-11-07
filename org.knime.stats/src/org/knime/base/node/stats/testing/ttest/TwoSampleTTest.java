@@ -115,10 +115,15 @@ public class TwoSampleTTest {
             exec.checkCanceled();
             exec.setProgress(rowIndex++ / (double)rowCount,
                     rowIndex + "/" + rowCount + " (\"" + row.getKey() + "\")");
-            Group group = m_grouping.getGroup(row.getCell(groupingIndex));
+            DataCell groupCell = row.getCell(groupingIndex);
+            Group group = m_grouping.getGroup(groupCell);
             for (int i = 0; i < testColumnCount; i++) {
                 if (group == null) {
-                    result[i].addMissingGroup();
+                    if (groupCell.isMissing()) {
+                        result[i].addMissingGroup();
+                    } else {
+                        result[i].addIgnoredGroup();
+                    }
                     continue;
                 }
                 DataCell cell = row.getCell(testColumnsIndex[i]);

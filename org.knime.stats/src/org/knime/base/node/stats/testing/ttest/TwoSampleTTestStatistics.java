@@ -97,6 +97,8 @@ public class TwoSampleTTestStatistics {
     public static final String MISSING_COUNT = "Missing Count";
     public static final String MISSING_COUNT_GROUP_COL =
         "Missing Count (Group Column)";
+    public static final String IGNORED_COUNT_GROUP_COL =
+        "Ignored Count (Group Column)";
     public static final String MEAN = "Mean";
     public static final String STANDARD_DEVIATION = "Standard Deviation";
     public static final String STANDARD_ERROR = "Standard Error Mean";
@@ -123,10 +125,14 @@ public class TwoSampleTTestStatistics {
     private SummaryStatistics m_stats;
     /** number of missing values per group. */
     private Map<Group, MutableInteger> m_missing;
-    /** number of missing values in the grouping column */
+    /** number of missing values in the grouping column. */
     private MutableInteger m_missingGroup;
-    /** Dummy object to access protected methods of {@link TTest} */
+    /** Dummy object to access protected methods of {@link TTest}. */
     private KnimeTTest m_tTest;
+    /** Number of ignored cells in the group column. Ignored are all values
+     * which are not in m_groups.
+     */
+    private MutableInteger m_ignoredGroup;
 
     /**
      * @param column the test column
@@ -143,6 +149,7 @@ public class TwoSampleTTestStatistics {
         m_groups = groups;
         m_tTest = new KnimeTTest();
         m_missingGroup = new MutableInteger(0);
+        m_ignoredGroup = new MutableInteger(0);
 
         m_gstats = new LinkedHashMap<Group, SummaryStatistics>();
         m_gstats.put(Group.GroupX, new SummaryStatistics());
@@ -179,6 +186,13 @@ public class TwoSampleTTestStatistics {
     }
 
     /**
+     * Add one to the counter for ignored cells in the grouping column.
+     */
+    public void addIgnoredGroup() {
+        m_ignoredGroup.add(1);
+    }
+
+    /**
      * Get the spec of the group statistics table.
      * @return the spec of the group statistics table
      */
@@ -189,12 +203,14 @@ public class TwoSampleTTestStatistics {
                 , N
                 , MISSING_COUNT
                 , MISSING_COUNT_GROUP_COL
+                , IGNORED_COUNT_GROUP_COL
                 , MEAN
                 , STANDARD_DEVIATION
                 , STANDARD_ERROR},
                 new DataType[] {
                 StringCell.TYPE
                 , StringCell.TYPE
+                , IntCell.TYPE
                 , IntCell.TYPE
                 , IntCell.TYPE
                 , IntCell.TYPE
@@ -205,8 +221,8 @@ public class TwoSampleTTestStatistics {
     }
 
     /**
-     * Get descriptive statistics
-     * @param exec
+     * Get descriptive statistics.
+     * @param exec the execution context
      * @return the descriptive statistics for each group
      */
     public BufferedDataTable getGroupTable(final ExecutionContext exec) {
@@ -252,6 +268,7 @@ public class TwoSampleTTestStatistics {
         cells.add(new IntCell((int)stats.getN()));
         cells.add(new IntCell(m_missing.get(group).intValue()));
         cells.add(new IntCell(m_missingGroup.intValue()));
+        cells.add(new IntCell(m_ignoredGroup.intValue()));
         cells.add(new DoubleCell(stats.getMean()));
         cells.add(new DoubleCell(stats.getStandardDeviation()));
         cells.add(new DoubleCell(StatsUtil.getStandardError(stats)));
@@ -357,8 +374,8 @@ public class TwoSampleTTestStatistics {
             // approximate degrees of freedom for 2-sample t-test
             double df = df(v1, v2, n1, n2);
             TDistribution distribution = new TDistribution(df);
-            double pValue = 2.0 *
-                distribution.cumulativeProbability(-FastMath.abs(t));
+            double pValue = 2.0
+                * distribution.cumulativeProbability(-FastMath.abs(t));
 
             double meanDifference = m1 - m2;
 
@@ -413,13 +430,13 @@ public class TwoSampleTTestStatistics {
             double t = homoscedasticT(m1, m2, v1, v2, n1, n2);
             double df = n1 + n2 - 2;
             TDistribution distribution = new TDistribution(df);
-            double pValue = 2.0 *
-                distribution.cumulativeProbability(-FastMath.abs(t));
+            double pValue = 2.0
+                * distribution.cumulativeProbability(-FastMath.abs(t));
 
             double meanDifference = m1 - m2;
 
             double pooledVariance =
-                ((n1  - 1) * v1 + (n2 -1) * v2 ) / (n1 + n2 - 2);
+                ((n1  - 1) * v1 + (n2 - 1) * v2) / (n1 + n2 - 2);
             double standardErrorDiff =
                 FastMath.sqrt(pooledVariance * (1d / n1 + 1d / n2));
             double tValue = FastMath.abs(
@@ -446,7 +463,7 @@ public class TwoSampleTTestStatistics {
     }
 
     /**
-     * Get summary statistics per group
+     * Get summary statistics per group.
      * @return the summary statistics
      */
     public Map<Group, SummaryStatistics> getGroupSummaryStatistics() {
@@ -454,7 +471,7 @@ public class TwoSampleTTestStatistics {
     }
 
     /**
-     * Get summary statistics across groups
+     * Get summary statistics across groups.
      * @return the summary statistics
      */
     public SummaryStatistics getSummaryStatistics() {
