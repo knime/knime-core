@@ -3925,6 +3925,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/port/database/DatabaseWriterConnection.java" type="org.knime.core.node.port.database.DatabaseWriterConnection">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.port.database.DatabaseWriterConnection"/>
+                <message_argument value="writeData(DatabaseConnectionSettings, String, BufferedDataTable, boolean, ExecutionMonitor, Map&lt;String,String&gt;, CredentialsProvider)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/port/pmml/PMMLDataDictionaryTranslator.java" type="org.knime.core.node.port.pmml.PMMLDataDictionaryTranslator">
         <filter comment="switching from PMML 4.0 to 4.1 (renaming pmml40 package to pmml) - bug 3481" id="338792546">
             <message_arguments>
@@ -4375,55 +4383,6 @@
                 <message_argument value="IFileStoreHandler"/>
                 <message_argument value="NodeExecutionResult"/>
                 <message_argument value="getFileStoreHandler()"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/batchexec/x2012/x10/x10/Credentials.java" type="org.knime.batchexec.x2012.x10.x10.Credentials">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.batchexec.x2012.x10.x10.Credentials"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/batchexec/x2012/x10/x10/DoubleVar.java" type="org.knime.batchexec.x2012.x10.x10.DoubleVar">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.batchexec.x2012.x10.x10.DoubleVar"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/batchexec/x2012/x10/x10/IntVar.java" type="org.knime.batchexec.x2012.x10.x10.IntVar">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.batchexec.x2012.x10.x10.IntVar"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/batchexec/x2012/x10/x10/ReportFormats.java" type="org.knime.batchexec.x2012.x10.x10.ReportFormats">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.batchexec.x2012.x10.x10.ReportFormats"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/batchexec/x2012/x10/x10/StringVar.java" type="org.knime.batchexec.x2012.x10.x10.StringVar">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.batchexec.x2012.x10.x10.StringVar"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/batchexec/x2012/x10/x10/Workflow.java" type="org.knime.batchexec.x2012.x10.x10.Workflow">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.batchexec.x2012.x10.x10.Workflow"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/batchexec/x2012/x10/x10/WorkflowsDocument.java" type="org.knime.batchexec.x2012.x10.x10.WorkflowsDocument">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.batchexec.x2012.x10.x10.WorkflowsDocument"/>
             </message_arguments>
         </filter>
     </resource>

@@ -78,6 +78,8 @@ import org.knime.core.node.workflow.CredentialsProvider;
 /**
  * Creates a connection to write to database.
  *
+ * <p>No public API.</p>
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class DatabaseWriterConnection {
@@ -100,6 +102,7 @@ public final class DatabaseWriterConnection {
      * @param batchSize number of rows written in one batch
      * @return error string or null, if non
      * @throws Exception if connection could not be established
+     * @since 2.7
      */
     public static final String writeData(
             final DatabaseConnectionSettings dbConn,
