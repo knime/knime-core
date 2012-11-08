@@ -495,6 +495,7 @@ public final class DatabaseReaderConnection {
                 case Types.BLOB:
                 case Types.LONGNVARCHAR:
                 case Types.LONGVARBINARY:
+                case Types.BINARY:
                     newType = BinaryObjectDataCell.TYPE;
                     break;
                 // fallback string
@@ -634,6 +635,7 @@ public final class DatabaseReaderConnection {
                             case Types.LONGVARCHAR:
                                 cell = readAsciiStream(i); break;
                             case Types.LONGVARBINARY:
+                            case Types.BINARY:
                                 cell = readBinaryStream(i); break;
                             default: cell = readString(i);
                         }

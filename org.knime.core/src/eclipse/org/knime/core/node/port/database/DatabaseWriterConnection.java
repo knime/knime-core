@@ -232,6 +232,7 @@ public final class DatabaseWriterConnection {
                                 break;
                             // check for blob compatible types
                             case Types.BLOB:
+                            case Types.BINARY:
                             case Types.LONGVARCHAR:
                             case Types.LONGVARBINARY:
                                 // types must also be compatible to DataValue
