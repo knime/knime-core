@@ -113,14 +113,14 @@ public abstract class AbstractQuickFormConfiguration
      * @return <code>true</code> if hidden in the wizard, otherwise <code>false</code>
      * @since 2.7
      */
-    public boolean hideInWizard() {
+    public boolean isHideInWizard() {
         return m_hideInWizard;
     }
     /**
      * @param hideInWizard set new state for this element to be hidden or not in the QuickForm execution wizard
      * @since 2.7
      */
-    public void hideInWizard(final boolean hideInWizard) {
+    public void setHideInWizard(final boolean hideInWizard) {
         m_hideInWizard = hideInWizard;
     }
 
