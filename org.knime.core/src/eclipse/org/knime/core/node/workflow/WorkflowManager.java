@@ -72,6 +72,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -7471,6 +7472,19 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /* -------------------------------------------------------------------*/
 
+    /** A filter object that is used in various findXYZ methods. Can be used to fine-tune the search.
+     * @param <T> the sub class or interface implemented by the node model.
+     * @since 2.7
+     */
+    public interface NodeModelFilter<T> {
+
+        /** Tests whether the concrete instance is to be included.
+         * @param nodeModel Test instance, not null.
+         * @return true if to include, false otherwise.
+         */
+        public boolean include(final T nodeModel);
+    }
+
     /**
      * Retrieves the node with the given ID, fetches the underlying
      * {@link NodeModel} and casts it to the argument class.
@@ -7505,8 +7519,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param recurse Whether to recurse into contained meta nodes.
      * @return A (unsorted) list of nodes matching the class criterion
      */
-    public <T> Map<NodeID, T> findNodes(
-            final Class<T> nodeModelClass, final boolean recurse) {
+    public <T> Map<NodeID, T> findNodes(final Class<T> nodeModelClass, final boolean recurse) {
     	synchronized (m_workflowMutex) {
     		Map<NodeID, T> result = new LinkedHashMap<NodeID, T>();
     		for (NodeContainer nc : m_workflow.getNodeValues()) {
@@ -7567,19 +7580,25 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      *
      * @param <T> ...
      * @param nodeModelClass ...
+     * @param filter non null refinement filter
      * @return ...
-     * @since 2.6
+     * @since 2.7
+     * @noreference This method is not intended to be referenced by clients.
      */
-    public <T> Map<NodeID, T> findWaitingNodes(final Class<T> nodeModelClass) {
+    public <T> Map<NodeID, T> findWaitingNodes(final Class<T> nodeModelClass,
+                             final NodeModelFilter<T> filter) {
     	synchronized (m_workflowMutex) {
             Map<NodeID, T> nodes = findNodes(nodeModelClass, /*recurse=*/false);
 	    	Iterator<Map.Entry<NodeID, T>> it = nodes.entrySet().iterator();
 	    	while (it.hasNext()) {
-	    		NodeID id = it.next().getKey();
+	    		Entry<NodeID, T> next = it.next();
+                NodeID id = next.getKey();
+	    		T nodeModel = next.getValue();
 	    		NodeContainer nc = getNodeContainer(id);
 	    		PortObject[] inData = new PortObject[nc.getNrInPorts()];
-	    		if (State.EXECUTED.equals(nc.getState())
-	    		    || (!assembleInputData(id, inData))) {
+	    		if (!filter.include(nodeModel)) {
+	    		    it.remove();
+	    		} else if (State.EXECUTED.equals(nc.getState()) || (!assembleInputData(id, inData))) {
 	    		    // only keep nodes that can be executed (= have all
 	    		    // data available) but are not yet executed
 	    			it.remove();
@@ -7599,17 +7618,22 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      *
      * @param <T> ...
      * @param nodeModelClass ...
+     * @param filter non null refinement filter
      * @return ...
-     * @since 2.6
+     * @since 2.7
+     * @noreference This method is not intended to be referenced by clients.
      */
-    public <T> Map<NodeID, T> findExecutedNodes(final Class<T> nodeModelClass) {
+    public <T> Map<NodeID, T> findExecutedNodes(final Class<T> nodeModelClass, final NodeModelFilter<T> filter) {
         synchronized (m_workflowMutex) {
             Map<NodeID, T> nodes = findNodes(nodeModelClass, /*recurse=*/false);
             Iterator<Map.Entry<NodeID, T>> it = nodes.entrySet().iterator();
             while (it.hasNext()) {
-                NodeID id = it.next().getKey();
+                Entry<NodeID, T> next = it.next();
+                NodeID id = next.getKey();
                 NodeContainer nc = getNodeContainer(id);
-                if (!State.EXECUTED.equals(nc.getState())) {
+                if (!filter.include(next.getValue())) {
+                    it.remove();
+                } else if (!State.EXECUTED.equals(nc.getState())) {
                     it.remove();
                 }
             }
@@ -7619,26 +7643,27 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** Find "next" workflowmanager which contains nodes of a certain type
      * that are currently ready to be executed.
-     * See {@link #findWaitingNodes(Class)}
+     * See {@link #findWaitingNodes(Class, NodeModelFilter)}
      *
      * @param <T> ...
      * @param nodeModelClass ...
+     * @param filter A non-null filter.
      * @return Workflowmanager with waiting nodes or null if none exists.
-     * @since 2.6
+     * @since 2.7
      */
     public <T> WorkflowManager findNextWaitingWorkflowManager(
-            final Class<T> nodeModelClass) {
-        return findNextWaitingWorkflowManager(this, nodeModelClass);
+            final Class<T> nodeModelClass, final NodeModelFilter<T> filter) {
+        return findNextWaitingWorkflowManager(this, nodeModelClass, filter);
     }
 
     /**
-     * recursion for nested meta nodes
+     * recursion for nested meta nodes.
      */
     private <T> WorkflowManager findNextWaitingWorkflowManager(
             final WorkflowManager parentWfm,
-            final Class<T> nodeModelClass) {
+            final Class<T> nodeModelClass, final NodeModelFilter<T> filter) {
         synchronized (m_workflowMutex) {
-            Map<NodeID, T> nodes = parentWfm.findWaitingNodes(nodeModelClass);
+            Map<NodeID, T> nodes = parentWfm.findWaitingNodes(nodeModelClass, filter);
             if (nodes.size() > 0) {
                 return this;
             }
@@ -7648,13 +7673,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 NodeContainer nc = workflow.getNode(id);
                 if (nc.isLocalWFM()) {
                     WorkflowManager wfm = (WorkflowManager)nc;
-                    Map<NodeID, T> n2s = wfm.findWaitingNodes(nodeModelClass);
+                    Map<NodeID, T> n2s = wfm.findWaitingNodes(nodeModelClass, filter);
                     if (n2s.size() > 0) {
                         return wfm;
                     } else {
-                        WorkflowManager nextWfm
-                                = findNextWaitingWorkflowManager(wfm,
-                                nodeModelClass);
+                        WorkflowManager nextWfm = findNextWaitingWorkflowManager(wfm, nodeModelClass, filter);
                         if (nextWfm != null) {
                             return nextWfm;
                         }

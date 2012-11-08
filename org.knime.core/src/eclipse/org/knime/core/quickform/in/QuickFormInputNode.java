@@ -49,6 +49,8 @@
 package org.knime.core.quickform.in;
 
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
 import org.knime.core.quickform.AbstractQuickFormConfiguration;
 import org.knime.core.quickform.AbstractQuickFormValueInConfiguration;
 import org.knime.core.quickform.QuickFormNode;
@@ -64,6 +66,19 @@ import org.knime.core.util.node.quickform.in.AbstractQuickFormInElement;
  * @noimplement Not yet stable API.
  */
 public interface QuickFormInputNode extends QuickFormNode {
+
+    /** Filter used in {@link WorkflowManager#findNextWaitingWorkflowManager(Class, NodeModelFilter)}.
+     * It only includes not hidden qf nodes.
+     * @since 2.7
+     */
+    public static final NodeModelFilter<QuickFormInputNode> NOT_HIDDEN_FILTER =
+            new NodeModelFilter<QuickFormInputNode>() {
+
+        @Override
+        public boolean include(final QuickFormInputNode nodeModel) {
+            return !nodeModel.hideInWizard();
+        }
+    };
 
     /** Get the quick form element controlling the relevant portions to this
      * node. The returned value can be remotely modified and later loaded into
