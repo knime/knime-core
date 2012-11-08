@@ -631,7 +631,15 @@ public final class DatabaseReaderConnection {
                     } else if (type.isCompatible(BinaryObjectDataValue.class)) {
                         switch (dbType) {
                             case Types.BLOB:
-                                cell = readBlob(i); break;
+                                DataCell c = null;
+                                try {
+                                    c = readBlob(i);
+                                } catch (SQLException ex) {
+                                    // probably not supported (e.g. SQLite), therefore try another method
+                                    c = readBytesAsBLOB(i);
+                                }
+                                cell = c;
+                                break;
                             case Types.LONGVARCHAR:
                                 cell = readAsciiStream(i); break;
                             case Types.LONGVARBINARY:
@@ -648,9 +656,8 @@ public final class DatabaseReaderConnection {
                             case Types.CHAR:
                             case Types.VARCHAR:
                                 cell = readString(i); break;
-                            case Types.BINARY:
                             case Types.VARBINARY:
-                                cell = readBytes(i); break;
+                                cell = readBytesAsString(i); break;
                             case Types.REF:
                                 cell = readRef(i); break;
                             case Types.NCHAR:
@@ -859,7 +866,16 @@ public final class DatabaseReaderConnection {
             }
         }
 
-        private DataCell readBytes(final int i) throws SQLException {
+        private DataCell readBytesAsBLOB(final int i) throws SQLException, IOException {
+            byte[] bytes = m_result.getBytes(i + 1);
+            if (wasNull() || bytes == null) {
+                return DataType.getMissingCell();
+            } else {
+                return m_blobFactory.create(bytes);
+            }
+        }
+
+        private DataCell readBytesAsString(final int i) throws SQLException {
             byte[] bytes = m_result.getBytes(i + 1);
             if (wasNull() || bytes == null) {
                 return DataType.getMissingCell();
