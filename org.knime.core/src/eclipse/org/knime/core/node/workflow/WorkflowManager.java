@@ -1960,8 +1960,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 assert nc instanceof SingleNodeContainer;
                 SingleNodeContainer snc = (SingleNodeContainer)nc;
                 // ...but first check if it's not the stopping type!
-                if (nodeModelClass.isInstance(snc.getNodeModel()) && !snc.isInactive()) {
-                    return;  // stop here
+                if (!snc.isInactive()) {
+                    // if current nodeModel is of class nodeModelClass and not filtered
+                    if (nodeModelClass.isInstance(snc.getNodeModel())) {
+                        final T nodeModel = (T) snc.getNodeModel();
+                    	if (filter.include(nodeModel)) {
+                    	    return;  // stop here
+                    	}
+                    }
                 }
                 this.markAndQueueNodeAndPredecessors(id, -1);
             }
