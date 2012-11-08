@@ -60,6 +60,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -715,11 +716,10 @@ public final class DatabaseWriterConnection {
                         stmt.setNull(dbIdx, Types.BLOB);
                     } else {
                         try {
-                            stmt.setBinaryStream(dbIdx, is, (int) value.length());
+                            stmt.setBinaryStream(dbIdx, is, value.length());
                         } catch (SQLException ex) {
                             // if no supported set byte array
-                            byte[] bytes = new byte[(int) value.length()];
-                            is.read(bytes);
+                            byte[] bytes = IOUtils.toByteArray(is);
                             stmt.setBytes(dbIdx, bytes);
                         }
                     }
