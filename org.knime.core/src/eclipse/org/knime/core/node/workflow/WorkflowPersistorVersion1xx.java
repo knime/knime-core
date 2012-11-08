@@ -1048,7 +1048,8 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor, FromFileN
              * incoming ports. Data ports precede the model ports (in their
              * index), although the GUI and the true ordering is the other
              * way around. */
-            if (pers.shouldFixModelPortOrder()) {
+            // only test if the node is not missing (missing node placeholder)
+            if (pers.getNode() != null && pers.shouldFixModelPortOrder()) {
                 Node node = pers.getNode();
                 int modelPortCount = 0;
                 // first port is flow variable input port
