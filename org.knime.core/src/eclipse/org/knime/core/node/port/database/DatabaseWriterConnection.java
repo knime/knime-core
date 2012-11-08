@@ -716,9 +716,11 @@ public final class DatabaseWriterConnection {
                         stmt.setNull(dbIdx, Types.BLOB);
                     } else {
                         try {
-                            stmt.setBinaryStream(dbIdx, is, value.length());
+                            // to be compatible with JDBC 3.0, the length of the stream is restricted to max integer,
+                            // which are ~2GB; with JDBC 4.0 longs are supported and the respective method can be called
+                            stmt.setBinaryStream(dbIdx, is, (int) value.length());
                         } catch (SQLException ex) {
-                            // if no supported set byte array
+                            // if no supported (i.e. SQLite) set byte array
                             byte[] bytes = IOUtils.toByteArray(is);
                             stmt.setBytes(dbIdx, bytes);
                         }
