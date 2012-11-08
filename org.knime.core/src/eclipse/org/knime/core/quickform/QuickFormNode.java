@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2012
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -40,52 +40,33 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME. The owner of a Node
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  */
-package org.knime.core.quickform.in;
+package org.knime.core.quickform;
 
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.quickform.AbstractQuickFormConfiguration;
-import org.knime.core.quickform.AbstractQuickFormValueInConfiguration;
-import org.knime.core.quickform.QuickFormNode;
-import org.knime.core.util.node.quickform.in.AbstractQuickFormInElement;
+import org.knime.core.quickform.in.QuickFormInputNode;
+import org.knime.core.quickform.out.QuickFormOutputNode;
 
 /**
- * Implemented by {@linkplain org.knime.core.node.NodeModel NodeModel}
- * derivatives that represent quick form input elements.
+ * Common QuickForm node interface implemented by all input and output QuickForms.
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @since 2.6
+ * @see QuickFormInputNode
+ * @see QuickFormOutputNode
+ *
+ * @author Thomas Gabriel, KNIME.com, Zurich
+ * @since 2.7
  *
  * @noimplement Not yet stable API.
  */
-public interface QuickFormInputNode extends QuickFormNode {
+public interface QuickFormNode {
 
-    /** Get the quick form element controlling the relevant portions to this
-     * node. The returned value can be remotely modified and later loaded into
-     * this instance using the
-     * {@link #loadFromQuickFormElement(AbstractQuickFormInElement)} method.
-     * @return The form element to this node.
+    /**
+     * @return <code>true</code> if this QuickForm is visible in the wizard, <code>false</code> otherwise.
      */
-    public AbstractQuickFormInElement getQuickFormElement();
-
-    /** Get handle on current (filled) configuration or null.
-     * @return The config to use.
-     */
-    public AbstractQuickFormConfiguration
-        <? extends AbstractQuickFormValueInConfiguration> getConfiguration();
-
-    /** Loads values from the argument form element.
-     * @param formElement To load from.
-     * @throws InvalidSettingsException If the argument is not of expected
-     * type or has invalid values.
-     */
-    public void loadFromQuickFormElement(
-            final AbstractQuickFormInElement formElement)
-            throws InvalidSettingsException;
+    public boolean hideInWizard();
 
 }

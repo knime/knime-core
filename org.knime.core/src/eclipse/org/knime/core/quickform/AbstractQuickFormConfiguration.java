@@ -57,6 +57,8 @@ import org.knime.core.node.workflow.FlowVariable;
 /**
  * Abstract configuration, contains fields for label, description and weight.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ *
+ * @param <V> type of underlying value configuration
  */
 public abstract class AbstractQuickFormConfiguration
     <V extends AbstractQuickFormValueInConfiguration> {
@@ -65,6 +67,7 @@ public abstract class AbstractQuickFormConfiguration
     private String m_description;
     private String m_variableName;
     private int m_weight;
+    private boolean m_hideInWizard;
     private V m_valueConfiguration;
 
     /** @return the label */
@@ -106,9 +109,26 @@ public abstract class AbstractQuickFormConfiguration
         m_variableName = variableName;
     }
 
-    /** @param reference the valueConfiguration to copy from, not null. */
-    public void copyValueConfigurationFrom(final V reference)
-        throws InvalidSettingsException {
+    /**
+     * @return <code>true</code> if hidden in the wizard, otherwise <code>false</code>
+     * @since 2.7
+     */
+    public boolean hideInWizard() {
+        return m_hideInWizard;
+    }
+    /**
+     * @param hideInWizard set new state for this element to be hidden or not in the QuickForm execution wizard
+     * @since 2.7
+     */
+    public void hideInWizard(final boolean hideInWizard) {
+        m_hideInWizard = hideInWizard;
+    }
+
+    /**
+     * @param reference the valueConfiguration to copy from, not null.
+     * @throws InvalidSettingsException if some settings could not be loaded
+     */
+    public void copyValueConfigurationFrom(final V reference) throws InvalidSettingsException {
         V valueConfig = createValueConfiguration();
         NodeSettings settings = new NodeSettings("copy");
         reference.saveValue(settings);
@@ -132,6 +152,7 @@ public abstract class AbstractQuickFormConfiguration
         settings.addString("description", m_description);
         settings.addString("variableName", m_variableName);
         settings.addInt("weight", m_weight);
+        settings.addBoolean("hide_in_wizard", m_hideInWizard);
         NodeSettingsWO valueSet = settings.addNodeSettings("value");
         m_valueConfiguration.saveValue(valueSet);
     }
@@ -150,6 +171,8 @@ public abstract class AbstractQuickFormConfiguration
         m_variableName =
             verifyFlowVariableName(settings.getString("variableName"));
         m_weight = settings.getInt("weight");
+        // since 2.7
+        m_hideInWizard = settings.getBoolean("hide_in_wizard", false);
         NodeSettingsRO valueSet = settings.getNodeSettings("value");
         V valueConfiguration = createValueConfiguration();
         valueConfiguration.loadValueInModel(valueSet);
@@ -167,6 +190,8 @@ public abstract class AbstractQuickFormConfiguration
         m_description = settings.getString("description", "Enter Description");
         m_variableName = settings.getString("variableName", "new variable");
         m_weight = settings.getInt("weight", 1);
+        // since 2.7
+        m_hideInWizard = settings.getBoolean("hide_in_wizard", false);
         try {
             verifyFlowVariableName(m_variableName);
         } catch (InvalidSettingsException ise) {
@@ -202,6 +227,9 @@ public abstract class AbstractQuickFormConfiguration
      */
     public abstract QuickFormConfigurationPanel<V> createController();
 
+    /**
+     * @return creates and returns a new value configuration of type <code>V</code>
+     */
     public abstract V createValueConfiguration();
 
 }

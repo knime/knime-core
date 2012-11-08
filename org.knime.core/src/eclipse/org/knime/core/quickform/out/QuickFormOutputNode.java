@@ -48,14 +48,17 @@
  */
 package org.knime.core.quickform.out;
 
+import org.knime.core.quickform.QuickFormNode;
 import org.knime.core.util.node.quickform.out.AbstractQuickFormOutElement;
 
 /** Implemented by nodes that represent output elements in a quick form.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @since 2.6
+ *
+ * @noimplement Not yet stable API.
  */
-public interface QuickFormOutputNode {
+public interface QuickFormOutputNode extends QuickFormNode {
 
     /** Get the quick form element containing the results.
      * @return The results.
