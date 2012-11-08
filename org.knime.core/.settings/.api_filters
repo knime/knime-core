@@ -4393,6 +4393,12 @@
                 <message_argument value="findWaitingNodes(Class&lt;T&gt;)"/>
             </message_arguments>
         </filter>
+        <filter comment="WFM.stepExecutionUpToNodeType() removed" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="stepExecutionUpToNodeType(Class&lt;T&gt;)"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowPersistor.java" type="org.knime.core.node.workflow.WorkflowPersistor">
         <filter id="643842064">

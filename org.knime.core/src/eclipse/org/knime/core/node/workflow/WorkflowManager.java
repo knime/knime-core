@@ -1912,13 +1912,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      *
      * @param <T> ...
      * @param nodeModelClass the interface of the "stepping" nodes
-     * @since 2.6
+     * @param filter ...
+     * @since 2.7
      */
-    public <T> void stepExecutionUpToNodeType(final Class<T> nodeModelClass) {
+    public <T> void stepExecutionUpToNodeType(final Class<T> nodeModelClass, final NodeModelFilter<T> filter) {
         synchronized (m_workflowMutex) {
             HashMap<NodeID, Integer> nodes = m_workflow.getStartNodes(-1);
             for (NodeID id : nodes.keySet()) {
-                stepExecutionUpToNodeType(id, nodeModelClass);
+                stepExecutionUpToNodeType(id, nodeModelClass, filter);
             }
             checkForNodeStateChanges(true);
         }
@@ -1931,8 +1932,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param <T> ...
      * @param nodeModelClass the interface of the "stepping" nodes
      */
-    private <T> void stepExecutionUpToNodeType(final NodeID id,
-            final Class<T> nodeModelClass) {
+    private <T> void stepExecutionUpToNodeType(final NodeID id, final Class<T> nodeModelClass,
+            final NodeModelFilter<T> filter) {
         NodeContainer nc = getNodeContainer(id);
         NodeOutPort[] incoming = assemblePredecessorOutPorts(id);
         for (int i = 0; i < incoming.length; i++) {
@@ -1951,11 +1952,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // node has all required predecessors and they are all marked
         // or executing or executed....
         State state = nc.getState();
-        if (!State.EXECUTED.equals(state)
-                && !state.executionInProgress()) {
+        if (!State.EXECUTED.equals(state) && !state.executionInProgress()) {
             // the node itself is not yet marked/executed - mark it
             if (nc.isLocalWFM()) {
-                ((WorkflowManager)nc).stepExecutionUpToNodeType(nodeModelClass);
+                ((WorkflowManager)nc).stepExecutionUpToNodeType(nodeModelClass, filter);
             } else {
                 assert nc instanceof SingleNodeContainer;
                 SingleNodeContainer snc = (SingleNodeContainer)nc;
@@ -1967,7 +1967,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
         }
         // and also mark successors
-        stepExecutionUpToNodeTypeSuccessorsOnly(id, nodeModelClass);
+        stepExecutionUpToNodeTypeSuccessorsOnly(id, nodeModelClass, filter);
     }
 
     /* Recursively continue to trigger execution of nodes until first
@@ -1980,13 +1980,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param <T> ...
      * @param nodeModelClass the interface of the "stepping" nodes
      */
-    private <T> void stepExecutionUpToNodeTypeSuccessorsOnly(final NodeID id,
-            final Class<T> nodeModelClass) {
+    private <T> void stepExecutionUpToNodeTypeSuccessorsOnly(final NodeID id, final Class<T> nodeModelClass,
+            final NodeModelFilter<T> filter) {
         for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
             if (!this.getID().equals(cc.getDest())) {
-                stepExecutionUpToNodeType(cc.getDest(), nodeModelClass);
+                stepExecutionUpToNodeType(cc.getDest(), nodeModelClass, filter);
             } else {
-                getParent().stepExecutionUpToNodeTypeSuccessorsOnly(cc.getDest(), nodeModelClass);
+                getParent().stepExecutionUpToNodeTypeSuccessorsOnly(cc.getDest(), nodeModelClass, filter);
             }
         }
     }
