@@ -716,7 +716,7 @@ public final class DatabaseWriterConnection {
                     } else {
                         try {
                             stmt.setBinaryStream(dbIdx, is, (int) value.length());
-                        } catch (UnsupportedOperationException uoe) {
+                        } catch (SQLException ex) {
                             // if no supported set byte array
                             byte[] bytes = new byte[(int) value.length()];
                             is.read(bytes);
