@@ -713,7 +713,14 @@ public final class DatabaseWriterConnection {
                     if (is == null) {
                         stmt.setNull(dbIdx, Types.BLOB);
                     } else {
-                        stmt.setBinaryStream(dbIdx, is, (int) value.length());
+                        try {
+                            stmt.setBinaryStream(dbIdx, is, (int) value.length());
+                        } catch (UnsupportedOperationException uoe) {
+                            // if no supported set byte array
+                            byte[] bytes = new byte[(int) value.length()];
+                            is.read(bytes);
+                            stmt.setBytes(dbIdx, bytes);
+                        }
                     }
                 } catch (IOException ioe) {
                     stmt.setNull(dbIdx, Types.BLOB);
