@@ -4328,6 +4328,21 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/util/ConvenienceMethods.java" type="org.knime.core.node.util.ConvenienceMethods">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.util.ConvenienceMethods"/>
+                <message_argument value="getShortStringFrom(List&lt;?&gt;, int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="2.6"/>
+                <message_argument value="2.7"/>
+                <message_argument value="getShortStringFrom(Collection&lt;?&gt;, int)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/BatchExecutor.java" type="org.knime.core.node.workflow.BatchExecutor">
         <filter id="421683322">
             <message_arguments>

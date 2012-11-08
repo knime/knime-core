@@ -50,7 +50,7 @@
  */
 package org.knime.core.node.util;
 
-import java.util.List;
+import java.util.Collection;
 
 import org.knime.core.node.NodeLogger;
 
@@ -153,8 +153,8 @@ public final class ConvenienceMethods {
      * @param objs The non null array to summarize
      * @param maxToPrint length to print, rest will be cut.
      * @return Such a short string summary.
-     * @since 2.6 */
-    public static String getShortStringFrom(final List<?> objs, final int maxToPrint) {
+     * @since 2.7*/
+    public static String getShortStringFrom(final Collection<?> objs, final int maxToPrint) {
         StringBuilder b = new StringBuilder();
         int l = 0;
         for (Object o : objs) {
