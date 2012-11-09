@@ -77,6 +77,18 @@ public class Joiner2Settings {
     private static final String MAX_OPEN_FILES = "maxOpenFiles";
     private static final String ROW_KEY_SEPARATOR = "rowKeySeparator";
     private static final String ENABLE_HILITE = "enableHiLite";
+    private static final String VERSION = "version";
+
+    /**
+     * The version for Joiner nodes until KNIME v2.6.
+     * @since 2.7
+     */
+    public static final String VERSION_1 = "version_1";
+    /**
+     * The version for Joiner nodes for KNIME v2.7 and later.
+     * @since 2.7
+     */
+    public static final String VERSION_2 = "version_2";
 
     /**
      * This enum holds all ways of handling duplicate column names in the two
@@ -164,6 +176,41 @@ public class Joiner2Settings {
     private int m_maxOpenFiles = 200;
     private String m_rowKeySeparator = "_";
     private boolean m_enableHiLite = false;
+
+    private String m_version = VERSION_2;
+
+
+    /**
+     * Returns true when the version of the settings supports a custom suffix
+     * for duplicated columns. The option was removed in version 2
+     * (see Bug 3368) in favor of a automatically generated suffix.
+     *
+     * @return true when this supports a custom suffix for duplicated columns.
+     * @since 2.7
+     *
+     */
+    public boolean supportsDuplicateColumnSuffix() {
+        return m_version.equals(VERSION_1);
+    }
+
+    /**
+     * Get the version  either VERSION_1 or VERSION_2.
+     * @return the version
+     * @since 2.7
+     */
+    public static String getVersion() {
+        return VERSION;
+    }
+
+    /**
+     * Set the version either VERSION_1 or VERSION_2.
+     *
+     * @param version the version to set
+     * @since 2.7
+     */
+    public void setVersion(final String version) {
+        m_version = version;
+    }
 
     /**
      * Returns the columns of the left table used in the join predicate.
@@ -459,6 +506,10 @@ public class Joiner2Settings {
      */
     public void loadSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        // load version introduced in 2.7
+        m_version = settings.getString(VERSION, VERSION_1);
+
+
         m_duplicateHandling =
                 DuplicateHandling.valueOf(settings
                         .getString(DUPLICATE_COLUMN_HANDLING));
@@ -480,6 +531,7 @@ public class Joiner2Settings {
         m_rowKeySeparator = settings.getString(ROW_KEY_SEPARATOR);
         m_enableHiLite = settings.getBoolean(ENABLE_HILITE);
 
+
     }
 
     /**
@@ -489,6 +541,9 @@ public class Joiner2Settings {
      * @param settings a node settings object
      */
     public void loadSettingsForDialog(final NodeSettingsRO settings) {
+        // load version introduced in 2.7
+        m_version = settings.getString(VERSION, VERSION_1);
+
         m_duplicateHandling =
                 DuplicateHandling.valueOf(settings.getString(
                         DUPLICATE_COLUMN_HANDLING,
@@ -505,7 +560,8 @@ public class Joiner2Settings {
         m_rightJoinColumns =
             settings.getStringArray(RIGHT_JOINING_COLUMNS,
                     new String[] {Joiner2Settings.ROW_KEY_IDENTIFIER});
-        m_duplicateColSuffix = settings.getString(DUPLICATE_COLUMN_SUFFIX, "");
+        m_duplicateColSuffix = settings.getString(DUPLICATE_COLUMN_SUFFIX,
+                                                  "");
 
         m_leftIncludeCols = settings.getStringArray(LEFT_INCLUDE_COLUMNS,
                 new String[0]);
@@ -522,6 +578,8 @@ public class Joiner2Settings {
         m_maxOpenFiles = settings.getInt(MAX_OPEN_FILES, 200);
         m_rowKeySeparator = settings.getString(ROW_KEY_SEPARATOR, "_");
         m_enableHiLite = settings.getBoolean(ENABLE_HILITE, false);
+
+
     }
 
     /**
@@ -555,5 +613,8 @@ public class Joiner2Settings {
         settings.addDouble("usedMemoryThreshold", 0.85);
         settings.addLong("minAvailableMemory", 10000000L);
         settings.addBoolean("memUseCollectionUsage", true);
+
+        // save version introduced in 2.7
+        settings.addString(VERSION, m_version);
     }
 }

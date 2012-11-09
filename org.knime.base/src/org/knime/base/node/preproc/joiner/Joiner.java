@@ -53,6 +53,7 @@ package org.knime.base.node.preproc.joiner;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -84,6 +85,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ConvenienceMethods;
+import org.knime.core.util.UniqueNameGenerator;
 
 /**
  * The joiner implements a database like join of two tables.
@@ -232,6 +234,7 @@ public final class Joiner {
         }
 
         if ((!duplicates.isEmpty())
+                && m_settings.supportsDuplicateColumnSuffix()
                 && m_settings.getDuplicateColumnSuffix().equals("")) {
             throw new InvalidSettingsException("No suffix for duplicate "
                     + "columns provided.");
@@ -296,12 +299,16 @@ public final class Joiner {
             }
         }
 
+        @SuppressWarnings("unchecked")
+        UniqueNameGenerator nameGen = new UniqueNameGenerator(
+            Collections.EMPTY_SET);
         m_leftSurvivors = new ArrayList<String>();
-        List<DataColumnSpec> takeSpecs = new ArrayList<DataColumnSpec>();
+        List<DataColumnSpec> outColSpecs = new ArrayList<DataColumnSpec>();
         for (int i = 0; i < specs[0].getNumColumns(); i++) {
             DataColumnSpec columnSpec = specs[0].getColumnSpec(i);
             if (leftCols.contains(columnSpec.getName())) {
-                takeSpecs.add(columnSpec);
+                outColSpecs.add(columnSpec);
+                nameGen.newName(columnSpec.getName());
                 m_leftSurvivors.add(columnSpec.getName());
             }
         }
@@ -310,27 +317,44 @@ public final class Joiner {
         for (int i = 0; i < specs[1].getNumColumns(); i++) {
             DataColumnSpec columnSpec = specs[1].getColumnSpec(i);
             if (rightCols.contains(columnSpec.getName())) {
-                if (duplicates.contains(columnSpec.getName())) {
-                    String newName = columnSpec.getName();
-                    do {
-                        newName += m_settings.getDuplicateColumnSuffix();
-                    } while (rightCols.contains(newName));
+                if (m_settings.supportsDuplicateColumnSuffix()) {
+                    // Code for KNIME v2.6 and older
+                    // (kept for backward compatibility)
+                    if (duplicates.contains(columnSpec.getName())) {
+                        String newName = columnSpec.getName();
+                        do {
+                            newName += m_settings.getDuplicateColumnSuffix();
+                        } while (rightCols.contains(newName));
 
-                    DataColumnSpecCreator dcsc =
-                        new DataColumnSpecCreator(columnSpec);
-                    dcsc.removeAllHandlers();
-                    dcsc.setName(newName);
-                    takeSpecs.add(dcsc.createSpec());
-                    rightCols.add(newName);
+                        DataColumnSpecCreator dcsc =
+                            new DataColumnSpecCreator(columnSpec);
+                        dcsc.removeAllHandlers();
+                        dcsc.setName(newName);
+                        outColSpecs.add(dcsc.createSpec());
+                        rightCols.add(newName);
+                    } else {
+                        outColSpecs.add(columnSpec);
+                    }
                 } else {
-                    takeSpecs.add(columnSpec);
+                    // Since KNIME v2.7
+                    String newName = nameGen.newName(columnSpec.getName());
+                    if (newName.equals(columnSpec.getName())) {
+                        outColSpecs.add(columnSpec);
+                    } else {
+                        DataColumnSpecCreator dcsc =
+                            new DataColumnSpecCreator(columnSpec);
+                        dcsc.removeAllHandlers();
+                        dcsc.setName(newName);
+                        outColSpecs.add(dcsc.createSpec());
+                    }
+
                 }
                 m_rightSurvivors.add(columnSpec.getName());
             }
         }
 
-        return new DataTableSpec(takeSpecs.toArray(
-                new DataColumnSpec[takeSpecs.size()]));
+        return new DataTableSpec(outColSpecs.toArray(
+                new DataColumnSpec[outColSpecs.size()]));
     }
 
     /**
@@ -1088,9 +1112,11 @@ public final class Joiner {
                     "Number of columns selected from the left table and from "
                     + "the right table do not match");
         }
-        if (DuplicateHandling.AppendSuffix.equals(s.getDuplicateHandling())
-                && ((s.getDuplicateColumnSuffix() == null) || (s
-                        .getDuplicateColumnSuffix().length() < 1))) {
+
+        if (s.supportsDuplicateColumnSuffix()
+            && DuplicateHandling.AppendSuffix.equals(s.getDuplicateHandling())
+            && ((s.getDuplicateColumnSuffix() == null) || (s
+                    .getDuplicateColumnSuffix().length() < 1))) {
             throw new InvalidSettingsException(
             "No suffix for duplicate columns provided");
         }

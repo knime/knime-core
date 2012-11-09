@@ -70,8 +70,6 @@ import javax.swing.JRadioButton;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.preproc.joiner.Joiner2Settings.DuplicateHandling;
 import org.knime.base.node.preproc.joiner.Joiner2Settings.JoinMode;
@@ -103,9 +101,7 @@ public class Joiner2NodeDialog extends NodeDialogPane {
             new JRadioButton("Filter duplicates");
 
     private final JRadioButton m_appendSuffix =
-            new JRadioButton("Append suffix:");
-
-    private final JTextField m_suffix = new JTextField();
+            new JRadioButton("Append suffix");
 
     private final Joiner2Settings m_settings = new Joiner2Settings();
 
@@ -325,16 +321,6 @@ public class Joiner2NodeDialog extends NodeDialogPane {
 
         c.gridy++;
         left.add(m_appendSuffix, c);
-        c.gridx++;
-        m_suffix.setPreferredSize(new Dimension(100,
-                m_suffix.getPreferredSize().height));
-        left.add(m_suffix, c);
-
-        m_appendSuffix.addChangeListener(new ChangeListener() {
-            public void stateChanged(final ChangeEvent e) {
-                m_suffix.setEnabled(m_appendSuffix.isSelected());
-            }
-        });
 
         ButtonGroup duplicateColGroup = new ButtonGroup();
         duplicateColGroup.add(m_filterDuplicates);
@@ -385,10 +371,6 @@ public class Joiner2NodeDialog extends NodeDialogPane {
         m_dontExecute.setSelected(m_settings.getDuplicateHandling().equals(
                 DuplicateHandling.DontExecute));
         m_appendSuffix.setSelected(m_settings.getDuplicateHandling().equals(
-                DuplicateHandling.AppendSuffix));
-
-        m_suffix.setText(m_settings.getDuplicateColumnSuffix());
-        m_suffix.setEnabled(m_settings.getDuplicateHandling().equals(
                 DuplicateHandling.AppendSuffix));
 
         m_leftFilterPanel.update(specs[0], false,
@@ -459,12 +441,10 @@ public class Joiner2NodeDialog extends NodeDialogPane {
         } else if (m_dontExecute.isSelected()) {
             m_settings.setDuplicateHandling(DuplicateHandling.DontExecute);
         } else {
-            String suffix = m_suffix.getText().trim().isEmpty() ? ""
-                    : m_suffix.getText();
             m_settings.setDuplicateHandling(DuplicateHandling.AppendSuffix);
-            m_settings.setDuplicateColumnSuffix(suffix);
-
         }
+        m_settings.setVersion(Joiner2Settings.VERSION_2);
+        m_settings.setDuplicateColumnSuffix("");
 
         m_settings.setLeftIncludeCols(
                 m_leftFilterPanel.getIncludedColumnSet().toArray(
