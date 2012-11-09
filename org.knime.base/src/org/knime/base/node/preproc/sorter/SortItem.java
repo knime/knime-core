@@ -62,8 +62,11 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.border.Border;
 
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.node.util.DataColumnSpecListCellRenderer;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataType;
+import org.knime.core.node.util.ColumnComboBoxRenderer;
 
 /**
  * The SortItem is a JPanel with a JComboBox and two JRadioButtons.
@@ -115,6 +118,26 @@ public class SortItem extends JPanel {
      *
      * @param id the unique ID of the SortItem
      * @param values the columns that the user can choose from
+     * @param columnName the name of the column
+     * @param sortOrder the sort
+     */
+    SortItem(final int id, final Vector<DataColumnSpec> values,
+            final String columnName, final boolean sortOrder) {
+        this(id, values, new DataColumnSpecCreator(columnName,
+            DataType.getType(DataCell.class)).createSpec(), sortOrder);
+        m_combo.setSelectedIndex(-1);
+        ColumnComboBoxRenderer renderer =
+            (ColumnComboBoxRenderer)m_combo.getRenderer();
+        renderer.setDefaultValue(columnName);
+    }
+
+    /**
+     * Constructs a new JPanel that consists of a JComboBox which lets the user
+     * choose the columns to sort and two JRadioButtons to choose the sort order
+     * (ascending/descending).
+     *
+     * @param id the unique ID of the SortItem
+     * @param values the columns that the user can choose from
      * @param selected the selected column
      * @param sortOrder the sort
      */
@@ -126,7 +149,9 @@ public class SortItem extends JPanel {
 
         super.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         m_combo = new JComboBox(m_combovalues);
-        m_combo.setRenderer(new DataColumnSpecListCellRenderer());
+        ColumnComboBoxRenderer renderer =
+            new ColumnComboBoxRenderer();
+        renderer.attachTo(m_combo);
         m_combo.setLightWeightPopupEnabled(false);
         m_combo.setSelectedItem(selected);
         m_combo.setMaximumSize(new Dimension(800, 30));
@@ -185,6 +210,7 @@ public class SortItem extends JPanel {
         return false;
     }
 
+
     /**
      * The column that is selected in the JComboBox.
      *
@@ -192,5 +218,28 @@ public class SortItem extends JPanel {
      */
     public DataColumnSpec getSelectedColumn() {
         return (DataColumnSpec) m_combo.getSelectedItem();
+    }
+
+    /**
+     * Returns true when a valid selection is done for the column field.
+     *
+     * @return if a selection is done by the user.
+     */
+    boolean isColumnSelected() {
+        return m_combo.getSelectedIndex() >= 0;
+    }
+
+    /**
+     * Get the text in the column field that is displayed to the user.
+     * @return the text of the column field displayed to the user.
+     */
+    String getColumnText() {
+        if (isColumnSelected()) {
+            return getSelectedColumn().getName();
+        } else {
+            ColumnComboBoxRenderer renderer =
+                (ColumnComboBoxRenderer)m_combo.getRenderer();
+            return renderer.getDefaultValue();
+        }
     }
 }

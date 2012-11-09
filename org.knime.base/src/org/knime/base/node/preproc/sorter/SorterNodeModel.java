@@ -65,6 +65,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.util.ConvenienceMethods;
 
 /**
  * This class implements the {@link NodeModel} for the sorter node. The input
@@ -204,14 +205,19 @@ public class SorterNodeModel extends NodeModel {
         }
         // check if the values of the include List
         // exist in the DataTableSpec
+        List<String> notAvailableCols = new ArrayList<String>();
         for (String ic : m_inclList) {
             if (!ic.equals(SorterNodeDialogPanel2.NOSORT.getName())
                     && !ic.equals(SorterNodeDialogPanel2.ROWKEY.getName())) {
                 if ((inSpecs[INPORT].findColumnIndex(ic) == -1)) {
-                    throw new InvalidSettingsException("Column " + ic
-                            + " not in spec.");
+                    notAvailableCols.add(ic);
                 }
             }
+        }
+        if (!notAvailableCols.isEmpty()) {
+            throw new InvalidSettingsException("The input table has "
+               + "changed. Some columns are missing: "
+               + ConvenienceMethods.getShortStringFrom(notAvailableCols, 3));
         }
         return new DataTableSpec[]{inSpecs[INPORT]};
     }

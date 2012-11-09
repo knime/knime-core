@@ -77,6 +77,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.node.InvalidSettingsException;
 
 
 /**
@@ -181,9 +182,9 @@ public class SorterNodeDialogPanel2 extends JPanel {
             } else {
                 for (int i = 0; i < incl.size(); i++) {
                     String includeString = incl.get(i);
-                    int toInclude = spec.findColumnIndex(includeString);
-                    if (toInclude != -1) {
-                        DataColumnSpec colspec = spec.getColumnSpec(toInclude);
+                    int columnIndex = spec.findColumnIndex(includeString);
+                    if (columnIndex != -1) {
+                        DataColumnSpec colspec = spec.getColumnSpec(columnIndex);
                         SortItem temp =
                                 new SortItem(interncounter, values, colspec,
                                         sortOrder[interncounter]);
@@ -202,6 +203,13 @@ public class SorterNodeDialogPanel2 extends JPanel {
                         super.add(temp);
                         m_components.add(temp);
                         interncounter++;
+                    } else if (columnIndex == -1) {
+                        SortItem temp = new SortItem(interncounter, values,
+                                                     includeString, sortOrder[interncounter]);
+                                                 super.add(temp);
+                                                 m_components.add(temp);
+                                                 interncounter++;
+
                     }
 
                 }
@@ -240,7 +248,7 @@ public class SorterNodeDialogPanel2 extends JPanel {
                     ArrayList<String> newlist = new ArrayList<String>();
                     for (int i = 0; i < m_components.size(); i++) {
                         SortItem temp = m_components.get(i);
-                        newlist.add(temp.getSelectedColumn().getName());
+                        newlist.add(temp.getColumnText());
                     }
                     int oldsize = m_components.size();
                     String temp = spinner.getValue().toString();
@@ -293,6 +301,20 @@ public class SorterNodeDialogPanel2 extends JPanel {
     }
 
     /**
+     * Tests if user selections are valid and throws an Exception if not.
+     * @throws InvalidSettingsException if user selection is not valid
+     */
+    void checkValid() throws InvalidSettingsException {
+        for (int i = 0; i < m_components.size(); i++) {
+            SortItem temp = m_components.get(i);
+            if (!temp.isColumnSelected()) {
+                throw new InvalidSettingsException("There are invalid "
+                    + "column selections (highlighted with a red border).");
+            }
+        }
+    }
+
+    /**
      * Returns all columns from the include list.
      *
      * @return a list of all columns from the include list
@@ -301,7 +323,8 @@ public class SorterNodeDialogPanel2 extends JPanel {
         ArrayList<String> list = new ArrayList<String>();
         for (int i = 0; i < m_components.size(); i++) {
             SortItem temp = m_components.get(i);
-            if (!(temp.getSelectedColumn().equals(NOSORT))) {
+            if (temp.isColumnSelected()
+                    && !(temp.getSelectedColumn().equals(NOSORT))) {
                 list.add(temp.getSelectedColumn().getName());
             }
         }
@@ -317,7 +340,8 @@ public class SorterNodeDialogPanel2 extends JPanel {
         Vector<Boolean> boolvector = new Vector<Boolean>();
         for (int i = 0; i < m_components.size(); i++) {
             SortItem temp = m_components.get(i);
-            if (!(temp.getSelectedColumn().equals(NOSORT))) {
+            if (temp.isColumnSelected()
+                    && !(temp.getSelectedColumn().equals(NOSORT))) {
                 boolvector.add(temp.getSortOrder());
             }
         }

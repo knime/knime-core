@@ -50,7 +50,7 @@
  */
 package org.knime.base.node.preproc.sorter;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.JScrollPane;
@@ -125,18 +125,9 @@ public class SorterNodeDialog extends NodeDialogPane {
         if (settings.containsKey(SorterNodeModel.INCLUDELIST_KEY)) {
             try {
                 String[] alist =
-
-                settings.getStringArray(SorterNodeModel.INCLUDELIST_KEY);
+                    settings.getStringArray(SorterNodeModel.INCLUDELIST_KEY);
                 if (alist != null) {
-                    list = new ArrayList<String>();
-                    for (int i = 0; i < alist.length; i++) {
-                        if (specs[0].findColumnIndex(alist[i]) >= 0
-                                || (alist[i]
-                                        .compareTo(SorterNodeDialogPanel2.ROWKEY
-                                                .getName()) == 0)) {
-                            list.add(alist[i]);
-                        }
-                    }
+                    list = Arrays.asList(alist);
                 }
             } catch (InvalidSettingsException ise) {
                 LOGGER.error(ise.getMessage());
@@ -179,12 +170,14 @@ public class SorterNodeDialog extends NodeDialogPane {
      * {@link SorterNodeDialogPanel}.
      *
      * @param settings the node settings to write into
-     *
+     * @throws InvalidSettingsException if settings are not valid
      * @see NodeDialogPane#saveSettingsTo(NodeSettingsWO)
      */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) {
+    protected void saveSettingsTo(final NodeSettingsWO settings)
+            throws InvalidSettingsException {
         assert (settings != null);
+        m_panel.checkValid();
         List<String> inclList = m_panel.getIncludedColumnList();
         settings.addStringArray(SorterNodeModel.INCLUDELIST_KEY, inclList
                 .toArray(new String[inclList.size()]));
