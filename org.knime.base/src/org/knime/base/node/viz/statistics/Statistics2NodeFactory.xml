@@ -12,7 +12,7 @@
 		<intro>		
 		This node calculates statistical moments such as minimum, maximum, mean,
 		standard deviation, variance, median, overall sum, number of missing 
-		values across all numeric columns, and counts all nominal values 
+		values and row count across all numeric columns, and counts all nominal values 
 		together with their occurrences. The dialog offers two options for 
 		choosing the median and/or nominal values calculations:
 		</intro>

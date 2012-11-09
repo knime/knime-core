@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   15.04.2005 (cebron): created
  */
@@ -87,9 +87,9 @@ import org.knime.core.util.MutableInteger;
 
 /**
  * New statistic table utility class to compute statistical moments, such as
- * mean, variance, column sum, count missing values, min/max values, median, 
+ * mean, variance, column sum, count missing values, min/max values, median,
  * and count occurrences of all possible values.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class Statistics2Table {
@@ -117,10 +117,13 @@ public class Statistics2Table {
 
     /** Used to 'cache' the maximum values. */
     private final double[] m_maxValues;
-    
+
+    /** Used to 'cache' the row count. */
+    private final int m_rowCount;
+
     /** Column name from the original data table spec. */
     private final DataTableSpec m_spec;
-    
+
     /** If not null, a warning has been created during construction. */
     private final String m_warning;
 
@@ -132,7 +135,7 @@ public class Statistics2Table {
      * @param table table to be wrapped
      * @param computeMedian if the median has to be computed
      * @param numNomValuesOutput number of possible values in output table
-     * @param nominalValueColumns columns used to determine all poss. values 
+     * @param nominalValueColumns columns used to determine all poss. values
      * @param exec an object to check with if user canceled operation
      * @throws CanceledExecutionException if user canceled
      */
@@ -140,7 +143,7 @@ public class Statistics2Table {
             final boolean computeMedian,
             final int numNomValuesOutput,
             final List<String> nominalValueColumns,
-            final ExecutionContext exec) 
+            final ExecutionContext exec)
             throws CanceledExecutionException {
         int nrCols = table.getDataTableSpec().getNumColumns();
         m_spec = table.getDataTableSpec();
@@ -153,6 +156,7 @@ public class Statistics2Table {
         m_missingValueCnt = new double[nrCols];
         m_median = new double[nrCols];
         m_nominalValues = new Map[nominalValueColumns.size()];
+        m_rowCount = table.getRowCount();
         // the number of non-missing cells in each column
         int[] validCount = new int[nrCols];
         double[] sumsquare = new double[nrCols];
@@ -167,13 +171,12 @@ public class Statistics2Table {
             sumsquare[i] = 0.0;
             validCount[i] = 0;
         }
-        
+
         // used to store warnings
         final StringBuilder warn = new StringBuilder();
-        
+
         // temp map used to sort later based in occurrences
-        Map<DataCell, MutableInteger>[] nominalValues = 
-        	new Map[m_nominalValues.length];
+        final Map<DataCell, MutableInteger>[] nominalValues = new Map[m_nominalValues.length];
 
         final int rowCnt = table.getRowCount();
         double diffProgress = rowCnt;
@@ -221,8 +224,7 @@ public class Statistics2Table {
                     m_missingValueCnt[c]++;
                 }
                 if (nominalValueColumns.contains(cspec.getName())) {
-                    if(nominalValues[colIdx] == null 
-                				|| (nominalValues[colIdx] != null
+                    if (nominalValues[colIdx] == null || (nominalValues[colIdx] != null
                 				// list is only empty, when the number of poss.
                 				// values exceeded the maximum
                 				&& nominalValues[colIdx].size() > 0)) {
@@ -239,12 +241,12 @@ public class Statistics2Table {
                         if (nominalValues[colIdx].size() == numNomValuesOutput + 1) {
                         	if (warn.length() == 0) {
                         		warn.append("Maximum number of unique possible "
-                        				+ "values (" + numNomValuesOutput 
+                        				+ "values (" + numNomValuesOutput
                         				+ ") exceeds for column(s): ");
                         	} else {
                         		warn.append(",");
                         	}
-                            warn.append("\"" 
+                            warn.append("\""
                             		+ m_spec.getColumnSpec(c).getName() + "\"");
                             nominalValues[colIdx].clear();
                         }
@@ -253,7 +255,7 @@ public class Statistics2Table {
                 }
             }
         }
-        
+
         // init warning message
         if (warn.length() > 0) {
         	m_warning = warn.toString();
@@ -284,14 +286,14 @@ public class Statistics2Table {
                 if (m_varianceValues[j] < 0.0 && m_varianceValues[j] > -1.0E8) {
                     m_varianceValues[j] = 0.0;
                 }
-                assert m_varianceValues[j] >= 0.0 
+                assert m_varianceValues[j] >= 0.0
                         : "Variance can not be negative (column \""
                         + m_spec.getColumnSpec(j).getName()
                         + "\": "
                         + m_varianceValues[j];
             }
         }
-        
+
         // copy map and sort each column
         for (int c = 0; c < nominalValues.length; c++) {
             Map<DataCell, MutableInteger> map = nominalValues[c];
@@ -319,25 +321,25 @@ public class Statistics2Table {
                 m_nominalValues[c].put(e.getKey(), e.getValue().intValue());
             }
         }
-        
+
         // compute median values if desired
         if (computeMedian) {
             for (int c = 0; c < nrCols; c++) {
-                exec.setMessage("Calculating median value for column \"" 
+                exec.setMessage("Calculating median value for column \""
                         + m_spec.getColumnSpec(c).getName() + "\"...");
                 if (m_spec.getColumnSpec(c).getType().isCompatible(
                         DoubleValue.class)) {
                     ColumnRearranger colre = new ColumnRearranger(m_spec);
                     colre.keepOnly(c);
-                    ExecutionContext subexec = 
+                    ExecutionContext subexec =
                     	exec.createSubExecutionContext(rowCnt / diffProgress);
-                    BufferedDataTable singleColumn = 
+                    BufferedDataTable singleColumn =
                         exec.createColumnRearrangeTable(table, colre,
-                        		exec.createSilentSubProgress(0.0)); 
-                    SortedTable stable = new SortedTable(singleColumn, 
-                        Arrays.asList(m_spec.getColumnSpec(c).getName()), 
-                                new boolean[]{false}, false, subexec); 
-                    int size = stable.getRowCount() 
+                        		exec.createSilentSubProgress(0.0));
+                    SortedTable stable = new SortedTable(singleColumn,
+                        Arrays.asList(m_spec.getColumnSpec(c).getName()),
+                                new boolean[]{false}, false, subexec);
+                    int size = stable.getRowCount()
                             - (int) m_missingValueCnt[c];
                     if (size % 2 == 0) {
                         size = size / 2;
@@ -362,7 +364,7 @@ public class Statistics2Table {
                             exec.checkCanceled();
                             if (size-- == 0) {
                                 DataCell cell = row.getCell(0);
-                                m_median[c] = 
+                                m_median[c] =
                                     ((DoubleValue) cell).getDoubleValue();
                                 break;
                             }
@@ -373,11 +375,11 @@ public class Statistics2Table {
             }
         }
     }
-    
-    private static final String[] ROW_HEADER = new String[]{"Minimum", 
+
+    private static final String[] ROW_HEADER = new String[]{"Minimum",
         "Maximum", "Mean", "Std. deviation", "Variance", "Overall sum",
-        "No. missings", "Median"};
-    
+        "No. missings", "Median", "Row count"};
+
     /**
      * Creates a table of statistic moments such as minimum, maximum, mean,
      * standard deviation, variance, overall sum, no. of missing vales, and
@@ -385,7 +387,7 @@ public class Statistics2Table {
      * @return a table with one moment in each row across all input columns
      */
     public DataTable createStatisticMomentsTable() {
-        DataRow[] data = new DataRow[8];
+        DataRow[] data = new DataRow[9];
         data[0] = createRow(ROW_HEADER[0], getMin());
         data[1] = createRow(ROW_HEADER[1], getMax());
         data[2] = createRow(ROW_HEADER[2], getMean());
@@ -394,13 +396,17 @@ public class Statistics2Table {
         data[5] = createRow(ROW_HEADER[5], getSum());
         data[6] = createRow(ROW_HEADER[6], getNumberMissingValues());
         data[7] = createRow(ROW_HEADER[7], getMedian());
+        final double[] rowCounts = new double[m_spec.getNumColumns()];
+        Arrays.fill(rowCounts, m_rowCount);
+        data[8] = createRow(ROW_HEADER[8], rowCounts);
         return new DefaultTable(data, createOutSpecNumeric(m_spec));
     }
-    
+
     /**
      * Create nominal value table containing all possible values together with
      * their occurrences.
-     * @return nominal value output table
+     * @param nominal value output table
+     * @return data table with nominal values for each column
      */
     public DataTable createNominalValueTable(final List<String> nominal) {
         DataTableSpec outSpec = createOutSpecNominal(m_spec, nominal);
@@ -418,7 +424,7 @@ public class Statistics2Table {
             DataCell[] cells = new DataCell[2 * it.length];
             for (int i = 0; i < it.length; i++) {
                if (it[i] != null && it[i].hasNext()) {
-                   Map.Entry<DataCell, Integer> e = 
+                   Map.Entry<DataCell, Integer> e =
                        (Map.Entry<DataCell, Integer>) it[i].next();
                    cells[2 * i] = e.getKey();
                    cells[2 * i + 1] = new IntCell(e.getValue());
@@ -437,7 +443,7 @@ public class Statistics2Table {
         cont.close();
         return cont.getTable();
     }
-    
+
     private DataRow createRow(final String key, final double[] array) {
         int idx = 0;
         DataTableSpec outSpec = createOutSpecNumeric(m_spec);
@@ -455,11 +461,11 @@ public class Statistics2Table {
         }
         return new DefaultRow(key, data);
     }
-    
+
     /**
-     * Create spec containing only numeric columns in same order as the input 
+     * Create spec containing only numeric columns in same order as the input
      * spec.
-     * @param inSpec input spec 
+     * @param inSpec input spec
      * @return a new spec with all numeric columns
      */
     public static DataTableSpec createOutSpecNumeric(
@@ -468,17 +474,17 @@ public class Statistics2Table {
         for (int i = 0; i < inSpec.getNumColumns(); i++) {
             DataColumnSpec cspec = inSpec.getColumnSpec(i);
             if (cspec.getType().isCompatible(DoubleValue.class)) {
-                cspecs.add(new DataColumnSpecCreator(cspec.getName(), 
+                cspecs.add(new DataColumnSpecCreator(cspec.getName(),
                     DoubleCell.TYPE).createSpec());
             }
         }
         return new DataTableSpec(cspecs.toArray(new DataColumnSpec[0]));
     }
-    
+
     /**
-     * Create spec containing only nominal columns in same order as the input 
+     * Create spec containing only nominal columns in same order as the input
      * spec.
-     * @param inSpec input spec 
+     * @param inSpec input spec
      * @param nominalValues used in map of co-occurrences
      * @return a new spec with all nominal columns
      */
@@ -497,14 +503,13 @@ public class Statistics2Table {
         }
         return new DataTableSpec(cspecs.toArray(new DataColumnSpec[0]));
     }
-    
+
     /**
      * Returns an array of valid columns.
-     * @return an array of string column which are valid in 
+     * @return an array of string column which are valid in
      *         in conjunction with the current data spec
      */
-    public final String[] extractNominalColumns(
-            final List<String> nominalValues) {
+    public final String[] extractNominalColumns(final List<String> nominalValues) {
         ArrayList<String> columns = new ArrayList<String>();
         for (int i = 0; i < m_spec.getNumColumns(); i++) {
             DataColumnSpec cspec = m_spec.getColumnSpec(i);
@@ -512,9 +517,9 @@ public class Statistics2Table {
                 columns.add(cspec.getName());
             }
         }
-        return columns.toArray(new String[0]); 
+        return columns.toArray(new String[0]);
     }
-    
+
     /**
      * @return array of column names
      */
@@ -531,7 +536,7 @@ public class Statistics2Table {
      * specified column is not compatible to DoubleValue. Returns
      * {@link Double#NaN} if the specified column contains only missing cells or
      * if the table is empty.
-     * 
+     *
      * @param colIdx the column index for which the mean is calculated
      * @return mean value or {@link Double#NaN}
      */
@@ -542,7 +547,7 @@ public class Statistics2Table {
     /**
      * Returns the means for all columns. Returns {@link Double#NaN} if the
      * column type is not of type {@link DoubleValue}.
-     * 
+     *
      * @return an array of mean values with an item for each column, which is
      *         {@link Double#NaN} if the column type is not {@link DoubleValue}
      */
@@ -557,7 +562,7 @@ public class Statistics2Table {
      * specified column is not compatible to DoubleValue. Returns
      * {@link Double#NaN} if the specified column contains only missing cells or
      * if the table is empty.
-     * 
+     *
      * @param colIdx the column index for which the mean is calculated
      * @return sum value or {@link Double#NaN}
      */
@@ -568,7 +573,7 @@ public class Statistics2Table {
     /**
      * Returns the sum values for all columns. Returns {@link Double#NaN} if the
      * column type is not of type {@link DoubleValue}.
-     * 
+     *
      * @return an array of sum values with an item for each column, which is
      *         {@link Double#NaN} if the column type is not {@link DoubleValue}
      */
@@ -580,7 +585,7 @@ public class Statistics2Table {
 
     /**
      * Returns an array of the number of missing values for each dimension.
-     * 
+     *
      * @return number missing values for each dimensions
      */
     public double[] getNumberMissingValues() {
@@ -591,7 +596,7 @@ public class Statistics2Table {
 
     /**
      * Returns the number of missing values for the given column index.
-     * 
+     *
      * @param colIdx column index to consider
      * @return number of missing values in this columns
      */
@@ -604,7 +609,7 @@ public class Statistics2Table {
      * specified column is not compatible to {@link DoubleValue}. Returns
      * {@link Double#NaN} if the specified column contains only missing cells or
      * if the table is empty.
-     * 
+     *
      * @param colIdx the column index for which the variance is calculated
      * @return variance or {@link Double#NaN}
      */
@@ -616,7 +621,7 @@ public class Statistics2Table {
      * Returns the variance for all columns. Returns {@link Double#NaN} if the
      * column type is not of type {@link DoubleValue}, if the entire column
      * contains missing cells, or if the table is empty.
-     * 
+     *
      * @return variance values
      */
     public double[] getVariance() {
@@ -630,7 +635,7 @@ public class Statistics2Table {
      * exception if the column type is not compatible to {@link DoubleValue}.
      * Will return zero if the column contains only missing cells or the table
      * was empty.
-     * 
+     *
      * @param colIdx the index of the column for which the standard deviation is
      *            to be calculated
      * @return standard deviation or zero if its a column of missing values of
@@ -644,7 +649,7 @@ public class Statistics2Table {
      * Returns the standard deviation for all columns. The returned array
      * contains no valid value (i.e. {@link Double#NaN}) for column that are
      * not compatible to {@link DoubleValue}.
-     * 
+     *
      * @return standard deviation values
      */
     public double[] getStandardDeviation() {
@@ -660,7 +665,7 @@ public class Statistics2Table {
     /**
      * Returns the minimum for all columns. Will be {@link Double#NaN} for
      * columns that only contain missing cells or for empty data tables.
-     * 
+     *
      * @return the minimum values
      */
     public double[] getMin() {
@@ -670,7 +675,7 @@ public class Statistics2Table {
     /**
      * Returns the maximum for all columns. Will be {@link Double#NaN} for
      * columns that only contain missing cells or for empty data tables.
-     * 
+     *
      * @return the maximum values
      */
     public double[] getMax() {
@@ -679,7 +684,7 @@ public class Statistics2Table {
 
     /**
      * Returns the median for the desired column.
-     * 
+     *
      * @param colIdx the column index for which the median is calculated
      * @return median value
      */
@@ -692,7 +697,7 @@ public class Statistics2Table {
 
     /**
      * Returns the median for all columns.
-     * 
+     *
      * @return an array of median values with an item for each column
      */
     public double[] getMedian() {
@@ -701,9 +706,15 @@ public class Statistics2Table {
         return result;
     }
 
+    /** @return number of rows in the original data table
+     * @since 2.7
+     */
+    public int getRowCount() {
+        return m_rowCount;
+    }
+
     /**
      * Returns a map containing DataCell value to number of occurrences.
-     * 
      * @param colIdx column index to return map for
      * @return map of DataCell values to occurrences
      */
@@ -717,7 +728,7 @@ public class Statistics2Table {
     /**
      * Returns an array (for each column) of mappings containing DataCell value
      * to number of occurrences.
-     * 
+     *
      * @return array of mappings of occurrences
      */
     public Map<DataCell, Integer>[] getNominalValues() {
@@ -727,12 +738,13 @@ public class Statistics2Table {
         }
         return result;
     }
-    
-    private Statistics2Table(final DataTableSpec spec, 
+
+    private Statistics2Table(final DataTableSpec spec,
             final double[] minValues, final double[] maxValues,
             final double[] meanValues, final double[] median,
             final double[] varianceValues, final double[] sum,
-            final double[] missings, final Map<DataCell, Integer>[] nomValues) {
+            final double[] missings, final Map<DataCell, Integer>[] nomValues,
+            final int rowCount) {
         m_spec = spec;
         m_minValues = minValues;
         m_maxValues = maxValues;
@@ -743,24 +755,25 @@ public class Statistics2Table {
         m_missingValueCnt = missings;
         m_nominalValues = nomValues;
         m_warning = null;
+        m_rowCount = rowCount;
     }
-    
+
     /**
-     * Returns warning message if number of possible values exceeds predefined 
+     * Returns warning message if number of possible values exceeds predefined
      * maximum.
      * @return null or a warning issued during construction time
      */
     public String getWarning() {
     	return m_warning;
     }
-    
+
     /**
      * Load a new statistic table by the given settings object.
      * @param sett to load this table from
      * @return a new statistic table
      * @throws InvalidSettingsException if the settings are corrupt
      */
-    public static Statistics2Table load(final NodeSettingsRO sett) 
+    public static Statistics2Table load(final NodeSettingsRO sett)
             throws InvalidSettingsException {
         DataTableSpec spec = DataTableSpec.load(sett.getConfig("spec"));
         Map<DataCell, Integer>[] nominalValues = new Map[spec.getNumColumns()];
@@ -785,8 +798,10 @@ public class Statistics2Table {
         double[] median = sett.getDoubleArray("median");
         double[] missings = sett.getDoubleArray("missings");
         double[] sums = sett.getDoubleArray("sums");
-        return new Statistics2Table(spec, min, max, mean, median, 
-                var, sums, missings, nominalValues);
+        // added with 2.7, fallback -1
+        int rowCount = sett.getInt("row_count", -1);
+        return new Statistics2Table(spec, min, max, mean, median,
+                var, sums, missings, nominalValues, rowCount);
     }
 
     /**
@@ -802,11 +817,12 @@ public class Statistics2Table {
         sett.addDoubleArray("median", m_median);
         sett.addDoubleArray("missings", m_missingValueCnt);
         sett.addDoubleArray("sums", m_sum);
+        sett.addInt("row_count", m_rowCount);
         for (int c = 0; c < m_nominalValues.length; c++) {
             if (m_nominalValues[c] != null) {
                 NodeSettingsWO subSett = sett.addNodeSettings(
                         m_spec.getColumnSpec(c).getName());
-                for (Map.Entry<DataCell, Integer> e 
+                for (Map.Entry<DataCell, Integer> e
                         : m_nominalValues[c].entrySet()) {
                     NodeSettingsWO nomSett = subSett.addNodeSettings(
                             e.getKey().toString());
