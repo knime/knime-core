@@ -6435,36 +6435,33 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return result;
     }
 
-    private void postLoad(
-            final Map<NodeID, NodeContainerPersistor> persistorMap,
-            final Map<Integer, BufferedDataTable> tblRep,
-            final boolean mustWarnOnDataLoadError, final ExecutionMonitor exec,
-            final LoadResult loadResult, final boolean keepNodeMessage)
-    throws CanceledExecutionException {
+    private void postLoad(final Map<NodeID, NodeContainerPersistor> persistorMap,
+                          final Map<Integer, BufferedDataTable> tblRep, final boolean mustWarnOnDataLoadError,
+                          final ExecutionMonitor exec, final LoadResult loadResult, final boolean keepNodeMessage)
+            throws CanceledExecutionException {
         // linked set because we need reverse order later on
         Collection<NodeID> failedNodes = new LinkedHashSet<NodeID>();
         boolean isStateChangePredictable = false;
         final Set<NodeID> nodeIDsInPersistorSet = persistorMap.keySet();
-        for (NodeID bfsID : m_workflow.createBreadthFirstSortedList(
-                nodeIDsInPersistorSet, true).keySet()) {
+        for (NodeID bfsID : m_workflow.createBreadthFirstSortedList(nodeIDsInPersistorSet, true).keySet()) {
             NodeContainer cont = getNodeContainer(bfsID);
             // initialize node container with CredentialsStore
             if (cont instanceof SingleNodeContainer) {
-                SingleNodeContainer snc = (SingleNodeContainer) cont;
+                SingleNodeContainer snc = (SingleNodeContainer)cont;
                 snc.setCredentialsStore(m_credentialsStore);
             }
             LoadResult subResult = new LoadResult(cont.getNameWithID());
             boolean isFullyConnected = isFullyConnected(bfsID);
             boolean needsReset;
             switch (cont.getState()) {
-            case IDLE:
-            case UNCONFIGURED_MARKEDFOREXEC:
-                needsReset = false;
-                break;
-            default:
-                // we reset everything which is not fully connected
-                needsReset = !isFullyConnected;
-            break;
+                case IDLE:
+                case UNCONFIGURED_MARKEDFOREXEC:
+                    needsReset = false;
+                    break;
+                default:
+                    // we reset everything which is not fully connected
+                    needsReset = !isFullyConnected;
+                    break;
             }
             NodeOutPort[] predPorts = assemblePredecessorOutPorts(bfsID);
             final int predCount = predPorts.length;
@@ -6474,7 +6471,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             for (int i = 0; i < predCount; i++) {
                 NodeOutPort p = predPorts[i];
                 if (cont instanceof SingleNodeContainer && p != null) {
-                    SingleNodeContainer snc = (SingleNodeContainer) cont;
+                    SingleNodeContainer snc = (SingleNodeContainer)cont;
                     snc.setInHiLiteHandler(i, p.getHiLiteHandler());
                 }
                 if (p != null) {
@@ -6486,14 +6483,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             FlowObjectStack inStack;
             try {
                 if (isSourceNode(bfsID)) {
-                    predStacks =
-                        new FlowObjectStack[]{getWorkflowVariableStack()};
+                    predStacks = new FlowObjectStack[]{getWorkflowVariableStack()};
                 }
                 inStack = new FlowObjectStack(cont.getID(), predStacks);
             } catch (IllegalFlowObjectStackException ex) {
-                subResult.addError("Errors creating flow object stack for "
-                        + "node \"" + cont.getNameWithID() + "\", (resetting "
-                        + "flow variables): " + ex.getMessage());
+                subResult.addError("Errors creating flow object stack for " + "node \"" + cont.getNameWithID()
+                        + "\", (resetting " + "flow variables): " + ex.getMessage());
                 needsReset = true;
                 inStack = new FlowObjectStack(cont.getID());
             }
@@ -6501,42 +6496,33 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             State loadState = persistor.getMetaPersistor().getState();
             exec.setMessage(cont.getNameWithID());
             // two steps below: loadNodeContainer and loadContent
-            ExecutionMonitor sub1 =
-                exec.createSubProgress(1.0 / (2 * m_workflow.getNrNodes()));
-            ExecutionMonitor sub2 =
-                exec.createSubProgress(1.0 / (2 * m_workflow.getNrNodes()));
+            ExecutionMonitor sub1 = exec.createSubProgress(1.0 / (2 * m_workflow.getNrNodes()));
+            ExecutionMonitor sub2 = exec.createSubProgress(1.0 / (2 * m_workflow.getNrNodes()));
             try {
                 persistor.loadNodeContainer(tblRep, sub1, subResult);
             } catch (CanceledExecutionException e) {
                 throw e;
             } catch (Exception e) {
-                if (!(e instanceof InvalidSettingsException)
-                        && !(e instanceof IOException)) {
-                    LOGGER.error("Caught unexpected \""
-                            + e.getClass().getSimpleName()
-                            + "\" during node loading", e);
+                if (!(e instanceof InvalidSettingsException) && !(e instanceof IOException)) {
+                    LOGGER.error("Caught unexpected \"" + e.getClass().getSimpleName() + "\" during node loading", e);
                 }
-                subResult.addError("Errors loading, skipping it: "
-                        + e.getMessage());
+                subResult.addError("Errors loading, skipping it: " + e.getMessage());
                 needsReset = true;
             }
             sub1.setProgress(1.0);
             // if cont == isolated meta nodes, then we need to block that meta
             // node as well (that is being asserted in methods which get called
             // indirectly)
-            Object mutex = cont instanceof WorkflowManager
-                ? ((WorkflowManager)cont).m_workflowMutex : m_workflowMutex;
+            Object mutex = cont instanceof WorkflowManager ? ((WorkflowManager)cont).m_workflowMutex : m_workflowMutex;
             synchronized (mutex) {
-                cont.loadContent(persistor, tblRep, inStack,
-                        sub2, subResult, keepNodeMessage);
+                cont.loadContent(persistor, tblRep, inStack, sub2, subResult, keepNodeMessage);
             }
             sub2.setProgress(1.0);
             if (persistor.isDirtyAfterLoad()) {
                 cont.setDirty();
             }
             boolean hasPredecessorFailed = false;
-            for (ConnectionContainer cc
-                    : m_workflow.getConnectionsByDest(bfsID)) {
+            for (ConnectionContainer cc : m_workflow.getConnectionsByDest(bfsID)) {
                 NodeID s = cc.getSource();
                 if (s.equals(getID())) {
                     continue; // don't consider WFM_IN connections
@@ -6548,8 +6534,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             needsReset |= persistor.needsResetAfterLoad();
             needsReset |= hasPredecessorFailed;
             boolean isExecuted = cont.getState().equals(State.EXECUTED);
-            boolean remoteExec = persistor.getMetaPersistor()
-                .getExecutionJobSettings() != null;
+            boolean remoteExec = persistor.getMetaPersistor().getExecutionJobSettings() != null;
 
             // if node is executed and some input data is missing we need
             // to reset that node as there is obviously a conflict (e.g.
@@ -6558,8 +6543,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 needsReset = true;
                 subResult.addError("Predecessor ports have no data", true);
             }
-            if (needsReset && cont instanceof SingleNodeContainer
-                    && cont.isResetable()) {
+            if (needsReset && cont instanceof SingleNodeContainer && cont.isResetable()) {
                 // we don't care for successors because they are not loaded yet
                 invokeResetOnSingleNodeContainer((SingleNodeContainer)cont);
                 isExecuted = false;
@@ -6568,51 +6552,42 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 failedNodes.add(bfsID);
             }
             if (!isExecuted && cont instanceof SingleNodeContainer) {
-                configureSingleNodeContainer((SingleNodeContainer)cont,
-                        keepNodeMessage);
+                configureSingleNodeContainer((SingleNodeContainer)cont, keepNodeMessage);
             }
-            if (persistor.mustComplainIfStateDoesNotMatch()
-                    && !cont.getState().equals(loadState)
+            if (persistor.mustComplainIfStateDoesNotMatch() && !cont.getState().equals(loadState)
                     && !hasPredecessorFailed) {
                 isStateChangePredictable = true;
-                String warning = "State has changed from "
-                    + loadState + " to " + cont.getState();
+                String warning = "State has changed from " + loadState + " to " + cont.getState();
                 switch (subResult.getType()) {
-                case DataLoadError:
-                    // data load errors cause state changes
-                    subResult.addError(warning, true);
-                    break;
-                default:
-                    subResult.addWarning(warning);
+                    case DataLoadError:
+                        // data load errors cause state changes
+                        subResult.addError(warning, true);
+                        break;
+                    default:
+                        subResult.addWarning(warning);
                 }
                 cont.setDirty();
             }
             // saved in executing state (e.g. grid job), request to reconnect
             if (remoteExec) {
                 if (needsReset) {
-                    subResult.addError("Can't continue execution "
-                            + "due to load errors");
+                    subResult.addError("Can't continue execution " + "due to load errors");
                 }
                 if (inPortsContainNull) {
-                    subResult.addError(
-                            "Can't continue execution; no data in inport");
+                    subResult.addError("Can't continue execution; no data in inport");
                 }
                 if (!cont.getState().equals(State.EXECUTINGREMOTELY)) {
-                    subResult.addError("Can't continue execution; node is not "
-                            + "configured but " + cont.getState());
+                    subResult.addError("Can't continue execution; node is not " + "configured but " + cont.getState());
                 }
                 try {
                     if (!continueExecutionOnLoad(cont, persistor)) {
                         cont.cancelExecution();
                         cont.setDirty();
-                        subResult.addError(
-                                "Can't continue execution; unknown reason");
+                        subResult.addError("Can't continue execution; unknown reason");
                     }
                 } catch (Exception exc) {
-                    StringBuilder error = new StringBuilder(
-                            "Can't continue execution");
-                    if (exc instanceof NodeExecutionJobReconnectException
-                            || exc instanceof InvalidSettingsException) {
+                    StringBuilder error = new StringBuilder("Can't continue execution");
+                    if (exc instanceof NodeExecutionJobReconnectException || exc instanceof InvalidSettingsException) {
                         error.append(": ").append(exc.getMessage());
                     } else {
                         error.append(" due to ");
@@ -6630,33 +6605,30 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // do this only if these are critical errors or data-load errors,
             // which must be reported.
             switch (subResult.getType()) {
-            case Ok:
-            case Warning:
-                break;
-            case DataLoadError:
-                if (!mustWarnOnDataLoadError) {
+                case Ok:
+                case Warning:
                     break;
-                }
-            default:
-                NodeMessage oldMessage = cont.getNodeMessage();
-                StringBuilder messageBuilder =
-                    new StringBuilder(oldMessage.getMessage());
-                if (messageBuilder.length() != 0) {
-                    messageBuilder.append("\n");
-                }
-                NodeMessage.Type type;
-                switch (oldMessage.getMessageType()) {
-                case RESET:
-                case WARNING:
-                    type = NodeMessage.Type.WARNING;
-                    break;
+                case DataLoadError:
+                    if (!mustWarnOnDataLoadError) {
+                        break;
+                    }
                 default:
-                    type = NodeMessage.Type.ERROR;
-                }
-                messageBuilder.append(subResult.getFilteredError(
-                        "", LoadResultEntryType.Warning));
-                cont.setNodeMessage(
-                        new NodeMessage(type, messageBuilder.toString()));
+                    NodeMessage oldMessage = cont.getNodeMessage();
+                    StringBuilder messageBuilder = new StringBuilder(oldMessage.getMessage());
+                    if (messageBuilder.length() != 0) {
+                        messageBuilder.append("\n");
+                    }
+                    NodeMessage.Type type;
+                    switch (oldMessage.getMessageType()) {
+                        case RESET:
+                        case WARNING:
+                            type = NodeMessage.Type.WARNING;
+                            break;
+                        default:
+                            type = NodeMessage.Type.ERROR;
+                    }
+                    messageBuilder.append(subResult.getFilteredError("", LoadResultEntryType.Warning));
+                    cont.setNodeMessage(new NodeMessage(type, messageBuilder.toString()));
             }
         }
         if (!sweep(nodeIDsInPersistorSet, false) && !isStateChangePredictable) {
