@@ -1149,6 +1149,13 @@
             id="org.knime.base.node.image.ImageToTableNodeFactory">
       </node>
       <node
+            after="org.knime.base.node.image.ImageToTableNodeFactory"
+            category-path="/view/view-util"
+            expert-flag="false"
+            factory-class="org.knime.base.node.image.tablerowtoimage.TableRowToImageNodeFactory"
+            id="org.knime.base.node.image.tablerowtoimage.TableRowToImageNodeFactory">
+      </node>
+      <node
             category-path="/flowcontrol/switches"
             factory-class="org.knime.base.node.switches.manualif.ManualIfNodeFactory"
             id="org.knime.base.node.switches.manualif.ManualIfNodeFactory">
