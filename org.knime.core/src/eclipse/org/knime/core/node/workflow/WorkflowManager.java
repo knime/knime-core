@@ -7478,17 +7478,19 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /* -------------------------------------------------------------------*/
 
-    /** A filter object that is used in various findXYZ methods. Can be used to fine-tune the search.
+    /** A subclassable filter object that is used in various findXYZ methods. Can be used to fine-tune the search.
      * @param <T> the sub class or interface implemented by the node model.
      * @since 2.7
      */
-    public interface NodeModelFilter<T> {
+    public static class NodeModelFilter<T> {
 
         /** Tests whether the concrete instance is to be included.
          * @param nodeModel Test instance, not null.
          * @return true if to include, false otherwise.
          */
-        public boolean include(final T nodeModel);
+        public boolean include(final T nodeModel) {
+            return true;
+        }
     }
 
     /**
@@ -7526,6 +7528,22 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return A (unsorted) list of nodes matching the class criterion
      */
     public <T> Map<NodeID, T> findNodes(final Class<T> nodeModelClass, final boolean recurse) {
+        return findNodes(nodeModelClass, new NodeModelFilter<T>(), recurse);
+    }
+
+    /** Find all nodes in this workflow, whose underlying {@link NodeModel} is
+     * of the requested type. Intended purpose is to allow certain extensions
+     * (reporting, web service, ...) access to specialized nodes.
+     * @param <T> Specific NodeModel derivation or another interface
+     *            implemented by NodeModel instances.
+     * @param nodeModelClass The class of interest
+     * @param filter A non-null filter to apply.
+     * @param recurse Whether to recurse into contained meta nodes.
+     * @return A (unsorted) list of nodes matching the class criterion
+     * @since 2.7
+     */
+    public <T> Map<NodeID, T> findNodes(final Class<T> nodeModelClass, final NodeModelFilter<T> filter,
+                                        final boolean recurse) {
     	synchronized (m_workflowMutex) {
     		Map<NodeID, T> result = new LinkedHashMap<NodeID, T>();
     		for (NodeContainer nc : m_workflow.getNodeValues()) {
