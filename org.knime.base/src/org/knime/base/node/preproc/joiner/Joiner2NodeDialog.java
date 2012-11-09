@@ -200,6 +200,7 @@ public class Joiner2NodeDialog extends NodeDialogPane {
         c.weighty = 1;
 
         m_columnPairs = new ColumnPairsSelectionPanel();
+        m_columnPairs.setRowKeyIdentifier(Joiner2Settings.ROW_KEY_IDENTIFIER);
         JScrollPane scrollPane = new JScrollPane(m_columnPairs);
         m_columnPairs.setBackground(Color.white);
         Component header = m_columnPairs.getHeaderView();
@@ -426,6 +427,10 @@ public class Joiner2NodeDialog extends NodeDialogPane {
         Object[] lr = m_columnPairs.getLeftSelectedItems();
         String[] ls = new String[lr.length];
         for (int i = 0; i < lr.length; i++) {
+            if (lr[i] == null) {
+                throw new InvalidSettingsException("There are invalid "
+                    + "joining columns (highlighted with a red border).");
+            }
             if (lr[i] instanceof String) {
                 ls[i] = Joiner2Settings.ROW_KEY_IDENTIFIER;
             } else {
@@ -437,6 +442,10 @@ public class Joiner2NodeDialog extends NodeDialogPane {
         Object[] rr = m_columnPairs.getRightSelectedItems();
         String[] rs = new String[rr.length];
         for (int i = 0; i < rr.length; i++) {
+            if (rr[i] == null) {
+                throw new InvalidSettingsException("There are invalid "
+                    + "joining columns (highlighted with a red border).");
+            }
             if (rr[i] instanceof String) {
                 rs[i] = Joiner2Settings.ROW_KEY_IDENTIFIER;
             } else {

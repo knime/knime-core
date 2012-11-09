@@ -72,6 +72,7 @@ import javax.swing.JPanel;
 
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.RowKey;
 
 /**
  * A Component used to define a list of column pairs. It is designed to select
@@ -87,6 +88,7 @@ import org.knime.core.data.DataTableSpec;
 public class ColumnPairsSelectionPanel extends JPanel {
     /** Name of the row key column in the dialog. */
     static final String ROW_KEY_COL_NAME = "Row ID";
+    private String m_rowKeyIdentifier = ROW_KEY_COL_NAME;
 
     private static final long serialVersionUID = 1L;
 
@@ -135,6 +137,24 @@ public class ColumnPairsSelectionPanel extends JPanel {
 
 
     /**
+     * @return the rowKeyIdentifier
+     * @since 2.7
+     */
+    public String getRowKeyIdentifier() {
+        return m_rowKeyIdentifier;
+    }
+
+
+    /**
+     * @param rowKeyIdentifier the rowKeyIdentifier to set
+     * @since 2.7
+     */
+    public void setRowKeyIdentifier(final String rowKeyIdentifier) {
+        m_rowKeyIdentifier = rowKeyIdentifier;
+    }
+
+
+    /**
      * Updates the component with the given data.
      * leftSelected[i] and rightSelected[i] are a pair of columns out of
      * specs[0] and specs[1], respectively.
@@ -171,6 +191,9 @@ public class ColumnPairsSelectionPanel extends JPanel {
         Object[] r = new Object[m_leftComboBoxes.size()];
         for (int i = 0; i < r.length; i++) {
             r[i] = m_leftComboBoxes.get(i).getSelectedItem();
+            if (r[i] instanceof RowKey) {
+                r[i] = m_rowKeyIdentifier;
+            }
         }
         return r;
     }
@@ -185,6 +208,9 @@ public class ColumnPairsSelectionPanel extends JPanel {
         Object[] r = new Object[m_rightComboBoxes.size()];
         for (int i = 0; i < r.length; i++) {
             r[i] = m_rightComboBoxes.get(i).getSelectedItem();
+            if (r[i] instanceof RowKey) {
+                r[i] = m_rowKeyIdentifier;
+            }
         }
         return r;
     }
@@ -213,29 +239,36 @@ public class ColumnPairsSelectionPanel extends JPanel {
         DefaultComboBoxModel comboBoxModel =
             (DefaultComboBoxModel)comboBox.getModel();
         comboBoxModel.removeAllElements();
-        comboBoxModel.addElement(ROW_KEY_COL_NAME);
-        comboBox.setSelectedIndex(0);
+        comboBoxModel.addElement(new RowKey(ROW_KEY_COL_NAME));
+        comboBox.setSelectedIndex(-1);
+        if (null != selected
+                && selected.equals(m_rowKeyIdentifier)) {
+            comboBox.setSelectedIndex(0);
+        }
         for (DataColumnSpec colSpec : spec) {
             comboBoxModel.addElement(colSpec);
             if (null != selected
                     && colSpec.getName().equals(selected)) {
                 comboBoxModel.setSelectedItem(colSpec);
             }
-
         }
+        ColumnComboBoxRenderer renderer =
+            (ColumnComboBoxRenderer) comboBox.getRenderer();
+        renderer.setDefaultValue(selected);
     }
 
     private void addUIControls(final int index, final String leftSelected,
             final String rightSelected) {
         m_leftComboBoxes.add(index, new JComboBox());
         m_leftComboBoxes.get(index).setModel(new DefaultComboBoxModel());
-        m_leftComboBoxes.get(index).setRenderer(
-                new DataColumnSpecListCellRenderer());
+        ColumnComboBoxRenderer renderer =
+            new ColumnComboBoxRenderer();
+        renderer.attachTo(m_leftComboBoxes.get(index));
         initComboBox(m_specs[0], m_leftComboBoxes.get(index), leftSelected);
         m_rightComboBoxes.add(index, new JComboBox());
         m_rightComboBoxes.get(index).setModel(new DefaultComboBoxModel());
-        m_rightComboBoxes.get(index).setRenderer(
-                new DataColumnSpecListCellRenderer());
+        renderer = new ColumnComboBoxRenderer();
+        renderer.attachTo(m_rightComboBoxes.get(index));
         initComboBox(m_specs[1], m_rightComboBoxes.get(index), rightSelected);
         JButton addButton = new JButton("+");
         addButton.setToolTipText("Add row preceding this.");

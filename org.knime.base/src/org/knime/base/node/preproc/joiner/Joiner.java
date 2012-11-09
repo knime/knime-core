@@ -83,6 +83,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.ConvenienceMethods;
 
 /**
  * The joiner implements a database like join of two tables.
@@ -347,9 +348,10 @@ public final class Joiner {
         leftJoinCols.addAll(Arrays.asList(m_settings.getLeftJoinColumns()));
         leftJoinCols.remove(Joiner2Settings.ROW_KEY_IDENTIFIER);
         if (!leftCols.containsAll(leftJoinCols)) {
+            leftJoinCols.removeAll(leftCols);
             throw new InvalidSettingsException("The left input table has "
-                    + "changed. Some joining columns do "
-                    + "not longer exist");
+               + "changed. Some joining columns are missing: "
+               + ConvenienceMethods.getShortStringFrom(leftJoinCols, 3));
         }
         // Check if left included columns are in table spec
         if (!m_settings.getLeftIncludeAll()) {
@@ -383,9 +385,10 @@ public final class Joiner {
         rightJoinCols.addAll(Arrays.asList(m_settings.getRightJoinColumns()));
         rightJoinCols.remove(Joiner2Settings.ROW_KEY_IDENTIFIER);
         if (!rightCols.containsAll(rightJoinCols)) {
+            rightJoinCols.removeAll(rightCols);
             throw new InvalidSettingsException("The right input table has "
-                    + "changed. Some joining columns do "
-                    + "not longer exist");
+                    + "changed. Some joining columns are missing: "
+                    + ConvenienceMethods.getShortStringFrom(rightJoinCols, 3));
         }
         // Check if right included columns are in table spec
         if (!m_settings.getRightIncludeAll()) {
