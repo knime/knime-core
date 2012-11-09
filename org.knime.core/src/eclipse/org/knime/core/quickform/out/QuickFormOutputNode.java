@@ -48,6 +48,8 @@
  */
 package org.knime.core.quickform.out;
 
+import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.core.node.workflow.WorkflowManager.NodeModelFilter;
 import org.knime.core.quickform.QuickFormNode;
 import org.knime.core.util.node.quickform.out.AbstractQuickFormOutElement;
 
@@ -60,6 +62,18 @@ import org.knime.core.util.node.quickform.out.AbstractQuickFormOutElement;
  */
 public interface QuickFormOutputNode extends QuickFormNode {
 
+    /** Filter used in {@link WorkflowManager#findExecutedNodes(Class, NodeModelFilter)}.
+     * It only includes not hidden qf nodes.
+     * @since 2.7
+     */
+    public static final NodeModelFilter<QuickFormOutputNode> NOT_HIDDEN_FILTER =
+            new NodeModelFilter<QuickFormOutputNode>() {
+
+        @Override
+        public boolean include(final QuickFormOutputNode nodeModel) {
+            return !nodeModel.hideInWizard();
+        }
+    };
     /** Get the quick form element containing the results.
      * @return The results.
      */
