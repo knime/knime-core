@@ -764,7 +764,9 @@ public class NodePersistorVersion1xx implements NodePersistor {
     @Override
     public PortObject getPortObject(final int outportIndex) {
         if (outportIndex == 0) {
-            if (m_isInactive) {
+            if (!m_sncPersistor.hasConfiguredState()) {
+                return null;
+            } else if (m_isInactive) {
                 return InactiveBranchPortObject.INSTANCE;
             } else {
                 return FlowVariablePortObject.INSTANCE;
@@ -793,7 +795,9 @@ public class NodePersistorVersion1xx implements NodePersistor {
     @Override
     public PortObjectSpec getPortObjectSpec(final int outportIndex) {
         if (outportIndex == 0) {
-            if (m_isInactive) {
+            if (!m_sncPersistor.hasConfiguredState()) {
+                return null;
+            } else if (m_isInactive) {
                 return InactiveBranchPortObjectSpec.INSTANCE;
             } else {
                 return FlowVariablePortObjectSpec.INSTANCE;

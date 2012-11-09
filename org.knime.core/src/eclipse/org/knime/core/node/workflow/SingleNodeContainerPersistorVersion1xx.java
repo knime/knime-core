@@ -433,6 +433,24 @@ public class SingleNodeContainerPersistorVersion1xx
         }
     }
 
+    /** Called during load by the Node instance to determine whether or not the flow variable output port is
+     * to be populated with the FlowVariablePortObjectSpec singleton.
+     * @return true if node's state is not idle
+     * @since 2.7
+     */
+    public boolean hasConfiguredState() {
+        if (m_metaPersistor == null) {
+            throw new IllegalStateException("preloadnodecontainer hasn't been called yet");
+        }
+        switch (m_metaPersistor.getState()) {
+            case IDLE:
+            case UNCONFIGURED_MARKEDFOREXEC:
+                return false;
+            default:
+                return true;
+        }
+    }
+
     /** Reads sub settings object.
      * @param settings ...
      * @return child settings (here: null)
