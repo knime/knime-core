@@ -50,10 +50,13 @@
  */
 package org.knime.core.node;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -69,6 +72,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import javax.swing.UIManager;
 
+import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.container.DataContainerException;
@@ -1124,6 +1128,7 @@ public final class Node implements NodeModelWarningListener {
         final PortObjectSpec s = portObject.getSpec();
         PortObjectSpec.PortObjectSpecSerializer ser =
             PortUtil.getPortObjectSpecSerializer(s.getClass());
+
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream(10 * 1024);
         PortObjectSpecZipOutputStream specOut =
             PortUtil.getPortObjectSpecZipOutputStream(byteOut);
@@ -1137,21 +1142,27 @@ public final class Node implements NodeModelWarningListener {
         PortObjectSpec specCopy = ser.loadPortObjectSpec(specIn);
         specIn.close();
 
+        DeferredFileOutputStream deferredOutputStream = new DeferredFileOutputStream(
+                /* 10 MB */10 * 1024 * 1024, "knime-portobject-copy-", ".bin",
+                new File(KNIMEConstants.getKNIMETempDir()));
         PortObject.PortObjectSerializer obSer =
             PortUtil.getPortObjectSerializer(portObject.getClass());
-        byteOut.reset();
-        PortObjectZipOutputStream objOut =
-            PortUtil.getPortObjectZipOutputStream(byteOut);
-        specOut.setLevel(0);
+        PortObjectZipOutputStream objOut = PortUtil.getPortObjectZipOutputStream(deferredOutputStream);
+        objOut.setLevel(0);
         obSer.savePortObject(portObject, objOut, exec);
         objOut.close();
-
-        byteIn = new ByteArrayInputStream(byteOut.toByteArray());
-        PortObjectZipInputStream objIn =
-            PortUtil.getPortObjectZipInputStream(byteIn);
-        PortObject result = obSer.loadPortObject(
-                objIn, specCopy, exec);
+        InputStream inStream;
+        if (deferredOutputStream.isInMemory()) {
+            inStream = new ByteArrayInputStream(deferredOutputStream.getData());
+        } else {
+            inStream = new BufferedInputStream(new FileInputStream(deferredOutputStream.getFile()));
+        }
+        PortObjectZipInputStream objIn = PortUtil.getPortObjectZipInputStream(inStream);
+        PortObject result = obSer.loadPortObject(objIn, specCopy, exec);
         objIn.close();
+        if (!deferredOutputStream.isInMemory()) {
+            deferredOutputStream.getFile().delete();
+        }
         return result;
     }
 
