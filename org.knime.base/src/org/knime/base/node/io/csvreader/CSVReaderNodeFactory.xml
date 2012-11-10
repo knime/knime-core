@@ -42,6 +42,9 @@
           Select this box if the first column contains row name headers 
           (no duplicates allowed).  
 		</option>
+		<option name="Support Short Lines">
+          Select this box if some rows may be shorter than others (filled with missings).  
+		</option>
 	</fullDescription>
 	<ports>
 		<outPort index="0" name="File Table">

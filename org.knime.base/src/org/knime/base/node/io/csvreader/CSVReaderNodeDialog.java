@@ -90,6 +90,7 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
     private final JTextField m_commentStartField;
     private final JCheckBox m_hasRowHeaderChecker;
     private final JCheckBox m_hasColHeaderChecker;
+    private final JCheckBox m_supportShortLinesChecker;
 
     /** Create new dialog, init layout. */
     CSVReaderNodeDialog() {
@@ -112,6 +113,7 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
         m_commentStartField = new JTextField("###", col);
         m_hasRowHeaderChecker = new JCheckBox("Has Row Header");
         m_hasColHeaderChecker = new JCheckBox("Has Column Header");
+        m_supportShortLinesChecker = new JCheckBox("Support Short Lines");
         panel.add(getInFlowLayout(m_filePanel, button), BorderLayout.NORTH);
         JPanel centerPanel = new JPanel(new GridLayout(0, 2));
         centerPanel.add(getInFlowLayout(m_colDelimiterField,
@@ -124,6 +126,7 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
                 new JLabel("Comment Char ")));
         centerPanel.add(getInFlowLayout(m_hasColHeaderChecker));
         centerPanel.add(getInFlowLayout(m_hasRowHeaderChecker));
+        centerPanel.add(getInFlowLayout(m_supportShortLinesChecker));
         panel.add(centerPanel, BorderLayout.CENTER);
         panel.add(new JLabel("   "), BorderLayout.WEST);
         addTab("CSV Reader", panel);
@@ -166,6 +169,7 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
         m_commentStartField.setText(config.getCommentStart());
         m_hasColHeaderChecker.setSelected(config.hasColHeader());
         m_hasRowHeaderChecker.setSelected(config.hasRowHeader());
+        m_supportShortLinesChecker.setSelected(config.isSupportShortLines());
     }
 
 
@@ -215,6 +219,7 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
         config.setCommentStart(m_commentStartField.getText());
         config.setHasRowHeader(m_hasRowHeaderChecker.isSelected());
         config.setHasColHeader(m_hasColHeaderChecker.isSelected());
+        config.setSupportShortLines(m_supportShortLinesChecker.isSelected());
         config.saveSettingsTo(settings);
     }
 

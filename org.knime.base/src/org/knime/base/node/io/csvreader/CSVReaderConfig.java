@@ -73,6 +73,7 @@ final class CSVReaderConfig {
     private boolean m_hasRowHeader;
     private boolean m_hasColHeader;
     private String m_commentStart;
+    private boolean m_supportShortLines;
 
 
     /**
@@ -87,6 +88,7 @@ final class CSVReaderConfig {
         m_commentStart = "#";
         m_hasRowHeader = true;
         m_hasColHeader = true;
+        m_supportShortLines = false;
     }
 
     /** Load settings, used in dialog (no errors).
@@ -107,6 +109,7 @@ final class CSVReaderConfig {
         m_commentStart = settings.getString("commentStart", m_commentStart);
         m_hasRowHeader = settings.getBoolean("hasRowHeader", m_hasRowHeader);
         m_hasColHeader = settings.getBoolean("hasColHeader", m_hasColHeader);
+        m_supportShortLines = settings.getBoolean("supportShortLines", m_supportShortLines);
     }
 
     /** Load in model, fail if settings are invalid.
@@ -131,6 +134,8 @@ final class CSVReaderConfig {
         m_commentStart = settings.getString("commentStart");
         m_hasRowHeader = settings.getBoolean("hasRowHeader");
         m_hasColHeader = settings.getBoolean("hasColHeader");
+        // added in 2.7
+        m_supportShortLines = settings.getBoolean("supportShortLines", m_supportShortLines);
     }
 
     /** Save configuration to argument.
@@ -146,6 +151,7 @@ final class CSVReaderConfig {
         settings.addString("commentStart", m_commentStart);
         settings.addBoolean("hasRowHeader", m_hasRowHeader);
         settings.addBoolean("hasColHeader", m_hasColHeader);
+        settings.addBoolean("supportShortLines", m_supportShortLines);
     }
 
     /** @return the url */
@@ -218,5 +224,18 @@ final class CSVReaderConfig {
         m_commentStart = commentStart;
     }
 
+    /**
+     * @param supportShortLines the supportShortLines to set
+     */
+    void setSupportShortLines(final boolean supportShortLines) {
+        m_supportShortLines = supportShortLines;
+    }
+
+    /**
+     * @return the supportShortLines
+     */
+    boolean isSupportShortLines() {
+        return m_supportShortLines;
+    }
 
 }

@@ -142,6 +142,9 @@ final class CSVReaderNodeModel extends NodeModel {
 
         settings.setWhiteSpaceUserSet(true);
 
+        boolean supportShortLines = m_config.isSupportShortLines();
+        settings.setSupportShortLines(supportShortLines);
+
         settings = FileAnalyzer.analyze(settings, null);
         SettingsStatus status = settings.getStatusOfSettings();
         if (status.getNumOfErrors() > 0) {
