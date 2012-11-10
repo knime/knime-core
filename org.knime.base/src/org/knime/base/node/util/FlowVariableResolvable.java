@@ -95,8 +95,7 @@ public interface FlowVariableResolvable {
                         break;
                     case 'S' :
                         String s = model.delegatePeekFlowVariableString(var);
-                        command = command.replace("$${S" + var + "}$$",
-                                "\"" + s + "\"");
+                        command = command.replace("$${S" + var + "}$$", s);
                         break;
                 }
             } while (true);
