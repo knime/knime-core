@@ -46,78 +46,53 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   Mar 9, 2012 (wiswedel): created
+ *   Mar 16, 2012 (wiswedel): created
  */
-package org.knime.core.data.container;
+package org.knime.core.data;
 
-import java.util.Vector;
-
-import org.knime.core.data.DataRow;
-import org.knime.core.data.container.ColumnRearranger.SpecAndFactoryObject;
-import org.knime.core.data.container.RearrangeColumnsTable.NewColumnsProducerMapping;
-import org.knime.core.node.streamable.StreamableFunction;
-import org.knime.core.node.streamable.StreamableOperatorInternals;
+import java.util.Map;
 
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @since 2.7
  */
-final class ColumnRearrangerFunction extends StreamableFunction {
-
-    private final NewColumnsProducerMapping m_newColumnsMapping;
-    private final boolean[] m_isFromRefTables;
-    private final int[] m_includesIndices;
-    private final StreamableOperatorInternals m_emptyInternals;
+public interface AdapterValue extends DataValue {
+    /**
+     * Returns whether this adapter value is an adapter for the given value class. By convention an adapter is also
+     * adaptable to all value classes that it is compatible with (i.e. that the cell implementation implements).
+     *
+     * @param valueClass a value class
+     * @return <code>true</code> if it is adaptable, <code>false</code> otherwise
+     * @see DataType#isCompatible(Class)
+     */
+    public <V extends DataValue> boolean isAdaptable(final Class<V> valueClass);
 
     /**
-     * @param rearranger */
-    ColumnRearrangerFunction(final ColumnRearranger rearranger) {
-        this(rearranger, null);
-    }
+     * Returns the value in this adapter for the given value class. The value is also returned if this adapter is
+     * compatible with the given value class.
+     *
+     * @param valueClass a value class
+     * @return a value object or <code>null</code> if an adapter error is stored instead of a value
+     * @see #getAdapterError(Class)
+     * @see DataType#isCompatible(Class)
+     * @throws IllegalArgumentException if this value is not adaptable to the given value class
+     */
+    public <V extends DataValue> V getAdapter(final Class<V> valueClass);
 
     /**
-     * @param rearranger
-     * @param emptyInternals */
-    ColumnRearrangerFunction(final ColumnRearranger rearranger, final StreamableOperatorInternals emptyInternals) {
-        Vector<SpecAndFactoryObject> includes = rearranger.getIncludes();
-        m_newColumnsMapping = RearrangeColumnsTable.createNewColumnsProducerMapping(includes);
-        final int size = includes.size();
-        m_isFromRefTables = new boolean[size];
-        m_includesIndices = new int[size];
-        int newColIndex = 0;
-        for (int i = 0; i < size; i++) {
-            SpecAndFactoryObject c = includes.get(i);
-            if (c.isNewColumn()) {
-                m_isFromRefTables[i] = false;
-                m_includesIndices[i] = newColIndex;
-                newColIndex++;
-            } else {
-                m_isFromRefTables[i] = true;
-                int originalIndex = c.getOriginalIndex();
-                m_includesIndices[i] = originalIndex;
-            }
-        }
-        m_emptyInternals = emptyInternals;
-    }
+     * Returns a missing value object if there is one for the given value class. If no error is available
+     * <code>null</code> is returned.
+     *
+     * @param valueClass a value class
+     * @return a missing value or <code>null</code>
+     */
+    public <V extends DataValue> MissingValue getAdapterError(final Class<V> valueClass);
 
-    /** {@inheritDoc} */
-    @Override
-    public DataRow compute(final DataRow inputRow) {
-        DataRow appendRow = RearrangeColumnsTable.calcNewCellsForRow(inputRow, m_newColumnsMapping);
-        return JoinTableIterator.createOutputRow(inputRow, appendRow, m_includesIndices, m_isFromRefTables);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public void finish() {
-        super.finish();
-        RearrangeColumnsTable.finishProcessing(m_newColumnsMapping);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public StreamableOperatorInternals saveInternals() {
-        return m_emptyInternals;
-    }
-
+    /**
+     * Returns a read-only map of all adapters. This method should only be used for internal purposes.
+     *
+     * @return a read-only adapter map
+     */
+    public Map<Class<? extends DataValue>, DataCell> getAdapterMap();
 }

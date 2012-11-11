@@ -57,12 +57,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
+import javax.xml.bind.DatatypeConverter;
+
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellTypeConverter;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
@@ -84,6 +89,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.util.MultiThreadWorker;
+import org.knime.core.util.Pair;
 
 
 /**
@@ -305,13 +311,12 @@ public final class RearrangeColumnsTable
                     + "spec passed in the constructor.");
         }
         int size = includes.size();
-        ArrayList<DataColumnSpec> newColSpecsList =
-            new ArrayList<DataColumnSpec>();
+        ArrayList<DataColumnSpec> newColSpecsList = new ArrayList<DataColumnSpec>();
         // the reduced set of SpecAndFactoryObject that models newly
         // appended/inserted columns; this vector is in most cases
         // considerably smaller than the vector includes
-        Vector<SpecAndFactoryObject> newColumnFactoryList =
-            createReducedList(includes);
+        NewColumnsProducerMapping newColsProducerMapping = createNewColumnsProducerMapping(includes);
+        List<SpecAndFactoryObject> newColumnFactoryList = newColsProducerMapping.getAllNewColumnsList();
         // with v2.5 we added the ability to process the input concurrently
         // this field has the minimum worker count for all used factories
         // (or negative for sequential processing)
@@ -320,8 +325,7 @@ public final class RearrangeColumnsTable
             CellFactory factory = s.getFactory();
             if (factory instanceof AbstractCellFactory) {
                 AbstractCellFactory acf = (AbstractCellFactory)factory;
-                workerCount =
-                    Math.min(workerCount, acf.getMaxParallelWorkers());
+                workerCount = Math.min(workerCount, acf.getMaxParallelWorkers());
             } else {
                 // unknown factory - process sequentially
                 workerCount = -1;
@@ -337,17 +341,14 @@ public final class RearrangeColumnsTable
         // the reference table but does not add any new column we avoid to scan
         // the entire table (nothing is written anyway))
         if (newColCount > 0) {
-            DataContainer container =
-                context.createDataContainer(new DataTableSpec(newColSpecs));
+            DataContainer container = context.createDataContainer(new DataTableSpec(newColSpecs));
             container.setBufferCreator(new NoKeyBufferCreator());
             assert newColumnFactoryList.size() == newColCount;
             try {
                 if (workerCount <= 0) {
-                    calcNewColsSynchronously(table, subProgress,
-                            newColumnFactoryList, container);
+                    calcNewColsSynchronously(table, subProgress, newColsProducerMapping, container);
                 } else {
-                    calcNewColsASynchronously(table, subProgress,
-                            newColumnFactoryList, container);
+                    calcNewColsASynchronously(table, subProgress, newColsProducerMapping, container);
                 }
             } finally {
                 container.close();
@@ -366,7 +367,12 @@ public final class RearrangeColumnsTable
         int newColIndex = 0;
         for (int i = 0; i < size; i++) {
             SpecAndFactoryObject c = includes.get(i);
-            if (c.isNewColumn()) {
+            if (c.isConvertedColumn()) {
+                isFromRefTable[i] = false;
+                includesIndex[i] = newColIndex;
+                colSpecs[i] = appendTableSpec.getColumnSpec(newColIndex);
+                newColIndex++;
+            } else if (c.isNewColumn()) {
                 isFromRefTable[i] = false;
                 includesIndex[i] = newColIndex;
                 colSpecs[i] = appendTableSpec.getColumnSpec(newColIndex);
@@ -379,7 +385,7 @@ public final class RearrangeColumnsTable
             }
         }
         DataTableSpec spec = new DataTableSpec(colSpecs);
-        finishProcessing(newColumnFactoryList);
+        finishProcessing(newColsProducerMapping);
         return new RearrangeColumnsTable(
                 table, includesIndex, isFromRefTable, spec, appendTable);
     }
@@ -387,10 +393,8 @@ public final class RearrangeColumnsTable
     /** Calls {@link AbstractCellFactory#afterProcessing()} on all unique
      * factories in the argument.
      * @param newColumnFactoryList */
-    static void finishProcessing(
-            final Vector<SpecAndFactoryObject> newColumnFactoryList) {
-        for (CellFactory uniqueFactory
-                : getUniqueProducerFactories(newColumnFactoryList)) {
+    static void finishProcessing(final NewColumnsProducerMapping newColumnFactoryList) {
+        for (CellFactory uniqueFactory : newColumnFactoryList.getUniqueCellFactoryMap().keySet()) {
             if (uniqueFactory instanceof AbstractCellFactory) {
                 ((AbstractCellFactory)uniqueFactory).afterProcessing();
             }
@@ -399,29 +403,23 @@ public final class RearrangeColumnsTable
 
     /** Processes input sequentially in the caller thread. */
     private static void calcNewColsSynchronously(final BufferedDataTable table,
-            final ExecutionMonitor subProgress,
-            final Vector<SpecAndFactoryObject> reducedList,
-            final DataContainer container)
-    throws CanceledExecutionException {
+            final ExecutionMonitor subProgress, final NewColumnsProducerMapping newColsProducerMapping,
+            final DataContainer container) throws CanceledExecutionException {
         int finalRowCount = table.getRowCount();
-        final int factoryCount = getUniqueProducerFactories(reducedList).size();
+        Set<CellFactory> newColsFactories = newColsProducerMapping.getUniqueCellFactoryMap().keySet();
+        final int factoryCount = newColsFactories.size();
         int r = 0;
-        CellFactory facForProgress = null;
-        final int newColCount = reducedList.size();
-        for (int i = 0; i < newColCount; i++) {
-            SpecAndFactoryObject cur = reducedList.get(i);
-            CellFactory fac = cur.getFactory();
-            if (facForProgress == null) {
-                facForProgress = fac;
-            }
-        }
-        assert facForProgress != null;
+        CellFactory facForProgress = factoryCount > 0 ? newColsFactories.iterator().next() : null;
         for (RowIterator it = table.iterator(); it.hasNext(); r++) {
             DataRow row = it.next();
-            DataRow append = calcNewCellsForRow(row, reducedList, factoryCount);
+            DataRow append = calcNewCellsForRow(row, newColsProducerMapping);
             container.addRowToTable(append);
-            facForProgress.setProgress(r + 1, finalRowCount,
-                    row.getKey(), subProgress);
+            if (facForProgress == null) {
+                // no factory added means at least one columns gets type converted.
+                assert !newColsProducerMapping.getConverterToIndexMap().isEmpty();
+            } else {
+                facForProgress.setProgress(r + 1, finalRowCount, row.getKey(), subProgress);
+            }
             subProgress.checkCanceled();
         }
     }
@@ -430,18 +428,15 @@ public final class RearrangeColumnsTable
      * {@link ConcurrentNewColCalculator}. */
     private static void calcNewColsASynchronously(final BufferedDataTable table,
             final ExecutionMonitor subProgress,
-            final Vector<SpecAndFactoryObject> reducedList,
+            final NewColumnsProducerMapping newColsProducerMapping,
             final DataContainer container)
             throws CanceledExecutionException {
         int finalRowCount = table.getRowCount();
         CellFactory facForProgress = null;
-        final int factoryCount = getUniqueProducerFactories(reducedList).size();
-        final int newColCount = reducedList.size();
         int workers = Integer.MAX_VALUE;
         int queueSize = Integer.MAX_VALUE;
-        for (int i = 0; i < newColCount; i++) {
-            SpecAndFactoryObject cur = reducedList.get(i);
-            CellFactory fac = cur.getFactory();
+        Set<CellFactory> newColsFactories = newColsProducerMapping.getUniqueCellFactoryMap().keySet();
+        for (CellFactory fac : newColsFactories) {
             if (fac instanceof AbstractCellFactory) {
                 AbstractCellFactory acf = (AbstractCellFactory)fac;
                 workers = Math.min(workers, acf.getMaxParallelWorkers());
@@ -460,7 +455,7 @@ public final class RearrangeColumnsTable
         assert queueSize > 0 : "queue size <= 0: " + queueSize;
         ConcurrentNewColCalculator calculator = new ConcurrentNewColCalculator(
                 queueSize, workers, container, subProgress, finalRowCount,
-                reducedList, factoryCount, facForProgress);
+                newColsProducerMapping, facForProgress);
         try {
             calculator.run(table);
         } catch (InterruptedException e) {
@@ -482,40 +477,59 @@ public final class RearrangeColumnsTable
 
     /** Calls for an input row the list of cell factories to produce the
      * output row (contains only the new cells, merged later).
-     * @param row The input row to be processed
-     * @param reducedList For each new (or replaced) column the factory.
-     * @param factoryCount The number of different factories (early termination)
+     * @param unconvertedRow The input row to be processed
+     * @param producerMap For each new (or replaced) column the factory.
      * @return The output row.
      */
-    static DataRow calcNewCellsForRow(final DataRow row,
-            final Vector<SpecAndFactoryObject> reducedList,
-            final int factoryCount) {
-        final int newColCount = reducedList.size();
+    static DataRow calcNewCellsForRow(final DataRow unconvertedRow, final NewColumnsProducerMapping producerMap) {
+        final int newColCount = producerMap.getAllNewColumnsList().size();
         DataCell[] newCells = new DataCell[newColCount];
-        int factoryCountRow = 0;
-        for (int i = 0; i < newColCount; i++) {
-            // early stopping, if we have just one factory but
-            // many many columns, this if statement will save a lot
-            if (factoryCount == factoryCountRow) {
-                break;
-            }
-            if (newCells[i] != null) {
-                continue;
-            }
-            CellFactory fac = reducedList.get(i).getFactory();
-            factoryCountRow++;
-            DataCell[] fromFac = fac.getCells(row);
-            for (int j = 0; j < newColCount; j++) {
-                SpecAndFactoryObject checkMe = reducedList.get(j);
-                if (checkMe.getFactory() == fac) {
-                    assert newCells[j] == null;
-                    newCells[j] =
-                        fromFac[checkMe.getColumnInFactory()];
-                }
+        DataRow row = applyDataTypeConverters(unconvertedRow, producerMap, newCells);
+        IdentityHashMap<CellFactory, List<Integer>> uniqueCellFactoryMap = producerMap.getUniqueCellFactoryMap();
+        for (Map.Entry<CellFactory, List<Integer>> e : uniqueCellFactoryMap.entrySet()) {
+            CellFactory factory = e.getKey();
+            List<Integer> list = e.getValue();
+            DataCell[] fromFac = factory.getCells(row);
+            assert fromFac.length == list.size() : String.format("New cells array length conflict: "
+                    + "expected %d, actual %d", fromFac.length, list.size());
+            for (int i = 0; i < fromFac.length; i++) {
+                Integer trueIndex = list.get(i);
+                assert newCells[trueIndex] == null : "New cells array at index expected to be null";
+                newCells[trueIndex] = fromFac[i];
             }
         }
         DataRow appendix = new DefaultRow(row.getKey(), newCells);
         return appendix;
+    }
+
+    /** Used when {@link ColumnRearranger#ensureColumnIsConverted(DataCellTypeConverter, int)} is called.
+     * It preproccesses the row and replaces the column to be converted by the the result of the given converter.
+     * @param row The original input row.
+     * @param producerMap The object having the converter list (or not)
+     * @param newCells
+     * @return The input row if no converter applied or a modified copy of the input row.
+     */
+    private static DataRow applyDataTypeConverters(final DataRow row,
+               final NewColumnsProducerMapping producerMap, final DataCell[] newCells) {
+        List<Pair<SpecAndFactoryObject, Integer>> converterToIndexMap = producerMap.getConverterToIndexMap();
+        if (!converterToIndexMap.isEmpty()) {
+            DataCell[] inputRowCells = new DataCell[row.getNumCells()];
+            for (int i = 0; i < inputRowCells.length; i++) {
+                inputRowCells[i] = row instanceof BlobSupportDataRow
+                        ? ((BlobSupportDataRow)row).getRawCell(i) : row.getCell(i);
+            }
+            for (Pair<SpecAndFactoryObject, Integer> entry : converterToIndexMap) {
+                SpecAndFactoryObject specAndObject = entry.getFirst();
+                DataCellTypeConverter converter = specAndObject.getConverter();
+                int converterIndex = specAndObject.getConverterIndex();
+                Integer index = entry.getSecond();
+                DataCell convertedCell = converter.callConvert(row.getCell(converterIndex));
+                newCells[index] = convertedCell;
+                inputRowCells[converterIndex] = convertedCell;
+            }
+            return new BlobSupportDataRow(row.getKey(), inputRowCells);
+        }
+        return row;
     }
 
     /** Counts for the argument collection the number of unique cell factories.
@@ -537,20 +551,9 @@ public final class RearrangeColumnsTable
      * @param includes All column representations
      * @return The list of data producers.
      */
-    static Vector<SpecAndFactoryObject> createReducedList(
-            final Vector<SpecAndFactoryObject> includes) {
-        Vector<SpecAndFactoryObject> newColumnFactoryList =
-            new Vector<SpecAndFactoryObject>();
-        final int size = includes.size();
-        for (int i = 0; i < size; i++) {
-            SpecAndFactoryObject s = includes.get(i);
-            if (s.isNewColumn()) {
-                newColumnFactoryList.add(s);
-            }
-        }
-        return newColumnFactoryList;
+    static NewColumnsProducerMapping createNewColumnsProducerMapping(final Vector<SpecAndFactoryObject> includes) {
+        return new NewColumnsProducerMapping(includes);
     }
-
 
     /**
      * {@inheritDoc}
@@ -564,8 +567,7 @@ public final class RearrangeColumnsTable
      * {@inheritDoc}
      */
     @Override
-    public void saveToFile(
-            final File f, final NodeSettingsWO s, final ExecutionMonitor exec)
+    public void saveToFile(final File f, final NodeSettingsWO s, final ExecutionMonitor exec)
         throws IOException, CanceledExecutionException {
         NodeSettingsWO subSettings = s.addNodeSettings(CFG_INTERNAL_META);
         subSettings.addInt(CFG_REFERENCE_ID, m_reference.getBufferedTableId());
@@ -644,7 +646,7 @@ public final class RearrangeColumnsTable
         /** {@inheritDoc} */
         @Override
         Buffer createBuffer(final File binFile, final File blobDir,
-                File fileStoreDir, final DataTableSpec spec,
+                final File fileStoreDir, final DataTableSpec spec,
                 final InputStream metaIn, final int bufID,
                 final Map<Integer, ContainerTable> tblRep, final FileStoreHandlerRepository fileStoreHandlerRepository)
             throws IOException {
@@ -658,12 +660,10 @@ public final class RearrangeColumnsTable
      * parallel processing (
      * {@link AbstractCellFactory#setParallelProcessing(boolean)})
      */
-    private static final class ConcurrentNewColCalculator
-        extends MultiThreadWorker<DataRow, DataRow> {
+    private static final class ConcurrentNewColCalculator extends MultiThreadWorker<DataRow, DataRow> {
 
         private final ExecutionMonitor m_subProgress;
-        private Vector<SpecAndFactoryObject> m_reducedList;
-        private final int m_factoryCount;
+        private NewColumnsProducerMapping m_reducedList;
         private DataContainer m_container;
         private final int m_totalRowCount;
         private final CellFactory m_facForProgress;
@@ -675,22 +675,19 @@ public final class RearrangeColumnsTable
          * @param subProgress
          * @param reducedList
          * @param newColCount
-         * @param factoryCount
          * @param container */
         private ConcurrentNewColCalculator(final int maxQueueSize,
                 final int maxActiveInstanceSize,
                 final DataContainer container,
                 final ExecutionMonitor subProgress,
                 final int totalRowCount,
-                final Vector<SpecAndFactoryObject> reducedList,
-                final int factoryCount,
+                final NewColumnsProducerMapping reducedList,
                 final CellFactory facForProgress) {
             super(maxQueueSize, maxActiveInstanceSize);
             m_container = container;
             m_subProgress = subProgress;
             m_totalRowCount = totalRowCount;
             m_reducedList = reducedList;
-            m_factoryCount = factoryCount;
             m_facForProgress = facForProgress;
         }
 
@@ -698,20 +695,18 @@ public final class RearrangeColumnsTable
         @Override
         protected DataRow compute(final DataRow in,
                 final long index) throws Exception {
-            return calcNewCellsForRow(in, m_reducedList, m_factoryCount);
+            return calcNewCellsForRow(in, m_reducedList);
         }
 
         /** {@inheritDoc} */
         @Override
         protected void processFinished(final ComputationTask task)
-            throws ExecutionException, CancellationException,
-            InterruptedException {
+                throws ExecutionException, CancellationException, InterruptedException {
             int r = (int)task.getIndex(); // row count in table is integer
             RowKey key = task.getInput().getKey();
             DataRow append = task.get();  // exception falls through
             m_container.addRowToTable(append);
-            m_facForProgress.setProgress(r + 1, m_totalRowCount,
-                    key, m_subProgress);
+            m_facForProgress.setProgress(r + 1, m_totalRowCount, key, m_subProgress);
             try {
                 m_subProgress.checkCanceled();
             } catch (CanceledExecutionException cee) {
@@ -719,5 +714,70 @@ public final class RearrangeColumnsTable
             }
         }
 
+    }
+
+    /** A class that helps to distinguish SpecAndFactoryObjects. There are three kinds: representing input columns,
+     * created with a cell factory, created with a converter (often molecular type adapter)
+     */
+    static final class NewColumnsProducerMapping {
+
+        private final List<SpecAndFactoryObject> m_allNewColumnsList;
+        private final List<Pair<SpecAndFactoryObject, Integer>> m_converterToIndexMap;
+        private final IdentityHashMap<CellFactory, List<Integer>> m_uniqueCellFactoryMap;
+
+        private NewColumnsProducerMapping(final Vector<SpecAndFactoryObject> includes) {
+            m_allNewColumnsList = new ArrayList<SpecAndFactoryObject>();
+            m_converterToIndexMap = new ArrayList<Pair<SpecAndFactoryObject, Integer>>();
+            m_uniqueCellFactoryMap = new IdentityHashMap<CellFactory, List<Integer>>();
+            int newColumnIndex = 0;
+            for (int i = 0; i < includes.size(); i++) {
+                SpecAndFactoryObject s = includes.get(i);
+                if (s.isConvertedColumn()) {
+                    m_converterToIndexMap.add(new Pair<SpecAndFactoryObject, Integer>(s, newColumnIndex++));
+                    m_allNewColumnsList.add(s);
+                }
+                if (s.isNewColumn()) {
+                    CellFactory cellFac = s.getFactory();
+                    List<Integer> specAndObs = m_uniqueCellFactoryMap.get(cellFac);
+                    if (specAndObs == null) {
+                        specAndObs = new ArrayList<Integer>();
+                        m_uniqueCellFactoryMap.put(cellFac, specAndObs);
+                    }
+                    specAndObs.add(newColumnIndex++);
+                    m_allNewColumnsList.add(s);
+                }
+            }
+        }
+
+        /**
+         * @return the converterToIndexMap
+         */
+        List<Pair<SpecAndFactoryObject, Integer>> getConverterToIndexMap() {
+            return m_converterToIndexMap;
+        }
+
+        /** @return the number of unique factories (mostly 0 or 1), excluding {@link DatatypeConverter}. */
+        int getFactoryCount() {
+            return m_uniqueCellFactoryMap.size();
+        }
+
+        /** @return The number of new columns (replaced, appended). Includes {@link DatatypeConverter}. */
+        int getNewColumnCount() {
+            return m_allNewColumnsList.size();
+        }
+
+        /**
+         * @return the uniqueCellFactoryMap
+         */
+        IdentityHashMap<CellFactory, List<Integer>> getUniqueCellFactoryMap() {
+            return m_uniqueCellFactoryMap;
+        }
+
+        /**
+         * @return the allNewColumnsList
+         */
+        List<SpecAndFactoryObject> getAllNewColumnsList() {
+            return m_allNewColumnsList;
+        }
     }
 }

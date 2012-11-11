@@ -52,6 +52,9 @@
 package org.knime.core.data;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.container.BlobWrapperDataCell;
@@ -128,10 +131,14 @@ public abstract class DataCell implements DataValue, Serializable {
      */
     public final DataType getType() {
         DataType elementType = null;
+        List<Class<? extends DataValue>> adapterValueList = Collections.emptyList();
         if (this instanceof CollectionDataValue) {
             elementType = ((CollectionDataValue)this).getElementType();
         }
-        return DataType.getType(getClass(), elementType);
+        if (this instanceof AdapterValue) {
+            adapterValueList = new ArrayList<Class<? extends DataValue>>(((AdapterValue)this).getAdapterMap().keySet());
+        }
+        return DataType.getType(getClass(), elementType, adapterValueList);
     }
 
     /**
@@ -145,26 +152,7 @@ public abstract class DataCell implements DataValue, Serializable {
      * @see DataType#getMissingCell()
      */
     public final boolean isMissing() {
-        /*
-         * Instead of testing "this != DataType.getMissing()" we use here
-         * the slightly more complicated approach using the method
-         * isMissingInternal() with package scope in order to avoid class
-         * loading  problems. Especially in eclipse it is known that there are
-         * many different class loaders, each of which can potentially create
-         * its own DataType.MissingCell instance.
-         */
-        return isMissingInternal();
-    }
-
-    /**
-     * Internal implementation of {@link DataCell#isMissing()}. It will return
-     * <code>false</code> and is only overridden in the
-     * {@link DataType#getMissingCell()} implementation.
-     *
-     * @return <code>false</code>
-     */
-    boolean isMissingInternal() {
-        return false;
+        return this instanceof MissingValue;
     }
 
     /**

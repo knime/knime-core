@@ -99,7 +99,7 @@ public abstract class SingleCellFactory extends AbstractCellFactory {
     public SingleCellFactory(final boolean processConcurrently,
             final int workerCount, final int maxQueueSize,
             final DataColumnSpec newColSpec) {
-        super(processConcurrently, newColSpec);
+        super(processConcurrently, workerCount, maxQueueSize, newColSpec);
     }
 
     /** {@inheritDoc} */

@@ -117,13 +117,13 @@ import org.knime.core.node.util.ConvenienceMethods;
 public final class DataType {
 
     /**
-     * Implementation of the missing cell. This
-     * {@link org.knime.core.data.DataCell} does not implement
-     * any {@link org.knime.core.data.DataValue} interfaces but is compatible
-     * to any value class. This class is the very only implementation whose
-     * isMissing() method returns true.
+     * Backward compatible class of a missing cell. The INSTANCE has been replaced by MissingCell in the same packe
+     * with KNIME 2.7
+     * @deprecated Missing cell in package is used instead: {@link org.knime.core.data.MissingCell}
      */
-    private static final class MissingCell extends DataCell {
+    @SuppressWarnings("unused") // used in serialized workflows
+    @Deprecated
+    private static final class MissingCell extends DataCell implements MissingValue {
 
         /** Singleton to be used. */
         static final MissingCell INSTANCE = new MissingCell();
@@ -145,6 +145,14 @@ public final class DataType {
          * {@inheritDoc}
          */
         @Override
+        public String getError() {
+            return null;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
         public boolean equalsDataCell(final DataCell dc) {
             // guaranteed not to be called on and with a missing cell
             return false;
@@ -156,14 +164,6 @@ public final class DataType {
         @Override
         public int hashCode() {
             return toString().hashCode();
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        boolean isMissingInternal() {
-            return true;
         }
 
         /**
@@ -192,6 +192,8 @@ public final class DataType {
     private static final String CFG_HAS_PREF_VALUE = "has_pref_value_class";
     /** Config key for value classes. */
     private static final String CFG_VALUE_CLASSES = "value_classes";
+    /** Config key for adapter classes. */
+    private static final String CFG_ADAPTER_CLASSES = "adapter_classes";
 
     /** Map of the referring <code>DataCell</code> serializer. */
     private static final Map<Class<? extends DataCell>, DataCellSerializer>
@@ -379,12 +381,10 @@ public final class DataType {
         }
         // if one of the types represents the missing cell type, we
         // return the other type.
-        if ((type1.m_cellClass != null)
-                && type1.m_cellClass.equals(MissingCell.class)) {
+        if (type1.isMissingValueType()) {
             return type2;
         }
-        if ((type2.m_cellClass != null)
-                && type2.m_cellClass.equals(MissingCell.class)) {
+        if (type2.isMissingValueType()) {
             return type1;
         }
 
@@ -408,7 +408,7 @@ public final class DataType {
      * @return singleton of a missing cell
      */
     public static DataCell getMissingCell() {
-        return MissingCell.INSTANCE;
+        return org.knime.core.data.MissingCell.INSTANCE;
     }
 
     /**
@@ -500,14 +500,15 @@ public final class DataType {
      * never <code>null</code>
      * @throws NullPointerException if the argument is <code>null</code>
      */
+    @SuppressWarnings("unchecked")
     public static DataType getType(final Class<? extends DataCell> cell) {
         if (cell == null) {
             throw new NullPointerException("Class must not be null.");
         }
-        ClassAndSubDataTypePair key = new ClassAndSubDataTypePair(cell, null);
+        ClassAndSubDataTypePair key = new ClassAndSubDataTypePair(cell, null, null);
         DataType result = CLASS_TO_TYPE_MAP.get(key);
         if (result == null) {
-            result = new DataType(cell, null);
+            result = new DataType(cell, null, Collections.EMPTY_LIST);
             CLASS_TO_TYPE_MAP.put(key, result);
         }
         return result;
@@ -533,26 +534,35 @@ public final class DataType {
      * @throws IllegalArgumentException As outlined above.
      * @throws NullPointerException If the class argument is null.
      */
-    public static DataType getType(
-            final Class<? extends DataCell> cellImplementsCollectionDataValue,
+    @SuppressWarnings("unchecked")
+    public static DataType getType(final Class<? extends DataCell> cellImplementsCollectionDataValue,
             final DataType collectionElementType) {
-        if (cellImplementsCollectionDataValue == null) {
+        return getType(cellImplementsCollectionDataValue, collectionElementType, Collections.EMPTY_LIST);
+    }
+
+    /** Implementation of {@link #getType(Class, DataType)} with additional information
+     * {@linkplain AdapterValue adapter} classes. The adapter list describes that an element in a column with this type
+     * is an instance {@link AdapterValue} (or missing), and that they can be adapted to the specified list.
+     *
+     * @param cellClass The cell class. <code>collectionElementType</code> must not be null if
+     * instance of {@link CollectionDataValue}. <code>adapterList</code> must not be null if
+     * instance of {@link AdapterValue}.
+     * @param collectionElementType The type of the elements in the collection.
+     * @param adapterList The list with adapter values. Must be null or empty if the cell class argument is not an
+     * {@link AdapterValue}. Must not be null otherwise.
+     * @return A data type representing that type of collection.
+     * @throws IllegalArgumentException As outlined above.
+     * @throws NullPointerException If the class argument is null.
+     */
+    public static DataType getType(final Class<? extends DataCell> cellClass,
+           final DataType collectionElementType, final List<Class<? extends DataValue>> adapterList) {
+        if (cellClass == null) {
             throw new NullPointerException("Cell class must not be null.");
         }
-        ClassAndSubDataTypePair key = new ClassAndSubDataTypePair(
-                cellImplementsCollectionDataValue, collectionElementType);
+        ClassAndSubDataTypePair key = new ClassAndSubDataTypePair(cellClass, collectionElementType, adapterList);
         DataType result = CLASS_TO_TYPE_MAP.get(key);
         if (result == null) {
-            if (!CollectionDataValue.class.isAssignableFrom(
-                    cellImplementsCollectionDataValue)
-                    && collectionElementType != null) {
-                throw new IllegalArgumentException("Cell class \""
-                        + cellImplementsCollectionDataValue.getSimpleName()
-                        + " does not implement \""
-                        + CollectionDataValue.class.getSimpleName() + "\"");
-            }
-            result = new DataType(
-                    cellImplementsCollectionDataValue, collectionElementType);
+            result = new DataType(cellClass, collectionElementType, adapterList);
             CLASS_TO_TYPE_MAP.put(key, result);
         }
         return result;
@@ -647,8 +657,7 @@ public final class DataType {
         if (cellClassName != null) {
             try {
                 Class<? extends DataCell> cellClass =
-                    (Class<? extends DataCell>)
-                    GlobalClassCreator.createClass(cellClassName);
+                        (Class<? extends DataCell>)GlobalClassCreator.createClass(cellClassName);
                 return getType(cellClass, collectionElementType);
             } catch (ClassCastException cce) {
                 throw new InvalidSettingsException(cellClassName
@@ -662,23 +671,11 @@ public final class DataType {
         // non-native type, must have the following fields.
         boolean hasPrefValueClass = config.getBoolean(CFG_HAS_PREF_VALUE);
         String[] valueClassNames = config.getStringArray(CFG_VALUE_CLASSES);
-        List<Class<? extends DataValue>> valueClasses =
-            new ArrayList<Class<? extends DataValue>>();
-        for (int i = 0; i < valueClassNames.length; i++) {
-            try {
-                valueClasses.add((Class<? extends DataValue>)
-                        GlobalClassCreator.createClass(valueClassNames[i]));
-            } catch (ClassCastException cce) {
-                throw new InvalidSettingsException(valueClassNames[i]
-                    + " Class not derived from DataValue: " + cce.getMessage());
-            } catch (ClassNotFoundException cnfe) {
-                throw new InvalidSettingsException(valueClassNames[i]
-                    + " Class not found: " + cnfe.getMessage());
-            }
-        }
+        List<Class<? extends DataValue>> valueClasses = getClasses(valueClassNames);
+        String[] adapterClassNames = config.getStringArray(CFG_VALUE_CLASSES, new String[0]);
+        List<Class<? extends DataValue>> adapterClasses = getClasses(adapterClassNames);
         try {
-            return new DataType(
-                    hasPrefValueClass, valueClasses, collectionElementType);
+            return new DataType(hasPrefValueClass, valueClasses, collectionElementType, adapterClasses);
         } catch (IllegalArgumentException iae) {
             throw new InvalidSettingsException(iae);
         }
@@ -697,16 +694,19 @@ public final class DataType {
 
     private final DataType m_collectionElementType;
 
+    private final List<Class<? extends DataValue>> m_adapterValueList;
+
     /**
      * Creates a new, non-native <code>DataType</code>. This method is used
      * from the {@link #load(ConfigRO)} method.
      * @param hasPreferredValue if preferred value is set
-     * @param valueClasses all implemented {@link org.knime.core.data.DataValue}
-     * interfaces
+     * @param valueClasses all implemented {@link org.knime.core.data.DataValue} interfaces
+     * @param adapterClasses adapter list
      */
     private DataType(final boolean hasPreferredValue,
             final List<Class<? extends DataValue>> valueClasses,
-            final DataType collectionElementType) {
+            final DataType collectionElementType,
+            final List<Class<? extends DataValue>> adapterClasses) {
         m_cellClass = null;
         m_hasPreferredValueClass = hasPreferredValue;
         m_valueClasses = valueClasses;
@@ -727,6 +727,7 @@ public final class DataType {
                     + "collection but no element type was provided");
         }
         m_collectionElementType = collectionElementType;
+        m_adapterValueList = adapterClasses;
     }
 
     /**
@@ -736,8 +737,8 @@ public final class DataType {
      * implementing and also retrieves their meta information. This constructor
      * is used by the static {@link #getType(Class)} method.
      */
-    private DataType(final Class<? extends DataCell> cl,
-            final DataType elementType) {
+    private DataType(final Class<? extends DataCell> cl, final DataType elementType,
+                     final List<Class<? extends DataValue>> adapterList) {
         // filter for classes that extend DataValue
         LinkedHashSet<Class<? extends DataValue>> valueClasses =
             new LinkedHashSet<Class<? extends DataValue>>();
@@ -768,6 +769,22 @@ public final class DataType {
             throw new IllegalArgumentException("The type does not represent "
                     + "a collection, element type must be null");
         }
+        if (AdapterValue.class.isAssignableFrom(cl)) {
+            if (adapterList == null) {
+                throw new IllegalArgumentException("Cell class \"" + cl.getSimpleName()
+                               + "\" is an adapter value but adapter list is null");
+            }
+            Set<Class<? extends DataValue>> set = new LinkedHashSet<Class<? extends DataValue>>();
+            set.addAll(m_valueClasses);
+            set.addAll(adapterList);
+            m_adapterValueList = new ArrayList<Class<? extends DataValue>>(set);
+        } else {
+            if (adapterList != null && !adapterList.isEmpty()) {
+                throw new IllegalArgumentException("Adapter list for non adapter class \""
+                        + cl.getSimpleName() + "\" must be empty: " + adapterList);
+            }
+            m_adapterValueList = Collections.emptyList();
+        }
         m_collectionElementType = elementType;
     }
 
@@ -783,16 +800,14 @@ public final class DataType {
      * @param type the type to clone
      * @param preferred the new preferred value class of the new type
      */
-    private DataType(final DataType type,
-            final Class<? extends DataValue> preferred) {
+    private DataType(final DataType type, final Class<? extends DataValue> preferred) {
         if (!type.m_valueClasses.contains(preferred)) {
             throw new IllegalArgumentException("Invalid preferred "
                     + "value class: " + preferred.getSimpleName());
         }
         // override, not assigned to any data cell implementation
         m_cellClass = null;
-        m_valueClasses = new ArrayList<Class<? extends DataValue>>(
-                type.m_valueClasses.size());
+        m_valueClasses = new ArrayList<Class<? extends DataValue>>(type.m_valueClasses.size());
         m_valueClasses.add(preferred);
         for (Class<? extends DataValue> c : type.m_valueClasses) {
             if (!c.equals(preferred)) {
@@ -800,6 +815,7 @@ public final class DataType {
             }
         }
         m_collectionElementType = type.m_collectionElementType;
+        m_adapterValueList = type.m_adapterValueList;
         m_hasPreferredValueClass = true;
     }
 
@@ -814,11 +830,18 @@ public final class DataType {
             type1.m_hasPreferredValueClass && type2.m_hasPreferredValueClass
             && type1.m_valueClasses.get(0).equals(type2.m_valueClasses.get(0));
         // linked set ensures that the first element is the preferred value
-        LinkedHashSet<Class<? extends DataValue>> hash =
-            new LinkedHashSet<Class<? extends DataValue>>();
-        hash.addAll(type1.m_valueClasses);
-        hash.retainAll(type2.m_valueClasses);
-        m_valueClasses = new ArrayList<Class<? extends DataValue>>(hash);
+        LinkedHashSet<Class<? extends DataValue>> valueClassHash = new LinkedHashSet<Class<? extends DataValue>>();
+        valueClassHash.addAll(type1.m_valueClasses);
+        valueClassHash.retainAll(type2.m_valueClasses);
+        m_valueClasses = new ArrayList<Class<? extends DataValue>>(valueClassHash);
+        if (type1.m_adapterValueList.isEmpty() && type2.m_adapterValueList.isEmpty()) {
+            m_adapterValueList = Collections.emptyList();
+        } else {
+            LinkedHashSet<Class<? extends DataValue>> adapterHash = new LinkedHashSet<Class<? extends DataValue>>();
+            adapterHash.addAll(type1.m_adapterValueList);
+            adapterHash.retainAll(type2.m_adapterValueList);
+            m_adapterValueList = new ArrayList<Class<? extends DataValue>>(adapterHash);
+        }
         if (type1.m_collectionElementType != null
                 && type2.m_collectionElementType != null) {
             boolean containsCollectionValue = false;
@@ -828,9 +851,8 @@ public final class DataType {
                 }
             }
             if (containsCollectionValue) {
-                m_collectionElementType = getCommonSuperType(
-                        type1.m_collectionElementType,
-                        type2.m_collectionElementType);
+                m_collectionElementType =
+                        getCommonSuperType(type1.m_collectionElementType, type2.m_collectionElementType);
             } else {
                 m_collectionElementType = null;
             }
@@ -838,6 +860,11 @@ public final class DataType {
             m_collectionElementType = null;
         }
         m_cellClass = null;
+    }
+
+    /** @true if value classes list contains {@link MissingValue} class. */
+    private boolean isMissingValueType() {
+        return m_valueClasses.contains(MissingValue.class);
     }
 
     /** Get the type of the elements in collection or <code>null</code> if
@@ -897,6 +924,12 @@ public final class DataType {
             return false;
         }
         if (!o.m_valueClasses.containsAll(m_valueClasses)) {
+            return false;
+        }
+        if (!m_adapterValueList.containsAll(o.m_adapterValueList)) {
+            return false;
+        }
+        if (!o.m_adapterValueList.containsAll(m_adapterValueList)) {
             return false;
         }
 
@@ -1020,6 +1053,9 @@ public final class DataType {
         for (Class<? extends DataValue> cl : m_valueClasses) {
             result ^= cl.hashCode();
         }
+        for (Class<? extends DataValue> cl : m_adapterValueList) {
+            result ^= cl.hashCode();
+        }
         final DataType collectionElementType = getCollectionElementType();
         if (collectionElementType != null) {
             result ^= collectionElementType.hashCode();
@@ -1054,45 +1090,105 @@ public final class DataType {
         if (type == this) {
             return true;
         }
-        if (MissingCell.class.equals(type.m_cellClass)) {
+        if (type.isCompatible(MissingValue.class)) {
             return true;
         }
         for (Class<? extends DataValue> cl : m_valueClasses) {
             if (!type.isCompatible(cl)) {
                 return false;
             } else if (cl.equals(CollectionDataValue.class)) {
-                if (!getCollectionElementType().isASuperTypeOf(
-                        type.getCollectionElementType())) {
+                if (!getCollectionElementType().isASuperTypeOf(type.getCollectionElementType())) {
                     return false;
                 }
+            }
+        }
+        for (Class<? extends DataValue> cl : m_adapterValueList) {
+            if (!type.isAdaptable(cl)) {
+                return false;
             }
         }
         return true;
     }
 
     /**
-     * Checks if the given <code>DataValue.class</code> is compatible to this
-     * type. It returns <code>true</code>, if
-     * {@link org.knime.core.data.DataCell}s of this type can be type-casted to
-     * the <code>valueClass</code> or if one assignable value class was found or
-     * if this type represents the missing cell. This method returns
-     * <code>false</code>, if the argument is <code>null</code> or if no
-     * assignable class was found.
-
+     * Checks if the given <code>DataValue.class</code> is compatible to this type. It returns <code>true</code>, if
+     * {@link org.knime.core.data.DataCell}s of this type can be casted to the <code>valueClass</code> OR this
+     * type represents a missing value type (as of {@link DataCell#isMissing()}).
+     *
      * @param valueClass class to check compatibility for
      * @return <code>true</code> if compatible
+     * @throws NullPointerException If the argument is null.
      */
-    public boolean isCompatible(
-            final Class<? extends DataValue> valueClass) {
-        if ((m_cellClass != null) && m_cellClass.equals(MissingCell.class)) {
-            return true;
-        }
+    public boolean isCompatible(final Class<? extends DataValue> valueClass) {
         for (Class<? extends DataValue> cl : m_valueClasses) {
-            if (valueClass.isAssignableFrom(cl)) {
+            // a missing value is by definition always compatible, see also DataCell#isMissing()
+            if (MissingValue.class.equals(cl) || valueClass.isAssignableFrom(cl)) {
                 return true;
             }
         }
         return false;
+    }
+
+    /** Returns true if this data type {@linkplain #isCompatible(Class) is compatible} to {@link AdapterValue}
+     * and the corresponding cells support the {@link AdapterValue#getAdapter(Class)} method for the given target value.
+     * @param valueClass The value class to check.
+     * @return That property.
+     * @since 2.7
+     */
+    public boolean isAdaptable(final Class<? extends DataValue> valueClass) {
+        return m_adapterValueList.contains(valueClass);
+    }
+
+    /** Returns true if this data type {@linkplain #isCompatible(Class) is compatible} to {@link AdapterValue}
+     * and the corresponding cells support any of the {@link AdapterValue#getAdapter(Class)} method for the given target value.
+     * @param valueClasses The value class to check.
+     * @return That property.
+     * @since 2.7
+     */
+    public boolean isAdaptableToAny(final Class<? extends DataValue>... valueClasses) {
+        for (Class<? extends DataValue> cl : valueClasses) {
+            if (m_adapterValueList.contains(cl)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    /** Creates a clone of this type that also contains all argument value classes in its adapter list. Used by nodes
+     * that add adapters to a column.
+     * @param valueClasses The non-null list of additional adapters.
+     * @return A (possibly new) type that has the enriched adapter list.
+     * @since 2.7
+     */
+    public DataType createNewWithAdapter(final Class<? extends DataValue>... valueClasses) {
+        if (!m_valueClasses.contains(AdapterValue.class)) {
+            throw new IllegalStateException("Can't add adapter to type \"" + this
+                                    + "\" - it's not adapter value compatible");
+        }
+        boolean allPresent = true;
+        for (Class<? extends DataValue> cl : valueClasses) {
+            if (!m_adapterValueList.contains(cl)) {
+                allPresent = false;
+                break;
+            }
+        }
+        if (allPresent) {
+            return this;
+        }
+        List<Class<? extends DataValue>> asList = Arrays.asList(valueClasses);
+        if (asList.contains(null)) {
+            throw new NullPointerException("Adapter class list must not contain null elements");
+        }
+        LinkedHashSet<Class<? extends DataValue>> newAdapterHash =
+                new LinkedHashSet<Class<? extends DataValue>>(m_adapterValueList);
+        newAdapterHash.addAll(Arrays.asList(valueClasses));
+        List<Class<? extends DataValue>> newAdapterList = new ArrayList<Class<? extends DataValue>>(newAdapterHash);
+        if (m_cellClass != null) {
+            return getType(m_cellClass, m_collectionElementType, newAdapterList);
+        }
+        // non native type
+        return new DataType(m_hasPreferredValueClass, m_valueClasses, m_collectionElementType, newAdapterList);
     }
 
     /**
@@ -1113,15 +1209,52 @@ public final class DataType {
         if (m_cellClass == null) {
             config.addString(CFG_CELL_NAME, null);
             config.addBoolean(CFG_HAS_PREF_VALUE, m_hasPreferredValueClass);
-            String[] valueClasses = new String[m_valueClasses.size()];
-            for (int i = 0; i < valueClasses.length; i++) {
-                valueClasses[i] = m_valueClasses.get(i).getName();
-            }
+            String[] valueClasses = convertClassesToNames(m_valueClasses);
             config.addStringArray(CFG_VALUE_CLASSES, valueClasses);
         } else {
             // only memorize cell class (is hashed anyway)
             config.addString(CFG_CELL_NAME, m_cellClass.getName());
         }
+        if (!m_adapterValueList.isEmpty()) {
+            String[] adapterClasses = convertClassesToNames(m_adapterValueList);
+            config.addStringArray(CFG_ADAPTER_CLASSES, adapterClasses);
+        }
+    }
+
+    /**
+     * @return
+     */
+    private static String[] convertClassesToNames(final List<Class<? extends DataValue>> classList) {
+        String[] valueClasses = new String[classList.size()];
+        for (int i = 0; i < valueClasses.length; i++) {
+            valueClasses[i] = classList.get(i).getName();
+        }
+        return valueClasses;
+    }
+
+    /**
+     * @param classnames
+     * @return
+     * @throws InvalidSettingsException
+     */
+    private static List<Class<? extends DataValue>> getClasses(final String[] classnames)
+            throws InvalidSettingsException {
+        if (classnames.length == 0) {
+            return Collections.emptyList();
+        }
+        List<Class<? extends DataValue>> valueClasses = new ArrayList<Class<? extends DataValue>>();
+        for (int i = 0; i < classnames.length; i++) {
+            try {
+                valueClasses.add((Class<? extends DataValue>)GlobalClassCreator.createClass(classnames[i]));
+            } catch (ClassCastException cce) {
+                throw new InvalidSettingsException(classnames[i]
+                        + " Class not derived from DataValue: " + cce.getMessage());
+            } catch (ClassNotFoundException cnfe) {
+                throw new InvalidSettingsException(classnames[i]
+                    + " Class not found: " + cnfe.getMessage());
+            }
+        }
+        return valueClasses;
     }
 
     /**
@@ -1150,16 +1283,18 @@ public final class DataType {
     private static final class ClassAndSubDataTypePair {
         private final Class<? extends DataCell> m_cellClass;
         private final DataType m_elementDataType;
+        private final List<Class<? extends DataValue>> m_adapterList;
 
         /**
          *
          */
-        ClassAndSubDataTypePair(
-                final Class<? extends DataCell> cellClass,
-                final DataType elementDataType) {
+        @SuppressWarnings("unchecked")
+        ClassAndSubDataTypePair(final Class<? extends DataCell> cellClass, final DataType elementDataType,
+                final List<Class<? extends DataValue>> adapterList) {
             assert cellClass != null : "Cell class is null";
             m_cellClass = cellClass;
             m_elementDataType = elementDataType;
+            m_adapterList = adapterList == null ? Collections.EMPTY_LIST : adapterList;
         }
 
         /** {@inheritDoc} */
@@ -1173,6 +1308,16 @@ public final class DataType {
                 b.append(m_elementDataType.toString());
                 b.append(")");
             }
+            if (!m_adapterList.isEmpty()) {
+                b.append(" adapter: ");
+                boolean first = true;
+                for (Class<? extends DataValue> v : m_adapterList) {
+                    b.append(first ? "" : ", ");
+                    first = false;
+                    b.append(v.getSimpleName());
+                }
+                b.append(")");
+            }
             return b.toString();
         }
 
@@ -1183,6 +1328,7 @@ public final class DataType {
             if (m_elementDataType != null) {
                 hash = hash ^ m_elementDataType.hashCode();
             }
+            hash = hash ^ m_adapterList.hashCode();
             return hash;
         }
 
@@ -1200,8 +1346,10 @@ public final class DataType {
                 return false;
             }
             // handles null cases
-            return ConvenienceMethods.areEqual(
-                    d.m_elementDataType, m_elementDataType);
+            if (!ConvenienceMethods.areEqual(d.m_elementDataType, m_elementDataType)) {
+                return false;
+            }
+            return d.m_adapterList.equals(m_adapterList);
         }
     }
 }

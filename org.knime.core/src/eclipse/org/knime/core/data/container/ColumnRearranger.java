@@ -58,8 +58,14 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Vector;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataCellTypeConverter;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.streamable.StreamableFunction;
 import org.knime.core.node.streamable.StreamableOperatorInternals;
 
@@ -143,6 +149,8 @@ import org.knime.core.node.streamable.StreamableOperatorInternals;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class ColumnRearranger {
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(ColumnRearranger.class);
 
     private final Vector<SpecAndFactoryObject> m_includes;
     private final DataTableSpec m_originalSpec;
@@ -569,6 +577,40 @@ public class ColumnRearranger {
         }
     }
 
+    /**
+     * @param converter
+     * @param index
+     * @since 2.7
+     */
+    public final void ensureColumnIsConverted(final DataCellTypeConverter converter, final int index) {
+        SpecAndFactoryObject current = m_includes.get(index);
+        DataType converterOutputType = converter.getOutputType();
+        DataColumnSpec colSpec = current.getColSpec();
+        if (converterOutputType.equals(colSpec.getType())) {
+            LOGGER.debug("Converting column \"" + colSpec.getName() + "\" not required.");
+        } else {
+            LOGGER.debug("Converting column \"" + colSpec.getName() + "\" required.");
+            DataColumnSpecCreator c = new DataColumnSpecCreator(colSpec);
+            c.setType(converterOutputType);
+            DataCellTypeConverterCellFactory cellConverter = new DataCellTypeConverterCellFactory(
+                  c.createSpec(), converter, index);
+            replace(cellConverter, index);
+        }
+    }
+
+    /**
+     * @param converter
+     * @param colName
+     * @since 2.7
+     */
+    public final void ensureColumnIsConverted(final DataCellTypeConverter converter, final String colName) {
+        int index = indexOf(colName);
+        if (index < 0) {
+            throw new IllegalArgumentException("No such column: " + colName);
+        }
+        ensureColumnIsConverted(converter, index);
+    }
+
     /** Access method for the internal data structure.
      * @return The current set of columns.
      */
@@ -672,10 +714,31 @@ public class ColumnRearranger {
         }
 
         /**
+         * @return the converter, throws exception if not converter column
+         */
+        final DataCellTypeConverter getConverter() {
+            return ((DataCellTypeConverterCellFactory)m_factory).m_converter;
+        }
+
+        /**
+         * @return the converter column index, throws exception if not converter column
+         */
+        final int getConverterIndex() {
+            return ((DataCellTypeConverterCellFactory)m_factory).m_columnIndex;
+        }
+
+        /**
          * @return If the column is created through a cell factory.
          */
         final boolean isNewColumn() {
-            return m_factory != null;
+            return m_factory != null && !isConvertedColumn();
+        }
+
+        /**
+         * @return If the column is converted prior passing it to the rest of the cell factorys.
+         */
+        final boolean isConvertedColumn() {
+            return m_factory instanceof DataCellTypeConverterCellFactory;
         }
 
         /**
@@ -684,6 +747,41 @@ public class ColumnRearranger {
         final int getOriginalIndex() {
             return m_originalIndex;
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            return String.format("[Column '%s', orig index %d, is new column: %b, is converter: %b]",
+                                 m_colSpec.getName(), m_originalIndex, isNewColumn(), isConvertedColumn());
+        }
+    }
+
+    static final class DataCellTypeConverterCellFactory extends SingleCellFactory {
+
+        private final DataCellTypeConverter m_converter;
+        private final int m_columnIndex;
+
+        /**
+         * @param newColSpec
+         * @param converter
+         */
+        DataCellTypeConverterCellFactory(final DataColumnSpec newColSpec,
+                 final DataCellTypeConverter converter, final int columnIndex) {
+            super(converter.isProcessConcurrently(), newColSpec);
+            m_converter = converter;
+            m_columnIndex = columnIndex;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataCell getCell(final DataRow row) {
+            throw new UnsupportedOperationException("Not to be called on a converter");
+        }
+
     }
 
 }
