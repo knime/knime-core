@@ -61,7 +61,7 @@ public interface RWAdapterValue extends AdapterValue {
      *
      * @param valueCell the new data cell
      * @param valueClasses the value classes which the data cell can represent
-     *
+     * @return a new data cell that implements {@link AdapterValue}
      */
-    public AdapterCell cloneAndAddAdapter(final DataCell valueCell, final Class<? extends DataValue>... valueClasses);
+    public DataCell cloneAndAddAdapter(final DataCell valueCell, final Class<? extends DataValue>... valueClasses);
 }

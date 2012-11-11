@@ -94,7 +94,10 @@ public abstract class AdapterCell extends DataCell implements Cloneable, RWAdapt
             // this may seem inefficient, but we assume that there are really only a few adapters per cell
             for (Map.Entry<Class<? extends DataValue>, DataCell> e1 : cell.m_adapterMap.entrySet()) {
                 for (Map.Entry<Class<? extends DataValue>, DataCell> e2 : temp.entrySet()) {
-                    if (e2.getValue() == e1.getValue()) {
+                    if ((e2.getValue() == e1.getValue()) && !e2.getKey().isAssignableFrom(AdapterCell.class)) {
+                        // only add value class if contents are equal AND
+                        // if the value class is not a generic value class implemented by the AdapterCell
+                        // e.g. DataValue or RWAdapterValue
                         values.add(e2.getKey());
                     }
                 }
