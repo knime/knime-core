@@ -56,6 +56,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -475,6 +476,8 @@ public final class RearrangeColumnsTable
         }
     }
 
+    private static Set<Class<? extends CellFactory>> codingProblemsCellFactoryClasses;
+
     /** Calls for an input row the list of cell factories to produce the
      * output row (contains only the new cells, merged later).
      * @param unconvertedRow The input row to be processed
@@ -490,9 +493,23 @@ public final class RearrangeColumnsTable
             CellFactory factory = e.getKey();
             List<Integer> list = e.getValue();
             DataCell[] fromFac = factory.getCells(row);
-            assert fromFac.length == list.size() : String.format("New cells array length conflict: "
-                    + "expected %d, actual %d", fromFac.length, list.size());
-            for (int i = 0; i < fromFac.length; i++) {
+            if (fromFac.length != list.size()) {
+                String error = String.format("New cells array length conflict: expected %d, actual %d (class %s)",
+                                             fromFac.length, list.size(), factory.getClass().getName());
+                if (fromFac.length < list.size()) {
+                    throw new IndexOutOfBoundsException(error);
+                } else {
+                    // such problems were ignored until 2.6 -- print warning only
+                    if (codingProblemsCellFactoryClasses == null) {
+                        codingProblemsCellFactoryClasses = new HashSet<Class<? extends CellFactory>>();
+                    }
+                    if (codingProblemsCellFactoryClasses.add(factory.getClass())) {
+                        LOGGER.coding(error);
+                    }
+                }
+            }
+            final int length = list.size();
+            for (int i = 0; i < length; i++) {
                 Integer trueIndex = list.get(i);
                 assert newCells[trueIndex] == null : "New cells array at index expected to be null";
                 newCells[trueIndex] = fromFac[i];
