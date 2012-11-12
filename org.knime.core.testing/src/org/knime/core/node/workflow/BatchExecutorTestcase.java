@@ -71,7 +71,6 @@ import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.knime.base.dbdrivers.Activator;
 import org.knime.core.util.FileUtil;
 import org.knime.core.util.MutableInteger;
 import org.knime.workbench.explorer.ExplorerMountTable;
@@ -102,7 +101,6 @@ public class BatchExecutorTestcase {
         standardTestWorkflowZip = findInPlugin("/files/BatchExecutorTestflow.zip");
         csvOut = File.createTempFile("BatchExecutorTest", ".csv");
         csvOut.deleteOnExit();
-        Activator.registerJDBCDrivers();
     }
 
     /**

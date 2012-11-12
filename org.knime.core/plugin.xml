@@ -2,6 +2,7 @@
 <?eclipse version="3.0"?>
 <plugin>
    <extension-point id="NodeExecutionJobManagerFactory" name="NodeExecutionJobManagerFactory" schema="schema/org.knime.core.NodeExecutionJobManagerFactory.exsd"/>
+   <extension-point id="JDBCDriver" name="JDBCDriver" schema="schema/JDBCDriver.exsd"/>
    <extension
          point="org.knime.core.NodeExecutionJobManagerFactory">
       <NodeExecutionJobManagerFactory

@@ -64,6 +64,12 @@ import java.util.jar.JarFile;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
+import org.eclipse.core.runtime.FileLocator;
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtension;
+import org.eclipse.core.runtime.IExtensionPoint;
+import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.StringHistory;
@@ -75,6 +81,7 @@ import org.knime.core.node.util.StringHistory;
  * @author Thomas Gabriel, University of Konstanz
  */
 public final class DatabaseDriverLoader {
+    private static final String EXT_POINT_ID = "org.knime.core.JDBCDriver";
 
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(DatabaseDriverLoader.class);
@@ -93,29 +100,10 @@ public final class DatabaseDriverLoader {
         = new LinkedHashMap<String, String>();
 
     static {
-        DRIVER_TO_URL.put(JDBC_ODBC_DRIVER, "jdbc:odbc:");
-        DRIVER_TO_URL.put("com.ibm.db2.jcc.DB2Driver", "jdbc:db2:");
-        DRIVER_TO_URL.put("org.firebirdsql.jdbc.FBDriver", "jdbc:firebirdsql:");
-        DRIVER_TO_URL.put("com.mysql.jdbc.Driver", "jdbc:mysql:");
-        DRIVER_TO_URL.put(
-                "oracle.jdbc.OracleDriver", "jdbc:oracle:thin:");
-        DRIVER_TO_URL.put(
-                "oracle.jdbc.driver.OracleDriver", "jdbc:oracle:thin:");
-        DRIVER_TO_URL.put("org.postgresql.Driver", "jdbc:postgresql:");
-        DRIVER_TO_URL.put("com.microsoft.sqlserver.jdbc.SQLServerDriver",
-                "jdbc:sqlserver:");
-        DRIVER_TO_URL.put("com.microsoft.jdbc.sqlserver.SQLServerDriver",
-                "jdbc:microsoft:sqlserver:");
-        DRIVER_TO_URL.put("org.apache.derby.jdbc.ClientDriver", "jdbc:derby:");
-        DRIVER_TO_URL.put("jdbc.FrontBase.FBJDriver", "jdbc:FrontBase:");
-        DRIVER_TO_URL.put("org.hsqldb.jdbcDriver", "jdbc:hsqldb:hsql:");
-        DRIVER_TO_URL.put("com.ingres.jdbc.IngresDriver", "jdbc:ingres:");
-        DRIVER_TO_URL.put("com.openbase.jdbc.ObDriver", "jdbc:openbase:");
-        DRIVER_TO_URL.put("net.sourceforge.jtds.jdbc.Driver",
-                "jdbc:jtds:sybase:");
-        DRIVER_TO_URL.put("com.sybase.jdbc3.jdbc.SybDriver",
-                "jdbc:sybase:Tds:");
-        DRIVER_TO_URL.put("org.sqlite.JDBC", "jdbc:sqlite:");
+        createDriverProtocolMapping();
+        registerODBCBridge();
+        initDriverHistory();
+        loadDriversFromExtensionPoint();
     }
 
     /**
@@ -130,9 +118,32 @@ public final class DatabaseDriverLoader {
         = new HashMap<String, DatabaseWrappedDriver>();
 
     /**
-     * Register Java's jdbc-odbc bridge.
+     * Creates a mapping from JDBC driver class names to the corresponding JDBC connection strings.
      */
-    static {
+    private static void createDriverProtocolMapping() {
+        DRIVER_TO_URL.put(JDBC_ODBC_DRIVER, "jdbc:odbc:");
+        DRIVER_TO_URL.put("com.ibm.db2.jcc.DB2Driver", "jdbc:db2:");
+        DRIVER_TO_URL.put("org.firebirdsql.jdbc.FBDriver", "jdbc:firebirdsql:");
+        DRIVER_TO_URL.put("com.mysql.jdbc.Driver", "jdbc:mysql:");
+        DRIVER_TO_URL.put("oracle.jdbc.OracleDriver", "jdbc:oracle:thin:");
+        DRIVER_TO_URL.put("oracle.jdbc.driver.OracleDriver", "jdbc:oracle:thin:");
+        DRIVER_TO_URL.put("org.postgresql.Driver", "jdbc:postgresql:");
+        DRIVER_TO_URL.put("com.microsoft.sqlserver.jdbc.SQLServerDriver", "jdbc:sqlserver:");
+        DRIVER_TO_URL.put("com.microsoft.jdbc.sqlserver.SQLServerDriver", "jdbc:microsoft:sqlserver:");
+        DRIVER_TO_URL.put("org.apache.derby.jdbc.ClientDriver", "jdbc:derby:");
+        DRIVER_TO_URL.put("jdbc.FrontBase.FBJDriver", "jdbc:FrontBase:");
+        DRIVER_TO_URL.put("org.hsqldb.jdbcDriver", "jdbc:hsqldb:hsql:");
+        DRIVER_TO_URL.put("com.ingres.jdbc.IngresDriver", "jdbc:ingres:");
+        DRIVER_TO_URL.put("com.openbase.jdbc.ObDriver", "jdbc:openbase:");
+        DRIVER_TO_URL.put("net.sourceforge.jtds.jdbc.Driver", "jdbc:jtds:sybase:");
+        DRIVER_TO_URL.put("com.sybase.jdbc3.jdbc.SybDriver", "jdbc:sybase:Tds:");
+        DRIVER_TO_URL.put("org.sqlite.JDBC", "jdbc:sqlite:");
+    }
+
+    /**
+     * Registers the native JDBC-ODBC bridge.
+     */
+    private static void registerODBCBridge() {
         try {
             Class<?> driverClass = Class.forName(JDBC_ODBC_DRIVER);
             DatabaseWrappedDriver d = new DatabaseWrappedDriver(
@@ -146,9 +157,9 @@ public final class DatabaseDriverLoader {
     }
 
     /**
-     * Init driver history on start-up.
+     *
      */
-    static {
+    private static void initDriverHistory() {
         // load all drivers from history file, before KNIME 2.1.1 only
         StringHistory hi = StringHistory.getInstance("database_library_files");
         for (String hist : hi.getHistory()) {
@@ -306,4 +317,30 @@ public final class DatabaseDriverLoader {
         return DRIVERFILE_TO_DRIVERCLASS.get(driverClass);
     }
 
+
+    /**
+     * Loads all JDBC driver registered via the extension point.
+     */
+    private static void loadDriversFromExtensionPoint() {
+        IExtensionRegistry registry = Platform.getExtensionRegistry();
+        IExtensionPoint point = registry.getExtensionPoint(EXT_POINT_ID);
+        if (point == null) {
+            throw new IllegalStateException("Invalid extension point id: " + EXT_POINT_ID);
+
+        }
+        for (IExtension ext : point.getExtensions()) {
+            IConfigurationElement[] elements = ext.getConfigurationElements();
+            for (IConfigurationElement e : elements) {
+                String path = e.getAttribute("jarFile");
+                String bundleId = e.getDeclaringExtension().getNamespaceIdentifier();
+
+                URL jdbcUrl = Platform.getBundle(bundleId).getEntry(path);
+                try {
+                    loadDriver(new File(FileLocator.toFileURL(jdbcUrl).getPath()));
+                } catch (IOException ex) {
+                    LOGGER.error("Could not load JDBC driver '" + path + "': " + ex.getMessage(), ex);
+                }
+            }
+        }
+    }
 }
