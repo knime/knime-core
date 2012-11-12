@@ -36,6 +36,7 @@ import junit.framework.TestCase;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class ThreadPoolTest extends TestCase {
+    private static final int LOOPS = 20;
     /** A counter for the Testers. */
     private static int count = 0;
     /** Counter for running threads. */
@@ -94,7 +95,7 @@ public class ThreadPoolTest extends TestCase {
      */
     public void testRootPool() throws InterruptedException {
         ThreadPool root = new ThreadPool(3);
-        final int loops = 200;
+        final int loops = LOOPS;
 
         for (int i = 1; i <= loops; i++) {
             root.submit(new Tester(root));
@@ -140,7 +141,7 @@ public class ThreadPoolTest extends TestCase {
      */
     public void testRootInvisible() throws InterruptedException {
         final ThreadPool root = new ThreadPool(3);
-        final int loops = 200;
+        final int loops = LOOPS;
 
         final Callable<?> submitter = new Callable<Void>() {
             @Override
@@ -196,7 +197,7 @@ public class ThreadPoolTest extends TestCase {
         pools[2] = root.createSubPool(5);
         pools[3] = pools[1].createSubPool(10);
 
-        final int loops = 200;
+        final int loops = LOOPS;
 
         for (int i = 1; i <= loops; i++) {
             final int k = (int) (Math.random() * pools.length);
@@ -229,7 +230,7 @@ public class ThreadPoolTest extends TestCase {
         final ThreadPool root = new ThreadPool(10);
         final ThreadPool sub1 = root.createSubPool(6);
         final ThreadPool sub2 = root.createSubPool(6);
-        final int loops = 200;
+        final int loops = LOOPS;
 
         final Callable<?> submitter = new Callable<Void>() {
             @Override
@@ -284,7 +285,7 @@ public class ThreadPoolTest extends TestCase {
      */
     public void testRootEnqueue() throws InterruptedException {
         ThreadPool root = new ThreadPool(3);
-        final int loops = 200;
+        final int loops = LOOPS;
 
         for (int i = 1; i <= loops; i++) {
             if (Math.random() > 0.4) {
@@ -348,7 +349,7 @@ public class ThreadPoolTest extends TestCase {
         pools[2] = root.createSubPool(5);
         pools[3] = pools[1].createSubPool(10);
 
-        final int loops = 200;
+        final int loops = LOOPS;
 
         for (int i = 1; i <= loops; i++) {
             final int k = (int) (Math.random() * pools.length);
