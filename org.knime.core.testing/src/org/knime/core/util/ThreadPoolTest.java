@@ -37,6 +37,7 @@ import junit.framework.TestCase;
  */
 public class ThreadPoolTest extends TestCase {
     private static final int LOOPS = 20;
+    private static final int LOOPS_MODULO = LOOPS / 5;
     /** A counter for the Testers. */
     private static int count = 0;
     /** Counter for running threads. */
@@ -101,7 +102,7 @@ public class ThreadPoolTest extends TestCase {
             root.submit(new Tester(root));
             System.out.println("Submitted task " + i + ", " + m_running.get()
                     + " running threads");
-            if (i % 30 == 0) {
+            if (i % LOOPS_MODULO == 0) {
                 root.setMaxThreads(root.getMaxThreads() + 1);
             }
 
@@ -154,7 +155,7 @@ public class ThreadPoolTest extends TestCase {
                     }
                     System.out.println("Submitted task " + i + ", "
                             + m_running.get() + " running threads");
-                    if (i % 30 == 0) {
+                    if (i % LOOPS_MODULO == 0) {
                         root.setMaxThreads(root.getMaxThreads() + 1);
                     }
 
@@ -205,7 +206,7 @@ public class ThreadPoolTest extends TestCase {
             pools[k].submit(new Tester(pools[k]));
             System.out.println("Submitted task " + i + ", " + m_running.get()
                     + " running threads");
-            if (i % 30 == 0) {
+            if (i % LOOPS_MODULO == 0) {
                 pools[k].setMaxThreads(pools[k].getMaxThreads() + 1);
             }
 
@@ -296,7 +297,7 @@ public class ThreadPoolTest extends TestCase {
             System.out.println("Submitted task " + i + ", " + m_running.get()
                     + " running threads, " + root.getQueueSize()
                     + " queued jobs");
-            if (i % 30 == 0) {
+            if (i % LOOPS_MODULO == 0) {
                 root.setMaxThreads(root.getMaxThreads() + 1);
             }
 
@@ -362,7 +363,7 @@ public class ThreadPoolTest extends TestCase {
             System.out.println("Submitted task " + i + ", " + m_running.get()
                     + " running threads, " + root.getQueueSize()
                     + " queued jobs");
-            if (i % 30 == 0) {
+            if (i % LOOPS_MODULO == 0) {
                 pools[k].setMaxThreads(pools[k].getMaxThreads() + 1);
             }
 
