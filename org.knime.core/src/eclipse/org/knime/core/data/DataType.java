@@ -672,7 +672,7 @@ public final class DataType {
         boolean hasPrefValueClass = config.getBoolean(CFG_HAS_PREF_VALUE);
         String[] valueClassNames = config.getStringArray(CFG_VALUE_CLASSES);
         List<Class<? extends DataValue>> valueClasses = getClasses(valueClassNames);
-        String[] adapterClassNames = config.getStringArray(CFG_VALUE_CLASSES, new String[0]);
+        String[] adapterClassNames = config.getStringArray(CFG_ADAPTER_CLASSES, new String[0]);
         List<Class<? extends DataValue>> adapterClasses = getClasses(adapterClassNames);
         try {
             return new DataType(hasPrefValueClass, valueClasses, collectionElementType, adapterClasses);

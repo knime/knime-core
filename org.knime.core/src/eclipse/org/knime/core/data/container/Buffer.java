@@ -89,6 +89,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.collection.BlobSupportDataCellIterator;
+import org.knime.core.data.collection.CellCollection;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.container.BlobDataCell.BlobAddress;
 import org.knime.core.data.container.BufferFromFileIteratorVersion20.DataCellStreamReader;
@@ -686,8 +687,8 @@ class Buffer implements KNIMEStreamConstants {
         } else if (cell instanceof BlobDataCell) {
             cl = CellClassInfo.get(cell);
             ad = ((BlobDataCell)cell).getBlobAddress();
-        } else if (cell instanceof CollectionDataValue) {
-            CollectionDataValue cdv = (CollectionDataValue)cell;
+        } else if (cell instanceof CellCollection) {
+            CellCollection cdv = (CellCollection)cell;
             if (cdv.containsBlobWrapperCells()) {
                 Iterator<DataCell> it = cdv.iterator();
                 if (!(it instanceof BlobSupportDataCellIterator)) {

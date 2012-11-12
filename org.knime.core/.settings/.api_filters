@@ -3880,6 +3880,15 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/collection/CollectionDataValue.java" type="org.knime.core.data.collection.CollectionDataValue">
+        <filter comment="Peter and I reviewed this change and didn't understand why this would cause any compatibility problems (extracting CellCollection interface from CollectionDataValue)" id="403984517">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.collection.CollectionDataValue"/>
+                <message_argument value="org.knime.core.data.collection.CellCollection"/>
+                <message_argument value="containsBlobWrapperCells()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/CopyNodePersistor.java" type="org.knime.core.node.CopyNodePersistor">
         <filter id="643842064">
             <message_arguments>

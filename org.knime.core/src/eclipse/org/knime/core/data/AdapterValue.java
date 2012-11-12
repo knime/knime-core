@@ -52,7 +52,10 @@ package org.knime.core.data;
 
 import java.util.Map;
 
-/**
+/** Interface defining access on {@link AdapterCell}.
+ *
+ * @noextend This interface is not intended to be extended by clients.
+ * @noimplement Use {@link AdapterCell} instead.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @since 2.7
@@ -90,9 +93,11 @@ public interface AdapterValue extends DataValue {
     public <V extends DataValue> MissingValue getAdapterError(final Class<V> valueClass);
 
     /**
-     * Returns a read-only map of all adapters. This method should only be used for internal purposes.
-     *
+     * Returns a read-only map of all adapters. The mapped cells are special instances with blob support. This
+     * method is not meant to be used outside the KNIME core plugin.
+
      * @return a read-only adapter map
+     * @noreference This method is not intended to be referenced by clients.
      */
     public Map<Class<? extends DataValue>, DataCell> getAdapterMap();
 }

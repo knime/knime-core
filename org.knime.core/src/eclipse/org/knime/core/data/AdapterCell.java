@@ -53,8 +53,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import org.knime.core.data.collection.CellCollection;
+import org.knime.core.data.collection.DefaultBlobSupportDataCellIterator;
+import org.knime.core.data.container.BlobDataCell;
+import org.knime.core.data.container.BlobWrapperDataCell;
 
 /**
  * Abstract implementation of an adapter cell. An adapter cells allows to store several representation of an entity
@@ -68,7 +74,7 @@ import java.util.Map;
  * @since 2.7
  */
 @SuppressWarnings({"serial"})
-public abstract class AdapterCell extends DataCell implements Cloneable, RWAdapterValue {
+public abstract class AdapterCell extends DataCell implements Cloneable, RWAdapterValue, CellCollection {
     private static final int MAX_ADAPTERS = 127;
 
     /**
@@ -120,7 +126,7 @@ public abstract class AdapterCell extends DataCell implements Cloneable, RWAdapt
         }
     }
 
-    protected HashMap<Class<? extends DataValue>, DataCell> m_adapterMap;
+    private BlobWrapperHashMap m_adapterMap;
 
     /**
      * This constructor should only be used by the de-serializer. It de-serializes a cell according to
@@ -136,7 +142,7 @@ public abstract class AdapterCell extends DataCell implements Cloneable, RWAdapt
             throw new IllegalStateException("Empty adpater cells are not allowed");
         }
 
-        m_adapterMap = new HashMap<Class<? extends DataValue>, DataCell>(4);
+        m_adapterMap = new BlobWrapperHashMap();
 
         List<Class<? extends DataValue>> values = new ArrayList<Class<? extends DataValue>>(Math.max(valueCount, 4));
         while (valueCount > 0) {
@@ -161,14 +167,16 @@ public abstract class AdapterCell extends DataCell implements Cloneable, RWAdapt
     }
 
     /**
-     * Creates a new adapter cell that contains a single data cell. This value classes that this data cell can represent
-     * are given in the second argument. The adapter cell is then adaptable to all this values.
+     * Used by extensions to fill adapter map from an existing AdapterValue. Rest is equivalent to
+     * {@link AdapterCell#AdapterCell(DataCell, Class...)}.
      *
      * @param valueCell any data cell
+     * @param predefinedAdapters Existing adapters.
      * @param valueClasses the value classes that this adapter cell should be adaptable to
      */
-    public AdapterCell(final DataCell valueCell, final Class<? extends DataValue>... valueClasses) {
-        m_adapterMap = new HashMap<Class<? extends DataValue>, DataCell>(4);
+    protected AdapterCell(final DataCell valueCell, final AdapterValue predefinedAdapters,
+                          final Class<? extends DataValue>... valueClasses) {
+        m_adapterMap = new BlobWrapperHashMap();
         if (valueClasses.length == 0) {
             for (Class<? extends DataValue> v : valueCell.getType().getValueClasses()) {
                 m_adapterMap.put(v, valueCell);
@@ -177,11 +185,25 @@ public abstract class AdapterCell extends DataCell implements Cloneable, RWAdapt
             for (Class<? extends DataValue> v : valueClasses) {
                 if (!v.isAssignableFrom(valueCell.getClass())) {
                     throw new IllegalArgumentException("A " + valueCell.getClass().getSimpleName()
-                            + " is not compatible with" + v.getSimpleName());
+                                                       + " is not compatible with" + v.getSimpleName());
                 }
                 m_adapterMap.put(v, valueCell);
             }
         }
+        if (predefinedAdapters != null) {
+            m_adapterMap.putAll(predefinedAdapters.getAdapterMap());
+        }
+    }
+
+    /**
+     * Creates a new adapter cell that contains a single data cell. This value classes that this data cell can represent
+     * are given in the second argument. The adapter cell is then adaptable to all this values.
+     *
+     * @param valueCell any data cell
+     * @param valueClasses the value classes that this adapter cell should be adaptable to
+     */
+    public AdapterCell(final DataCell valueCell, final Class<? extends DataValue>... valueClasses) {
+        this(valueCell, null, valueClasses);
     }
 
     /** {@inheritDoc} */
@@ -215,7 +237,7 @@ public abstract class AdapterCell extends DataCell implements Cloneable, RWAdapt
             throw new IllegalArgumentException("At most " + MAX_ADAPTERS + " adapters are supported per cell");
         }
         AdapterCell clone = clone();
-        clone.m_adapterMap = new HashMap<Class<? extends DataValue>, DataCell>(m_adapterMap);
+        clone.m_adapterMap = new BlobWrapperHashMap(m_adapterMap);
         for (Class<? extends DataValue> v : valueClasses) {
             if (!v.isAssignableFrom(valueCell.getClass())) {
                 throw new IllegalArgumentException("A " + valueCell.getClass().getSimpleName()
@@ -281,4 +303,71 @@ public abstract class AdapterCell extends DataCell implements Cloneable, RWAdapt
     public Map<Class<? extends DataValue>, DataCell> getAdapterMap() {
         return Collections.unmodifiableMap(m_adapterMap);
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean containsBlobWrapperCells() {
+        for (DataCell c : m_adapterMap.values()) {
+            if (c instanceof BlobWrapperDataCell) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Iterator<DataCell> iterator() {
+        return new DefaultBlobSupportDataCellIterator(m_adapterMap.values().iterator());
+    }
+
+    private static final class BlobWrapperHashMap extends HashMap<Class<? extends DataValue>, DataCell> {
+
+        BlobWrapperHashMap() {
+            super(4);
+        }
+
+        BlobWrapperHashMap(final BlobWrapperHashMap m) {
+            super(m);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataCell get(final Object key) {
+            DataCell c = super.get(key);
+            if (c instanceof BlobWrapperDataCell) {
+                return ((BlobWrapperDataCell)c).getCell();
+            }
+            return c;
+        }
+
+        DataCell getUnwrapped(final Object key) {
+            return super.get(key);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataCell put(final Class<? extends DataValue> key, final DataCell c) {
+            DataCell wrapperCell;
+            if (c instanceof BlobWrapperDataCell) {
+                wrapperCell = c;
+            } else if (c instanceof BlobDataCell) {
+                wrapperCell = new BlobWrapperDataCell((BlobDataCell)c);
+            } else {
+                wrapperCell = c;
+            }
+            return super.put(key, wrapperCell);
+        }
+
+
+    }
+
 }

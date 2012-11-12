@@ -58,8 +58,6 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
-import org.knime.core.data.container.BlobDataCell;
-import org.knime.core.data.container.BlobWrapperDataCell;
 import org.knime.core.data.renderer.DataValueRendererFamily;
 import org.knime.core.data.renderer.DefaultDataValueRenderer;
 import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
@@ -71,7 +69,7 @@ import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
  * types manual</a>.
  * @author Bernd Wiswedel, University of Konstanz
  */
-public interface CollectionDataValue extends DataValue, Iterable<DataCell> {
+public interface CollectionDataValue extends DataValue, CellCollection {
 
     /** Meta information to collection values.
      * @see DataValue#UTILITY
@@ -85,35 +83,6 @@ public interface CollectionDataValue extends DataValue, Iterable<DataCell> {
     /** Get the number of elements in this collection.
      * @return size of the collection. */
     public int size();
-
-    /** Get whether the collection contains special {@link BlobWrapperDataCell}
-     * (framework use). This method gives a hint to the framwork (specifically
-     * to the classes {@link org.knime.core.data.container.DataContainer
-     * DataContainer} and {@link org.knime.core.node.BufferedDataContainer
-     * BufferedDataContainer}) whether they should handle the cell implementing
-     * this interface with care with respect to contained {@link BlobDataCell}.
-     *
-     * <p>This method should return <code>true</code> only if
-     * <ul>
-     * <li>The iterator returned by {@link #iterator()} implements
-     * {@link BlobSupportDataCellIterator} (which allows the framework to access
-     * the {@link BlobWrapperDataCell} without touching the contained
-     * {@link BlobDataCell} (which is an expensive operation) and </li>
-     * <li>at least one element returned by the iterator is indeed a
-     * {@link BlobWrapperDataCell}.</li>
-     * </ul>
-     *
-     * <p>Implementation note: This method is really only a helper for the
-     * framework. The same information can be retrieved by accessing the
-     * iterator. This can be an expensive and unnecessary operation, however.
-     *
-     * @return Whether the collection contains blob wrapper cells.
-     */
-    public boolean containsBlobWrapperCells();
-
-    /** {@inheritDoc} */
-    @Override
-    public Iterator<DataCell> iterator();
 
     /** Implementations of the meta information of this value class. */
     public static class CollectionUtilityFactory extends UtilityFactory {

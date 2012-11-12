@@ -446,6 +446,8 @@ public abstract class Config extends ConfigBase
         DATACELL_MAP.put(LongCellEntry.CLASS.getName(), new LongCellEntry());
         DATACELL_MAP.put(DateAndTimeCellEntry.CLASS.getName(),
                 new DateAndTimeCellEntry());
+        // missing cell was moved to separate class in 2.7 -- this is the backward compatible version
+        DATACELL_MAP.put("org.knime.core.data.DataType$MissingCell", new MissingCellEntry());
         DATACELL_MAP.put(MissingCellEntry.CLASS.getName(),
                 new MissingCellEntry());
         DATACELL_MAP.put(ComplexNumberCellEntry.CLASS.getName(),
@@ -612,7 +614,7 @@ public abstract class Config extends ConfigBase
             try {
                 String serString = config.getString(CFG_DATA_CELL_SER, null);
                 if (serString == null) { // backward comp. to v1.0.0
-                    return (DataCell)Config.readObject(null, className);
+                    return (DataCell)Config.readObject(className, null);
                 } else {
                     return (DataCell)Config.readObject(className, serString);
                 }
