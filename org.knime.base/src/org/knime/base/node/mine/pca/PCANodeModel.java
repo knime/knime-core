@@ -502,7 +502,7 @@ public class PCANodeModel extends NodeModel {
             throw new IllegalArgumentException("table contains missing values");
         }
         // put each cell of a pca row into the row to append
-        final DataCell[] cells = new DataCell[inputColumnIndices.length];
+        final DataCell[] cells = new DataCell[resultDimensions];
 
         if (missingValues) {
             for (int i = 0; i < resultDimensions; i++) {
