@@ -197,6 +197,12 @@ public class JavaSnippetCellFactory implements CellFactory {
                     field.set(m_jsnippet, v);
                 }
             }
+            // reset the system output fields to null (see also bug 3781)
+            for (OutCol outCol : m_snippet.getSystemFields().getOutColFields()) {
+                Field field = m_jsnippet.getClass().getField(
+                        outCol.getJavaName());
+                field.set(m_jsnippet, null);
+            }
             // populate the system input flow variable fields with data
             for (InVar inCol : m_snippet.getSystemFields().getInVarFields()) {
                 Field field = m_jsnippet.getClass().getField(
