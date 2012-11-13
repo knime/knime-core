@@ -3880,12 +3880,27 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/collection/BlobSupportDataCellIterator.java" type="org.knime.core.data.collection.BlobSupportDataCellIterator">
+        <filter comment="added in 2.7 -- assuming this API is not yet implemented" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.collection.BlobSupportDataCellIterator"/>
+                <message_argument value="replaceLastReturnedWithWrapperCell(DataCell)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/collection/CollectionDataValue.java" type="org.knime.core.data.collection.CollectionDataValue">
         <filter comment="Peter and I reviewed this change and didn't understand why this would cause any compatibility problems (extracting CellCollection interface from CollectionDataValue)" id="403984517">
             <message_arguments>
                 <message_argument value="org.knime.core.data.collection.CollectionDataValue"/>
                 <message_argument value="org.knime.core.data.collection.CellCollection"/>
                 <message_argument value="containsBlobWrapperCells()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/collection/DefaultBlobSupportDataCellIterator.java" type="org.knime.core.data.collection.DefaultBlobSupportDataCellIterator">
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="DefaultBlobSupportDataCellIterator(ListIterator&lt;DataCell&gt;)"/>
             </message_arguments>
         </filter>
     </resource>

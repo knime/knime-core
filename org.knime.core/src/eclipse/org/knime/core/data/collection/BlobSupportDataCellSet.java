@@ -203,6 +203,7 @@ public class BlobSupportDataCellSet
     /**
      * {@inheritDoc}
      */
+    @Override
     public Iterator<DataCell> iterator() {
         return new WrapperIterator(m_set.iterator());
     }
@@ -340,7 +341,7 @@ public class BlobSupportDataCellSet
      */
     private static final class Wrapper {
 
-        private final DataCell m_cell;
+        private DataCell m_cell;
 
         /**
          *
@@ -404,30 +405,29 @@ public class BlobSupportDataCellSet
     private static final class WrapperIterator implements BlobSupportDataCellIterator {
 
         private final Iterator<Wrapper> m_iter;
+        private Wrapper m_lastReturned;
 
         private WrapperIterator(final Iterator<Wrapper> iter) {
             m_iter = iter;
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        /** {@inheritDoc} */
+        @Override
         public DataCell nextWithBlobSupport() {
-            return m_iter.next().getCell();
+            m_lastReturned = m_iter.next();
+            return m_lastReturned.getCell();
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        /** {@inheritDoc} */
+        @Override
         public boolean hasNext() {
             return m_iter.hasNext();
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        /** {@inheritDoc} */
+        @Override
         public DataCell next() {
-            DataCell cell = m_iter.next().getCell();
+            DataCell cell = nextWithBlobSupport();
             if (cell instanceof BlobWrapperDataCell) {
                 return ((BlobWrapperDataCell)cell).getCell();
             } else {
@@ -435,9 +435,18 @@ public class BlobSupportDataCellSet
             }
         }
 
-        /**
-         * {@inheritDoc}
-         */
+        /** {@inheritDoc} */
+        @Override
+        public void replaceLastReturnedWithWrapperCell(final DataCell cell) {
+            if (m_lastReturned == null) {
+                throw new IllegalStateException("nextWithBlobSupport not called");
+            }
+            m_lastReturned.m_cell = cell;
+            m_lastReturned = null;
+        }
+
+        /** {@inheritDoc} */
+        @Override
         public void remove() {
             throw new UnsupportedOperationException("Modification not allowed");
         }

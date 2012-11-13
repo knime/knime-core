@@ -322,7 +322,8 @@ public abstract class AdapterCell extends DataCell implements Cloneable, RWAdapt
      */
     @Override
     public Iterator<DataCell> iterator() {
-        return new DefaultBlobSupportDataCellIterator(m_adapterMap.values().iterator());
+        Iterator iterator = m_adapterMap.entrySet().iterator();
+        return new DefaultBlobSupportDataCellIterator(iterator);
     }
 
     private static final class BlobWrapperHashMap extends HashMap<Class<? extends DataValue>, DataCell> {

@@ -56,7 +56,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -139,7 +138,7 @@ public class BlobSupportDataCellList
         } else {
             m_elementType = commonType;
         }
-        m_cellList = Collections.unmodifiableList(cellList);
+        m_cellList = cellList;
     }
 
     /**
@@ -187,7 +186,7 @@ public class BlobSupportDataCellList
         if (!containsBlobWrapperCells()) {
             return m_cellList.iterator();
         }
-        return new DefaultBlobSupportDataCellIterator(m_cellList.iterator());
+        return new DefaultBlobSupportDataCellIterator(m_cellList.listIterator());
     }
 
     /**

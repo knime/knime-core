@@ -44,13 +44,16 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Aug 11, 2008 (wiswedel): created
  */
 package org.knime.core.data.collection;
 
 import java.util.Iterator;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.container.BlobWrapperDataCell;
@@ -61,13 +64,19 @@ import org.knime.core.data.container.BlobWrapperDataCell;
  */
 public class DefaultBlobSupportDataCellIterator implements
         BlobSupportDataCellIterator {
-    
-    private final Iterator<DataCell> m_it;
-    
+
+    private final InternalIterator m_it;
+
     /** Create new instance by wrapping an existing iterator.
      * @param it To wrap. */
-    public DefaultBlobSupportDataCellIterator(final Iterator<DataCell> it) {
-        m_it = it;
+    public DefaultBlobSupportDataCellIterator(final ListIterator<DataCell> it) {
+        m_it = new ListInternalIterator(it);
+    }
+
+    /** Create new instance by wrapping an existing iterator.
+     * @param it To wrap. */
+    public DefaultBlobSupportDataCellIterator(final Iterator<Map.Entry<?, DataCell>> it) {
+        m_it = new MapEntryInternalIterator(it);
     }
 
     /** {@inheritDoc} */
@@ -92,11 +101,108 @@ public class DefaultBlobSupportDataCellIterator implements
         return next;
     }
 
+    /** {@inheritDoc}
+     * @since 2.7
+     */
+    @Override
+    public void replaceLastReturnedWithWrapperCell(final DataCell cell) {
+        m_it.replaceLast(cell);
+    }
+
     /** {@inheritDoc} */
     @Override
     public void remove() {
-        throw new UnsupportedOperationException(
-                "No write DataCell collections");
+        throw new UnsupportedOperationException("No write DataCell collections");
+    }
+
+    /** An iterator that allows replacing the last returned element. Used by Buffer to replace a data cell
+     * with a blob wrapper cell. */
+    abstract static class InternalIterator implements Iterator<DataCell> {
+
+        /** Called by DataContainer Buffer to replace the contained data cell by a address-corrected blob wrapper.
+         * @param cell The replacement
+         */
+        abstract void replaceLast(final DataCell cell);
+
+        /** {@inheritDoc} */
+        @Override
+        public void remove() {
+            throw new UnsupportedOperationException("No write DataCell collections");
+        }
+    }
+
+    /** List based internal iterator. Used {@link ListIterator#set(Object)} to modify the collection. */
+    private static final class ListInternalIterator extends InternalIterator {
+
+        private final ListIterator<DataCell> m_iterator;
+
+
+        /** @param iterator to wrap. */
+        ListInternalIterator(final ListIterator<DataCell> iterator) {
+            m_iterator = iterator;
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public boolean hasNext() {
+            return m_iterator.hasNext();
+        }
+
+        /** {@inheritDoc} */
+        @Override
+        public DataCell next() {
+            return m_iterator.next();
+        }
+
+
+        /** {@inheritDoc} */
+        @Override
+        public void replaceLast(final DataCell cell) {
+            m_iterator.set(cell);
+        }
+    }
+
+    /** Map based internal iterator. Used {@link java.util.Map.Entry#setValue(Object)} to modify map. */
+    private static final class MapEntryInternalIterator extends InternalIterator {
+
+        private final Iterator<Map.Entry<?, DataCell>> m_mapIterator;
+        private Map.Entry<?, DataCell> m_lastReturnedEntry;
+
+        /** @param mapIterator iterator to wrap (only the values)
+         */
+        MapEntryInternalIterator(final Iterator<Entry<?, DataCell>> mapIterator) {
+            m_mapIterator = mapIterator;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean hasNext() {
+            return m_mapIterator.hasNext();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataCell next() {
+            m_lastReturnedEntry = m_mapIterator.next();
+            return m_lastReturnedEntry.getValue();
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        void replaceLast(final DataCell cell) {
+            if (m_lastReturnedEntry == null) {
+                throw new IllegalStateException("next not called");
+            }
+            m_lastReturnedEntry.setValue(cell);
+            m_lastReturnedEntry = null;
+        }
+
     }
 
 }

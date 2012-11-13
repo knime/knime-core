@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Aug 11, 2008 (wiswedel): created
  */
@@ -56,25 +56,35 @@ import org.knime.core.data.DataCell;
 
 /**
  * Iterator on a collection of {@link DataCell} objects, permitting
- * the access on underlying 
+ * the access on underlying
  * {@link org.knime.core.data.container.BlobWrapperDataCell BlobWrapperDataCell}
  * if applicable.
- * 
+ *
  * <p>
- * Instances of this iterator are returned by the 
+ * Instances of this iterator are returned by the
  * {@link CollectionDataValue#iterator()} method when the collection contains
- * wrapped blobs. The framework will handle such cases with care, that is, 
- * by accessing the wrapper cell, not the actual blob (which might be 
- * unnecessary and expensive).  
+ * wrapped blobs. The framework will handle such cases with care, that is,
+ * by accessing the wrapper cell, not the actual blob (which might be
+ * unnecessary and expensive).
  * @author Bernd Wiswedel, University of Konstanz
  */
 public interface BlobSupportDataCellIterator extends Iterator<DataCell> {
-    
-    /** Get the next DataCell, not unwrapping the blob when it is a 
-     * {@link org.knime.core.data.container.BlobWrapperDataCell 
+
+    /** Get the next DataCell, not unwrapping the blob when it is a
+     * {@link org.knime.core.data.container.BlobWrapperDataCell
      * BlobWrapperDataCell}.
      * @return The next cell.
      */
     public DataCell nextWithBlobSupport();
+
+    /** Replaces the last returned element with a wrapper cell that contains additional information. Necessary when
+     * a blob gets copied because it belongs to a non global table (created in a table that is not (yet) part of the
+     * output port).
+     * @param cell ...
+     * @since 2.7
+     */
+    // method added in 2.7 ... assuming that no one is implementing this interface but using
+    // DefaultBlobSupportDataCellIterator instead.
+    public void replaceLastReturnedWithWrapperCell(final DataCell cell);
 
 }

@@ -679,12 +679,13 @@ class Buffer implements KNIMEStreamConstants {
         boolean isWrapperCell = cell instanceof BlobWrapperDataCell;
         BlobAddress ad;
         final CellClassInfo cl;
-        BlobWrapperDataCell wc = null;
+        BlobWrapperDataCell wc;
         if (isWrapperCell) {
             wc = (BlobWrapperDataCell)cell;
             ad = wc.getAddress();
             cl = wc.getBlobClassInfo();
         } else if (cell instanceof BlobDataCell) {
+            wc = null;
             cl = CellClassInfo.get(cell);
             ad = ((BlobDataCell)cell).getBlobAddress();
         } else if (cell instanceof CellCollection) {
@@ -704,9 +705,16 @@ class Buffer implements KNIMEStreamConstants {
                     DataCell n = it instanceof BlobSupportDataCellIterator
                             ? ((BlobSupportDataCellIterator)
                                     it).nextWithBlobSupport() : it.next();
-                    // we disregard the return value here
-                    handleIncomingBlob(n, col, totalColCount,
-                            copyForVersionHop, forceCopyOfBlobsArg);
+                    DataCell correctedCell = handleIncomingBlob(n, col, totalColCount,
+                                                                copyForVersionHop, forceCopyOfBlobsArg);
+                    if (correctedCell != n) {
+                        if (it instanceof BlobSupportDataCellIterator) {
+                            BlobSupportDataCellIterator bsdi = (BlobSupportDataCellIterator)it;
+                            bsdi.replaceLastReturnedWithWrapperCell(correctedCell);
+                        } else {
+                            // coding problem was reported above.
+                        }
+                    }
                 }
             }
             return cell;
@@ -744,8 +752,7 @@ class Buffer implements KNIMEStreamConstants {
         // assignable m_indicesOfBlobInColumns[col])
         boolean isToCloneForVersionHop = false;
         if (copyForVersionHop) {
-            isToCloneForVersionHop = ad != null
-            && ad.getBufferID() == getBufferID();
+            isToCloneForVersionHop = ad != null && ad.getBufferID() == getBufferID();
             // this if statement handles cases where a blob is added to the
             // buffer multiple times -- don't copy the duplicates
             if (isToCloneForVersionHop && m_indicesOfBlobInColumns == null) {
@@ -785,19 +792,15 @@ class Buffer implements KNIMEStreamConstants {
 
         // if either not previously assigned (ownerBuffer == null) or
         // we have to make a clone
-        if (ownerBuffer == null || isToCloneForVersionHop
-                || isToCloneDueToForceCopyOfBlobs) {
+        if (ownerBuffer == null || isToCloneForVersionHop || isToCloneDueToForceCopyOfBlobs) {
             // need to set ownership if this blob was not assigned yet
             // or has been assigned to an unlinked (i.e. local) buffer
-            boolean isCompress = ad != null ? ad.isUseCompression()
-                    : isUseCompressionForBlobs(cl);
-            BlobAddress rewrite =
-                new BlobAddress(m_bufferID, col, isCompress);
+            boolean isCompress = ad != null ? ad.isUseCompression() : isUseCompressionForBlobs(cl);
+            BlobAddress rewrite = new BlobAddress(m_bufferID, col, isCompress);
             if (ad == null) {
                 // take ownership
                 if (isWrapperCell) {
-                    ((BlobWrapperDataCell)cell).setAddressAndBuffer(
-                            rewrite, this);
+                    ((BlobWrapperDataCell)cell).setAddressAndBuffer(rewrite, this);
                 } else {
                     ((BlobDataCell)cell).setBlobAddress(rewrite);
                 }
@@ -806,7 +809,7 @@ class Buffer implements KNIMEStreamConstants {
             if (m_indicesOfBlobInColumns == null) {
                 m_indicesOfBlobInColumns = new int[totalColCount];
             }
-            Buffer b;
+            Buffer b = null; // to buffer to copy the blob from (if at all)
             if (isToCloneDueToForceCopyOfBlobs) {
                 b = ownerBuffer;
                 m_copiedBlobsMap.put(ad, rewrite);
@@ -837,8 +840,7 @@ class Buffer implements KNIMEStreamConstants {
                 // also cause trouble ("no such file"), which is ok as we need
                 // to take an error along
                 if (bc != null) {
-                    writeBlobDataCell(
-                            bc, rewrite, getSerializerForDataCell(cl));
+                    writeBlobDataCell(bc, rewrite, getSerializerForDataCell(cl));
                     wc = new BlobWrapperDataCell(this, rewrite, cl, bc);
                 } else {
                     wc = new BlobWrapperDataCell(this, rewrite, cl);
