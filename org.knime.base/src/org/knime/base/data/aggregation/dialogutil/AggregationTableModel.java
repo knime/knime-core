@@ -49,7 +49,9 @@
 package org.knime.base.data.aggregation.dialogutil;
 
 import java.util.List;
+
 import javax.swing.table.TableModel;
+
 import org.knime.base.data.aggregation.AggregationMethodDecorator;
 
 
@@ -97,4 +99,25 @@ public interface AggregationTableModel<O extends AggregationMethodDecorator>
      * does not contain such a column
      */
     public int getMissingCellOptionColIdx();
+
+    /**
+     * @return the index of the aggregation operator settings button column
+     * @since 2.7
+     */
+    public int getSettingsButtonColIdx();
+
+
+    /**
+     * @param row the index of the row
+     * @return the row with the given index
+     * @since 2.7
+     */
+    public O getRow(final int row);
+
+    /**
+     * @return <code>true</code> if one of the rows contains a parameter that requires
+     * additional settings
+     * @since 2.7
+     */
+    public boolean containsSettingsOperator();
 }

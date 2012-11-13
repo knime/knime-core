@@ -48,6 +48,28 @@
 
 package org.knime.base.data.aggregation;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.TreeMap;
+
+import javax.swing.JEditorPane;
+import javax.swing.JScrollPane;
+import javax.swing.ScrollPaneConstants;
+
+import org.eclipse.core.runtime.IConfigurationElement;
+import org.eclipse.core.runtime.IExtensionPoint;
+import org.eclipse.core.runtime.IExtensionRegistry;
+import org.eclipse.core.runtime.Platform;
 import org.knime.base.data.aggregation.booleancell.FalseCountOperator;
 import org.knime.base.data.aggregation.booleancell.TrueCountOperator;
 import org.knime.base.data.aggregation.collection.AndElementCountOperator;
@@ -85,7 +107,7 @@ import org.knime.base.data.aggregation.numerical.RangeOperator;
 import org.knime.base.data.aggregation.numerical.StdDeviationOperator;
 import org.knime.base.data.aggregation.numerical.SumOperator;
 import org.knime.base.data.aggregation.numerical.VarianceOperator;
-
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
@@ -93,29 +115,6 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeMap;
-
-import javax.swing.JEditorPane;
-import javax.swing.JScrollPane;
-import javax.swing.ScrollPaneConstants;
-
-import org.eclipse.core.runtime.IConfigurationElement;
-import org.eclipse.core.runtime.IExtensionPoint;
-import org.eclipse.core.runtime.IExtensionRegistry;
-import org.eclipse.core.runtime.Platform;
 
 
 /**
@@ -530,9 +529,17 @@ public final class AggregationMethods {
         if (type == null) {
             return compatibleMethods;
         }
+        final DataType dataType;
+        if (DataType.getMissingCell().getType().equals(type)) {
+            //this is the MissingType return only the general methods since
+            //the MissingType is compatible to all other types which is weird
+            dataType = DataType.getType(DataCell.class);
+        } else {
+            dataType = type;
+        }
         for (final AggregationOperator operator : instance().getOperators()) {
-            if (operator.isCompatible(type)) {
-                compatibleMethods.add(operator);
+            if (operator.isCompatible(dataType)) {
+                compatibleMethods.add(cloneOperator(operator));
             }
         }
         return compatibleMethods;
@@ -751,7 +758,16 @@ public final class AggregationMethods {
         if (operator == null) {
             operator = m_deprecatedOperators.get(id);
         }
-        return operator;
+        return cloneOperator(operator);
+    }
+
+    private static AggregationOperator cloneOperator(
+                                      final AggregationOperator operator) {
+        if (operator == null) {
+            return null;
+        }
+        return operator.createInstance(operator.getGlobalSettings(),
+                operator.getOperatorColumnSettings());
     }
 
     /**
@@ -821,8 +837,13 @@ public final class AggregationMethods {
      * operator name
      */
     public static List<AggregationMethod> getAvailableMethods() {
+        Collection<AggregationOperator> operators = instance().getOperators();
         final List<AggregationMethod> methods =
-            new ArrayList<AggregationMethod>(instance().getOperators());
+            new ArrayList<AggregationMethod>(operators.size());
+        //clone all operators prior returning
+        for (AggregationOperator operator : operators) {
+            methods.add(cloneOperator(operator));
+        }
         Collections.sort(methods);
         return methods;
     }

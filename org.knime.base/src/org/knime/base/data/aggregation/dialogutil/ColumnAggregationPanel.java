@@ -55,14 +55,19 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.table.TableColumnModel;
+
 import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.NamedAggregationOperator;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.config.Config;
 
 
@@ -160,7 +165,7 @@ public class ColumnAggregationPanel extends AbstractAggregationPanel<
                 new NamedAggregationMethodNameTableCellRenderer());
         columnModel.getColumn(0).setCellEditor(
                 new NamedAggregationMethodNameTableCellEditor());
-        columnModel.getColumn(0).setPreferredWidth(105);
+        columnModel.getColumn(0).setPreferredWidth(120);
         columnModel.getColumn(1).setPreferredWidth(45);
     }
 
@@ -174,14 +179,16 @@ public class ColumnAggregationPanel extends AbstractAggregationPanel<
         if (m_type == newType) {
             return;
         }
-        initialize(newType, getTableModel().getRows());
+        initialize(newType, getTableModel().getRows(), getInputTableSpec());
     }
 
     /**
      * @param cnfg the {@link Config} to write to
+     * @see #saveSettingsTo(NodeSettingsWO)
      */
+    @Deprecated
     public void saveSettingsTo(final Config cnfg) {
-        NamedAggregationOperator.saveMethods(cnfg,
+        NamedAggregationOperator.saveMethods((NodeSettingsWO)cnfg,
                 getTableModel().getRows());
     }
 
@@ -189,10 +196,35 @@ public class ColumnAggregationPanel extends AbstractAggregationPanel<
      * @param cnfg the {@link Config} to read from
      * @param type the {@link DataType} the methods should support
      * @throws InvalidSettingsException if the settings are invalid
+     * @see #loadSettingsFrom(NodeSettingsRO, DataType, DataTableSpec)
      */
+    @Deprecated
     public void loadSettingsFrom(final Config cnfg, final DataType type)
     throws InvalidSettingsException {
-        initialize(type, NamedAggregationOperator.loadMethods(cnfg));
+        initialize(type, NamedAggregationOperator.loadMethods(
+                      (NodeSettingsRO)cnfg), null);
+    }
+
+    /**
+     * @param settings the {@link NodeSettingsRO} to write to
+     * @since 2.7
+     */
+    public void saveSettingsTo(final NodeSettingsWO settings) {
+        NamedAggregationOperator.saveMethods(settings,
+                getTableModel().getRows());
+    }
+
+    /**
+     * @param settings the {@link NodeSettingsRO} to read from
+     * @param type the {@link DataType} the methods should support
+     * @param spec the input {@link DataTableSpec}
+     * @throws InvalidSettingsException if the settings are invalid
+     * @since 2.7
+     */
+    public void loadSettingsFrom(final NodeSettingsRO settings,
+             final DataType type, final DataTableSpec spec)
+    throws InvalidSettingsException {
+        initialize(type, NamedAggregationOperator.loadMethods(settings), spec);
     }
 
     /**
@@ -200,10 +232,12 @@ public class ColumnAggregationPanel extends AbstractAggregationPanel<
      * @param type the {@link DataType} the methods should support
      * @param methods the {@link List} of {@link NamedAggregationOperator}s
      * that are initially used
+     * @param spec input {@link DataTableSpec}
+     * @since 2.7
      */
     public void initialize(final DataType type,
-            final List<NamedAggregationOperator> methods) {
-
+            final List<NamedAggregationOperator> methods,
+            final DataTableSpec spec) {
         m_type = type;
         //update the compatible methods list
         final List<NamedAggregationOperator> methods2Use =
@@ -216,7 +250,7 @@ public class ColumnAggregationPanel extends AbstractAggregationPanel<
                 }
             }
             super.initialize(AggregationMethods.getCompatibleMethods(m_type),
-                    methods2Use);
+                    methods2Use, spec);
         }
     }
 
@@ -232,7 +266,11 @@ public class ColumnAggregationPanel extends AbstractAggregationPanel<
      */
     @Override
     protected NamedAggregationOperator getOperator(
-            final AggregationMethod selectedListElement) {
-        return new NamedAggregationOperator(selectedListElement);
+            final AggregationMethod method) {
+        //create a new instance to guarantee that each aggregation operator
+        //uses its own instance
+        final AggregationMethod clonedMethod =
+            AggregationMethods.getMethod4Id(method.getId());
+        return new NamedAggregationOperator(clonedMethod);
     }
 }

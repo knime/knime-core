@@ -56,8 +56,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+
 import javax.swing.table.AbstractTableModel;
 import javax.swing.table.DefaultTableModel;
+
 import org.knime.base.data.aggregation.AggregationMethodDecorator;
 import org.knime.base.data.aggregation.ColumnAggregator;
 
@@ -79,6 +81,8 @@ public abstract class AbstractAggregationTableModel
     private final List<O> m_operators = new ArrayList<O>();
 
     private final int m_missingColIdx;
+
+    private final int m_settingsColIdx;
 
     private final Class<?>[] m_classes;
 
@@ -105,16 +109,25 @@ public abstract class AbstractAggregationTableModel
         }
         if (appendMissingCol) {
             m_missingColIdx = colClasses.length;
-            m_colNames = new String[colNames.length + 1];
+            m_settingsColIdx = m_missingColIdx + 1;
+            m_colNames = new String[colNames.length + 2];
             System.arraycopy(colNames, 0, m_colNames, 0, colNames.length);
             m_colNames[m_missingColIdx] = "Missing";
-            m_classes = new Class<?>[colClasses.length + 1];
+            m_colNames[m_settingsColIdx] = "Parameter";
+            m_classes = new Class<?>[colClasses.length + 2];
             System.arraycopy(colClasses, 0, m_classes, 0, colClasses.length);
             m_classes[m_missingColIdx] = Boolean.class;
+            m_classes[m_settingsColIdx] = Boolean.class;
         } else {
-            m_classes = colClasses;
-            m_colNames = colNames;
             m_missingColIdx = -1;
+            m_settingsColIdx = colClasses.length;
+            m_colNames = new String[colNames.length + 1];
+            System.arraycopy(colNames, 0, m_colNames, 0, colNames.length);
+            m_colNames[m_settingsColIdx] = "Parameter";
+            m_classes = new Class<?>[colClasses.length + 1];
+            System.arraycopy(colClasses, 0, m_classes, 0, colClasses.length);
+            m_classes[m_settingsColIdx] = Boolean.class;
+
         }
     }
 
@@ -185,7 +198,6 @@ public abstract class AbstractAggregationTableModel
             toggleMissingCellOption(row);
         } else {
             setValue(aValue, row, columnIdx);
-
         }
     }
 
@@ -234,6 +246,9 @@ public abstract class AbstractAggregationTableModel
         if (columnIdx == m_missingColIdx) {
             return getOperator(row).supportsMissingValueOption();
         }
+        if (columnIdx == m_settingsColIdx) {
+            return getOperator(row).hasOptionalSettings();
+        }
         return isEditable(row, columnIdx);
     }
 
@@ -265,10 +280,11 @@ public abstract class AbstractAggregationTableModel
     }
 
     /**
-     * @param row the index of the row
-     * @return the row with the given index
+     * {@inheritDoc}
+     * @since 2.7
      */
-    protected O getRow(final int row) {
+    @Override
+    public O getRow(final int row) {
         if (row < 0 || getRowCount() <= row) {
             throw new IllegalArgumentException("Invalid row index: " + row);
         }
@@ -314,6 +330,9 @@ public abstract class AbstractAggregationTableModel
     public Object getValueAt(final int row, final int columnIndex) {
         if (columnIndex == m_missingColIdx) {
             return Boolean.valueOf(getOperator(row).inclMissingCells());
+        }
+        if (columnIndex == m_settingsColIdx) {
+            return Boolean.valueOf(getOperator(row).hasOptionalSettings());
         }
         return getValueAtRow(row, columnIndex);
     }
@@ -367,9 +386,32 @@ public abstract class AbstractAggregationTableModel
 
     /**
      * {@inheritDoc}
+     * @since 2.7
+     */
+    @Override
+    public boolean containsSettingsOperator() {
+        for (O op : getRows()) {
+            if (op.hasOptionalSettings()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * {@inheritDoc}
      */
     @Override
     public int getMissingCellOptionColIdx() {
         return m_missingColIdx;
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.7
+     */
+    @Override
+    public int getSettingsButtonColIdx() {
+        return m_settingsColIdx;
     }
 }

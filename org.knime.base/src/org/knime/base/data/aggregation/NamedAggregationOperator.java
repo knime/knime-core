@@ -48,11 +48,14 @@
 
 package org.knime.base.data.aggregation;
 
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.config.Config;
-
 import java.util.LinkedList;
 import java.util.List;
+
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.config.Config;
 
 /**
  * Combines a method with the name to use for this method.
@@ -61,6 +64,9 @@ import java.util.List;
  * @since 2.6
  */
 public class NamedAggregationOperator extends AggregationMethodDecorator {
+
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(NamedAggregationOperator.class);
 
     /**Config key for the name the result column should have.*/
     protected static final String CNFG_RESULT_COL_NAMES = "resultColName";
@@ -94,8 +100,9 @@ public class NamedAggregationOperator extends AggregationMethodDecorator {
      * @param cnfg the {@link Config} to write to
      * @param namedAggregationOperators list of the
      * {@link NamedAggregationOperator}s
+     * @since 2.7
      */
-    public static void saveMethods(final Config cnfg,
+    public static void saveMethods(final NodeSettingsWO cnfg,
             final List<NamedAggregationOperator> namedAggregationOperators) {
         if (cnfg == null) {
             throw new NullPointerException("config must not be null");
@@ -115,6 +122,17 @@ public class NamedAggregationOperator extends AggregationMethodDecorator {
             colNames[i] = aggrMethod.getName();
             aggrMethods[i] = aggrMethod.getMethodTemplate().getId();
             inclMissingVals[i] = aggrMethod.inclMissingCells();
+            if (aggrMethod.hasOptionalSettings()) {
+                try {
+                    NodeSettingsWO operatorSettings = cnfg.addNodeSettings(
+                       createSettingsKey(i, aggrMethod.getName(), aggrMethod));
+                    aggrMethod.saveSettingsTo(operatorSettings);
+                } catch (Exception e) {
+                    LOGGER.error(
+                    "Exception while saving settings for aggreation operator '"
+                    + aggrMethod.getId() + "', reason: " + e.getMessage());
+                }
+            }
         }
 
         cnfg.addStringArray(CNFG_RESULT_COL_NAMES, colNames);
@@ -126,8 +144,10 @@ public class NamedAggregationOperator extends AggregationMethodDecorator {
      * @param cnfg the {@link Config} to read from
      * @return a list of all {@link NamedAggregationOperator}s
      * @throws InvalidSettingsException if the settings are invalid
+     * @since 2.7
      */
-    public static List<NamedAggregationOperator> loadMethods(final Config cnfg)
+    public static List<NamedAggregationOperator> loadMethods(
+         final NodeSettingsRO cnfg)
     throws InvalidSettingsException {
         final String[] resultColNames =
             cnfg.getStringArray(CNFG_RESULT_COL_NAMES);
@@ -146,10 +166,32 @@ public class NamedAggregationOperator extends AggregationMethodDecorator {
             final AggregationMethod method =
                 AggregationMethods.getMethod4Id(aggrMethods[i]);
             final boolean inclMissingVal = inclMissingVals[i];
+            if (method.hasOptionalSettings()) {
+                try {
+                    NodeSettingsRO operatorSettings = cnfg.getNodeSettings(
+                               createSettingsKey(i, resultColNames[i], method));
+                    method.loadValidatedSettings(operatorSettings);
+                } catch (Exception e) {
+                    LOGGER.error(
+                    "Exception while loading settings for aggreation operator '"
+                    + method.getId() + "', reason: " + e.getMessage());
+                }
+            }
             colAggrList.add(new NamedAggregationOperator(resultColName,
                     method, inclMissingVal));
         }
         return colAggrList;
+    }
+
+    /**
+     * @param idx the index of the aggregation method (not necessary continuous)
+     * @param columnName the name of the result column
+     * @param method the {@link AggregationMethod} to use
+     * @return the unique settings key
+     */
+    private static String createSettingsKey(final int idx,
+            final String columnName, final AggregationMethod method) {
+        return idx + "_" + columnName + "_" + method.getId();
     }
 
     /**

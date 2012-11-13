@@ -55,6 +55,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.NamedAggregationOperator;
 import org.knime.core.data.DataTableSpec;
@@ -69,7 +70,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
-import org.knime.core.node.config.Config;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
@@ -238,8 +238,9 @@ public class ColumnAggregatorNodeModel extends NodeModel {
         m_removeAggregationCols.saveSettingsTo(settings);
         m_valueDelimiter.saveSettingsTo(settings);
         m_maxUniqueValues.saveSettingsTo(settings);
-        final Config cnfg = settings.addConfig(CFG_AGGREGATION_METHODS);
-        NamedAggregationOperator.saveMethods(cnfg, m_methods);
+        final NodeSettingsWO subSettings =
+            settings.addNodeSettings(CFG_AGGREGATION_METHODS);
+        NamedAggregationOperator.saveMethods(subSettings, m_methods);
     }
 
     /**
@@ -265,10 +266,10 @@ public class ColumnAggregatorNodeModel extends NodeModel {
                     "Methods configuration not found");
         }
         //check for duplicate column names
-        final Config cnfg = settings.getConfig(
+        final NodeSettingsRO subSettings = settings.getNodeSettings(
                 ColumnAggregatorNodeModel.CFG_AGGREGATION_METHODS);
         final List<NamedAggregationOperator> methods =
-            NamedAggregationOperator.loadMethods(cnfg);
+            NamedAggregationOperator.loadMethods(subSettings);
         if (methods.isEmpty()) {
             throw new InvalidSettingsException(
                     "Please select at least one aggregation method");
@@ -300,9 +301,9 @@ public class ColumnAggregatorNodeModel extends NodeModel {
         m_valueDelimiter.loadSettingsFrom(settings);
         m_maxUniqueValues.loadSettingsFrom(settings);
         m_methods.clear();
-        final Config cnfg = settings.getConfig(
+        final NodeSettingsRO subSettings = settings.getNodeSettings(
                 ColumnAggregatorNodeModel.CFG_AGGREGATION_METHODS);
-        m_methods.addAll(NamedAggregationOperator.loadMethods(cnfg));
+        m_methods.addAll(NamedAggregationOperator.loadMethods(subSettings));
     }
 
     /**

@@ -8,6 +8,94 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/data/aggregation/AggregationMethod.java" type="org.knime.base.data.aggregation.AggregationMethod">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.AggregationMethod"/>
+                <message_argument value="getAdditionalColumnNames()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.AggregationMethod"/>
+                <message_argument value="getSettingsPanel(DataTableSpec)"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.AggregationMethod"/>
+                <message_argument value="hasOptionalSettings()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.AggregationMethod"/>
+                <message_argument value="loadValidatedSettings(NodeSettingsRO)"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.AggregationMethod"/>
+                <message_argument value="saveSettingsTo(NodeSettingsWO)"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.AggregationMethod"/>
+                <message_argument value="validateSettings(NodeSettingsRO)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/data/aggregation/NamedAggregationOperator.java" type="org.knime.base.data.aggregation.NamedAggregationOperator">
+        <filter comment="Config object replaced with corresponding NodeSettings objects previous settings can still be loaded" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.NamedAggregationOperator"/>
+                <message_argument value="loadMethods(Config)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="Config replaced by NodeSettings previous settings can still be loaded" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.NamedAggregationOperator"/>
+                <message_argument value="saveMethods(Config, List&lt;NamedAggregationOperator&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/data/aggregation/dialogutil/AbstractAggregationPanel.java" type="org.knime.base.data.aggregation.dialogutil.AbstractAggregationPanel">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.dialogutil.AbstractAggregationPanel"/>
+                <message_argument value="initialize(List&lt;L&gt;, List&lt;O&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/data/aggregation/dialogutil/AggregationTableModel.java" type="org.knime.base.data.aggregation.dialogutil.AggregationTableModel">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.dialogutil.AggregationTableModel"/>
+                <message_argument value="containsSettingsOperator()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.dialogutil.AggregationTableModel"/>
+                <message_argument value="getRow(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.dialogutil.AggregationTableModel"/>
+                <message_argument value="getSettingsButtonColIdx()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/data/aggregation/dialogutil/ColumnAggregationPanel.java" type="org.knime.base.data.aggregation.dialogutil.ColumnAggregationPanel">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.dialogutil.ColumnAggregationPanel"/>
+                <message_argument value="initialize(DataType, List&lt;NamedAggregationOperator&gt;)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/data/normalize/PMMLNormalizeTranslator.java" type="org.knime.base.data.normalize.PMMLNormalizeTranslator">
         <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="338792546">
             <message_arguments>

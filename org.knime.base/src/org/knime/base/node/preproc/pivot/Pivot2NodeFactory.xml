@@ -66,6 +66,10 @@
             Tick the missing box to include missing values. This option might
             be disabled if the aggregation method does not support missing
             values.
+            The parameter column shows an "Edit" button for all 
+            aggregation operators that require additional information. 
+            Clicking on the "Edit" button opens the parameter dialog 
+            which allows changing the operator specific settings.
           </option>
         </tab>
         <tab name="Advanced settings">

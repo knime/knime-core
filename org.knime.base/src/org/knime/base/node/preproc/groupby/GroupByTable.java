@@ -56,6 +56,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.ColumnAggregator;
@@ -71,6 +72,7 @@ import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.SingleCellFactory;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -98,7 +100,6 @@ public abstract class GroupByTable {
     private final boolean m_retainOrder;
     private final ColumnAggregator[] m_colAggregators;
     private final BufferedDataTable m_resultTable;
-    private final boolean m_sortInMemory;
 
     /**Constructor for class GroupByTable.
      * @param exec the <code>ExecutionContext</code>
@@ -167,7 +168,6 @@ public abstract class GroupByTable {
         if (exec == null) {
             throw new NullPointerException("Exec must not be null");
         }
-        m_sortInMemory = sortInMemory;
         m_enableHilite = enableHilite;
         if (m_enableHilite) {
             m_hiliteMapping = new HashMap<RowKey, Set<RowKey>>();
@@ -179,7 +179,7 @@ public abstract class GroupByTable {
         //retain the row order only if the input table contains more than 1 row
         m_retainOrder = retainOrder && inDataTable.getRowCount() > 1;
         final Set<String> workingCols =
-            getWorkingCols(groupByCols, colAggregators);
+            getWorkingCols(globalSettings, groupByCols, colAggregators);
         final BufferedDataTable dataTable;
         final ColumnAggregator[] aggrs;
         final ExecutionContext subExec;
@@ -250,7 +250,7 @@ public abstract class GroupByTable {
                 exec.setMessage("Rebuild original row order...");
                 final BufferedDataTable tempTable =
                     sortTable(exec.createSubExecutionContext(0.4), groupTable,
-                            Arrays.asList(orderColName), sortInMemory);
+                            Arrays.asList(orderColName));
                 //remove the order column
                 final ColumnRearranger rearranger =
                     new ColumnRearranger(tempTable.getSpec());
@@ -266,15 +266,21 @@ public abstract class GroupByTable {
     }
 
     /**
+     * @param globalSettings the {@link GlobalSettings}
      * @param groupByCols the group by column names
      * @param colAggregators the aggregation columns
      * @return {@link Set} with the name of all columns to work with
      */
-    private Set<String> getWorkingCols(final List<String> groupByCols,
-            final ColumnAggregator[] colAggregators) {
+    private Set<String> getWorkingCols(final GlobalSettings globalSettings,
+       final List<String> groupByCols, final ColumnAggregator[] colAggregators) {
         final Set<String> colNames = new LinkedHashSet<String>(groupByCols);
         for (final ColumnAggregator aggr : colAggregators) {
             colNames.add(aggr.getOriginalColName());
+            final Collection<String> addColNames =
+                aggr.getOperator(globalSettings).getAdditionalColumnNames();
+            if (addColNames != null && !addColNames.isEmpty()) {
+                colNames.addAll(addColNames);
+            }
         }
         return colNames;
     }
@@ -317,9 +323,12 @@ public abstract class GroupByTable {
 
     /**
      * @return if sorting should be performed in memory
+     * @deprecated this option is no longer required and always returns
+     * <code>false</code>
      */
+    @Deprecated
     public boolean isSortInMemory() {
-        return m_sortInMemory;
+        return false;
     }
 
 
@@ -372,10 +381,27 @@ public abstract class GroupByTable {
      * @param sortInMemory the sort in memory flag
      * @return the sorted {@link BufferedDataTable}
      * @throws CanceledExecutionException if the operation has been canceled
+     * @deprecated the sortInMemory option is no longer required
+     * @see #sortTable(ExecutionContext, BufferedDataTable, List)
      */
+    @Deprecated
     public static BufferedDataTable sortTable(final ExecutionContext exec,
             final BufferedDataTable table2sort, final List<String> sortCols,
             final boolean sortInMemory) throws CanceledExecutionException {
+        return sortTable(exec, table2sort, sortCols);
+    }
+
+    /**
+     * @param exec {@link ExecutionContext}
+     * @param table2sort the {@link BufferedDataTable} to sort
+     * @param sortCols the columns to sort by
+     * @return the sorted {@link BufferedDataTable}
+     * @throws CanceledExecutionException if the operation has been canceled
+     * @since 2.7
+     */
+    public static BufferedDataTable sortTable(final ExecutionContext exec,
+            final BufferedDataTable table2sort, final List<String> sortCols)
+    throws CanceledExecutionException {
         if (sortCols.isEmpty()) {
             return table2sort;
         }
@@ -384,8 +410,7 @@ public abstract class GroupByTable {
             sortOrder[i] = true;
         }
         final SortedTable sortedTabel =
-            new SortedTable(table2sort, sortCols, sortOrder,
-                sortInMemory, exec);
+            new SortedTable(table2sort, sortCols, sortOrder, exec);
         return sortedTabel.getBufferedDataTable();
 
     }

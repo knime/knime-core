@@ -61,6 +61,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+
 import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.ColumnAggregator;
@@ -676,12 +677,12 @@ public class GroupByNodeModel extends NodeModel {
         if (inMemory || groupByCols.isEmpty()) {
             resultTable = new MemoryGroupByTable(exec, table, groupByCols,
                     aggregators.toArray(new ColumnAggregator[0]),
-                    globalSettings, sortInMemory, enableHilite, colNamePolicy,
+                    globalSettings, enableHilite, colNamePolicy,
                     retainOrder);
         } else {
             resultTable = new BigGroupByTable(exec, table, groupByCols,
                     aggregators.toArray(new ColumnAggregator[0]),
-                    globalSettings, sortInMemory, enableHilite, colNamePolicy,
+                    globalSettings, enableHilite, colNamePolicy,
                     retainOrder);
         }
         if (m_enableHilite.getBooleanValue()) {

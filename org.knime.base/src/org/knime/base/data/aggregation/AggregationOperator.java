@@ -48,13 +48,21 @@
 
 package org.knime.base.data.aggregation;
 
+import java.awt.Component;
+import java.util.Collection;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.node.ExecutionContext;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 
 /**
@@ -131,7 +139,8 @@ public abstract class AggregationOperator implements AggregationMethod {
 
     /**
      * Creates a new instance of this operator. A new instance is created for
-     * each column.
+     * each column. Remember to copy all operator specific settings when
+     * creating a new instance!
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings
      *
@@ -185,6 +194,14 @@ public abstract class AggregationOperator implements AggregationMethod {
      */
     public GlobalSettings getGlobalSettings() {
         return m_globalSettings;
+    }
+
+    /**
+     * @return the {@link OperatorColumnSettings} object
+     * @since 2.7
+     */
+    public OperatorColumnSettings getOperatorColumnSettings() {
+        return m_opColSettings;
     }
 
     /**
@@ -265,7 +282,8 @@ public abstract class AggregationOperator implements AggregationMethod {
 
     /**
      * @param row the {@link DataRow} the given cell belongs to
-     * @param idxs the indices of the columns to aggregate
+     * @param idxs the indices of the columns to aggregate. Pass -1 to indicate
+     * that the row key should be used.
      * @since 2.6
      */
     public final void compute(final DataRow row, final int... idxs) {
@@ -279,7 +297,14 @@ public abstract class AggregationOperator implements AggregationMethod {
             throw new NullPointerException("indices must not be null or empty");
         }
         for (final int idx : idxs) {
-            final DataCell cell = row.getCell(idx);
+            final DataCell cell;
+            if (idx == -1) {
+                //this is the row id option convert the key to a string cell
+                //an proceed
+                cell = new StringCell(row.getKey().getString());
+            } else {
+                cell = row.getCell(idx);
+            }
             if (inclMissingCells() || !cell.isMissing()) {
                 m_skipped = computeInternal(row, cell);
             }
@@ -490,6 +515,75 @@ public abstract class AggregationOperator implements AggregationMethod {
         }
         //sort by label
         return getLabel().compareTo(o.getLabel());
+    }
+
+    /**
+     * Override this method and return <code>true</code> if the operator
+     * requires additional settings.
+     *
+     * {@inheritDoc}
+     * @since 2.7
+     */
+    @Override
+    public boolean hasOptionalSettings() {
+        //no settings required by default override if operator requires settings
+        return false;
+    }
+
+    /**
+     * Override this method if the operator requires additional settings.
+     * {@inheritDoc}
+     * @since 2.7
+     */
+    @Override
+    public Component getSettingsPanel(final DataTableSpec spec) {
+        //nothing to return by default override if operator requires settings
+        return null;
+    }
+
+    /**
+     * Override this method if the operator requires additional settings.
+     * {@inheritDoc}
+     * @since 2.7
+     */
+    @Override
+    public void loadValidatedSettings(final NodeSettingsRO settings)
+    throws InvalidSettingsException {
+        //nothing to read by default override if operator requires settings
+    }
+
+
+    /**
+     * Override this method if the operator requires additional settings.
+     * {@inheritDoc}
+     * @since 2.7
+     */
+    @Override
+    public void saveSettingsTo(final NodeSettingsWO settings) {
+        // nothing to save by default override if operator requires settings
+    }
+
+
+    /**
+     * Override this method if the operator requires additional settings.
+     * {@inheritDoc}
+     * @since 2.7
+     */
+    @Override
+    public void validateSettings(final NodeSettingsRO settings)
+        throws InvalidSettingsException {
+     // nothing to validate by default override if operator requires settings
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.7
+     */
+    @Override
+    public Collection<String> getAdditionalColumnNames() {
+        //nothing to return by default override if operator requires additional
+        //columns
+        return null;
     }
 
     /**

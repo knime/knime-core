@@ -181,7 +181,7 @@ GroupByTable {
                 exec.createSubExecutionContext(0.6);
             exec.setMessage("Sorting input table...");
             sortedTable = sortTable(sortExec, table,
-                    getGroupCols(), isSortInMemory());
+                    getGroupCols());
             sortExec.setProgress(1.0);
             groupExec = exec.createSubExecutionContext(0.4);
             comparators = new DataValueComparator[groupColIdx.length];

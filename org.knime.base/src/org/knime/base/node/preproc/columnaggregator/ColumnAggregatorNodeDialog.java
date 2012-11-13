@@ -48,9 +48,27 @@
 
 package org.knime.base.node.preproc.columnaggregator;
 
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.dialogutil.ColumnAggregationPanel;
-
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -71,26 +89,6 @@ import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
-
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.GridLayout;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JComponent;
-import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 
 
 /**
@@ -292,9 +290,9 @@ public class ColumnAggregatorNodeDialog  extends NodeDialogPane {
             component.loadSettingsFrom(settings, specs);
         }
         try {
-            m_aggrMethodsPanel.loadSettingsFrom(settings.getConfig(
+            m_aggrMethodsPanel.loadSettingsFrom(settings.getNodeSettings(
                     ColumnAggregatorNodeModel.CFG_AGGREGATION_METHODS),
-                    getSuperType());
+                    getSuperType(), m_spec);
         } catch (final InvalidSettingsException e) {
             throw new NotConfigurableException(e.getMessage(), e);
         }
@@ -309,7 +307,7 @@ public class ColumnAggregatorNodeDialog  extends NodeDialogPane {
         for (final DialogComponent component : m_components) {
             component.saveSettingsTo(settings);
         }
-        m_aggrMethodsPanel.saveSettingsTo(settings.addConfig(
+        m_aggrMethodsPanel.saveSettingsTo(settings.addNodeSettings(
                 ColumnAggregatorNodeModel.CFG_AGGREGATION_METHODS));
     }
 }

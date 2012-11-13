@@ -48,9 +48,16 @@
 
 package org.knime.base.data.aggregation;
 
+import java.awt.Component;
+import java.util.Collection;
+
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataValue;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 
 /**
@@ -141,4 +148,65 @@ public interface AggregationMethod extends Comparable<AggregationMethod> {
      * @return the user friendly label of the supported {@link DataValue} class
      */
     String getSupportedTypeLabel();
+
+    /**
+     * This method indicates if the operator requires additional settings.
+     * If that is the case the operator should return <code>true</code>. It must
+     * also override the corresponding methods (#getSettingsPanel(DataTableSpec),
+     * #validateSettings(NodeSettingsRO), #loadValidatedSettings(NodeSettingsRO),
+     * #saveSettingsTo(NodeSettingsWO) and #resetSettings()). Furthermore it
+     * needs to copy all operator specific settings when creating a new instance
+     * ({@link #createOperator(GlobalSettings, OperatorColumnSettings)}.
+     * @return <code>true</code> if the operator requires additional
+     * settings
+     * @since 2.7
+     * @see #getSettingsPanel(DataTableSpec)
+     * @see #validateSettings(NodeSettingsRO)
+     * @see #loadValidatedSettings(NodeSettingsRO)
+     * @see #saveSettingsTo(NodeSettingsWO)
+     * @see #createOperator(GlobalSettings, OperatorColumnSettings)
+     */
+    public boolean hasOptionalSettings();
+
+    /**
+     * Returns the optional {@link Component} that allows the user to adjust
+     * all necessary settings. Operators that do need additional settings must
+     * override this method in order to return their settings panel.
+     * @param spec the {@link DataTableSpec} of the input table
+     *
+     * @return the Component that contains all necessary settings
+     * @since 2.7
+     */
+    public Component getSettingsPanel(final DataTableSpec spec);
+
+    /**
+     * @param settings {@link NodeSettingsRO} that contains the optional
+     * settings
+     * @throws InvalidSettingsException if the settings are invalid
+     * @since 2.7
+     */
+    public void loadValidatedSettings(final NodeSettingsRO settings)
+    throws InvalidSettingsException;
+
+    /**
+     * @param settings the {@link NodeSettingsWO} to save the optional settings
+     * @since 2.7
+     */
+    public void saveSettingsTo(final NodeSettingsWO settings);
+
+    /**
+     * @param settings the {@link NodeSettingsRO} that contains the optional
+     * settings to validate
+     * @throws InvalidSettingsException if the settings are invalid
+     * @since 2.7
+     */
+    public void validateSettings(final NodeSettingsRO settings)
+        throws InvalidSettingsException;
+
+    /**
+     * @return {@link Collection} of column names that are required by this
+     * aggregation operator in addition to column that should be aggregated
+     * @since 2.7
+     */
+    public Collection<String> getAdditionalColumnNames();
 }

@@ -48,17 +48,19 @@
 
 package org.knime.base.data.aggregation;
 
+import java.util.LinkedList;
+import java.util.List;
+
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.config.Config;
-
-import java.util.LinkedList;
-import java.util.List;
 
 
 /**
@@ -67,6 +69,9 @@ import java.util.List;
  * @author Tobias Koetter, University of Konstanz
  */
 public class ColumnAggregator extends AggregationMethodDecorator {
+
+    private static final NodeLogger LOGGER =
+        NodeLogger.getLogger(ColumnAggregator.class);
 
     private static final String CNFG_AGGR_COL_SECTION = "aggregationColumn";
     private static final String CNFG_COL_NAMES = "columnNames";
@@ -144,7 +149,16 @@ public class ColumnAggregator extends AggregationMethodDecorator {
      * @return <code>true</code> if the column is compatible to the given type
      */
     public boolean isCompatible(final Class<? extends DataValue> type) {
-        return getOriginalDataType().isCompatible(type);
+        final DataType originalDataType = getOriginalDataType();
+        final DataType dataType;
+        if (DataType.getMissingCell().getType().equals(originalDataType)) {
+            //this is the MissingType use the DataCell type instead since
+            //the missing type is compatible to all other types which is weird
+            dataType = DataType.getType(DataCell.class);
+        } else {
+            dataType = originalDataType;
+        }
+        return dataType.isCompatible(type);
     }
 
     /**
@@ -233,6 +247,17 @@ public class ColumnAggregator extends AggregationMethodDecorator {
                 //get the default behavior of the method
                 inclMissingVal = method.inclMissingCells();
             }
+            if (method.hasOptionalSettings()) {
+                try {
+                    NodeSettingsRO operatorSettings = settings.getNodeSettings(
+                                   createSettingsKey(i, colNames[i], method));
+                    method.loadValidatedSettings(operatorSettings);
+                } catch (Exception e) {
+                    LOGGER.error(
+                     "Exception while loading settings for aggreation operator '"
+                     + method.getId() + "', reason: " + e.getMessage());
+                }
+            }
             final DataColumnSpec spec = new DataColumnSpecCreator(
                     colNames[i], colTypes[i]).createSpec();
             colAggrList.add(new ColumnAggregator(spec, method, inclMissingVal));
@@ -259,15 +284,39 @@ public class ColumnAggregator extends AggregationMethodDecorator {
         for (int i = 0, length = cols.size(); i < length; i++) {
             final ColumnAggregator aggrCol = cols.get(i);
             colNames[i] = aggrCol.getOriginalColName();
-            aggrMethods[i] = aggrCol.getMethodTemplate().getId();
+            final AggregationMethod method = aggrCol.getMethodTemplate();
+            aggrMethods[i] = method.getId();
             types[i] = aggrCol.getOriginalDataType();
             inclMissingVals[i] = aggrCol.inclMissingCells();
+            if (method.hasOptionalSettings()) {
+                try {
+                    final NodeSettingsWO operatorSettings =
+                        settings.addNodeSettings(createSettingsKey(i,
+                                       aggrCol.getOriginalColName(), method));
+                    method.saveSettingsTo(operatorSettings);
+                } catch (Exception e) {
+                    LOGGER.error(
+                        "Exception while saving settings for aggreation operator '"
+                        + method.getId() + "', reason: " + e.getMessage());
+                }
+            }
         }
         final Config cnfg = settings.addConfig(CNFG_AGGR_COL_SECTION);
         cnfg.addStringArray(CNFG_COL_NAMES, colNames);
         cnfg.addDataTypeArray(CNFG_COL_TYPES, types);
         cnfg.addStringArray(CNFG_AGGR_METHODS, aggrMethods);
         cnfg.addBooleanArray(CNFG_INCL_MISSING_VALS, inclMissingVals);
+    }
+
+    /**
+     * @param idx the index of the aggregation method (not necessary continuous)
+     * @param columnName the name of the column to aggregate
+     * @param method the {@link AggregationMethod} to use
+     * @return the unique settings key
+     */
+    private static String createSettingsKey(final int idx, final String columnName,
+            final AggregationMethod method) {
+        return idx + "_" + columnName + "_" + method.getId();
     }
 
     /**
@@ -280,5 +329,4 @@ public class ColumnAggregator extends AggregationMethodDecorator {
     public void setinclMissingCells(final boolean inclMissingCells) {
         super.setInclMissingCells(inclMissingCells);
     }
-
 }

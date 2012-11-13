@@ -62,6 +62,7 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.LinkedList;
 import java.util.List;
+
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -78,7 +79,9 @@ import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableModel;
+
 import org.knime.base.data.aggregation.AggregationMethodDecorator;
+import org.knime.core.data.DataTableSpec;
 
 
 /**
@@ -104,8 +107,12 @@ public abstract class AbstractAggregationPanel
     /**The size of the incl./excl. missing cells column.*/
     public static final int MISSING_CELL_OPTION_SIZE = 45;
 
+    /**The size of the settings button cells column.
+     * @since 2.7*/
+    public static final int SETTINGS_BUTTON_CELL_SIZE = 60;
+
     /**The initial dimension of this panel.*/
-    public static final Dimension PANEL_DIMENSION = new Dimension(650, 200);
+    public static final Dimension PANEL_DIMENSION = new Dimension(725, 200);
 
     private static final int BUTTON_WIDTH = 125;
 
@@ -120,6 +127,8 @@ public abstract class AbstractAggregationPanel
     private final T m_tableModel;
 
     private final JTable m_table;
+
+    private DataTableSpec m_inputTableSpec;
 
     /**
      * This class implements the context menu functionality of the table.
@@ -214,6 +223,13 @@ public abstract class AbstractAggregationPanel
             columnModel.getColumn(missingCellOptionColIdx).setMaxWidth(
                     MISSING_CELL_OPTION_SIZE);
         }
+        int buttonColIdx = m_tableModel.getSettingsButtonColIdx();
+        final OperatorSettingsButtonCellRenderer settingsButton =
+            new OperatorSettingsButtonCellRenderer(this);
+        columnModel.getColumn(buttonColIdx).setCellEditor(settingsButton);
+        columnModel.getColumn(buttonColIdx).setCellRenderer(settingsButton);
+        columnModel.getColumn(buttonColIdx).setMinWidth(SETTINGS_BUTTON_CELL_SIZE);
+        columnModel.getColumn(buttonColIdx).setMaxWidth(SETTINGS_BUTTON_CELL_SIZE);
         adaptTableColumnModel(columnModel);
 
         m_panel.setMinimumSize(PANEL_DIMENSION);
@@ -584,13 +600,24 @@ public abstract class AbstractAggregationPanel
     }
 
     /**
+     * @return the {@link DataTableSpec} of the input table
+     * @since 2.7
+     */
+    public DataTableSpec getInputTableSpec() {
+        return m_inputTableSpec;
+    }
+
+    /**
      * Initializes the panel.
      * @param listElements the elements the user can choose from
      * @param operators of {@link AggregationMethodDecorator}s
      * that are initially used
+     * @param spec input {@link DataTableSpec}
+     * @since 2.7
      */
-    public void initialize(final List<L> listElements,
-            final List<O> operators) {
+    protected void initialize(final List<L> listElements,
+            final List<O> operators, final DataTableSpec spec) {
+        m_inputTableSpec = spec;
         getListModel().clear();
         final Collection<L> types = listElements;
         for (final L type : types) {

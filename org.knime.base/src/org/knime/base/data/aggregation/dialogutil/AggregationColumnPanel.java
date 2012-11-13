@@ -60,10 +60,12 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
 import javax.swing.table.TableColumnModel;
+
 import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.ColumnAggregator;
@@ -436,7 +438,7 @@ ColumnAggregator, DataColumnSpec> {
                 newAggregators.add(aggregator);
             }
         }
-        initialize(newList, newAggregators);
+        initialize(newList, newAggregators, getInputTableSpec());
     }
 
     /**
@@ -485,7 +487,7 @@ ColumnAggregator, DataColumnSpec> {
                 colAggrs2Use.add(colAggr);
             }
         }
-        initialize(listElements, colAggrs2Use);
+        initialize(listElements, colAggrs2Use, spec);
     }
 
     /**

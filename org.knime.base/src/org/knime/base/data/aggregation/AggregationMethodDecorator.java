@@ -35,9 +35,16 @@
 
 package org.knime.base.data.aggregation;
 
+import java.awt.Component;
+import java.util.Collection;
+
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
 
 /**
  * Utility class that bundles an {@link AggregationMethod} with an
@@ -221,10 +228,65 @@ public abstract class AggregationMethodDecorator
 
     /**
      * {@inheritDoc}
+     * @since 2.7
+     */
+    @Override
+    public boolean hasOptionalSettings() {
+        return m_operatorTemplate.hasOptionalSettings();
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.7
+     */
+    @Override
+    public Component getSettingsPanel(final DataTableSpec spec) {
+        return m_operatorTemplate.getSettingsPanel(spec);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.7
+     */
+    @Override
+    public void loadValidatedSettings(final NodeSettingsRO settings)
+    throws InvalidSettingsException {
+        m_operatorTemplate.loadValidatedSettings(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.7
+     */
+    @Override
+    public void saveSettingsTo(final NodeSettingsWO settings) {
+        m_operatorTemplate.saveSettingsTo(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.7
+     */
+    @Override
+    public void validateSettings(final NodeSettingsRO settings)
+    throws InvalidSettingsException {
+        m_operatorTemplate.validateSettings(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.7
+     */
+    @Override
+    public Collection<String> getAdditionalColumnNames() {
+        return m_operatorTemplate.getAdditionalColumnNames();
+    }
+
+    /**
+     * {@inheritDoc}
      */
     @Override
     public String toString() {
         return m_operatorTemplate.getLabel() + " " + m_inclMissingCells;
     }
-
 }

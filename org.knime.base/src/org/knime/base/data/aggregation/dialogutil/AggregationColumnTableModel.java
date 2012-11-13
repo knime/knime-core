@@ -57,7 +57,9 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+
 import javax.swing.table.DefaultTableModel;
+
 import org.knime.base.data.aggregation.AggregationMethod;
 import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.ColumnAggregator;
@@ -166,8 +168,12 @@ public class AggregationColumnTableModel
             //check if the method has changed
             return;
         }
+        //create a new operator each time it is updated to guarantee that
+        //each column has its own operator instance
+        AggregationMethod methodClone =
+            AggregationMethods.getMethod4Id(method.getId());
         updateRow(row, new ColumnAggregator(old.getOriginalColSpec(),
-                method, old.inclMissingCells()));
+                methodClone, old.inclMissingCells()));
     }
 
     /**
