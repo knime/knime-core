@@ -58,7 +58,7 @@ import java.io.IOException;
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-final class TreeTargetNumericColumnMetaData extends TreeTargetColumnMetaData {
+public final class TreeTargetNumericColumnMetaData extends TreeTargetColumnMetaData {
 
 
     /**

@@ -86,7 +86,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.util.Pair;
 
 /**
  *
@@ -135,6 +134,8 @@ public class TreeEnsembleLearnerConfiguration {
 
     private static final String KEY_MIN_NODE_SIZE = "minNodeSize";
 
+    private static final String KEY_MIN_CHILD_SIZE = "minChildSize";
+
     private static final String KEY_SEED = "seed";
 
     private static final String KEY_TARGET_COLUMN = "targetColumn";
@@ -169,6 +170,9 @@ public class TreeEnsembleLearnerConfiguration {
     /** indicates minimum node size parameter is not defined. */
     public static final int MIN_NODE_SIZE_UNDEFINED = -1;
 
+    /** indicates minimum leaf size parameter is not defined. */
+    public static final int MIN_CHILD_SIZE_UNDEFINED = -1;
+
     static final int DEF_MAX_LEVEL = 5;
 
     public static final double DEF_DATA_FRACTION = 0.7;
@@ -187,7 +191,10 @@ public class TreeEnsembleLearnerConfiguration {
 
     private int m_maxLevels = DEF_MAX_LEVEL;
 
+    /** see {@link #getMinNodeSize(int)}. */
     private int m_minNodeSize = MIN_NODE_SIZE_UNDEFINED;
+
+    private int m_minChildSize = MIN_CHILD_SIZE_UNDEFINED;
 
     private double m_dataFractionPerTree = DEF_DATA_FRACTION;
 
@@ -302,27 +309,48 @@ public class TreeEnsembleLearnerConfiguration {
         m_maxLevels = maxLevels;
     }
 
-    /** The minimum number of objects represented by a node to be split further.
-     * Value can be {@link #MIN_NODE_SIZE_UNDEFINED} in which case the criterion
-     * is not evaluated.
+    /** The minimum number of objects in a node so that a split is attempted. Not evaluated if
+     * value is {@link #MIN_NODE_SIZE_UNDEFINED} AND {@link #getMinChildSize()} is unset;
+     * otherwise it needs to be twice as large.
      * @return the minNodeSize */
     public int getMinNodeSize() {
         return m_minNodeSize;
     }
 
-    /** See {@link #getMinNodeSize()} for details.
-     * @param minNodeSize the minNodeSize to set
-     * @throws InvalidSettingsException If value is not
-     * {@link #MIN_NODE_SIZE_UNDEFINED} and smaller or equal to 0. */
-    public void setMinNodeSize(final int minNodeSize)
-        throws InvalidSettingsException {
+    /** The minimum objects in either child node, at most 1/2 {@link #getMinNodeSize()}.
+     * @return the minChildSize value or {@link #MIN_CHILD_SIZE_UNDEFINED}.
+     */
+    public int getMinChildSize() {
+        return m_minChildSize;
+    }
+
+    /** See size values for minimum split and child node.
+     * @param minNodeSize the minChildSize to set (or {@link #MIN_CHILD_SIZE_UNDEFINED}).
+     * @param minChildSize the minChildSize to set (or {@link #MIN_CHILD_SIZE_UNDEFINED}).
+     * @throws InvalidSettingsException if either value is invalid or min child size is larger than minnodesize/2
+     */
+    public void setMinSizes(final int minNodeSize, final int minChildSize) throws InvalidSettingsException {
         if (minNodeSize == MIN_NODE_SIZE_UNDEFINED) {
             // ok
         } else if (minNodeSize <= 0) {
-            throw new InvalidSettingsException(
-                    "Invalid minimum node size: " + minNodeSize);
+            throw new InvalidSettingsException("Invalid minimum node size: " + minNodeSize);
         }
-        m_minNodeSize = minNodeSize;
+
+        if (minChildSize == MIN_CHILD_SIZE_UNDEFINED) {
+            // ok
+        } else if (minChildSize <= 0) {
+            throw new InvalidSettingsException("Invalid minimum child size: " + minChildSize);
+        } else if (minNodeSize > 0 && minChildSize > minNodeSize / 2) {
+            throw new InvalidSettingsException("Invalid minimum child size (" + minChildSize
+                       + "); must be at most 2 x minimum node size (" + minNodeSize +")");
+        }
+
+        if (minChildSize > 0 && minNodeSize == MIN_NODE_SIZE_UNDEFINED) {
+            m_minNodeSize = 2 * minChildSize;
+        } else {
+            m_minNodeSize = minNodeSize;
+        }
+        m_minChildSize = minChildSize;
     }
 
     /**
@@ -571,31 +599,25 @@ public class TreeEnsembleLearnerConfiguration {
         settings.addString(KEY_SEED, seedS);
         settings.addInt(KEY_MAX_LEVELS, m_maxLevels);
         settings.addInt(KEY_MIN_NODE_SIZE, m_minNodeSize);
+        settings.addInt(KEY_MIN_CHILD_SIZE, m_minChildSize);
         settings.addDouble(KEY_DATA_FRACTION, m_dataFractionPerTree);
-        settings.addBoolean(KEY_IS_DATA_SELECTION_WITH_REPLACEMENT,
-                m_isDataSelectionWithReplacement);
+        settings.addBoolean(KEY_IS_DATA_SELECTION_WITH_REPLACEMENT, m_isDataSelectionWithReplacement);
         settings.addString(KEY_ROOT_COLUMN, m_hardCodedRootColumn);
-        settings.addString(KEY_COLUMN_SAMPLING_MODE,
-                m_columnSamplingMode.name());
-        settings.addDouble(KEY_COLUMN_FRACTION_LINEAR,
-                m_columnFractionLinearValue);
+        settings.addString(KEY_COLUMN_SAMPLING_MODE, m_columnSamplingMode.name());
+        settings.addDouble(KEY_COLUMN_FRACTION_LINEAR, m_columnFractionLinearValue);
         settings.addInt(KEY_COLUMN_ABSOLUTE, m_columnAbsoluteValue);
-        settings.addBoolean(KEY_IS_USE_DIFFERENT_ATTRIBUTES_AT_EACH_NODE,
-                m_isUseDifferentAttributesAtEachNode);
+        settings.addBoolean(KEY_IS_USE_DIFFERENT_ATTRIBUTES_AT_EACH_NODE, m_isUseDifferentAttributesAtEachNode);
         settings.addInt(KEY_NR_MODELS, m_nrModels);
         settings.addString(KEY_SPLIT_CRITERION, m_splitCriterion.name());
-        settings.addBoolean(KEY_USE_AVERAGE_SPLIT_POINTS,
-                m_useAverageSplitPoints);
+        settings.addBoolean(KEY_USE_AVERAGE_SPLIT_POINTS, m_useAverageSplitPoints);
         settings.addString(KEY_FINGERPRINT_COLUMN, m_fingerprintColumn);
         settings.addStringArray(KEY_INCLUDE_COLUMNS, m_includeColumns);
         settings.addBoolean(KEY_INCLUDE_ALL_COLUMNS, m_includeAllColumns);
-        settings.addBoolean(KEY_IGNORE_COLUMNS_WITHOUT_DOMAIN,
-                m_ignoreColumnsWithoutDomain);
+        settings.addBoolean(KEY_IGNORE_COLUMNS_WITHOUT_DOMAIN, m_ignoreColumnsWithoutDomain);
         settings.addInt(KEY_NR_HILITE_PATTERNS, m_nrHilitePatterns);
     }
 
-    public void loadInModel(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    public void loadInModel(final NodeSettingsRO settings) throws InvalidSettingsException {
         setTargetColumn(settings.getString(KEY_TARGET_COLUMN));
         String seedS = settings.getString(KEY_SEED);
         Long seed;
@@ -605,54 +627,47 @@ public class TreeEnsembleLearnerConfiguration {
             try {
                 seed = Long.parseLong(seedS);
             } catch (NumberFormatException nfe) {
-                throw new InvalidSettingsException("Unable to parse seed \""
-                        + seedS + "\"", nfe);
+                throw new InvalidSettingsException("Unable to parse seed \"" + seedS + "\"", nfe);
             }
         }
         setSeed(seed);
         setMaxLevels(settings.getInt(KEY_MAX_LEVELS));
-        // added after given to first prototype to users but before
-        // first public release
-        setMinNodeSize(settings.getInt(
-                KEY_MIN_NODE_SIZE, MIN_NODE_SIZE_UNDEFINED));
+        // added after given to first prototype to users but before first public release
+        setMinSizes(settings.getInt(KEY_MIN_NODE_SIZE, MIN_NODE_SIZE_UNDEFINED),
+                     settings.getInt(KEY_MIN_CHILD_SIZE, MIN_CHILD_SIZE_UNDEFINED));
         setHardCodedRootColumn(settings.getString(KEY_ROOT_COLUMN));
         setDataFractionPerTree(settings.getDouble(KEY_DATA_FRACTION));
-        setDataSelectionWithReplacement(settings.getBoolean(
-                KEY_IS_DATA_SELECTION_WITH_REPLACEMENT));
+        setDataSelectionWithReplacement(settings.getBoolean(KEY_IS_DATA_SELECTION_WITH_REPLACEMENT));
 
         String columnSamplMode = settings.getString(KEY_COLUMN_SAMPLING_MODE);
         final ColumnSamplingMode colSamplingMode;
         try {
             colSamplingMode = ColumnSamplingMode.valueOf(columnSamplMode);
         } catch (Exception e) {
-            throw new InvalidSettingsException(
-                    "Unable to read column sampling mode", e);
+            throw new InvalidSettingsException("Unable to read column sampling mode", e);
         }
         setColumnSamplingMode(colSamplingMode);
         switch (colSamplingMode) {
-        case Linear:
-            final double v = settings.getDouble(KEY_COLUMN_FRACTION_LINEAR);
-            setColumnFractionLinearValue(v);
-            break;
-        case Absolute:
-            final int a = settings.getInt(KEY_COLUMN_ABSOLUTE);
-            setColumnAbsoluteValue(a);
-            break;
-        default:
-            // ignored
+            case Linear:
+                final double v = settings.getDouble(KEY_COLUMN_FRACTION_LINEAR);
+                setColumnFractionLinearValue(v);
+                break;
+            case Absolute:
+                final int a = settings.getInt(KEY_COLUMN_ABSOLUTE);
+                setColumnAbsoluteValue(a);
+                break;
+            default:
+                // ignored
         }
-        setUseDifferentAttributesAtEachNode(settings.getBoolean(
-                KEY_IS_USE_DIFFERENT_ATTRIBUTES_AT_EACH_NODE));
+        setUseDifferentAttributesAtEachNode(settings.getBoolean(KEY_IS_USE_DIFFERENT_ATTRIBUTES_AT_EACH_NODE));
         setNrModels(settings.getInt(KEY_NR_MODELS));
         String splitCriterionS = settings.getString(KEY_SPLIT_CRITERION);
         try {
             m_splitCriterion = SplitCriterion.valueOf(splitCriterionS);
         } catch (Exception e) {
-            throw new InvalidSettingsException("Unable to parse split "
-                    + "criterion \"" + splitCriterionS + "\"", e);
+            throw new InvalidSettingsException("Unable to parse split " + "criterion \"" + splitCriterionS + "\"", e);
         }
-        setUseAverageSplitPoints(settings
-                .getBoolean(KEY_USE_AVERAGE_SPLIT_POINTS));
+        setUseAverageSplitPoints(settings.getBoolean(KEY_USE_AVERAGE_SPLIT_POINTS));
         setFingerprintColumn(settings.getString(KEY_FINGERPRINT_COLUMN));
         setIncludeColumns(settings.getStringArray(KEY_INCLUDE_COLUMNS));
         setIncludeAllColumns(settings.getBoolean(KEY_INCLUDE_ALL_COLUMNS));
@@ -666,14 +681,13 @@ public class TreeEnsembleLearnerConfiguration {
             throw new InvalidSettingsException("No attribute columns selected");
         }
         // added after first preview, be backward compatible (true as default)
-        setIgnoreColumnsWithoutDomain(settings.getBoolean(
-                KEY_IGNORE_COLUMNS_WITHOUT_DOMAIN, true));
+        setIgnoreColumnsWithoutDomain(settings.getBoolean(KEY_IGNORE_COLUMNS_WITHOUT_DOMAIN, true));
         // added after first preview, be backward compatible (none as default)
         setNrHilitePatterns(settings.getInt(KEY_NR_HILITE_PATTERNS, -1));
     }
 
     public void loadInDialog(final NodeSettingsRO settings,
-            final DataTableSpec inSpec) throws NotConfigurableException {
+                             final DataTableSpec inSpec) throws NotConfigurableException {
         String defTargetColumn = null;
         String defFingerprintColumn = null;
         boolean hasAttributeColumns = false;
@@ -688,14 +702,16 @@ public class TreeEnsembleLearnerConfiguration {
             String colName = colSpec.getName();
             if (colType.isCompatible(BitVectorValue.class)) {
                 defFingerprintColumn = colName;
-            } else if (colType.isCompatible(targetClass)) {
-                if (defTargetColumn == null) { // first categorical column
-                    defTargetColumn = colName;
+            } else if (colType.isCompatible(NominalValue.class) || colType.isCompatible(DoubleValue.class)) {
+                if (colType.isCompatible(targetClass)) {
+                    if (defTargetColumn == null) { // first categorical column
+                        defTargetColumn = colName;
+                    } else {
+                        hasAttributeColumns = true;
+                    }
                 } else {
                     hasAttributeColumns = true;
                 }
-            } else if (colType.isCompatible(DoubleValue.class)) {
-                hasAttributeColumns = true;
             }
         }
         if (defTargetColumn == null) {
@@ -704,15 +720,14 @@ public class TreeEnsembleLearnerConfiguration {
         }
         if (!hasAttributeColumns && defFingerprintColumn == null) {
             throw new NotConfigurableException("No appropriate learning column "
-                        + "in input (need to have at least one additional "
-                        + "numeric/categorical column or fingerprint data)");
+                    + "in input (need to have at least one additional "
+                    + "numeric/categorical column or fingerprint data)");
         }
 
         // assign fields:
         m_targetColumn = settings.getString(KEY_TARGET_COLUMN, defTargetColumn);
         DataColumnSpec targetColSpec = inSpec.getColumnSpec(m_targetColumn);
-        if (targetColSpec == null
-                || !targetColSpec.getType().isCompatible(targetClass)) {
+        if (targetColSpec == null || !targetColSpec.getType().isCompatible(targetClass)) {
             m_targetColumn = defTargetColumn;
         }
 
@@ -723,23 +738,18 @@ public class TreeEnsembleLearnerConfiguration {
             m_hardCodedRootColumn = hardCodedRootColumn;
         }
 
-        m_fingerprintColumn = settings.getString(KEY_FINGERPRINT_COLUMN,
-                defFingerprintColumn);
+        m_fingerprintColumn = settings.getString(KEY_FINGERPRINT_COLUMN, defFingerprintColumn);
         if (m_fingerprintColumn == null) {
             // null in node settings - leave it
         } else {
-            DataColumnSpec fpColSpec =
-                    inSpec.getColumnSpec(m_fingerprintColumn);
-            if (fpColSpec == null || !fpColSpec.getType().isCompatible(
-                    BitVectorValue.class)) {
+            DataColumnSpec fpColSpec = inSpec.getColumnSpec(m_fingerprintColumn);
+            if (fpColSpec == null || !fpColSpec.getType().isCompatible(BitVectorValue.class)) {
                 m_fingerprintColumn = defFingerprintColumn;
             }
         }
 
-        m_includeColumns =
-                settings.getStringArray(KEY_INCLUDE_COLUMNS, (String[])null);
-        m_includeAllColumns =
-                settings.getBoolean(KEY_INCLUDE_ALL_COLUMNS, true);
+        m_includeColumns = settings.getStringArray(KEY_INCLUDE_COLUMNS, (String[])null);
+        m_includeAllColumns = settings.getBoolean(KEY_INCLUDE_ALL_COLUMNS, true);
 
         Long defSeed = System.currentTimeMillis();
         String seedS = settings.getString(KEY_SEED, Long.toString(defSeed));
@@ -760,31 +770,30 @@ public class TreeEnsembleLearnerConfiguration {
             m_maxLevels = DEF_MAX_LEVEL;
         }
 
-        m_minNodeSize = settings.getInt(
-                KEY_MIN_NODE_SIZE, MIN_NODE_SIZE_UNDEFINED);
-        if (m_minNodeSize != MIN_NODE_SIZE_UNDEFINED && m_minNodeSize <= 0) {
+        int minNodeSize = settings.getInt(KEY_MIN_NODE_SIZE, MIN_NODE_SIZE_UNDEFINED);
+        int minChildSize = settings.getInt(KEY_MIN_CHILD_SIZE, MIN_CHILD_SIZE_UNDEFINED);
+        try {
+            setMinSizes(minNodeSize, minChildSize);
+        } catch (InvalidSettingsException e) {
             m_minNodeSize = MIN_NODE_SIZE_UNDEFINED;
+            m_minChildSize = MIN_CHILD_SIZE_UNDEFINED;
         }
 
-        m_dataFractionPerTree =
-                settings.getDouble(KEY_DATA_FRACTION, DEF_DATA_FRACTION);
+        m_dataFractionPerTree = settings.getDouble(KEY_DATA_FRACTION, DEF_DATA_FRACTION);
         if (m_dataFractionPerTree <= 0.0 || m_dataFractionPerTree > 1.0) {
             m_dataFractionPerTree = DEF_DATA_FRACTION;
         }
 
-        m_columnAbsoluteValue = settings.getInt(
-                KEY_COLUMN_ABSOLUTE, DEF_COLUMN_ABSOLUTE);
+        m_columnAbsoluteValue = settings.getInt(KEY_COLUMN_ABSOLUTE, DEF_COLUMN_ABSOLUTE);
         if (m_columnAbsoluteValue <= 0) {
             m_columnAbsoluteValue = DEF_COLUMN_ABSOLUTE;
         }
 
-        m_isDataSelectionWithReplacement = settings.getBoolean(
-                KEY_IS_DATA_SELECTION_WITH_REPLACEMENT, false);
+        m_isDataSelectionWithReplacement = settings.getBoolean(KEY_IS_DATA_SELECTION_WITH_REPLACEMENT, false);
 
         ColumnSamplingMode defColSamplingMode = ColumnSamplingMode.None;
         ColumnSamplingMode colSamplingMode = defColSamplingMode;
-        String colSamplingModeS =
-                settings.getString(KEY_COLUMN_SAMPLING_MODE, null);
+        String colSamplingModeS = settings.getString(KEY_COLUMN_SAMPLING_MODE, null);
         if (colSamplingModeS == null) {
             colSamplingMode = defColSamplingMode;
         } else {
@@ -796,21 +805,18 @@ public class TreeEnsembleLearnerConfiguration {
         }
         double colFracLinValue;
         switch (colSamplingMode) {
-        case Linear:
-            colFracLinValue =
-                    settings.getDouble(KEY_COLUMN_FRACTION_LINEAR,
-                            DEF_COLUMN_FRACTION);
-            if (colFracLinValue <= 0.0 || colFracLinValue > 1.0) {
+            case Linear:
+                colFracLinValue = settings.getDouble(KEY_COLUMN_FRACTION_LINEAR, DEF_COLUMN_FRACTION);
+                if (colFracLinValue <= 0.0 || colFracLinValue > 1.0) {
+                    colFracLinValue = DEF_COLUMN_FRACTION;
+                }
+                break;
+            default:
                 colFracLinValue = DEF_COLUMN_FRACTION;
-            }
-            break;
-        default:
-            colFracLinValue = DEF_COLUMN_FRACTION;
         }
         m_columnSamplingMode = colSamplingMode;
         m_columnFractionLinearValue = colFracLinValue;
-        m_isUseDifferentAttributesAtEachNode = settings.getBoolean(
-                KEY_IS_USE_DIFFERENT_ATTRIBUTES_AT_EACH_NODE, false);
+        m_isUseDifferentAttributesAtEachNode = settings.getBoolean(KEY_IS_USE_DIFFERENT_ATTRIBUTES_AT_EACH_NODE, false);
 
         m_nrModels = settings.getInt(KEY_NR_MODELS, DEF_NR_MODELS);
         if (m_nrModels <= 0) {
@@ -818,9 +824,7 @@ public class TreeEnsembleLearnerConfiguration {
         }
 
         SplitCriterion defSplitCriterion = SplitCriterion.InformationGainRatio;
-        String splitCriterionS =
-                settings.getString(KEY_SPLIT_CRITERION,
-                        defSplitCriterion.name());
+        String splitCriterionS = settings.getString(KEY_SPLIT_CRITERION, defSplitCriterion.name());
         SplitCriterion splitCriterion;
         if (splitCriterionS == null) {
             splitCriterion = defSplitCriterion;
@@ -832,9 +836,7 @@ public class TreeEnsembleLearnerConfiguration {
             }
         }
         m_splitCriterion = splitCriterion;
-        m_useAverageSplitPoints =
-                settings.getBoolean(KEY_USE_AVERAGE_SPLIT_POINTS,
-                        DEF_AVERAGE_SPLIT_POINTS);
+        m_useAverageSplitPoints = settings.getBoolean(KEY_USE_AVERAGE_SPLIT_POINTS, DEF_AVERAGE_SPLIT_POINTS);
 
         if (m_fingerprintColumn != null) {
             // use fingerprint data, OK
@@ -848,30 +850,24 @@ public class TreeEnsembleLearnerConfiguration {
         } else {
             m_includeAllColumns = true;
         }
-        m_ignoreColumnsWithoutDomain = settings.getBoolean(
-                KEY_IGNORE_COLUMNS_WITHOUT_DOMAIN, true);
+        m_ignoreColumnsWithoutDomain = settings.getBoolean(KEY_IGNORE_COLUMNS_WITHOUT_DOMAIN, true);
         m_nrHilitePatterns = settings.getInt(KEY_NR_HILITE_PATTERNS, -1);
     }
 
-    public Pair<ColumnRearranger, String> filterLearnColumns(final DataTableSpec spec)
+    public FilterLearnColumnRearranger filterLearnColumns(final DataTableSpec spec)
             throws InvalidSettingsException {
         // TODO return type should be a derived class of ColumnRearranger
         // (ColumnRearranger is a final class in v2.5)
         if (m_targetColumn == null) {
             throw new InvalidSettingsException("Target column not set");
         }
-        // TODO to be replaced by ColumnRearranger#getColumnCount
-        // (added in v2.6)
-        int colCount = spec.getNumColumns();
         DataColumnSpec targetCol = spec.getColumnSpec(m_targetColumn);
-        if (targetCol == null || !targetCol.getType().isCompatible(
-                getRequiredTargetClass())) {
-            throw new InvalidSettingsException("Target column \""
-                    + m_targetColumn + "\" does not exist or is not of the "
-                    + "correct type");
+        if (targetCol == null || !targetCol.getType().isCompatible(getRequiredTargetClass())) {
+            throw new InvalidSettingsException("Target column \"" + m_targetColumn
+                       + "\" does not exist or is not of the " + "correct type");
         }
         List<String> noDomainColumns = new ArrayList<String>();
-        ColumnRearranger rearranger = new ColumnRearranger(spec);
+        FilterLearnColumnRearranger rearranger = new FilterLearnColumnRearranger(spec);
         if (m_fingerprintColumn == null) { // use ordinary data
             Set<String> incl =
                     m_includeAllColumns ? null : new HashSet<String>(
@@ -916,11 +912,10 @@ public class TreeEnsembleLearnerConfiguration {
                 }
                 if (ignoreColumn) {
                     rearranger.remove(colName);
-                    colCount -= 1;
                 }
 
             }
-            if (colCount <= 1) {
+            if (rearranger.getColumnCount() <= 1) {
                 StringBuilder b = new StringBuilder("Input table has no valid "
                         + "learning columns (need one additional numeric or "
                         + "nominal column).");
@@ -956,9 +951,8 @@ public class TreeEnsembleLearnerConfiguration {
                         + "of correct type.");
             }
             rearranger.keepOnly(m_targetColumn, m_fingerprintColumn);
-            colCount = 2;
         }
-        rearranger.move(m_targetColumn, colCount);
+        rearranger.move(m_targetColumn, rearranger.getColumnCount());
         String warn = null;
         if (!noDomainColumns.isEmpty()) {
             StringBuilder b = new StringBuilder();
@@ -981,7 +975,8 @@ public class TreeEnsembleLearnerConfiguration {
             b.append(" Domain Calculator node to fix it");
             warn = b.toString();
         }
-        return new Pair<ColumnRearranger, String>(rearranger, warn);
+        rearranger.setWarning(warn);
+        return rearranger;
     }
 
     private boolean shouldIgnoreLearnColumn(final DataColumnSpec col) {
@@ -1059,6 +1054,32 @@ public class TreeEnsembleLearnerConfiguration {
 
     private Class<? extends DataValue> getRequiredTargetClass() {
         return m_isRegression ? DoubleValue.class : NominalValue.class;
+    }
+
+    /** Column rearranger with "warning" field. */
+    public static final class FilterLearnColumnRearranger extends ColumnRearranger {
+
+        private String m_warning;
+
+        /** @param original ...*/
+        public FilterLearnColumnRearranger(final DataTableSpec original) {
+            super(original);
+        }
+
+        /**
+         * @return the warning
+         */
+        public String getWarning() {
+            return m_warning;
+        }
+
+        /**
+         * @param warning the warning to set
+         */
+        void setWarning(final String warning) {
+            m_warning = warning;
+        }
+
     }
 
 }

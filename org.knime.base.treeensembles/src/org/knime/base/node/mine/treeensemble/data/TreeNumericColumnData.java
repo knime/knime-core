@@ -52,6 +52,7 @@ package org.knime.base.node.mine.treeensemble.data;
 
 import org.knime.base.node.mine.treeensemble.learner.IImpurity;
 import org.knime.base.node.mine.treeensemble.learner.NumericSplitCandidate;
+import org.knime.base.node.mine.treeensemble.learner.SplitCandidate;
 import org.knime.base.node.mine.treeensemble.model.TreeNodeCondition;
 import org.knime.base.node.mine.treeensemble.model.TreeNodeNumericCondition;
 import org.knime.base.node.mine.treeensemble.model.TreeNodeNumericCondition.NumericOperator;
@@ -65,14 +66,14 @@ import org.knime.base.node.util.DoubleFormat;
 public class TreeNumericColumnData extends TreeAttributeColumnData {
 
     private final double[] m_sortedData;
-    private final int[] m_orginalIndexInColumnList;
+    private final int[] m_originalIndexInColumnList;
 
     TreeNumericColumnData(final TreeNumericColumnMetaData metaData,
             final TreeEnsembleLearnerConfiguration configuration,
             final double[] sortedData, final int[] orginalIndexInColumnList) {
         super(metaData, configuration);
         m_sortedData = sortedData;
-        m_orginalIndexInColumnList = orginalIndexInColumnList;
+        m_originalIndexInColumnList = orginalIndexInColumnList;
     }
 
     /** {@inheritDoc} */
@@ -83,25 +84,22 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
 
     /** {@inheritDoc} */
     @Override
-    public NumericSplitCandidate calcBestSplit(final double[] rowWeights,
-            final PriorDistribution targetPriors,
+    public NumericSplitCandidate calcBestSplitClassification(final double[] rowWeights,
+            final ClassificationPriors targetPriors,
             final TreeTargetNominalColumnData targetColumn) {
-        final NominalValueRepresentation[] targetVals =
-            targetColumn.getMetaData().getValues();
-        final int[] originalIndexInColumnList = m_orginalIndexInColumnList;
-        final boolean useAverageSplitPoints =
-            getConfiguration().isUseAverageSplitPoints();
+        final NominalValueRepresentation[] targetVals = targetColumn.getMetaData().getValues();
+        final int[] originalIndexInColumnList = m_originalIndexInColumnList;
+        final boolean useAverageSplitPoints = getConfiguration().isUseAverageSplitPoints();
+        final int minChildNodeSize = getConfiguration().getMinChildSize();
 
         // distribution of target for each attribute value
         final int targetCounts = targetVals.length;
         final double[] targetCountsLeftOfSplit = new double[targetCounts];
-        final double[] targetCountsRightOfSplit =
-            targetPriors.getDistribution().clone();
+        final double[] targetCountsRightOfSplit = targetPriors.getDistribution().clone();
         assert targetCountsRightOfSplit.length == targetCounts;
-        final double totalSumWeight = targetPriors.getTotalSum();
+        final double totalSumWeight = targetPriors.getNrRecords();
         final double priorImpurity = targetPriors.getPriorImpurity();
-        final IImpurity impurityCriterion =
-            targetPriors.getImpurityCriterion();
+        final IImpurity impurityCriterion = targetPriors.getImpurityCriterion();
 
         double sumWeightsLeftOfSplit = 0.0;
         double sumWeightsRightOfSplit = totalSumWeight;
@@ -121,7 +119,7 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
         // split points (i.e. where the attribute value changes and value of the
         // target column), and for each split point compute the information
         // gain, keep the one that maximizes the split
-        for (int i = 0; i < m_orginalIndexInColumnList.length; i++) {
+        for (int i = 0; i < m_originalIndexInColumnList.length; i++) {
             final int originalIndex = originalIndexInColumnList[i];
             final double weight = rowWeights[originalIndex];
             if (weight < EPSILON) {
@@ -135,16 +133,15 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
             if (hasTargetChanged) {
                 mustTestOnNextValueChange = true;
             }
-            if (hasValueChanged && mustTestOnNextValueChange) {
-                tempArray1[0] = impurityCriterion.getPartitionImpurity(
-                        targetCountsLeftOfSplit, sumWeightsLeftOfSplit);
+            if (hasValueChanged && mustTestOnNextValueChange
+                    && sumWeightsLeftOfSplit >= minChildNodeSize && sumWeightsRightOfSplit >= minChildNodeSize) {
+                tempArray1[0] = impurityCriterion.getPartitionImpurity(targetCountsLeftOfSplit, sumWeightsLeftOfSplit);
                 tempArray1[1] = impurityCriterion.getPartitionImpurity(
-                        targetCountsRightOfSplit, sumWeightsRightOfSplit);
+                           targetCountsRightOfSplit, sumWeightsRightOfSplit);
                 tempArray2[0] = sumWeightsLeftOfSplit;
                 tempArray2[1] = sumWeightsRightOfSplit;
-                double postSplitImpurity =
-                    impurityCriterion.getPostSplitImpurity(
-                            tempArray1, tempArray2, totalSumWeight);
+                double postSplitImpurity = impurityCriterion.getPostSplitImpurity(
+                              tempArray1, tempArray2, totalSumWeight);
                 if (postSplitImpurity < priorImpurity) {
                     // Use absolute gain (IG) for split calculation even
                     // if the split criterion is information gain ratio (IGR).
@@ -155,12 +152,10 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
                     // which is ~0.00148
                     double gain = (priorImpurity - postSplitImpurity);
                     if (gain > bestGain) {
-                        bestGainValueForSplit = impurityCriterion.getGain(
-                                priorImpurity, postSplitImpurity,
+                        bestGainValueForSplit = impurityCriterion.getGain(priorImpurity, postSplitImpurity,
                                 tempArray2, totalSumWeight);
                         bestGain = gain;
-                        bestSplit = useAverageSplitPoints
-                        ? getCenter(lastSeenValue, value) : lastSeenValue;
+                        bestSplit = useAverageSplitPoints ? getCenter(lastSeenValue, value) : lastSeenValue;
                     }
                 }
                 mustTestOnNextValueChange = false;
@@ -183,8 +178,85 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
             //       (see info gain ratio implementation)
             return null;
         }
-        return new NumericSplitCandidate(this, targetPriors,
-                bestSplit, bestGainValueForSplit);
+        return new NumericSplitCandidate(this, bestSplit, bestGainValueForSplit);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public SplitCandidate calcBestSplitRegression(final double[] rowWeights,
+            final RegressionPriors targetPriors,
+            final TreeTargetNumericColumnData targetColumn) {
+        final int[] originalIndexInColumnList = m_originalIndexInColumnList;
+        final boolean useAverageSplitPoints = getConfiguration().isUseAverageSplitPoints();
+        final int minChildNodeSize = getConfiguration().getMinChildSize();
+
+        final double ySumTotal = targetPriors.getYSum();
+        final double nrRecordsTotal = targetPriors.getNrRecords();
+        final double criterionTotal = ySumTotal * ySumTotal / nrRecordsTotal;
+
+        double ySumLeft = 0.0;
+        double nrRecordsLeft = 0.0;
+
+        double ySumRight = ySumTotal;
+        double nrRecordsRight = nrRecordsTotal;
+
+        double bestSplit = Double.NEGATIVE_INFINITY;
+        double bestImprovement = 0.0;
+
+        double lastSeenY = Double.NaN;
+        double lastSeenValue = Double.NEGATIVE_INFINITY;
+        double lastSeenWeight = -1.0;
+
+        // main loop: iterate the entire sorted column, and for each split point
+        // compute the gain, keep the one that maximizes the split
+        for (int i = 0; i < m_originalIndexInColumnList.length; i++) {
+            final int originalIndex = originalIndexInColumnList[i];
+            final double weight = rowWeights[originalIndex];
+            if (weight < EPSILON) {
+                // ignore record: not in current branch or not in sample
+                continue;
+            } else if (Math.floor(weight) != weight) {
+                throw new UnsupportedOperationException("weighted records (missing values?) not supported, "
+                        + "weight is " + weight);
+            }
+
+            final double value = m_sortedData[i];
+
+            if (lastSeenWeight > 0.0) {
+                ySumLeft += lastSeenWeight * lastSeenY;
+                ySumRight -= lastSeenWeight * lastSeenY;
+
+                nrRecordsLeft += lastSeenWeight;
+                nrRecordsRight -= lastSeenWeight;
+
+                if (nrRecordsLeft >= minChildNodeSize && nrRecordsRight >= minChildNodeSize && lastSeenValue < value) {
+                    double criterion = (ySumLeft * ySumLeft / nrRecordsLeft)
+                        + (ySumRight * ySumRight / nrRecordsRight) - criterionTotal;
+                    if (criterion > bestImprovement) {
+                        bestImprovement = criterion;
+                        bestSplit = useAverageSplitPoints ? getCenter(lastSeenValue, value) : lastSeenValue;
+                    }
+                }
+            }
+            lastSeenY = targetColumn.getValueFor(originalIndex);
+            lastSeenValue = value;
+            lastSeenWeight = weight;
+        }
+        assert areApproximatelyEqual(lastSeenWeight, nrRecordsRight) :
+            "Expected left weight of " + nrRecordsRight + ", was " + lastSeenWeight;
+
+        assert areApproximatelyEqual(lastSeenWeight * lastSeenY, ySumRight) :
+            "Expected y sum of " + ySumRight + " but was " + lastSeenY * lastSeenWeight;
+        if (bestImprovement > 0.0) {
+            return new NumericSplitCandidate(this, bestSplit, bestImprovement);
+        } else {
+            return null;
+        }
+    }
+
+    private static boolean areApproximatelyEqual(final double d1, final double d2) {
+        double quot = d1 / d2;
+        return Math.abs(quot - 1.0) < 0.001;
     }
 
     private static double getCenter(final double left, final double right) {
@@ -201,7 +273,7 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
         final double splitValue = numCondition.getSplitValue();
         for (int i = 0; i < m_sortedData.length; i++) {
             final double value = m_sortedData[i];
-            final int originalColIndex = m_orginalIndexInColumnList[i];
+            final int originalColIndex = m_originalIndexInColumnList[i];
             boolean matches;
             switch (numOperator) {
             case LessThanOrEqual:
@@ -227,10 +299,10 @@ public class TreeNumericColumnData extends TreeAttributeColumnData {
     public String toString() {
         StringBuilder b = new StringBuilder(getMetaData().getAttributeName());
         b.append(" [");
-        final int length = m_orginalIndexInColumnList.length;
+        final int length = m_originalIndexInColumnList.length;
         String[] sample = new String[Math.min(100, length)];
         for (int i = 0; i < length; i++) {
-            int trueIndex = m_orginalIndexInColumnList[i];
+            int trueIndex = m_originalIndexInColumnList[i];
             if (trueIndex < sample.length) {
                 sample[trueIndex] = DoubleFormat.formatDouble(m_sortedData[i]);
             }

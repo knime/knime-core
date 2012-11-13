@@ -46,83 +46,61 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   Jan 1, 2012 (wiswedel): created
+ *   Oct 19, 2012 (wiswedel): created
  */
-package org.knime.base.node.mine.treeensemble.model;
+package org.knime.base.node.mine.treeensemble.learner;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
-import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
-import org.knime.base.node.mine.treeensemble.data.PredictorRecord;
-import org.knime.base.node.mine.treeensemble.data.TreeMetaData;
-import org.knime.core.util.MutableInteger;
+import org.apache.commons.math.random.RandomData;
+import org.knime.base.node.mine.treeensemble.data.TreeData;
+import org.knime.base.node.mine.treeensemble.model.AbstractTreeModel;
+import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
+import org.knime.base.node.mine.treeensemble.sample.column.ColumnSampleStrategy;
+import org.knime.base.node.mine.treeensemble.sample.row.RowSample;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
 
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public class TreeModel {
+public abstract class AbstractTreeLearner {
 
-    private final TreeNodeClassification m_rootNode;
+    private final TreeEnsembleLearnerConfiguration m_config;
+    private final TreeData m_data;
+    private final RowSample m_rowSampling;
+    private final ColumnSampleStrategy m_colSamplingStrategy;
 
     /**
      *  */
-    public TreeModel(final TreeNodeClassification rootNode) {
-        m_rootNode = rootNode;
+    public AbstractTreeLearner(final TreeEnsembleLearnerConfiguration config,
+            final TreeData data, final RandomData randomData) {
+        m_config = config;
+        m_data = data;
+        m_rowSampling = m_config.createRowSample(m_data.getNrRows(), randomData);
+        m_colSamplingStrategy = m_config.createColumnSampleStrategy(m_data, randomData);
     }
 
-    /** @return the rootNode */
-    public TreeNodeClassification getRootNode() {
-        return m_rootNode;
+    /** @return the rowSampling */
+    public final RowSample getRowSampling() {
+        return m_rowSampling;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public String toString() {
-        return m_rootNode.toString();
+    /** @return the colSamplingStrategy */
+    public final ColumnSampleStrategy getColSamplingStrategy() {
+        return m_colSamplingStrategy;
     }
 
-    public void save(final DataOutputStream out) throws IOException {
-        m_rootNode.save(out);
+    /** @return the data */
+    final TreeData getData() {
+        return m_data;
     }
 
-    public static TreeModel load(final DataInputStream in,
-            final TreeMetaData metaData) throws IOException {
-        TreeNodeClassification rootNode = TreeNodeClassification.load(in, metaData);
-        return new TreeModel(rootNode);
+    /** @return the config */
+    final TreeEnsembleLearnerConfiguration getConfig() {
+        return m_config;
     }
 
-    public TreeNodeClassification findMatchingNode(final PredictorRecord record) {
-        TreeNodeClassification matchingNode = m_rootNode;
-        TreeNodeClassification nextChild;
-        while ((nextChild = matchingNode.findMatchingChild(record)) != null) {
-            matchingNode = nextChild;
-        }
-        return matchingNode;
-    }
-
-    public DecisionTree createDecisionTree(final TreeMetaData metaData) {
-        DecisionTreeNode decTreeRoot =
-            m_rootNode.createDecisionTreeNode(new MutableInteger(0), metaData);
-        return new DecisionTree(decTreeRoot,
-                metaData.getTargetMetaData().getAttributeName());
-    }
-
-    public Iterable<TreeNodeClassification> getTreeNodes(final int level) {
-        if (level == 0) {
-            return Collections.singleton(m_rootNode);
-        }
-        List<TreeNodeClassification> result = new ArrayList<TreeNodeClassification>();
-        for (TreeNodeClassification parent : getTreeNodes(level - 1)) {
-            result.addAll(parent.getChildren());
-        }
-        return result;
-    }
+    public abstract AbstractTreeModel learnSingleTree(final ExecutionMonitor exec, final RandomData rd)
+        throws CanceledExecutionException;
 
 }

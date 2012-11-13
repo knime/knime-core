@@ -68,6 +68,7 @@ import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModel;
 import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObject;
 import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObjectSpec;
 import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
+import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration.FilterLearnColumnRearranger;
 import org.knime.base.node.mine.treeensemble.node.predictor.TreeEnsemblePredictor;
 import org.knime.base.node.mine.treeensemble.node.predictor.TreeEnsemblePredictorConfiguration;
 import org.knime.core.data.DataCell;
@@ -87,7 +88,6 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.util.Pair;
 
 /**
 *
@@ -124,16 +124,13 @@ final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel {
         if (m_configuration == null) {
             throw new InvalidSettingsException("No configuration available");
         }
-        final Pair<ColumnRearranger, String> learnSetup =
-            m_configuration.filterLearnColumns(inSpec);
-        ColumnRearranger learnCols = learnSetup.getFirst();
-        final String warn = learnSetup.getSecond();
+        final FilterLearnColumnRearranger learnRearranger = m_configuration.filterLearnColumns(inSpec);
+        final String warn = learnRearranger.getWarning();
         if (warn != null) {
             setWarningMessage(warn);
         }
-        DataTableSpec learnSpec = learnCols.createSpec();
-        TreeEnsembleModelPortObjectSpec ensembleSpec =
-            m_configuration.createPortObjectSpec(learnSpec);
+        DataTableSpec learnSpec = learnRearranger.createSpec();
+        TreeEnsembleModelPortObjectSpec ensembleSpec = m_configuration.createPortObjectSpec(learnSpec);
         // the following call may return null, which is OK during configure
         // but not upon execution (spec may not be populated yet, e.g.
         // predecessor not executed)
@@ -141,14 +138,10 @@ final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel {
         // for duplicates in the toString() representation
         ensembleSpec.getTargetColumnPossibleValueMap();
 
-        final TreeEnsemblePredictor outOfBagPredictor =
-                createOutOfBagPredictor(ensembleSpec, null, inSpec);
-        ColumnRearranger outOfBagRearranger =
-            outOfBagPredictor.getPredictionRearranger();
-        DataTableSpec outOfBagSpec = outOfBagRearranger == null ? null
-                : outOfBagRearranger.createSpec();
-        DataTableSpec colStatsSpec =
-            TreeEnsembleLearner.getColumnStatisticTableSpec();
+        final TreeEnsemblePredictor outOfBagPredictor = createOutOfBagPredictor(ensembleSpec, null, inSpec);
+        ColumnRearranger outOfBagRearranger = outOfBagPredictor.getPredictionRearranger();
+        DataTableSpec outOfBagSpec = outOfBagRearranger == null ? null : outOfBagRearranger.createSpec();
+        DataTableSpec colStatsSpec = TreeEnsembleLearner.getColumnStatisticTableSpec();
 
         return new PortObjectSpec[] {outOfBagSpec, colStatsSpec, ensembleSpec};
     }
@@ -164,8 +157,7 @@ final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel {
             final TreeEnsembleModelPortObject ensembleModel,
             final DataTableSpec inSpec)
             throws InvalidSettingsException {
-        TreeEnsemblePredictorConfiguration ooBConfig =
-            new TreeEnsemblePredictorConfiguration();
+        TreeEnsemblePredictorConfiguration ooBConfig = new TreeEnsemblePredictorConfiguration(false);
         String targetColumn = m_configuration.getTargetColumn();
         String append = targetColumn + " (Out-of-bag)";
         ooBConfig.setPredictionColumnName(append);
@@ -182,12 +174,9 @@ final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         BufferedDataTable t = (BufferedDataTable)inObjects[0];
         DataTableSpec spec = t.getDataTableSpec();
-        final Pair<ColumnRearranger, String> learnSetup =
-            m_configuration.filterLearnColumns(spec);
-        ColumnRearranger learnCols = learnSetup.getFirst();
-        String warn = learnSetup.getSecond();
-        BufferedDataTable learnTable = exec.createColumnRearrangeTable(t,
-                learnCols, exec.createSubProgress(0.0));
+        final FilterLearnColumnRearranger learnRearranger = m_configuration.filterLearnColumns(spec);
+        String warn = learnRearranger.getWarning();
+        BufferedDataTable learnTable = exec.createColumnRearrangeTable(t, learnRearranger, exec.createSubProgress(0.0));
         DataTableSpec learnSpec = learnTable.getDataTableSpec();
         TreeEnsembleModelPortObjectSpec ensembleSpec =
             m_configuration.createPortObjectSpec(learnSpec);
@@ -220,8 +209,7 @@ final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel {
         }
         readInExec.setProgress(1.0);
         exec.setMessage("Learning trees");
-        TreeEnsembleLearner learner =
-            new TreeEnsembleLearner(m_configuration, data);
+        TreeEnsembleLearner learner = new TreeEnsembleLearner(m_configuration, data);
         TreeEnsembleModel model;
         try {
             model = learner.learnEnsemble(learnExec);
@@ -232,20 +220,14 @@ final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel {
             }
             throw e;
         }
-        TreeEnsembleModelPortObject modelPortObject =
-            new TreeEnsembleModelPortObject(ensembleSpec, model);
+        TreeEnsembleModelPortObject modelPortObject = new TreeEnsembleModelPortObject(ensembleSpec, model);
         learnExec.setProgress(1.0);
         exec.setMessage("Out of bag prediction");
-        TreeEnsemblePredictor outOfBagPredictor =
-            createOutOfBagPredictor(ensembleSpec, modelPortObject, spec);
-        outOfBagPredictor.setOutofBagFilter(
-                learner.getRowSamples(), data.getTargetColumn());
-        ColumnRearranger outOfBagRearranger =
-            outOfBagPredictor.getPredictionRearranger();
-        BufferedDataTable outOfBagTable = exec.createColumnRearrangeTable(
-                t, outOfBagRearranger, outOfBagExec);
-        BufferedDataTable colStatsTable = learner.createColumnStatisticTable(
-                exec.createSubExecutionContext(0.0));
+        TreeEnsemblePredictor outOfBagPredictor = createOutOfBagPredictor(ensembleSpec, modelPortObject, spec);
+        outOfBagPredictor.setOutofBagFilter(learner.getRowSamples(), data.getTargetColumn());
+        ColumnRearranger outOfBagRearranger = outOfBagPredictor.getPredictionRearranger();
+        BufferedDataTable outOfBagTable = exec.createColumnRearrangeTable(t, outOfBagRearranger, outOfBagExec);
+        BufferedDataTable colStatsTable = learner.createColumnStatisticTable(exec.createSubExecutionContext(0.0));
         m_ensembleModel = model;
         if (warn != null) {
             setWarningMessage(warn);
@@ -302,8 +284,7 @@ final class TreeEnsembleClassificationLearnerNodeModel extends NodeModel {
         }
         file = new File(nodeInternDir, INTERNAL_INFO_FILE);
         if (file.exists()) {
-            NodeSettingsRO sets = NodeSettings.loadFromXML(
-                    new FileInputStream(file));
+            NodeSettingsRO sets = NodeSettings.loadFromXML(new FileInputStream(file));
             m_viewMessage = sets.getString("view_warning", null);
         }
     }

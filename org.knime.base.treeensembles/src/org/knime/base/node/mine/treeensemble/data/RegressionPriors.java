@@ -46,55 +46,70 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   Jan 8, 2012 (wiswedel): created
+ *   Jan 5, 2012 (wiswedel): created
  */
 package org.knime.base.node.mine.treeensemble.data;
 
-import org.knime.base.node.mine.treeensemble.learner.SplitCandidate;
-import org.knime.base.node.mine.treeensemble.model.TreeNodeCondition;
-import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
+import org.knime.base.node.util.DoubleFormat;
 
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public abstract class TreeAttributeColumnData extends TreeColumnData {
+public final class RegressionPriors extends AbstractPriors {
 
-    private final TreeEnsembleLearnerConfiguration m_configuration;
+    private final double m_mean;
+    private final double m_ySumSquareDeviation;
+    private final double m_ySum;
 
     /**
-     * @param metaData */
-    protected TreeAttributeColumnData(
-            final TreeAttributeColumnMetaData metaData,
-            final TreeEnsembleLearnerConfiguration configuration) {
-        super(metaData);
-        m_configuration = configuration;
+     */
+    RegressionPriors(final TreeTargetNumericColumnMetaData targetMetaData,
+            final double totalSum, final double mean,
+            final double ySumSquareDeviation, final double ySum) {
+        super(targetMetaData, totalSum);
+        m_mean = mean;
+        m_ySumSquareDeviation = ySumSquareDeviation;
+        m_ySum = ySum;
     }
 
     /** {@inheritDoc} */
     @Override
-    public TreeAttributeColumnMetaData getMetaData() {
-        return (TreeAttributeColumnMetaData)super.getMetaData();
+    public TreeTargetNumericColumnMetaData getTargetMetaData() {
+        return (TreeTargetNumericColumnMetaData)super.getTargetMetaData();
     }
 
-    /** @return the configuration */
-    protected final TreeEnsembleLearnerConfiguration getConfiguration() {
-        return m_configuration;
+    /** @return the mean */
+    public double getMean() {
+        return m_mean;
     }
 
-    public abstract SplitCandidate calcBestSplitClassification(
-            final double[] rowWeights,
-            final ClassificationPriors targetPriors,
-            final TreeTargetNominalColumnData targetColumn);
+    /** @return the ySum */
+    public double getYSum() {
+        return m_ySum;
+    }
 
-    public abstract SplitCandidate calcBestSplitRegression(
-            final double[] rowWeights,
-            final RegressionPriors targetPriors,
-            final TreeTargetNumericColumnData targetColumn);
+    /** @return the totalSquaredDeviation */
+    public double getSumSquaredDeviation() {
+        return m_ySumSquareDeviation;
+    }
 
-    public abstract void updateChildMemberships(
-            final TreeNodeCondition childCondition,
-            final double[] parentMemberships,
-            final double[] childMembershipsToUpdate);
+    /** {@inheritDoc} */
+    @Override
+    public String toString() {
+        StringBuilder b = new StringBuilder();
+        final double totalSum = getNrRecords();
+        final double mean = getMean();
+        final double totalSquaredDeviation = getSumSquaredDeviation();
+        b.append("mean: ").append(DoubleFormat.formatDouble(mean));
+        b.append(" - sum squared deviation: ");
+        b.append(DoubleFormat.formatDouble(totalSquaredDeviation));
+        b.append(" - total weight: ");
+        b.append(DoubleFormat.formatDouble(totalSum));
+        b.append(" (average squared deviation: ");
+        b.append(DoubleFormat.formatDouble(
+                totalSquaredDeviation / totalSum)).append(")");
+        return b.toString();
+    }
 
 }

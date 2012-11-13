@@ -46,55 +46,82 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   Jan 8, 2012 (wiswedel): created
+ *   Jan 5, 2012 (wiswedel): created
  */
 package org.knime.base.node.mine.treeensemble.data;
 
-import org.knime.base.node.mine.treeensemble.learner.SplitCandidate;
-import org.knime.base.node.mine.treeensemble.model.TreeNodeCondition;
-import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
+import java.text.NumberFormat;
+
+import org.knime.base.node.mine.treeensemble.learner.IImpurity;
 
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public abstract class TreeAttributeColumnData extends TreeColumnData {
+public class ClassificationPriors extends AbstractPriors {
 
-    private final TreeEnsembleLearnerConfiguration m_configuration;
+    private final double[] m_distribution;
+    private final double m_totalSum;
+    private final double m_priorImpurity;
+    private final int m_majorityIndex;
+    private final IImpurity m_impurityCriterion;
 
     /**
-     * @param metaData */
-    protected TreeAttributeColumnData(
-            final TreeAttributeColumnMetaData metaData,
-            final TreeEnsembleLearnerConfiguration configuration) {
-        super(metaData);
-        m_configuration = configuration;
+     * @param impurityCriterion TODO
+     *  */
+    ClassificationPriors(final TreeTargetNominalColumnMetaData targetMetaData,
+            final double[] distribution, final double totalSum,
+            final int majorityIndex,
+            final IImpurity impurityCriterion) {
+        super(targetMetaData, totalSum);
+        m_distribution = distribution;
+        m_impurityCriterion = impurityCriterion;
+        assert distribution.length == targetMetaData.getValues().length;
+        m_totalSum = totalSum;
+        m_majorityIndex = majorityIndex;
+        m_priorImpurity =
+            impurityCriterion.getPartitionImpurity(distribution, totalSum);
+    }
+
+    /** @return the distribution */
+    public double[] getDistribution() {
+        return m_distribution;
+    }
+
+    /** @return the targetMetaData */
+    @Override
+    public TreeTargetNominalColumnMetaData getTargetMetaData() {
+        return (TreeTargetNominalColumnMetaData)super.getTargetMetaData();
+    }
+
+    /** @return the impurityCriterion */
+    public IImpurity getImpurityCriterion() {
+        return m_impurityCriterion;
+    }
+
+    /** @return the prior impurity (gini or entropy) */
+    public double getPriorImpurity() {
+        return m_priorImpurity;
+    }
+
+    /** @return the majorityIndex */
+    public int getMajorityIndex() {
+        return m_majorityIndex;
     }
 
     /** {@inheritDoc} */
     @Override
-    public TreeAttributeColumnMetaData getMetaData() {
-        return (TreeAttributeColumnMetaData)super.getMetaData();
+    public String toString() {
+        NumberFormat format = NumberFormat.getInstance();
+        // e.g. "Iris-Setosa (50/150) - prior impurity: 0.93"
+        StringBuilder b = new StringBuilder();
+        NominalValueRepresentation[] values = getTargetMetaData().getValues();
+        b.append("\"").append(values[m_majorityIndex].getNominalValue());
+        b.append("\" (").append(format.format(m_distribution[m_majorityIndex]));
+        b.append("/").append(format.format(m_totalSum));
+        b.append(") - prior impurity: ");
+        b.append(format.format(getPriorImpurity()));
+        return b.toString();
     }
-
-    /** @return the configuration */
-    protected final TreeEnsembleLearnerConfiguration getConfiguration() {
-        return m_configuration;
-    }
-
-    public abstract SplitCandidate calcBestSplitClassification(
-            final double[] rowWeights,
-            final ClassificationPriors targetPriors,
-            final TreeTargetNominalColumnData targetColumn);
-
-    public abstract SplitCandidate calcBestSplitRegression(
-            final double[] rowWeights,
-            final RegressionPriors targetPriors,
-            final TreeTargetNumericColumnData targetColumn);
-
-    public abstract void updateChildMemberships(
-            final TreeNodeCondition childCondition,
-            final double[] parentMemberships,
-            final double[] childMembershipsToUpdate);
 
 }

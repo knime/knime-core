@@ -50,9 +50,9 @@
  */
 package org.knime.base.node.mine.treeensemble.data;
 
+import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.data.RowKey;
-import org.knime.core.util.Pair;
 
 /**
  *
@@ -78,26 +78,35 @@ public final class TreeTargetNumericColumnData extends TreeTargetColumnData {
         return m_data[row];
     }
 
-    public Pair<Double, Double> getPriorMeanAndSumSquare(
-            final double[] memberships) {
-        double sum = 0.0;
-        double sumSquare = 0.0;
-        double count = 0.0;
+    public RegressionPriors getPriors(final double[] rowWeights,
+            final TreeEnsembleLearnerConfiguration config) {
+        double mean = 0.0;
+        // sum of squares of differences from the (current) mean
+        // final (population) variance will be this value divided by #records
+        double sumSquareDeviation = 0.0;
+        double ySum = 0.0;
+        double totalSum = 0.0;
         for (int i = 0; i < m_data.length; ++i) {
-            final double weight = memberships[i];
+            final double weight = rowWeights[i];
             if (weight < EPSILON) {
                 // not in current branch or in sample
                 continue;
             }
+            // for the discrete case (no weights) this is:
+            //     sumSquare += i * (meanDiff) * (meanDiff) / (i + 1);
+            //     mean = (i * mean + d) / (i + 1);
+            // for the weighted case see also
+            // http://en.wikipedia.org/wiki/Algorithms_for_calculating_variance#Weighted_incremental_algorithm
             final double d = m_data[i];
-            final double v = weight * d;
-            sum += v;
-            sumSquare += v * d;
-            count += weight;
+            final double newTotalSum = totalSum + weight;
+            final double delta = d - mean;
+            final double r = delta  * weight / newTotalSum;
+            mean += r;
+            sumSquareDeviation += totalSum * delta * r;
+            totalSum += weight;
+            ySum += weight * d;
         }
-        double mean = sum / count;
-        double stddev = sumSquare - (sum * sum) / count;
-        return new Pair<Double, Double>(mean, stddev);
+        return new RegressionPriors(getMetaData(), totalSum, mean, sumSquareDeviation, ySum);
     }
 
     /** {@inheritDoc} */

@@ -75,7 +75,7 @@ import org.knime.core.node.port.pmml.PMMLTranslator;
  */
 public class TreeModelPMMLTranslator implements PMMLTranslator {
 
-    private final TreeModel m_treeModel;
+    private final TreeModelClassification m_treeModel;
     /** enumeration of the tree nodes. KNIME does not support node ids of type
      * string (if it did we were using the TreeSignature instead of this int).
      */
@@ -84,7 +84,7 @@ public class TreeModelPMMLTranslator implements PMMLTranslator {
 
     /**
      *  */
-    public TreeModelPMMLTranslator(final TreeModel treeModel) {
+    public TreeModelPMMLTranslator(final TreeModelClassification treeModel) {
         m_treeModel = treeModel;
     }
 

@@ -54,7 +54,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.knime.base.node.mine.treeensemble.data.NominalValueRepresentation;
-import org.knime.base.node.mine.treeensemble.data.PriorDistribution;
 import org.knime.base.node.mine.treeensemble.data.TreeColumnData;
 import org.knime.base.node.mine.treeensemble.data.TreeNominalColumnData;
 import org.knime.base.node.mine.treeensemble.data.TreeNominalColumnMetaData;
@@ -72,10 +71,9 @@ public final class NominalSplitCandidate extends SplitCandidate {
     /**
      * @param gainValue */
     public NominalSplitCandidate(final TreeNominalColumnData nominalColumn,
-            final PriorDistribution targetPriors,
             final double gainValue,
             final double[] sumWeightsAttributes) {
-        super(nominalColumn, targetPriors, gainValue);
+        super(nominalColumn, gainValue);
         assert sumWeightsAttributes.length
             == nominalColumn.getMetaData().getValues().length;
         m_sumWeightsAttributes = sumWeightsAttributes;

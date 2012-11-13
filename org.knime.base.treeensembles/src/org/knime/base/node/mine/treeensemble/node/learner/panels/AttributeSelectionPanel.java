@@ -394,4 +394,11 @@ public final class AttributeSelectionPanel extends JPanel {
         }
     }
 
+    /**
+     * @return the isRegression
+     */
+    boolean isRegression() {
+        return m_isRegression;
+    }
+
 }

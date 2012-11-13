@@ -87,13 +87,12 @@ public final class TreeBitVectorColumnData extends TreeAttributeColumnData {
 
     /** {@inheritDoc} */
     @Override
-    public SplitCandidate calcBestSplit(final double[] rowWeights,
-            final PriorDistribution targetPriors,
+    public SplitCandidate calcBestSplitClassification(final double[] rowWeights,
+            final ClassificationPriors targetPriors,
             final TreeTargetNominalColumnData targetColumn) {
-        final NominalValueRepresentation[] targetVals =
-            targetColumn.getMetaData().getValues();
-        final IImpurity impurityCriterion =
-            targetPriors.getImpurityCriterion();
+        final NominalValueRepresentation[] targetVals = targetColumn.getMetaData().getValues();
+        final IImpurity impurityCriterion = targetPriors.getImpurityCriterion();
+        final int minChildSize = getConfiguration().getMinChildSize();
         // distribution of target for On ('1') and Off ('0') bits
         final double[] onTargetWeights = new double[targetVals.length];
         final double[] offTargetWeights = new double[targetVals.length];
@@ -115,19 +114,61 @@ public final class TreeBitVectorColumnData extends TreeAttributeColumnData {
                 }
             }
         }
+        if (onWeights < minChildSize || offWeights < minChildSize) {
+            return null;
+        }
         final double weightSum = onWeights + offWeights;
-        final double onImpurity = impurityCriterion.getPartitionImpurity(
-                onTargetWeights, onWeights);
-        final double offImpurity = impurityCriterion.getPartitionImpurity(
-                offTargetWeights, offWeights);
+        final double onImpurity = impurityCriterion.getPartitionImpurity(onTargetWeights, onWeights);
+        final double offImpurity = impurityCriterion.getPartitionImpurity(offTargetWeights, offWeights);
         final double[] partitionWeights = new double[] {onWeights, offWeights};
-        final double postSplitImpurity = impurityCriterion.getPostSplitImpurity(
-                new double[] {onImpurity, offImpurity},
+        final double postSplitImpurity = impurityCriterion.getPostSplitImpurity(new double[] {onImpurity, offImpurity},
                 partitionWeights, weightSum);
-        final double gainValue = impurityCriterion.getGain(
-                targetPriors.getPriorImpurity(), postSplitImpurity,
+        final double gainValue = impurityCriterion.getGain(targetPriors.getPriorImpurity(), postSplitImpurity,
                 partitionWeights, weightSum);
-        return new BitSplitCandidate(this, targetPriors, gainValue);
+        return new BitSplitCandidate(this, gainValue);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public SplitCandidate calcBestSplitRegression(final double[] rowWeights,
+            final RegressionPriors targetPriors,
+            final TreeTargetNumericColumnData targetColumn) {
+        final double ySumTotal = targetPriors.getYSum();
+        final double nrRecordsTotal = targetPriors.getNrRecords();
+        final double criterionTotal = ySumTotal * ySumTotal / nrRecordsTotal;
+        final int minChildSize = getConfiguration().getMinChildSize();
+
+        double onWeights = 0.0;
+        double offWeights = 0.0;
+        double ySumOn = 0.0;
+        double ySumOff = 0.0;
+        for (int i = 0; i < m_length; i++) {
+            final double weight = rowWeights[i];
+            if (weight < EPSILON) {
+                // ignore record: not in current branch or not in sample
+            } else {
+                final double y = targetColumn.getValueFor(i);
+                if (m_columnBitSet.get(i)) {
+                    onWeights += weight;
+                    ySumOn += weight * y;
+                } else {
+                    offWeights += weight;
+                    ySumOff += weight * y;
+                }
+            }
+        }
+
+        if (onWeights < minChildSize || offWeights < minChildSize) {
+            return null;
+        }
+
+        final double onCriterion = ySumOn * ySumOn / onWeights;
+        final double offCriterion = ySumOff * ySumOff / offWeights;
+        final double gain = onCriterion + offCriterion - criterionTotal;
+        if (gain > 0) {
+            return new BitSplitCandidate(this, gain);
+        }
+        return null;
     }
 
     /** {@inheritDoc} */

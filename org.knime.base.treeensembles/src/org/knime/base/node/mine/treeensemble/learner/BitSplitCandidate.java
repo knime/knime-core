@@ -50,7 +50,6 @@
  */
 package org.knime.base.node.mine.treeensemble.learner;
 
-import org.knime.base.node.mine.treeensemble.data.PriorDistribution;
 import org.knime.base.node.mine.treeensemble.data.TreeBitColumnMetaData;
 import org.knime.base.node.mine.treeensemble.data.TreeBitVectorColumnData;
 import org.knime.base.node.mine.treeensemble.model.TreeNodeBitCondition;
@@ -67,9 +66,8 @@ public final class BitSplitCandidate extends SplitCandidate {
      */
     public BitSplitCandidate(
             final TreeBitVectorColumnData bitColumnData,
-            final PriorDistribution targetPriors,
             final double gainValue) {
-        super(bitColumnData, targetPriors, gainValue);
+        super(bitColumnData, gainValue);
     }
 
     /** {@inheritDoc} */

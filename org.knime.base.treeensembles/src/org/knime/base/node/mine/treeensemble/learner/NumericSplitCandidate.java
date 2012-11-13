@@ -50,7 +50,6 @@
  */
 package org.knime.base.node.mine.treeensemble.learner;
 
-import org.knime.base.node.mine.treeensemble.data.PriorDistribution;
 import org.knime.base.node.mine.treeensemble.data.TreeNumericColumnData;
 import org.knime.base.node.mine.treeensemble.data.TreeNumericColumnMetaData;
 import org.knime.base.node.mine.treeensemble.model.TreeNodeCondition;
@@ -67,12 +66,11 @@ public final class NumericSplitCandidate extends SplitCandidate {
 
     /**
      * @param columnData
-     * @param targetPriors */
+     */
     public  NumericSplitCandidate(
             final TreeNumericColumnData columnData,
-            final PriorDistribution targetPriors, final double splitValue,
-            final double gainValue) {
-        super(columnData, targetPriors, gainValue);
+            final double splitValue, final double gainValue) {
+        super(columnData, gainValue);
         m_splitValue = splitValue;
     }
 

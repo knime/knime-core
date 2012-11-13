@@ -50,7 +50,6 @@
  */
 package org.knime.base.node.mine.treeensemble.learner;
 
-import org.knime.base.node.mine.treeensemble.data.PriorDistribution;
 import org.knime.base.node.mine.treeensemble.data.TreeAttributeColumnData;
 import org.knime.base.node.mine.treeensemble.model.TreeNodeCondition;
 
@@ -60,16 +59,13 @@ import org.knime.base.node.mine.treeensemble.model.TreeNodeCondition;
  */
 public abstract class SplitCandidate {
 
-    private final PriorDistribution m_targetPriors;
     private final TreeAttributeColumnData m_columnData;
     private final double m_gainValue;
 
     /**
      *  */
     protected SplitCandidate(final TreeAttributeColumnData columnData,
-            final PriorDistribution targetPriors, final
-            double gainValue) {
-        m_targetPriors = targetPriors;
+            final double gainValue) {
         m_columnData = columnData;
         m_gainValue = gainValue;
     }
@@ -86,10 +82,6 @@ public abstract class SplitCandidate {
     }
 
     public abstract boolean canColumnBeSplitFurther();
-
-    public final PriorDistribution getTargetPriors() {
-        return m_targetPriors;
-    }
 
     /** {@inheritDoc} */
     @Override

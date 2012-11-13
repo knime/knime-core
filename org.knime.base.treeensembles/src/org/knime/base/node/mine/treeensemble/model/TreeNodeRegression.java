@@ -53,17 +53,16 @@ package org.knime.base.node.mine.treeensemble.model;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.text.NumberFormat;
 import java.util.LinkedHashMap;
 
 import org.knime.base.node.mine.decisiontree2.PMMLPredicate;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeLeaf;
 import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNodeSplitPMML;
-import org.knime.base.node.mine.treeensemble.data.ClassificationPriors;
-import org.knime.base.node.mine.treeensemble.data.NominalValueRepresentation;
+import org.knime.base.node.mine.treeensemble.data.RegressionPriors;
 import org.knime.base.node.mine.treeensemble.data.TreeMetaData;
-import org.knime.base.node.mine.treeensemble.data.TreeTargetNominalColumnMetaData;
+import org.knime.base.node.mine.treeensemble.data.TreeTargetNumericColumnMetaData;
+import org.knime.base.node.util.DoubleFormat;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.util.MutableInteger;
@@ -72,66 +71,50 @@ import org.knime.core.util.MutableInteger;
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public final class TreeNodeClassification extends AbstractTreeNode {
+public final class TreeNodeRegression extends AbstractTreeNode {
 
-    private static final TreeNodeClassification[] EMPTY_CHILD_ARRAY = new TreeNodeClassification[0];
+    private static final TreeNodeRegression[] EMPTY_CHILD_ARRAY = new TreeNodeRegression[0];
 
-    private final int m_majorityIndex;
-    private final double[] m_targetDistribution;
+    private final double m_mean;
+    private final double m_sumSquaredDeviation;
+    private final double m_totalSum;
 
-    public TreeNodeClassification(final TreeNodeSignature signature,
-            final ClassificationPriors targetPriors) {
+
+    public TreeNodeRegression(final TreeNodeSignature signature,
+            final RegressionPriors targetPriors) {
         this(signature, targetPriors, EMPTY_CHILD_ARRAY);
     }
 
-    public TreeNodeClassification(final TreeNodeSignature signature,
-            final ClassificationPriors targetPriors,
-            final TreeNodeClassification[] childNodes) {
+    public TreeNodeRegression(final TreeNodeSignature signature,
+            final RegressionPriors targetPriors,
+            final TreeNodeRegression[] childNodes) {
         super(signature, targetPriors.getTargetMetaData(), childNodes);
-        m_targetDistribution = targetPriors.getDistribution();
-        m_majorityIndex = targetPriors.getMajorityIndex();
+        m_mean = targetPriors.getMean();
+        m_totalSum = targetPriors.getNrRecords();
+        m_sumSquaredDeviation = targetPriors.getSumSquaredDeviation();
     }
 
-    private TreeNodeClassification(final DataInputStream in, final TreeMetaData metaData)
-        throws IOException {
+    /**
+     * @param in
+     * @param metaData
+     * @throws IOException */
+    public TreeNodeRegression(final DataInputStream in, final TreeMetaData metaData) throws IOException {
         super(in, metaData);
-        TreeTargetNominalColumnMetaData targetMetaData = (TreeTargetNominalColumnMetaData)metaData.getTargetMetaData();
-        int targetLength = targetMetaData.getValues().length;
-        double[] targetDistribution = new double[targetLength];
-        int majorityIndex = -1;
-        double max = Double.NEGATIVE_INFINITY;
-        for (int i = 0; i < targetLength; i++) {
-            final double d = in.readDouble();
-            if (d > max) { // strictly larger, see also PriorDistribution
-                majorityIndex = i;
-                max = d;
-            }
-            targetDistribution[i] = d;
-        }
-        m_majorityIndex = majorityIndex;
-        m_targetDistribution = targetDistribution;
+        m_mean = in.readDouble();
+        m_totalSum = in.readDouble();
+        m_sumSquaredDeviation = in.readDouble();
     }
 
     /** {@inheritDoc} */
     @Override
-    public TreeTargetNominalColumnMetaData getTargetMetaData() {
-        return (TreeTargetNominalColumnMetaData)super.getTargetMetaData();
-    }
-
-    /** @return the majorityClassName */
-    public String getMajorityClassName() {
-        return getTargetMetaData().getValues()[m_majorityIndex].getNominalValue();
+    public TreeNodeRegression getChild(final int index) {
+        return (TreeNodeRegression)super.getChild(index);
     }
 
     /** {@inheritDoc} */
     @Override
-    public TreeNodeClassification getChild(final int index) {
-        return (TreeNodeClassification)super.getChild(index);
-    }
-
-    /** @return the targetDistribution */
-    public double[] getTargetDistribution() {
-        return m_targetDistribution;
+    public TreeTargetNumericColumnMetaData getTargetMetaData() {
+        return (TreeTargetNumericColumnMetaData)super.getTargetMetaData();
     }
 
     /** {@inheritDoc} */
@@ -140,24 +123,22 @@ public final class TreeNodeClassification extends AbstractTreeNode {
         return toStringRecursion("");
     }
 
+    /** @return the mean */
+    public double getMean() {
+        return m_mean;
+    }
+
     public String toStringRecursion(final String indent) {
         StringBuilder b = new StringBuilder();
-        final TreeNodeCondition condition = getCondition();
+        TreeNodeCondition condition = getCondition();
         if (condition != null) {
             b.append(indent).append(condition).append(" --> ");
         } else {
             b.append(indent);
         }
-        // e.g. "Iris-Setosa (50/150)"
-        double majorityWeight = m_targetDistribution[m_majorityIndex];
-        double weightSum = 0.0;
-        for (double v : m_targetDistribution) {
-            weightSum += v;
-        }
-        b.append("\"").append(getMajorityClassName()).append("\" (");
-        NumberFormat format = NumberFormat.getInstance();
-        b.append(format.format(majorityWeight)).append("/");
-        b.append(format.format(weightSum)).append(")");
+        b.append(DoubleFormat.formatDouble(m_mean));
+        b.append(" (variance: ").append(DoubleFormat.formatDouble(m_sumSquaredDeviation / m_totalSum));
+        b.append("; #records: ").append(m_totalSum).append(")");
         String childIndent = indent.concat("   ");
         for (int i = 0; i < getNrChildren(); i++) {
             b.append("\n");
@@ -166,46 +147,19 @@ public final class TreeNodeClassification extends AbstractTreeNode {
         return b.toString();
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public void saveInSubclass(final DataOutputStream out) throws IOException {
-        // length is equally to target value list length (no need to store)
-        for (int i = 0; i < m_targetDistribution.length; i++) {
-            out.writeDouble(m_targetDistribution[i]);
-        }
-    }
-
-    public static TreeNodeClassification load(final DataInputStream in,
-            final TreeMetaData metaData) throws IOException {
-        return new TreeNodeClassification(in, metaData);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    TreeNodeClassification loadChild(final DataInputStream in, final TreeMetaData metaData) throws IOException {
-        return TreeNodeClassification.load(in, metaData);
-    }
+    private static final LinkedHashMap<DataCell, Double> EMPTY_MAP = new LinkedHashMap<DataCell, Double>();
 
     /**
      * @param metaData
      * @return */
     public DecisionTreeNode createDecisionTreeNode(
             final MutableInteger idGenerator, final TreeMetaData metaData) {
-        DataCell majorityCell = new StringCell(getMajorityClassName());
-        double[] targetDistribution = getTargetDistribution();
-        int initSize = (int)(targetDistribution.length / 0.75 + 1.0);
-        LinkedHashMap<DataCell, Double> scoreDistributionMap =
-            new LinkedHashMap<DataCell, Double>(initSize);
-        NominalValueRepresentation[] targets = getTargetMetaData().getValues();
-        for (int i = 0; i < targetDistribution.length; i++) {
-            String cl = targets[i].getNominalValue();
-            double d = targetDistribution[i];
-            scoreDistributionMap.put(new StringCell(cl), d);
-        }
+        DataCell majorityCell = new StringCell(DoubleFormat.formatDouble(m_mean));
         final int nrChildren = getNrChildren();
+        LinkedHashMap<DataCell, Double> distributionMap = new LinkedHashMap<DataCell, Double>();
+        distributionMap.put(majorityCell, m_totalSum);
         if (nrChildren == 0) {
-            return new DecisionTreeNodeLeaf(idGenerator.inc(),
-                    majorityCell, scoreDistributionMap);
+            return new DecisionTreeNodeLeaf(idGenerator.inc(), majorityCell, distributionMap);
         } else {
             int id = idGenerator.inc();
             DecisionTreeNode[] childNodes = new DecisionTreeNode[nrChildren];
@@ -215,17 +169,56 @@ public final class TreeNodeClassification extends AbstractTreeNode {
                     splitAttributeIndex).getAttributeName();
             PMMLPredicate[] childPredicates = new PMMLPredicate[nrChildren];
             for (int i = 0; i < nrChildren; i++) {
-                final TreeNodeClassification treeNode = getChild(i);
+                final TreeNodeRegression treeNode = getChild(i);
                 TreeNodeCondition cond = treeNode.getCondition();
                 childPredicates[i] = cond.toPMMLPredicate();
                 childNodes[i] = treeNode.createDecisionTreeNode(
                         idGenerator, metaData);
             }
             return new DecisionTreeNodeSplitPMML(id,
-                    majorityCell, scoreDistributionMap, splitAttribute,
+                    majorityCell, distributionMap, splitAttribute,
                     childPredicates, childNodes);
         }
     }
 
+    @Override
+    public void saveInSubclass(final DataOutputStream out) throws IOException {
+        // length is equally to target value list length (no need to store)
+        out.writeDouble(m_mean);
+        out.writeDouble(m_totalSum);
+        out.writeDouble(m_sumSquaredDeviation);
+    }
+
+    public static TreeNodeRegression load(final DataInputStream in,
+            final TreeMetaData metaData) throws IOException {
+        return new TreeNodeRegression(in, metaData);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    TreeNodeRegression loadChild(final DataInputStream in, final TreeMetaData metaData) throws IOException {
+        return TreeNodeRegression.load(in, metaData);
+    }
+
+    @Override
+    public int getSplitAttributeIndex() {
+        final int nrChildren = getNrChildren();
+        int splitAttributeIndex = -1;
+        for (int i = 0; i < nrChildren; i++) {
+            final TreeNodeRegression treeNode = getChild(i);
+            TreeNodeCondition cond = treeNode.getCondition();
+            if (cond instanceof TreeNodeColumnCondition) {
+                int s = ((TreeNodeColumnCondition)cond)
+                    .getColumnMetaData().getAttributeIndex();
+                if (splitAttributeIndex == -1) {
+                    splitAttributeIndex = s;
+                } else if (splitAttributeIndex != s) {
+                    assert false : "Confusing split column in node's childrin: "
+                        + "\"" + splitAttributeIndex + "\" vs. \"" + s + "\"";
+                }
+            }
+        }
+        return splitAttributeIndex;
+    }
 
 }

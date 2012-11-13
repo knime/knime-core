@@ -46,55 +46,44 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   Jan 8, 2012 (wiswedel): created
+ *   Jan 10, 2012 (wiswedel): created
  */
-package org.knime.base.node.mine.treeensemble.data;
+package org.knime.base.node.mine.treeensemble.node.predictor.classification;
 
-import org.knime.base.node.mine.treeensemble.learner.SplitCandidate;
-import org.knime.base.node.mine.treeensemble.model.TreeNodeCondition;
-import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
+import org.knime.base.node.mine.treeensemble.node.predictor.TreeEnsemblePredictorPanel;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.port.PortObjectSpec;
 
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public abstract class TreeAttributeColumnData extends TreeColumnData {
+public final class TreeEnsembleClassificationPredictorNodeDialogPane extends NodeDialogPane {
 
-    private final TreeEnsembleLearnerConfiguration m_configuration;
+    private final TreeEnsemblePredictorPanel m_predictorPanel;
 
     /**
-     * @param metaData */
-    protected TreeAttributeColumnData(
-            final TreeAttributeColumnMetaData metaData,
-            final TreeEnsembleLearnerConfiguration configuration) {
-        super(metaData);
-        m_configuration = configuration;
+     *  */
+    public TreeEnsembleClassificationPredictorNodeDialogPane() {
+        m_predictorPanel = new TreeEnsemblePredictorPanel(false);
+        addTab(TreeEnsemblePredictorPanel.PANEL_NAME, m_predictorPanel);
     }
 
     /** {@inheritDoc} */
     @Override
-    public TreeAttributeColumnMetaData getMetaData() {
-        return (TreeAttributeColumnMetaData)super.getMetaData();
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
+            throws NotConfigurableException {
+        m_predictorPanel.loadSettingsFrom(settings, specs);
     }
 
-    /** @return the configuration */
-    protected final TreeEnsembleLearnerConfiguration getConfiguration() {
-        return m_configuration;
+    /** {@inheritDoc} */
+    @Override
+    protected void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+        m_predictorPanel.saveSettingsTo(settings);
     }
-
-    public abstract SplitCandidate calcBestSplitClassification(
-            final double[] rowWeights,
-            final ClassificationPriors targetPriors,
-            final TreeTargetNominalColumnData targetColumn);
-
-    public abstract SplitCandidate calcBestSplitRegression(
-            final double[] rowWeights,
-            final RegressionPriors targetPriors,
-            final TreeTargetNumericColumnData targetColumn);
-
-    public abstract void updateChildMemberships(
-            final TreeNodeCondition childCondition,
-            final double[] parentMemberships,
-            final double[] childMembershipsToUpdate);
 
 }

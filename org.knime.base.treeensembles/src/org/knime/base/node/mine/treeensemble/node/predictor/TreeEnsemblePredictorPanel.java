@@ -1,5 +1,4 @@
-/*
- * ------------------------------------------------------------------------
+/* ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
  *  University of Konstanz, Germany and
@@ -62,7 +61,6 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
@@ -72,95 +70,89 @@ import org.knime.core.node.port.PortObjectSpec;
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public final class TreeEnsemblePredictorNodeDialogPane extends NodeDialogPane {
+public final class TreeEnsemblePredictorPanel extends JPanel {
 
-    private final JCheckBox m_appendOverallConvidenceColChecker;
-    private final JCheckBox m_appendClassConvidencesColChecker;
+    /** Panel name. */
+    public static final String PANEL_NAME = "Prediction Settings";
+
+    private final JCheckBox m_appendOverallConfidenceColChecker;
+
+    private final JCheckBox m_appendClassConfidencesColChecker;
+
     private final JTextField m_predictionColNameField;
 
+    private final boolean m_isRegression;
+
     /**
-     *  */
-    public TreeEnsemblePredictorNodeDialogPane() {
+     * @param isRegression panel for regression or classification.
+     * */
+    public TreeEnsemblePredictorPanel(final boolean isRegression) {
+        super(new GridBagLayout());
+        m_isRegression = isRegression;
         m_predictionColNameField = new JTextField(20);
-        m_predictionColNameField.setText(
-                TreeEnsemblePredictorConfiguration.PREDICT_COL_NAME);
+        final String defColName = TreeEnsemblePredictorConfiguration.getPredictColumnName(isRegression);
+        m_predictionColNameField.setText(defColName);
         m_predictionColNameField.addFocusListener(new FocusAdapter() {
             /** {@inheritDoc} */
             @Override
             public void focusGained(final FocusEvent e) {
-                if (m_predictionColNameField.getText().equals(
-                        TreeEnsemblePredictorConfiguration.PREDICT_COL_NAME)) {
+                if (m_predictionColNameField.getText().equals(defColName)) {
                     m_predictionColNameField.selectAll();
                 }
             }
         });
-        m_appendClassConvidencesColChecker =
-            new JCheckBox("Append individual class confidences");
-        m_appendOverallConvidenceColChecker =
-            new JCheckBox("Append overall prediction confidence");
+        m_appendClassConfidencesColChecker = new JCheckBox("Append individual class confidences");
+        m_appendOverallConfidenceColChecker = new JCheckBox("Append overall prediction confidence");
         initLayout();
     }
-
 
     /**
      *  */
     private void initLayout() {
-        JPanel p = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.anchor = GridBagConstraints.WEST;
 
         gbc.gridx = 0;
         gbc.gridy = 0;
-        p.add(new JLabel("Prediction Column Name"), gbc);
+        add(new JLabel(TreeEnsemblePredictorConfiguration.getPredictColumnName(m_isRegression)), gbc);
         gbc.gridx += 1;
-        p.add(m_predictionColNameField, gbc);
+        add(m_predictionColNameField, gbc);
 
-        gbc.gridy += 1;
-        gbc.gridx = 0;
-        gbc.gridwidth = 2;
-        p.add(m_appendOverallConvidenceColChecker, gbc);
+        if (!m_isRegression) {
+            gbc.gridy += 1;
+            gbc.gridx = 0;
+            gbc.gridwidth = 2;
+            add(m_appendOverallConfidenceColChecker, gbc);
 
-        gbc.gridy += 1;
-        gbc.gridx = 0;
-        gbc.gridwidth = 2;
-        p.add(m_appendClassConvidencesColChecker, gbc);
-        addTab("Prediction Settings", p);
+            gbc.gridy += 1;
+            gbc.gridx = 0;
+            gbc.gridwidth = 2;
+            add(m_appendClassConfidencesColChecker, gbc);
+        }
     }
 
-
-    /** {@inheritDoc} */
-    @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings,
-            final PortObjectSpec[] specs) throws NotConfigurableException {
-        TreeEnsemblePredictorConfiguration config =
-            new TreeEnsemblePredictorConfiguration();
+    public void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
+            throws NotConfigurableException {
+        TreeEnsemblePredictorConfiguration config = new TreeEnsemblePredictorConfiguration(m_isRegression);
         config.loadInDialog(settings);
-        if (config.isAppendPredictionConfidence()
-                != m_appendOverallConvidenceColChecker.isSelected()) {
-            m_appendOverallConvidenceColChecker.doClick();
+        if (config.isAppendPredictionConfidence() != m_appendOverallConfidenceColChecker.isSelected()) {
+            m_appendOverallConfidenceColChecker.doClick();
         }
-        if (config.isAppendClassConfidences()
-                != m_appendClassConvidencesColChecker.isSelected()) {
-            m_appendClassConvidencesColChecker.doClick();
+        if (config.isAppendClassConfidences() != m_appendClassConfidencesColChecker.isSelected()) {
+            m_appendClassConfidencesColChecker.doClick();
         }
         String colName = config.getPredictionColumnName();
         if (colName == null || colName.isEmpty()) {
-            colName = TreeEnsemblePredictorConfiguration.PREDICT_COL_NAME;
+            colName = TreeEnsemblePredictorConfiguration.getPredictColumnName(m_isRegression);
         }
         m_predictionColNameField.setText(colName);
     }
 
-    /** {@inheritDoc} */
-    @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings)
-            throws InvalidSettingsException {
-        TreeEnsemblePredictorConfiguration config =
-            new TreeEnsemblePredictorConfiguration();
-        config.setAppendClassConfidences(
-                m_appendClassConvidencesColChecker.isSelected());
-        config.setAppendPredictionConfidence(
-                m_appendOverallConvidenceColChecker.isSelected());
+    public void saveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
+        TreeEnsemblePredictorConfiguration config = new TreeEnsemblePredictorConfiguration(m_isRegression);
+        config.setAppendClassConfidences(m_appendClassConfidencesColChecker.isSelected());
+        config.setAppendPredictionConfidence(m_appendOverallConfidenceColChecker.isSelected());
         config.setPredictionColumnName(m_predictionColNameField.getText());
         config.save(settings);
     }

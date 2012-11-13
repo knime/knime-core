@@ -56,7 +56,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -68,9 +67,9 @@ import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModel;
 import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObject;
 import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObjectSpec;
 import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
+import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration.FilterLearnColumnRearranger;
 import org.knime.base.node.mine.treeensemble.node.predictor.TreeEnsemblePredictor;
 import org.knime.base.node.mine.treeensemble.node.predictor.TreeEnsemblePredictorConfiguration;
-import org.knime.core.data.DataCell;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
@@ -87,7 +86,6 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
-import org.knime.core.util.Pair;
 
 /**
  *
@@ -97,59 +95,49 @@ final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel {
 
     /** The file name where to write the internals to. */
     private static final String INTERNAL_DATASAMPLE_FILE = "datasample.zip";
+
     /** The file name where to write the internals to. */
     private static final String INTERNAL_TREES_FILE = "treeensemble.bin.gz";
+
     /** The file name where to write the internals to. */
     private static final String INTERNAL_INFO_FILE = "info.xml";
+
     private TreeEnsembleModel m_ensembleModel;
+
     private DataTable m_hiliteRowSample;
+
     private String m_viewMessage;
+
     private TreeEnsembleLearnerConfiguration m_configuration;
 
     /**
      *  */
     public TreeEnsembleRegressionLearnerNodeModel() {
-        super(new PortType[] {BufferedDataTable.TYPE}, new PortType[] {
-                BufferedDataTable.TYPE, BufferedDataTable.TYPE,
+        super(new PortType[]{BufferedDataTable.TYPE}, new PortType[]{BufferedDataTable.TYPE, BufferedDataTable.TYPE,
                 TreeEnsembleModelPortObject.TYPE});
     }
 
     /** {@inheritDoc} */
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
-            throws InvalidSettingsException {
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         // guaranteed to not be null (according to API)
         DataTableSpec inSpec = (DataTableSpec)inSpecs[0];
         if (m_configuration == null) {
             throw new InvalidSettingsException("No configuration available");
         }
-        final Pair<ColumnRearranger, String> learnSetup =
-            m_configuration.filterLearnColumns(inSpec);
-        ColumnRearranger learnCols = learnSetup.getFirst();
-        final String warn = learnSetup.getSecond();
+        final FilterLearnColumnRearranger learnRearranger = m_configuration.filterLearnColumns(inSpec);
+        final String warn = learnRearranger.getWarning();
         if (warn != null) {
             setWarningMessage(warn);
         }
-        DataTableSpec learnSpec = learnCols.createSpec();
-        TreeEnsembleModelPortObjectSpec ensembleSpec =
-            m_configuration.createPortObjectSpec(learnSpec);
-        // the following call may return null, which is OK during configure
-        // but not upon execution (spec may not be populated yet, e.g.
-        // predecessor not executed)
-        // if the possible values is not null, the following call checks
-        // for duplicates in the toString() representation
-        ensembleSpec.getTargetColumnPossibleValueMap();
+        DataTableSpec learnSpec = learnRearranger.createSpec();
+        TreeEnsembleModelPortObjectSpec ensembleSpec = m_configuration.createPortObjectSpec(learnSpec);
+        final TreeEnsemblePredictor outOfBagPredictor = createOutOfBagPredictor(ensembleSpec, null, inSpec);
+        ColumnRearranger outOfBagRearranger = outOfBagPredictor.getPredictionRearranger();
+        DataTableSpec outOfBagSpec = outOfBagRearranger == null ? null : outOfBagRearranger.createSpec();
+        DataTableSpec colStatsSpec = TreeEnsembleLearner.getColumnStatisticTableSpec();
 
-        final TreeEnsemblePredictor outOfBagPredictor =
-                createOutOfBagPredictor(ensembleSpec, null, inSpec);
-        ColumnRearranger outOfBagRearranger =
-            outOfBagPredictor.getPredictionRearranger();
-        DataTableSpec outOfBagSpec = outOfBagRearranger == null ? null
-                : outOfBagRearranger.createSpec();
-        DataTableSpec colStatsSpec =
-            TreeEnsembleLearner.getColumnStatisticTableSpec();
-
-        return new PortObjectSpec[] {outOfBagSpec, colStatsSpec, ensembleSpec};
+        return new PortObjectSpec[]{outOfBagSpec, colStatsSpec, ensembleSpec};
     }
 
     /**
@@ -157,56 +145,38 @@ final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel {
      * @param ensembleModel
      * @param inSpec
      * @return
-     * @throws InvalidSettingsException */
-    private TreeEnsemblePredictor createOutOfBagPredictor(
-            final TreeEnsembleModelPortObjectSpec ensembleSpec,
-            final TreeEnsembleModelPortObject ensembleModel,
-            final DataTableSpec inSpec)
-            throws InvalidSettingsException {
-        TreeEnsemblePredictorConfiguration ooBConfig =
-            new TreeEnsemblePredictorConfiguration();
+     * @throws InvalidSettingsException
+     */
+    private TreeEnsemblePredictor createOutOfBagPredictor(final TreeEnsembleModelPortObjectSpec ensembleSpec,
+                                                          final TreeEnsembleModelPortObject ensembleModel,
+                                                          final DataTableSpec inSpec) throws InvalidSettingsException {
+        TreeEnsemblePredictorConfiguration ooBConfig = new TreeEnsemblePredictorConfiguration(true);
         String targetColumn = m_configuration.getTargetColumn();
         String append = targetColumn + " (Out-of-bag)";
         ooBConfig.setPredictionColumnName(append);
         ooBConfig.setAppendPredictionConfidence(true);
         ooBConfig.setAppendClassConfidences(true);
         ooBConfig.setAppendModelCount(true);
-        return new TreeEnsemblePredictor(ensembleSpec, ensembleModel,
-                inSpec, ooBConfig);
+        return new TreeEnsemblePredictor(ensembleSpec, ensembleModel, inSpec, ooBConfig);
     }
 
     /** {@inheritDoc} */
     @Override
-    protected PortObject[] execute(final PortObject[] inObjects,
-            final ExecutionContext exec) throws Exception {
+    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
         BufferedDataTable t = (BufferedDataTable)inObjects[0];
         DataTableSpec spec = t.getDataTableSpec();
-        final Pair<ColumnRearranger, String> learnSetup =
-            m_configuration.filterLearnColumns(spec);
-        ColumnRearranger learnCols = learnSetup.getFirst();
-        String warn = learnSetup.getSecond();
-        BufferedDataTable learnTable = exec.createColumnRearrangeTable(t,
-                learnCols, exec.createSubProgress(0.0));
+        final FilterLearnColumnRearranger learnRearranger = m_configuration.filterLearnColumns(spec);
+        String warn = learnRearranger.getWarning();
+        BufferedDataTable learnTable = exec.createColumnRearrangeTable(t, learnRearranger, exec.createSubProgress(0.0));
         DataTableSpec learnSpec = learnTable.getDataTableSpec();
-        TreeEnsembleModelPortObjectSpec ensembleSpec =
-            m_configuration.createPortObjectSpec(learnSpec);
-        Map<String, DataCell> targetValueMap =
-            ensembleSpec.getTargetColumnPossibleValueMap();
-        if (targetValueMap == null) {
-            throw new InvalidSettingsException("The target column does not "
-                    + "have possible values assigned. Most likely it "
-                    + "has too many different distinct values (learning an ID "
-                    + "column?) Fix it by preprocessing the table using "
-                    + "a \"Domain Calculator\".");
-        }
+        TreeEnsembleModelPortObjectSpec ensembleSpec = m_configuration.createPortObjectSpec(learnSpec);
+
         ExecutionMonitor readInExec = exec.createSubProgress(0.1);
         ExecutionMonitor learnExec = exec.createSubProgress(0.8);
         ExecutionMonitor outOfBagExec = exec.createSubProgress(0.1);
-        TreeDataCreator dataCreator = new TreeDataCreator(m_configuration,
-                learnSpec, learnTable.getRowCount());
+        TreeDataCreator dataCreator = new TreeDataCreator(m_configuration, learnSpec, learnTable.getRowCount());
         exec.setProgress("Reading data into memory");
-        TreeData data = dataCreator.readData(
-                learnTable, m_configuration, readInExec);
+        TreeData data = dataCreator.readData(learnTable, m_configuration, readInExec);
         m_hiliteRowSample = dataCreator.getDataRowsForHilite();
         m_viewMessage = dataCreator.getViewMessage();
         String dataCreationWarning = dataCreator.getAndClearWarningMessage();
@@ -219,8 +189,7 @@ final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel {
         }
         readInExec.setProgress(1.0);
         exec.setMessage("Learning trees");
-        TreeEnsembleLearner learner =
-            new TreeEnsembleLearner(m_configuration, data);
+        TreeEnsembleLearner learner = new TreeEnsembleLearner(m_configuration, data);
         TreeEnsembleModel model;
         try {
             model = learner.learnEnsemble(learnExec);
@@ -231,25 +200,19 @@ final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel {
             }
             throw e;
         }
-        TreeEnsembleModelPortObject modelPortObject =
-            new TreeEnsembleModelPortObject(ensembleSpec, model);
+        TreeEnsembleModelPortObject modelPortObject = new TreeEnsembleModelPortObject(ensembleSpec, model);
         learnExec.setProgress(1.0);
         exec.setMessage("Out of bag prediction");
-        TreeEnsemblePredictor outOfBagPredictor =
-            createOutOfBagPredictor(ensembleSpec, modelPortObject, spec);
-        outOfBagPredictor.setOutofBagFilter(
-                learner.getRowSamples(), data.getTargetColumn());
-        ColumnRearranger outOfBagRearranger =
-            outOfBagPredictor.getPredictionRearranger();
-        BufferedDataTable outOfBagTable = exec.createColumnRearrangeTable(
-                t, outOfBagRearranger, outOfBagExec);
-        BufferedDataTable colStatsTable = learner.createColumnStatisticTable(
-                exec.createSubExecutionContext(0.0));
+        TreeEnsemblePredictor outOfBagPredictor = createOutOfBagPredictor(ensembleSpec, modelPortObject, spec);
+        outOfBagPredictor.setOutofBagFilter(learner.getRowSamples(), data.getTargetColumn());
+        ColumnRearranger outOfBagRearranger = outOfBagPredictor.getPredictionRearranger();
+        BufferedDataTable outOfBagTable = exec.createColumnRearrangeTable(t, outOfBagRearranger, outOfBagExec);
+        BufferedDataTable colStatsTable = learner.createColumnStatisticTable(exec.createSubExecutionContext(0.0));
         m_ensembleModel = model;
         if (warn != null) {
             setWarningMessage(warn);
         }
-        return new PortObject[] {outOfBagTable, colStatsTable, modelPortObject};
+        return new PortObject[]{outOfBagTable, colStatsTable, modelPortObject};
     }
 
     /** {@inheritDoc} */
@@ -262,17 +225,14 @@ final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel {
 
     /** {@inheritDoc} */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         new TreeEnsembleLearnerConfiguration(true).loadInModel(settings);
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        TreeEnsembleLearnerConfiguration config =
-            new TreeEnsembleLearnerConfiguration(true);
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+        TreeEnsembleLearnerConfiguration config = new TreeEnsembleLearnerConfiguration(true);
         config.loadInModel(settings);
         m_configuration = config;
     }
@@ -287,8 +247,7 @@ final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel {
 
     /** {@inheritDoc} */
     @Override
-    protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         File file = new File(nodeInternDir, INTERNAL_TREES_FILE);
         InputStream in = new GZIPInputStream(new FileInputStream(file));
@@ -301,16 +260,14 @@ final class TreeEnsembleRegressionLearnerNodeModel extends NodeModel {
         }
         file = new File(nodeInternDir, INTERNAL_INFO_FILE);
         if (file.exists()) {
-            NodeSettingsRO sets = NodeSettings.loadFromXML(
-                    new FileInputStream(file));
+            NodeSettingsRO sets = NodeSettings.loadFromXML(new FileInputStream(file));
             m_viewMessage = sets.getString("view_warning", null);
         }
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         File file = new File(nodeInternDir, INTERNAL_TREES_FILE);
         OutputStream out = new GZIPOutputStream(new FileOutputStream(file));

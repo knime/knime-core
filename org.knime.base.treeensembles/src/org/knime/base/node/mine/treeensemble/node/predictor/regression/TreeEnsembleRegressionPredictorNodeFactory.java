@@ -46,55 +46,50 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   Jan 8, 2012 (wiswedel): created
+ *   Jan 10, 2012 (wiswedel): created
  */
-package org.knime.base.node.mine.treeensemble.data;
+package org.knime.base.node.mine.treeensemble.node.predictor.regression;
 
-import org.knime.base.node.mine.treeensemble.learner.SplitCandidate;
-import org.knime.base.node.mine.treeensemble.model.TreeNodeCondition;
-import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public abstract class TreeAttributeColumnData extends TreeColumnData {
+public class TreeEnsembleRegressionPredictorNodeFactory extends
+    NodeFactory<TreeEnsembleRegressionPredictorNodeModel> {
 
-    private final TreeEnsembleLearnerConfiguration m_configuration;
-
-    /**
-     * @param metaData */
-    protected TreeAttributeColumnData(
-            final TreeAttributeColumnMetaData metaData,
-            final TreeEnsembleLearnerConfiguration configuration) {
-        super(metaData);
-        m_configuration = configuration;
+    /** {@inheritDoc} */
+    @Override
+    public final TreeEnsembleRegressionPredictorNodeModel createNodeModel() {
+        return new TreeEnsembleRegressionPredictorNodeModel();
     }
 
     /** {@inheritDoc} */
     @Override
-    public TreeAttributeColumnMetaData getMetaData() {
-        return (TreeAttributeColumnMetaData)super.getMetaData();
+    protected final int getNrNodeViews() {
+        return 0;
     }
 
-    /** @return the configuration */
-    protected final TreeEnsembleLearnerConfiguration getConfiguration() {
-        return m_configuration;
+    /** {@inheritDoc} */
+    @Override
+    public final NodeView<TreeEnsembleRegressionPredictorNodeModel> createNodeView(
+            final int viewIndex, final TreeEnsembleRegressionPredictorNodeModel nodeModel) {
+        throw new IndexOutOfBoundsException();
     }
 
-    public abstract SplitCandidate calcBestSplitClassification(
-            final double[] rowWeights,
-            final ClassificationPriors targetPriors,
-            final TreeTargetNominalColumnData targetColumn);
+    /** {@inheritDoc} */
+    @Override
+    protected final boolean hasDialog() {
+        return true;
+    }
 
-    public abstract SplitCandidate calcBestSplitRegression(
-            final double[] rowWeights,
-            final RegressionPriors targetPriors,
-            final TreeTargetNumericColumnData targetColumn);
-
-    public abstract void updateChildMemberships(
-            final TreeNodeCondition childCondition,
-            final double[] parentMemberships,
-            final double[] childMembershipsToUpdate);
+    /** {@inheritDoc} */
+    @Override
+    protected final NodeDialogPane createNodeDialogPane() {
+        return new TreeEnsembleRegressionPredictorNodeDialogPane();
+    }
 
 }

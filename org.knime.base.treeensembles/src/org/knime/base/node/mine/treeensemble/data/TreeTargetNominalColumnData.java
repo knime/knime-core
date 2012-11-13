@@ -67,7 +67,7 @@ public final class TreeTargetNominalColumnData extends TreeTargetColumnData {
         m_data = data;
     }
 
-    public PriorDistribution getDistribution(
+    public ClassificationPriors getDistribution(
             final double[] rowWeights,
             final TreeEnsembleLearnerConfiguration config) {
         NominalValueRepresentation[] nominalValues = getMetaData().getValues();
@@ -80,8 +80,19 @@ public final class TreeTargetNominalColumnData extends TreeTargetColumnData {
                 result[m_data[i]] += weight;
             }
         }
-        return new PriorDistribution(result,
-                getMetaData(), config.createImpurityCriterion());
+        double totalSum = 0.0;
+        int majorityIndex = -1;
+        double max = Double.NEGATIVE_INFINITY;
+        for (int i = 0; i < result.length; i++) {
+            double d = result[i];
+            if (d > max) { // strictly larger, see also TreeNode
+                max = d;
+                majorityIndex = i;
+            }
+            totalSum += d;
+        }
+        return new ClassificationPriors(getMetaData(), result, totalSum,
+                majorityIndex, config.createImpurityCriterion());
     }
 
     public int getValueFor(final int row) {

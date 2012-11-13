@@ -70,15 +70,14 @@ public final class TreeEnsembleRegressionLearnerNodeFactory extends
     /** {@inheritDoc} */
     @Override
     protected int getNrNodeViews() {
-        return 0;
+        return 1;
     }
 
     /** {@inheritDoc} */
     @Override
     public NodeView<TreeEnsembleRegressionLearnerNodeModel> createNodeView(
-            final int viewIndex,
-            final TreeEnsembleRegressionLearnerNodeModel nodeModel) {
-        throw new IndexOutOfBoundsException();
+            final int viewIndex, final TreeEnsembleRegressionLearnerNodeModel nodeModel) {
+        return new TreeEnsembleRegressionLearnerNodeView(nodeModel);
     }
 
     /** {@inheritDoc} */

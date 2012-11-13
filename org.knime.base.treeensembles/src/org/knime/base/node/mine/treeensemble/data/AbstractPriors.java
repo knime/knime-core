@@ -46,55 +46,36 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   Jan 8, 2012 (wiswedel): created
+ *   Jun 10, 2012 (wiswedel): created
  */
 package org.knime.base.node.mine.treeensemble.data;
-
-import org.knime.base.node.mine.treeensemble.learner.SplitCandidate;
-import org.knime.base.node.mine.treeensemble.model.TreeNodeCondition;
-import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
 
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public abstract class TreeAttributeColumnData extends TreeColumnData {
+public abstract class AbstractPriors {
 
-    private final TreeEnsembleLearnerConfiguration m_configuration;
+    private final double m_nrRecords;
+    private final TreeTargetColumnMetaData m_targetMetaData;
 
     /**
-     * @param metaData */
-    protected TreeAttributeColumnData(
-            final TreeAttributeColumnMetaData metaData,
-            final TreeEnsembleLearnerConfiguration configuration) {
-        super(metaData);
-        m_configuration = configuration;
+     * @param nrRecords
+     * @param targetMetaData */
+    AbstractPriors(final TreeTargetColumnMetaData targetMetaData,
+            final double nrRecords) {
+        m_targetMetaData = targetMetaData;
+        m_nrRecords = nrRecords;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public TreeAttributeColumnMetaData getMetaData() {
-        return (TreeAttributeColumnMetaData)super.getMetaData();
+    /** @return the targetMetaData */
+    public TreeTargetColumnMetaData getTargetMetaData() {
+        return m_targetMetaData;
     }
 
-    /** @return the configuration */
-    protected final TreeEnsembleLearnerConfiguration getConfiguration() {
-        return m_configuration;
+    /** @return the totalSum */
+    public final double getNrRecords() {
+        return m_nrRecords;
     }
-
-    public abstract SplitCandidate calcBestSplitClassification(
-            final double[] rowWeights,
-            final ClassificationPriors targetPriors,
-            final TreeTargetNominalColumnData targetColumn);
-
-    public abstract SplitCandidate calcBestSplitRegression(
-            final double[] rowWeights,
-            final RegressionPriors targetPriors,
-            final TreeTargetNumericColumnData targetColumn);
-
-    public abstract void updateChildMemberships(
-            final TreeNodeCondition childCondition,
-            final double[] parentMemberships,
-            final double[] childMembershipsToUpdate);
 
 }

@@ -163,6 +163,18 @@ public final class TreeEnsembleModelPortObjectSpec
                 m_learnSpec, false, m_learnSpec.getNumColumns() - 1);
     }
 
+    public void assertTargetTypeMatches(final boolean isRegression) throws InvalidSettingsException {
+        if (isRegression) {
+            if (!getTargetColumn().getType().isCompatible(DoubleValue.class)) {
+                throw new InvalidSettingsException("Can't apply classification model for regression tasks");
+            }
+        } else {
+            if (!getTargetColumn().getType().isCompatible(NominalValue.class)) {
+                throw new InvalidSettingsException("Can't apply regression model for classification tasks");
+            }
+        }
+    }
+
     public int[] calculateFilterIndices(final DataTableSpec testTableInput)
         throws InvalidSettingsException {
         DataTableSpec learnSpec = getLearnTableSpec();

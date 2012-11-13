@@ -1,47 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="treeensemble_learner.png" type="Learner">
-  <name>Tree Ensemble Learner</name>
+<knimeNode icon="treeensemble_learner_regression.png" type="Learner">
+  <name>Tree Ensemble Learner (Regression)</name>
 
   <shortDescription>
-    Learns an ensemble of decision trees (such as random forest variants).
+    Learns an ensemble of regression trees.
   </shortDescription>
 
   <fullDescription>
     <intro>
       <p>
-        Learns an ensemble of decision trees (such as random forest variants). Each of the decision tree models is
+        Learns an ensemble of regression trees (such as random forest variants). Each of the regression tree models is
         learned on a different set of rows (records) and/or a different set of columns (describing attributes), whereby 
         the latter can also be a bit-vector descriptor (e.g. molecular fingerprint). The output model describes an
-        ensemble of decision tree models and is applied in the corresponding predictor node using a simply majority 
-        vote. 
+        ensemble of regression tree models and is applied in the corresponding predictor node using a simply mean
+        of the individual predictions. 
       </p>
       <p>
-        The following configuration settings learn a model that is similar to the
-        <a href="http://en.wikipedia.org/wiki/Random_forest">Random Forest</a>&#x2122; classifier described by 
-        Leo Breiman and Adele Cutler:
-        <ul>
-          <li>Tree Options - Split Criterion: Gini Index</li>
-          <li>Tree Options - Limit number of levels (tree depth): unlimited</li>
-          <li>Tree Options - Minimum node size: unlimited</li>
-          <li>Ensemble Configuration - Number of models: Arbitrary (Random Forest arguably does not overfit)</li>
-          <li>Ensemble Configuration - Data Sampling: Use all rows (fraction = 1) but choose sampling 
-            with replacement (bootstrapping)
-          </li>
-          <li>Ensemble Configuration - Attribute Sampling: Sample using a different set of attributes for each tree 
-            node split; usually square root of number of attributes but can vary
-          </li>
-        </ul>
-        Experiments have shown the results on different data sets are very similar to the 
-        <a href="http://cran.r-project.org/web/packages/randomForest/">Random Forest implementation available in R</a>.
-        Known differences are in the missing value handling (currently not available in this node) and the split 
-        creation for nominal attributes (the original Random Forest classifier uses binary nominal splits; this 
-        implementation creates child nodes for each possible split attribute). Note also, this implementation keeps
-        additional statistics for each split (class distribution), which can be seen in the view but which can also
-        increase the model size (in terms of MB on disc) quite a lot. 
-      </p>
-      <p>
-        The decision tree construction takes place in main memory (all data and all models are kept in memory).
+        For a more general description and suggested default parameters see the node description of the classification 
+        <i>Tree Ensemble Learner</i>.
       </p>
       <p><b>Note:</b> The node is currently under development; models used with the current version are 
         likely not backward compatible.
@@ -73,11 +50,6 @@
       </option>
     </tab>
     <tab name="Tree Options">
-      <option name="Split Criterion">Choose the <a href="http://en.wikipedia.org/wiki/Decision_tree_learning#Formulae">
-        split criterion</a> here. Gini is usually a good choice and is used in CART (as described by Breiman et al); 
-        information gain is used in C4.5; information gain ratio normalizes the standard information gain by the split
-        entropy to overcome some unfair preference for nominal splits with many child nodes.
-        </option>
       <option name="Use mid points splits (only for numeric attributes)">
         Uses for numerical splits the middle point between two class boundaries. If unselected the split attribute value
         is the smaller value with "&lt;=" relationship.
@@ -133,13 +105,13 @@
     </tab>
   </fullDescription>
   <ports>
-    <inPort index="0" name="Input Data">The data to learn from. It must contain at least one nominal target column and 
+    <inPort index="0" name="Input Data">The data to learn from. It must contain at least one numeric target column and 
       either a fingerprint (bitvector) column or another numeric or nominal column.
     </inPort>
-    <outPort index="0" name="Out-of-bag error estimates">
-      The input data with the out-of-bag error estimates, i.e. for each input row the majority vote of all models that 
+    <outPort index="0" name="Out-of-bag response">
+      The input data with the out-of-bag response estimates, i.e. for each input row the mean output of all models that 
       did not use the row in the training. If the entire data was used to train the individual models then this
-      output will contain the input data with missing prediction and confidence values. The appended columns are 
+      output will contain the input data with missing response and response variance values. The appended columns are 
       equivalent to the columns appended by the corresponding predictor node. There is one additional column
       <i>model count</i>, which contains the number of models used for the voting (number of models not using the row
       throughout the learning.)
@@ -158,7 +130,7 @@
   </ports>
   <views>
     <view name="Tree Views" index="0">An decision tree viewer for all the trained models. Use the spinner to iterate
-      through the different models.
+      through the different models. 
       </view>
   </views>
 </knimeNode>

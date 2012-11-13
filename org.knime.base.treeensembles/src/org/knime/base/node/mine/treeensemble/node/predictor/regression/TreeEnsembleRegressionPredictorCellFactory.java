@@ -48,21 +48,23 @@
  * History
  *   Jan 10, 2012 (wiswedel): created
  */
-package org.knime.base.node.mine.treeensemble.node.predictor;
+package org.knime.base.node.mine.treeensemble.node.predictor.regression;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
+import org.apache.commons.math.stat.descriptive.moment.Mean;
+import org.apache.commons.math.stat.descriptive.moment.Variance;
 import org.knime.base.data.filter.column.FilterColumnRow;
 import org.knime.base.node.mine.treeensemble.data.PredictorRecord;
 import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModel;
 import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObject;
 import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObjectSpec;
-import org.knime.base.node.mine.treeensemble.model.TreeModel;
-import org.knime.base.node.mine.treeensemble.model.TreeNodeClassification;
+import org.knime.base.node.mine.treeensemble.model.TreeModelRegression;
+import org.knime.base.node.mine.treeensemble.model.TreeNodeRegression;
+import org.knime.base.node.mine.treeensemble.node.predictor.TreeEnsemblePredictor;
+import org.knime.base.node.mine.treeensemble.node.predictor.TreeEnsemblePredictorConfiguration;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -72,79 +74,50 @@ import org.knime.core.data.container.AbstractCellFactory;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.util.MutableInteger;
 import org.knime.core.util.UniqueNameGenerator;
 
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-final class TreeEnsemblePredictorCellFactory extends AbstractCellFactory {
+public final class TreeEnsembleRegressionPredictorCellFactory extends AbstractCellFactory {
 
     private final TreeEnsemblePredictor m_predictor;
     private final DataTableSpec m_learnSpec;
     private final int[] m_learnColumnInRealDataIndices;
-    private final Map<String, DataCell> m_targetValueMap;
 
-    private TreeEnsemblePredictorCellFactory(
+    private TreeEnsembleRegressionPredictorCellFactory(
             final TreeEnsemblePredictor predictor,
-            final Map<String, DataCell> targetValueMap,
             final DataColumnSpec[] appendSpecs,
             final int[] learnColumnInRealDataIndices) {
         super(appendSpecs);
         setParallelProcessing(true);
-        m_targetValueMap = targetValueMap;
         m_predictor = predictor;
         m_learnSpec = predictor.getModelSpec().getLearnTableSpec();
         m_learnColumnInRealDataIndices = learnColumnInRealDataIndices;
     }
     /**
      *  */
-    static TreeEnsemblePredictorCellFactory createFactory(
-            final TreeEnsemblePredictor predictor)
+    public static TreeEnsembleRegressionPredictorCellFactory createFactory(final TreeEnsemblePredictor predictor)
     throws InvalidSettingsException {
         DataTableSpec testDataSpec = predictor.getDataSpec();
         TreeEnsembleModelPortObjectSpec modelSpec = predictor.getModelSpec();
         TreeEnsembleModelPortObject modelObject = predictor.getModelObject();
-        TreeEnsemblePredictorConfiguration configuration =
-            predictor.getConfiguration();
+        TreeEnsemblePredictorConfiguration configuration = predictor.getConfiguration();
         UniqueNameGenerator nameGen = new UniqueNameGenerator(testDataSpec);
-        Map<String, DataCell> targetValueMap =
-            modelSpec.getTargetColumnPossibleValueMap();
         List<DataColumnSpec> newColsList = new ArrayList<DataColumnSpec>();
-        DataType targetColType = modelSpec.getTargetColumn().getType();
         String targetColName = configuration.getPredictionColumnName();
-        DataColumnSpec targetCol =
-            nameGen.newColumn(targetColName, targetColType);
+        DataColumnSpec targetCol = nameGen.newColumn(targetColName, DoubleCell.TYPE);
         newColsList.add(targetCol);
         if (configuration.isAppendPredictionConfidence()) {
-            newColsList.add(nameGen.newColumn(
-                    targetCol.getName() + " (Confidence)", DoubleCell.TYPE));
-        }
-        if (configuration.isAppendClassConfidences()) {
-            // the model needs to have valid possible values if confidence
-            // values should be added (otherwise no output can be set upfront
-            // and this class is not called)
-            assert targetValueMap != null
-                : "Target column has no possible values";
-            for (String v : targetValueMap.keySet()) {
-                newColsList.add(nameGen.newColumn(v, DoubleCell.TYPE));
-            }
+            newColsList.add(nameGen.newColumn(targetCol.getName() + " (Prediction Variance)", DoubleCell.TYPE));
         }
         if (configuration.isAppendModelCount()) {
             newColsList.add(nameGen.newColumn("model count", IntCell.TYPE));
         }
-        // if the model is non-null (during execute) the target values must be
-        // assigned
-        assert modelObject == null || targetValueMap != null
-            : "Target values must be known during execution";
-        DataColumnSpec[] newCols = newColsList.toArray(
-                new DataColumnSpec[newColsList.size()]);
-        int[] learnColumnInRealDataIndices =
-            modelSpec.calculateFilterIndices(testDataSpec);
-        return new TreeEnsemblePredictorCellFactory(
-                predictor, targetValueMap, newCols,
-                learnColumnInRealDataIndices);
+        DataColumnSpec[] newCols = newColsList.toArray(new DataColumnSpec[newColsList.size()]);
+        int[] learnColumnInRealDataIndices = modelSpec.calculateFilterIndices(testDataSpec);
+        return new TreeEnsembleRegressionPredictorCellFactory(predictor, newCols, learnColumnInRealDataIndices);
     }
 
     /** {@inheritDoc} */
@@ -155,95 +128,44 @@ final class TreeEnsemblePredictorCellFactory extends AbstractCellFactory {
         final TreeEnsembleModel ensembleModel = modelObject.getEnsembleModel();
         int size = 1;
         final boolean appendConfidence = cfg.isAppendPredictionConfidence();
+        final boolean appendModelCount = cfg.isAppendModelCount();
         if (appendConfidence) {
             size += 1;
         }
-        final boolean appendClassConfidences = cfg.isAppendClassConfidences();
-        if (appendClassConfidences) {
-            size += m_targetValueMap.size();
+        if (appendModelCount) {
+            size += 1;
         }
-        size += 1;
         final boolean hasOutOfBagFilter = m_predictor.hasOutOfBagFilter();
         DataCell[] result = new DataCell[size];
-        DataRow filterRow = new FilterColumnRow(
-                row, m_learnColumnInRealDataIndices);
-        PredictorRecord record = ensembleModel.createPredictorRecord(
-                filterRow, m_learnSpec);
+        DataRow filterRow = new FilterColumnRow(row, m_learnColumnInRealDataIndices);
+        PredictorRecord record = ensembleModel.createPredictorRecord(filterRow, m_learnSpec);
         if (record == null) { // missing value
             Arrays.fill(result, DataType.getMissingCell());
             return result;
         }
-        OccurrenceCounter<String> counter = new OccurrenceCounter<String>();
-        TreeModel[] models = ensembleModel.getModels();
-        int nrValidModels = 0;
-        for (int i = 0; i < models.length; i++) {
-            if (hasOutOfBagFilter
-                    && m_predictor.isRowPartOfTrainingData(row.getKey(), i)) {
+        Mean mean = new Mean();
+        Variance variance = new Variance();
+        final int nrModels = ensembleModel.getNrModels();
+        for (int i = 0; i < nrModels; i++) {
+            if (hasOutOfBagFilter && m_predictor.isRowPartOfTrainingData(row.getKey(), i)) {
                 // ignore, row was used to train the model
             } else {
-                TreeModel m = models[i];
-                TreeNodeClassification match = m.findMatchingNode(record);
-                String majorityClassName = match.getMajorityClassName();
-                counter.add(majorityClassName);
-                nrValidModels += 1;
+                TreeModelRegression m = ensembleModel.getTreeModelRegression(i);
+                TreeNodeRegression match = m.findMatchingNode(record);
+                double nodeMean = match.getMean();
+                mean.increment(nodeMean);
+                variance.increment(nodeMean);
             }
         }
-        String bestValue = counter.getMostFrequent();
+        int nrValidModels = (int)mean.getN();
         int index = 0;
-        if (bestValue == null) {
-            assert nrValidModels == 0;
-            Arrays.fill(result, DataType.getMissingCell());
-            index = size - 1;
-        } else {
-            result[index++] = m_targetValueMap.get(bestValue);
-            if (appendConfidence) {
-                final int freqValue = counter.getFrequency(bestValue);
-                result[index++] = new DoubleCell(
-                        freqValue / (double)nrValidModels);
-            }
-            if (appendClassConfidences) {
-                for (String key : m_targetValueMap.keySet()) {
-                    int frequency = counter.getFrequency(key);
-                    double ratio = frequency / (double)nrValidModels;
-                    result[index++] = new DoubleCell(ratio);
-                }
-            }
+        result[index++] = nrValidModels == 0 ? DataType.getMissingCell() : new DoubleCell(mean.getResult());
+        if (appendConfidence) {
+            result[index++] = nrValidModels == 0 ? DataType.getMissingCell() : new DoubleCell(variance.getResult());
         }
-        result[index++] = new IntCell(nrValidModels);
+        if (appendModelCount) {
+            result[index++] = new IntCell(nrValidModels);
+        }
         return result;
     }
-
-    private static final class OccurrenceCounter<T>
-        extends HashMap<T, MutableInteger> {
-
-        public int add(final T object) {
-            MutableInteger count = get(object);
-            if (count == null) {
-                count = new MutableInteger(1);
-                put(object, count);
-            } else {
-                count.inc();
-            }
-            return count.intValue();
-        }
-
-        public T getMostFrequent() {
-            int max = 0;
-            T maxValue = null;
-            for (Map.Entry<T, MutableInteger> e : entrySet()) {
-                final int intValue = e.getValue().intValue();
-                if (intValue > max) {
-                    max = intValue;
-                    maxValue = e.getKey();
-                }
-            }
-            return maxValue;
-        }
-
-        public int getFrequency(final T object) {
-            MutableInteger count = get(object);
-            return count == null ? 0 : count.intValue();
-        }
-    }
-
 }

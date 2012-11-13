@@ -99,6 +99,10 @@ public final class TreeOptionsPanel extends JPanel {
 
     private final JSpinner m_minNodeSizeSpinner;
 
+    private final JCheckBox m_minChildNodeSizeChecker;
+
+    private final JSpinner m_minChildNodeSizeSpinner;
+
     private final JCheckBox m_hardCodedRootColumnChecker;
 
     private final ColumnSelectionComboxBox m_hardCodedRootColumnBox;
@@ -133,9 +137,8 @@ public final class TreeOptionsPanel extends JPanel {
         });
         m_maxLevelChecker.doClick();
 
-        m_minNodeSizeSpinner = new JSpinner(
-                new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));
-        m_minNodeSizeChecker = new JCheckBox("Minimum node size");
+        m_minNodeSizeSpinner = new JSpinner(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));
+        m_minNodeSizeChecker = new JCheckBox("Minimum split node size");
         m_minNodeSizeChecker.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(final ItemEvent e) {
@@ -144,6 +147,16 @@ public final class TreeOptionsPanel extends JPanel {
             }
         });
         m_minNodeSizeChecker.doClick();
+        m_minChildNodeSizeSpinner = new JSpinner(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));
+        m_minChildNodeSizeChecker = new JCheckBox("Minimum child node size");
+        m_minChildNodeSizeChecker.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(final ItemEvent e) {
+                final boolean s = m_minChildNodeSizeChecker.isSelected();
+                m_minChildNodeSizeSpinner.setEnabled(s);
+            }
+        });
+        m_minChildNodeSizeChecker.doClick();
         m_hardCodedRootColumnBox =
             new ColumnSelectionComboxBox((Border)null, NominalValue.class,
                     DoubleValue.class);
@@ -170,13 +183,17 @@ public final class TreeOptionsPanel extends JPanel {
 
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.weightx = 0.0;
-        add(new JLabel("Split Criterion"), gbc);
-        gbc.gridx += 1;
-        gbc.weightx = 1.0;
-        add(m_splitCriterionsBox, gbc);
 
-        gbc.gridy += 1;
+        if (!m_attributePanel.isRegression()) {
+            // regression doesn't know about gini, info gain, etc.
+            gbc.weightx = 0.0;
+            add(new JLabel("Split Criterion"), gbc);
+            gbc.gridx += 1;
+            gbc.weightx = 1.0;
+            add(m_splitCriterionsBox, gbc);
+            gbc.gridy += 1;
+        }
+
         gbc.gridx = 0;
         gbc.weightx = 0.0;
         gbc.gridwidth = 2;
@@ -198,6 +215,14 @@ public final class TreeOptionsPanel extends JPanel {
         gbc.gridx += 1;
         gbc.weightx = 1.0;
         add(m_minNodeSizeSpinner, gbc);
+
+        gbc.gridy += 1;
+        gbc.gridx = 0;
+        gbc.weightx = 0.0;
+        add(m_minChildNodeSizeChecker, gbc);
+        gbc.gridx += 1;
+        gbc.weightx = 1.0;
+        add(m_minChildNodeSizeSpinner, gbc);
 
         gbc.gridy += 1;
         gbc.gridx = 0;
@@ -246,6 +271,16 @@ public final class TreeOptionsPanel extends JPanel {
             m_minNodeSizeSpinner.setValue(1);
         } else {
             m_minNodeSizeSpinner.setValue(minNodeSize);
+        }
+        int minChildNodeSize = cfg.getMinChildSize();
+        if ((minChildNodeSize != TreeEnsembleLearnerConfiguration.MIN_CHILD_SIZE_UNDEFINED)
+                != m_minChildNodeSizeChecker.isSelected()) {
+            m_minChildNodeSizeChecker.doClick();
+        }
+        if (minChildNodeSize == TreeEnsembleLearnerConfiguration.MIN_CHILD_SIZE_UNDEFINED) {
+            m_minChildNodeSizeSpinner.setValue(1);
+        } else {
+            m_minChildNodeSizeSpinner.setValue(minChildNodeSize);
         }
         String rootCol = cfg.getHardCodedRootColumn();
         if (hasOrdinaryColumnsInInput) {
@@ -298,7 +333,11 @@ public final class TreeOptionsPanel extends JPanel {
         int minNodeSize = m_minNodeSizeChecker.isSelected()
         ? (Integer)m_minNodeSizeSpinner.getValue()
                 : TreeEnsembleLearnerConfiguration.MIN_NODE_SIZE_UNDEFINED;
-        cfg.setMinNodeSize(minNodeSize);
+
+        int minChildNodeSize = m_minChildNodeSizeChecker.isSelected()
+                ? (Integer)m_minChildNodeSizeSpinner.getValue()
+                        : TreeEnsembleLearnerConfiguration.MIN_CHILD_SIZE_UNDEFINED;
+        cfg.setMinSizes(minNodeSize, minChildNodeSize);
 
         String hardCodedRootCol = m_hardCodedRootColumnChecker.isSelected()
         ? m_hardCodedRootColumnBox.getSelectedColumn() : null;

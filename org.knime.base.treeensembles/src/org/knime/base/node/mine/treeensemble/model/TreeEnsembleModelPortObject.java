@@ -105,7 +105,7 @@ public class TreeEnsembleModelPortObject extends AbstractPortObject {
     @Override
     public String getSummary() {
         StringBuilder b = new StringBuilder();
-        b.append(m_ensembleModel.getModels().length);
+        b.append(m_ensembleModel.getNrModels());
         b.append(" classifiers on ");
         b.append(m_ensembleModel.getMetaData().getNrAttributes());
         b.append(" attributes");
@@ -137,7 +137,7 @@ public class TreeEnsembleModelPortObject extends AbstractPortObject {
         pmmlSpecCreator.setTargetCol(targetSpec);
         PMMLPortObjectSpec pmmlSpec = pmmlSpecCreator.createSpec();
         PMMLPortObject portObject = new PMMLPortObject(pmmlSpec);
-        TreeModel model = m_ensembleModel.getModels()[modelIndex];
+        TreeModelClassification model = m_ensembleModel.getTreeModelClassification(modelIndex);
         portObject.addModelTranslater(new TreeModelPMMLTranslator(model));
         return portObject;
     }

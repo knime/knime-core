@@ -50,46 +50,13 @@
  */
 package org.knime.base.node.mine.treeensemble.node.predictor;
 
-import org.knime.core.node.NodeDialogPane;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeView;
+import org.knime.base.node.mine.treeensemble.node.predictor.classification.TreeEnsembleClassificationPredictorNodeFactory;
 
 /**
- *
+ * (Empty but backward compatible) extension of classification predictor factory.
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public final class TreeEnsemblePredictorNodeFactory extends
-        NodeFactory<TreeEnsemblePredictorNodeModel> {
+public final class TreeEnsemblePredictorNodeFactory extends TreeEnsembleClassificationPredictorNodeFactory {
 
-    /** {@inheritDoc} */
-    @Override
-    public TreeEnsemblePredictorNodeModel createNodeModel() {
-        return new TreeEnsemblePredictorNodeModel();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected int getNrNodeViews() {
-        return 0;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public NodeView<TreeEnsemblePredictorNodeModel> createNodeView(
-            final int viewIndex, final TreeEnsemblePredictorNodeModel nodeModel) {
-        throw new IndexOutOfBoundsException();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected boolean hasDialog() {
-        return true;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new TreeEnsemblePredictorNodeDialogPane();
-    }
 
 }

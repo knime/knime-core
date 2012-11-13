@@ -48,13 +48,15 @@
  * History
  *   Jan 10, 2012 (wiswedel): created
  */
-package org.knime.base.node.mine.treeensemble.node.predictor;
+package org.knime.base.node.mine.treeensemble.node.predictor.classification;
 
 import java.io.File;
 import java.io.IOException;
 
 import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObject;
 import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObjectSpec;
+import org.knime.base.node.mine.treeensemble.node.predictor.TreeEnsemblePredictor;
+import org.knime.base.node.mine.treeensemble.node.predictor.TreeEnsemblePredictorConfiguration;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.BufferedDataTable;
@@ -73,54 +75,45 @@ import org.knime.core.node.port.PortType;
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-final class TreeEnsemblePredictorNodeModel extends NodeModel {
+final class TreeEnsembleClassificationPredictorNodeModel extends NodeModel {
 
     private TreeEnsemblePredictorConfiguration m_configuration;
 
     /**
      *  */
-    TreeEnsemblePredictorNodeModel() {
-        super(new PortType[]{TreeEnsembleModelPortObject.TYPE,
-                BufferedDataTable.TYPE},
-                new PortType[]{BufferedDataTable.TYPE});
+    TreeEnsembleClassificationPredictorNodeModel() {
+        super(new PortType[]{TreeEnsembleModelPortObject.TYPE, BufferedDataTable.TYPE},
+              new PortType[]{BufferedDataTable.TYPE});
     }
 
     /** {@inheritDoc} */
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
-            throws InvalidSettingsException {
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
         if (m_configuration == null) {
-            m_configuration =
-                TreeEnsemblePredictorConfiguration.createDefault();
+            m_configuration = TreeEnsemblePredictorConfiguration.createDefault(false);
         }
-        TreeEnsembleModelPortObjectSpec modelSpec =
-            (TreeEnsembleModelPortObjectSpec)inSpecs[0];
+        TreeEnsembleModelPortObjectSpec modelSpec = (TreeEnsembleModelPortObjectSpec)inSpecs[0];
+        modelSpec.assertTargetTypeMatches(false);
         DataTableSpec dataSpec = (DataTableSpec)inSpecs[1];
-        final TreeEnsemblePredictor pred = new TreeEnsemblePredictor(
-                modelSpec, null, dataSpec, m_configuration);
+        final TreeEnsemblePredictor pred = new TreeEnsemblePredictor(modelSpec, null, dataSpec, m_configuration);
         ColumnRearranger rearranger = pred.getPredictionRearranger();
         // rearranger may be null if confidence values are appended but the
         // model does not have a list of possible target values
-        DataTableSpec outSpec = rearranger != null
-            ? rearranger.createSpec() : null;
-        return new DataTableSpec[] {outSpec};
+        DataTableSpec outSpec = rearranger != null ? rearranger.createSpec() : null;
+        return new DataTableSpec[]{outSpec};
     }
 
     /** {@inheritDoc} */
     @Override
-    protected PortObject[] execute(final PortObject[] inObjects,
-            final ExecutionContext exec) throws Exception {
-        TreeEnsembleModelPortObject model =
-            (TreeEnsembleModelPortObject)inObjects[0];
+    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
+        TreeEnsembleModelPortObject model = (TreeEnsembleModelPortObject)inObjects[0];
         TreeEnsembleModelPortObjectSpec modelSpec = model.getSpec();
         BufferedDataTable data = (BufferedDataTable)inObjects[1];
         DataTableSpec dataSpec = data.getDataTableSpec();
-        final TreeEnsemblePredictor pred = new TreeEnsemblePredictor(
-                modelSpec, model, dataSpec, m_configuration);
+        final TreeEnsemblePredictor pred = new TreeEnsemblePredictor(modelSpec, model, dataSpec, m_configuration);
         ColumnRearranger rearranger = pred.getPredictionRearranger();
-        BufferedDataTable outTable =
-            exec.createColumnRearrangeTable(data, rearranger, exec);
-        return new BufferedDataTable[] {outTable};
+        BufferedDataTable outTable = exec.createColumnRearrangeTable(data, rearranger, exec);
+        return new BufferedDataTable[]{outTable};
     }
 
     /** {@inheritDoc} */
@@ -139,35 +132,29 @@ final class TreeEnsemblePredictorNodeModel extends NodeModel {
 
     /** {@inheritDoc} */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        TreeEnsemblePredictorConfiguration config =
-            new TreeEnsemblePredictorConfiguration();
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        TreeEnsemblePredictorConfiguration config = new TreeEnsemblePredictorConfiguration(false);
         config.loadInModel(settings);
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        TreeEnsemblePredictorConfiguration config =
-            new TreeEnsemblePredictorConfiguration();
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
+        TreeEnsemblePredictorConfiguration config = new TreeEnsemblePredictorConfiguration(false);
         config.loadInModel(settings);
         m_configuration = config;
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         // no internals
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec) throws IOException,
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         // no internals
     }

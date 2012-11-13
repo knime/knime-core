@@ -3,12 +3,6 @@
 <plugin>
    <extension
          point="org.knime.workbench.repository.nodes">
-<!--      <node
-            category-path="/preview"
-            factory-class="org.knime.base.node.similaritysearch.SimilaritySearchNodeFactory"
-            id="org.knime.base.node.similaritysearch.SimilaritySearchNodeFactory">
-      </node>
--->
       <node
             category-path="/labs/treeensemble"
             expert-flag="false"
@@ -16,18 +10,32 @@
             id="org.knime.base.node.mine.treeensemble.node.learner.classification.TreeEnsembleClassificationLearnerNodeFactory">
       </node>
       <node
-            after="org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerNodeFactory"
+            after="org.knime.base.node.mine.treeensemble.node.learner.classification.TreeEnsembleClassificationLearnerNodeFactory"
             category-path="/labs/treeensemble"
             expert-flag="false"
-            factory-class="org.knime.base.node.mine.treeensemble.node.predictor.TreeEnsemblePredictorNodeFactory"
-            id="org.knime.base.node.mine.treeensemble.node.predictor.TreeEnsemblePredictorNodeFactory">
+            factory-class="org.knime.base.node.mine.treeensemble.node.predictor.classification.TreeEnsembleClassificationPredictorNodeFactory"
+            id="org.knime.base.node.mine.treeensemble.node.predictor.classification.TreeEnsembleClassificationPredictorNodeFactory">
       </node>
       <node
-            after="org.knime.base.node.mine.treeensemble.node.predictor.TreeEnsemblePredictorNodeFactory"
+            after="org.knime.base.node.mine.treeensemble.node.predictor.classification.TreeEnsembleClassificationPredictorNodeFactory"
             category-path="/labs/treeensemble"
             expert-flag="false"
             factory-class="org.knime.base.node.mine.treeensemble.node.modelextractor.TreeEnsembleModelExtractorNodeFactory"
             id="org.knime.base.node.mine.treeensemble.node.modelextractor.TreeEnsembleModelExtractorNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.mine.treeensemble.node.modelextractor.TreeEnsembleModelExtractorNodeFactory"
+            category-path="/labs/treeensemble"
+            expert-flag="false"
+            factory-class="org.knime.base.node.mine.treeensemble.node.learner.regression.TreeEnsembleRegressionLearnerNodeFactory"
+            id="org.knime.base.node.mine.treeensemble.node.learner.regression.TreeEnsembleRegressionLearnerNodeFactory">
+      </node>
+      <node
+            after="org.knime.base.node.mine.treeensemble.node.learner.regression.TreeEnsembleRegressionLearnerNodeFactory"
+            category-path="/labs/treeensemble"
+            expert-flag="false"
+            factory-class="org.knime.base.node.mine.treeensemble.node.predictor.regression.TreeEnsembleRegressionPredictorNodeFactory"
+            id="org.knime.base.node.mine.treeensemble.node.predictor.regression.TreeEnsembleRegressionPredictorNodeFactory">
       </node>
    </extension>
    <extension

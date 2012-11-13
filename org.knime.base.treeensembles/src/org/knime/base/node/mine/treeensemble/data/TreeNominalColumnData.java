@@ -54,6 +54,7 @@ import java.util.Arrays;
 
 import org.knime.base.node.mine.treeensemble.learner.IImpurity;
 import org.knime.base.node.mine.treeensemble.learner.NominalSplitCandidate;
+import org.knime.base.node.mine.treeensemble.learner.SplitCandidate;
 import org.knime.base.node.mine.treeensemble.model.TreeNodeCondition;
 import org.knime.base.node.mine.treeensemble.model.TreeNodeNominalCondition;
 import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
@@ -83,8 +84,8 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
 
     /** {@inheritDoc} */
     @Override
-    public NominalSplitCandidate calcBestSplit(final double[]
-            rowWeights, final PriorDistribution targetPriors,
+    public NominalSplitCandidate calcBestSplitClassification(final double[]
+            rowWeights, final ClassificationPriors targetPriors,
             final TreeTargetNominalColumnData targetColumn) {
         final NominalValueRepresentation[] targetVals =
             targetColumn.getMetaData().getValues();
@@ -125,10 +126,54 @@ public final class TreeNominalColumnData extends TreeAttributeColumnData {
                 attEntropys, attWeights, totalWeight);
         double gain = impCriterion.getGain(targetPriors.getPriorImpurity(),
                 postSplitImpurity, attWeights, totalWeight);
-        return new NominalSplitCandidate(this, targetPriors,
-                gain, attWeights);
+        return new NominalSplitCandidate(this, gain, attWeights);
     }
 
+
+    /** {@inheritDoc} */
+    @Override
+    public SplitCandidate calcBestSplitRegression(final double[] rowWeights,
+            final RegressionPriors targetPriors,
+            final TreeTargetNumericColumnData targetColumn) {
+        final NominalValueRepresentation[] nomVals = getMetaData().getValues();
+        final double ySumTotal = targetPriors.getYSum();
+        final double nrRecordsTotal = targetPriors.getNrRecords();
+        final double criterionTotal = ySumTotal * ySumTotal / nrRecordsTotal;
+
+        double criterionAfterSplit = 0.0;
+        final int[] originalIndexInColumnList = m_orginalIndexInColumnList;
+        final double[] sumWeightsAttributes = new double[nomVals.length];
+        // number (sum) of total valid values
+        double totalWeight = 0.0;
+        int start = 0;
+        for (int att = 0; att < nomVals.length; att++) {
+            int end = start + m_nominalValueCounts[att];
+            double weightSum = 0.0;
+            double ySum = 0.0;
+            for (int index = start; index < end; index++) {
+                final int originalIndex = originalIndexInColumnList[index];
+                final double weight = rowWeights[originalIndex];
+                if (weight < EPSILON) {
+                    // ignore record: not in current branch or not in sample
+                } else {
+                    ySum += weight * targetColumn.getValueFor(originalIndex);
+                    weightSum += weight;
+                }
+            }
+            criterionAfterSplit += ySum * ySum / weightSum;
+            sumWeightsAttributes[att] = weightSum;
+            totalWeight += weightSum;
+            start = end;
+        }
+
+//        assert Math.abs((ySumTotal - totalWeight) / ySumTotal) < EPSILON
+//            : "Expected similar values: " + ySumTotal + " vs. " + totalWeight;
+        final double gain = criterionAfterSplit - criterionTotal;
+        if (gain > 0.0) {
+            return new NominalSplitCandidate(this, gain, sumWeightsAttributes);
+        }
+        return null;
+    }
 
     /** {@inheritDoc} */
     @Override

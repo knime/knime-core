@@ -95,6 +95,10 @@ public final class TreeMetaData {
         return m_targetMetaData;
     }
 
+    public boolean isRegression() {
+        return m_targetMetaData instanceof TreeTargetNumericColumnMetaData;
+    }
+
     public void save(final DataOutputStream output) throws IOException {
         output.writeInt(m_attributesMetaData.length);
         for (TreeAttributeColumnMetaData a : m_attributesMetaData) {

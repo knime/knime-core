@@ -46,55 +46,65 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   Jan 8, 2012 (wiswedel): created
+ *   Oct 18, 2012 (wiswedel): created
  */
-package org.knime.base.node.mine.treeensemble.data;
+package org.knime.base.node.mine.treeensemble.model;
 
-import org.knime.base.node.mine.treeensemble.learner.SplitCandidate;
-import org.knime.base.node.mine.treeensemble.model.TreeNodeCondition;
-import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
+import org.knime.base.node.mine.treeensemble.data.PredictorRecord;
 
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public abstract class TreeAttributeColumnData extends TreeColumnData {
+public abstract class AbstractTreeModel<N extends AbstractTreeNode> {
 
-    private final TreeEnsembleLearnerConfiguration m_configuration;
+    private final N m_rootNode;
 
     /**
-     * @param metaData */
-    protected TreeAttributeColumnData(
-            final TreeAttributeColumnMetaData metaData,
-            final TreeEnsembleLearnerConfiguration configuration) {
-        super(metaData);
-        m_configuration = configuration;
+     * @param rootNode */
+    AbstractTreeModel(final N rootNode) {
+        m_rootNode = rootNode;
+    }
+
+    /** @return the rootNode */
+    public final N getRootNode() {
+        return m_rootNode;
     }
 
     /** {@inheritDoc} */
     @Override
-    public TreeAttributeColumnMetaData getMetaData() {
-        return (TreeAttributeColumnMetaData)super.getMetaData();
+    public String toString() {
+        return m_rootNode.toString();
     }
 
-    /** @return the configuration */
-    protected final TreeEnsembleLearnerConfiguration getConfiguration() {
-        return m_configuration;
+    public N findMatchingNode(final PredictorRecord record) {
+        N matchingNode = m_rootNode;
+        N nextChild;
+        while ((nextChild = matchingNode.findMatchingChild(record)) != null) {
+            matchingNode = nextChild;
+        }
+        return matchingNode;
     }
 
-    public abstract SplitCandidate calcBestSplitClassification(
-            final double[] rowWeights,
-            final ClassificationPriors targetPriors,
-            final TreeTargetNominalColumnData targetColumn);
+    public Iterable<N> getTreeNodes(final int level) {
+        if (level == 0) {
+            return Collections.singleton(m_rootNode);
+        }
+        List<N> result = new ArrayList<N>();
+        for (N parent : getTreeNodes(level - 1)) {
+            final List<N> children = parent.getChildren();
+            result.addAll(children);
+        }
+        return result;
+    }
 
-    public abstract SplitCandidate calcBestSplitRegression(
-            final double[] rowWeights,
-            final RegressionPriors targetPriors,
-            final TreeTargetNumericColumnData targetColumn);
-
-    public abstract void updateChildMemberships(
-            final TreeNodeCondition childCondition,
-            final double[] parentMemberships,
-            final double[] childMembershipsToUpdate);
-
+    public void save(final DataOutputStream out) throws IOException {
+        m_rootNode.save(out);
+    }
 }

@@ -62,21 +62,38 @@ import org.knime.core.node.NotConfigurableException;
 public final class TreeEnsemblePredictorConfiguration {
 
     /**  */
-    static final String PREDICT_COL_NAME = "Tree Ensemble Prediction";
+    public static final String getPredictColumnName(final boolean isRegression) {
+        return isRegression ? "Tree Ensemble Response" : "Tree Ensemble Prediction";
+    }
+
+    private final boolean m_isRegression;
+
     private boolean m_appendPredictionConfidence = true;
+
     private boolean m_appendClassConfidences = false;
+
     private boolean m_appendModelCount = false;
 
-    private String m_predictionColumnName = PREDICT_COL_NAME;
+    private String m_predictionColumnName;
+
+    /**
+     *
+     */
+    public TreeEnsemblePredictorConfiguration(final boolean isRegression) {
+        m_isRegression = isRegression;
+        m_predictionColumnName = getPredictColumnName(isRegression);
+    }
 
     /** @return the appendPredictionConfidence */
     public boolean isAppendPredictionConfidence() {
         return m_appendPredictionConfidence;
     }
+
     /** @param value the appendPredictionConfidence to set */
     public void setAppendPredictionConfidence(final boolean value) {
         m_appendPredictionConfidence = value;
     }
+
     /** @return the appendConfidenceValues */
     public boolean isAppendClassConfidences() {
         return m_appendClassConfidences;
@@ -107,47 +124,36 @@ public final class TreeEnsemblePredictorConfiguration {
         m_appendModelCount = appendModelCount;
     }
 
-    void save(final NodeSettingsWO settings) {
-        settings.addBoolean("appendPredictionConfidence",
-                m_appendPredictionConfidence);
-        settings.addBoolean("appendClassConfidences",
-                m_appendClassConfidences);
+    public void save(final NodeSettingsWO settings) {
+        settings.addBoolean("appendPredictionConfidence", m_appendPredictionConfidence);
+        settings.addBoolean("appendClassConfidences", m_appendClassConfidences);
         settings.addBoolean("appendModelCount", m_appendModelCount);
         settings.addString("predictionColumnName", m_predictionColumnName);
     }
 
-    void loadInDialog(final NodeSettingsRO settings)
-        throws NotConfigurableException {
-        m_appendPredictionConfidence =
-            settings.getBoolean("appendPredictionConfidence", true);
-        m_appendClassConfidences =
-            settings.getBoolean("appendClassConfidences", false);
-        m_predictionColumnName =
-            settings.getString("predictionColumnName", PREDICT_COL_NAME);
+    public void loadInDialog(final NodeSettingsRO settings) throws NotConfigurableException {
+        m_appendPredictionConfidence = settings.getBoolean("appendPredictionConfidence", true);
+        m_appendClassConfidences = settings.getBoolean("appendClassConfidences", false);
+        String defColName = getPredictColumnName(m_isRegression);
+        m_predictionColumnName = settings.getString("predictionColumnName", defColName);
         m_appendModelCount = settings.getBoolean("appendModelCount", false);
-        if (m_predictionColumnName == null
-                || m_predictionColumnName.isEmpty()) {
-            m_predictionColumnName = PREDICT_COL_NAME;
+        if (m_predictionColumnName == null || m_predictionColumnName.isEmpty()) {
+            m_predictionColumnName = defColName;
         }
     }
 
-    void loadInModel(final NodeSettingsRO settings)
-        throws InvalidSettingsException {
-        m_appendPredictionConfidence =
-            settings.getBoolean("appendPredictionConfidence");
-        m_appendClassConfidences =
-            settings.getBoolean("appendClassConfidences");
+    public void loadInModel(final NodeSettingsRO settings) throws InvalidSettingsException {
+        m_appendPredictionConfidence = settings.getBoolean("appendPredictionConfidence");
+        m_appendClassConfidences = settings.getBoolean("appendClassConfidences");
         m_predictionColumnName = settings.getString("predictionColumnName");
         m_appendModelCount = settings.getBoolean("appendModelCount");
-        if (m_predictionColumnName == null
-                || m_predictionColumnName.isEmpty()) {
-            throw new InvalidSettingsException(
-                    "Prediction column name must not be empty");
+        if (m_predictionColumnName == null || m_predictionColumnName.isEmpty()) {
+            throw new InvalidSettingsException("Prediction column name must not be empty");
         }
     }
 
-    static TreeEnsemblePredictorConfiguration createDefault() {
-        return new TreeEnsemblePredictorConfiguration();
+    public static TreeEnsemblePredictorConfiguration createDefault(final boolean isRegression) {
+        return new TreeEnsemblePredictorConfiguration(isRegression);
     }
 
 }

@@ -46,55 +46,40 @@
  * ------------------------------------------------------------------------
  *
  * History
- *   Jan 8, 2012 (wiswedel): created
+ *   Jan 1, 2012 (wiswedel): created
  */
-package org.knime.base.node.mine.treeensemble.data;
+package org.knime.base.node.mine.treeensemble.model;
 
-import org.knime.base.node.mine.treeensemble.learner.SplitCandidate;
-import org.knime.base.node.mine.treeensemble.model.TreeNodeCondition;
-import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
+import java.io.DataInputStream;
+import java.io.IOException;
+
+import org.knime.base.node.mine.decisiontree2.model.DecisionTree;
+import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
+import org.knime.base.node.mine.treeensemble.data.TreeMetaData;
+import org.knime.core.util.MutableInteger;
 
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
-public abstract class TreeAttributeColumnData extends TreeColumnData {
-
-    private final TreeEnsembleLearnerConfiguration m_configuration;
+public class TreeModelClassification extends AbstractTreeModel<TreeNodeClassification> {
 
     /**
-     * @param metaData */
-    protected TreeAttributeColumnData(
-            final TreeAttributeColumnMetaData metaData,
-            final TreeEnsembleLearnerConfiguration configuration) {
-        super(metaData);
-        m_configuration = configuration;
+     *  */
+    public TreeModelClassification(final TreeNodeClassification rootNode) {
+        super(rootNode);
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public TreeAttributeColumnMetaData getMetaData() {
-        return (TreeAttributeColumnMetaData)super.getMetaData();
+    public DecisionTree createDecisionTree(final TreeMetaData metaData) {
+        DecisionTreeNode decTreeRoot =
+            getRootNode().createDecisionTreeNode(new MutableInteger(0), metaData);
+        return new DecisionTree(decTreeRoot,
+                metaData.getTargetMetaData().getAttributeName());
     }
 
-    /** @return the configuration */
-    protected final TreeEnsembleLearnerConfiguration getConfiguration() {
-        return m_configuration;
+    public static TreeModelClassification load(final DataInputStream in,
+            final TreeMetaData metaData) throws IOException {
+        return new TreeModelClassification(TreeNodeClassification.load(in, metaData));
     }
-
-    public abstract SplitCandidate calcBestSplitClassification(
-            final double[] rowWeights,
-            final ClassificationPriors targetPriors,
-            final TreeTargetNominalColumnData targetColumn);
-
-    public abstract SplitCandidate calcBestSplitRegression(
-            final double[] rowWeights,
-            final RegressionPriors targetPriors,
-            final TreeTargetNumericColumnData targetColumn);
-
-    public abstract void updateChildMemberships(
-            final TreeNodeCondition childCondition,
-            final double[] parentMemberships,
-            final double[] childMembershipsToUpdate);
 
 }

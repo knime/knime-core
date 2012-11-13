@@ -115,28 +115,38 @@ public final class TreeEnsembleModel {
                     return t;
                 }
             }
-            throw new IOException("Can't read tree type, unknown "
+            throw new IOException("Can't read data type, unknown "
                     + "byte identifier: " + persistByte);
         }
     }
 
     private final TreeMetaData m_metaData;
     private final TreeType m_type;
-    private final TreeModel[] m_models;
+    private final AbstractTreeModel[] m_models;
 
     /**
-     * @param models */
-    public TreeEnsembleModel(
-            final TreeMetaData metaData,
-            final TreeModel[] models, final TreeType treeType) {
+     * @param models
+     */
+    public TreeEnsembleModel(final TreeMetaData metaData, final AbstractTreeModel[] models,
+            final TreeType treeType) {
         m_metaData = metaData;
         m_models = models;
         m_type = treeType;
     }
 
     /** @return the models */
-    public TreeModel[] getModels() {
-        return m_models;
+    public AbstractTreeModel<?> getTreeModel(final int index) {
+        return m_models[index];
+    }
+
+    /** @return the models */
+    public TreeModelClassification getTreeModelClassification(final int index) {
+        return (TreeModelClassification)m_models[index];
+    }
+
+    /** @return the models */
+    public TreeModelRegression getTreeModelRegression(final int index) {
+        return (TreeModelRegression)m_models[index];
     }
 
     public int getNrModels() {
@@ -155,8 +165,14 @@ public final class TreeEnsembleModel {
 
     public DecisionTree createDecisionTree(final int modelIndex,
             final DataTable sampleForHiliting) {
-        TreeModel treeModel = m_models[modelIndex];
-        final DecisionTree result = treeModel.createDecisionTree(m_metaData);
+        final DecisionTree result;
+        if (m_metaData.isRegression()) {
+            TreeModelRegression treeModel = getTreeModelRegression(modelIndex);
+            result = treeModel.createDecisionTree(m_metaData);
+        } else {
+            TreeModelClassification treeModel = getTreeModelClassification(modelIndex);
+            result = treeModel.createDecisionTree(m_metaData);
+        }
         if (sampleForHiliting != null) {
             final DataTableSpec dataSpec = sampleForHiliting.getDataTableSpec();
             final DataTableSpec spec = getLearnAttributeSpec(dataSpec);
@@ -307,12 +323,12 @@ public final class TreeEnsembleModel {
         // the write operation from, e.g. 63s to 8s
         DataOutputStream dataOutput = new DataOutputStream(
                 new BufferedOutputStream(new NonClosableOutputStream(out)));
-        dataOutput.writeInt(20120120); // version number
+        dataOutput.writeInt(20121019); // version number
         m_type.save(dataOutput);
         m_metaData.save(dataOutput);
         dataOutput.writeInt(m_models.length);
         for (int i = 0; i < m_models.length; i++) {
-            TreeModel singleModel = m_models[i];
+            AbstractTreeModel singleModel = m_models[i];
             try {
                 singleModel.save(dataOutput);
             } catch (IOException ioe) {
@@ -330,26 +346,26 @@ public final class TreeEnsembleModel {
      * @return ...
      * @throws IOException ...
      * @throws CanceledExecutionException ... */
-    public static TreeEnsembleModel load(final InputStream in,
-            final ExecutionMonitor exec)
+    public static TreeEnsembleModel load(final InputStream in, final ExecutionMonitor exec)
     throws IOException, CanceledExecutionException {
         // wrapping the argument (zip input) stream in a buffered stream
         // reduces read operation from, e.g. 42s to 2s
         DataInputStream input = new DataInputStream(
                 new BufferedInputStream(new NonClosableInputStream(in)));
         int version = input.readInt();
-        if (version != 20120120) {
-            throw new IOException("Tree Ensemble version "
-                    + version + " not supported");
+        if (version != 20121019) {
+            throw new IOException("Tree Ensemble version " + version + " not supported");
         }
         TreeType type = TreeType.load(input);
         TreeMetaData metaData = TreeMetaData.load(input);
         int nrModels = input.readInt();
-        TreeModel[] models = new TreeModel[nrModels];
+        AbstractTreeModel[] models = new AbstractTreeModel[nrModels];
+        boolean isRegression = metaData.isRegression();
         for (int i = 0; i < nrModels; i++) {
-            TreeModel singleModel;
+            AbstractTreeModel singleModel;
             try {
-                singleModel = TreeModel.load(input, metaData);
+                singleModel = isRegression ? TreeModelRegression.load(input, metaData)
+                        : TreeModelClassification.load(input, metaData);
                 if (input.readByte() != 0) {
                     throw new IOException("Model not terminated by 0 byte");
                 }

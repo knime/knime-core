@@ -56,8 +56,11 @@ import java.util.Map;
 import org.knime.base.node.mine.treeensemble.data.TreeTargetColumnData;
 import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObject;
 import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModelPortObjectSpec;
+import org.knime.base.node.mine.treeensemble.node.predictor.classification.TreeEnsembleClassificationPredictorCellFactory;
+import org.knime.base.node.mine.treeensemble.node.predictor.regression.TreeEnsembleRegressionPredictorCellFactory;
 import org.knime.base.node.mine.treeensemble.sample.row.RowSample;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.node.InvalidSettingsException;
@@ -82,7 +85,6 @@ public final class TreeEnsemblePredictor {
 
     private Map<RowKey, Integer> m_rowKeyToLearnIndex;
 
-
     /**
      * @param modelSpec
      * @param modelObject
@@ -90,37 +92,35 @@ public final class TreeEnsemblePredictor {
      * @param configuration
      * @throws InvalidSettingsException
      */
-    public TreeEnsemblePredictor(
-            final TreeEnsembleModelPortObjectSpec modelSpec,
-            final TreeEnsembleModelPortObject modelObject,
-            final DataTableSpec dataSpec,
-            final TreeEnsemblePredictorConfiguration configuration)
+    public TreeEnsemblePredictor(final TreeEnsembleModelPortObjectSpec modelSpec,
+                                 final TreeEnsembleModelPortObject modelObject, final DataTableSpec dataSpec,
+                                 final TreeEnsemblePredictorConfiguration configuration)
     throws InvalidSettingsException {
         m_modelSpec = modelSpec;
         m_modelObject = modelObject;
         m_dataSpec = dataSpec;
         m_configuration = configuration;
-        boolean hasPossibleValues =
-            modelSpec.getTargetColumnPossibleValueMap() != null;
-        if (configuration.isAppendClassConfidences() && !hasPossibleValues) {
+        boolean hasPossibleValues = modelSpec.getTargetColumnPossibleValueMap() != null;
+        if (modelSpec.getTargetColumn().getType().isCompatible(DoubleValue.class)) {
+            m_predictionRearranger = new ColumnRearranger(dataSpec);
+            m_predictionRearranger.append(TreeEnsembleRegressionPredictorCellFactory.createFactory(this));
+        } else if (configuration.isAppendClassConfidences() && !hasPossibleValues) {
             // can't add confidence columns (possible values unknown)
             m_predictionRearranger = null;
         } else {
             m_predictionRearranger = new ColumnRearranger(dataSpec);
-            TreeEnsemblePredictorCellFactory cellFac =
-                TreeEnsemblePredictorCellFactory.createFactory(this);
+            TreeEnsembleClassificationPredictorCellFactory cellFac =
+                    TreeEnsembleClassificationPredictorCellFactory.createFactory(this);
             m_predictionRearranger.append(cellFac);
         }
     }
 
-    public void setOutofBagFilter(final RowSample[] modelRowSamples,
-            final TreeTargetColumnData targetColumnData) {
+    public void setOutofBagFilter(final RowSample[] modelRowSamples, final TreeTargetColumnData targetColumnData) {
         if (modelRowSamples == null || targetColumnData == null) {
             throw new NullPointerException("Argument must not be null.");
         }
         final int nrRows = targetColumnData.getNrRows();
-        Map<RowKey, Integer> learnItemMap = new HashMap<RowKey, Integer>(
-                (int)(nrRows / 0.75 + 1));
+        Map<RowKey, Integer> learnItemMap = new HashMap<RowKey, Integer>((int)(nrRows / 0.75 + 1));
         for (int i = 0; i < nrRows; i++) {
             RowKey key = targetColumnData.getRowKeyFor(i);
             learnItemMap.put(key, i);
@@ -129,38 +129,39 @@ public final class TreeEnsemblePredictor {
         m_rowKeyToLearnIndex = learnItemMap;
     }
 
-    /** @return the rearranger for the appended columns or null if the out
-     * spec can't be determined (during configure with an unknown number of
-     * targets). */
+    /**
+     * @return the rearranger for the appended columns or null if the out spec can't be determined (during configure with
+     *         an unknown number of targets).
+     */
     public ColumnRearranger getPredictionRearranger() {
         return m_predictionRearranger;
     }
 
     /** @return the configuration */
-    TreeEnsemblePredictorConfiguration getConfiguration() {
+    public TreeEnsemblePredictorConfiguration getConfiguration() {
         return m_configuration;
     }
 
     /** @return the data */
-    DataTableSpec getDataSpec() {
+    public DataTableSpec getDataSpec() {
         return m_dataSpec;
     }
 
     /** @return the modelObject */
-    TreeEnsembleModelPortObject getModelObject() {
+    public TreeEnsembleModelPortObject getModelObject() {
         return m_modelObject;
     }
 
     /** @return the modelSpec */
-    TreeEnsembleModelPortObjectSpec getModelSpec() {
+    public TreeEnsembleModelPortObjectSpec getModelSpec() {
         return m_modelSpec;
     }
 
-    boolean hasOutOfBagFilter() {
+    public boolean hasOutOfBagFilter() {
         return m_modelLearnRowSamples != null;
     }
 
-    boolean isRowPartOfTrainingData(final RowKey key, final int modelIndex) {
+    public boolean isRowPartOfTrainingData(final RowKey key, final int modelIndex) {
         assert m_modelLearnRowSamples != null : "no out of bag filter set";
         Integer indexInteger = m_rowKeyToLearnIndex.get(key);
         if (indexInteger == null) {

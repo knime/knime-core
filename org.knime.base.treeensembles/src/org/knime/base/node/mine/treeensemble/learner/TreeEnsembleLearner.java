@@ -59,9 +59,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.commons.math.random.RandomData;
 import org.knime.base.node.mine.treeensemble.data.TreeAttributeColumnData;
 import org.knime.base.node.mine.treeensemble.data.TreeData;
+import org.knime.base.node.mine.treeensemble.model.AbstractTreeModel;
+import org.knime.base.node.mine.treeensemble.model.AbstractTreeNode;
 import org.knime.base.node.mine.treeensemble.model.TreeEnsembleModel;
-import org.knime.base.node.mine.treeensemble.model.TreeModel;
-import org.knime.base.node.mine.treeensemble.model.TreeNodeClassification;
 import org.knime.base.node.mine.treeensemble.model.TreeNodeSignature;
 import org.knime.base.node.mine.treeensemble.node.learner.TreeEnsembleLearnerConfiguration;
 import org.knime.base.node.mine.treeensemble.sample.column.ColumnSample;
@@ -157,7 +157,7 @@ public class TreeEnsembleLearner {
         };
         TreeLearnerResult[] modelResults = tp.runInvisible(learnCallable);
         checkThrowable(learnThrowableRef);
-        TreeModel[] models = new TreeModel[nrModels];
+        AbstractTreeModel[] models = new AbstractTreeModel[nrModels];
         m_rowSamples = new RowSample[nrModels];
         m_columnSampleStrategies = new ColumnSampleStrategy[nrModels];
         for (int i = 0; i < nrModels; i++) {
@@ -177,17 +177,16 @@ public class TreeEnsembleLearner {
 
     public BufferedDataTable createColumnStatisticTable(
             final ExecutionContext exec) throws CanceledExecutionException {
-        BufferedDataContainer c =
-            exec.createDataContainer(getColumnStatisticTableSpec());
-        TreeModel[] models = m_ensembleModel.getModels();
+        BufferedDataContainer c = exec.createDataContainer(getColumnStatisticTableSpec());
+        final int nrModels = m_ensembleModel.getNrModels();
         final TreeAttributeColumnData[] columns = m_data.getColumns();
         final int nrAttributes = columns.length;
         int[][] columnOnLevelCounts = new int[REPORT_LEVEL][nrAttributes];
         int[][] columnInLevelSampleCounts = new int[REPORT_LEVEL][nrAttributes];
-        for (int i = 0; i < models.length; i++) {
-            final TreeModel treeModel = models[i];
+        for (int i = 0; i < nrModels; i++) {
+            final AbstractTreeModel<?> treeModel = m_ensembleModel.getTreeModel(i);
             for (int level = 0; level < REPORT_LEVEL; level++) {
-                for (TreeNodeClassification treeNodeOnLevel : treeModel.getTreeNodes(level)) {
+                for (AbstractTreeNode treeNodeOnLevel : treeModel.getTreeNodes(level)) {
                     TreeNodeSignature sig = treeNodeOnLevel.getSignature();
                     ColumnSampleStrategy colStrat = m_columnSampleStrategies[i];
                     ColumnSample cs = colStrat.getColumnSampleForTreeNode(sig);
@@ -254,8 +253,7 @@ public class TreeEnsembleLearner {
         }
     }
 
-    private final class TreeLearnerCallable
-        implements Callable<TreeLearnerResult> {
+    private final class TreeLearnerCallable implements Callable<TreeLearnerResult> {
 
         private final ExecutionMonitor m_exec;
         private final RandomData m_rd;
@@ -277,12 +275,16 @@ public class TreeEnsembleLearner {
         @Override
         public TreeLearnerResult call() throws Exception {
             try {
-                TreeLearnerClassification treeLearner = new TreeLearnerClassification(
-                        m_config, m_data, m_rd);
-                TreeModel model = treeLearner.learnSingleTreeClassification(m_exec, m_rd);
-                RowSample rowSample = treeLearner.getRowSampling();
-                TreeLearnerResult result = new TreeLearnerResult(
-                        model, rowSample, treeLearner.getColSamplingStrategy());
+                AbstractTreeLearner learner;
+                if (m_data.getMetaData().isRegression()) {
+                    learner = new TreeLearnerRegression(m_config, m_data, m_rd);
+                } else {
+                    learner = new TreeLearnerClassification(m_config, m_data, m_rd);
+                }
+                AbstractTreeModel model = learner.learnSingleTree(m_exec, m_rd);
+                final RowSample rowSample = learner.getRowSampling();
+                final ColumnSampleStrategy colSamplingStrategy = learner.getColSamplingStrategy();
+                TreeLearnerResult result = new TreeLearnerResult(model, rowSample, colSamplingStrategy);
                 m_exec.setProgress(1.0);
                 return result;
             } catch (Throwable t) {
@@ -295,14 +297,14 @@ public class TreeEnsembleLearner {
     }
 
     private final static class TreeLearnerResult {
-        private final TreeModel m_treeModel;
+        private final AbstractTreeModel m_treeModel;
         private final RowSample m_rowSample;
         private final ColumnSampleStrategy m_rootColumnSampleStrategy;
         /**
          * @param treeModel
          * @param rowSample
          * @param columnSampleStrategy */
-        private TreeLearnerResult(final TreeModel treeModel,
+        private TreeLearnerResult(final AbstractTreeModel treeModel,
                 final RowSample rowSample,
                 final ColumnSampleStrategy columnSampleStrategy) {
             m_treeModel = treeModel;
