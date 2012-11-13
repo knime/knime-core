@@ -488,10 +488,11 @@ public final class RearrangeColumnsTable
         final int newColCount = producerMap.getAllNewColumnsList().size();
         DataCell[] newCells = new DataCell[newColCount];
         DataRow row = applyDataTypeConverters(unconvertedRow, producerMap, newCells);
-        IdentityHashMap<CellFactory, List<Integer>> uniqueCellFactoryMap = producerMap.getUniqueCellFactoryMap();
-        for (Map.Entry<CellFactory, List<Integer>> e : uniqueCellFactoryMap.entrySet()) {
+        IdentityHashMap<CellFactory, List<Pair<Integer, Integer>>> uniqueCellFactoryMap =
+                producerMap.getUniqueCellFactoryMap();
+        for (Map.Entry<CellFactory, List<Pair<Integer, Integer>>> e : uniqueCellFactoryMap.entrySet()) {
             CellFactory factory = e.getKey();
-            List<Integer> list = e.getValue();
+            List<Pair<Integer, Integer>> list = e.getValue();
             DataCell[] fromFac = factory.getCells(row);
             if (fromFac.length != list.size()) {
                 String error = String.format("New cells array length conflict: expected %d, actual %d (class %s)",
@@ -510,9 +511,11 @@ public final class RearrangeColumnsTable
             }
             final int length = list.size();
             for (int i = 0; i < length; i++) {
-                Integer trueIndex = list.get(i);
-                assert newCells[trueIndex] == null : "New cells array at index expected to be null";
-                newCells[trueIndex] = fromFac[i];
+                Pair<Integer, Integer> indexPair = list.get(i);
+                int indexInNewCellsArray = indexPair.getFirst();
+                int indexInFactory = indexPair.getSecond();
+                assert newCells[indexInNewCellsArray] == null : "New cells array at index expected to be null";
+                newCells[indexInNewCellsArray] = fromFac[indexInFactory];
             }
         }
         DataRow appendix = new DefaultRow(row.getKey(), newCells);
@@ -740,12 +743,12 @@ public final class RearrangeColumnsTable
 
         private final List<SpecAndFactoryObject> m_allNewColumnsList;
         private final List<Pair<SpecAndFactoryObject, Integer>> m_converterToIndexMap;
-        private final IdentityHashMap<CellFactory, List<Integer>> m_uniqueCellFactoryMap;
+        private final IdentityHashMap<CellFactory, List<Pair<Integer, Integer>>> m_uniqueCellFactoryMap;
 
         private NewColumnsProducerMapping(final Vector<SpecAndFactoryObject> includes) {
             m_allNewColumnsList = new ArrayList<SpecAndFactoryObject>();
             m_converterToIndexMap = new ArrayList<Pair<SpecAndFactoryObject, Integer>>();
-            m_uniqueCellFactoryMap = new IdentityHashMap<CellFactory, List<Integer>>();
+            m_uniqueCellFactoryMap = new IdentityHashMap<CellFactory, List<Pair<Integer, Integer>>>();
             int newColumnIndex = 0;
             for (int i = 0; i < includes.size(); i++) {
                 SpecAndFactoryObject s = includes.get(i);
@@ -755,15 +758,16 @@ public final class RearrangeColumnsTable
                 }
                 if (s.isNewColumn()) {
                     CellFactory cellFac = s.getFactory();
-                    List<Integer> specAndObs = m_uniqueCellFactoryMap.get(cellFac);
+                    List<Pair<Integer, Integer>> specAndObs = m_uniqueCellFactoryMap.get(cellFac);
                     if (specAndObs == null) {
-                        specAndObs = new ArrayList<Integer>();
+                        specAndObs = new ArrayList<Pair<Integer, Integer>>();
                         m_uniqueCellFactoryMap.put(cellFac, specAndObs);
                     }
-                    specAndObs.add(newColumnIndex++);
+                    specAndObs.add(new Pair<Integer, Integer>(newColumnIndex++, s.getColumnInFactory()));
                     m_allNewColumnsList.add(s);
                 }
             }
+
         }
 
         /**
@@ -783,10 +787,12 @@ public final class RearrangeColumnsTable
             return m_allNewColumnsList.size();
         }
 
-        /**
+        /** A map that for each cell factory (often only 0 or 1) keeps a list of two-index pairs. The first index
+         * is the index in the created new cells array (containing all columns that need to be saved). The second
+         * index describes the position of the created cell in the cell factories getCells() method.
          * @return the uniqueCellFactoryMap
          */
-        IdentityHashMap<CellFactory, List<Integer>> getUniqueCellFactoryMap() {
+        IdentityHashMap<CellFactory, List<Pair<Integer, Integer>>> getUniqueCellFactoryMap() {
             return m_uniqueCellFactoryMap;
         }
 
