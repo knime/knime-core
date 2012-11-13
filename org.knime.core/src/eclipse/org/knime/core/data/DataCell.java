@@ -120,6 +120,9 @@ import org.knime.core.data.container.BlobWrapperDataCell;
  */
 public abstract class DataCell implements DataValue, Serializable {
 
+    /** */
+    private static final long serialVersionUID = 7415713938002260608L;
+
     /**
      * Returns this cell's <code>DataType</code>. This method is provided for
      * convenience only, it is a shortcut for
