@@ -1014,28 +1014,20 @@ public final class DataType {
      *         <code>DataType</code>
      */
     public DataValueRendererFamily getRenderer(final DataColumnSpec spec) {
-        Set<DataValueRendererFamily> set = new LinkedHashSet<DataValueRendererFamily>();
+        ArrayList<DataValueRendererFamily> list =
+            new ArrayList<DataValueRendererFamily>();
         // first add the preferred value class, if any
         for (Class<? extends DataValue> cl : m_valueClasses) {
             UtilityFactory fac = getUtilityFor(cl);
             DataValueRendererFamily fam = fac.getRendererFamily(spec);
             if (fam != null) {
-                set.add(fam);
+                list.add(fam);
             }
         }
-        // also add renderers for data values enclosed in an adapter
-        for (Class<? extends DataValue> cl : m_adapterValueList) {
-            UtilityFactory fac = getUtilityFor(cl);
-            DataValueRendererFamily fam = fac.getRendererFamily(spec);
-            if (fam != null) {
-                set.add(fam);
-            }
+        if (list.isEmpty()) {
+            list.add(new DefaultDataValueRendererFamily());
         }
-
-        if (set.isEmpty()) {
-            set.add(new DefaultDataValueRendererFamily());
-        }
-        return new SetOfRendererFamilies(new ArrayList<DataValueRendererFamily>(set));
+        return new SetOfRendererFamilies(list);
     }
 
     /**
