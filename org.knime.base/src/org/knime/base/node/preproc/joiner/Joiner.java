@@ -377,15 +377,10 @@ public final class Joiner {
                + "changed. Some joining columns are missing: "
                + ConvenienceMethods.getShortStringFrom(leftJoinCols, 3));
         }
-        // Check if left included columns are in table spec
+
         if (!m_settings.getLeftIncludeAll()) {
             List<String> leftIncludes =
                 Arrays.asList(m_settings.getLeftIncludeCols());
-            if (!leftCols.containsAll(leftIncludes)) {
-                throw new InvalidSettingsException("The left input table has "
-                        + "changed. Some columns in the include list do "
-                        + "not longer exist");
-            }
             leftCols.retainAll(leftIncludes);
         }
         if (m_settings.getRemoveLeftJoinCols()) {
@@ -414,15 +409,10 @@ public final class Joiner {
                     + "changed. Some joining columns are missing: "
                     + ConvenienceMethods.getShortStringFrom(rightJoinCols, 3));
         }
-        // Check if right included columns are in table spec
+
         if (!m_settings.getRightIncludeAll()) {
             List<String> rightIncludes =
                 Arrays.asList(m_settings.getRightIncludeCols());
-            if (!rightCols.containsAll(rightIncludes)) {
-                throw new InvalidSettingsException("The right input table has "
-                        + "changed. Some columns in the include list do "
-                        + "not longer exist");
-            }
             rightCols.retainAll(rightIncludes);
         }
         if (m_settings.getRemoveRightJoinCols()) {
