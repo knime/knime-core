@@ -48,16 +48,15 @@
 
 package org.knime.base.data.aggregation.general;
 
+import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
-
-import org.knime.base.data.aggregation.AggregationOperator;
-import org.knime.base.data.aggregation.GlobalSettings;
-import org.knime.base.data.aggregation.OperatorColumnSettings;
-import org.knime.base.data.aggregation.OperatorData;
 
 
 /**
@@ -100,7 +99,7 @@ public class PercentOperator extends CountOperator {
     public AggregationOperator createInstance(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        return new PercentOperator(globalSettings, opColSettings);
+        return new PercentOperator(getOperatorData(), globalSettings, opColSettings);
     }
 
     /**

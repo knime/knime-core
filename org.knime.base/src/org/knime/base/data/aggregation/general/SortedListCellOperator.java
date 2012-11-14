@@ -48,21 +48,20 @@
 
 package org.knime.base.data.aggregation.general;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.DataValueComparator;
-import org.knime.core.data.collection.CollectionCellFactory;
-import org.knime.core.data.collection.ListCell;
+import java.util.Collections;
+import java.util.List;
 
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
 import org.knime.base.node.preproc.setoperator.GeneralDataValueComparator;
-
-import java.util.Collections;
-import java.util.List;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.DataValueComparator;
+import org.knime.core.data.collection.CollectionCellFactory;
+import org.knime.core.data.collection.ListCell;
 
 /**
  * Returns all values as a sorted {@link ListCell} per group.
@@ -109,7 +108,7 @@ public class SortedListCellOperator extends ListCellOperator {
     public AggregationOperator createInstance(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        return new SortedListCellOperator(globalSettings, opColSettings);
+        return new SortedListCellOperator(getOperatorData(), globalSettings, opColSettings);
     }
 
     /**

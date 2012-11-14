@@ -48,15 +48,14 @@
 
 package org.knime.base.data.aggregation.numerical;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.def.DoubleCell;
-
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.def.DoubleCell;
 
 /**
  * Returns the geometric mean per group.
@@ -119,7 +118,7 @@ public class GeometricMeanOperator extends AggregationOperator {
     public AggregationOperator createInstance(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        return new GeometricMeanOperator(globalSettings, opColSettings);
+        return new GeometricMeanOperator(getOperatorData(), globalSettings, opColSettings);
     }
 
     /**

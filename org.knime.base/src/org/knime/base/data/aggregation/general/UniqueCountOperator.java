@@ -48,15 +48,14 @@
 
 package org.knime.base.data.aggregation.general;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.def.IntCell;
-
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.def.IntCell;
 
 /**
  * Returns the count of the unique values per group.
@@ -95,7 +94,7 @@ public class UniqueCountOperator extends SetCellOperator {
     public AggregationOperator createInstance(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        return new UniqueCountOperator(globalSettings, opColSettings);
+        return new UniqueCountOperator(getOperatorData(), globalSettings, opColSettings);
     }
 
     /**

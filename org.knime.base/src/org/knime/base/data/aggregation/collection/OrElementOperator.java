@@ -48,21 +48,20 @@
 
 package org.knime.base.data.aggregation.collection;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataType;
-import org.knime.core.data.collection.CollectionCellFactory;
-import org.knime.core.data.collection.CollectionDataValue;
-import org.knime.core.data.collection.SetCell;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
-
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
+import org.knime.core.data.collection.CollectionCellFactory;
+import org.knime.core.data.collection.CollectionDataValue;
+import org.knime.core.data.collection.SetCell;
 
 
 /**
@@ -109,7 +108,7 @@ public class OrElementOperator extends AggregationOperator {
     public AggregationOperator createInstance(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        return new OrElementOperator(globalSettings, opColSettings);
+        return new OrElementOperator(getOperatorData(), globalSettings, opColSettings);
     }
 
     /**

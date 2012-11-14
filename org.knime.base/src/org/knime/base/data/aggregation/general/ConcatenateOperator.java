@@ -48,15 +48,14 @@
 
 package org.knime.base.data.aggregation.general;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.def.StringCell;
-
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.def.StringCell;
 
 /**
  * Returns the all values concatenated per group.
@@ -110,7 +109,7 @@ public class ConcatenateOperator extends AggregationOperator {
     public AggregationOperator createInstance(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        return new ConcatenateOperator(globalSettings, opColSettings);
+        return new ConcatenateOperator(getOperatorData(), globalSettings, opColSettings);
     }
 
     /**

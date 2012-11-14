@@ -48,21 +48,20 @@
 
 package org.knime.base.data.aggregation.general;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.def.StringCell;
-import org.knime.core.util.MutableInteger;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
-
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.util.MutableInteger;
 
 /**
  * Returns the concatenation of all different values per group and the
@@ -124,7 +123,7 @@ public class UniqueConcatenateWithCountOperator
     public AggregationOperator createInstance(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        return new UniqueConcatenateWithCountOperator(globalSettings,
+        return new UniqueConcatenateWithCountOperator(getOperatorData(), globalSettings,
                 opColSettings);
     }
 

@@ -48,15 +48,14 @@
 
 package org.knime.base.data.aggregation.general;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DataValue;
-import org.knime.core.data.def.IntCell;
-
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DataValue;
+import org.knime.core.data.def.IntCell;
 
 /**
  * Returns the number of missing values per group.
@@ -119,7 +118,7 @@ public class MissingValueCountOperator extends AggregationOperator {
     public AggregationOperator createInstance(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        return new MissingValueCountOperator(globalSettings, opColSettings);
+        return new MissingValueCountOperator(getOperatorData(), globalSettings, opColSettings);
     }
 
     /**

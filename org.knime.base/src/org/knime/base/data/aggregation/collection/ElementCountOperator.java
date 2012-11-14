@@ -48,15 +48,14 @@
 
 package org.knime.base.data.aggregation.collection;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataType;
-import org.knime.core.data.collection.CollectionDataValue;
-import org.knime.core.data.def.IntCell;
-
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
+import org.knime.core.data.collection.CollectionDataValue;
+import org.knime.core.data.def.IntCell;
 
 
 /**
@@ -96,7 +95,7 @@ public class ElementCountOperator extends AggregationOperator {
     public AggregationOperator createInstance(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        return new ElementCountOperator(globalSettings, opColSettings);
+        return new ElementCountOperator(getOperatorData(), globalSettings, opColSettings);
     }
 
     /**

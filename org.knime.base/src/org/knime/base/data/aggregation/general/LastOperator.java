@@ -102,7 +102,7 @@ public class LastOperator extends AggregationOperator {
     public AggregationOperator createInstance(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        return new LastOperator(globalSettings, opColSettings);
+        return new LastOperator(getOperatorData(), globalSettings, opColSettings);
     }
 
     /**

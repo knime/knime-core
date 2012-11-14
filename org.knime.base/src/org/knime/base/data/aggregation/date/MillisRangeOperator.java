@@ -119,7 +119,7 @@ public class MillisRangeOperator extends AggregationOperator {
     public AggregationOperator createInstance(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        return new MillisRangeOperator(globalSettings, opColSettings);
+        return new MillisRangeOperator(getOperatorData(), globalSettings, opColSettings);
     }
 
     /**

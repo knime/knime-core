@@ -48,16 +48,15 @@
 
 package org.knime.base.data.aggregation.general;
 
+import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.def.DoubleCell;
-
-import org.knime.base.data.aggregation.AggregationOperator;
-import org.knime.base.data.aggregation.GlobalSettings;
-import org.knime.base.data.aggregation.OperatorColumnSettings;
-import org.knime.base.data.aggregation.OperatorData;
 
 /**
  * Returns the maximum per group.
@@ -114,7 +113,7 @@ public class MaxOperator extends AggregationOperator {
     public AggregationOperator createInstance(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        return new MaxOperator(globalSettings, opColSettings);
+        return new MaxOperator(getOperatorData(), globalSettings, opColSettings);
     }
 
     /**

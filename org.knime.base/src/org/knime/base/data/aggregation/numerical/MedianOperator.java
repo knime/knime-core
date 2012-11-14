@@ -48,18 +48,17 @@
 
 package org.knime.base.data.aggregation.numerical;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataType;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.def.DoubleCell;
+import java.util.List;
 
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
 import org.knime.base.data.aggregation.general.SortedListCellOperator;
-
-import java.util.List;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
+import org.knime.core.data.DoubleValue;
+import org.knime.core.data.def.DoubleCell;
 
 
 /**
@@ -120,7 +119,7 @@ public class MedianOperator extends SortedListCellOperator {
     public AggregationOperator createInstance(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        return new MedianOperator(globalSettings, opColSettings);
+        return new MedianOperator(getOperatorData(), globalSettings, opColSettings);
     }
 
     /**

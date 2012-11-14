@@ -48,6 +48,10 @@
 
 package org.knime.base.data.aggregation.numerical;
 
+import org.knime.base.data.aggregation.AggregationOperator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.OperatorColumnSettings;
+import org.knime.base.data.aggregation.OperatorData;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
@@ -57,11 +61,6 @@ import org.knime.core.data.LongValue;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
-
-import org.knime.base.data.aggregation.AggregationOperator;
-import org.knime.base.data.aggregation.GlobalSettings;
-import org.knime.base.data.aggregation.OperatorColumnSettings;
-import org.knime.base.data.aggregation.OperatorData;
 
 /**
  * Returns the sum per group.
@@ -127,7 +126,7 @@ public class SumOperator extends AggregationOperator {
     public AggregationOperator createInstance(
             final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        return new SumOperator(globalSettings, opColSettings);
+        return new SumOperator(getOperatorData(), globalSettings, opColSettings);
     }
 
     /**
