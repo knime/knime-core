@@ -583,21 +583,19 @@ public class NodeContainerFigure extends RectangleFigure {
      * @param msg the node message
      */
     public void setMessage(final NodeMessage msg) {
+        removeMessages();
         if (msg == null || msg.getMessageType() == null) {
-            removeMessages();
-            NodeLogger.getLogger(NodeContainerFigure.class).warn(
-                    "Received NULL message!");
+            NodeLogger.getLogger(NodeContainerFigure.class).warn("Received NULL message!");
         } else {
             switch (msg.getMessageType()) {
-            case RESET:
-                removeMessages();
-                break;
-            case WARNING:
-                m_infoWarnErrorPanel.setWarning(msg.getMessage());
-                break;
-            case ERROR:
-                m_infoWarnErrorPanel.setError(msg.getMessage());
-                break;
+                case RESET:
+                    break;
+                case WARNING:
+                    m_infoWarnErrorPanel.setWarning(msg.getMessage());
+                    break;
+                case ERROR:
+                    m_infoWarnErrorPanel.setError(msg.getMessage());
+                    break;
             }
         }
         m_statusFigure.repaint();
