@@ -17,8 +17,11 @@
    <marginLine fg="b0b4b9"/>
    <markAllHighlight color="6b8189"/> <!-- TODO: Fix me -->
    <markOccurrencesHighlight color="d4d4d4"/>
-   <matchedBracket fg="c0c0c0" animate="false"/>
+   <matchedBracket fg="c0c0c0" animate="false" highlightBoth="true"/>
    <hyperlinks fg="3f3fbf"/>
+   <secondaryLanguages>
+      <language index="1" bg="cccccc"/>
+   </secondaryLanguages>
    <!-- Gutter styling. -->
    <gutterBorder color="dddddd"/>
    <lineNumbers fg="787878"/>
