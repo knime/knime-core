@@ -210,24 +210,35 @@ public abstract class AdapterCell extends DataCell implements Cloneable, RWAdapt
     @Override
     @SuppressWarnings("unchecked")
     public <V extends DataValue> V getAdapter(final Class<V> valueClass) {
-        if (AdapterValue.class.equals(valueClass) || RWAdapterValue.class.equals(valueClass)) {
-            return (V) this;
+        if (valueClass.isAssignableFrom(getClass())) {
+            return valueClass.cast(this);
         }
+        DataCell c = lookupFromAdapterMap(valueClass);
+        if (c.isMissing()) {
+            return null;
+        }
+        return valueClass.cast(c);
+    }
+
+    /** Allows sub classes to do a lookup in the internal adapter map. Used by derived classes to get a representation
+     * that is not only an adapter by also implemented by the class.
+     * @param valueClass The class to lookup.
+     * @param <V> ...
+     * @return The non-null value (might be missing!)
+     * @throws IllegalArgumentException If no adapter is in the map.
+     */
+    protected final <V> DataCell lookupFromAdapterMap(final Class<V> valueClass) {
         DataCell c = m_adapterMap.get(valueClass);
         if (c == null) {
             throw new IllegalArgumentException("No adapter for " + valueClass);
         }
-        if (c.isMissing()) {
-            return null;
-        }
-        return (V) c;
+        return c;
     }
 
     /** {@inheritDoc} */
     @Override
     public <V extends DataValue> boolean isAdaptable(final Class<V> valueClass) {
-        return m_adapterMap.containsKey(valueClass)
-                || (AdapterValue.class.equals(valueClass) || RWAdapterValue.class.equals(valueClass));
+        return valueClass.isAssignableFrom(getClass()) || m_adapterMap.containsKey(valueClass);
     }
 
     /** {@inheritDoc} */
