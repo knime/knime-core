@@ -52,7 +52,9 @@ package org.knime.core.data.uri;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -62,6 +64,7 @@ import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.port.AbstractSimplePortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.util.ConvenienceMethods;
 
 /**
  *
@@ -69,6 +72,7 @@ import org.knime.core.node.port.PortType;
  */
 public class URIPortObject extends AbstractSimplePortObject {
 
+    private URIPortObjectSpec m_uriPortObjectSpec;
     private List<URIContent> m_uriContents;
 
     /**
@@ -85,19 +89,28 @@ public class URIPortObject extends AbstractSimplePortObject {
 
     /**
      * Constructor for new URI port objects.
-     *
-     *
-     * @param uriContents The contend for this object. Must not be null or
-     *            contain null.
+     * @param uriContents The contend for this object. Must not be null or contain null.
      */
     public URIPortObject(final List<URIContent> uriContents) {
-        if (uriContents == null || uriContents.contains(null)) {
-            throw new NullPointerException(
-                    "List argument must not be null or contain null objects");
+        this(URIPortObjectSpec.create(uriContents), uriContents);
+    }
+    
+    /**
+     * Constructor for new URI port objects.
+     * @param spec The non null spec. All file extensions in the spec must be present in the list argument.
+     * @param uriContents The contend for this object. Must not be null or contain null.
+     */
+    public URIPortObject(URIPortObjectSpec spec, final List<URIContent> uriContents) {
+        Set<String> extensionsSet = new HashSet<String>(spec.getFileExtensions());
+        for (URIContent u : uriContents) {
+            extensionsSet.remove(u.getExtension());
         }
-        m_uriContents =
-                Collections.unmodifiableList(new ArrayList<URIContent>(
-                        uriContents));
+        if (!extensionsSet.isEmpty()) {
+            throw new IllegalArgumentException("Spec contains file extensions that are not present in the URI list: "
+                    + ConvenienceMethods.getShortStringFrom(extensionsSet, 3));
+        }
+        m_uriContents = Collections.unmodifiableList(new ArrayList<URIContent>(uriContents));
+        m_uriPortObjectSpec = spec;
     }
 
     /**
@@ -112,8 +125,13 @@ public class URIPortObject extends AbstractSimplePortObject {
      */
     @Override
     public String getSummary() {
-        // shown in tooltip
-        return null;
+        StringBuilder b = new StringBuilder();
+        int size = m_uriContents.size();
+        b.append(size);
+        b.append(size == 1 ? " file (extension: " : " files (extensions: ");
+        b.append(ConvenienceMethods.getShortStringFrom(m_uriPortObjectSpec.getFileExtensions(), 3));
+        b.append(")");
+        return b.toString();
     }
 
     /**
@@ -121,7 +139,7 @@ public class URIPortObject extends AbstractSimplePortObject {
      */
     @Override
     public URIPortObjectSpec getSpec() {
-        return URIPortObjectSpec.INSTANCE;
+        return m_uriPortObjectSpec;
     }
 
     /**
@@ -137,6 +155,7 @@ public class URIPortObject extends AbstractSimplePortObject {
             list.add(URIContent.load(child));
         }
         m_uriContents = Collections.unmodifiableList(list);
+        m_uriPortObjectSpec = (URIPortObjectSpec)spec;
     }
 
     /**

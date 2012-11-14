@@ -50,6 +50,12 @@
  */
 package org.knime.core.data.uri;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+
 import javax.swing.JComponent;
 
 import org.knime.core.node.InvalidSettingsException;
@@ -58,22 +64,43 @@ import org.knime.core.node.ModelContentWO;
 import org.knime.core.node.port.AbstractSimplePortObjectSpec;
 
 /**
+ * Spec to {@link URIPortObject}. It represents a {@linkplain URIPortObjectSpec#getFileExtensions() list of extensions}.  
  * 
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class URIPortObjectSpec extends AbstractSimplePortObjectSpec {
-
-    /**
-     * Singleton instance of this spec.
-     */
-    public static final URIPortObjectSpec INSTANCE = new URIPortObjectSpec();
+    
+    private final List<String> m_fileExtensions;
 
     /**
      * Framework constructor. <b>Do not use in client code.</b>. Use
      * <code>URIPortObjectSpec.INSTANCE</code> instead.
      */
     public URIPortObjectSpec() {
-        // no op, singleton
+        m_fileExtensions = new ArrayList<String>();
+    }
+    
+    /**
+     * @param fileExtensions
+     */
+    public URIPortObjectSpec(Collection<String> fileExtensions) {
+        // remove duplicates
+        m_fileExtensions = new ArrayList<String>(new LinkedHashSet<String>(fileExtensions));
+    }
+    
+    /**
+     * @param fileExtensions
+     */
+    public URIPortObjectSpec(String... fileExtensions) {
+        this(Arrays.asList(fileExtensions));
+    }
+    
+    /** It contains a list of file extensions ("csv", "xml", ...). The corresponding
+     * {@link URIPortObject} contains at least one for each of these extensions.
+     * @return The list of extensions, not null.
+     */
+    public List<String> getFileExtensions() {
+        return m_fileExtensions;
     }
 
     /**
@@ -89,24 +116,28 @@ public class URIPortObjectSpec extends AbstractSimplePortObjectSpec {
      */
     @Override
     public boolean equals(final Object o) {
-        return o != null && o.getClass().equals(URIPortObjectSpec.class);
+        if (o == this) {
+            return true;
+        }
+        if (!(o instanceof URIPortObjectSpec)) {
+            return false;
+        }
+        URIPortObjectSpec other = (URIPortObjectSpec) o;
+        return m_fileExtensions.equals(other.m_fileExtensions);
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
     public int hashCode() {
-        return URIPortObjectSpec.class.hashCode();
+        return m_fileExtensions.hashCode();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void load(final ModelContentRO model)
-            throws InvalidSettingsException {
-        // singleton, nothing to load
+    protected void load(final ModelContentRO model) throws InvalidSettingsException {
+        m_fileExtensions.addAll(Arrays.asList(model.getStringArray("fileExtensions")));
     }
 
     /**
@@ -114,6 +145,20 @@ public class URIPortObjectSpec extends AbstractSimplePortObjectSpec {
      */
     @Override
     protected void save(final ModelContentWO model) {
-        // singleton, nothing to save
+        model.addStringArray("fileExtensions", m_fileExtensions.toArray(new String[m_fileExtensions.size()]));
+    }
+    
+    /**
+     * Creates new spec for list of {@link URIContent}. It scans through all the elements and determines the 
+     * possible extensions.
+     * @param uriContentIterable ...
+     * @return ...
+     */
+    public static URIPortObjectSpec create(final Iterable<URIContent> uriContentIterable) {
+        LinkedHashSet<String> fileExtensionsHash = new LinkedHashSet<String>();
+        for (URIContent u : uriContentIterable) {
+            fileExtensionsHash.add(u.getExtension());
+        }
+        return new URIPortObjectSpec(fileExtensionsHash);
     }
 }
