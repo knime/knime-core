@@ -54,7 +54,6 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.knime.base.node.jsnippet.expression.TypeException;
 import org.knime.base.node.jsnippet.type.data.JavaToDataCell;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.collection.CollectionCellFactory;
@@ -101,20 +100,13 @@ public class JavaToListCell extends JavaToDataCell {
      * {@inheritDoc}
      */
     @Override
-    public DataCell createDataCell(final Object value) throws Exception {
-        if (canProcess(value)) {
-            Object[] values = (Object[])value;
-            Collection<DataCell> cells = new ArrayList<DataCell>();
-            for (Object v : values) {
-                cells.add(m_javaToCell.createDataCell(v));
-            }
-            return CollectionCellFactory.createListCell(cells);
-        } else {
-            throw new TypeException("The data cell of type "
-                    + "\"String\""
-                    + " cannot be created from an java object of type "
-                    + value.getClass().getSimpleName());
+    public DataCell createDataCellUnchecked(final Object value) throws Exception {
+        Object[] values = (Object[])value;
+        Collection<DataCell> cells = new ArrayList<DataCell>();
+        for (Object v : values) {
+            cells.add(m_javaToCell.createDataCell(v));
         }
+        return CollectionCellFactory.createListCell(cells);
     }
 
 }

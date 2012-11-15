@@ -71,17 +71,11 @@ public class JavaToLongCell extends JavaToDataCell {
      * {@inheritDoc}
      */
     @Override
-    public DataCell createDataCell(final Object value) throws TypeException {
-        if (canProcess(value)) {
-            long number = value instanceof Long ? (Long)value
-                    : (Integer)value;
-            return new LongCell(number);
-        } else {
-            throw new TypeException("The data cell of type "
-                    + "\"Long\""
-                    + " cannot be created from an java object of type "
-                    + value.getClass().getSimpleName());
-        }
+    public DataCell createDataCellUnchecked(final Object value)
+    throws TypeException {
+        long number = value instanceof Long ? (Long)value
+                : (Integer)value;
+        return new LongCell(number);
     }
 
 

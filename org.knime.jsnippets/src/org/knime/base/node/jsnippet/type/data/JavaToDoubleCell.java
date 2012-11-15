@@ -71,17 +71,11 @@ public class JavaToDoubleCell extends JavaToDataCell {
      * {@inheritDoc}
      */
     @Override
-    public DataCell createDataCell(final Object value) throws TypeException {
-        if (canProcess(value)) {
-            double number = value instanceof Double ? (Double)value
-                    : (Integer)value;
-            return new DoubleCell(number);
-        } else {
-            throw new TypeException("The data cell of type "
-                    + "\"Double\""
-                    + " cannot be created from an java object of type "
-                    + value.getClass().getSimpleName());
-        }
+    public DataCell createDataCellUnchecked(final Object value)
+    throws TypeException {
+        double number = value instanceof Double ? (Double)value
+                : (Integer)value;
+        return new DoubleCell(number);
     }
 
 

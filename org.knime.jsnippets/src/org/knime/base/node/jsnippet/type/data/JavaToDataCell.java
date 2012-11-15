@@ -55,6 +55,7 @@ import java.util.Comparator;
 
 import org.knime.base.node.jsnippet.expression.TypeException;
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
 
 
 /**
@@ -124,6 +125,17 @@ public abstract class JavaToDataCell {
     }
 
     /**
+     * Creates a DataCell from the given object without checking type
+     * compatibility.
+     * @param value the object
+     * @return the data cell
+     * @throws Exception when creation of data cell fails
+     */
+    protected abstract DataCell createDataCellUnchecked(Object value)
+        throws Exception;
+
+
+    /**
      * Creates a DataCell from the given object.
      * @param value the object
      * @return the data cell
@@ -131,7 +143,18 @@ public abstract class JavaToDataCell {
      * of the given object
      * @throws Exception when creation of data cell fails
      */
-    public abstract DataCell createDataCell(Object value)
-        throws TypeException, Exception;
+    public DataCell createDataCell(final Object value)
+        throws TypeException, Exception {
+        if (value == null) {
+            return DataType.getMissingCell();
+        }
+        if (canProcess(value)) {
+            return createDataCellUnchecked(value);
+        } else {
+            throw new TypeException("The data cell"
+                    + " cannot be created from an java object of type "
+                    + value.getClass().getSimpleName());
+        }
+    }
 }
 

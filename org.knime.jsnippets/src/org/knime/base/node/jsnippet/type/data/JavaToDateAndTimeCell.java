@@ -83,26 +83,19 @@ public class JavaToDateAndTimeCell extends JavaToDataCell {
      * @throws XMLStreamException if error occurs while parsing
      */
     @Override
-    public DataCell createDataCell(final Object value)
+    public DataCell createDataCellUnchecked(final Object value)
         throws TypeException, IOException, ParserConfigurationException,
             SAXException, XMLStreamException {
-        if (canProcess(value)) {
-            if (value instanceof Calendar) {
-                Calendar calendar = (Calendar)value;
-                return new DateAndTimeCell(calendar.getTimeInMillis(),
-                        calendarHasDate(calendar),
-                        calendarHasTime(calendar),
-                        calendarHasMillis(calendar));
-            } else { // value instanceof Date
-                Date date = (Date)value;
-                return new DateAndTimeCell(date.getTime(),
-                        true, true, true);
-            }
-        } else {
-            throw new TypeException("The data cell of type "
-                    + "\"Date and Time\""
-                    + " cannot be created from an java object of type "
-                    + value.getClass().getSimpleName());
+        if (value instanceof Calendar) {
+            Calendar calendar = (Calendar)value;
+            return new DateAndTimeCell(calendar.getTimeInMillis(),
+                    calendarHasDate(calendar),
+                    calendarHasTime(calendar),
+                    calendarHasMillis(calendar));
+        } else { // value instanceof Date
+            Date date = (Date)value;
+            return new DateAndTimeCell(date.getTime(),
+                    true, true, true);
         }
     }
 

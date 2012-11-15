@@ -82,20 +82,13 @@ public class JavaToXMLCell extends JavaToDataCell {
      * @throws XMLStreamException if error occurs while parsing
      */
     @Override
-    public DataCell createDataCell(final Object value)
+    public DataCell createDataCellUnchecked(final Object value)
         throws TypeException, IOException, ParserConfigurationException,
             SAXException, XMLStreamException {
-        if (canProcess(value)) {
-            if (value instanceof Document) {
-                return XMLCellFactory.create((Document)value);
-            } else { // value instanceof String
-                return XMLCellFactory.create((String)value);
-            }
-        } else {
-            throw new TypeException("The data cell of type "
-                    + "\"XML\""
-                    + " cannot be created from a java object of type "
-                    + value.getClass().getSimpleName());
+        if (value instanceof Document) {
+            return XMLCellFactory.create((Document)value);
+        } else { // value instanceof String
+            return XMLCellFactory.create((String)value);
         }
     }
 

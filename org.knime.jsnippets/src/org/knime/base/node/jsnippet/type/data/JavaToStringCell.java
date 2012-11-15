@@ -71,7 +71,8 @@ public class JavaToStringCell extends JavaToDataCell {
      * {@inheritDoc}
      */
     @Override
-    public DataCell createDataCell(final Object value) throws TypeException {
+    public DataCell createDataCellUnchecked(final Object value)
+    throws TypeException {
         if (canProcess(value)) {
             return new StringCell((String)value);
         } else {

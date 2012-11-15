@@ -71,17 +71,9 @@ public class JavaToIntCell extends JavaToDataCell {
      * {@inheritDoc}
      */
     @Override
-    public DataCell createDataCell(final Object value) throws TypeException {
-        if (canProcess(value)) {
-            int number = (Integer)value;
-            return new IntCell(number);
-        } else {
-            throw new TypeException("The data cell of type "
-                    + "\"Integer\""
-                    + " cannot be created from an java object of type "
-                    + value.getClass().getSimpleName());
-        }
+    public DataCell createDataCellUnchecked(final Object value)
+    throws TypeException {
+        int number = (Integer)value;
+        return new IntCell(number);
     }
-
-
 }

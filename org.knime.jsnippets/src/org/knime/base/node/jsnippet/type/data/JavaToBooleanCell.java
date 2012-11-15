@@ -50,7 +50,6 @@
  */
 package org.knime.base.node.jsnippet.type.data;
 
-import org.knime.base.node.jsnippet.expression.TypeException;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.def.BooleanCell;
 
@@ -71,15 +70,9 @@ public class JavaToBooleanCell extends JavaToDataCell {
      * {@inheritDoc}
      */
     @Override
-    public DataCell createDataCell(final Object value) throws TypeException {
-        if (canProcess(value)) {
-            return (Boolean)value ? BooleanCell.TRUE : BooleanCell.FALSE;
-        } else {
-            throw new TypeException("The data cell of type "
-                    + "\"Boolean\""
-                    + " cannot be created from an java object of type "
-                    + value.getClass().getSimpleName());
-        }
+    public DataCell createDataCellUnchecked(final Object value)
+        throws Exception {
+        return (Boolean)value ? BooleanCell.TRUE : BooleanCell.FALSE;
     }
 
 
