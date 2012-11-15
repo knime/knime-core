@@ -99,13 +99,6 @@ public final class DatabaseDriverLoader {
     private static final Map<String, String> DRIVER_TO_URL
         = new LinkedHashMap<String, String>();
 
-    static {
-        createDriverProtocolMapping();
-        registerODBCBridge();
-        initDriverHistory();
-        loadDriversFromExtensionPoint();
-    }
-
     /**
      * Allowed file extensions, jar and zip only.
      */
@@ -138,6 +131,14 @@ public final class DatabaseDriverLoader {
         DRIVER_TO_URL.put("net.sourceforge.jtds.jdbc.Driver", "jdbc:jtds:sybase:");
         DRIVER_TO_URL.put("com.sybase.jdbc3.jdbc.SybDriver", "jdbc:sybase:Tds:");
         DRIVER_TO_URL.put("org.sqlite.JDBC", "jdbc:sqlite:");
+    }
+
+    static {
+        // make sure that all static variables are initialized before (i.e. above) this static block
+        createDriverProtocolMapping();
+        registerODBCBridge();
+        initDriverHistory();
+        loadDriversFromExtensionPoint();
     }
 
     /**
