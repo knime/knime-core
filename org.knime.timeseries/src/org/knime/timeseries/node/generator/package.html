@@ -1,7 +1,7 @@
-/*
- * ------------------------------------------------------------------------
+<!--
+========================================================================
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2012
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -43,55 +43,12 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
- *
- */
-package org.knime.timeseries.node.movavg.maversions;
-
-import org.knime.core.data.DataCell;
-import org.knime.core.data.def.DoubleCell;
-
-/**
- * Represents the Cumulative MA which returns the total mean
- * till this moment.
- *
- * s_n = 1/n* (v_1 + ... +v_n)
- *
- * @author Adae, University of Konstanz
- */
-public class CumulativeMA extends MovingAverage {
-
-    private double m_avg;
-    private double m_counter;
-
-    /**
-     *
-     */
-    public CumulativeMA() {
-        m_avg = 0;
-        m_counter = 0;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public DataCell getMeanandUpdate(final double newValue) {
-        if (m_counter == 0) {
-            m_avg = newValue;
-        } else {
-            m_avg += ((newValue - m_avg) / (m_counter + 1));
-        }
-        m_counter++;
-        return new DoubleCell(m_avg);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public double getMean() {
-        return m_avg;
-    }
-
-}
+====================================================================
+-->
+<HTML>
+<BODY>
+<P> 
+  Contains the classes for the date and time generator node.
+</P>
+</BODY>
+</HTML>

@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   15.09.2009 (Fabian Dill): created
  */
@@ -72,23 +72,23 @@ import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
- * Dialog component to enter a date with year, month and day. 
+ * Dialog component to enter a date with year, month and day.
  * @see DialogComponentCalendar
  * @see SettingsModelCalendar
- * 
+ *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
 public class DialogComponentDate extends DialogComponent {
-    
+
     private JTextField m_yearUI;
 
-    private JComboBox m_monthUI;
+    private JComboBox<Integer> m_monthUI;
 
-    private JComboBox m_dayUI;
+    private JComboBox<Integer> m_dayUI;
 
 
     /**
-     * 
+     *
      * @param model SettingsModel to represent the selected date
      * @param label the label to display
      */
@@ -101,8 +101,9 @@ public class DialogComponentDate extends DialogComponent {
         overall.setBorder(BorderFactory.createTitledBorder(label));
         overall.add(createDatePanel());
         getComponentPanel().add(overall);
-        
+
         getModel().addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 updateComponent();
             }
@@ -151,7 +152,7 @@ public class DialogComponentDate extends DialogComponent {
                     // year may be invalid -> month is anyway a select box
                 }
             }
-            
+
         });
         datePanel.add(new JLabel("Month:"));
         datePanel.add(m_monthUI);
@@ -215,7 +216,7 @@ public class DialogComponentDate extends DialogComponent {
             // set the fields from the model's calendar
             calendar = model.getCalendar();
         } else {
-            // do not set the fields of the model's calendar: they are not set, 
+            // do not set the fields of the model's calendar: they are not set,
             // i.e. 1.1.1970.
             // for user friendliness use current date
             calendar = Calendar.getInstance(DateAndTimeCell.UTC_TIMEZONE);
@@ -227,10 +228,10 @@ public class DialogComponentDate extends DialogComponent {
         m_dayUI.setSelectedIndex(calendar.get(Calendar.DAY_OF_MONTH) - 1);
         setEnabledComponents(model.useDate() && model.isEnabled());
     }
-    
+
     /**
-     * Writes the values immediately into the model. 
-     *  
+     * Writes the values immediately into the model.
+     *
      * @throws InvalidSettingsException if the year is not an integer
      */
     protected void updateModel() throws InvalidSettingsException {
@@ -240,8 +241,8 @@ public class DialogComponentDate extends DialogComponent {
             return;
         }
         Calendar calendar = model.getCalendar();
-        // taking the index is perfectly fine, since Calendar 
-        // represents months as zero-based indices 
+        // taking the index is perfectly fine, since Calendar
+        // represents months as zero-based indices
         // (but not day of month)
         int month = m_monthUI.getSelectedIndex();
         int day = m_dayUI.getSelectedIndex() + 1;
@@ -265,7 +266,7 @@ public class DialogComponentDate extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettingsBeforeSave() 
+    protected void validateSettingsBeforeSave()
         throws InvalidSettingsException {
         updateModel();
     }

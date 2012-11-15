@@ -19,7 +19,7 @@
         <option name="Select second date column">Select a second column containing the end date</option>
         <option name="Fixed time">Select a fixed time as the end date.</option>   
         <option name="Select granularity of time difference">The granularity of the difference 
-        	(in years, quarters, months, weeks, days, hours, minutes)</option>
+            (in years, quarters, months, weeks, days, hours, minutes)</option>
         <option name="Rounding mode">How many fraction digits</option>
         <option name="Appended column name">Name of the newly appended column containing the time difference</option>                                
     </fullDescription>

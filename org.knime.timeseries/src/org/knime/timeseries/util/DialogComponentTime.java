@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   15.09.2009 (Fabian Dill): created
  */
@@ -74,10 +74,10 @@ import org.knime.core.node.port.PortObjectSpec;
 /**
  * A dialog component to enter a time with text fields for hour, minute, seconds
  * and milliseconds. The milliseconds are optional and displayed with a checkbox
- * to activate them. 
+ * to activate them.
  * @see DialogComponentCalendar
  * @see SettingsModelCalendar
- * 
+ *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
 public class DialogComponentTime extends DialogComponent {
@@ -89,11 +89,11 @@ public class DialogComponentTime extends DialogComponent {
     private JTextField m_secondUI;
 
     private JTextField m_milliUI;
-    
-    private JCheckBox m_useMillis; 
+
+    private JCheckBox m_useMillis;
 
     /**
-     * 
+     *
      * @param model SettingsModel to represent the selected date
      * @param label the label to display
      */
@@ -106,8 +106,9 @@ public class DialogComponentTime extends DialogComponent {
         overall.setBorder(BorderFactory.createTitledBorder(label));
         overall.add(createTimePanel());
         getComponentPanel().add(overall);
-        
+
         getModel().addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 updateComponent();
             }
@@ -182,7 +183,7 @@ public class DialogComponentTime extends DialogComponent {
         timePanel.add(new JLabel("Second:"));
         timePanel.add(m_secondUI);
         timePanel.add(Box.createHorizontalStrut(5));
-        
+
         m_useMillis = new JCheckBox();
         m_useMillis.setSelected(false);
         m_milliUI = new JTextField(3);
@@ -212,8 +213,8 @@ public class DialogComponentTime extends DialogComponent {
                     // if we are disabled -> clear all errors
                     // DialogComponent sets default (active!) colors
                     clearError(m_milliUI);
-                }                
-                // now enable or disable the text field (in order to get the 
+                }
+                // now enable or disable the text field (in order to get the
                 // inactive default colors
                 m_milliUI.setEnabled(enable);
                 // immediately update the model
@@ -230,7 +231,7 @@ public class DialogComponentTime extends DialogComponent {
                     }
                 }
             }
-            
+
         });
         timePanel.add(m_useMillis);
         timePanel.add(new JLabel("Milli:"));
@@ -238,7 +239,7 @@ public class DialogComponentTime extends DialogComponent {
         panel.add(timePanel);
         return panel;
     }
-    
+
     private static boolean isValidHour(final String enteredValue) {
         try {
             int hour = Integer.parseInt(enteredValue);
@@ -250,9 +251,9 @@ public class DialogComponentTime extends DialogComponent {
         }
         return false;
     }
-    
+
     private static boolean isValidMinuteOrSecond(final String enteredValue) {
-        try {            
+        try {
             int minute = Integer.parseInt(enteredValue);
             if (minute >= 0 && minute < 60) {
                 return true;
@@ -260,9 +261,9 @@ public class DialogComponentTime extends DialogComponent {
         } catch (Exception e) {
             // obviously not valid!
         }
-        return false;        
+        return false;
     }
-    
+
     private static boolean isValidMillisecond(final String enteredValue) {
         try {
             int milli = Integer.parseInt(enteredValue);
@@ -297,9 +298,9 @@ public class DialogComponentTime extends DialogComponent {
         m_useMillis.setSelected(((SettingsModelCalendar)getModel())
                 .useMilliseconds());
         m_milliUI.setEnabled(enabled && m_useMillis.isSelected());
-        
+
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -325,11 +326,11 @@ public class DialogComponentTime extends DialogComponent {
         m_useMillis.setSelected(model.useMilliseconds());
         setEnabledComponents(model.useTime() && model.isEnabled());
     }
-    
+
     /**
-     * Writes the hour immediately into the model's calendar or 
+     * Writes the hour immediately into the model's calendar or
      * throws an exception if entered value is not an integer.
-     * 
+     *
      * @throws InvalidSettingsException if entered value is not an int
      */
     protected void updateHour() throws InvalidSettingsException {
@@ -340,7 +341,7 @@ public class DialogComponentTime extends DialogComponent {
         String hourText = m_hourUI.getText();
         if (!isValidHour(hourText)) {
             throw new InvalidSettingsException(
-                    "Hour must be between 0 and 23 but is " 
+                    "Hour must be between 0 and 23 but is "
                     + hourText + "!");
         }
         Calendar calendar = model.getCalendar();
@@ -348,12 +349,12 @@ public class DialogComponentTime extends DialogComponent {
         calendar.set(Calendar.HOUR_OF_DAY, hour);
         model.setCalendar(calendar);
     }
-    
+
     /**
      * Writes the entered minute immediately into the model's calendar
      * or throws an exception if the entered value is not valid.
-     * 
-     * @throws InvalidSettingsException if the entered value is not an int in 
+     *
+     * @throws InvalidSettingsException if the entered value is not an int in
      * the range of 0,59
      */
     protected void updateMinute() throws InvalidSettingsException {
@@ -373,13 +374,13 @@ public class DialogComponentTime extends DialogComponent {
         calendar.set(Calendar.MINUTE, minute);
         model.setCalendar(calendar);
     }
-    
+
     /**
-     * Writes the second immediately into the model's calendar or throws an 
+     * Writes the second immediately into the model's calendar or throws an
      * exception if the entered value is not a valid second.
-     * 
+     *
      * @throws InvalidSettingsException if the entered value is not an int in
-     * the range of 0-59 
+     * the range of 0-59
      */
     protected void updateSecond() throws InvalidSettingsException {
         SettingsModelCalendar model = (SettingsModelCalendar)getModel();
@@ -398,12 +399,12 @@ public class DialogComponentTime extends DialogComponent {
         calendar.set(Calendar.SECOND, second);
         model.setCalendar(calendar);
     }
-    
+
     /**
-     * Writes the milliseconds immediately into the model's calendar or throws 
+     * Writes the milliseconds immediately into the model's calendar or throws
      * an exception if the entered value is not a valid millisecond.
-     *  
-     * @throws InvalidSettingsException if the entered value is not an int in 
+     *
+     * @throws InvalidSettingsException if the entered value is not an int in
      * the range of 0-999
      */
     protected void updateMillisecond() throws InvalidSettingsException {
@@ -423,12 +424,12 @@ public class DialogComponentTime extends DialogComponent {
         calendar.set(Calendar.MILLISECOND, milli);
         model.setCalendar(calendar);
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettingsBeforeSave() 
+    protected void validateSettingsBeforeSave()
         throws InvalidSettingsException {
         updateHour();
         updateMinute();

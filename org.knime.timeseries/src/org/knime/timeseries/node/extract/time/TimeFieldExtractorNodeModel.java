@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   24.09.2009 (Fabian Dill): created
  */
@@ -79,59 +79,57 @@ import org.knime.timeseries.node.extract.AbstractTimeExtractorIntCellFactory;
 import org.knime.timeseries.node.extract.SingleCellFactoryCompound;
 
 /**
- * 
+ *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
 public class TimeFieldExtractorNodeModel extends NodeModel {
-    
 
-    
-    private final SettingsModelString m_selectedColumn 
-        = TimeFieldExtractorNodeDialog.createColumnSelectionModel();
+
+
+    private final SettingsModelString m_selectedColumn = AbstractFieldExtractorNodeDialog.createColumnSelectionModel();
 
     // hour
-    private final SettingsModelBoolean m_useHour = TimeFieldExtractorNodeDialog
-        .createUseTimeFieldModel(TimeFieldExtractorNodeDialog.HOUR); 
-    private final SettingsModelString m_hourColName = 
-        TimeFieldExtractorNodeDialog.createTimeFieldColumnNameModel(
+    private final SettingsModelBoolean m_useHour = AbstractFieldExtractorNodeDialog
+        .createUseTimeFieldModel(TimeFieldExtractorNodeDialog.HOUR);
+    private final SettingsModelString m_hourColName =
+            AbstractFieldExtractorNodeDialog.createTimeFieldColumnNameModel(
             TimeFieldExtractorNodeDialog.HOUR);
     // minute
-    private final SettingsModelBoolean m_useMinute = 
-        TimeFieldExtractorNodeDialog.createUseTimeFieldModel(
-                TimeFieldExtractorNodeDialog.MINUTE); 
-    private final SettingsModelString m_minuteColName = 
-    TimeFieldExtractorNodeDialog.createTimeFieldColumnNameModel(
+    private final SettingsModelBoolean m_useMinute =
+            AbstractFieldExtractorNodeDialog.createUseTimeFieldModel(
+                TimeFieldExtractorNodeDialog.MINUTE);
+    private final SettingsModelString m_minuteColName =
+            AbstractFieldExtractorNodeDialog.createTimeFieldColumnNameModel(
             TimeFieldExtractorNodeDialog.MINUTE);
     // second
-    private final SettingsModelBoolean m_useSecond = 
-        TimeFieldExtractorNodeDialog.createUseTimeFieldModel(
-                TimeFieldExtractorNodeDialog.SECOND); 
-    private final SettingsModelString m_secondColName = 
-        TimeFieldExtractorNodeDialog.createTimeFieldColumnNameModel(
+    private final SettingsModelBoolean m_useSecond =
+            AbstractFieldExtractorNodeDialog.createUseTimeFieldModel(
+                TimeFieldExtractorNodeDialog.SECOND);
+    private final SettingsModelString m_secondColName =
+            AbstractFieldExtractorNodeDialog.createTimeFieldColumnNameModel(
             TimeFieldExtractorNodeDialog.SECOND);
     // millis
-    private final SettingsModelBoolean m_useMillis = 
-        TimeFieldExtractorNodeDialog.createUseTimeFieldModel(
-                TimeFieldExtractorNodeDialog.MILLISECOND); 
-    private final SettingsModelString m_milliColName = 
-    TimeFieldExtractorNodeDialog.createTimeFieldColumnNameModel(
+    private final SettingsModelBoolean m_useMillis =
+        AbstractFieldExtractorNodeDialog.createUseTimeFieldModel(TimeFieldExtractorNodeDialog.MILLISECOND);
+    private final SettingsModelString m_milliColName =
+            AbstractFieldExtractorNodeDialog.createTimeFieldColumnNameModel(
             TimeFieldExtractorNodeDialog.MILLISECOND);
-    
+
     /**
-     * One in port containing {@link DateAndTimeValue}s, one out port with the 
+     * One in port containing {@link DateAndTimeValue}s, one out port with the
      * extracted time fields appended.
      */
     public TimeFieldExtractorNodeModel() {
         super(1, 1);
         // add listener to the models
-        TimeFieldExtractorNodeDialog.addListener(m_useHour, m_hourColName);
-        TimeFieldExtractorNodeDialog.addListener(m_useMinute, m_minuteColName);
-        TimeFieldExtractorNodeDialog.addListener(m_useSecond, m_secondColName);
-        TimeFieldExtractorNodeDialog.addListener(m_useMillis, m_milliColName);
+        AbstractFieldExtractorNodeDialog.addListener(m_useHour, m_hourColName);
+        AbstractFieldExtractorNodeDialog.addListener(m_useMinute, m_minuteColName);
+        AbstractFieldExtractorNodeDialog.addListener(m_useSecond, m_secondColName);
+        AbstractFieldExtractorNodeDialog.addListener(m_useMillis, m_milliColName);
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -141,16 +139,13 @@ public class TimeFieldExtractorNodeModel extends NodeModel {
         // check input spec:
         // contains timestamp?
         if (!inSpec.containsCompatibleType(DateAndTimeValue.class)) {
-            throw new InvalidSettingsException(
-                    "No timestamp found in input table!");
+            throw new InvalidSettingsException("No timestamp found in input table!");
         }
         // currently selected column still there?
-        String selectedColName = m_selectedColumn.getStringValue(); 
+        String selectedColName = m_selectedColumn.getStringValue();
         if (selectedColName != null && !selectedColName.isEmpty()) {
             if (!inSpec.containsName(selectedColName)) {
-                throw new InvalidSettingsException(
-                        "Column " + selectedColName 
-                        + " not found in input spec!");
+                throw new InvalidSettingsException("Column " + selectedColName + " not found in input spec!");
             }
         } else {
             // no value set: auto-configure -> choose first timeseries
@@ -168,21 +163,21 @@ public class TimeFieldExtractorNodeModel extends NodeModel {
             .getColumnRearranger();
         return new DataTableSpec[] {colRearranger.createSpec()};
     }
-    
 
-    
+
+
     private SingleCellFactoryCompound createColumnRearranger(
             final DataTableSpec inSpec) {
         final int colIdx = inSpec.findColumnIndex(
                 m_selectedColumn.getStringValue());
         ColumnRearranger rearranger = new ColumnRearranger(inSpec);
-        List<AbstractTimeExtractorCellFactory> cellFactories 
+        List<AbstractTimeExtractorCellFactory> cellFactories
             = new ArrayList<AbstractTimeExtractorCellFactory>();
         // ************************* TIME fields factories *******************/
         // hour
-        AbstractTimeExtractorCellFactory hourFactory = null; 
+        AbstractTimeExtractorCellFactory hourFactory = null;
         if (m_useHour.getBooleanValue()) {
-            String colName = DataTableSpec.getUniqueColumnName(inSpec, 
+            String colName = DataTableSpec.getUniqueColumnName(inSpec,
                     m_hourColName.getStringValue());
             hourFactory = new AbstractTimeExtractorIntCellFactory(
                     colName, colIdx, true) {
@@ -191,14 +186,14 @@ public class TimeFieldExtractorNodeModel extends NodeModel {
                         final DateAndTimeValue value) {
                     return value.getHourOfDay();
                 }
-            };    
+            };
             rearranger.append(hourFactory);
             cellFactories.add(hourFactory);
         }
-        // minute 
+        // minute
         AbstractTimeExtractorCellFactory minuteFactory = null;
         if (m_useMinute.getBooleanValue()) {
-            String colName = DataTableSpec.getUniqueColumnName(inSpec, 
+            String colName = DataTableSpec.getUniqueColumnName(inSpec,
                     m_minuteColName.getStringValue());
             minuteFactory = new AbstractTimeExtractorIntCellFactory(
                     colName, colIdx, true) {
@@ -214,7 +209,7 @@ public class TimeFieldExtractorNodeModel extends NodeModel {
         // second
         AbstractTimeExtractorCellFactory secondFactory = null;
         if (m_useSecond.getBooleanValue()) {
-            String colName = DataTableSpec.getUniqueColumnName(inSpec, 
+            String colName = DataTableSpec.getUniqueColumnName(inSpec,
                     m_secondColName.getStringValue());
             secondFactory = new AbstractTimeExtractorIntCellFactory(
                     colName, colIdx, true) {
@@ -230,17 +225,17 @@ public class TimeFieldExtractorNodeModel extends NodeModel {
         // millisecond
         AbstractTimeExtractorCellFactory milliFactory = null;
         if (m_useMillis.getBooleanValue()) {
-            String colName = DataTableSpec.getUniqueColumnName(inSpec, 
+            String colName = DataTableSpec.getUniqueColumnName(inSpec,
                     m_milliColName.getStringValue());
             milliFactory = new AbstractTimeExtractorIntCellFactory(
                     colName, colIdx, true) {
-                // here we also have to check if the value has millis  
+                // here we also have to check if the value has millis
                 @Override
                 protected int extractTimeField(
                         final DateAndTimeValue value) {
                     return value.getMillis();
                 }
-                
+
                 @Override
                 public DataCell getCell(final DataRow row) {
                     DataCell cell = row.getCell(colIdx);
@@ -254,7 +249,7 @@ public class TimeFieldExtractorNodeModel extends NodeModel {
                     }
                     // no date set
                     increaseMissingValueCount();
-                    return DataType.getMissingCell(); 
+                    return DataType.getMissingCell();
                 }
             };
             rearranger.append(milliFactory);
@@ -262,9 +257,9 @@ public class TimeFieldExtractorNodeModel extends NodeModel {
         }
         return new SingleCellFactoryCompound(rearranger, cellFactories);
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -280,16 +275,16 @@ public class TimeFieldExtractorNodeModel extends NodeModel {
         BufferedDataTable out = exec.createColumnRearrangeTable(inData[0],
                 rearranger, exec);
         int nrMissingValues = 0;
-        for (AbstractTimeExtractorCellFactory cellFactory 
+        for (AbstractTimeExtractorCellFactory cellFactory
                 : compound.getUsedCellFactories()) {
             nrMissingValues += cellFactory.getNumberMissingValues();
         }
         if (nrMissingValues > 0) {
-            setWarningMessage("Produced " + nrMissingValues 
+            setWarningMessage("Produced " + nrMissingValues
                     + " missing values due to missing time"
                     + " information in input date/time!");
         }
-        
+
         return new BufferedDataTable[] {out};
     }
 
@@ -300,10 +295,10 @@ public class TimeFieldExtractorNodeModel extends NodeModel {
     protected void reset() {
         // nothing to do here
     }
-    
+
     /**
-     * 
-     * @return <code>true</code> if at least one field is selected, 
+     *
+     * @return <code>true</code> if at least one field is selected,
      * <code>false</code> otherwise
      */
     private boolean checkSelection() {
@@ -341,7 +336,7 @@ public class TimeFieldExtractorNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        // basic checks 
+        // basic checks
         m_selectedColumn.validateSettings(settings);
         // hour
         m_useHour.validateSettings(settings);
@@ -392,22 +387,22 @@ public class TimeFieldExtractorNodeModel extends NodeModel {
         m_useMillis.loadSettingsFrom(settings);
         m_milliColName.loadSettingsFrom(settings);
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
+    protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
     throws IOException, CanceledExecutionException {
         // no internals
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
+    protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
     throws IOException, CanceledExecutionException {
         // no internals

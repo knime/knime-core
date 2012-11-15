@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   05.06.2009 (Fabian Dill): created
  */
@@ -67,30 +67,30 @@ import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
- * Dialog component to configure a date, a time or both. This is a convenience 
- * class consisting of  {@link DialogComponentDate} and 
- * {@link DialogComponentTime} handling the loading and saving of the 
+ * Dialog component to configure a date, a time or both. This is a convenience
+ * class consisting of  {@link DialogComponentDate} and
+ * {@link DialogComponentTime} handling the loading and saving of the
  * settings for both of them with one single model.
- * 
+ *
  * @see DialogComponentDate
  * @see DialogComponentTime
  * @see SettingsModelCalendar
- * 
+ *
  * @author Fabian Dill, KNIME.com AG
- * 
+ *
  */
 public class DialogComponentCalendar extends DialogComponent {
 
     private DialogComponentDate m_date;
-    
-    private DialogComponentTime m_time; 
+
+    private DialogComponentTime m_time;
 
     private JCheckBox m_useDateUI;
 
     private JCheckBox m_useTimeUI;
 
     /**
-     * 
+     *
      * @param model SettingsModel to represent the selected date
      * @param label the label to display
      */
@@ -104,8 +104,9 @@ public class DialogComponentCalendar extends DialogComponent {
         overall.add(createDatePanel());
         overall.add(createTimePanel());
         getComponentPanel().add(overall);
-        
+
         getModel().addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 updateComponent();
             }
@@ -113,7 +114,7 @@ public class DialogComponentCalendar extends DialogComponent {
     }
 
     private JPanel createDatePanel() {
-        m_date = new DialogComponentDate((SettingsModelCalendar)getModel(), 
+        m_date = new DialogComponentDate((SettingsModelCalendar)getModel(),
                 "Date:");
         // add the check box on top of the horizontal date panel
         JPanel panel = new JPanel();
@@ -125,9 +126,9 @@ public class DialogComponentCalendar extends DialogComponent {
             @Override
             public void itemStateChanged(final ItemEvent e) {
                 boolean enable = m_useDateUI.isSelected();
-                // only dis-/enable UI since they all share one model 
+                // only dis-/enable UI since they all share one model
                 m_date.setEnabledComponents(enable);
-                ((SettingsModelCalendar)getModel()).setUseDate(enable); 
+                ((SettingsModelCalendar)getModel()).setUseDate(enable);
             }
         });
         useDateBox.add(m_useDateUI);
@@ -138,7 +139,7 @@ public class DialogComponentCalendar extends DialogComponent {
     }
 
     private JPanel createTimePanel() {
-        m_time = new DialogComponentTime((SettingsModelCalendar)getModel(), 
+        m_time = new DialogComponentTime((SettingsModelCalendar)getModel(),
                 "Time:");
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -146,6 +147,7 @@ public class DialogComponentCalendar extends DialogComponent {
         Box useTimeBox = Box.createHorizontalBox();
         m_useTimeUI = new JCheckBox("Use Time", true);
         m_useTimeUI.addItemListener(new ItemListener() {
+            @Override
             public void itemStateChanged(final ItemEvent e) {
                 boolean enable = m_useTimeUI.isSelected();
                 // only dis-/enable UI since they all share one model
@@ -187,14 +189,14 @@ public class DialogComponentCalendar extends DialogComponent {
     public void setDateDisabled(final boolean disabled) {
         m_useDateUI.setEnabled(!disabled);
     }
-    
+
     /**
      * @param disabled If true, the checkbox for using the time is disabled.
      */
     public void setTimeDisabled(final boolean disabled) {
         m_useTimeUI.setEnabled(!disabled);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -209,13 +211,13 @@ public class DialogComponentCalendar extends DialogComponent {
     @Override
     protected void updateComponent() {
         SettingsModelCalendar model = (SettingsModelCalendar)getModel();
-        
+
         m_useDateUI.setSelected(model.useDate());
         m_useDateUI.setEnabled(model.isEnabled());
-        
+
         m_useTimeUI.setSelected(model.useTime());
         m_useTimeUI.setEnabled(model.isEnabled());
-        
+
         m_date.updateComponent();
         m_time.updateComponent();
     }
@@ -224,15 +226,15 @@ public class DialogComponentCalendar extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettingsBeforeSave() 
+    protected void validateSettingsBeforeSave()
         throws InvalidSettingsException {
             if (!m_useDateUI.isSelected() && !m_useTimeUI.isSelected()) {
                 throw new InvalidSettingsException(
                         "Either date or time or both must be selected!");
             }
-            if (m_useDateUI.isSelected()) {                
+            if (m_useDateUI.isSelected()) {
                 m_date.validateSettingsBeforeSave();
-            } 
+            }
             if (m_useTimeUI.isSelected()) {
                 m_time.validateSettingsBeforeSave();
             }

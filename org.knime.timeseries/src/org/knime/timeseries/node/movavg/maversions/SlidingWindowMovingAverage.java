@@ -72,8 +72,6 @@ public abstract class SlidingWindowMovingAverage extends MovingAverage {
     /** the number of values in the window. can be less than the needed in
      * the beginning. */
     private int m_nrofValues = 0;
-    /** if true, the window, if complete, and m_winlength == m_nrofvalue.*/
-    private boolean m_enoughValues = false;
 
     /**
      * Constructor. Builds MA array with specified number of items.
@@ -83,7 +81,7 @@ public abstract class SlidingWindowMovingAverage extends MovingAverage {
      */
     public SlidingWindowMovingAverage(final int winLength) {
         m_winLength = winLength;
-        m_values = new double[getWinLength()];
+        m_values = new double[m_winLength];
     }
 
 
@@ -92,31 +90,28 @@ public abstract class SlidingWindowMovingAverage extends MovingAverage {
      */
     @Override
     public DataCell getMeanandUpdate(final double newValue) {
-        if (!m_enoughValues) {
+        if (m_nrofValues != m_winLength) {
             m_avg = updateMean(newValue, m_nrofValues);
             m_values[m_indexNewestValue] = newValue;
             m_indexNewestValue++;
 
             m_nrofValues++;
-            m_enoughValues = (m_nrofValues == getWinLength());
 
-            if (!m_enoughValues) {
+            if (m_nrofValues != m_winLength) {
                 return DataType.getMissingCell();
             }
-            DoubleCell dc = new DoubleCell(m_avg);
-            return dc;
+            return new DoubleCell(m_avg);
         }
         m_avg = updateMean(newValue);
 
         m_indexNewestValue = m_indexOldestValue;
         m_values[m_indexNewestValue] = newValue;
         m_indexOldestValue++;
-        if (m_indexOldestValue >= getWinLength()) {
+        if (m_indexOldestValue >= m_winLength) {
             m_indexOldestValue = 0;
         }
 
-        DoubleCell dc = new DoubleCell(m_avg);
-        return dc;
+        return new DoubleCell(m_avg);
     }
 
     /**

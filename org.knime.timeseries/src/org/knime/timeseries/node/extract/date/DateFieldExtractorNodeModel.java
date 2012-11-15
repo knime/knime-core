@@ -76,7 +76,6 @@ import org.knime.timeseries.node.extract.AbstractTimeExtractorCellFactory;
 import org.knime.timeseries.node.extract.AbstractTimeExtractorIntCellFactory;
 import org.knime.timeseries.node.extract.AbstractTimeExtractorStringCellFactory;
 import org.knime.timeseries.node.extract.SingleCellFactoryCompound;
-import org.knime.timeseries.node.extract.time.TimeFieldExtractorNodeDialog;
 
 /**
  *
@@ -85,56 +84,52 @@ import org.knime.timeseries.node.extract.time.TimeFieldExtractorNodeDialog;
 public class DateFieldExtractorNodeModel extends NodeModel {
 
     private final SettingsModelString m_selectedColumn
-        = DateFieldExtractorNodeDialog.createColumnSelectionModel();
+        = AbstractFieldExtractorNodeDialog.createColumnSelectionModel();
 
     // year
-    private final SettingsModelBoolean m_useYear = DateFieldExtractorNodeDialog
+    private final SettingsModelBoolean m_useYear = AbstractFieldExtractorNodeDialog
         .createUseTimeFieldModel(DateFieldExtractorNodeDialog.YEAR);
     private final SettingsModelString m_yearColName =
-        DateFieldExtractorNodeDialog.createTimeFieldColumnNameModel(
+            AbstractFieldExtractorNodeDialog.createTimeFieldColumnNameModel(
                 DateFieldExtractorNodeDialog.YEAR);
     // quarter
     private final SettingsModelBoolean m_useQuarter
-        = DateFieldExtractorNodeDialog.createUseTimeFieldModel(
+        = AbstractFieldExtractorNodeDialog.createUseTimeFieldModel(
                 DateFieldExtractorNodeDialog.QUARTER);
     private final SettingsModelString m_quarterColName
-        = DateFieldExtractorNodeDialog.createTimeFieldColumnNameModel(
+        = AbstractFieldExtractorNodeDialog.createTimeFieldColumnNameModel(
                 DateFieldExtractorNodeDialog.QUARTER);
     // month
-    private final SettingsModelBoolean m_useMonth = DateFieldExtractorNodeDialog
+    private final SettingsModelBoolean m_useMonth = AbstractFieldExtractorNodeDialog
         .createUseTimeFieldModel(DateFieldExtractorNodeDialog.MONTH);
     private final SettingsModelString m_monthColName =
-        DateFieldExtractorNodeDialog.createTimeFieldColumnNameModel(
-                DateFieldExtractorNodeDialog.MONTH);
+            AbstractFieldExtractorNodeDialog.createTimeFieldColumnNameModel(DateFieldExtractorNodeDialog.MONTH);
     private final SettingsModelString m_monthRepresentation
-        = DateFieldExtractorNodeDialog.createRepresentationModelFor(
-                DateFieldExtractorNodeDialog.MONTH);
+        = AbstractFieldExtractorNodeDialog.createRepresentationModelFor(DateFieldExtractorNodeDialog.MONTH);
 
     // day of week
     private final SettingsModelBoolean m_useDayOfWeek
-        = DateFieldExtractorNodeDialog.createUseTimeFieldModel(
+        = AbstractFieldExtractorNodeDialog.createUseTimeFieldModel(
                 DateFieldExtractorNodeDialog.DAY_OF_WEEK);
     private final SettingsModelString m_dayOfWeekColName
-        = DateFieldExtractorNodeDialog.createTimeFieldColumnNameModel(
+        = AbstractFieldExtractorNodeDialog.createTimeFieldColumnNameModel(
                 DateFieldExtractorNodeDialog.DAY_OF_WEEK);
     private final SettingsModelString m_dayOfWeekRepresentationModel
-        = DateFieldExtractorNodeDialog.createRepresentationModelFor(
+        = AbstractFieldExtractorNodeDialog.createRepresentationModelFor(
                 DateFieldExtractorNodeDialog.DAY_OF_WEEK);
 
     // day of month
-    private final SettingsModelBoolean m_useDay = TimeFieldExtractorNodeDialog
-        .createUseTimeFieldModel(DateFieldExtractorNodeDialog.DAY_OF_MONTH);
+    private final SettingsModelBoolean m_useDay = AbstractFieldExtractorNodeDialog
+                            .createUseTimeFieldModel(DateFieldExtractorNodeDialog.DAY_OF_MONTH);
     private final SettingsModelString m_dayColName =
-    DateFieldExtractorNodeDialog.createTimeFieldColumnNameModel(
-            DateFieldExtractorNodeDialog.DAY_OF_MONTH);
+                    AbstractFieldExtractorNodeDialog.createTimeFieldColumnNameModel(
+                    DateFieldExtractorNodeDialog.DAY_OF_MONTH);
 
     //day of year
-    private final SettingsModelBoolean m_useDayOfYear
-    = DateFieldExtractorNodeDialog.createUseTimeFieldModel(
+    private final SettingsModelBoolean m_useDayOfYear = AbstractFieldExtractorNodeDialog.createUseTimeFieldModel(
             DateFieldExtractorNodeDialog.DAY_OF_YEAR);
     private final SettingsModelString m_dayOfYearColName
-        = DateFieldExtractorNodeDialog.createTimeFieldColumnNameModel(
-                DateFieldExtractorNodeDialog.DAY_OF_YEAR);
+            = AbstractFieldExtractorNodeDialog.createTimeFieldColumnNameModel(DateFieldExtractorNodeDialog.DAY_OF_YEAR);
 
      /**
      * One in port containing {@link DateAndTimeValue}s, one out port with the
@@ -145,10 +140,8 @@ public class DateFieldExtractorNodeModel extends NodeModel {
         AbstractFieldExtractorNodeDialog.addListener(m_useYear, m_yearColName);
         AbstractFieldExtractorNodeDialog.addListener(m_useMonth, m_monthColName);
         AbstractFieldExtractorNodeDialog.addListener(m_useDay, m_dayColName);
-        AbstractFieldExtractorNodeDialog.addListener(m_useDayOfWeek,
-                m_dayOfWeekColName);
-        AbstractFieldExtractorNodeDialog.addListener(m_useDayOfYear,
-                m_dayOfYearColName);
+        AbstractFieldExtractorNodeDialog.addListener(m_useDayOfWeek, m_dayOfWeekColName);
+        AbstractFieldExtractorNodeDialog.addListener(m_useDayOfYear, m_dayOfYearColName);
     }
 
 
