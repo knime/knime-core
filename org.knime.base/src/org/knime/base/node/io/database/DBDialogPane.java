@@ -54,7 +54,6 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
-import java.io.File;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -79,7 +78,7 @@ import org.knime.core.node.port.database.DatabaseDriverLoader;
 import org.knime.core.util.KnimeEncryption;
 
 /**
- * Creates a panel to select database driver, enter database URL, user and 
+ * Creates a panel to select database driver, enter database URL, user and
  * password - optionally from credentials.
  *
  * @author Thomas Gabriel, University of Konstanz
@@ -109,8 +108,8 @@ final class DBDialogPane extends JPanel {
     DBDialogPane() {
         super();
         super.setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        
-// create and driver component        
+
+// create and driver component
         m_driver.setEditable(false);
         m_driver.setFont(FONT);
         final JPanel driverPanel = new JPanel(new BorderLayout());
@@ -155,15 +154,15 @@ final class DBDialogPane extends JPanel {
         credPanel.add(m_credBox, BorderLayout.CENTER);
         super.add(credPanel);
 
-// create and user name field        
+// create and user name field
         final JPanel userPanel = new JPanel(new BorderLayout());
         userPanel.setBorder(BorderFactory.createTitledBorder(" User Name "));
         m_user.setFont(FONT);
         userPanel.add(m_user, BorderLayout.CENTER);
         super.add(userPanel);
-        
-// create and add password panel        
-        final JPanel passPanel = new JPanel(new BorderLayout()); 
+
+// create and add password panel
+        final JPanel passPanel = new JPanel(new BorderLayout());
         passPanel.setBorder(BorderFactory.createTitledBorder(" Password "));
         m_pass.setFont(FONT);
         m_pass.getDocument().addDocumentListener(new DocumentListener() {
@@ -300,26 +299,19 @@ final class DBDialogPane extends JPanel {
                     new String(m_pass.getPassword()));
             }
         }
-        // fix 2416: for backward compatible reason the loaded_driver still
-        // needs to be added to the NodeSettings; dialog and model setting
-        // must hold the same properties (see DatabaseConnectionSettings)
-        final File driverFile =
-            DatabaseDriverLoader.getDriverFileForDriverClass(driverName);
-        settings.addString("loaded_driver",
-                (driverFile == null ? null : driverFile.getAbsolutePath()));
     }
-    
+
     /**
      * Settings object holding the current database connection properties.
      * @return a <code>DatabaseConnectionSettings</code> object
      */
     protected final DatabaseConnectionSettings getConnectionSettings() {
         return new DatabaseConnectionSettings(
-                m_driver.getSelectedItem().toString(), 
-                m_db.getSelectedItem().toString(), 
-                m_user.getText(), 
+                m_driver.getSelectedItem().toString(),
+                m_db.getSelectedItem().toString(),
+                m_user.getText(),
                 new String(m_pass.getPassword()),
-                m_credCheckBox.isSelected() 
+                m_credCheckBox.isSelected()
                     ? m_credBox.getSelectedItem().toString() : null);
     }
 }

@@ -48,7 +48,6 @@
  */
 package org.knime.core.node.port.database;
 
-import java.io.File;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.sql.Connection;
@@ -432,10 +431,6 @@ public class DatabaseConnectionSettings {
         } else {
             settings.addString("credential_name", m_credName);
         }
-        final File driverFile =
-            DatabaseDriverLoader.getDriverFileForDriverClass(m_driver);
-        settings.addString("loaded_driver",
-                (driverFile == null ? null : driverFile.getAbsolutePath()));
         DRIVER_ORDER.add(m_driver);
         DATABASE_URLS.add(m_dbName);
     }
@@ -524,17 +519,6 @@ public class DatabaseConnectionSettings {
             m_pass = (password == null ? "" : password);
             m_dbName = database;
             DATABASE_URLS.add(m_dbName);
-            // loaded driver
-            String loadedDriver = settings.getString("loaded_driver", null);
-            if (loadedDriver != null) {
-                try {
-                    DatabaseDriverLoader.loadDriver(new File(loadedDriver));
-                } catch (Throwable t) {
-                    LOGGER.info("Could not load driver from file \""
-                            + loadedDriver + "\"" + (t.getMessage() != null
-                                ? ", reason: " + t.getMessage() : "."));
-                }
-            }
             return changed;
         }
         return false;
