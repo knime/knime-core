@@ -35,7 +35,7 @@ if [[ -n "$JAVA" ]]; then
 
   # fire it up
   cd "$APP_DIR"
-  "$JAVA" $VMARGS -classpath $CLASSPATH org.eclipse.equinox.launcher.Main $APPARGS
+  "$JAVA" $VMARGS -classpath "$CLASSPATH" org.eclipse.equinox.launcher.Main $APPARGS
   cd -
 else
   # start normally
