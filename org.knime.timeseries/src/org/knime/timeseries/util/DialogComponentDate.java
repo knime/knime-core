@@ -82,9 +82,9 @@ public class DialogComponentDate extends DialogComponent {
 
     private JTextField m_yearUI;
 
-    private JComboBox<Integer> m_monthUI;
+    private JComboBox m_monthUI;
 
-    private JComboBox<Integer> m_dayUI;
+    private JComboBox m_dayUI;
 
 
     /**
