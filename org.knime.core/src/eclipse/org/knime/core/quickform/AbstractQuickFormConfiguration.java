@@ -154,7 +154,7 @@ public abstract class AbstractQuickFormConfiguration
         settings.addInt("weight", m_weight);
         settings.addBoolean("hide_in_wizard", m_hideInWizard);
         NodeSettingsWO valueSet = settings.addNodeSettings("value");
-        m_valueConfiguration.saveValue(valueSet);
+        getValueConfiguration().saveValue(valueSet);
     }
 
     /** Load config in model.
