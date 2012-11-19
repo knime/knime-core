@@ -29,6 +29,8 @@ All other trademarks are the property of their respective owners.
    </configIni>
 
    <launcherArgs>
+      <programArgsMac>-vm
+../../jre/Home/bin/java</programArgsMac>
       <vmArgs>-XX:MaxPermSize=256m
 -server
 -Dsun.java2d.d3d=false
@@ -62,7 +64,6 @@ All other trademarks are the property of their respective owners.
       <macos include="true">org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6</macos>
       <windows include="true">org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.6</windows>
    </vm>
-
 
    <plugins>
    </plugins>

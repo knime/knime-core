@@ -13,6 +13,9 @@ if [[ "$1" == "-vm" ]]; then
 elif [[ -x "$KNIME_DIR/jre/bin/java" ]]; then
   # start KNIME with the java in the jre folder
   JAVA="$KNIME_DIR/jre/bin/java"
+elif [[ -x "$KNIME_DIR/jre/Home/bin/java" ]]; then
+  # start KNIME with the java in the jre folder
+  JAVA="$KNIME_DIR/jre/Home/bin/java"
 fi
 
 if [[ -n "$JAVA" ]]; then
