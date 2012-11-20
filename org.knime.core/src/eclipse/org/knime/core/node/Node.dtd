@@ -76,6 +76,6 @@
 <!ATTLIST outPort name CDATA #REQUIRED>
 
 <!ELEMENT views (view+) >
-<!ELEMENT view (#PCDATA | br | b | i | u | a | tt | ul | ol)* >
+<!ELEMENT view (#PCDATA | p | h | br | b | i | u | tt | a | ul | ol | pre | sub | sup)* >
 <!ATTLIST view index CDATA #REQUIRED>
 <!ATTLIST view name CDATA #REQUIRED>

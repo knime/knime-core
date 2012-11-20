@@ -266,14 +266,19 @@
   <xs:element name="view">
     <xs:complexType mixed="true">
       <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="p"/>
+        <xs:element ref="h"/>
         <xs:element ref="br"/>
         <xs:element ref="b"/>
         <xs:element ref="i"/>
         <xs:element ref="u"/>
-        <xs:element ref="a"/>
         <xs:element ref="tt"/>
+        <xs:element ref="a"/>
         <xs:element ref="ul"/>
         <xs:element ref="ol"/>
+        <xs:element ref="pre"/>
+        <xs:element ref="sub"/>
+        <xs:element ref="sup"/>
       </xs:choice>
       <xs:attribute name="index" type="xs:int"  use="required"/>
       <xs:attribute name="name" type="xs:string" use="required"/>
