@@ -99,6 +99,10 @@ public class KNIMEApplication implements IApplication {
         try {
             Shell shell = new Shell(display, SWT.ON_TOP);
 
+            if (!checkJRE(shell)) {
+                return EXIT_OK;
+            }
+
             try {
                 if (!checkInstanceLocation(shell)) {
                     appContext.applicationRunning();
@@ -140,6 +144,25 @@ public class KNIMEApplication implements IApplication {
                 display.dispose();
             }
         }
+    }
+
+    /**
+     * Check if the current JRE is supported (currently for MacOSX only).
+     */
+    private boolean checkJRE(final Shell shell) {
+        if (Platform.OS_MACOSX.equals(Platform.getOS())) {
+            String version = System.getProperty("java.version");
+            if (!version.startsWith("1.6.")) {
+                MessageBox mb = new MessageBox(shell, SWT.YES | SWT.NO | SWT.ICON_WARNING);
+                mb.setText("Unsupported Java version");
+                mb.setMessage("The Java version currently active on your system (" + version + ") is known to cause "
+                              + "problems and is not supported by KNIME under MacOS X. Please see "
+                              + "http://www.knime.org/faq#q9999 for details and how to fix it.\nDo you want to start "
+                              + "KNIME anyway and continue on your own risk?");
+                return mb.open() == SWT.YES;
+            }
+        }
+        return true;
     }
 
     private void parseApplicationArguments(final IApplicationContext context) {
