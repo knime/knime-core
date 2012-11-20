@@ -259,9 +259,20 @@ public class KNIMEApplication implements IApplication {
             return false;
         }
 
+        URL defaultLocation = instanceLoc.getDefault();
+        if (Platform.OS_MACOSX.equals(Platform.getOS())) {
+            if (defaultLocation.getPath().contains("/Knime.app/")) {
+                URL url = Platform.getInstallLocation().getURL();
+                try {
+                    defaultLocation = new URL(url.getProtocol(), url.getHost(), url.getPath() + "/workspace");
+                } catch (MalformedURLException ex) {
+                    // should not happen
+                }
+            }
+        }
+
         // -data @noDefault or -data not specified, prompt and set
-        ChooseWorkspaceData launchData =
-                new ChooseWorkspaceData(instanceLoc.getDefault());
+        ChooseWorkspaceData launchData = new ChooseWorkspaceData(instanceLoc.getDefault());
 
         boolean force = false;
         while (true) {
