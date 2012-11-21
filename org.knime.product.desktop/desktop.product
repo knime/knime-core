@@ -29,8 +29,6 @@ All other trademarks are the property of their respective owners.
    </configIni>
 
    <launcherArgs>
-      <programArgsMac>-vm
-../../jre/Home/bin/java</programArgsMac>
       <vmArgs>-XX:MaxPermSize=256m
 -server
 -Dsun.java2d.d3d=false
