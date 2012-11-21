@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode type="Other">
+	<name>Image Comparator</name>
+	<shortDescription>
+	    Compares two PNG or SVG images.
+	</shortDescription>
+	<fullDescription>
+		<intro>
+		Compares two PNG or SVG images: PNGs are compared based on their byte arrays, SVGs based on the XML string. 
+        Other image types and more fuzzy-like comparisons are not yet supported.
+		</intro>
+		
+	</fullDescription>
+	<ports>
+        <inPort name="Image Input" index="0">Image at port one</inPort>
+        <inPort name="Image Input" index="1">Image at port two</inPort>
+    </ports>
+</knimeNode>

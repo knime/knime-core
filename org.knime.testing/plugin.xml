@@ -70,6 +70,12 @@
             expert-flag="false"
             factory-class="org.knime.testing.node.filestore.check.FileStoreTestNodeFactory"
             id="org.knime.testing.node.filestore.check.FileStoreTestNodeFactory">
+      </node>
+      <node
+            category-path="/testing"
+            expert-flag="false"
+            factory-class="org.knime.testing.imagecomp.ImageCompNodeFactory"
+            id="org.knime.testing.imagecomp.ImageCompNodeFactory">
       </node>     
    </extension>
    <extension
