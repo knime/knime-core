@@ -65,6 +65,7 @@ import org.knime.base.node.mine.mds.distances.RowDistanceManager;
 import org.knime.base.node.preproc.filter.row.RowFilterTable;
 import org.knime.base.node.preproc.filter.row.rowfilter.MissingCellRowFilter;
 import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DoubleValue;
@@ -326,9 +327,11 @@ public class MDSProjectionManager {
 
             DataPoint p = new DataPoint(m_dimension);
             for (int i = 0; i < m_dimension; i++) {
-                DoubleValue d =
-                    (DoubleValue)row.getCell(fixedDataMdsIndices[i]);
-                p.setElementAt(i, d.getDoubleValue());
+                final DataCell cell = row.getCell(fixedDataMdsIndices[i]);
+                if (!cell.isMissing()) {
+                    final Double d = ((DoubleValue) cell).getDoubleValue();
+                    p.setElementAt(i, d);
+                }
             }
             m_fixedPoints.put(row.getKey(), p);
         }

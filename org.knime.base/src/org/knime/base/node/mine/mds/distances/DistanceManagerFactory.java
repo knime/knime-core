@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   02.02.2007 (Kilian Thiel): created
  */
@@ -52,7 +52,7 @@ package org.knime.base.node.mine.mds.distances;
 
 
 /**
- * 
+ *
  * @author Kilian Thiel, University of Konstanz
  */
 public final class DistanceManagerFactory {
@@ -66,21 +66,21 @@ public final class DistanceManagerFactory {
      * Flag for cosinus distance.
      */
     public static final String COS_DIST = "Cosinus";
-    
+
     /**
      * Flag for korrelation distance.
      */
     public static final String MANHATTAN_DIST = "Manhattan";
-    
-    
+
+
     private DistanceManagerFactory() { /* empty */ }
-    
+
     /**
-     * Creates a new instance extending the <code>DistanceManager</code> 
-     * interface. According to the kind of distance a particular 
-     * <code>DistanceManager</code> is returned. If you want to compute i.e. 
+     * Creates a new instance extending the <code>DistanceManager</code>
+     * interface. According to the kind of distance a particular
+     * <code>DistanceManager</code> is returned. If you want to compute i.e.
      * euclidean distances, then use
-     * <code>DistanceManagerFactory.EUCLIDEAN_DIST</code> as distance parameter 
+     * <code>DistanceManagerFactory.EUCLIDEAN_DIST</code> as distance parameter
      * and the <code>EuclideanDistanceManager</code> is returned. If an unvalid
      * kind of distance is given null will be returned.
      * The fuzzy parameter specifies if the created <code>DistanceManager</code>
@@ -88,17 +88,17 @@ public final class DistanceManagerFactory {
      * <code>DataCell</code>s containing numbers.
      * The offset parameter specifies a particular offset used i.e. by the
      * <code>CosinusDistanceManager</code>.
-     * 
+     *
      * @param distance Specifies the concrete <code>DistanceManager</code>
      * implementation to be returned.
      * @param fuzzy If true the <code>DistanceManager</code> will compute
      * distances between <code>FuzzyIntervalCell</code>s.
      * @param offset A particular offset use by i.e. the
-     * <code>CosinusDistanceManager</code> 
-     * @param ignoreType If set <code>true</code> the type 
-     * (fuzzy or number) will be ignored. When dealing with fuzzy values the 
+     * <code>CosinusDistanceManager</code>
+     * @param ignoreType If set <code>true</code> the type
+     * (fuzzy or number) will be ignored. When dealing with fuzzy values the
      * center of gravity is used, otherwise the numerical value.
-     * 
+     *
      * @return A particular <code>DistanceManager</code>, specified by the
      * distance parameter.
      */
@@ -118,23 +118,23 @@ public final class DistanceManagerFactory {
         }
         return null;
     }
-    
+
     /**
-     * Creates a new instance extending the <code>DistanceManager</code> 
-     * interface. According to the kind of distance a particular 
-     * <code>DistanceManager</code> is returned. If you want to compute for 
+     * Creates a new instance extending the <code>DistanceManager</code>
+     * interface. According to the kind of distance a particular
+     * <code>DistanceManager</code> is returned. If you want to compute for
      * instance euclidean distances, then use
-     * <code>DistanceManagerFactory.EUCLIDEAN_DIST</code> as distance parameter 
+     * <code>DistanceManagerFactory.EUCLIDEAN_DIST</code> as distance parameter
      * and the <code>EuclideanDistanceManager</code> is returned. If an unvalid
      * kind of distance is given null will be returned.
      * The returned <code>DistanceManager</code> computes distances between
-     * <code>DataCell</code>s containing numbers, not 
+     * <code>DataCell</code>s containing numbers, not
      * <code>FuzzyIntervalCell</code>s. The offset is set to 1 by default.
      * The types will not be ignored by default.
-     * 
+     *
      * @param distance Specifies the concrete <code>DistanceManager</code>
      * implementation to be returned.
-     * 
+     *
      * @return A particular <code>DistanceManager</code>, specified by the
      * distance parameter.
      */
@@ -143,62 +143,62 @@ public final class DistanceManagerFactory {
         return DistanceManagerFactory.createDistanceManager(distance, false, 1,
                 false);
     }
-    
+
     /**
-     * Creates a new instance extending the <code>DistanceManager</code> 
-     * interface. According to the kind of distance a particular 
-     * <code>DistanceManager</code> is returned. If you want to compute for 
+     * Creates a new instance extending the <code>DistanceManager</code>
+     * interface. According to the kind of distance a particular
+     * <code>DistanceManager</code> is returned. If you want to compute for
      * instance Euclidean distances, then use
-     * <code>DistanceManagerFactory.EUCLIDEAN_DIST</code> as distance parameter 
+     * <code>DistanceManagerFactory.EUCLIDEAN_DIST</code> as distance parameter
      * and the <code>EuclideanDistanceManager</code> is returned. If an invalid
      * kind of distance is given null will be returned.
      * The fuzzy parameter specifies if the created <code>DistanceManager</code>
      * will compute distances between <code>FuzzyIntervalCell</code>s or
-     * <code>DataCell</code>s containing numbers. 
+     * <code>DataCell</code>s containing numbers.
      * The offset is set to 1 by default.
-     * 
+     *
      * @param distance Specifies the concrete <code>DistanceManager</code>
      * implementation to be returned.
      * @param fuzzy If true the <code>DistanceManager</code> will compute
      * distances between <code>FuzzyIntervalCell</code>s.
-     * 
+     *
      * @return A particular <code>DistanceManager</code>, specified by the
      * distance parameter.
-     */    
+     */
     public static final DistanceManager createDistanceManager(
             final String distance, final boolean fuzzy) {
-        return DistanceManagerFactory.createDistanceManager(distance, fuzzy, 1, 
+        return DistanceManagerFactory.createDistanceManager(distance, fuzzy, 1,
                 false);
     }
-    
+
     /**
-     * Creates a new instance extending the <code>DistanceManager</code> 
-     * interface. According to the kind of distance a particular 
-     * <code>DistanceManager</code> is returned. If you want to compute for 
+     * Creates a new instance extending the <code>DistanceManager</code>
+     * interface. According to the kind of distance a particular
+     * <code>DistanceManager</code> is returned. If you want to compute for
      * instance Euclidean distances, then use
-     * <code>DistanceManagerFactory.EUCLIDEAN_DIST</code> as distance parameter 
+     * <code>DistanceManagerFactory.EUCLIDEAN_DIST</code> as distance parameter
      * and the <code>EuclideanDistanceManager</code> is returned. If an unvalid
      * kind of distance is given null will be returned.
      * The fuzzy parameter specifies if the created <code>DistanceManager</code>
      * will compute distances between <code>FuzzyIntervalCell</code>s or
-     * <code>DataCell</code>s containing numbers. 
+     * <code>DataCell</code>s containing numbers.
      * The offset is set to 1 by default.
-     * 
+     *
      * @param distance Specifies the concrete <code>DistanceManager</code>
      * implementation to be returned.
      * @param fuzzy If true the <code>DistanceManager</code> will compute
      * distances between <code>FuzzyIntervalCell</code>s.
-     * @param ignoreCase If <code>true</code>The type (fuzzy or number) 
-     * will be ignored. When dealing with fuzzy values the 
-     * center of gravity is used, otherwise the numerical value. 
-     * 
+     * @param ignoreCase If <code>true</code>The type (fuzzy or number)
+     * will be ignored. When dealing with fuzzy values the
+     * center of gravity is used, otherwise the numerical value.
+     *
      * @return A particular <code>DistanceManager</code>, specified by the
      * distance parameter.
-     */    
+     */
     public static final DistanceManager createDistanceManager(
-            final String distance, final boolean fuzzy, 
+            final String distance, final boolean fuzzy,
             final boolean ignoreCase) {
-        return DistanceManagerFactory.createDistanceManager(distance, fuzzy, 
+        return DistanceManagerFactory.createDistanceManager(distance, fuzzy,
                 1, ignoreCase);
-    }    
+    }
 }

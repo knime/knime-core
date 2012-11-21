@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   07.03.2008 (Kilian Thiel): created
  */
@@ -58,7 +58,6 @@ import java.util.List;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.base.node.mine.mds.MDSCellFactory;
 import org.knime.base.node.mine.mds.MDSNodeDialog;
 import org.knime.base.node.mine.sota.logic.SotaUtil;
@@ -86,64 +85,64 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
- * 
+ *
  * @author Kilian Thiel, University of Konstanz
  */
 public class MDSProjectionNodeModel extends NodeModel {
-    
+
     /**
      * The default projection setting.
      */
-    public static final boolean DEF_PROJECT_ONLY = true;    
-    
-    private SettingsModelIntegerBounded m_rowsModel = 
+    public static final boolean DEF_PROJECT_ONLY = true;
+
+    private SettingsModelIntegerBounded m_rowsModel =
         MDSNodeDialog.getRowsModel();
-    
-    private SettingsModelBoolean m_useRowsModel = 
+
+    private SettingsModelBoolean m_useRowsModel =
         MDSNodeDialog.getUseMaxRowsModel();
-    
-    private SettingsModelDoubleBounded m_learnrateModel = 
+
+    private SettingsModelDoubleBounded m_learnrateModel =
         MDSNodeDialog.getLearnrateModel();
-    
-    private SettingsModelIntegerBounded m_epochsModel = 
+
+    private SettingsModelIntegerBounded m_epochsModel =
         MDSNodeDialog.getEpochModel();
-    
-    private SettingsModelIntegerBounded m_outputDimModel = 
+
+    private SettingsModelIntegerBounded m_outputDimModel =
         MDSNodeDialog.getOutputDimModel();
-    
-    private SettingsModelString m_distModel = 
+
+    private SettingsModelString m_distModel =
         MDSNodeDialog.getDistanceModel();
-    
-    private SettingsModelFilterString m_colModel = 
+
+    private SettingsModelFilterString m_colModel =
         MDSNodeDialog.getColumnModel();
-    
-    private SettingsModelIntegerBounded m_seedModel = 
+
+    private SettingsModelIntegerBounded m_seedModel =
         MDSNodeDialog.getSeedModel();
-    
-    private SettingsModelFilterString m_fixedMdsColModel = 
+
+    private SettingsModelFilterString m_fixedMdsColModel =
         MDSProjectionNodeDialog.getFixedColumnModel();
-    
+
     private SettingsModelBoolean m_projectOnly =
         MDSProjectionNodeDialog.getProjectOnlyModel();
-    
-    
+
+
     private MDSProjectionManager m_manager;
-    
+
     private List<String> m_includeList;
-    
-    private boolean m_fuzzy = false;    
-    
+
+    private boolean m_fuzzy = false;
+
     /**
      * The index of the data table containing the fixed data.
      */
     static final int FIXED_DATA_INDEX = 0;
-    
+
     /**
      * The index of the data table containing the input data.
      */
     static final int IN_DATA_INDEX = 1;
-    
-    
+
+
     /**
      * Creates a new instance of <code>MDSNodeModel</code>.
      */
@@ -152,7 +151,7 @@ public class MDSProjectionNodeModel extends NodeModel {
         m_useRowsModel.addChangeListener(new CheckBoxChangeListener());
         checkUncheck();
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -163,7 +162,7 @@ public class MDSProjectionNodeModel extends NodeModel {
         }
         return getInHiLiteHandler(IN_DATA_INDEX);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -173,11 +172,11 @@ public class MDSProjectionNodeModel extends NodeModel {
         assert inSpecs.length == 2;
         m_includeList = m_colModel.getIncludeList();
         StringBuffer buffer = new StringBuffer();
-        
+
         //
         /// Check input data
         //
-        
+
         // check number of selected columns
         List<String> allColumns = new ArrayList<String>();
         int numberCells = 0;
@@ -195,14 +194,14 @@ public class MDSProjectionNodeModel extends NodeModel {
                 }
             }
         }
-        
+
         // check if selected columns are still in spec
         for (String s : m_includeList) {
             if (!allColumns.contains(s)) {
                 buffer.append("Selected column are not in spec !");
             }
         }
-        
+
         // throw exception if number of selected columns is not valid.
         if (numberCells <= 0 && fuzzyCells <= 0) {
             buffer.append("Number of columns has to be "
@@ -218,18 +217,18 @@ public class MDSProjectionNodeModel extends NodeModel {
         //
         /// Check fixed data
         //
-        
+
         List<String> fixedColumns = new ArrayList<String>();
         for (int i = 0; i < inSpecs[FIXED_DATA_INDEX].getNumColumns(); i++) {
             fixedColumns.add(
                     inSpecs[FIXED_DATA_INDEX].getColumnSpec(i).getName());
         }
-        
+
         if (numberCells <= 0) {
-            buffer.append("Number of columns containing fixed data has " 
+            buffer.append("Number of columns containing fixed data has "
                     + "to be greater than zero !");
         }
-        
+
         // check if selected columns are still in spec
         List<String> fixedColInlucdeList = m_fixedMdsColModel.getIncludeList();
         for (String s : fixedColInlucdeList) {
@@ -237,14 +236,14 @@ public class MDSProjectionNodeModel extends NodeModel {
                 buffer.append("Selected fixed column are not in spec !");
             }
         }
-        
-        
+
+
         // create output table spec (input spec with the additional mds columns
         // appended).
         ColumnRearranger rearranger = createColumnRearranger(
-                inSpecs[IN_DATA_INDEX], 
+                inSpecs[IN_DATA_INDEX],
                 new MDSCellFactory(null, m_outputDimModel.getIntValue()));
-        
+
         return new DataTableSpec[]{rearranger.createSpec()};
     }
 
@@ -254,67 +253,53 @@ public class MDSProjectionNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        assert inData.length == 2;
-        
+
+        final DataTableSpec inSpecData = inData[IN_DATA_INDEX].getSpec();
+        final ColumnRearranger colFilter = new ColumnRearranger(inSpecData);
+        if (m_includeList != null) {
+            colFilter.keepOnly(m_includeList.toArray(new String[m_includeList.size()]));
+        }
+        BufferedDataTable rowCutDataTable = exec.createColumnRearrangeTable(inData[IN_DATA_INDEX], colFilter,
+            exec.createSilentSubProgress(0.0));
+
         int rowsToUse = m_rowsModel.getIntValue();
         if (m_useRowsModel.getBooleanValue()) {
             rowsToUse = inData[IN_DATA_INDEX].getRowCount();
         }
-        
+
         // Warn if number of rows is greater than chosen number of rows
         if (inData[IN_DATA_INDEX].getRowCount() > rowsToUse) {
-            setWarningMessage("Maximal number of rows to report is less" 
-                    + " than number of rows in input data table !");
+            setWarningMessage("Maximal number of rows to report is less than number of rows in input data table !");
         }
 
         // use only specified rows
-        DataTable dataContainer = new DefaultDataArray(
-                inData[IN_DATA_INDEX], 1, rowsToUse);
-        
-        // save BufferedDataTable with rows to use and ALL columns to generate
-        // the output data table out of it.
-        BufferedDataTable rowCutDataTable = 
-            exec.createBufferedDataTable(dataContainer, exec);
-        
-        // use only specified columns
-        if (m_includeList != null) {
-            dataContainer = new FilterColumnTable(dataContainer, 
-                    m_includeList.toArray(new String[m_includeList.size()]));
-        }
-        
+        DataTable dataContainer = new DefaultDataArray(rowCutDataTable, 1, rowsToUse);
+
         // create BufferedDataTable
-        BufferedDataTable dataTableToUse = 
-            exec.createBufferedDataTable(dataContainer, exec);
-        
+        rowCutDataTable = exec.createBufferedDataTable(dataContainer, exec);
+
         // get the indices of the fixed mds columns
         List<String> fixedCols = m_fixedMdsColModel.getIncludeList();
-        int[] fixedColsIndicies = new int[fixedCols.size()]; 
-        int currentColIndex = 0;
+        int[] fixedMdsColsIndicies = new int[fixedCols.size()];
         DataTableSpec spec = inData[FIXED_DATA_INDEX].getSpec();
-        for (int i = 0; i < spec.getNumColumns(); i++) {
-            if (fixedCols.contains(spec.getColumnSpec(i).getName())) {
-                fixedColsIndicies[currentColIndex] = i;
-                currentColIndex++;
-            }
+        for (int i = 0; i < fixedCols.size(); i++) {
+            fixedMdsColsIndicies[i] = spec.findColumnIndex(fixedCols.get(i));
         }
-        
+
         // create MDS manager, init and train stuff
         m_manager = new MDSProjectionManager(m_outputDimModel.getIntValue(),
-                m_distModel.getStringValue(), m_fuzzy, dataTableToUse,
-                inData[FIXED_DATA_INDEX], fixedColsIndicies, exec);
+                m_distModel.getStringValue(), m_fuzzy, rowCutDataTable,
+                inData[FIXED_DATA_INDEX], fixedMdsColsIndicies, exec);
         m_manager.setProjectOnly(m_projectOnly.getBooleanValue());
         m_manager.init(m_seedModel.getIntValue());
-        m_manager.train(m_epochsModel.getIntValue(),
-                m_learnrateModel.getDoubleValue());
-        
+        m_manager.train(m_epochsModel.getIntValue(), m_learnrateModel.getDoubleValue());
+
         // create BufferedDataTable out of mapped data.
-        ColumnRearranger rearranger = createColumnRearranger(
-                rowCutDataTable.getDataTableSpec(),
-                new MDSCellFactory(m_manager.getDataPoints(), 
+        ColumnRearranger rearranger = createColumnRearranger(inSpecData,
+                new MDSCellFactory(m_manager.getDataPoints(),
                                    m_manager.getDimension()));
-        
-        return new BufferedDataTable[] {
-                exec.createColumnRearrangeTable(rowCutDataTable, rearranger, 
+
+        return new BufferedDataTable[] {exec.createColumnRearrangeTable(inData[IN_DATA_INDEX], rearranger,
                 exec.createSubProgress(0.1))};
     }
 
@@ -330,11 +315,11 @@ public class MDSProjectionNodeModel extends NodeModel {
         ColumnRearranger rearranger = new ColumnRearranger(originalSpec);
         rearranger.append(mdsCellFac);
         return rearranger;
-    }    
-    
+    }
+
     /**
      * Creates the <code>DataTableSpec</code> of the output data table.
-     * 
+     *
      * @param inPsec The <code>DataTableSpec</code> of the input data table.
      * @param dimensions The dimensions of the output data.
      * @return The <code>DataTableSpec</code> of the output data table.
@@ -342,34 +327,36 @@ public class MDSProjectionNodeModel extends NodeModel {
      * the output spec.
      * @since 2.6
      */
-    static DataTableSpec createDataTableSpec(final DataTableSpec inPsec,
-            final int dimensions) {
-        return new DataTableSpec(inPsec, 
+    @Deprecated
+    static DataTableSpec createDataTableSpec(final DataTableSpec inPsec, final int dimensions) {
+        return new DataTableSpec(inPsec,
                 new DataTableSpec(getColumnSpecs(dimensions)));
     }
-    
+
     /**
      * The <code>DataColumnSpec</code>s of the mds data (columns).
-     * 
-     * @param dimensions The dimension of the mds data. 
+     *
+     * @param dimensions The dimension of the mds data.
      * @return The <code>DataColumnSpec</code>s of the mds data.
      * @deprecated should not be used anymore, since column rearranger creates
      * the output spec.
      * @since 2.6
+    @Deprecated
      */
+    @Deprecated
     static DataColumnSpec[] getColumnSpecs(final int dimensions) {
-        DataColumnSpec[] specs = new DataColumnSpec[dimensions]; 
+        DataColumnSpec[] specs = new DataColumnSpec[dimensions];
         for (int i = 0; i < dimensions; i++) {
             DataColumnSpecCreator creator =
-                new DataColumnSpecCreator("MDS Col " + (i + 1), 
+                new DataColumnSpecCreator("MDS Col " + (i + 1),
                         DoubleCell.TYPE);
             specs[i] = creator.createSpec();
-            
+
         }
         return specs;
     }
-    
-    
+
+
 
     /**
      * {@inheritDoc}
@@ -399,7 +386,7 @@ public class MDSProjectionNodeModel extends NodeModel {
             m_manager.reset();
         }
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -435,12 +422,12 @@ public class MDSProjectionNodeModel extends NodeModel {
         m_projectOnly.validateSettings(settings);
     }
 
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
+    protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         // Nothing to do ...
@@ -450,15 +437,15 @@ public class MDSProjectionNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
+    protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         // Nothing to do ...
     }
-    
-    
+
+
     /**
-     * 
+     *
      * @author Kilian Thiel, University of Konstanz
      */
     class CheckBoxChangeListener implements ChangeListener {
@@ -471,12 +458,12 @@ public class MDSProjectionNodeModel extends NodeModel {
             checkUncheck();
         }
     }
-    
+
     private void checkUncheck() {
         if (m_useRowsModel.getBooleanValue()) {
             m_rowsModel.setEnabled(false);
         } else {
             m_rowsModel.setEnabled(true);
         }
-    }    
+    }
 }
