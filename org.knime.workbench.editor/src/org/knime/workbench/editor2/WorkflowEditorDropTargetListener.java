@@ -69,8 +69,7 @@ public abstract class WorkflowEditorDropTargetListener
      */
     protected ContextAwareNodeFactory<NodeModel> getNodeFactory(final URL url) {
         String path = url.getPath();
-        Class<? extends ContextAwareNodeFactory<NodeModel>> clazz
-                = ContextAwareNodeFactoryMapper.getNodeFactory(path);
+        Class<? extends ContextAwareNodeFactory> clazz = ContextAwareNodeFactoryMapper.getNodeFactory(path);
         if (clazz == null) {
             LOGGER.warn("No node factory is registered for handling "
                     + " \"" + path + "\"");
