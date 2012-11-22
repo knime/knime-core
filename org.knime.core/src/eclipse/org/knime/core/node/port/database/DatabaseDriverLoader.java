@@ -72,7 +72,6 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.util.StringHistory;
 
 /**
  * Utility class to load additional drivers from jar and zip to the
@@ -137,7 +136,6 @@ public final class DatabaseDriverLoader {
         // make sure that all static variables are initialized before (i.e. above) this static block
         createDriverProtocolMapping();
         registerODBCBridge();
-        initDriverHistory();
         loadDriversFromExtensionPoint();
     }
 
@@ -157,28 +155,7 @@ public final class DatabaseDriverLoader {
         }
     }
 
-    /**
-     *
-     */
-    private static void initDriverHistory() {
-        // load all drivers from history file, before KNIME 2.1.1 only
-        StringHistory hi = StringHistory.getInstance("database_library_files");
-        for (String hist : hi.getHistory()) {
-            try {
-                File histFile = new File(hist);
-                loadDriver(histFile);
-            } catch (Throwable t) {
-                LOGGER.info("Could not load driver library file \""
-                        + hist + "\" from history"
-                        + (t.getMessage() != null
-                                ? ", reason: " + t.getMessage() : "."));
-            }
-        }
-    }
-
-    /**
-     * Hide (empty) constructor.
-     */
+    /** Hide (empty) constructor. */
     private DatabaseDriverLoader() {
         // empty default constructor
     }
