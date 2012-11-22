@@ -52,7 +52,6 @@ package org.knime.core.node;
 
 import java.io.File;
 import java.net.InetAddress;
-import java.util.Locale;
 
 import javax.swing.ImageIcon;
 
@@ -346,12 +345,6 @@ public final class KNIMEConstants {
             KNIME16X16 = icon;
         } else {
             KNIME16X16 = null;
-        }
-        // we prefer to have all gui-related locals being set to us-standard
-        try {
-            Locale.setDefault(Locale.US);
-        } catch (Exception e) {
-            // do nothing.
         }
 
         int maxThreads = Runtime.getRuntime().availableProcessors() + 2;
