@@ -82,21 +82,27 @@ final class ColumnRearrangerFunction extends StreamableFunction {
         Vector<SpecAndFactoryObject> includes = rearranger.getIncludes();
         m_newColumnsMapping = RearrangeColumnsTable.createNewColumnsProducerMapping(includes);
         final int size = includes.size();
-        m_isFromRefTables = new boolean[size];
-        m_includesIndices = new int[size];
+        boolean[] isFromRefTable = new boolean[size];
+        int[] includesIndex = new int[size];
         int newColIndex = 0;
         for (int i = 0; i < size; i++) {
             SpecAndFactoryObject c = includes.get(i);
-            if (c.isNewColumn()) {
-                m_isFromRefTables[i] = false;
-                m_includesIndices[i] = newColIndex;
+            if (c.isConvertedColumn()) {
+                isFromRefTable[i] = false;
+                includesIndex[i] = newColIndex;
+                newColIndex++;
+            } else if (c.isNewColumn()) {
+                isFromRefTable[i] = false;
+                includesIndex[i] = newColIndex;
                 newColIndex++;
             } else {
-                m_isFromRefTables[i] = true;
+                isFromRefTable[i] = true;
                 int originalIndex = c.getOriginalIndex();
-                m_includesIndices[i] = originalIndex;
+                includesIndex[i] = originalIndex;
             }
         }
+        m_isFromRefTables = isFromRefTable;
+        m_includesIndices = includesIndex;
         m_emptyInternals = emptyInternals;
     }
 
