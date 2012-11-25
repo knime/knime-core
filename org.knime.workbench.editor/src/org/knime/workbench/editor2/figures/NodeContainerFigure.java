@@ -57,6 +57,7 @@ import org.eclipse.draw2d.FlowLayout;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
+import org.eclipse.draw2d.OrderedLayout;
 import org.eclipse.draw2d.RectangleFigure;
 import org.eclipse.draw2d.RelativeLocator;
 import org.eclipse.draw2d.ToolbarLayout;
@@ -763,6 +764,9 @@ public class NodeContainerFigure extends RectangleFigure {
         private static final String BACKGROUND_OTHER = "icons/node/"
                 + "background_other.png";
 
+        private static final String BACKGROUND_MISSING = "icons/node/"
+                + "background_missing.png";
+
         private static final String BACKGROUND_SOURCE = "icons/node/"
                 + "background_source.png";
 
@@ -930,6 +934,8 @@ public class NodeContainerFigure extends RectangleFigure {
                 str = BACKGROUND_META;
             } else if (type.equals(NodeType.Other)) {
                 str = BACKGROUND_OTHER;
+            } else if (type.equals(NodeType.Missing)) {
+                str = BACKGROUND_MISSING;
             } else if (type.equals(NodeType.Visualizer)) {
                 str = BACKGROUND_VIEWER;
             } else if (type.equals(NodeType.LoopStart)) {
@@ -1021,8 +1027,8 @@ public class NodeContainerFigure extends RectangleFigure {
             // a line
 
             final FlowLayout layout = new FlowLayout(true);
-            layout.setMajorAlignment(FlowLayout.ALIGN_CENTER);
-            layout.setMinorAlignment(FlowLayout.ALIGN_CENTER);
+            layout.setMajorAlignment(OrderedLayout.ALIGN_CENTER);
+            layout.setMinorAlignment(OrderedLayout.ALIGN_CENTER);
             layout.setMajorSpacing(3);
             setLayoutManager(layout);
 
@@ -1143,7 +1149,7 @@ public class NodeContainerFigure extends RectangleFigure {
             setBounds(new Rectangle(0, 0, ProgressFigure.WIDTH,
                     ProgressFigure.HEIGHT));
             final ToolbarLayout layout = new ToolbarLayout(false);
-            layout.setMinorAlignment(ToolbarLayout.ALIGN_CENTER);
+            layout.setMinorAlignment(OrderedLayout.ALIGN_CENTER);
             layout.setStretchMinorAxis(true);
             setLayoutManager(layout);
             m_label = new Label();
@@ -1197,7 +1203,7 @@ public class NodeContainerFigure extends RectangleFigure {
         public InfoWarnErrorFigure() {
 
             final ToolbarLayout layout = new ToolbarLayout(false);
-            layout.setMinorAlignment(ToolbarLayout.ALIGN_CENTER);
+            layout.setMinorAlignment(OrderedLayout.ALIGN_CENTER);
             layout.setStretchMinorAxis(true);
             setLayoutManager(layout);
             m_label = new Label();

@@ -116,6 +116,9 @@ public abstract class NodeFactory<T extends NodeModel> {
         QuickForm,
         /** All other nodes. */
         Other,
+        /** A missing node (framework use only).
+         * @since 2.7 */
+        Missing,
         /** If not specified. */
         Unknown
     }

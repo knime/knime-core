@@ -257,7 +257,7 @@ Export-Package: Jama,
  org.knime.base.util.kdtree,
  org.knime.base.util.math,
  org.knime.base.util.pmml.samples
-Require-Bundle: org.knime.core;bundle-version="[2.5.0,3.0.0)";visibility:=reexport,
+Require-Bundle: org.knime.core;bundle-version="[2.7.0,3.0.0)";visibility:=reexport,
  org.apache.commons.math;bundle-version="[2.1.0,2.2.0)",
  org.apache.commons.httpclient;bundle-version="[3.1.0,3.2.0)",
  org.apache.commons.lang;bundle-version="[2.4.0,2.5.0)"
