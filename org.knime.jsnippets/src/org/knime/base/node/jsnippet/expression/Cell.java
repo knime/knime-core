@@ -60,12 +60,12 @@ public interface Cell {
     /**
      * Get the value of the cell.
      *
-     * @param <T> the expected type
      * @param t the type to be returned
      * @return the value of the cell
      * @throws TypeException if the type cannot be provided
      */
-    public <T> T getValueAs(final T t) throws TypeException;
+    @SuppressWarnings("rawtypes")
+    public Object getValueAs(final Class t) throws TypeException;
 
     /**
      * Get the value of the cell.

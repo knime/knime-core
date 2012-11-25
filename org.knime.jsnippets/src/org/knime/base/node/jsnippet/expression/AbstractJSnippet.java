@@ -91,11 +91,12 @@ public abstract class AbstractJSnippet {
      * @throws TypeException if the column cannot provide the given type
      * @throws ColumnException if the column does not exist
      */
+    @SuppressWarnings("unchecked")
     protected <T> T getCell(final String col, final T t) throws TypeException,
             ColumnException {
         if (m_cellsMap.containsKey(col)) {
             Cell cell = m_cellsMap.get(col);
-            return cell.getValueAs(t);
+            return (T)cell.getValueAs(Type.getMembersClass(t));
         } else {
             throw new ColumnException("The column " + col + " does not exist.");
         }
@@ -112,11 +113,12 @@ public abstract class AbstractJSnippet {
      * @throws TypeException if the column cannot provide the given type
      * @throws ColumnException if the column does not exist
      */
+    @SuppressWarnings("unchecked")
     protected <T> T getCell(final int col, final T t) throws TypeException,
             ColumnException {
         if (col >= 0 || col < m_cells.size()) {
             Cell cell = m_cells.get(col);
-            return cell.getValueAs(t);
+            return (T)cell.getValueAs(Type.getMembersClass(t));
         } else {
             throw new ColumnException("The column index " + col
                     + " is out of the allowed range"
@@ -137,7 +139,7 @@ public abstract class AbstractJSnippet {
             throws ColumnException {
         if (m_cellsMap.containsKey(column)) {
             return canProvideJavaType(m_inSpec.getColumnSpec(column),
-                    t.getClass());
+                                      Type.getMembersClass(t));
         } else {
             throw new ColumnException("The column " + column
                     + " does not exist.");
@@ -158,7 +160,7 @@ public abstract class AbstractJSnippet {
             throws ColumnException {
         if (column >= 0 || column < m_cells.size()) {
             return canProvideJavaType(m_inSpec.getColumnSpec(column),
-                    t.getClass());
+                                      Type.getMembersClass(t));
         } else {
             throw new ColumnException("The column index " + column
                     + " is out of the allowed range"

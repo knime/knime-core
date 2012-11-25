@@ -377,10 +377,10 @@ public class JavaSnippetCellFactory implements CellFactory {
         /**
          * {@inheritDoc}
          */
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings("rawtypes")
         @Override
-        public <T> T getValueAs(final T t) throws TypeException {
-            return (T)getValueOfType(t.getClass());
+        public Object getValueAs(final Class t) throws TypeException {
+            return getValueOfType(t);
         }
 
         /**

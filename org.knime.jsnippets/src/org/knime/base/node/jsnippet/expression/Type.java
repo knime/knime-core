@@ -127,4 +127,21 @@ public final class Type {
         }
         throw new TypeException("Unknown type: " + type.getName());
     }
+
+    /**
+     * Get the class of the given value. The value is supposed to be a member
+     * value of this class.
+     * @param t the variable
+     * @return the class
+     */
+    @SuppressWarnings("rawtypes")
+    public static Class getMembersClass(final Object t) {
+        if (t == tCalendar) {
+            return Calendar.class;
+        } else if (t == tXML) {
+            return Document.class;
+        } else {
+            return t.getClass();
+        }
+    }
 }
