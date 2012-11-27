@@ -563,7 +563,6 @@ public class BatchExecutor {
      */
     public static String getOptionsString() {
         return "Usage: The following options are available:\n"
-                + " -config=...       => XML file containing the configuration for one or more workflows\n" + "   OR\n"
                 + " -nosave           => do not save the workflow after execution has finished\n"
                 + " -reset            => reset workflow prior to execution\n"
                 + " -failonloaderror  => don't execute if there are errors during workflow loading\n"
