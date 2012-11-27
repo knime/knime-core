@@ -144,14 +144,21 @@ public final class DatabaseDriverLoader {
      */
     private static void registerODBCBridge() {
         try {
+            if (Platform.OS_LINUX.equals(Platform.getOS())) {
+                try {
+                    System.loadLibrary("libJdbcOdbc.so");
+                } catch (Error e) {
+                    LOGGER.info("Could not load \"libJdbcOdbc.so\" library which is known to be a problem under Linux"
+                        + " when using the \"" + JDBC_ODBC_DRIVER + "\"; that is, the driver is not loaded.");
+                    return;
+                }
+            }
             Class<?> driverClass = Class.forName(JDBC_ODBC_DRIVER);
-            DatabaseWrappedDriver d = new DatabaseWrappedDriver(
-                    (Driver)driverClass.newInstance());
+            DatabaseWrappedDriver d = new DatabaseWrappedDriver((Driver)driverClass.newInstance());
             // DriverManager.registerDriver(d);
             DRIVER_MAP.put(d.toString(), d);
         } catch (Throwable t) {
-            LOGGER.warn("Could not load driver class \""
-                    + JDBC_ODBC_DRIVER + "\"");
+            LOGGER.warn("Could not load driver class \"" + JDBC_ODBC_DRIVER + "\"");
         }
     }
 
