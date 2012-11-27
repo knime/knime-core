@@ -51,6 +51,7 @@ package org.knime.workbench.editor2;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EventObject;
@@ -122,6 +123,7 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
@@ -151,9 +153,11 @@ import org.eclipse.ui.views.properties.PropertySheetPage;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
+import org.knime.core.node.workflow.AbstractNodeExecutionJobManager;
 import org.knime.core.node.workflow.EditorUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.State;
+import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodePropertyChangedEvent;
 import org.knime.core.node.workflow.NodePropertyChangedListener;
@@ -168,6 +172,7 @@ import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.util.Pointer;
+import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.nodeprovider.NodeProvider;
 import org.knime.workbench.core.nodeprovider.NodeProvider.EventListener;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
@@ -206,6 +211,7 @@ import org.knime.workbench.editor2.editparts.AnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
+import org.knime.workbench.editor2.figures.WorkflowFigure;
 import org.knime.workbench.explorer.view.actions.validators.FileStoreNameValidator;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -735,6 +741,7 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         loadProperties();
         updateEditorBackgroundColor();
+        updateJobManagerDisplay();
         ((WorkflowRootEditPart)getGraphicalViewer().getRootEditPart()
                 .getChildren().get(0))
                 .createToolTipHelper(getSite().getShell());
@@ -901,6 +908,27 @@ public class WorkflowEditor extends GraphicalEditor implements
             // update Actions, as now there's everything available
             updateActions();
         }
+    }
+
+    private void updateJobManagerDisplay() {
+        NodeExecutionJobManager jobManager = m_manager.findJobManager();
+        URL url;
+        if (jobManager instanceof AbstractNodeExecutionJobManager) {
+            url = ((AbstractNodeExecutionJobManager)jobManager).getIconForWorkflow();
+        } else if (jobManager != null && jobManager.getClass().getName().contains("pervasive")) {
+            // TODO remove as soon as pervasive comes with own icon
+            url = KNIMEEditorPlugin.getDefault().getBundle().getEntry("/icons/executor_in_metanode.png");
+        } else {
+            url = null;
+        }
+        Image image;
+        if (url != null) {
+            image = ImageRepository.getImage(url);
+        } else {
+            image = null;
+        }
+        WorkflowFigure workflowFigure = ((WorkflowRootEditPart)getViewer().getRootEditPart().getContents()).getFigure();
+        workflowFigure.setJobManagerFigure(image);
     }
 
     private void updatePartName() {
@@ -1774,29 +1802,6 @@ public class WorkflowEditor extends GraphicalEditor implements
      * ---------- end of auto-placing and auto-connecting --------------
      */
 
-    /*
-     * ------------- grid functions ----------------------------------------------------------
-     */
-
-    private void updateGrid() {
-        /**
-         * This is used to init the viewer and to update on a property change event. Maybe we need to split this in
-         * an init and an update, in case we don't want to change all settings on an update (e.g. the view grid could
-         * be an editor instance specific setting with a default value in the pref page).
-         */
-        boolean snapToGrid = getPrefSnapToGrid();
-        boolean showGrid = getPrefIsGridVisible();
-        GraphicalViewer graphicalViewer = getGraphicalViewer();
-        graphicalViewer.setProperty(SnapToGeometry.PROPERTY_SNAP_ENABLED,
-                Boolean.valueOf(snapToGrid));
-        graphicalViewer.setProperty(SnapToGrid.PROPERTY_GRID_ENABLED,
-                Boolean.valueOf(snapToGrid));
-        graphicalViewer.setProperty(SnapToGrid.PROPERTY_GRID_SPACING,
-                new Dimension(getPrefGridXSize(), getPrefGridYSize()));
-        graphicalViewer.setProperty(SnapToGrid.PROPERTY_GRID_VISIBLE,
-                showGrid);
-    }
-
     /**
      * Returns the grid horizontal spacing or the x value from the preference page, if the editor's property is not
      * set.
@@ -2242,6 +2247,9 @@ public class WorkflowEditor extends GraphicalEditor implements
     @Override
     public void nodePropertyChanged(final NodePropertyChangedEvent e) {
         switch (e.getProperty()) {
+        case JobManager:
+            updateJobManagerDisplay();
+            break;
         case Name:
             updatePartName();
             break;

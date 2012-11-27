@@ -52,6 +52,8 @@ package org.knime.workbench.editor2.figures;
 
 import org.eclipse.draw2d.FreeformLayeredPane;
 import org.eclipse.draw2d.Graphics;
+import org.eclipse.draw2d.geometry.Rectangle;
+import org.eclipse.swt.graphics.Image;
 
 /**
  * The root figure, containing all diagram elements inside the workflow.
@@ -66,6 +68,9 @@ public class WorkflowFigure extends FreeformLayeredPane {
 //            WorkflowFigure.class);
 
     private ProgressToolTipHelper m_progressToolTipHelper;
+
+    private Image m_jobManagerFigure;
+
     /**
      * New workflow root figure.
      */
@@ -85,7 +90,27 @@ public class WorkflowFigure extends FreeformLayeredPane {
         paintChildren(graphics);
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void paintFigure(final Graphics graphics) {
+        super.paintFigure(graphics);
+        if (m_jobManagerFigure != null) {
+            org.eclipse.swt.graphics.Rectangle imgBox = m_jobManagerFigure.getBounds();
+            Rectangle bounds2 = getBounds();
+            graphics.drawImage(m_jobManagerFigure, 0, 0, imgBox.width,
+                               imgBox.height, bounds2.width - imgBox.width, 5, imgBox.width, imgBox.height + 5);
+        }
+    }
 
+    /**
+     * @param jobManagerFigure the jobManagerFigure to set
+     */
+    public void setJobManagerFigure(final Image jobManagerFigure) {
+        m_jobManagerFigure = jobManagerFigure;
+        repaint();
+    }
 
     public ProgressToolTipHelper getProgressToolTipHelper() {
         return m_progressToolTipHelper;

@@ -58,7 +58,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.eclipse.draw2d.ConnectionLayer;
-import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.LayoutManager;
 import org.eclipse.gef.CompoundSnapToHelper;
 import org.eclipse.gef.EditPart;
@@ -313,7 +312,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
      * {@inheritDoc}
      */
     @Override
-    protected IFigure createFigure() {
+    protected WorkflowFigure createFigure() {
 
         WorkflowFigure backgroundFigure = new WorkflowFigure();
 
@@ -321,6 +320,14 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
         backgroundFigure.setLayoutManager(l);
 
         return backgroundFigure;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public WorkflowFigure getFigure() {
+        return (WorkflowFigure)super.getFigure();
     }
 
     /**
@@ -436,7 +443,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
                         .getProperty(ZoomManager.class.toString()));
         m_toolTipHelper =
                 new ProgressToolTipHelper(getViewer().getControl(), zoomManager);
-        ((WorkflowFigure)getFigure()).setProgressToolTipHelper(m_toolTipHelper);
+        getFigure().setProgressToolTipHelper(m_toolTipHelper);
     }
 
     /**

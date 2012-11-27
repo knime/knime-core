@@ -67,6 +67,9 @@ import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitTyp
  * Main entry point for compute intensive jobs. Controls resource (thread)
  * allocation...
  *
+ * <p>Subclasses should extend from {@link AbstractNodeExecutionJobManager} (which has one more method
+ * {@link AbstractNodeExecutionJobManager#getIconForWorkflow()}).
+ *
  * @author M. Berthold & B. Wiswedel, University of Konstanz
  */
 public interface NodeExecutionJobManager {
@@ -107,10 +110,11 @@ public interface NodeExecutionJobManager {
      * @return a unique ID of this job manager implementations
      */
     String getID();
-    
+
     /**
-     * {@inheritDoc} 
+     * {@inheritDoc}
      */
+    @Override
     String toString();
 
     /**

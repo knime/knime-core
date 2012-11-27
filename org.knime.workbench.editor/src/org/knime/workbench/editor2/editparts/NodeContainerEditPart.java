@@ -104,6 +104,7 @@ import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainer.State;
+import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessageEvent;
 import org.knime.core.node.workflow.NodeMessageListener;
@@ -256,11 +257,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         cont.addNodePropertyChangedListener(this);
         addEditPartListener(this);
 
-        // set the job manager icon
-        if (cont.findJobManager() != null) {
-            URL iconURL = cont.findJobManager().getIcon();
-            setJobManagerIcon(iconURL);
-        }
+        updateJobManagerIcon();
         checkMetaNodeTemplateIcon();
         checkMetaNodeLockIcon();
         // set the active (or disabled) state
@@ -857,9 +854,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                 if (isActive()) {
                     switch (e.getProperty()) {
                     case JobManager:
-                        URL iconURL =
-                                getNodeContainer().findJobManager().getIcon();
-                        setJobManagerIcon(iconURL);
+                        updateJobManagerIcon();
                         break;
                     case Name:
                         updateHeaderField();
@@ -917,7 +912,14 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         nodeFig.repaint();
     }
 
-    private void setJobManagerIcon(final URL iconURL) {
+    private void updateJobManagerIcon() {
+        NodeExecutionJobManager jobManager = getNodeContainer().getJobManager();
+        URL iconURL;
+        if (jobManager != null) {
+            iconURL = jobManager.getIcon();
+        } else {
+            iconURL = null;
+        }
         Image icon = null;
         if (iconURL != null) {
             icon = ImageDescriptor.createFromURL(iconURL).createImage();
