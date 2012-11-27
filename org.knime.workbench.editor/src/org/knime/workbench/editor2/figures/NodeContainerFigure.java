@@ -57,7 +57,6 @@ import org.eclipse.draw2d.FlowLayout;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
-import org.eclipse.draw2d.OrderedLayout;
 import org.eclipse.draw2d.RectangleFigure;
 import org.eclipse.draw2d.RelativeLocator;
 import org.eclipse.draw2d.ToolbarLayout;
@@ -534,6 +533,7 @@ public class NodeContainerFigure extends RectangleFigure {
     /**
      *
      * @param state new state of underlying node
+     * @param loopStatus ...
      * @param isInactive is true, the state is ignored and the inactive status
      *            figure set.
      */
@@ -1027,8 +1027,8 @@ public class NodeContainerFigure extends RectangleFigure {
             // a line
 
             final FlowLayout layout = new FlowLayout(true);
-            layout.setMajorAlignment(OrderedLayout.ALIGN_CENTER);
-            layout.setMinorAlignment(OrderedLayout.ALIGN_CENTER);
+            layout.setMajorAlignment(ToolbarLayout.ALIGN_CENTER);
+            layout.setMinorAlignment(ToolbarLayout.ALIGN_CENTER);
             layout.setMajorSpacing(3);
             setLayoutManager(layout);
 
@@ -1149,7 +1149,7 @@ public class NodeContainerFigure extends RectangleFigure {
             setBounds(new Rectangle(0, 0, ProgressFigure.WIDTH,
                     ProgressFigure.HEIGHT));
             final ToolbarLayout layout = new ToolbarLayout(false);
-            layout.setMinorAlignment(OrderedLayout.ALIGN_CENTER);
+            layout.setMinorAlignment(ToolbarLayout.ALIGN_CENTER);
             layout.setStretchMinorAxis(true);
             setLayoutManager(layout);
             m_label = new Label();
@@ -1203,7 +1203,7 @@ public class NodeContainerFigure extends RectangleFigure {
         public InfoWarnErrorFigure() {
 
             final ToolbarLayout layout = new ToolbarLayout(false);
-            layout.setMinorAlignment(OrderedLayout.ALIGN_CENTER);
+            layout.setMinorAlignment(ToolbarLayout.ALIGN_CENTER);
             layout.setStretchMinorAxis(true);
             setLayoutManager(layout);
             m_label = new Label();
