@@ -1459,7 +1459,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         synchronized (m_workflowMutex) {
             for (NodeID id : ids) {
                 NodeContainer nc = getNodeContainer(id);
-                if (nc.getState().executionInProgress() || !hasSuccessorInProgress(id)) {
+                if (nc.getState().executionInProgress() || hasSuccessorInProgress(id)) {
                     throw new IllegalStateException("Cannot load settings into node \"" + nc.getNameWithID()
                                                     + "\"; it is executing or has executing successors");
                 }
