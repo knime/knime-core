@@ -100,6 +100,7 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.workflow.AbstractNodeExecutionJobManager;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer;
@@ -133,6 +134,7 @@ import org.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
 import org.knime.workbench.editor2.editparts.snap.SnapIconToGrid;
 import org.knime.workbench.editor2.figures.NodeContainerFigure;
 import org.knime.workbench.editor2.figures.ProgressFigure;
+import org.knime.workbench.editor2.pervasive.PervasiveJobExecutorHelper;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.SyncExecQueueDispatcher;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
@@ -913,12 +915,20 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     }
 
     private void updateJobManagerIcon() {
-        NodeExecutionJobManager jobManager = getNodeContainer().getJobManager();
+        NodeContainer nc = getNodeContainer();
+        NodeExecutionJobManager jobManager = nc.getJobManager();
         URL iconURL;
         if (jobManager != null) {
             iconURL = jobManager.getIcon();
         } else {
-            iconURL = null;
+            NodeExecutionJobManager parentJobManager = nc.findJobManager();
+            if (parentJobManager instanceof AbstractNodeExecutionJobManager) {
+                iconURL = ((AbstractNodeExecutionJobManager)parentJobManager).getIconForChild(nc);
+            } else if (PervasiveJobExecutorHelper.isPervasiveJobManager(parentJobManager)) {
+                iconURL = PervasiveJobExecutorHelper.getIconForChild(nc);
+            } else {
+                iconURL = null;
+            }
         }
         Image icon = null;
         if (iconURL != null) {

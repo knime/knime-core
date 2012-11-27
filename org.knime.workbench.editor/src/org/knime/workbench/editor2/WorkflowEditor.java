@@ -172,7 +172,6 @@ import org.knime.core.node.workflow.WorkflowListener;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.util.Pointer;
-import org.knime.workbench.KNIMEEditorPlugin;
 import org.knime.workbench.core.nodeprovider.NodeProvider;
 import org.knime.workbench.core.nodeprovider.NodeProvider.EventListener;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
@@ -212,6 +211,7 @@ import org.knime.workbench.editor2.editparts.NodeAnnotationEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.editor2.figures.WorkflowFigure;
+import org.knime.workbench.editor2.pervasive.PervasiveJobExecutorHelper;
 import org.knime.workbench.explorer.view.actions.validators.FileStoreNameValidator;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -915,9 +915,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         URL url;
         if (jobManager instanceof AbstractNodeExecutionJobManager) {
             url = ((AbstractNodeExecutionJobManager)jobManager).getIconForWorkflow();
-        } else if (jobManager != null && jobManager.getClass().getName().contains("pervasive")) {
-            // TODO remove as soon as pervasive comes with own icon
-            url = KNIMEEditorPlugin.getDefault().getBundle().getEntry("/icons/executor_in_metanode.png");
+        } else if (PervasiveJobExecutorHelper.isPervasiveJobManager(jobManager)) {
+            url = PervasiveJobExecutorHelper.getIconForWorkflow();
         } else {
             url = null;
         }
