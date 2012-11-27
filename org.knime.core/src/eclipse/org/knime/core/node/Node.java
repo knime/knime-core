@@ -1830,6 +1830,9 @@ public final class Node implements NodeModelWarningListener {
                     if (exRef.get() instanceof Error) {
                         throw (Error)exRef.get();
                     } else if (exRef.get() instanceof RuntimeException) {
+                        NodeLogger.getLogger(Node.class).error("Error while creating node dialog for '"
+                                                                       + m_factory.getNodeName() + "': "
+                                                                       + exRef.get().getMessage(), exRef.get());
                         throw (RuntimeException) exRef.get();
                     } else {
                     	// not possible since createNodeDialogPane does not throw Exceptions
