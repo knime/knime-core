@@ -11,10 +11,9 @@
 		<intro>		
 	     Deletes data rows in the database based on the selected columns from the input table.
 	     All selected column names need to exactly match the column names inside the database. Only the rows matching
-	     the values of the selected column will be deleted. The output table contains an additional column with the 
-	     number of rows affected by the DELETE statement.
+	     the values of the selected column will be deleted. 
 	     <br/>
-         The output table contains an additional column with the number of rows affected by the UPDATE statement. 
+	     The output table contains an additional column with the number of rows affected by the DELETE statement.
          A number greater than or equal to zero -- indicates that the command was processed successfully and is 
          an update count giving the number of rows in the database that were affected by the command's execution
          A value of -2 -- indicates that the command was processed successfully but that the number of rows affected 
