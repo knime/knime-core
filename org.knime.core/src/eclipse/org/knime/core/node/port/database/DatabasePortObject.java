@@ -183,6 +183,7 @@ public class DatabasePortObject implements PortObject {
      * Override this panel in order to set the CredentialsProvider
      * into this class.
      */
+    @SuppressWarnings("serial")
     public final class DatabaseOutPortPanel extends JPanel {
         /**
          * Create new database provider.
@@ -205,6 +206,7 @@ public class DatabasePortObject implements PortObject {
     public JComponent[] getViews() {
         JComponent[] specPanels = m_spec.getViews();
         final JComponent[] panels = new JComponent[specPanels.length + 1];
+        @SuppressWarnings("serial")
         final BufferedDataTableView dataView = new BufferedDataTableView(null) {
             @Override
             public String getName() {
@@ -257,8 +259,8 @@ public class DatabasePortObject implements PortObject {
                             LOGGER.warn("Error during fetching data from "
                                 + "database, reason: " + ie.getMessage(), ie);
                         }
-                        BufferedDataTableView dataView2 =
-                            new BufferedDataTableView(dt) {
+                        @SuppressWarnings("serial")
+                        final BufferedDataTableView dataView2 = new BufferedDataTableView(dt) {
                             /** {@inheritDoc} */
                             @Override
                             public String getName() {

@@ -76,24 +76,20 @@ final class DBConnectionNodeModel extends NodeModel {
 
     /** Creates a new database connection reader. */
     DBConnectionNodeModel() {
-        super(new PortType[]{DatabasePortObject.TYPE},
-                new PortType[]{BufferedDataTable.TYPE});
+        super(new PortType[]{DatabasePortObject.TYPE}, new PortType[]{BufferedDataTable.TYPE});
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inData,
-            final ExecutionContext exec)
+    protected PortObject[] execute(final PortObject[] inData, final ExecutionContext exec)
             throws CanceledExecutionException, Exception {
         exec.setProgress("Opening database connection...");
         DatabasePortObject dbObj = (DatabasePortObject) inData[0];
         DatabaseQueryConnectionSettings conn =
-            new DatabaseQueryConnectionSettings(
-                dbObj.getConnectionModel(), getCredentialsProvider());
-        final DatabaseReaderConnection load =
-            new DatabaseReaderConnection(conn);
+            new DatabaseQueryConnectionSettings(dbObj.getConnectionModel(), getCredentialsProvider());
+        final DatabaseReaderConnection load = new DatabaseReaderConnection(conn);
         exec.setProgress("Reading data from database...");
         CredentialsProvider cp = getCredentialsProvider();
         return new BufferedDataTable[]{load.createTable(exec, cp)};
@@ -131,8 +127,7 @@ final class DBConnectionNodeModel extends NodeModel {
     @Override
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
-        DatabasePortObjectSpec dbSpec =
-            (DatabasePortObjectSpec) inSpecs[0];
+        DatabasePortObjectSpec dbSpec = (DatabasePortObjectSpec) inSpecs[0];
         return new PortObjectSpec[] {dbSpec.getDataTableSpec()};
     }
 

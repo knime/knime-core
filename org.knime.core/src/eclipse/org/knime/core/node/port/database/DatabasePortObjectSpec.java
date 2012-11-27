@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   13.02.2008 (gabriel): created
  */
@@ -73,52 +73,51 @@ import org.knime.core.node.workflow.DataTableSpecView;
 /**
  * Class used as database port object holding a {@link DataTableSpec}
  * and a <code>ModelContentRO</code> to create a database connection.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public class DatabasePortObjectSpec implements PortObjectSpec {
 
     private final DataTableSpec m_spec;
-    
+
     private final ModelContentRO m_conn;
-    
+
     /**
      * Creates a new database port object spec.
      * @param spec underlying table spec
      * @param conn connection model
      */
-    public DatabasePortObjectSpec(final DataTableSpec spec, 
+    public DatabasePortObjectSpec(final DataTableSpec spec,
             final ModelContentRO conn) {
         if (spec == null) {
             throw new NullPointerException("DataTableSpec must not be null.");
         }
         if (conn == null) {
-            throw new NullPointerException(
-                    "Database Connection must not be null.");
+            throw new NullPointerException("Database Connection must not be null.");
         }
         m_spec = spec;
         m_conn = conn;
     }
-    
+
     /**
      * @return underlying table spec
      */
     public DataTableSpec getDataTableSpec() {
         return m_spec;
     }
-    
+
     /**
      * @return connection model
      */
     public ModelContentRO getConnectionModel() {
         return m_conn;
     }
-    
+
     /**
      * Serializer used to save <code>DatabasePortObjectSpec</code>.
      * @return a new database spec serializer
      */
-    public static PortObjectSpecSerializer<DatabasePortObjectSpec> 
+    public static PortObjectSpecSerializer<DatabasePortObjectSpec>
             getPortObjectSpecSerializer() {
         return new PortObjectSpecSerializer<DatabasePortObjectSpec>() {
 
@@ -130,25 +129,24 @@ public class DatabasePortObjectSpec implements PortObjectSpec {
 
             @Override
             public void savePortObjectSpec(
-                    final DatabasePortObjectSpec portObjectSpec, 
-                    final PortObjectSpecZipOutputStream out) 
+                    final DatabasePortObjectSpec portObjectSpec,
+                    final PortObjectSpecZipOutputStream out)
                     throws IOException {
                 save(out, portObjectSpec);
             }
         };
     }
-    
-    private static final String KEY_DATABASE_CONNECTION = 
-        "database_connection.zip";
-    
+
+    private static final String KEY_DATABASE_CONNECTION = "database_connection.zip";
+
     private static final String KEY_SPEC = "spec_xml.zip";
-    
+
     private static DatabasePortObjectSpec load(
             final PortObjectSpecZipInputStream is) throws IOException {
         ZipEntry ze = is.getNextEntry();
         if (!ze.getName().equals(KEY_DATABASE_CONNECTION)) {
             throw new IOException("Key \"" + ze.getName() + "\" does not "
-                    + " match expected zip entry name \"" 
+                    + " match expected zip entry name \""
                     + KEY_DATABASE_CONNECTION + "\".");
         }
         ModelContentRO conn = ModelContent.loadFromXML(
@@ -156,7 +154,7 @@ public class DatabasePortObjectSpec implements PortObjectSpec {
         ze = is.getNextEntry();
         if (!ze.getName().equals(KEY_SPEC)) {
             throw new IOException("Key \"" + ze.getName() + "\" does not "
-                    + " match expected zip entry name \"" 
+                    + " match expected zip entry name \""
                     + KEY_SPEC + "\".");
         }
         ModelContentRO specModel = ModelContent.loadFromXML(
@@ -169,8 +167,8 @@ public class DatabasePortObjectSpec implements PortObjectSpec {
         }
         return new DatabasePortObjectSpec(spec, conn);
     }
-    
-    private static void save(final PortObjectSpecZipOutputStream os, 
+
+    private static void save(final PortObjectSpecZipOutputStream os,
             final DatabasePortObjectSpec portObjectSpec) throws IOException {
         ZipEntry ze = new ZipEntry(KEY_DATABASE_CONNECTION);
         os.putNextEntry(ze);
@@ -183,7 +181,7 @@ public class DatabasePortObjectSpec implements PortObjectSpec {
         specModel.saveToXML(new NonClosableOutputStream.Zip(os));
         os.close();
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -192,7 +190,8 @@ public class DatabasePortObjectSpec implements PortObjectSpec {
         JComponent specPanel = new DataTableSpecView(m_spec);
         return new JComponent[]{specPanel, new DatabaseConnectionView(m_conn)};
     }
-    
+
+    @SuppressWarnings("serial")
     private static final class DatabaseConnectionView extends JPanel {
         private DatabaseConnectionView(final ModelContentRO sett) {
             super(new BorderLayout());
@@ -224,7 +223,7 @@ public class DatabasePortObjectSpec implements PortObjectSpec {
             super.add(jsp, BorderLayout.CENTER);
         }
     }
-    
+
     /** Escape special html characters. */
     private static String escapeHtml(final String str) {
         // escape the quote character
@@ -239,7 +238,7 @@ public class DatabasePortObjectSpec implements PortObjectSpec {
         s = s.replace("\n", "<br/>");
         return s;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public boolean equals(final Object obj) {
@@ -250,13 +249,13 @@ public class DatabasePortObjectSpec implements PortObjectSpec {
             return false;
         }
         DatabasePortObjectSpec dbSpec = (DatabasePortObjectSpec) obj;
-        return m_conn.equals(dbSpec.m_conn) && m_spec.equals(dbSpec.m_spec); 
+        return m_conn.equals(dbSpec.m_conn) && m_spec.equals(dbSpec.m_spec);
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public int hashCode() {
         return m_conn.hashCode() ^ m_spec.hashCode();
     }
-    
+
 }
