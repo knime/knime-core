@@ -61,11 +61,14 @@ import org.eclipse.core.runtime.IExtensionRegistry;
 import org.eclipse.core.runtime.Platform;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManagerFactory;
+import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeExecutionJobManagerFactory;
+import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.ThreadPool;
 
 /**
@@ -225,6 +228,60 @@ public final class NodeExecutionJobManagerPool {
             collectJobManagerFactories();
         }
         return Collections.unmodifiableCollection(managerFactories.keySet());
+    }
+
+    /** Get the common settings for a set of job managers.
+     * Used from {@link WorkflowManager#getCommonSettings(org.knime.core.node.workflow.NodeID...)}.
+     * @param jobManagers ...
+     * @return ...
+     * @since 2.7
+     */
+    public static NodeContainerSettings merge(final NodeExecutionJobManager[] jobManagers) {
+        String factoryID = null;
+        NodeSettings mgrSettings = null;
+        boolean isFirst = true;
+        for (NodeExecutionJobManager jobManager : jobManagers) {
+            String curFactoryID;
+            NodeSettings curMgrSettings;
+            if (jobManager == null) {
+                curFactoryID = null;
+                curMgrSettings = null;
+            } else {
+                curFactoryID = jobManager.getID();
+                NodeSettings temp = new NodeSettings(CFG_JOB_MANAGER_SETTINGS);
+                jobManager.save(temp);
+                curMgrSettings = temp;
+            }
+            if (isFirst) {
+                isFirst = false;
+                factoryID = curFactoryID;
+                mgrSettings = curMgrSettings;
+            } else if (ConvenienceMethods.areEqual(factoryID, curFactoryID)) {
+                if (!ConvenienceMethods.areEqual(mgrSettings, curMgrSettings)) {
+                    mgrSettings = null;
+                }
+            } else {
+                // different job managers
+                curFactoryID = null; // unassigned
+            }
+        }
+        if (factoryID == null) {
+            return null;
+        }
+        NodeExecutionJobManagerFactory jobManagerFactory = getJobManagerFactory(factoryID);
+        assert jobManagerFactory != null : "Factory ID " + factoryID + " unknown although job manager present";
+        NodeExecutionJobManager instance = jobManagerFactory.getInstance();
+        if (mgrSettings != null) {
+            try {
+                instance.load(mgrSettings);
+            } catch (InvalidSettingsException e) {
+                LOGGER.error("Settings could not be applied to job manager although "
+                        + "they retrieved from another identical instance.", e);
+            }
+        }
+        NodeContainerSettings result = new NodeContainerSettings();
+        result.setJobManager(instance);
+        return result;
     }
 
     private static void collectJobManagerFactories() {

@@ -959,8 +959,19 @@ public abstract class NodeContainer implements NodeProgressListener {
 
     public abstract boolean areDialogAndNodeSettingsEqual();
 
-    void loadSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    void loadSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        /*
+         * see #loadCommonSettings
+         */
+        NodeContainerSettings ncSet = new NodeContainerSettings();
+        ncSet.setJobManager(getJobManager());
+        ncSet.load(settings);
+        // the job manager instance will be the same, if settings permit
+        setJobManager(ncSet.getJobManager());
+        setDirty();
+    }
+
+    void loadCommonSettings(final NodeContainerSettings s) throws InvalidSettingsException {
         /*
          * this is awkward. We don't have a member for NodeContainerSettings.
          * This object is just created to load (and save) the node container
@@ -971,7 +982,9 @@ public abstract class NodeContainer implements NodeProgressListener {
          */
         NodeContainerSettings ncSet = new NodeContainerSettings();
         ncSet.setJobManager(getJobManager());
-        ncSet.load(settings);
+        NodeSettings tempSettings = new NodeSettings("temp");
+        s.save(tempSettings);
+        ncSet.load(tempSettings);
         // the job manager instance will be the same, if settings permit
         setJobManager(ncSet.getJobManager());
         setDirty();

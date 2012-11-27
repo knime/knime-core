@@ -1426,6 +1426,63 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         nc.saveSettings(settings);
     }
 
+    /** Gets for a set of nodes their (overlapping) node settings. This is currently only the job manager but
+     * might contain also the memory settings in the future. If the nodes have different settings (e.g. job managers),
+     * the result will represent a default (e.g. a null job manager).
+     *
+     * <p>Used from a GUI action that allows the user to modify the settings for multiple selected nodes.
+     * @param ids The nodes of interest.
+     * @return The settings ... as far as they overlap
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 2.7
+     */
+    public NodeContainerSettings getCommonSettings(final NodeID... ids) {
+        synchronized (m_workflowMutex) {
+            NodeExecutionJobManager[] jobManagers = new NodeExecutionJobManager[ids.length];
+            for (int i = 0; i < ids.length; i++) {
+                NodeContainer nc = getNodeContainer(ids[i]);
+                jobManagers[i] = nc.getJobManager();
+            }
+            return NodeExecutionJobManagerPool.merge(jobManagers);
+        }
+    }
+
+    /** Counterpart to {@link #getCommonSettings(NodeID...)}. It applies the same settings to all
+     * argument nodes.
+     * @param settings ...
+     * @param ids ...
+     * @throws InvalidSettingsException If not possible (settings may be applied to half of the nodes)
+     * @since 2.7
+     */
+    public void applyCommonSettings(final NodeContainerSettings settings, final NodeID... ids)
+        throws InvalidSettingsException {
+        synchronized (m_workflowMutex) {
+            for (NodeID id : ids) {
+                NodeContainer nc = getNodeContainer(id);
+                if (nc.getState().executionInProgress() || !hasSuccessorInProgress(id)) {
+                    throw new IllegalStateException("Cannot load settings into node \"" + nc.getNameWithID()
+                                                    + "\"; it is executing or has executing successors");
+                }
+            }
+            for (NodeID id : ids) {
+                NodeContainer nc = getNodeContainer(id);
+                // make sure we are consistent (that is reset + configure)
+                // if we touch upstream nodes implicitly (e.g. loop heads)
+                resetNodeAndSuccessors(id);
+                nc.loadCommonSettings(settings);
+                // bug fix 2593: can't simply call configureNodeAndSuccessor
+                // with meta node as argument: will miss contained source nodes
+                if (nc instanceof SingleNodeContainer) {
+                    configureNodeAndSuccessors(id, true);
+                } else {
+                    ((WorkflowManager)nc).reconfigureAllNodesOnlyInThisWFM();
+                    configureNodeAndSuccessors(id, false);
+                }
+            }
+
+        }
+    }
+
     ////////////////////////////
     // Execution of nodes
     ////////////////////////////
