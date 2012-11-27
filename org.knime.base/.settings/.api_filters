@@ -20,19 +20,31 @@
         <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.base.data.aggregation.AggregationMethod"/>
+                <message_argument value="configure(DataTableSpec)"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.AggregationMethod"/>
                 <message_argument value="getAdditionalColumnNames()"/>
             </message_arguments>
         </filter>
         <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.base.data.aggregation.AggregationMethod"/>
-                <message_argument value="getSettingsPanel(DataTableSpec)"/>
+                <message_argument value="getSettingsPanel()"/>
             </message_arguments>
         </filter>
         <filter id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.base.data.aggregation.AggregationMethod"/>
                 <message_argument value="hasOptionalSettings()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.base.data.aggregation.AggregationMethod"/>
+                <message_argument value="loadSettingsFrom(NodeSettingsRO, DataTableSpec)"/>
             </message_arguments>
         </filter>
         <filter id="403804204">

@@ -432,12 +432,17 @@ public final class AggregationMethods {
                     LOGGER.error("Extension " + decl + " ignored.");
                     continue;
                 }
-
+                boolean isDeprecated =
+                    Boolean.parseBoolean(elem.getAttribute("deprecated"));
                 try {
                     final AggregationOperator aggrOperator =
                             (AggregationOperator)elem.createExecutableExtension(
                                     EXT_POINT_ATTR_DF);
-                    addOperator(aggrOperator);
+                    if (isDeprecated) {
+                        addDeprecatedOperator(aggrOperator);
+                    } else {
+                        addOperator(aggrOperator);
+                    }
                 } catch (final Throwable t) {
                     LOGGER.error("Problems during initialization of "
                             + "aggregation operator (with id '" + operator
@@ -765,6 +770,9 @@ public final class AggregationMethods {
                                       final AggregationOperator operator) {
         if (operator == null) {
             return null;
+        }
+        if (!operator.hasOptionalSettings()) {
+            return operator;
         }
         return operator.createInstance(operator.getGlobalSettings(),
                 operator.getOperatorColumnSettings());

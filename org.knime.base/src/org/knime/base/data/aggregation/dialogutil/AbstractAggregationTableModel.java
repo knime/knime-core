@@ -76,6 +76,9 @@ public abstract class AbstractAggregationTableModel
     <O extends AggregationMethodDecorator> extends AbstractTableModel
         implements AggregationTableModel<O> {
 
+    /**The name of the settings column in the aggregation panel.*/
+    private static final String SETTINGS_COL_NAME = "Parameter";
+
     private static final long serialVersionUID = 1;
 
     private final List<O> m_operators = new ArrayList<O>();
@@ -113,7 +116,7 @@ public abstract class AbstractAggregationTableModel
             m_colNames = new String[colNames.length + 2];
             System.arraycopy(colNames, 0, m_colNames, 0, colNames.length);
             m_colNames[m_missingColIdx] = "Missing";
-            m_colNames[m_settingsColIdx] = "Parameter";
+            m_colNames[m_settingsColIdx] = SETTINGS_COL_NAME;
             m_classes = new Class<?>[colClasses.length + 2];
             System.arraycopy(colClasses, 0, m_classes, 0, colClasses.length);
             m_classes[m_missingColIdx] = Boolean.class;
@@ -123,7 +126,7 @@ public abstract class AbstractAggregationTableModel
             m_settingsColIdx = colClasses.length;
             m_colNames = new String[colNames.length + 1];
             System.arraycopy(colNames, 0, m_colNames, 0, colNames.length);
-            m_colNames[m_settingsColIdx] = "Parameter";
+            m_colNames[m_settingsColIdx] = SETTINGS_COL_NAME;
             m_classes = new Class<?>[colClasses.length + 1];
             System.arraycopy(colClasses, 0, m_classes, 0, colClasses.length);
             m_classes[m_settingsColIdx] = Boolean.class;

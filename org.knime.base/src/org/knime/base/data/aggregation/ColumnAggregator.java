@@ -54,6 +54,7 @@ import java.util.List;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
@@ -221,6 +222,22 @@ public class ColumnAggregator extends AggregationMethodDecorator {
     public static List<ColumnAggregator> loadColumnAggregators(
             final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        return loadColumnAggregators(settings, null);
+    }
+
+    /**
+     * Creates a {@link List} with all {@link ColumnAggregator}s that were
+     * stored in the settings.
+     *
+     * @param settings the settings object to read from
+     * @param spec {@link DataTableSpec} of the input table if available
+     * @return {@link List} with the {@link ColumnAggregator}s
+     * @throws InvalidSettingsException if the settings are invalid
+     * @since 2.7
+     */
+    public static List<ColumnAggregator> loadColumnAggregators(
+            final NodeSettingsRO settings, final DataTableSpec spec)
+            throws InvalidSettingsException {
         final Config cnfg = settings.getConfig(CNFG_AGGR_COL_SECTION);
         final String[] colNames = cnfg.getStringArray(CNFG_COL_NAMES);
         final DataType[] colTypes = cnfg.getDataTypeArray(CNFG_COL_TYPES);
@@ -247,57 +264,65 @@ public class ColumnAggregator extends AggregationMethodDecorator {
                 //get the default behavior of the method
                 inclMissingVal = method.inclMissingCells();
             }
-            if (method.hasOptionalSettings()) {
+            final DataColumnSpec resultSpec = new DataColumnSpecCreator(
+                                        colNames[i], colTypes[i]).createSpec();
+            final ColumnAggregator aggrCol =
+                new ColumnAggregator(resultSpec, method, inclMissingVal);
+            if (aggrCol.hasOptionalSettings()) {
                 try {
                     NodeSettingsRO operatorSettings = settings.getNodeSettings(
-                                   createSettingsKey(i, colNames[i], method));
-                    method.loadValidatedSettings(operatorSettings);
+                                   createSettingsKey(aggrCol));
+                    if (spec != null) {
+                        //this method is called from the dialog
+                        aggrCol.loadSettingsFrom(operatorSettings, spec);
+                    } else {
+                        //this method is called from the node model where we do not
+                        //have the DataTableSpec
+                        aggrCol.loadValidatedSettings(operatorSettings);
+                    }
                 } catch (Exception e) {
                     LOGGER.error(
                      "Exception while loading settings for aggreation operator '"
-                     + method.getId() + "', reason: " + e.getMessage());
+                        + aggrCol.getId() + "', reason: " + e.getMessage());
                 }
             }
-            final DataColumnSpec spec = new DataColumnSpecCreator(
-                    colNames[i], colTypes[i]).createSpec();
-            colAggrList.add(new ColumnAggregator(spec, method, inclMissingVal));
+            colAggrList.add(aggrCol);
         }
         return colAggrList;
     }
 
     /**
      * @param settings the settings object to write to
-     * @param cols the {@link ColumnAggregator} objects to save
+     * @param aggregators the {@link ColumnAggregator} objects to save
      */
     public static void saveColumnAggregators(final NodeSettingsWO settings,
-            final List<ColumnAggregator> cols) {
+            final List<ColumnAggregator> aggregators) {
         if (settings == null) {
             throw new NullPointerException("settings must not be null");
         }
-        if (cols == null) {
+        if (aggregators == null) {
             throw new NullPointerException("cols must not be null");
         }
-        final String[] colNames = new String[cols.size()];
-        final String[] aggrMethods = new String[cols.size()];
-        final boolean[] inclMissingVals = new boolean[cols.size()];
-        final DataType[] types = new DataType[cols.size()];
-        for (int i = 0, length = cols.size(); i < length; i++) {
-            final ColumnAggregator aggrCol = cols.get(i);
-            colNames[i] = aggrCol.getOriginalColName();
-            final AggregationMethod method = aggrCol.getMethodTemplate();
-            aggrMethods[i] = method.getId();
-            types[i] = aggrCol.getOriginalDataType();
-            inclMissingVals[i] = aggrCol.inclMissingCells();
-            if (method.hasOptionalSettings()) {
+        final String[] colNames = new String[aggregators.size()];
+        final String[] aggrMethods = new String[aggregators.size()];
+        final boolean[] inclMissingVals = new boolean[aggregators.size()];
+        final DataType[] types = new DataType[aggregators.size()];
+        for (int i = 0, length = aggregators.size(); i < length; i++) {
+            final ColumnAggregator colAggr = aggregators.get(i);
+            colNames[i] = colAggr.getOriginalColName();
+            final AggregationMethod method = colAggr.getMethodTemplate();
+            aggrMethods[i] = colAggr.getId();
+            types[i] = colAggr.getOriginalDataType();
+            inclMissingVals[i] = colAggr.inclMissingCells();
+            if (colAggr.hasOptionalSettings()) {
                 try {
                     final NodeSettingsWO operatorSettings =
-                        settings.addNodeSettings(createSettingsKey(i,
-                                       aggrCol.getOriginalColName(), method));
+                        settings.addNodeSettings(createSettingsKey(colAggr));
                     method.saveSettingsTo(operatorSettings);
                 } catch (Exception e) {
                     LOGGER.error(
                         "Exception while saving settings for aggreation operator '"
-                        + method.getId() + "', reason: " + e.getMessage());
+                        + colAggr.getId() + "', reason: " + e.getMessage());
                 }
             }
         }
@@ -309,14 +334,69 @@ public class ColumnAggregator extends AggregationMethodDecorator {
     }
 
     /**
-     * @param idx the index of the aggregation method (not necessary continuous)
-     * @param columnName the name of the column to aggregate
-     * @param method the {@link AggregationMethod} to use
+     * Validates the operator specific settings of all {@link ColumnAggregator}s
+     * that require additional settings.
+     *
+     * @param settings the settings to validate
+     * @param aggregators the operators to validate
+     * @throws InvalidSettingsException if the settings of an operator are not valid
+     * @since 2.7
+     */
+    public static void validateSettings(final NodeSettingsRO settings,
+                                        final List<ColumnAggregator> aggregators)
+        throws InvalidSettingsException {
+        for (int i = 0, length = aggregators.size(); i < length; i++) {
+            final ColumnAggregator colAggr = aggregators.get(i);
+            if (colAggr.hasOptionalSettings()) {
+                final NodeSettingsRO operatorSettings =
+                    settings.getNodeSettings(createSettingsKey(colAggr));
+                try {
+                    colAggr.validateSettings(operatorSettings);
+                } catch (InvalidSettingsException e) {
+                    throw new InvalidSettingsException(
+                       "Invalid settings for aggreation operator '"
+                        + colAggr.getLabel() + "' for column '"
+                        + colAggr.getOriginalColName()
+                        + "', reason: " + e.getMessage());
+                }
+            }
+        }
+    }
+
+    /**
+     * @param spec the {@link DataTableSpec} of the input table
+     * @param aggregators the {@link ColumnAggregator}s to configure
+     * @throws InvalidSettingsException if an {@link ColumnAggregator} could
+     * not be configured with the given input spec
+     * @since 2.7
+     */
+    public static void configure(final DataTableSpec spec, final List<ColumnAggregator> aggregators)
+        throws InvalidSettingsException {
+        for (ColumnAggregator colAggr : aggregators) {
+            if (colAggr.hasOptionalSettings()) {
+                //check that the input spec is compatible with the aggregator
+                try {
+                    colAggr.configure(spec);
+                } catch (InvalidSettingsException e) {
+                    throw new InvalidSettingsException(
+                       "Invalid settings for aggreation operator '"
+                        + colAggr.getLabel() + "' for column '"
+                        + colAggr.getOriginalColName()
+                        + "', reason: " + e.getMessage());
+                }
+            }
+        }
+    }
+
+    /**
+     * @param colAggr the {@link ColumnAggregator} to use
      * @return the unique settings key
      */
-    private static String createSettingsKey(final int idx, final String columnName,
-            final AggregationMethod method) {
-        return idx + "_" + columnName + "_" + method.getId();
+    private static String createSettingsKey(final ColumnAggregator colAggr) {
+        //the method id and the original column name are unique since
+        //both are used to generate the new column name in the result table
+        //which must be unique as well
+        return colAggr.getId() + "_" + colAggr.getOriginalColName();
     }
 
     /**

@@ -184,6 +184,9 @@ public class ColumnAggregatorNodeModel extends NodeModel {
             throw new InvalidSettingsException(
                     "None of the selected columns found in input table.");
         }
+        //configure also all aggregation operators to check if they can be
+        //applied to the given input table
+        NamedAggregationOperator.configure(inSpec, m_methods);
         final AggregationCellFactory cellFactory = new AggregationCellFactory(
                 inSpec, selectedCols, GlobalSettings.DEFAULT, m_methods);
         return new DataTableSpec[]{
@@ -269,7 +272,7 @@ public class ColumnAggregatorNodeModel extends NodeModel {
         final NodeSettingsRO subSettings = settings.getNodeSettings(
                 ColumnAggregatorNodeModel.CFG_AGGREGATION_METHODS);
         final List<NamedAggregationOperator> methods =
-            NamedAggregationOperator.loadMethods(subSettings);
+            NamedAggregationOperator.loadOperators(subSettings);
         if (methods.isEmpty()) {
             throw new InvalidSettingsException(
                     "Please select at least one aggregation method");
@@ -287,6 +290,8 @@ public class ColumnAggregatorNodeModel extends NodeModel {
             }
             colIdx++;
         }
+        //validate the sub settings of all operators that require additional settings
+        NamedAggregationOperator.validateSettings(subSettings, methods);
     }
 
     /**
@@ -303,7 +308,7 @@ public class ColumnAggregatorNodeModel extends NodeModel {
         m_methods.clear();
         final NodeSettingsRO subSettings = settings.getNodeSettings(
                 ColumnAggregatorNodeModel.CFG_AGGREGATION_METHODS);
-        m_methods.addAll(NamedAggregationOperator.loadMethods(subSettings));
+        m_methods.addAll(NamedAggregationOperator.loadOperators(subSettings));
     }
 
     /**

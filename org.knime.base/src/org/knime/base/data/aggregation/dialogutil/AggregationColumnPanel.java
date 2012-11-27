@@ -457,7 +457,7 @@ ColumnAggregator, DataColumnSpec> {
     public void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec spec)
     throws InvalidSettingsException {
-        initialize(spec, ColumnAggregator.loadColumnAggregators(settings));
+        initialize(spec, ColumnAggregator.loadColumnAggregators(settings, spec));
     }
 
     /**

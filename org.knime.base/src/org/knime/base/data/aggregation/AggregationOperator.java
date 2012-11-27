@@ -63,6 +63,7 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
 
 
 /**
@@ -536,7 +537,7 @@ public abstract class AggregationOperator implements AggregationMethod {
      * @since 2.7
      */
     @Override
-    public Component getSettingsPanel(final DataTableSpec spec) {
+    public Component getSettingsPanel() {
         //nothing to return by default override if operator requires settings
         return null;
     }
@@ -552,6 +553,16 @@ public abstract class AggregationOperator implements AggregationMethod {
         //nothing to read by default override if operator requires settings
     }
 
+    /**
+     * Override this method if the operator requires additional settings.
+     * {@inheritDoc}
+     * @since 2.7
+     */
+    @Override
+    public void loadSettingsFrom(final NodeSettingsRO settings,
+                     final DataTableSpec spec) throws NotConfigurableException {
+      //nothing to read by default override if operator requires settings
+    }
 
     /**
      * Override this method if the operator requires additional settings.
@@ -572,6 +583,16 @@ public abstract class AggregationOperator implements AggregationMethod {
     @Override
     public void validateSettings(final NodeSettingsRO settings)
         throws InvalidSettingsException {
+        // nothing to validate by default override if operator requires settings
+    }
+
+    /**
+     * Override this method if the operator requires additional settings.
+     * {@inheritDoc}
+     * @since 2.7
+     */
+    @Override
+    public void configure(final DataTableSpec spec) throws InvalidSettingsException {
      // nothing to validate by default override if operator requires settings
     }
 

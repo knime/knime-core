@@ -355,6 +355,11 @@ public class GroupByNodeModel extends NodeModel {
                     }
                 }
             }
+            try {
+                ColumnAggregator.validateSettings(settings, aggregators);
+            } catch (InvalidSettingsException e) {
+                throw new IllegalArgumentException(e.getMessage());
+            }
         } catch (final InvalidSettingsException e) {
             // these settings are prior Knime 2.0 and can't contain
             // a column several times
@@ -490,6 +495,8 @@ public class GroupByNodeModel extends NodeModel {
         // generate group-by spec given the original spec and selected columns
         final DataTableSpec groupBySpec =
             createGroupBySpec(origSpec, groupByCols);
+        //only after generating the spec we have the columnAggregators2Use initialized
+        ColumnAggregator.configure(origSpec, m_columnAggregators2Use);
         return new DataTableSpec[] {groupBySpec};
     }
 

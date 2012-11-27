@@ -45,6 +45,7 @@ import org.knime.core.data.DataValue;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.NotConfigurableException;
 
 /**
  * Utility class that bundles an {@link AggregationMethod} with an
@@ -240,8 +241,8 @@ public abstract class AggregationMethodDecorator
      * @since 2.7
      */
     @Override
-    public Component getSettingsPanel(final DataTableSpec spec) {
-        return m_operatorTemplate.getSettingsPanel(spec);
+    public Component getSettingsPanel() {
+        return m_operatorTemplate.getSettingsPanel();
     }
 
     /**
@@ -252,6 +253,16 @@ public abstract class AggregationMethodDecorator
     public void loadValidatedSettings(final NodeSettingsRO settings)
     throws InvalidSettingsException {
         m_operatorTemplate.loadValidatedSettings(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.7
+     */
+    @Override
+    public void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec spec)
+        throws NotConfigurableException {
+        m_operatorTemplate.loadSettingsFrom(settings, spec);
     }
 
     /**
@@ -271,6 +282,15 @@ public abstract class AggregationMethodDecorator
     public void validateSettings(final NodeSettingsRO settings)
     throws InvalidSettingsException {
         m_operatorTemplate.validateSettings(settings);
+    }
+
+    /**
+     * {@inheritDoc}
+     * @since 2.7
+     */
+    @Override
+    public void configure(final DataTableSpec spec) throws InvalidSettingsException {
+        m_operatorTemplate.configure(spec);
     }
 
     /**

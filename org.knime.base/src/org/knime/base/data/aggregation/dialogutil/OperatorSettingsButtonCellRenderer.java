@@ -36,6 +36,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
+import org.knime.core.node.NotConfigurableException;
 
 /**
  * This class implements the aggregation operator settings button that is
@@ -164,105 +165,118 @@ implements TableCellRenderer, TableCellEditor, MouseListener {
         fireEditingStopped();
 
         final AggregationMethod aggr = m_rootPanel.getTableModel().getRow(row);
-        if (aggr.hasOptionalSettings()) {
-            final JPanel settingsPanel = new JPanel();
-            settingsPanel.add(
-                      aggr.getSettingsPanel(m_rootPanel.getInputTableSpec()));
-            String settingsTitle;
-            if (aggr instanceof ColumnAggregator) {
-                final ColumnAggregator op = (ColumnAggregator)aggr;
-                settingsTitle = op.getOriginalColSpec().getName() + ": " + aggr.getLabel();
-            } else if (aggr instanceof NamedAggregationOperator) {
-                final NamedAggregationOperator op = (NamedAggregationOperator)aggr;
-                settingsTitle = op.getName() + ": " + aggr.getLabel();
-            } else {
-                settingsTitle = aggr.getLabel() + " parameter";
-            }
-            final Border settingsBorder =
-                BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
-                                                 " " + settingsTitle + " ");
-            settingsPanel.setBorder(settingsBorder);
-            //save the initial settings to restore them on cancel
-            final NodeSettings initialSettings = new NodeSettings("tmp");
-            aggr.saveSettingsTo(initialSettings);
-
-            // figure out the parent to be able to make the dialog modal
-            Frame f = null;
-            Container c = m_rootPanel.getComponentPanel().getParent();
-            while (c != null) {
-                if (c instanceof Frame) {
-                    f = (Frame)c;
-                    break;
-                }
-                c = c.getParent();
-            }
-
-            final JDialog dialog = new JDialog(f, true);
-            dialog.setTitle(" Parameter ");
-            if (KNIMEConstants.KNIME16X16 != null) {
-                dialog.setIconImage(KNIMEConstants.KNIME16X16.getImage());
-            }
-            //center the dialog
-            dialog.setLocationRelativeTo(c);
-
-            final JPanel rootPanel = new JPanel();
-            rootPanel.setLayout(new GridBagLayout());
-            final GridBagConstraints gc = new GridBagConstraints();
-            gc.gridx = 0;
-            gc.gridy = 0;
-            gc.gridwidth = 2;
-            gc.insets = new Insets(10, 10, 10, 10);
-            rootPanel.add(settingsPanel, gc);
-
-            //buttons
-            gc.anchor = GridBagConstraints.LINE_END;
-            gc.weightx = 1;
-            gc.ipadx = 20;
-            gc.gridwidth = 1;
-            gc.gridx = 0;
-            gc.gridy = 1;
-            gc.insets = new Insets(0, 10, 10, 0);
-            final JButton okButton = new JButton("OK");
-            final ActionListener okActionListener = new ActionListener() {
-                @Override
-                public void actionPerformed(final ActionEvent e) {
-                    if (validateSettings(dialog, aggr)) {
-                        closeDialog(dialog);
-                    }
-                }
-            };
-            okButton.addActionListener(okActionListener);
-            rootPanel.add(okButton, gc);
-
-            gc.anchor = GridBagConstraints.LINE_START;
-            gc.weightx = 0;
-            gc.ipadx = 10;
-            gc.gridx = 1;
-            gc.insets = new Insets(0, 5, 10, 10);
-            final JButton cancelButton = new JButton("Cancel");
-            final ActionListener cancelActionListener = new ActionListener() {
-                @Override
-                public void actionPerformed(final ActionEvent e) {
-                    onCancel(dialog, aggr, initialSettings);
-                }
-            };
-            cancelButton.addActionListener(cancelActionListener);
-            rootPanel.add(cancelButton, gc);
-            dialog.setContentPane(rootPanel);
-
-            dialog.setDefaultCloseOperation(
-                WindowConstants.DO_NOTHING_ON_CLOSE);
-            dialog.addWindowListener(new WindowAdapter() {
-                @Override
-                public void windowClosing(final WindowEvent we) {
-                    //handle all window closing events triggered by none of
-                    //the given buttons
-                    onCancel(dialog, aggr, initialSettings);
-                }
-            });
-            dialog.pack();
-            dialog.setVisible(true);
+        if (!aggr.hasOptionalSettings()) {
+            //the operator has no additional settings
+            return;
         }
+
+        // figure out the parent to be able to make the dialog modal
+        Frame f = null;
+        Container c = m_rootPanel.getComponentPanel().getParent();
+        while (c != null) {
+            if (c instanceof Frame) {
+                f = (Frame)c;
+                break;
+            }
+            c = c.getParent();
+        }
+
+        final JDialog dialog = new JDialog(f, true);
+        dialog.setTitle(" Parameter ");
+        if (KNIMEConstants.KNIME16X16 != null) {
+            dialog.setIconImage(KNIMEConstants.KNIME16X16.getImage());
+        }
+        //center the dialog
+        dialog.setLocationRelativeTo(c);
+
+        //save the initial settings to restore them on cancel and to initialize the dialog
+        final NodeSettings initialSettings = new NodeSettings("tmp");
+        aggr.saveSettingsTo(initialSettings);
+        try {
+            //load the default settings including the input table spec
+            //to initialize the dialog panel
+            aggr.loadSettingsFrom(initialSettings, m_rootPanel.getInputTableSpec());
+        } catch (NotConfigurableException e) {
+          //show the error message
+            JOptionPane.showMessageDialog(dialog, e.getMessage(),
+                              "Unable to open dialog", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        final JPanel settingsPanel = new JPanel();
+        settingsPanel.add(aggr.getSettingsPanel());
+        String settingsTitle;
+        if (aggr instanceof ColumnAggregator) {
+            final ColumnAggregator op = (ColumnAggregator)aggr;
+            settingsTitle = op.getOriginalColSpec().getName() + ": " + aggr.getLabel();
+        } else if (aggr instanceof NamedAggregationOperator) {
+            final NamedAggregationOperator op = (NamedAggregationOperator)aggr;
+            settingsTitle = op.getName() + ": " + aggr.getLabel();
+        } else {
+            settingsTitle = aggr.getLabel() + " parameter";
+        }
+        final Border settingsBorder =
+            BorderFactory.createTitledBorder(BorderFactory.createEtchedBorder(),
+                                             " " + settingsTitle + " ");
+        settingsPanel.setBorder(settingsBorder);
+
+
+        final JPanel rootPanel = new JPanel();
+        rootPanel.setLayout(new GridBagLayout());
+        final GridBagConstraints gc = new GridBagConstraints();
+        gc.gridx = 0;
+        gc.gridy = 0;
+        gc.gridwidth = 2;
+        gc.insets = new Insets(10, 10, 10, 10);
+        rootPanel.add(settingsPanel, gc);
+
+        //buttons
+        gc.anchor = GridBagConstraints.LINE_END;
+        gc.weightx = 1;
+        gc.ipadx = 20;
+        gc.gridwidth = 1;
+        gc.gridx = 0;
+        gc.gridy = 1;
+        gc.insets = new Insets(0, 10, 10, 0);
+        final JButton okButton = new JButton("OK");
+        final ActionListener okActionListener = new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                if (validateSettings(dialog, aggr)) {
+                    closeDialog(dialog);
+                }
+            }
+        };
+        okButton.addActionListener(okActionListener);
+        rootPanel.add(okButton, gc);
+
+        gc.anchor = GridBagConstraints.LINE_START;
+        gc.weightx = 0;
+        gc.ipadx = 10;
+        gc.gridx = 1;
+        gc.insets = new Insets(0, 5, 10, 10);
+        final JButton cancelButton = new JButton("Cancel");
+        final ActionListener cancelActionListener = new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                onCancel(dialog, aggr, initialSettings);
+            }
+        };
+        cancelButton.addActionListener(cancelActionListener);
+        rootPanel.add(cancelButton, gc);
+        dialog.setContentPane(rootPanel);
+
+        dialog.setDefaultCloseOperation(
+            WindowConstants.DO_NOTHING_ON_CLOSE);
+        dialog.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(final WindowEvent we) {
+                //handle all window closing events triggered by none of
+                //the given buttons
+                onCancel(dialog, aggr, initialSettings);
+            }
+        });
+        dialog.pack();
+        dialog.setVisible(true);
     }
 
     /**

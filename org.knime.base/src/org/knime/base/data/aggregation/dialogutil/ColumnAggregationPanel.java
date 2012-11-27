@@ -201,8 +201,8 @@ public class ColumnAggregationPanel extends AbstractAggregationPanel<
     @Deprecated
     public void loadSettingsFrom(final Config cnfg, final DataType type)
     throws InvalidSettingsException {
-        initialize(type, NamedAggregationOperator.loadMethods(
-                      (NodeSettingsRO)cnfg), null);
+        initialize(type, NamedAggregationOperator.loadOperators(
+                      (NodeSettingsRO)cnfg, null), null);
     }
 
     /**
@@ -224,7 +224,7 @@ public class ColumnAggregationPanel extends AbstractAggregationPanel<
     public void loadSettingsFrom(final NodeSettingsRO settings,
              final DataType type, final DataTableSpec spec)
     throws InvalidSettingsException {
-        initialize(type, NamedAggregationOperator.loadMethods(settings), spec);
+        initialize(type, NamedAggregationOperator.loadOperators(settings, spec), spec);
     }
 
     /**

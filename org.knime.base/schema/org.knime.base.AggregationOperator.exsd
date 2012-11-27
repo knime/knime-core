@@ -59,6 +59,13 @@
                </appInfo>
             </annotation>
          </attribute>
+         <attribute name="deprecated" type="boolean" use="default" value="false">
+            <annotation>
+               <documentation>
+                  Set &lt;i&gt;true&lt;/i&gt; if the aggregation method is deprecated. If an aggregation method is indicated as deprecated it is no longer available to the user in the node dialogs. However nodes that used the deprecated operator can still be loaded and executed since the method is still available via AggregationMethods#getMethod4Id(). The default value is &lt;b&gt;false&lt;/b&gt; to indicate that the operator is not deprecated and thus available to the user for selection.
+               </documentation>
+            </annotation>
+         </attribute>
       </complexType>
    </element>
 
