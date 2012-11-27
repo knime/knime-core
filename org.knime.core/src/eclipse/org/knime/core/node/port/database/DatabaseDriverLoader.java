@@ -144,12 +144,14 @@ public final class DatabaseDriverLoader {
      */
     private static void registerODBCBridge() {
         try {
+            // Bug 3821: prevent loading sun.jdbc.odbc.JdbcOdbcDriver driver on Linux (with missing libodbc.so library)
             if (Platform.OS_LINUX.equals(Platform.getOS())) {
                 try {
                     System.loadLibrary("libJdbcOdbc.so");
                 } catch (Error e) {
                     LOGGER.info("Could not load \"libJdbcOdbc.so\" library which is known to be a problem under Linux"
                         + " when using the \"" + JDBC_ODBC_DRIVER + "\"; that is, the driver is not loaded.");
+                    // don't load driver
                     return;
                 }
             }
