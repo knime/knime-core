@@ -241,6 +241,7 @@ public class NodeExecutorJobManagerDialogTab extends JPanel {
 
         if (getParent() != null) {
             getParent().invalidate();
+            getParent().validate();
             getParent().repaint();
         }
 

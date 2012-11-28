@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2011
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   ${date} (${user}): created
  */
@@ -61,11 +61,13 @@ import org.eclipse.gef.ui.actions.ZoomOutRetargetAction;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.ui.IEditorPart;
 import org.eclipse.ui.actions.ActionFactory;
+import org.knime.core.node.util.NodeExecutionJobManagerPool;
 
 /**
  * Contributes action to the toolbar / menu bar.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class WorkflowEditorActionBarContributor extends ActionBarContributor {
@@ -105,6 +107,19 @@ public class WorkflowEditorActionBarContributor extends ActionBarContributor {
         String[] zoomStrings = new String[] {ZoomManager.FIT_ALL,
                 ZoomManager.FIT_HEIGHT, ZoomManager.FIT_WIDTH};
         tbm.add(new ZoomComboContributionItem(getPage(), zoomStrings));
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setActiveEditor(final IEditorPart editor) {
+        if (NodeExecutionJobManagerPool.getNumberOfJobManagersFactories() <= 1) {
+            editor.getEditorSite().getActionBars().getToolBarManager()
+                    .remove("org.knime.workbench.editor.actions.openMultiDialog");
+        }
+        super.setActiveEditor(editor);
     }
 
     /**

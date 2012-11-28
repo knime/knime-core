@@ -328,6 +328,19 @@
                toolbarPath="org.knime.workbench.editor.menu/group1"
                tooltip="Configure selected node"/>
          <action
+               class="org.knime.workbench.editor2.actions.delegates.OpenMultipleDialogEditorAction"
+               definitionId="knime.commands.openMultiDialog"
+               disabledIcon="icons/confexec_dis.png"
+               icon="icons/confexec.png"
+               id="org.knime.workbench.editor.actions.openMultiDialog"
+               label="Configure JobMgr..."
+               menubarPath="org.knime.workbench.editor.menu/group2"
+               style="push"
+               toolbarPath="org.knime.workbench.editor.menu/group2"
+               tooltip="Configure all the selected nodes (JobManager only)"/>
+         
+         
+         <action
                class="org.knime.workbench.editor2.actions.delegates.ChangeGridEditorAction"
                definitionId="knime.commands.editor.gridSettings"
                disabledIcon="icons/grid_16_bw.png"
