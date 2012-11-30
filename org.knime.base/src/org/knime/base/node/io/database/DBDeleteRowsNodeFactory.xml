@@ -60,7 +60,7 @@
         in order to run the delete. 
       </option>
     </tab>
-    <tab name="Advance">
+    <tab name="Advanced">
         <option name="Batch Size">
            Enter a number greater than 0 for the number of rows deleted in one batch job; 1 means on row at a time.
         </option>

@@ -115,7 +115,7 @@ final class DBUpdateDialogPane extends NodeDialogPane {
         m_batchSize = new JTextField();
         m_batchSize.setPreferredSize(new Dimension(100, 20));
         batchSizePanel.add(m_batchSize);
-        super.addTab("Advance", batchSizePanel);
+        super.addTab("Advanced", batchSizePanel);
 
     }
 
