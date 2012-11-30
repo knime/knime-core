@@ -424,7 +424,7 @@ public final class DatabaseWriterConnection {
             query.append(" WHERE");
             for (int i = 0; i < whereColumns.length; i++) {
                 if (i > 0) {
-                    query.append(",");
+                    query.append(" AND");
                 }
                 final String newColumnName = replaceColumnName(whereColumns[i]);
                 query.append(" " + newColumnName + " = ?");
@@ -557,7 +557,7 @@ public final class DatabaseWriterConnection {
             final StringBuilder query = new StringBuilder("DELETE FROM " + table + " WHERE");
             for (int i = 0; i < whereColumns.length; i++) {
                 if (i > 0) {
-                    query.append(",");
+                    query.append(" AND");
                 }
                 final String newColumnName = replaceColumnName(whereColumns[i]);
                 query.append(" " + newColumnName + " = ?");
