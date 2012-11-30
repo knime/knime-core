@@ -65,6 +65,14 @@ public final class NotInWorkflowWriteFileStoreHandler extends WriteFileStoreHand
     }
 
     /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void open() {
+        super.open();
+    }
+
+    /**
      * @param storeUUID */
     public NotInWorkflowWriteFileStoreHandler(final UUID storeUUID,
             final FileStoreHandlerRepository repository) {

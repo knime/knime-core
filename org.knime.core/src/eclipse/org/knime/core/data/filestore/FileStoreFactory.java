@@ -49,7 +49,9 @@
 package org.knime.core.data.filestore;
 
 import java.io.IOException;
+import java.util.UUID;
 
+import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
 import org.knime.core.node.ExecutionContext;
 
 /**
@@ -63,33 +65,101 @@ import org.knime.core.node.ExecutionContext;
  *
  * @author Tobias Koetter, University of Konstanz
  * @since 2.6
+ * @noextend This class is not intended to be subclassed by clients.
  */
-public class FileStoreFactory {
+public abstract class FileStoreFactory {
 
-    private final ExecutionContext m_exec;
-
-    /**Constructor for class FileStoreFactory.
-     * @param exec the {@link ExecutionContext} used to create new
-     * {@link FileStore}s
-     *
-     */
-    public FileStoreFactory(final ExecutionContext exec) {
-        if (exec == null) {
-            throw new NullPointerException("exec must not be null");
-        }
-        m_exec = exec;
+    /** Constructor with package scope to prevent extensions outside this package. */
+    FileStoreFactory() {
     }
 
-    /** See {@link ExecutionContext#createFileStore(String)} for details
-     * (including declared exceptions).
+    /** Creates the file store object. This either is part of the workflow or not (depending upon how this factory
+     * is created). For details see {@link ExecutionContext#createFileStore(String)} (including declared exceptions).
      * @param relativePath ...
      * @return ...
      * @throws IOException ...
      * @noreference Pending API. Feel free to use the method but keep in mind
      * that it might change in a future version of KNIME.
      */
-    public FileStore createFileStore(final String relativePath)
-        throws IOException {
-        return m_exec.createFileStore(relativePath);
+    public abstract FileStore createFileStore(final String relativePath) throws IOException;
+
+    /** Can be called by the client to disallow further creation of file stores.
+     * @since 2.7
+     */
+    public abstract void close();
+
+    /** Creates a factory whose file stores are part of the workflow. The factory delegates to
+     * {@link ExecutionContext#createFileStore(String)}.
+     * @param exec The non-null execution context.
+     * @return A file store factory that creates file stores as part of the workflow.
+     * @since 2.7
+     */
+    public static final FileStoreFactory createWorkflowFileStoreFactory(final ExecutionContext exec) {
+        return new WorkflowFileStoreFactory(exec);
     }
+
+    /** Creates a factory whose generated file stores are not part of the workflow. It's used in isolated
+     * data tables (such as used in views).
+     * @return Such a new factory.
+     * @since 2.7
+     */
+    public static final FileStoreFactory createNotInWorkflowFileStoreFactory() {
+        NotInWorkflowWriteFileStoreHandler fsh = new NotInWorkflowWriteFileStoreHandler(UUID.randomUUID());
+        fsh.open();
+        return new NotInWorkflowFileStoreFactory(fsh);
+    }
+
+    /** Implementation that creates file stores associated with the workflow (execution context). */
+    private static final class WorkflowFileStoreFactory extends FileStoreFactory {
+
+        private ExecutionContext m_exec;
+
+        WorkflowFileStoreFactory(final ExecutionContext exec) {
+            if (exec == null) {
+                throw new NullPointerException("exec must not be null");
+            }
+            m_exec = exec;
+        }
+
+        @Override
+        public FileStore createFileStore(final String relativePath) throws IOException {
+            return m_exec.createFileStore(relativePath);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void close() {
+            // empty, leave it to the framework to decide when a node execution is over.
+        }
+    }
+
+    /** Implementation that creates file stores outside the workflow scope. */
+    private static final class NotInWorkflowFileStoreFactory extends FileStoreFactory {
+
+        private final NotInWorkflowWriteFileStoreHandler m_notInWorkflowWriteFileStoreHandler;
+
+        NotInWorkflowFileStoreFactory(final NotInWorkflowWriteFileStoreHandler fsh) {
+            if (fsh == null) {
+                throw new NullPointerException("exec must not be null");
+            }
+            m_notInWorkflowWriteFileStoreHandler = fsh;
+        }
+
+        @Override
+        public FileStore createFileStore(final String relativePath) throws IOException {
+            return m_notInWorkflowWriteFileStoreHandler.createFileStore(relativePath);
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void close() {
+            m_notInWorkflowWriteFileStoreHandler.close();
+        }
+    }
+
+
 }

@@ -60,6 +60,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.knime.base.data.aggregation.ColumnAggregator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
@@ -458,7 +459,7 @@ public class CrosstabNodeModel extends NodeModel
         final ColumnNamePolicy colNamePolicy =
             ColumnNamePolicy.AGGREGATION_METHOD_COLUMN_NAME;
         final GlobalSettings globalSettings =
-            new GlobalSettings(new FileStoreFactory(exec), groupByCols,
+            new GlobalSettings(FileStoreFactory.createWorkflowFileStoreFactory(exec), groupByCols,
                     maxUniqueVals, GlobalSettings.STANDARD_DELIMITER,
                     table.getDataTableSpec(), table.getRowCount());
 

@@ -206,7 +206,7 @@ public class ColumnAggregatorNodeModel extends NodeModel {
             Arrays.asList(filterResult.getIncludes());
         final AggregationCellFactory cellFactory = new AggregationCellFactory(
                 origSpec, selectedCols, new GlobalSettings(
-                        new FileStoreFactory(exec), selectedCols,
+                        FileStoreFactory.createWorkflowFileStoreFactory(exec), selectedCols,
                         m_maxUniqueValues.getIntValue(),
                         m_valueDelimiter.getStringValue(), origSpec,
                         table.getRowCount()), m_methods);

@@ -719,7 +719,7 @@ public class GroupByNodeModel extends NodeModel {
     protected GlobalSettings createGlobalSettings(final ExecutionContext exec,
             final BufferedDataTable table, final List<String> groupByCols,
             final int maxUniqueVals) {
-        return new GlobalSettings(new FileStoreFactory(exec), groupByCols,
+        return new GlobalSettings(FileStoreFactory.createWorkflowFileStoreFactory(exec), groupByCols,
                 maxUniqueVals, m_valueDelimiter.getStringValue(),
                 table.getDataTableSpec(), table.getRowCount());
     }

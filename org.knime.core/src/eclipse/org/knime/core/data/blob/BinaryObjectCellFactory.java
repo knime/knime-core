@@ -55,7 +55,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
-import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.HexDump;
@@ -64,7 +63,7 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.io.output.DeferredFileOutputStream;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.filestore.FileStore;
-import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
+import org.knime.core.data.filestore.FileStoreFactory;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.util.ConvenienceMethods;
 
@@ -100,34 +99,32 @@ public final class BinaryObjectCellFactory {
         TMP_DIR_FOLDER = new File(System.getProperty("java.io.tmpdir"));
     }
 
-    /* only one of the two is non-null. */
-    private final ExecutionContext m_exec;
-    private final NotInWorkflowWriteFileStoreHandler m_notInWorkflowWriteFileStoreHandler;
-
+    private final FileStoreFactory m_fileStoreFactory;
     private int m_fileNameIndex;
 
     /** Create new cell factory based on a node's execution context. The argument object is used to
      * create an extension of {@link org.knime.core.data.filestore.FileStoreCell} that is used to keep the data
      * for large binary objects.
-     * @param exec The execution context used to create file store cells
-     * (using {@link ExecutionContext#createFileStore(String)}.
+     * @param exec Non-null execution context used to create file store cells
+     *             (using {@link ExecutionContext#createFileStore(String)}.
      */
     public BinaryObjectCellFactory(final ExecutionContext exec) {
-        if (exec == null) {
-            throw new NullPointerException("Argument must not be null.");
-        }
-        m_exec = exec;
-        m_notInWorkflowWriteFileStoreHandler = null;
-        m_fileNameIndex = 0;
+        this(FileStoreFactory.createWorkflowFileStoreFactory(exec));
     }
 
     /** Factory of binary objects, which are <b>not</b> associated with the workflow. This constructor
      * should only be used if a factory is used for temporary, non-persistent objects (e.g. in views).
      */
     public BinaryObjectCellFactory() {
+        this(FileStoreFactory.createNotInWorkflowFileStoreFactory());
+    }
+
+    /** Private constructor that just sets the fields.
+     * @param fileStoreFactory ...
+     */
+    private BinaryObjectCellFactory(final FileStoreFactory fileStoreFactory) {
         m_fileNameIndex = 0;
-        m_exec = null;
-        m_notInWorkflowWriteFileStoreHandler = new NotInWorkflowWriteFileStoreHandler(UUID.randomUUID());
+        m_fileStoreFactory = fileStoreFactory;
     }
 
     /** Creates a new cell given a byte array.
@@ -168,11 +165,7 @@ public final class BinaryObjectCellFactory {
             FileStore fs;
             synchronized (this) {
                 String name = "binaryObject-" + m_fileNameIndex++;
-                if (m_exec != null) {
-                    fs = m_exec.createFileStore(name);
-                } else {
-                    fs = m_notInWorkflowWriteFileStoreHandler.createFileStore(name);
-                }
+                fs = m_fileStoreFactory.createFileStore(name);
             }
             File f = outStream.getFile();
             assert f.exists() : "File " + f.getAbsolutePath() + " not created by file output stream";

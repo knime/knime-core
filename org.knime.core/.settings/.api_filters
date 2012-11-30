@@ -3896,6 +3896,13 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/filestore/FileStoreFactory.java" type="org.knime.core.data.filestore.FileStoreFactory">
+        <filter id="337764418">
+            <message_arguments>
+                <message_argument value="org.knime.core.data.filestore.FileStoreFactory"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/CopyNodePersistor.java" type="org.knime.core.node.CopyNodePersistor">
         <filter id="643842064">
             <message_arguments>

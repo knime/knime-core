@@ -345,6 +345,14 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
     /** {@inheritDoc} */
     @Override
     public void open(final ExecutionContext exec) {
+        if (exec == null) {
+            throw new NullPointerException("ExecutionContext must not be null.");
+        }
+        open();
+    }
+
+    /** Assigns duplicate checker which marks this FSH as open. */
+    void open() {
         m_duplicateChecker = new InternalDuplicateChecker();
     }
 
