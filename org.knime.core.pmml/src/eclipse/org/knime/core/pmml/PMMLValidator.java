@@ -91,10 +91,11 @@ public final class PMMLValidator {
         pmmlDocument.validate(validateOptions);
         Map<String, String> errorMessages = new TreeMap<String, String>();
         for (XmlError error : errorList) {
-            String location = error.getCursorLocation()
-                    .xmlText().substring(0, 50) + "[...]";
-            String errorMessage = error.getMessage().replace(
-                    PMML_NAMESPACE_URI, "");
+            String location = error.getCursorLocation().xmlText();
+            if (location.length() > 50) {
+                location = location.substring(0, 50) + "[...]";
+            }
+            String errorMessage = error.getMessage().replace(PMML_NAMESPACE_URI, "");
             LOGGER.error(location + ": " + errorMessage);
             errorMessages.put(location, errorMessage);
         }
