@@ -113,6 +113,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.util.FileUtil;
 
@@ -153,6 +154,9 @@ public final class JavaSnippet {
 
 
     private File m_tempClassPathDir;
+
+    private NodeLogger m_logger;
+
 
     /**
      * Create a new snippet.
@@ -338,6 +342,7 @@ public final class JavaSnippet {
             classes.add(FlowVariableException.class);
             classes.add(Type.class);
             classes.add(TypeException.class);
+            classes.add(NodeLogger.class);
 
             // create tree structure for classes
             DefaultMutableTreeNode root = createTree(classes);
@@ -876,7 +881,7 @@ public final class JavaSnippet {
      * @return the compiled snippet
      */
     @SuppressWarnings("unchecked")
-    Class<? extends AbstractJSnippet> createSnippetClass() {
+    private Class<? extends AbstractJSnippet> createSnippetClass() {
         JavaSnippetCompiler compiler = new JavaSnippetCompiler(this);
         StringWriter log = new StringWriter();
         DiagnosticCollector<JavaFileObject> digsCollector =
@@ -918,6 +923,37 @@ public final class JavaSnippet {
 
             throw new IllegalStateException(msg.toString());
         }
+    }
+
+    /**
+     * Create an instance of the snippet.
+     * @return a snippet instance
+     */
+    AbstractJSnippet createSnippetInstance() {
+        Class<? extends AbstractJSnippet> jsnippetClass = createSnippetClass();
+        AbstractJSnippet instance;
+        try {
+            instance = jsnippetClass.newInstance();
+        } catch (InstantiationException e) {
+            // cannot happen, but rethrow just in case
+            throw new RuntimeException(e);
+        } catch (IllegalAccessException e) {
+            // cannot happen, but rethrow just in case
+            throw new RuntimeException(e);
+        }
+        if (m_logger != null) {
+            instance.attachLogger(m_logger);
+        }
+        return instance;
+    }
+
+
+    /**
+     * Attach logger to be used by this java snippet instance.
+     * @param logger the node logger
+     */
+    public void attachLogger(final NodeLogger logger) {
+        m_logger = logger;
     }
 
 }

@@ -59,12 +59,16 @@ import org.knime.base.node.jsnippet.type.data.DataValueToJava;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.node.NodeLogger;
 
 /**
  *
  * @author Heiko Hofer
  */
 public abstract class AbstractJSnippet {
+    private static NodeLogger LOGGER = NodeLogger.getLogger(
+        AbstractJSnippet.class);
+
     /** the id of the current row. */
     public String ROWID = "";
 
@@ -80,6 +84,14 @@ public abstract class AbstractJSnippet {
     private List<String> m_columns;
     private FlowVariableRepository m_flowVars;
 
+    private NodeLogger m_logger = NodeLogger.getLogger("Java Snippet");
+
+    /**
+     * Create new instance.
+     */
+    public AbstractJSnippet() {
+        m_logger = LOGGER;
+    }
 
     /**
      * Get the cell contents of the given column.
@@ -260,4 +272,109 @@ public abstract class AbstractJSnippet {
      * @throws Abort if node execution should be stopped
      */
     public abstract void snippet() throws TypeException, ColumnException, Abort;
+
+
+    /**
+     * Attach logger to be used by this java snippet instance.
+     * @param logger the node logger
+     */
+    public void attachLogger(final NodeLogger logger) {
+        m_logger = logger;
+    }
+
+    /**
+     * Write warning message to the logger.
+     *
+     * @param o The object to print.
+     */
+    protected void logWarn(final Object o) {
+        m_logger.warn(o);
+    }
+
+    /**
+     * Write debugging message to the logger.
+     *
+     * @param o The object to print.
+     */
+    protected void logDebug(final Object o) {
+        m_logger.debug(o);
+    }
+
+    /**
+     * Write info message to the logger.
+     *
+     * @param o The object to print.
+     */
+    protected void logInfo(final Object o) {
+        m_logger.info(o);
+    }
+
+    /**
+     * Write error message to the logger.
+     *
+     * @param o The object to print.
+     */
+    protected void logError(final Object o) {
+        m_logger.error(o);
+    }
+
+    /**
+     * Write fatal error message to the logger.
+     *
+     * @param o The object to print.
+     */
+    protected void logFatal(final Object o) {
+        m_logger.fatal(o);
+    }
+
+    /**
+     * Write warning message and throwable to the logger.
+     *
+     * @param o The object to print.
+     * @param t The exception to log at debug level, including its stack trace.
+     */
+    protected void logWarn(final Object o, final Throwable t) {
+        m_logger.warn(o, t);
+    }
+
+    /**
+     * Write debugging message and throwable to the logger.
+     *
+     * @param o The object to print.
+     * @param t The exception to log, including its stack trace.
+     */
+    protected void logDebug(final Object o, final Throwable t) {
+        m_logger.debug(o, t);
+    }
+
+    /**
+     * Write info message and throwable to the logger.
+     *
+     * @param o The object to print.
+     * @param t The exception to log at debug level, including its stack trace.
+     */
+    protected void logInfo(final Object o, final Throwable t) {
+        m_logger.info(o, t);
+    }
+
+    /**
+     * Write error message and throwable to the logger.
+     *
+     * @param o The object to print.
+     * @param t The exception to log at debug level, including its stack trace.
+     */
+    protected void logError(final Object o, final Throwable t) {
+        m_logger.error(o, t);
+    }
+
+    /**
+     * Write fatal error message and throwable to the logger.
+     *
+     * @param o The object to print.
+     * @param t The exception to log at debug level, including its stack trace.
+     */
+    protected void logFatal(final Object o, final Throwable t) {
+        m_logger.fatal(o, t);
+    }
+
 }

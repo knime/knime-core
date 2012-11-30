@@ -128,9 +128,7 @@ public class JavaSnippetCellFactory implements CellFactory {
     public DataCell[] getCells(final DataRow row) {
          try {
             if (null == m_jsnippet) {
-                Class<? extends AbstractJSnippet> jsnippetClass =
-                    m_snippet.createSnippetClass();
-                m_jsnippet = jsnippetClass.newInstance();
+                m_jsnippet = m_snippet.createSnippetInstance();
                 // populate the fields in the m_jsnippet that are constant
                 // across the rows.
                 Field[] fs =
