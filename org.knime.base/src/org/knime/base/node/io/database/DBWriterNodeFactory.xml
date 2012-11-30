@@ -66,7 +66,7 @@
 		long strings such as SLNs or Smiles.
 	  </option>
     </tab>
-    <tab name="Advance">
+    <tab name="Advanced">
         <option name="Batch Size">
            Enter a number greater than 0 for the number of rows written in one batch job; 1 means on row at a time.
         </option>
