@@ -55,7 +55,6 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.SingleNodeContainer;
-import org.knime.core.node.workflow.WorkflowManager;
 
 /** A temporary class that returns some job manager icons until Pervasive changes their node execution job manager.
  *
@@ -89,24 +88,38 @@ public final class PervasiveJobExecutorHelper {
     }
 
     public static URL getIconForChild(final NodeContainer child) {
-        if (child instanceof WorkflowManager) {
-            return KRUNNER_FORCED;
+        if ( child instanceof SingleNodeContainer ) {
+            //first check to see if we are native streaming (if no we will never be forced)
+            SingleNodeContainer snc = (SingleNodeContainer)child;
+            NodeModel model = snc.getNodeModel();
+            Class cl = model.getClass();
+            if (cl.getName().contains("pervasive")) {
+                return KRUNNER_NATIVE;
+            }
+            do {
+                try {
+                    cl.getDeclaredMethod("getInputPortRoles");
+                    return KRUNNER_NATIVE;
+                } catch (Exception e) {
+                    // ignore, check superclass
+                }
+                cl = cl.getSuperclass();
+            } while (!NodeModel.class.equals(cl));
+
+            //force streaming is indicated by setting the same job manager again.
+            //this will change (we will have a separate job manager), but not
+            //until after KNIME 2.7 is out, at which point we will have our own implementation
+            //of AbstractNodeExecutionJobManager
+            if ( child.getJobManager() != null && child.getJobManager().getClass().getSimpleName().equals("KRunnerJobManager") ) {
+                return KRUNNER_FORCED;
+            }
+
+            return KRUNNER_DISABLED;
         }
-        SingleNodeContainer snc = (SingleNodeContainer)child;
-        NodeModel model = snc.getNodeModel();
-        Class cl = model.getClass();
-        if (cl.getName().contains("pervasive")) {
+        else {
+            //hmm, what to return for metanodes? they could be a mix of forced and non-forced, native and non-native..
+            //ok, let's assume native for now...
             return KRUNNER_NATIVE;
         }
-        do {
-            try {
-                cl.getDeclaredMethod("getInputPortRoles");
-                return KRUNNER_NATIVE;
-            } catch (Exception e) {
-                // ignore, check superclass
-            }
-            cl = cl.getSuperclass();
-        } while (!NodeModel.class.equals(cl));
-        return KRUNNER_DISABLED;
     }
 }
