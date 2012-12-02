@@ -205,13 +205,13 @@ final class BinByDictionaryNodeModel extends NodeModel {
                 rules.add(new Rule(lowerBoundComparator, lower,
                         isLowerBoundInclusive, upperBoundComparator, upper,
                         isUpperBoundInclusive, label));
-                exec.setProgress(current / (double)rowCount,
-                        "Indexing rule table " + current + "/" + rowCount
+                exec.setProgress(/*no prog */0.0,
+                        "Indexing rule table " + (current++) + "/" + rowCount
                         + " (\"" + r.getKey() + "\")");
                 exec.checkCanceled();
             }
         }
-        SingleCellFactory fac = new SingleCellFactory(labelColSpec) {
+        SingleCellFactory fac = new SingleCellFactory(rules.size() > 50, labelColSpec) {
 
             @Override
             public DataCell getCell(final DataRow row) {
