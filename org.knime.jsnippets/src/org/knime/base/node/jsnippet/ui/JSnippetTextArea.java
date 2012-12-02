@@ -58,6 +58,7 @@ import java.net.URL;
 import javax.swing.ToolTipManager;
 
 import org.fife.rsta.ac.LanguageSupportFactory;
+import org.fife.rsyntaxarea.internal.RSyntaxAreaActivator;
 import org.fife.ui.rsyntaxtextarea.RSyntaxTextArea;
 import org.fife.ui.rsyntaxtextarea.Theme;
 import org.fife.ui.rsyntaxtextarea.Token;
@@ -78,6 +79,10 @@ import org.knime.core.node.NodeLogger;
 public class JSnippetTextArea extends RSyntaxTextArea {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(JSnippetTextArea.class);
+
+    static {
+        RSyntaxAreaActivator.ensureWorkaroundBug3692Applied();
+    }
 
     /**
      * Create a new component.
