@@ -65,6 +65,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.text.NumberFormat;
 import java.util.List;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -77,6 +78,7 @@ import org.knime.base.node.mine.decisiontree2.model.DecisionTreeNode;
 import org.knime.base.node.mine.decisiontree2.view.DecTreeGraphView;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
+import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.image.ImageContent;
 import org.knime.core.data.image.png.PNGImageContent;
 import org.knime.core.node.BufferedDataTable;
@@ -96,6 +98,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.image.ImagePortObject;
 import org.knime.core.node.port.image.ImagePortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.port.pmml.PMMLPortObjectSpec;
 import org.knime.core.pmml.PMMLModelType;
 import org.w3c.dom.Node;
 
@@ -140,6 +143,23 @@ public class DecTreeToImageNodeModel extends NodeModel {
     @Override
     protected final PortObjectSpec[] configure(final PortObjectSpec[] inPOSpecs)
     throws InvalidSettingsException {
+        // test if number of pixels will exceed Integer.MAX_VALUE
+        double imgSize = m_settings.getWidth() * (double) m_settings.getHeight();
+        if (imgSize > Integer.MAX_VALUE) {
+            throw new InvalidSettingsException("The maximum image size (width * heigth) of "
+                    + NumberFormat.getIntegerInstance().format(Integer.MAX_VALUE) + " pixel is exceeded.");
+        }
+        if (inPOSpecs[1] != null) {
+            PMMLPortObjectSpec treeSpec = (PMMLPortObjectSpec)inPOSpecs[0];
+            DataTableSpec inSpec = (DataTableSpec)inPOSpecs[1];
+            for (String learnColName : treeSpec.getLearningFields()) {
+                if (!inSpec.containsName(learnColName)) {
+                    throw new InvalidSettingsException(
+                            "Learning column \"" + learnColName
+                            + "\" not found in the data input (color information).");
+                }
+            }
+        }
         return new PortObjectSpec[] {
                 new ImagePortObjectSpec(PNGImageContent.TYPE)};
     }
@@ -149,9 +169,8 @@ public class DecTreeToImageNodeModel extends NodeModel {
      */
     @Override
     public PortObject[] execute(final PortObject[] inPorts,
-            final ExecutionContext exec) throws CanceledExecutionException,
-            Exception {
-        exec.setMessage("Decision Tree Predictor: Loading predictor...");
+            final ExecutionContext exec) throws CanceledExecutionException,  Exception {
+        exec.setMessage("Decision Tree To Image: Loading model...");
         PMMLPortObject port = (PMMLPortObject)inPorts[0];
 
         List<Node> models = port.getPMMLValue().getModels(
@@ -211,8 +230,7 @@ public class DecTreeToImageNodeModel extends NodeModel {
             //         Transparency.TRANSLUCENT);
         }
         Graphics2D g = (Graphics2D)image.getGraphics();
-        DecisionTreeNode root = null != getDecisionTree() ?
-                getDecisionTree().getRootNode() : null;
+        DecisionTreeNode root = null != getDecisionTree() ? getDecisionTree().getRootNode() : null;
         DecTreeGraphView graph = new DecTreeToImageGraphView(root, colorColumn,
                 m_settings);
         // draw graph
