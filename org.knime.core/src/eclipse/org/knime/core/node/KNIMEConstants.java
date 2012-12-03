@@ -339,7 +339,7 @@ public final class KNIMEConstants {
             try {
                 ClassLoader loader = KNIMEConstants.class.getClassLoader();
                 icon = new ImageIcon(loader.getResource(KNIME_ICON_PATH));
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 icon = null;
             }
             KNIME16X16 = icon;
