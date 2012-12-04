@@ -8,7 +8,8 @@
     </shortDescription>
     
     <fullDescription>
-        <intro>Computes statistics for the two sample t-test. It is designed 
+        <intro>Computes statistics for the independent groups t-test, 
+        also know as the two sample t-test. It is designed 
         to compare the means of observations in the same column between 
         two groups. The node allows the testing of equality of variances 
         (Levene's test) and the t-value for both equal- and unequal-variance. 
@@ -29,13 +30,13 @@
 	    of the parameter is in the confidence interval.
 	    </option>
         <option name="Test columns">
-        A two sample t-test is performed separately for each of these columns.
+        A independent groups t-test is performed separately for each of these columns.
         </option>	    
     </fullDescription>
     
     <ports>
         <inPort index="0" name="Data Table">The Input</inPort>
-        <outPort index="0" name="Two-Sample T-Test">Statistics for the two sample t-test.</outPort>
+        <outPort index="0" name="Independent groups t-test">Statistics for the independent groups t-test.</outPort>
         <outPort index="1" name="Levene-Test">Statistics for the Levene-Test.</outPort>
         <outPort index="2" name="Descriptive Statistics">Descriptive statistics of the input.</outPort>
     </ports>

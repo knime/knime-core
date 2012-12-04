@@ -193,7 +193,7 @@ public class TwoSampleTTestNodeView extends NodeView<TwoSampleTTestNodeModel> {
     private String renderHeader() {
         StringBuilder buffer = NodeViewUtil.createHtmlHeader();
         buffer.append("<body>\n");
-        buffer.append("<h2>Two-Samples T-Test ");
+        buffer.append("<h2>Independent groups t-test");
         buffer.append("</h2>");
         buffer.append("</body>\n");
         buffer.append("</html>\n");
@@ -205,7 +205,7 @@ public class TwoSampleTTestNodeView extends NodeView<TwoSampleTTestNodeModel> {
         StringBuilder buffer = NodeViewUtil.createHtmlHeader();
         buffer.append("<body>\n");
 
-        buffer.append("<h3>Independent Samples Statistics</h3>");
+        buffer.append("<h3>Group Statistics</h3>");
         NodeViewUtil.renderDataTable(getNodeModel().getDescritiveStatistics(),
                 TwoSampleTTestStatistics.TEST_COLUMN,
                 Arrays.asList(new String[] {
@@ -276,7 +276,7 @@ public class TwoSampleTTestNodeView extends NodeView<TwoSampleTTestNodeModel> {
         StringBuilder buffer = NodeViewUtil.createHtmlHeader();
         buffer.append("<body>\n");
 
-        buffer.append("<h3>Independent Samples Statistics</h3>");
+        buffer.append("<h3>Independent Groups Statistics</h3>");
 
         buffer.append("<p>");
         buffer.append("Confidence Interval (CI) Probability: ");
