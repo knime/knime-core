@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   04.04.2011 (mb): created
  */
@@ -59,7 +59,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 /**
  * Represents all parallel chunks (@see{ParallelChunkContext}) together and
  * also encapsulating metanode.
- * 
+ *
  * @author M. Berthold, University of Konstanz
  */
 public class ParallelizedChunkContentMaster
@@ -70,13 +70,13 @@ implements NodeStateChangeListener {
 
     /** metanode container for all chunks */
     WorkflowManager m_manager;
-    
+
     /** end node waiting for chunks */
     LoopEndParallelizeNode m_endNode;
-    
+
     /** Create new chunk object master - also knows Workflowmanager
      * the chunks are located in.
-     * 
+     *
      * @param wfm the workflowmanager holding the chunks
      * @param endNode corresponding end node of the loop
      * @param chunkCount the number of chunks.
@@ -90,7 +90,7 @@ implements NodeStateChangeListener {
     }
 
     /** Add a new chunk to the list.
-     * 
+     *
      * @param index of chunk
      * @param pcc content of chunk
      */
@@ -102,14 +102,14 @@ implements NodeStateChangeListener {
         m_chunks[index] = pcc;
         pcc.registerLoopEndStateChangeListener(this);
     }
-    
+
     /**
      * @return number of chunks
      */
     public int nrChunks() {
         return m_chunks.length;
     }
-    
+
     /**
      * @param i index
      * @return chunk of given index
@@ -187,7 +187,7 @@ implements NodeStateChangeListener {
             }
         }
     }
-    
+
     /**
      * Clean up chunks (and containing WFM).
      */
@@ -197,7 +197,6 @@ implements NodeStateChangeListener {
                 ParallelizedChunkContent pbc = m_chunks[i];
                 if (pbc != null) {
                     pbc.removeLoopEndStateChangeListener(this);
-                    pbc.removeAllNodesFromWorkflow();
                     m_chunks[i] = null;
                 }
             }
@@ -222,5 +221,5 @@ implements NodeStateChangeListener {
         // notify end node about new status
         m_endNode.updateStatus();
     }
-    
+
 }
