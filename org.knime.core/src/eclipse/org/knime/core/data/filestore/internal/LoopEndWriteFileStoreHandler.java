@@ -54,6 +54,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 import org.knime.core.data.filestore.FileStore;
+import org.knime.core.data.filestore.FileStoreUtil;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -93,8 +94,7 @@ public final class LoopEndWriteFileStoreHandler implements IWriteFileStoreHandle
     @Override
     public FileStoreKey translateToLocal(final FileStore fs) {
         final FileStoreKey result = m_loopStartFSHandler.translateToLocal(fs);
-        // might be called after node is closed, e.g. when workflow
-        // is saved
+        // might be called after node is closed, e.g. when workflow is saved
         boolean isClosed = m_fileStoresInLoopCache == null;
         if (!isClosed && m_loopStartFSHandler.isCreatedInThisLoop(result)) {
             if (m_fsKeysToKeepLRUCache.put(result, result) == null) {
@@ -102,6 +102,17 @@ public final class LoopEndWriteFileStoreHandler implements IWriteFileStoreHandle
             }
         }
         return result;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean mustBeFlushedPriorSave(final FileStore fs) {
+        return m_loopStartFSHandler.mustBeFlushedPriorSave(fs)
+                // underlying files needs to be flushed as a subsequent save of the workflow will first save
+                // the start node and then the loop body (which then would save the contained fs cells,
+                // which is too late) ... all this is really only to make sure that smart implementations of
+                // a file store cell get notified to save their stuff.
+                || m_loopStartFSHandler.isCreatedInThisLoop(FileStoreUtil.getFileStoreKey(fs));
     }
 
     /** {@inheritDoc} */

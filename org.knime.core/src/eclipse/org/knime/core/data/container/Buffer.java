@@ -649,10 +649,10 @@ class Buffer implements KNIMEStreamConstants {
             DataCell processedCell = handleIncomingBlob(
                     cell, col, row.getNumCells(),
                     isCopyOfExisting, forceCopyOfBlobs);
-            if (needFileStoresBeReassigned(processedCell)) {
+            if (mustBeFlushedPriorSave(processedCell)) {
                 if (m_maxRowsInMem != 0) {
                     LOGGER.debug("Forcing buffer to disc as it contains "
-                            + "file store cells that need to be copied");
+                            + "file store cells that need special handling");
                     m_maxRowsInMem = 0;
                 }
             }
@@ -858,16 +858,13 @@ class Buffer implements KNIMEStreamConstants {
         return wc;
     }
 
-    private boolean needFileStoresBeReassigned(final DataCell cell) {
+    private boolean mustBeFlushedPriorSave(final DataCell cell) {
         if (cell instanceof FileStoreCell) {
             FileStore fileStore = FileStoreUtil.getFileStore((FileStoreCell)cell);
-            FileStoreKey oldKey = FileStoreUtil.getFileStoreKey(fileStore);
-            FileStoreKey newKey = ((IWriteFileStoreHandler)
-                    m_fileStoreHandler).translateToLocal(fileStore);
-            return !oldKey.equals(newKey);
+            return ((IWriteFileStoreHandler)m_fileStoreHandler).mustBeFlushedPriorSave(fileStore);
         } else if (cell instanceof CollectionDataValue) {
             for (DataCell c : (CollectionDataValue)cell) {
-                if (needFileStoresBeReassigned(c)) {
+                if (mustBeFlushedPriorSave(c)) {
                     return true;
                 }
             }
@@ -875,7 +872,7 @@ class Buffer implements KNIMEStreamConstants {
             final BlobWrapperDataCell blobWrapperCell = (BlobWrapperDataCell)cell;
             Class<? extends BlobDataCell> blobClass = blobWrapperCell.getBlobClass();
             if (CollectionDataValue.class.isAssignableFrom(blobClass)) {
-                return needFileStoresBeReassigned(blobWrapperCell.getCell());
+                return mustBeFlushedPriorSave(blobWrapperCell.getCell());
             }
         }
         return false;

@@ -163,6 +163,15 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
         return key;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean mustBeFlushedPriorSave(final FileStore fs) {
+        final FileStoreKey key = FileStoreUtil.getFileStoreKey(fs);
+        return getOwnerHandler(key) == null;
+    }
+
     synchronized FileStoreKey copyFileStore(final FileStore fs) {
         FileStoreKey key = FileStoreUtil.getFileStoreKey(fs);
         if (m_createdFileStoreKeys == null) {

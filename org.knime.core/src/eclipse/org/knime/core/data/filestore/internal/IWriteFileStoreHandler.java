@@ -75,6 +75,8 @@ public interface IWriteFileStoreHandler extends IFileStoreHandler {
      * @return */
     public FileStoreKey translateToLocal(FileStore fs);
 
+    public boolean mustBeFlushedPriorSave(final FileStore fs);
+
     public UUID getStoreUUID();
 
 }

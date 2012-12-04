@@ -117,6 +117,12 @@ public final class LoopStartReferenceWriteFileStoreHandler implements ILoopStart
 
     /** {@inheritDoc} */
     @Override
+    public boolean mustBeFlushedPriorSave(final FileStore fs) {
+        return m_reference.mustBeFlushedPriorSave(fs);
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public FileStoreHandlerRepository getFileStoreHandlerRepository() {
         return m_reference.getFileStoreHandlerRepository();
     }

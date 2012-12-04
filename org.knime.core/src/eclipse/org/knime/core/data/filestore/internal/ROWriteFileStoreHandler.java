@@ -102,6 +102,12 @@ public class ROWriteFileStoreHandler extends EmptyFileStoreHandler implements IW
 
     /** {@inheritDoc} */
     @Override
+    public boolean mustBeFlushedPriorSave(final FileStore fs) {
+        return false;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public UUID getStoreUUID() {
         return null;
     }
