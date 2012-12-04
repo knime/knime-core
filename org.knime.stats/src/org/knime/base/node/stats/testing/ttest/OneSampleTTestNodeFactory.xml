@@ -9,7 +9,8 @@
     </shortDescription>
     
     <fullDescription>
-        <intro>Computes statistics for the single sample t-test. The single 
+        <intro>Computes statistics for the single sample t-test, also 
+        know as one sample t-test. The single 
         sample t-test tests the null hypothesis that the population mean is 
         equal to a given number.
         </intro>
@@ -21,13 +22,13 @@
 	    of the parameter is in the confidence interval.
 	    </option>
 	    <option name="Test columns">
-	    A two sample t-test is performed separately for each of these columns.
+	    A single sample t-test is performed separately for each of these columns.
 	    </option>
     </fullDescription>
     
     <ports>
         <inPort index="0" name="Data Table">The Input</inPort>
-        <outPort index="0" name="One-Sample T-Test">Statistics for the one sample t-test.</outPort>
+        <outPort index="0" name="Single Sample T-Test">Statistics for the single sample t-test.</outPort>
         <outPort index="1" name="Descriptive Statistics">Descriptive statistics of the input.</outPort>        
     </ports>  
     <views>

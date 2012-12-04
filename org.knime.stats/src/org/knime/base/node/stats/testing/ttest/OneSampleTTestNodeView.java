@@ -178,7 +178,7 @@ public class OneSampleTTestNodeView extends NodeView<OneSampleTTestNodeModel> {
     private String renderHeader() {
         StringBuilder buffer = NodeViewUtil.createHtmlHeader();
         buffer.append("<body>\n");
-        buffer.append("<h2>One-Sample T-Test ");
+        buffer.append("<h2>Single Sample T-Test ");
         buffer.append("</h2>");
         buffer.append("</body>\n");
         buffer.append("</html>\n");
@@ -190,7 +190,7 @@ public class OneSampleTTestNodeView extends NodeView<OneSampleTTestNodeModel> {
         StringBuilder buffer = NodeViewUtil.createHtmlHeader();
         buffer.append("<body>\n");
 
-        buffer.append("<h3>One-Sample Statistics</h3>");
+        buffer.append("<h3>Descriptive Statistics</h3>");
         NodeViewUtil.renderDataTable(getNodeModel().getDescritiveStatistics(),
                 OneSampleTTestStatistics.COLUMN,
                 Collections.singleton(OneSampleTTestStatistics.COLUMN),
@@ -207,7 +207,7 @@ public class OneSampleTTestNodeView extends NodeView<OneSampleTTestNodeModel> {
         StringBuilder buffer = NodeViewUtil.createHtmlHeader();
         buffer.append("<body>\n");
 
-        buffer.append("<h3>One-Sample Test</h3>");
+        buffer.append("<h3>Single Sample Test</h3>");
 
         buffer.append("<p>");
         buffer.append("Confidence Interval (CI) Probability: ");
