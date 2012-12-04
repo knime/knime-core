@@ -287,7 +287,7 @@ public final class JavaSnippet {
         File jSnippetFile = new File(m_tempClassPathDir.getPath()
                 + File.separator + "JSnippet.java");
         FileOutputStream fos = new FileOutputStream(jSnippetFile);
-        OutputStreamWriter out = new OutputStreamWriter(fos, "UTF-8");
+        OutputStreamWriter out = new OutputStreamWriter(fos);
         try {
             try {
                 Document doc = getDocument();
@@ -301,7 +301,7 @@ public final class JavaSnippet {
         }
 
         return new EclipseFileObject("JSnippet", jSnippetFile.toURI(),
-                Kind.SOURCE, Charset.forName("UTF-8"));
+                Kind.SOURCE, Charset.defaultCharset());
     }
 
 
@@ -784,7 +784,8 @@ public final class JavaSnippet {
      * The execution method when no input table is present. I.e. used by
      * the java edit variable node.
      * @param flowVariableRepository flow variables at the input
-     * @param exec the execution context to report progress
+     * @param exec the execution context to report progress, may be null when
+     * this method is called from configure
      */
     public void execute(final FlowVariableRepository flowVariableRepository,
             final ExecutionContext exec) {
