@@ -194,15 +194,6 @@ public class Joiner2Settings {
     }
 
     /**
-     * Get the version  either VERSION_1 or VERSION_2.
-     * @return the version
-     * @since 2.7
-     */
-    public static String getVersion() {
-        return VERSION;
-    }
-
-    /**
      * Set the version either VERSION_1 or VERSION_2.
      *
      * @param version the version to set
