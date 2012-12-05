@@ -4,7 +4,7 @@
     <name>Tree Ensemble Predictor (Regression)</name>
 
     <shortDescription>
-        Applies regression from from a tree ensemble model by using the mean of the individual predictions.
+        Applies regression from a tree ensemble model by using the mean of the individual predictions.
     </shortDescription>
 
 	<fullDescription>
