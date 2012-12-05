@@ -485,7 +485,6 @@ class SpreadsheetTable extends JTable {
         ColHeaderMouseAdapter(final SpreadsheetTable table) {
             m_table = table;
 
-
             JMenu changeType = new JMenu("Change Type");
             JMenuItem doubleType = new JMenuItem("Double");
             doubleType.addActionListener(new ActionListener() {
@@ -560,27 +559,30 @@ class SpreadsheetTable extends JTable {
             model.addColProperties(changedProps);
         }
 
-        private void showPopup(final MouseEvent e) {
+        private boolean selectColumnAt(final MouseEvent e) {
             int col = m_table.getTableHeader().columnAtPoint(e.getPoint());
-            if (!m_table.getColumnModel().getSelectionModel()
-                    .isSelectedIndex(col)) {
-                m_table.getColumnModel().getSelectionModel()
-                    .setSelectionInterval(col, col);
-                m_table.getSelectionModel()
-                    .setSelectionInterval(m_table.getRowCount() - 1, 0);
+            // The autoscroller can generate drag events outside the
+            // table's range.
+            if (col == -1) {
+                return false;
             }
-            m_popup.show(m_table.getTableHeader(), e.getX(), e.getY());
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void mouseClicked(final MouseEvent e) {
-            if (e.isPopupTrigger()) {
-                showPopup(e);
-            } else if (e.getClickCount() == 2) {
-                new PropertyColumnsAction(m_table).actionPerformed(null);
+            boolean isSelected = m_table.getColumnModel().
+                getSelectionModel().isSelectedIndex(col);
+            if (!isSelected) {
+                m_table.changeSelection(0, col, e.isControlDown(),
+                                    e.isShiftDown());
+            }
+            // isSelEmpty==false may happen with e.isControlDown() on a
+            // selected column
+            boolean isSelEmpty = m_table.getColumnModel().
+                getSelectionModel().isSelectionEmpty();
+            if (!isSelEmpty) {
+                m_table.getSelectionModel().setSelectionInterval(
+                    m_table.getRowCount() - 1, 0);
+                return true;
+            } else {
+                m_table.getSelectionModel().clearSelection();
+                return false;
             }
         }
 
@@ -590,29 +592,36 @@ class SpreadsheetTable extends JTable {
          */
         @Override
         public void mousePressed(final MouseEvent e) {
-            int col = m_table.getTableHeader().columnAtPoint(e.getPoint());
-            // The autoscroller can generate drag events outside the
-            // table's range.
-            if (col == -1) {
-                return;
-            }
             // Commit edit, which are otherwise lost
             TableCellEditor editor = m_table.getCellEditor();
             if (editor != null) {
                 editor.stopCellEditing();
             }
-            if (e.isPopupTrigger()) {
-                showPopup(e);
-            } else {
+
+            // Use e.isPopupTriggger for Linux und OSX.
+            // One windows the popup is usually displayed on mouseReleased
+            // event. To support this we would have to use platform specific
+            // code.
+            boolean isPopupTrigger = e.isPopupTrigger()
+                || SwingUtilities.isRightMouseButton(e);
+
+            if (!isPopupTrigger) {
+                int col = m_table.getTableHeader().columnAtPoint(e.getPoint());
+
                 m_table.changeSelection(0, col, e.isControlDown(),
-                        e.isShiftDown());
-                if (!m_table.getColumnModel().getSelectionModel()
-                        .isSelectionEmpty()) {
-                    m_table.getSelectionModel()
-                        .setSelectionInterval(m_table.getRowCount() - 1, 0);
+                                        e.isShiftDown());
+                // isSelEmpty==false may happen with e.isControlDown() on a
+                // selected column
+                boolean isSelEmpty = m_table.getColumnModel().
+                    getSelectionModel().isSelectionEmpty();
+                if (!isSelEmpty) {
+                    m_table.getSelectionModel().setSelectionInterval(
+                        m_table.getRowCount() - 1, 0);
                 } else {
                     m_table.getSelectionModel().clearSelection();
                 }
+            } else {
+                m_popup.show(m_table.getTableHeader(), e.getX(), e.getY());
             }
         }
 
@@ -621,10 +630,19 @@ class SpreadsheetTable extends JTable {
          */
         @Override
         public void mouseReleased(final MouseEvent e) {
-            if (e.isPopupTrigger()) {
-                showPopup(e);
+        }
+
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void mouseClicked(final MouseEvent e) {
+            if (e.getClickCount() == 2) {
+                new PropertyColumnsAction(m_table).actionPerformed(null);
             }
         }
+
 
         /**
          * {@inheritDoc}

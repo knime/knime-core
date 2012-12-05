@@ -207,53 +207,27 @@ class RowHeaderTable extends JTable {
             m_table.add(m_popup);
         }
 
-        private void showPopup(final MouseEvent e) {
-            int row = m_rowHeaderTable.rowAtPoint(e.getPoint());
-            // The autoscroller can generate drag events outside the
-            // table's range.
-            if (row == -1) {
-                return;
-            }
-            if (!m_table.getSelectionModel().isSelectedIndex(row)) {
-                m_table.getSelectionModel().setSelectionInterval(row, row);
-                m_table.getColumnModel().getSelectionModel()
-                    .setSelectionInterval(m_table.getColumnCount() - 1, 0);
-            }
-            m_popup.show(m_rowHeaderTable, e.getX(), e.getY());
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public void mouseClicked(final MouseEvent e) {
-            if (e.isPopupTrigger()) {
-                showPopup(e);
-            } else if (e.getClickCount() == 2) {
-                new PropertyRowsAction(m_rowHeaderTable).actionPerformed(null);
-            }
-        }
 
         /**
          * {@inheritDoc}
          */
         @Override
         public void mousePressed(final MouseEvent e) {
-            int row = m_rowHeaderTable.rowAtPoint(e.getPoint());
-            // The autoscroller can generate drag events outside the
-            // table's range.
-            if (row == -1) {
-                return;
-            }
             // Commit edit, otherwise strange behavior can happen
             TableCellEditor editor = m_table.getCellEditor();
             if (editor != null) {
                 editor.stopCellEditing();
             }
+            // Use e.isPopupTriggger for Linux und OSX.
+            // One windows the popup is usually displayed on mouseReleased
+            // event. To support this we would have to use platform specific
+            // code.
+            boolean isPopupTrigger = e.isPopupTrigger()
+                || SwingUtilities.isRightMouseButton(e);
 
-            if (e.isPopupTrigger()) {
-                showPopup(e);
-            } else {
+            if (!isPopupTrigger) {
+                int row = m_rowHeaderTable.rowAtPoint(e.getPoint());
+
                 if (m_table.getSelectionModel().isSelectionEmpty()) {
                     m_table.getSelectionModel().setSelectionInterval(row, row);
                 }
@@ -268,7 +242,10 @@ class RowHeaderTable extends JTable {
                 }
                 m_table.getColumnModel().getSelectionModel()
                         .setSelectionInterval(m_table.getColumnCount() - 1, 0);
+            } else {
+                m_popup.show(m_rowHeaderTable, e.getX(), e.getY());
             }
+
         }
 
 
@@ -277,8 +254,16 @@ class RowHeaderTable extends JTable {
          */
         @Override
         public void mouseReleased(final MouseEvent e) {
-            if (e.isPopupTrigger()) {
-                showPopup(e);
+        }
+
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void mouseClicked(final MouseEvent e) {
+            if (e.getClickCount() == 2) {
+                new PropertyRowsAction(m_rowHeaderTable).actionPerformed(null);
             }
         }
     }
