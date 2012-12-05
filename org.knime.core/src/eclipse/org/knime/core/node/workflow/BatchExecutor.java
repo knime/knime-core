@@ -569,7 +569,7 @@ public class BatchExecutor {
                 + " -updateLinks      => update meta node links to latest version\n"
                 + " -credential=name[;login[;password]] => for each credential enter credential\n"
                 + "                      name and optional login/password, otherwise its prompted for\n"
-                + " -masterkey[=...]  => prompt for master passwort (used in e.g. database nodes),\n"
+                + " -masterkey[=...]  => prompt for master password (used in e.g. database nodes),\n"
                 + "                      if provided with argument, use argument instead of prompting\n"
                 + " -preferences=...  => path to the file containing eclipse/knime preferences,\n"
                 + " -workflowFile=... => ZIP file with a ready-to-execute workflow in the root \n"
