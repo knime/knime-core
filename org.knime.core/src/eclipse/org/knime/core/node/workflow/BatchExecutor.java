@@ -593,9 +593,9 @@ public class BatchExecutor {
     protected String getReturnCodesHelp() {
         return "The following return codes are defined:\n"
                 + "\t" + EXIT_SUCCESS + "\tupon successful execution\n"
-                + "\t" + EXIT_ERR_PRESTART + "\tif paramaters are wrong or missing\n"
+                + "\t" + EXIT_ERR_PRESTART + "\tif parameters are wrong or missing\n"
                 + "\t" + EXIT_ERR_LOAD + "\twhen an error occurs during loading a workflow\n"
-                + "\t" + EXIT_ERR_EXECUTION + "\tif an error during execution occured\n";
+                + "\t" + EXIT_ERR_EXECUTION + "\tif an error during execution occurred\n";
     }
 
     /**
