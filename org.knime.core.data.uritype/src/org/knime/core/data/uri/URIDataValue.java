@@ -59,15 +59,15 @@ import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
 import org.knime.core.data.renderer.StringValueRenderer;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public interface URIDataValue extends DataValue {
 
     /**
      * Meta information to this value type.
-     * 
-     * 
+     *
+     *
      * @see DataValue#UTILITY
      */
     public static final UtilityFactory UTILITY = new URIDataUtilityFactory();
@@ -85,8 +85,7 @@ public interface URIDataValue extends DataValue {
         /**
          * Singleton icon to be used to display this cell type.
          */
-        private static final Icon ICON = loadIcon(URIDataValue.class,
-                "./uriicon.png");
+        private static final Icon ICON = loadIcon(URIDataValue.class, "uriicon.png");
 
         /**
          * Only subclasses are allowed to instantiate this class.
