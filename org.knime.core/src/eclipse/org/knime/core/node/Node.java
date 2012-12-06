@@ -236,7 +236,7 @@ public final class Node implements NodeModelWarningListener {
                 sysLaF = UIManager.getCrossPlatformLookAndFeelClassName();
             }
             UIManager.setLookAndFeel(sysLaF);
-        } catch (Exception e) {
+        } catch (Throwable e) {
             // use the default look and feel then.
         }
     }
