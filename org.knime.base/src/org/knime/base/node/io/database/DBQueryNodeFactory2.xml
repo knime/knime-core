@@ -10,19 +10,19 @@
 	<fullDescription>
 		<intro>
 		 Modifies the input SQL query from a incoming database connection.
-		 The SQL query is represented by the place holder #table# and will
-		 replaced during execute. The new database connection then available
+		 The SQL query is represented by the place holder #table# and will be
+		 replaced during execute. The new database connection is then available
 		 at the out-port. The database connection settings itself are not 
 		 modified. 
 		</intro>
 		
    	    <option name="SQL Statement">
-		  Enter a new database query. Don't removed the #table# place
+		  Enter a new database query. Don't remove the #table# place
 		  holder which represents the incoming SQL statement.
 		  <br/>
           Additional SQL commands (create, drop, set parameter, etc.) can be 
-          arrange in front of the actual SELECT statement and are execute 
-          together line-by-line during configure and execute. Note, those 
+          added before the actual SELECT statement and are executed 
+          together, line-by-line during configure and execute. Note, those 
           additional SQL commands need to be separated by semicolon.
 	    </option>
 	    <option name="Flow Variable List">
