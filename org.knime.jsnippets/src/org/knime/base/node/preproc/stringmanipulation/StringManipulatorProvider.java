@@ -240,7 +240,7 @@ public final class StringManipulatorProvider implements ManipulatorProvider {
      * @throws IOException if jar file cannot be created
      */
     public File getJarFile() throws IOException {
-        if (m_jarFile == null) {
+        if (m_jarFile == null || !m_jarFile.exists()) {
             File tempClassPathDir =
                     FileUtil.createTempDir("knime_stringmanipulation");
             tempClassPathDir.deleteOnExit();
