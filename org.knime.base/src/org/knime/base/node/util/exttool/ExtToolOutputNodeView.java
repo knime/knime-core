@@ -93,6 +93,7 @@ public abstract class ExtToolOutputNodeView<T extends ExtToolOutputNodeModel>
         m_colorDefault = m_output.getForeground();
         if (!SwingUtilities.isEventDispatchThread()) {
             SwingUtilities.invokeLater(new Runnable() {
+                @Override
                 public void run() {
                     init();
                 }
@@ -109,7 +110,7 @@ public abstract class ExtToolOutputNodeView<T extends ExtToolOutputNodeModel>
     private void init() {
         m_output.setEditable(false);
         m_output.setColumns(80);
-        m_output.setRows(50);
+        m_output.setRows(35);
         // show the output even if the node is not executed (failed executing)
         setShowNODATALabel(false);
         setComponent(new JScrollPane(m_output));
@@ -152,6 +153,7 @@ public abstract class ExtToolOutputNodeView<T extends ExtToolOutputNodeModel>
 
         if (!SwingUtilities.isEventDispatchThread()) {
             SwingUtilities.invokeLater(new Runnable() {
+                @Override
                 public void run() {
                     setText(lines, fgColor);
                 }
@@ -183,6 +185,7 @@ public abstract class ExtToolOutputNodeView<T extends ExtToolOutputNodeModel>
     protected void addLineInSwingThreadLater(final String s) {
         if (!SwingUtilities.isEventDispatchThread()) {
             SwingUtilities.invokeLater(new Runnable() {
+                @Override
                 public void run() {
                     addLine(s);
                 }
