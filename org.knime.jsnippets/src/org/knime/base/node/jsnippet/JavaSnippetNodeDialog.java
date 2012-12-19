@@ -451,7 +451,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
 
         try {
             boolean doUpdate = false;
-            if (null == m_autoCompletionJars) {
+            if (filesExist(m_autoCompletionJars)) {
                 m_autoCompletionJars = m_snippet.getClassPath();
                 doUpdate = true;
             } else {
@@ -474,6 +474,22 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
             LOGGER.error(ioe.getMessage(), ioe);
         }
 
+    }
+
+    /**
+     * Tests if files in the given array exist.
+     * @param files the files to test
+     * @return true if array is not null and all files exist.
+     */
+    private boolean filesExist(final File[] files) {
+        if (null == files) {
+            return false;
+        }
+        boolean exists = true;
+        for (File file : files) {
+            exists = exists && file.exists();
+        }
+        return exists;
     }
 
     /** Create an empty, titled border.

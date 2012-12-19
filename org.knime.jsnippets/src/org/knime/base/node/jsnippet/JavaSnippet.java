@@ -142,6 +142,7 @@ public final class JavaSnippet {
     private File[] m_jarFileCache;
 
     private JavaFileObject m_snippet;
+    private File m_snippetFile;
 
     private GuardedDocument m_document;
     // true when the document has changed and the m_snippet is not up to date.
@@ -220,12 +221,12 @@ public final class JavaSnippet {
      */
     File[] getClassPath() throws IOException {
         // use cached list if present
-        if (null != m_jarFileCache) {
+        if (filesExist(m_jarFileCache)) {
             return m_jarFileCache;
         }
         // Add lock since jSnippetJar is used across all JavaSnippets
         synchronized (JavaSnippet.class) {
-            if (jSnippetJar == null) {
+            if (jSnippetJar == null || !jSnippetJar.exists()) {
                 jSnippetJar = createJSnippetJarFile();
             }
         }
@@ -249,6 +250,22 @@ public final class JavaSnippet {
     }
 
     /**
+     * Tests if files in the given array exist.
+     * @param files the files to test
+     * @return true if array is not null and all files exist.
+     */
+    private boolean filesExist(final File[] files) {
+        if (null == files) {
+            return false;
+        }
+        boolean exists = true;
+        for (File file : files) {
+            exists = exists && file.exists();
+        }
+        return exists;
+    }
+
+    /**
      * Get compilation units used by the JavaSnippetCompiler.
      * @return the files to compile
      * @throws IOException When files cannot be created.
@@ -256,7 +273,8 @@ public final class JavaSnippet {
     public Iterable<? extends JavaFileObject> getCompilationUnits()
         throws IOException {
 
-        if (m_snippet == null) {
+        if (m_snippet == null || m_snippetFile == null
+                || !m_snippetFile.exists()) {
             m_snippet = createJSnippetFile();
         } else {
             if (m_dirty) {
@@ -284,9 +302,9 @@ public final class JavaSnippet {
     private JavaFileObject createJSnippetFile() throws IOException {
         m_tempClassPathDir = FileUtil.createTempDir("knime_javasnippet");
         m_tempClassPathDir.deleteOnExit();
-        File jSnippetFile = new File(m_tempClassPathDir.getPath()
+        m_snippetFile = new File(m_tempClassPathDir.getPath()
                 + File.separator + "JSnippet.java");
-        FileOutputStream fos = new FileOutputStream(jSnippetFile);
+        FileOutputStream fos = new FileOutputStream(m_snippetFile);
         OutputStreamWriter out = new OutputStreamWriter(fos);
         try {
             try {
@@ -300,7 +318,7 @@ public final class JavaSnippet {
             out.close();
         }
 
-        return new EclipseFileObject("JSnippet", jSnippetFile.toURI(),
+        return new EclipseFileObject("JSnippet", m_snippetFile.toURI(),
                 Kind.SOURCE, Charset.defaultCharset());
     }
 
