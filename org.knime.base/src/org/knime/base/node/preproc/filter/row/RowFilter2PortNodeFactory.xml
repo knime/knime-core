@@ -38,7 +38,7 @@
 			for range filtering. When using a pattern match, you can set checkmarks
 			according to whether the pattern contains wildcards or is a regular 
 			expression. Wildcard patterns contain '*' (matching any sequence of
-			characters) and '.' (matching any one character). Examples of regular
+			characters) and '?' (matching any one character). Examples of regular
 			expressions are given below. Also, a case sensitive match can be enabled
 			by the according checkmark. Note: if you select a pattern from the drop-down
 			menu of the pattern text field, the node still performs a comparison of
