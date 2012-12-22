@@ -123,7 +123,7 @@ public final class DatabaseWriterConnection {
                 ResultSet rs = null;
                 try {
                     // try to count all rows to see if table exists
-                    final String query = "SELECT * FROM " + table;
+                    final String query = "SELECT * FROM " + table + " WHERE 1 = 0";
                     LOGGER.debug("Executing SQL statement \"" + query + "\"");
                     statement = conn.createStatement();
                     rs = statement.executeQuery(query);
