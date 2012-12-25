@@ -843,6 +843,15 @@ public class DataContainer implements RowAppender {
         m_size += 1;
     } // addRowToTable(DataRow)
 
+    /** @return size of buffer temp file in bytes, -1 if not set. Only for debugging/test purposes. */
+    long getBufferFileSize() {
+        Buffer b = m_table != null ? m_table.getBuffer() : m_buffer;
+        if (b != null) {
+            return b.getBufferFileSize();
+        }
+        return -1L;
+    }
+
     /**
      * Get an internal id for the buffer being used. This ID is used in
      * conjunction with blob serialization to locate buffers. Blobs that belong

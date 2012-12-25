@@ -1477,6 +1477,14 @@ class Buffer implements KNIMEStreamConstants {
         return blobDir;
     }
 
+    /** @return size of m_binFile in bytes, -1 if not set. Only for debugging/test purposes. */
+    long getBufferFileSize() {
+        if (m_binFile != null) {
+            return m_binFile.length();
+        }
+        return -1L;
+    }
+
     /**
      * Determines the file location for a blob to be read/written with some
      * given coordinates (column and index in column).
