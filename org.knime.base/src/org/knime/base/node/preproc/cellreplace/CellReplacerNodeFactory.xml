@@ -37,7 +37,7 @@
             second input table.</option>
         <option name="Dictionary table, Output (Replacement)">Column in the  
             second input table containing the replacement values.</option>
-        <option name="If no element matches, use:">Define how values in the 
+        <option name="If no element matches use">Define how values in the 
             input table, which do not match any search pattern, are treated. 
             "Input" will leave the value unmodified, "Missing" replaces the 
             value by a missing value.</option>
