@@ -1686,7 +1686,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
                 break;
             case EXECUTING:
-                // bug "fix" (workaround) 1913
+                // bug "fix" (workaround) 3913
                 if (!(nc instanceof SingleNodeContainer)) {
                     ((WorkflowManager)nc).markForExecutionAllNodesInWorkflow(false);
                 }
