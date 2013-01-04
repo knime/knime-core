@@ -50,10 +50,11 @@
  */
 package org.knime.workbench.repository.view;
 
+import org.eclipse.swt.widgets.Display;
+import org.knime.workbench.repository.model.AbstractNodeTemplate;
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.IRepositoryObject;
 import org.knime.workbench.repository.model.MetaNodeTemplate;
-import org.knime.workbench.repository.model.NodeTemplate;
 import org.knime.workbench.repository.model.Root;
 
 /**
@@ -72,12 +73,15 @@ public class RepositoryViewFilter extends TextualViewFilter {
     protected boolean doSelect(final Object parentElement,
             final Object element, final boolean recurse) {
         boolean selectThis = false;
-
         // Node Template : Match against name
-        if (element instanceof NodeTemplate) {
+        if (element instanceof AbstractNodeTemplate) {
 
             // check against node name
-            selectThis = match(((NodeTemplate)element).getName());
+            selectThis = match(((AbstractNodeTemplate)element).getName());
+            if (element instanceof MetaNodeTemplate) {
+                // with meta nodes also check the name of the workflow manager
+                selectThis |= match(((MetaNodeTemplate)element).getManager().getName());
+            }
             if (selectThis) {
                 return true;
             }
@@ -93,23 +97,6 @@ public class RepositoryViewFilter extends TextualViewFilter {
                 temp = temp.getParent();
             }
         } else
-        // MetaNodeTemplate: check agains name and names of contained nodes
-        if (element instanceof MetaNodeTemplate) {
-            selectThis = match(((MetaNodeTemplate)element).getName())
-                || match(((MetaNodeTemplate)element).getManager().getName());
-            if (selectThis) {
-                return true;
-            }
-            /*
-             * enable if advanced search in NodeRepository is available
-            for (NodeContainer cont : ((MetaNodeTemplate)element).getManager()
-                    .getNodeContainers()) {
-                if (match(cont.getName())) {
-                    return true;
-                }
-            }
-            */
-        } else
         // Category: Match against name and children
         if (element instanceof Category) {
             // check against node name
@@ -118,12 +105,12 @@ public class RepositoryViewFilter extends TextualViewFilter {
                 return true;
             }
 
-            // check recursivly against children, if needed
+            // check recursively against children, if needed
             if (recurse) {
                 Category category = (Category)element;
                 IRepositoryObject[] children = category.getChildren();
                 for (int i = 0; i < children.length; i++) {
-                    // recursivly check. return true on first matching child
+                    // recursively check. return true on first matching child
                     if (doSelect(category, children[i], true)) {
                         return true;
                     }
