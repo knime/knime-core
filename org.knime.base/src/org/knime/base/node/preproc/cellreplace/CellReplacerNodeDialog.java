@@ -100,8 +100,7 @@ public class CellReplacerNodeDialog extends DefaultNodeSettingsPane {
         }
         DialogComponentButtonGroup noMatchButtonGroup =
                 new DialogComponentButtonGroup(noMatchPolicyModel, false,
-                        "If no element matches, use: ", noMatchPols
-                                .toArray(new String[noMatchPols.size()]));
+                        null, noMatchPols.toArray(new String[noMatchPols.size()]));
 
         DialogComponentColumnNameSelection dictInputColSelector =
                 new DialogComponentColumnNameSelection(dictInputColModel,
@@ -131,8 +130,9 @@ public class CellReplacerNodeDialog extends DefaultNodeSettingsPane {
         addDialogComponent(appendColumnChecker);
         addDialogComponent(appendColumnNameField);
         closeCurrentGroup();
-
         setHorizontalPlacement(false);
+        createNewGroup("If no element matches use");
         addDialogComponent(noMatchButtonGroup);
+        closeCurrentGroup();
     }
 }

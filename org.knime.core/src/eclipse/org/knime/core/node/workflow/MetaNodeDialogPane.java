@@ -60,6 +60,7 @@ import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -94,7 +95,7 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
         m_panel = new JPanel();
         final BoxLayout boxLayout = new BoxLayout(m_panel, BoxLayout.Y_AXIS);
         m_panel.setLayout(boxLayout);
-        addTab("Quickforms", m_panel);
+        addTab("QuickForms", new JScrollPane(m_panel));
     }
 
     /** {@inheritDoc} */
@@ -124,7 +125,6 @@ public final class MetaNodeDialogPane extends NodeDialogPane {
             if (config == null) { // quickform nodes has no valid configuration
                 continue;
             }
-            @SuppressWarnings("unchecked")
             QuickFormConfigurationPanel
                 <? extends AbstractQuickFormValueInConfiguration> quickform =
                     config.createController();

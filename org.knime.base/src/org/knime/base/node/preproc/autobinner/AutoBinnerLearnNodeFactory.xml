@@ -12,7 +12,7 @@
 		  This node allows to group numeric data in intervals - called bins.
 		  There are two naming options for the bins and two methods which define
 		  the number and the range of values that fall in a bin.
-		  Please use the "Automatic Binner" node if you want to define custom bins.
+		  Please use the "Numeric Binner" node if you want to define custom bins.
 	    </intro>
 		
 		<option name="Column Selection: ">
