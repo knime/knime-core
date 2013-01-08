@@ -1442,5 +1442,11 @@
                  extension=".table">
            </FileExtension>
         </FileExtensionMapping>
+        <FileExtensionMapping
+              NodeFactory="org.knime.base.node.io.pmml.read.PMMLReaderNodeFactory">
+           <FileExtension
+                 extension=".pmml">
+           </FileExtension>
+        </FileExtensionMapping>
      </extension>   
 </plugin>

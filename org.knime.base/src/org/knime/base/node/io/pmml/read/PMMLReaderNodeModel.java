@@ -99,7 +99,7 @@ public class PMMLReaderNodeModel extends NodeModel {
      */
     public PMMLReaderNodeModel(final NodeCreationContext context) {
         this();
-        m_file.setStringValue(context.getUrl().getFile());
+        m_file.setStringValue(context.getUrl().toString());
     }
 
     /**
