@@ -49,7 +49,7 @@ package org.knime.base.node.io.pmml.read;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
@@ -114,17 +114,12 @@ public class PMMLReaderNodeModel extends NodeModel {
         if (fileS == null || fileS.isEmpty()) {
             throw new InvalidSettingsException("Please select a PMML file!");
         }
-        File file = getFileFromSettings(fileS);
-        if (!file.exists() || !file.canRead()) {
-            throw new InvalidSettingsException("Can't access PMML file \""
-                    + file + "\".");
-        }
+        URL url = getURLFromSettings(fileS);
         try {
-            PMMLImport pmmlImport = new PMMLImport(file);
+            PMMLImport pmmlImport = new PMMLImport(url, false);
             m_pmmlPort = pmmlImport.getPortObject();
         } catch (IllegalArgumentException e) {
-            String msg = "File \"" + file
-                    + "\" is not a valid PMML file:\n" + e.getMessage();
+            String msg = "File \"" + url + "\" is not a valid PMML file:\n" + e.getMessage();
             setWarningMessage(msg);
             throw new InvalidSettingsException(msg);
         } catch (XmlException e) {
@@ -191,39 +186,32 @@ public class PMMLReaderNodeModel extends NodeModel {
         m_file.loadSettingsFrom(settings);
     }
 
-    /** Convert argument string to file, will also accept URL (only file:).
-      * @param fileS The file string
-      * @return The file (exists)
-      * @throws InvalidSettingsException If no valid file given.
+    /** Convert argument string to a URL.
+      * @param fileS The file string (a url or a file path)
+      * @return The url (if it's a path then file access is checked)
+      * @throws InvalidSettingsException If no valid url given.
       */
-    static File getFileFromSettings(final String fileS)
+    static URL getURLFromSettings(final String fileS)
         throws InvalidSettingsException {
         if (fileS == null || fileS.length() == 0) {
-            throw new InvalidSettingsException("No file specified");
+            throw new InvalidSettingsException("No file/url specified");
         }
-        File f;
-        if (fileS.startsWith("file:")) {
-            URI uri;
-            try {
-                URL url = new URL(fileS);
-                uri = url.toURI();
-            } catch (Exception e) {
-                throw new InvalidSettingsException("Not a valid URL: \""
-                        + fileS + "\"", e);
+
+        try {
+            return new URL(fileS);
+        } catch (MalformedURLException e) {
+            File tmp = new File(fileS);
+            if (tmp.isFile() && tmp.canRead()) {
+                try  {
+                    return tmp.getAbsoluteFile().toURI().toURL();
+                } catch (MalformedURLException e1) {
+                    throw new InvalidSettingsException(e1);
+                }
             }
-            f = new File(uri);
-        } else {
-            f = new File(fileS);
+            throw new InvalidSettingsException("File/URL \"" + fileS
+                       + "\" cannot be parsed as a URL or represents a non exising file location");
         }
-        if (!f.isFile()) {
-            throw new InvalidSettingsException("File \"" + fileS
-                    + "\" does not exist.");
-        }
-        if (!f.canRead()) {
-            throw new InvalidSettingsException("Can't access PMML file \""
-                    + fileS + "\"");
-        }
-        return f;
+
     }
 
     /**
