@@ -231,8 +231,9 @@ public class SVMLearnerNodeModel extends NodeModel {
     protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
         BufferedDataTable inTable = (BufferedDataTable)inData[0];
+        DataTableSpec inSpec = inTable.getDataTableSpec();
         LearnColumnsAndColumnRearrangerTuple tuple =
-            createTrainTableColumnRearranger(inTable.getDataTableSpec());
+            createTrainTableColumnRearranger(inSpec);
         // no progress needed as constant operation (column removal only)
         BufferedDataTable trainTable = exec.createColumnRearrangeTable(inTable,
                 tuple.getTrainingRearranger(), exec.createSubProgress(0.0));
@@ -350,14 +351,14 @@ public class SVMLearnerNodeModel extends NodeModel {
 
         // create the outgoing PMML spec
         PMMLPortObjectSpecCreator specCreator =
-            new PMMLPortObjectSpecCreator(inPMMLPort, trainSpec);
+            new PMMLPortObjectSpecCreator(inPMMLPort, inSpec);
         specCreator.setLearningCols(trainSpec);
         specCreator.setTargetCol(trainSpec.getColumnSpec(m_classcol
                 .getStringValue()));
 
         // create the outgoing PMML port object
         PMMLPortObject outPMMLPort = new PMMLPortObject(
-                specCreator.createSpec(), inPMMLPort, inTable.getSpec());
+                specCreator.createSpec(), inPMMLPort, inSpec);
         outPMMLPort.addModelTranslater(new PMMLSVMTranslator(categories,
                 Arrays.asList(m_svms), kernel));
 

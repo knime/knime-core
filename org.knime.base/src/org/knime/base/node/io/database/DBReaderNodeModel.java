@@ -259,17 +259,13 @@ class DBReaderNodeModel extends NodeModel
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        String query = settings.getString(
-                DatabaseConnectionSettings.CFG_STATEMENT);
+        String query = settings.getString(DatabaseConnectionSettings.CFG_STATEMENT);
         DatabaseQueryConnectionSettings conn = m_load.getQueryConnection();
-        if (conn == null || !conn.loadValidatedConnection(settings,
-                    getCredentialsProvider())
+        if (conn == null || conn.loadValidatedConnection(settings, getCredentialsProvider())
                 || query == null || m_query == null || !query.equals(m_query)) {
             m_lastSpec = null;
             try {
-                m_load.setDBQueryConnection(
-                        new DatabaseQueryConnectionSettings(settings,
-                            getCredentialsProvider()));
+                m_load.setDBQueryConnection(new DatabaseQueryConnectionSettings(settings, getCredentialsProvider()));
             } catch (Throwable t) {
                 throw new InvalidSettingsException(t);
             }

@@ -49,6 +49,7 @@ package org.knime.base.node.io.pmml.read;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -92,6 +93,11 @@ public class PMMLImport {
      */
     public PMMLImport(final File file, final boolean update)
             throws IOException, XmlException, IllegalArgumentException {
+        this(checkFileAndGetURL(file), update);
+    }
+
+    /** Checks file existence (throws exception if not exists) and returns corresponding URL. */
+    private static URL checkFileAndGetURL(final File file) throws IOException {
         if (file == null) {
             throw new IllegalArgumentException("File must not be null!");
         }
@@ -99,9 +105,38 @@ public class PMMLImport {
             throw new IllegalArgumentException("File " + file.getName()
                     + " does not exists.");
         }
+        return file.toURI().toURL();
+    }
 
+    /**
+     * Reads and validates the passed file and creates the
+     * {@link PMMLPortObjectSpec} from the content of the file.
+     *
+     * @param url url of PMML file
+     * @param update try to update the PMML to version 4.1 if an older version
+     *      is imported
+     * @throws IOException if something goes wrong reading the file
+     * @throws XmlException if an invalid PMML file is passed
+     * @throws IllegalArgumentException if the input file is invalid or has invalid content
+     */
+    PMMLImport(final URL url, final boolean update)
+            throws IOException, XmlException, IllegalArgumentException {
+
+        if (url == null) {
+            throw new IllegalArgumentException("URL argument must not be null.");
+        }
+        String urlToString;
+        if ("file".equals(url.getProtocol())) {
+            try {
+                urlToString = new File(url.toURI()).getAbsolutePath();
+            } catch (Exception e) {
+                urlToString = url.toString();
+            }
+        } else {
+            urlToString = url.toString();
+        }
         PMMLDocument pmmlDoc = null;
-        XmlObject xmlDoc = XmlObject.Factory.parse(file);
+        XmlObject xmlDoc = XmlObject.Factory.parse(url.openStream());
         if (xmlDoc instanceof PMMLDocument) {
             pmmlDoc = (PMMLDocument)xmlDoc;
         } else {
@@ -128,14 +163,12 @@ public class PMMLImport {
             }
         }
         if (pmmlDoc == null) {
-            throw new IllegalArgumentException("File \"" + file
-                    + "\" is not a valid PMML 4.1 file.");
+            throw new IllegalArgumentException("File \"" + urlToString + "\" is not a valid PMML 4.1 file.");
         }
         Map<String, String> msg = PMMLValidator.validatePMML(pmmlDoc);
         if (!msg.isEmpty()) {
             StringBuffer sb = new StringBuffer();
-            sb.append("File \"" + file
-                    + "\" is not a valid PMML 4.1 file. Errors:\n");
+            sb.append("File \"" + urlToString + "\" is not a valid PMML 4.1 file. Errors:\n");
             for (Map.Entry<String, String> entry : msg.entrySet()) {
                 String location = entry.getKey();
                 String message = entry.getValue();
