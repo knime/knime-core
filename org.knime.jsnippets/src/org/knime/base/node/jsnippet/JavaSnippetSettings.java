@@ -74,6 +74,7 @@ public class JavaSnippetSettings {
     private static final String IN_VARS = "inVars";
     private static final String TEMPLATE_UUID = "templateUUID";
     private static final String VERSION = "version";
+    private static final String RUN_ON_EXECUTE = "runOnExecute";
 
     /** Custom imports. */
     private String m_scriptImports;
@@ -100,6 +101,9 @@ public class JavaSnippetSettings {
     /** The version of the java snippet. */
     private String m_version;
 
+    /** If Java Edit Variable should be run during execute, not configure. */
+    private boolean m_runOnExecute;
+
 
     /**
      * Create a new instance.
@@ -115,6 +119,7 @@ public class JavaSnippetSettings {
         m_inVars = new InVarList();
         m_version = JavaSnippet.VERSION_1_X;
         m_templateUUID = null;
+        m_runOnExecute = false;
     }
 
 
@@ -221,6 +226,19 @@ public class JavaSnippetSettings {
         m_templateUUID = templateUUID;
     }
 
+    /**
+     * @return the m_runOnExecute
+     */
+    public boolean isRunOnExecute() {
+        return m_runOnExecute;
+    }
+
+    /**
+     * @param runOnExecute the runOnExecute to set
+     */
+    public void setRunOnExecute(final boolean runOnExecute) {
+        m_runOnExecute = runOnExecute;
+    }
 
     /**
      * Set the system fields definitions of the java snippet.
@@ -248,6 +266,7 @@ public class JavaSnippetSettings {
         m_inVars.saveSettings(settings.addConfig(IN_VARS));
         settings.addString(VERSION, m_version);
         settings.addString(TEMPLATE_UUID, m_templateUUID);
+        settings.addBoolean(RUN_ON_EXECUTE, m_runOnExecute);
     }
 
     /** Loads parameters in NodeModel.
@@ -268,6 +287,8 @@ public class JavaSnippetSettings {
         if (settings.containsKey(TEMPLATE_UUID)) {
             m_templateUUID = settings.getString(TEMPLATE_UUID);
         }
+        // added in 2.8 (only java edit variable) -- 2.7 scripts were always run on execute()
+        m_runOnExecute = settings.getBoolean(RUN_ON_EXECUTE, true);
     }
 
 
@@ -286,6 +307,8 @@ public class JavaSnippetSettings {
             m_inVars.loadSettingsForDialog(settings.getConfig(IN_VARS));
             m_version = settings.getString(VERSION, JavaSnippet.VERSION_1_X);
             m_templateUUID = settings.getString(TEMPLATE_UUID, null);
+            // added in 2.8 (only java edit variable)
+            m_runOnExecute = settings.getBoolean(RUN_ON_EXECUTE, false);
         } catch (InvalidSettingsException e) {
             throw new IllegalStateException(e);
         }

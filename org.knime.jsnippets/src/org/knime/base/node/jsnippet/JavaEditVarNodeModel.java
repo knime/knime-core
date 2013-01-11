@@ -126,16 +126,17 @@ public class JavaEditVarNodeModel extends NodeModel {
                         flowVar.getStringValue());
             }
         }
+        // execute if execute on config flag is set
+        if (!m_settings.isRunOnExecute()) {
+            performExecute(null);
+        }
         return new PortObjectSpec[] {FlowVariablePortObjectSpec.INSTANCE};
     }
 
     /**
-     * {@inheritDoc}
+     *
      */
-    @Override
-    protected PortObject[] execute(final PortObject[] inObjects,
-            final ExecutionContext exec) throws Exception {
-        m_snippet.setSettings(m_settings);
+    private void performExecute(final ExecutionContext exec) {
         FlowVariableRepository flowVarRepo =
             new FlowVariableRepository(getAvailableInputFlowVariables());
         m_snippet.execute(flowVarRepo, exec);
@@ -148,6 +149,20 @@ public class JavaEditVarNodeModel extends NodeModel {
             } else { // case: type.equals(Type.STRING)
                 pushFlowVariableString(var.getName(), var.getStringValue());
             }
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected PortObject[] execute(final PortObject[] inObjects,
+            final ExecutionContext exec) throws Exception {
+        // Execute only if not done during config, running twice there may be
+        // the chance to perform execution on already updated values.
+        if (!m_settings.isRunOnExecute()) {
+            m_snippet.setSettings(m_settings);
+            performExecute(exec);
         }
         return new PortObject[] {FlowVariablePortObject.INSTANCE};
     }
