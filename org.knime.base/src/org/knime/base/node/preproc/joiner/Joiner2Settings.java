@@ -85,10 +85,15 @@ public class Joiner2Settings {
      */
     public static final String VERSION_1 = "version_1";
     /**
-     * The version for Joiner nodes for KNIME v2.7 and later.
+     * The version for Joiner nodes for KNIME v2.7.
      * @since 2.7
      */
     public static final String VERSION_2 = "version_2";
+    /**
+     * The version for Joiner nodes for KNIME v2.7.1 and later. Partial revert of Bug 3368 (see Bug 3916).
+     * @since 2.7
+     */
+    public static final String VERSION_2_1 = "version_2.1";
 
     /**
      * This enum holds all ways of handling duplicate column names in the two
@@ -100,6 +105,8 @@ public class Joiner2Settings {
         /** Filter out duplicate columns from the second table. */
         Filter,
         /** Append a suffix to the columns from the second table. */
+        AppendSuffixAutomatic,
+        /** Append a custom suffix to the columns from the second table. */
         AppendSuffix,
         /** Don't execute the node. */
         DontExecute;
@@ -504,6 +511,10 @@ public class Joiner2Settings {
         m_duplicateHandling =
                 DuplicateHandling.valueOf(settings
                         .getString(DUPLICATE_COLUMN_HANDLING));
+        if (m_version.equals(VERSION_2)
+                && m_duplicateHandling.equals(DuplicateHandling.AppendSuffix)) {
+            m_duplicateHandling = DuplicateHandling.AppendSuffixAutomatic;
+        }
         m_compositionMode =
             CompositionMode.valueOf(settings.getString(COPOSITION_MODE));
         m_joinMode = JoinMode.valueOf(settings.getString(JOIN_MODE));
@@ -539,6 +550,10 @@ public class Joiner2Settings {
                 DuplicateHandling.valueOf(settings.getString(
                         DUPLICATE_COLUMN_HANDLING,
                         DuplicateHandling.AppendSuffix.toString()));
+        if (m_version.equals(VERSION_2)
+                && m_duplicateHandling.equals(DuplicateHandling.AppendSuffix)) {
+            m_duplicateHandling = DuplicateHandling.AppendSuffixAutomatic;
+        }
         m_compositionMode =
             CompositionMode.valueOf(settings.getString(
                     COPOSITION_MODE, CompositionMode.MatchAll.toString()));
@@ -552,7 +567,7 @@ public class Joiner2Settings {
             settings.getStringArray(RIGHT_JOINING_COLUMNS,
                     new String[] {Joiner2Settings.ROW_KEY_IDENTIFIER});
         m_duplicateColSuffix = settings.getString(DUPLICATE_COLUMN_SUFFIX,
-                                                  "");
+                                                  "(*)");
 
         m_leftIncludeCols = settings.getStringArray(LEFT_INCLUDE_COLUMNS,
                 new String[0]);

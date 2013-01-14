@@ -7,6 +7,12 @@
                 <message_argument value="2.6.2.0034909"/>
             </message_arguments>
         </filter>
+        <filter comment="joiner fix 3916" id="924844039">
+            <message_arguments>
+                <message_argument value="2.7.0"/>
+                <message_argument value="2.7.0"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="META-INF/MANIFEST.MF" type="schemaorg_apache_xmlbeans.system.s3B82E2FB9AF537F6FF8B321C34E0C68C.TypeSystemHolder">
         <filter id="305422471">
@@ -503,6 +509,20 @@
                 <message_argument value="NodeModel"/>
                 <message_argument value="RowFilterNodeModel"/>
                 <message_argument value="getOutputPortRoles()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/joiner/Joiner2Settings.java" type="org.knime.base.node.preproc.joiner.Joiner2Settings">
+        <filter comment="added 2.7.1" id="1143996420">
+            <message_arguments>
+                <message_argument value="VERSION_2_1"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/org/knime/base/node/preproc/joiner/Joiner2Settings.java" type="org.knime.base.node.preproc.joiner.Joiner2Settings$DuplicateHandling">
+        <filter comment="added in 2.7.1 - bug fix" id="1177550852">
+            <message_arguments>
+                <message_argument value="AppendSuffixAutomatic"/>
             </message_arguments>
         </filter>
     </resource>

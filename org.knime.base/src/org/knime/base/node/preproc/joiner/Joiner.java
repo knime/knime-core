@@ -233,11 +233,10 @@ public final class Joiner {
             rightCols.removeAll(leftCols);
         }
 
-        if ((!duplicates.isEmpty())
-                && m_settings.supportsDuplicateColumnSuffix()
-                && m_settings.getDuplicateColumnSuffix().equals("")) {
-            throw new InvalidSettingsException("No suffix for duplicate "
-                    + "columns provided.");
+        if ((!duplicates.isEmpty()) && m_settings.getDuplicateHandling().equals(DuplicateHandling.AppendSuffix)
+                && (m_settings.getDuplicateColumnSuffix() == null
+                || m_settings.getDuplicateColumnSuffix().equals(""))) {
+            throw new InvalidSettingsException("No suffix for duplicate columns provided.");
         }
 
         // check if data types of joining columns do match
@@ -317,14 +316,14 @@ public final class Joiner {
         for (int i = 0; i < specs[1].getNumColumns(); i++) {
             DataColumnSpec columnSpec = specs[1].getColumnSpec(i);
             if (rightCols.contains(columnSpec.getName())) {
-                if (m_settings.supportsDuplicateColumnSuffix()) {
-                    // Code for KNIME v2.6 and older
-                    // (kept for backward compatibility)
-                    if (duplicates.contains(columnSpec.getName())) {
+                if (m_settings.getDuplicateHandling().equals(DuplicateHandling.AppendSuffix)) {
+                    if (m_leftSurvivors.contains(columnSpec.getName()) 
+                            || m_rightSurvivors.contains(columnSpec.getName())) {
                         String newName = columnSpec.getName();
                         do {
                             newName += m_settings.getDuplicateColumnSuffix();
-                        } while (rightCols.contains(newName));
+                        } while (m_leftSurvivors.contains(newName)
+                                || m_rightSurvivors.contains(newName));
 
                         DataColumnSpecCreator dcsc =
                             new DataColumnSpecCreator(columnSpec);
@@ -336,7 +335,6 @@ public final class Joiner {
                         outColSpecs.add(columnSpec);
                     }
                 } else {
-                    // Since KNIME v2.7
                     String newName = nameGen.newName(columnSpec.getName());
                     if (newName.equals(columnSpec.getName())) {
                         outColSpecs.add(columnSpec);
@@ -1103,10 +1101,9 @@ public final class Joiner {
                     + "the right table do not match");
         }
 
-        if (s.supportsDuplicateColumnSuffix()
-            && DuplicateHandling.AppendSuffix.equals(s.getDuplicateHandling())
-            && ((s.getDuplicateColumnSuffix() == null) || (s
-                    .getDuplicateColumnSuffix().length() < 1))) {
+        if (s.getDuplicateHandling().equals(DuplicateHandling.AppendSuffix)
+            && (s.getDuplicateColumnSuffix() == null
+            || s.getDuplicateColumnSuffix().isEmpty())) {
             throw new InvalidSettingsException(
             "No suffix for duplicate columns provided");
         }
