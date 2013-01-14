@@ -160,7 +160,7 @@ public class JavaEditVarNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         // Execute only if not done during config, running twice there may be
         // the chance to perform execution on already updated values.
-        if (!m_settings.isRunOnExecute()) {
+        if (m_settings.isRunOnExecute()) {
             m_snippet.setSettings(m_settings);
             performExecute(exec);
         }
