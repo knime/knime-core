@@ -121,8 +121,8 @@ public class WrappedNodeDialog extends Dialog {
 
     private final AtomicBoolean m_dialogSizeComputed = new AtomicBoolean();
 
-    private final static boolean enableMacOSXWorkaround = Boolean
-            .getBoolean(KNIMEConstants.PROPERTY_MACOSX_DIALOG_WORKAROUND);
+    private static final boolean enableMacOSXWorkaround = Boolean.getBoolean(
+            KNIMEConstants.PROPERTY_MACOSX_DIALOG_WORKAROUND);
 
     /**
      * Creates the (application modal) dialog for a given node.
@@ -362,8 +362,9 @@ public class WrappedNodeDialog extends Dialog {
                     btnOK.setText("OK - Execute");
                 }
                 if (ke.keyCode == SWT.CR) {
-                    if (ke.stateMask == SWT.CTRL
-                            || ke.stateMask == SWT.SHIFT + SWT.CTRL) {
+                    if (ke.stateMask == SWT.CTRL || ke.stateMask == SWT.SHIFT + SWT.CTRL) {
+                        // Bug 3942: transfer focus to OK button to have all component to auto-commit their changes
+                        btnOK.forceFocus();
                         // force OK - Execute when CTRL and ENTER is pressed
                         // open first out-port view if SHIFT is pressed
                         doOK(ke, true, ke.stateMask == SWT.SHIFT + SWT.CTRL);
