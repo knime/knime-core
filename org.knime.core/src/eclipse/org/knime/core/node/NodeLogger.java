@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -340,7 +340,7 @@ public final class NodeLogger {
     /** Write copyright message. */
     private static void copyrightMessage() {
         NodeLogger l = getLogger(NodeLogger.class);
-        l.info("# Copyright, 2003 - 2012                                    #");
+        l.info("# Copyright, 2003 - 2013                                    #");
         l.info("# University of Konstanz, Germany.                          #");
         l.info("# Chair for Bioinformatics and Information Mining           #");
         l.info("# Prof. Dr. Michael R. Berthold                             #");
