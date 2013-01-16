@@ -6696,7 +6696,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
         }
         if (!sweep(nodeIDsInPersistorSet, false) && !isStateChangePredictable) {
-            loadResult.addError("Some node states were invalid");
+            loadResult.addWarning("Some node states were invalid");
         }
     }
 
