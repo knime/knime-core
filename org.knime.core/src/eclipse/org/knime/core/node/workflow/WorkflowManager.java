@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -6696,7 +6696,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
         }
         if (!sweep(nodeIDsInPersistorSet, false) && !isStateChangePredictable) {
-            loadResult.addError("Some node states were invalid");
+            loadResult.addWarning("Some node states were invalid");
         }
     }
 

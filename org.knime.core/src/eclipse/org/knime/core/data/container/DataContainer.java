@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -842,6 +842,15 @@ public class DataContainer implements RowAppender {
         }
         m_size += 1;
     } // addRowToTable(DataRow)
+
+    /** @return size of buffer temp file in bytes, -1 if not set. Only for debugging/test purposes. */
+    long getBufferFileSize() {
+        Buffer b = m_table != null ? m_table.getBuffer() : m_buffer;
+        if (b != null) {
+            return b.getBufferFileSize();
+        }
+        return -1L;
+    }
 
     /**
      * Get an internal id for the buffer being used. This ID is used in

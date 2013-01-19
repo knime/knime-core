@@ -2,7 +2,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  * 
- * Copyright, 2003 - 2011
+ * Copyright, 2003 - 2013
  * Universitaet Konstanz, Germany.
  * Lehrstuhl fuer Angewandte Informatik
  * Prof. Dr. Michael R. Berthold

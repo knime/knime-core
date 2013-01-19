@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -133,7 +133,8 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
     /** Component with a list of all input flow variables. */
     protected FlowVariableList m_flowVarsList;
 
-    private JavaSnippetSettings m_settings;
+    /** The settings. */
+    protected JavaSnippetSettings m_settings;
     private JavaSnippet m_snippet;
     private InFieldsTable m_inFieldsTable;
     private OutFieldsTable m_outFieldsTable;
@@ -146,8 +147,10 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
 
     private File[] m_autoCompletionJars;
 
+
     @SuppressWarnings("rawtypes")
-    private Class m_templateMetaCategory;
+    /** The templates category for templates viewed or edited by this dialog. */
+    protected Class m_templateMetaCategory;
     private JLabel m_templateLocation;
 
 
@@ -168,7 +171,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
      * @param isPreview if this is a preview used for showing templates.
      */
     @SuppressWarnings("rawtypes")
-    private JavaSnippetNodeDialog(final Class templateMetaCategory,
+    protected JavaSnippetNodeDialog(final Class templateMetaCategory,
             final boolean isPreview) {
         m_templateMetaCategory = templateMetaCategory;
         m_settings = new JavaSnippetSettings();
@@ -263,9 +266,12 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
         p.add(centerPanel, BorderLayout.CENTER);
         JPanel templateInfoPanel = createTemplateInfoPanel(isPreview);
         p.add(templateInfoPanel, BorderLayout.NORTH);
+        JPanel optionsPanel = createOptionsPanel();
+        if (optionsPanel != null) {
+            p.add(optionsPanel, BorderLayout.SOUTH);
+        }
         return p;
     }
-
 
     /**
      * The panel at the to with the "Create Template..." Button.
@@ -356,8 +362,8 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
 
     /**
      * Create a non editable preview to be used to display a template. This
-     * method is typically overriden by subclasses.
-     * @return a new instance prpared to display a preview.
+     * method is typically overridden by subclasses.
+     * @return a new instance prepared to display a preview.
      */
     protected JavaSnippetNodeDialog createPreview() {
         return new JavaSnippetNodeDialog(m_templateMetaCategory, true);
@@ -442,6 +448,16 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
         return varSplitPane;
     }
 
+
+
+    /**
+     * Create Panel with additional options to be displayed in the south.
+     * @return options panel or null if there are no additional options.
+     */
+    protected JPanel createOptionsPanel() {
+        return null;
+    }
+
     private void updateAutocompletion() {
         LanguageSupportFactory lsf = LanguageSupportFactory.get();
         LanguageSupport support = lsf.getSupportFor(
@@ -519,7 +535,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
      * user input.
      * @param enabled true if this component should be enabled, false otherwise
      */
-    public void setEnabled(final boolean enabled) {
+    protected void setEnabled(final boolean enabled) {
         if (m_isEnabled != enabled) {
             m_colList.setEnabled(enabled);
             m_flowVarsList.setEnabled(enabled);
@@ -556,7 +572,12 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
         });
     }
 
-    private void loadSettingsFromInternal(final NodeSettingsRO settings,
+    /**
+     * Load settings invoked from the EDT-Thread.
+     * @param settings the settings to load
+     * @param specs the specs of the input table
+     */
+    protected void loadSettingsFromInternal(final NodeSettingsRO settings,
             final DataTableSpec[] specs) {
         m_settings.loadSettingsForDialog(settings);
 
@@ -689,8 +710,21 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
             throw new IllegalArgumentException(
                     "The output fields table has errors.");
         }
+        // give subclasses the chance to modify settings
+        preSaveSettings(s);
 
         s.saveSettings(settings);
     }
+
+    /**
+     * Called right before storing the settings object. Gives subclasses
+     * the chance to modify the settings object.
+     * @param s the settings
+     */
+    protected void preSaveSettings(final JavaSnippetSettings s) {
+        // just a place holder.
+    }
+
+
 
 }
