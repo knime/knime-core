@@ -7,6 +7,12 @@
                 <message_argument value="org.knime.base_2.7.0"/>
             </message_arguments>
         </filter>
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="schemaorg_apache_xmlbeans.system.sEF316ABABAA840DCBC7DB6F63E1CF526.TypeSystemHolder"/>
+                <message_argument value="org.knime.base_2.7.1"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/org/knime/base/node/preproc/filter/row/RowFilterNodeModel.java" type="org.knime.base.node.preproc.filter.row.RowFilterNodeModel">
         <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="571519004">
