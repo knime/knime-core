@@ -103,20 +103,7 @@ public class RangeOperator extends AggregationOperator {
     public RangeOperator(final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
         this(new OperatorData("Range", false, false, DoubleValue.class, false),
-                globalSettings, setInclMissingFlag(opColSettings));
-    }
-
-    /**
-     * Ensure that the flag is set correctly since this method does not
-     * support changing of the missing cell handling option.
-     *
-     * @param opColSettings the {@link OperatorColumnSettings} to set
-     * @return the correct {@link OperatorColumnSettings}
-     */
-    private static OperatorColumnSettings setInclMissingFlag(
-            final OperatorColumnSettings opColSettings) {
-        opColSettings.setInclMissing(false);
-        return opColSettings;
+                globalSettings, AggregationOperator.setInclMissingFlag(opColSettings, false));
     }
 
     /**

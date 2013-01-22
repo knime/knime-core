@@ -210,4 +210,78 @@ public class OperatorData {
     public boolean usesLimit() {
         return m_usesLimit;
     }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((m_colName == null) ? 0 : m_colName.hashCode());
+        result = prime * result + ((m_id == null) ? 0 : m_id.hashCode());
+        result = prime * result + (m_keepColSpec ? 1231 : 1237);
+        result = prime * result + ((m_label == null) ? 0 : m_label.hashCode());
+        result = prime * result + ((m_supportedType == null) ? 0 : m_supportedType.hashCode());
+        result = prime * result + (m_supportsMissingVals ? 1231 : 1237);
+        result = prime * result + (m_usesLimit ? 1231 : 1237);
+        return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        OperatorData other = (OperatorData)obj;
+        if (m_id == null) {
+            if (other.m_id != null) {
+                return false;
+            }
+        } else if (!m_id.equals(other.m_id)) {
+            return false;
+        }
+        if (m_colName == null) {
+            if (other.m_colName != null) {
+                return false;
+            }
+        } else if (!m_colName.equals(other.m_colName)) {
+            return false;
+        }
+        if (m_keepColSpec != other.m_keepColSpec) {
+            return false;
+        }
+        if (m_label == null) {
+            if (other.m_label != null) {
+                return false;
+            }
+        } else if (!m_label.equals(other.m_label)) {
+            return false;
+        }
+        if (m_supportedType == null) {
+            if (other.m_supportedType != null) {
+                return false;
+            }
+        } else if (!m_supportedType.equals(other.m_supportedType)) {
+            return false;
+        }
+        if (m_supportsMissingVals != other.m_supportsMissingVals) {
+            return false;
+        }
+        if (m_usesLimit != other.m_usesLimit) {
+            return false;
+        }
+        return true;
+    }
+
+
 }

@@ -92,21 +92,8 @@ public class DateMeanOperator extends AggregationOperator {
      */
     public DateMeanOperator(final GlobalSettings globalSettings,
             final OperatorColumnSettings opColSettings) {
-        this(new OperatorData("Mean date", false, true, DateAndTimeValue.class,
-                false), globalSettings, setInclMissingFlag(opColSettings));
-    }
-
-    /**
-     * Ensure that the flag is set correctly since this method does not
-     * support changing of the missing cell handling option.
-     *
-     * @param opColSettings the {@link OperatorColumnSettings} to set
-     * @return the correct {@link OperatorColumnSettings}
-     */
-    private static OperatorColumnSettings setInclMissingFlag(
-            final OperatorColumnSettings opColSettings) {
-        opColSettings.setInclMissing(false);
-        return opColSettings;
+        this(new OperatorData("Mean date", false, true, DateAndTimeValue.class, false),
+             globalSettings, AggregationOperator.setInclMissingFlag(opColSettings, false));
     }
 
     /**

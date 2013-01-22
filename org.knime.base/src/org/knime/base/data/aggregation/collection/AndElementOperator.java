@@ -90,6 +90,7 @@ public class AndElementOperator extends AggregationOperator {
                     "Maximum unique values number to big");
         }
     }
+
     /**Constructor for class AndElementOperator.
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings

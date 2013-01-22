@@ -52,6 +52,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.filestore.FileStore;
@@ -124,7 +125,6 @@ public class GlobalSettings {
      * @see #GlobalSettings(FileStoreFactory, List, int, String,
      * DataTableSpec, int)
      */
-    @SuppressWarnings("unchecked")
     @Deprecated
     public GlobalSettings(final int maxUniqueValues,
             final String valueDelimiter, final DataTableSpec spec,
@@ -352,5 +352,81 @@ public class GlobalSettings {
             throw new NullPointerException("key must not be null");
         }
         return m_keyValueMap.get(key);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((m_fileStoreFactory == null) ? 0 : m_fileStoreFactory.hashCode());
+        result = prime * result + ((m_groupColNames == null) ? 0 : m_groupColNames.hashCode());
+        result = prime * result + ((m_keyValueMap == null) ? 0 : m_keyValueMap.hashCode());
+        result = prime * result + m_maxUniqueValues;
+        result = prime * result + m_noOfRows;
+        result = prime * result + ((m_spec == null) ? 0 : m_spec.hashCode());
+        result = prime * result + ((m_valueDelimiter == null) ? 0 : m_valueDelimiter.hashCode());
+        return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        GlobalSettings other = (GlobalSettings)obj;
+        if (m_fileStoreFactory == null) {
+            if (other.m_fileStoreFactory != null) {
+                return false;
+            }
+        } else if (!m_fileStoreFactory.equals(other.m_fileStoreFactory)) {
+            return false;
+        }
+        if (m_groupColNames == null) {
+            if (other.m_groupColNames != null) {
+                return false;
+            }
+        } else if (!m_groupColNames.equals(other.m_groupColNames)) {
+            return false;
+        }
+        if (m_keyValueMap == null) {
+            if (other.m_keyValueMap != null) {
+                return false;
+            }
+        } else if (!m_keyValueMap.equals(other.m_keyValueMap)) {
+            return false;
+        }
+        if (m_maxUniqueValues != other.m_maxUniqueValues) {
+            return false;
+        }
+        if (m_noOfRows != other.m_noOfRows) {
+            return false;
+        }
+        if (m_spec == null) {
+            if (other.m_spec != null) {
+                return false;
+            }
+        } else if (!m_spec.equals(other.m_spec)) {
+            return false;
+        }
+        if (m_valueDelimiter == null) {
+            if (other.m_valueDelimiter != null) {
+                return false;
+            }
+        } else if (!m_valueDelimiter.equals(other.m_valueDelimiter)) {
+            return false;
+        }
+        return true;
     }
 }

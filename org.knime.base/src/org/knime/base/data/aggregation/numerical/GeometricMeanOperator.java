@@ -87,20 +87,7 @@ public class GeometricMeanOperator extends AggregationOperator {
             final OperatorColumnSettings opColSettings) {
         this(new OperatorData("Geometric Mean", "Geometric mean", "Geom. mean",
                 false, false, DoubleValue.class, false),
-                globalSettings, setInclMissingFlag(opColSettings));
-    }
-
-    /**
-     * Ensure that the flag is set correctly since this method does not
-     * support changing of the missing cell handling option.
-     *
-     * @param opColSettings the {@link OperatorColumnSettings} to set
-     * @return the correct {@link OperatorColumnSettings}
-     */
-    private static OperatorColumnSettings setInclMissingFlag(
-            final OperatorColumnSettings opColSettings) {
-        opColSettings.setInclMissing(false);
-        return opColSettings;
+                globalSettings, AggregationOperator.setInclMissingFlag(opColSettings, false));
     }
 
     /**
