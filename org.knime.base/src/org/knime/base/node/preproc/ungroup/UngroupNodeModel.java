@@ -51,6 +51,23 @@
 
 package org.knime.base.node.preproc.ungroup;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -60,6 +77,7 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.data.def.DefaultRow;
+import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -71,24 +89,12 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
+import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Set;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
+import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 
 
 /**
@@ -97,6 +103,12 @@ import java.util.zip.GZIPOutputStream;
  */
 public class UngroupNodeModel extends NodeModel {
 
+    /**The config key of the collections column names.*/
+    private static final String CFG_COL_NAMES = "columnNames";
+
+    private final SettingsModelColumnFilter2 m_collCols =
+            createCollectionColsModel();
+
     private final SettingsModelString m_columnName =
         createColumnModel();
 
@@ -104,7 +116,7 @@ public class UngroupNodeModel extends NodeModel {
         createRemoveCollectionColModel();
 
     private final SettingsModelBoolean m_skipMissingVal =
-        createskipMissingValModel();
+        createSkipMissingValModel();
 
     private final SettingsModelBoolean m_enableHilite =
         createEnableHiliteModel();
@@ -124,6 +136,14 @@ public class UngroupNodeModel extends NodeModel {
     }
 
     /**
+     * @return the collection columns model
+     */
+    @SuppressWarnings("unchecked")
+    static SettingsModelColumnFilter2 createCollectionColsModel() {
+        return new SettingsModelColumnFilter2(CFG_COL_NAMES, CollectionDataValue.class);
+    }
+
+    /**
      * @return the enable hilite translation model
      */
     static SettingsModelBoolean createEnableHiliteModel() {
@@ -133,7 +153,7 @@ public class UngroupNodeModel extends NodeModel {
     /**
      * @return the ignore missing value model
      */
-    static SettingsModelBoolean createskipMissingValModel() {
+    static SettingsModelBoolean createSkipMissingValModel() {
         return new SettingsModelBoolean("skipMissingValues", false);
     }
 
@@ -147,9 +167,10 @@ public class UngroupNodeModel extends NodeModel {
     /**
      * @return the column name settings model
      */
-    static SettingsModelString createColumnModel() {
+    private static SettingsModelString createColumnModel() {
         return new SettingsModelString("columnName", null);
     }
+
     /**
      * {@inheritDoc}
      */
@@ -157,20 +178,7 @@ public class UngroupNodeModel extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         final DataTableSpec spec = inSpecs[0];
-        String colName = m_columnName.getStringValue();
-        if (colName == null || colName.length() <= 0) {
-            for (final DataColumnSpec colSpec : spec) {
-                if (colSpec.getType().isCompatible(CollectionDataValue.class)) {
-                    colName = colSpec.getName();
-                    m_columnName.setStringValue(colName);
-                    setWarningMessage("Column '" + colName
-                            + "' automatically preset");
-                    break;
-                }
-            }
-        }
-        final DataTableSpec resultSpec = createTableSpec(spec,
-                colName, m_removeCollectionCol.getBooleanValue());
+        final DataTableSpec resultSpec = compatibleCreateResultSpec(spec);
         return new DataTableSpec[] {resultSpec};
     }
 
@@ -184,22 +192,27 @@ public class UngroupNodeModel extends NodeModel {
             throw new InvalidSettingsException("Invalid input data");
         }
         final BufferedDataTable table = inData[0];
+        int[] colIdxs = getSelectedColIdxs(table.getDataTableSpec(), m_collCols);
+        if (colIdxs == null || colIdxs.length <= 0) {
+            setWarningMessage("No ungroup column selected. Node returns input table.");
+            return inData;
+        }
         final boolean removeCollectionCol =
             m_removeCollectionCol.getBooleanValue();
         final boolean skipMissingVals = m_skipMissingVal.getBooleanValue();
         final boolean enableHilite = m_enableHilite.getBooleanValue();
         final Map<RowKey, Set<RowKey>> hiliteMapping =
             new HashMap<RowKey, Set<RowKey>>();
-        final DataTableSpec newSpec =
-            createTableSpec(table.getSpec(), m_columnName.getStringValue(),
-                    removeCollectionCol);
+        final DataTableSpec newSpec = compatibleCreateResultSpec(table.getDataTableSpec());
         final BufferedDataContainer dc = exec.createDataContainer(newSpec);
         if (table.getRowCount() == 0) {
             dc.close();
             return new BufferedDataTable[] {dc.getTable()};
         }
-        final int colIdx = table.getSpec().findColumnIndex(
-                m_columnName.getStringValue());
+        @SuppressWarnings("unchecked")
+        Iterator<DataCell>[] iterators = new Iterator[colIdxs.length];
+        final DataCell[] missingCells = new DataCell[colIdxs.length];
+        Arrays.fill(missingCells, DataType.getMissingCell());
         final int totalRowCount = table.getRowCount();
         final double progressPerRow = 1.0 / totalRowCount;
         int rowCounter = 0;
@@ -208,19 +221,27 @@ public class UngroupNodeModel extends NodeModel {
             exec.checkCanceled();
             exec.setProgress(rowCounter * progressPerRow,
                     "Processing row " + rowCounter + " of " + totalRowCount);
-            final DataCell cell = row.getCell(colIdx);
-            final Iterator<DataCell> iterator;
-            final  CollectionDataValue listCell;
-            if (cell instanceof  CollectionDataValue) {
-                listCell = (CollectionDataValue)cell;
-                iterator = listCell.iterator();
-            } else {
-                //this is a missing cell append a missing cell as well if the
-                //skip missing value option is disabled
+            boolean allMissing = true;
+            for (int i = 0, length = colIdxs.length; i < length; i++) {
+                final DataCell cell = row.getCell(colIdxs[i]);
+                        final  CollectionDataValue listCell;
+                final Iterator<DataCell> iterator;
+                if (cell instanceof  CollectionDataValue) {
+                    listCell = (CollectionDataValue)cell;
+                    iterator = listCell.iterator();
+                    allMissing = false;
+                } else {
+                    iterator = null;
+                }
+                iterators[i] = iterator;
+            }
+            if (allMissing) {
+                //all collection column cells are missing cells append a row
+                //with missing cells as well if the skip missing value option is disabled
                 if (!skipMissingVals) {
                     final DefaultRow newRow =
-                        createClone(row.getKey(), row, colIdx,
-                                removeCollectionCol, DataType.getMissingCell());
+                            createClone(row.getKey(), row, colIdxs,
+                                        removeCollectionCol, missingCells);
                     if (enableHilite) {
                         //create the hilite entry
                         final Set<RowKey> keys = new HashSet<RowKey>(1);
@@ -238,21 +259,47 @@ public class UngroupNodeModel extends NodeModel {
             } else {
                 keys = null;
             }
-            while (iterator.hasNext()) {
-                final DataCell newCell = iterator.next();
-                if (newCell.isMissing() && skipMissingVals) {
+            boolean continueLoop = false;
+            boolean allEmpty = true;
+            do {
+                //reset the loop flag
+                allMissing = true;
+                continueLoop = false;
+                final DataCell[] newCells = new DataCell[iterators.length];
+                for (int i = 0, length = iterators.length; i < length; i++) {
+                    Iterator<DataCell> iterator = iterators[i];
+                    DataCell newCell;
+                    if (iterator != null && iterator.hasNext()) {
+                        allEmpty = false;
+                        continueLoop = true;
+                        newCell = iterator.next();
+                    } else {
+                        if (iterator == null) {
+                            allEmpty = false;
+                        }
+                        newCell = DataType.getMissingCell();
+                    }
+                    if (!newCell.isMissing()) {
+                        allMissing = false;
+                    }
+                    newCells[i] = newCell;
+                }
+                if (!allEmpty && !continueLoop) {
+                    break;
+                }
+                if (!allEmpty && allMissing && skipMissingVals) {
                     continue;
                 }
                 final RowKey oldKey = row.getKey();
                 final RowKey newKey = new RowKey(oldKey.getString()
-                        + "_" + counter++);
-                final DefaultRow newRow = createClone(newKey, row, colIdx,
-                        removeCollectionCol, newCell);
+                                                 + "_" + counter++);
+                final DefaultRow newRow = createClone(newKey, row, colIdxs,
+                                                  removeCollectionCol, newCells);
                 dc.addRowToTable(newRow);
                 if (keys != null) {
                     keys.add(newKey);
                 }
-            }
+            } while(continueLoop);
             if (keys != null && !keys.isEmpty()) {
                 hiliteMapping.put(row.getKey(), keys);
             }
@@ -266,71 +313,105 @@ public class UngroupNodeModel extends NodeModel {
     }
 
     private DefaultRow createClone(final RowKey newKey, final DataRow row,
-            final int collectionColIdx, final boolean removeCollectionCol,
-            final DataCell newCell) {
+            final int[] colIdxs, final boolean removeCollectionCol,
+            final DataCell[] newCells) {
+        assert colIdxs.length == newCells.length;
+        final Map<Integer, DataCell> map = new HashMap<Integer, DataCell>(newCells.length);
+        for (int i = 0, length = newCells.length; i < length; i++) {
+            map.put(Integer.valueOf(colIdxs[i]), newCells[i]);
+        }
         final int cellCount;
         if (removeCollectionCol) {
             cellCount = row.getNumCells();
         } else {
-            cellCount = row.getNumCells() + 1;
+            cellCount = row.getNumCells() + colIdxs.length;
         }
-        final DataCell[] newCells = new DataCell[cellCount];
+        final DataCell[] cells = new DataCell[cellCount];
         int cellIdx = 0;
         for (int i = 0, length = row.getNumCells(); i < length; i++) {
-            if (removeCollectionCol && i == collectionColIdx) {
+            if (removeCollectionCol && map.containsKey(Integer.valueOf(i))) {
                 //skip the collection column
                 continue;
             }
-            newCells[cellIdx++] = row.getCell(i);
+            cells[cellIdx++] = row.getCell(i);
         }
-        newCells[cellIdx++] = newCell;
-        return new DefaultRow(newKey, newCells);
+        //append all new cells
+        for (DataCell newCell : newCells) {
+            cells[cellIdx++] = newCell;
+        }
+        return new DefaultRow(newKey, cells);
+    }
+
+    private int[] getSelectedColIdxs(final DataTableSpec spec,
+            final SettingsModelColumnFilter2 columnFilter)
+    throws InvalidSettingsException {
+        final FilterResult filterResult = columnFilter.applyTo(spec);
+        final String[] featureNames = filterResult.getIncludes();
+        final int[] idxs = new int[featureNames.length];
+        for (int i = 0, length = featureNames.length; i < length; i++) {
+            final String name = featureNames[i];
+            idxs[i] = spec.findColumnIndex(name);
+            if (idxs[i] < 0) {
+                throw new InvalidSettingsException("Column with name "
+                        + name + " not found in input table");
+            }
+        }
+        return idxs;
     }
 
     /**
      * @param spec original spec
-     * @param colName the collection column name
      * @param removeCollectionCol <code>true</code> if the collection
      * column should be removed
+     * @param colNames the collection column names
      * @return the new spec
      * @throws InvalidSettingsException if an exception occurs
      */
     private static DataTableSpec createTableSpec(final DataTableSpec spec,
-            final String colName, final boolean removeCollectionCol)
+            final boolean removeCollectionCol, final String... colNames)
             throws InvalidSettingsException {
-        final int index = spec.findColumnIndex(colName);
-        if (index < 0) {
-            throw new InvalidSettingsException(
-                    "Invalid column name: " + colName);
-        }
-        final DataColumnSpec colSpec = spec.getColumnSpec(index);
-        final DataType type = colSpec.getType();
-        final DataType basicType = type.getCollectionElementType();
-        if (basicType == null) {
-            throw new InvalidSettingsException("Invalid column name");
+        if (colNames == null || colNames.length <= 0) {
+            //the user has not selected any column
+            return spec;
         }
         final Collection<DataColumnSpec> specs =
-            new LinkedList<DataColumnSpec>();
-        final int noOfCols = spec.getNumColumns();
-        for (int i = 0; i < noOfCols; i++) {
-            final DataColumnSpec currentSpec = spec.getColumnSpec(i);
-            if (removeCollectionCol && currentSpec.equals(colSpec)) {
-                //skip the collection column
+                new LinkedList<DataColumnSpec>();
+        final Map<String, DataType> collectionColsMap =
+                new LinkedHashMap<String, DataType>(colNames.length);
+        for (final String colName : colNames) {
+            final int index = spec.findColumnIndex(colName);
+            if (index < 0) {
+                throw new InvalidSettingsException(
+                                       "Invalid column name '" + colName + "'");
+            }
+            final DataColumnSpec colSpec = spec.getColumnSpec(index);
+            final DataType type = colSpec.getType();
+            final DataType basicType = type.getCollectionElementType();
+            if (basicType == null) {
+                throw new InvalidSettingsException("Column '" + colName + "' is not of collection type");
+            }
+            collectionColsMap.put(colName, basicType);
+        }
+        for (final DataColumnSpec origColSpec: spec) {
+            if (removeCollectionCol && collectionColsMap.containsKey(origColSpec.getName())) {
+                //skip the selected collection columns
                 continue;
             }
-            specs.add(currentSpec);
-        }
-        final String newColName;
-        if (removeCollectionCol) {
-            //keep the original column name if the collection column is removed
-            newColName = colName;
-        } else {
-            newColName = DataTableSpec.getUniqueColumnName(
-                    spec, colName);
+            specs.add(origColSpec);
         }
         final DataColumnSpecCreator specCreator =
-            new DataColumnSpecCreator(newColName, basicType);
-        specs.add(specCreator.createSpec());
+                new DataColumnSpecCreator("dummy", StringCell.TYPE);
+        for (Entry<String, DataType> entry : collectionColsMap.entrySet()) {
+            if (removeCollectionCol) {
+                //keep the original column name if the collection columns are removed
+                specCreator.setName(entry.getKey());
+            } else {
+                specCreator.setName(DataTableSpec.getUniqueColumnName(
+                                               spec, entry.getKey()));
+            }
+            specCreator.setType(entry.getValue());
+            specs.add(specCreator.createSpec());
+        }
         final DataTableSpec resultSpec =
             new DataTableSpec(specs.toArray(new DataColumnSpec[0]));
         return resultSpec;
@@ -376,10 +457,13 @@ public class UngroupNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_columnName.validateSettings(settings);
         m_removeCollectionCol.validateSettings(settings);
         m_skipMissingVal.validateSettings(settings);
         m_enableHilite.validateSettings(settings);
+        if (settings.containsKey(CFG_COL_NAMES)) {
+            //this option has been introduced in KNIME 2.8
+            m_collCols.validateSettings(settings);
+        }
     }
     /**
      * {@inheritDoc}
@@ -387,10 +471,16 @@ public class UngroupNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
-        m_columnName.loadSettingsFrom(settings);
         m_removeCollectionCol.loadSettingsFrom(settings);
         m_skipMissingVal.loadSettingsFrom(settings);
         m_enableHilite.loadSettingsFrom(settings);
+        try {
+            // this option has been introduced in KNIME 2.8
+            m_collCols.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException e) {
+            //load and use the old settings
+            m_columnName.loadSettingsFrom(settings);
+        }
     }
 
     /**
@@ -398,10 +488,10 @@ public class UngroupNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
-        m_columnName.saveSettingsTo(settings);
         m_removeCollectionCol.saveSettingsTo(settings);
         m_skipMissingVal.saveSettingsTo(settings);
         m_enableHilite.saveSettingsTo(settings);
+        m_collCols.saveSettingsTo(settings);
     }
     /**
      * {@inheritDoc}
@@ -435,5 +525,26 @@ public class UngroupNodeModel extends NodeModel {
                 throw new IOException(ex.getMessage());
             }
         }
+    }
+
+    /**
+     * @param spec
+     * @return
+     * @throws InvalidSettingsException
+     */
+    private DataTableSpec compatibleCreateResultSpec(final DataTableSpec spec)
+            throws InvalidSettingsException {
+        final DataTableSpec resultSpec;
+        if (m_columnName.getStringValue() == null) {
+            //the column filter has been introduced in KNIME 2.8
+            final FilterResult filterResult = m_collCols.applyTo(spec);
+            String[] colNames = filterResult.getIncludes();
+            resultSpec = createTableSpec(spec, m_removeCollectionCol.getBooleanValue(),
+                                     colNames);
+        } else {
+            resultSpec = createTableSpec(spec, m_removeCollectionCol.getBooleanValue(),
+                                         m_columnName.getStringValue());
+        }
+        return resultSpec;
     }
 }

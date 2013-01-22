@@ -51,12 +51,10 @@
 
 package org.knime.base.node.preproc.ungroup;
 
-import org.knime.core.data.collection.CollectionDataValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
-import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
+import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 
 /**
@@ -64,14 +62,12 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
  * @author Tobias Koetter, University of Konstanz
  */
 public class UngroupNodeDialog extends DefaultNodeSettingsPane {
-    private final SettingsModelString m_columnName =
-        UngroupNodeModel.createColumnModel();
 
     private final SettingsModelBoolean m_removeCollectionCol =
         UngroupNodeModel.createRemoveCollectionColModel();
 
     private final SettingsModelBoolean m_skipMissingVal =
-        UngroupNodeModel.createskipMissingValModel();
+        UngroupNodeModel.createSkipMissingValModel();
 
     private final SettingsModelBoolean m_enableHilite =
         UngroupNodeModel.createEnableHiliteModel();
@@ -79,13 +75,14 @@ public class UngroupNodeDialog extends DefaultNodeSettingsPane {
     /**Constructor for class AppenderNodeDialog.
      *
      */
-    @SuppressWarnings("unchecked")
     public UngroupNodeDialog() {
-        addDialogComponent(new DialogComponentColumnNameSelection(m_columnName,
-                "Collection column: ", 0, CollectionDataValue.class));
+        createNewGroup(" Collection columns ");
+        addDialogComponent(new DialogComponentColumnFilter2(
+                        UngroupNodeModel.createCollectionColsModel(), 0));
+        createNewGroup(" Additional Settings ");
+        setHorizontalPlacement(true);
         addDialogComponent(new DialogComponentBoolean(m_removeCollectionCol,
                 "Remove selected collection column"));
-        setHorizontalPlacement(true);
         addDialogComponent(new DialogComponentBoolean(
                 m_skipMissingVal, "Skip missing values"));
         final DialogComponentBoolean enableHilite = new DialogComponentBoolean(
