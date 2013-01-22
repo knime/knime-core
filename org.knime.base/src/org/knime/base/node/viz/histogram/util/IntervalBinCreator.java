@@ -59,7 +59,7 @@ import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnDomain;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DoubleValue;
-import org.knime.core.data.IntValue;
+import org.knime.core.data.LongValue;
 
 /**
  * This class is a helper class of the {@link BinningUtil} class to create the
@@ -126,7 +126,7 @@ public abstract class IntervalBinCreator <E extends BinDataModel> {
             noOfBins = 1;
         }
         final boolean isInteger =
-            colSpec.getType().isCompatible(IntValue.class);
+            colSpec.getType().isCompatible(LongValue.class);
         double binInterval = BinningUtil.createBinInterval(upperBound,
                 lowerBound, noOfBins, isInteger);
         final double calculatedLowerBound =
