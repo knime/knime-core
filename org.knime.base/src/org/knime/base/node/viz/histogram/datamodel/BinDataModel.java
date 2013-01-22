@@ -51,22 +51,6 @@
 
 package org.knime.base.node.viz.histogram.datamodel;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.RowKey;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.StringCell;
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.config.Config;
-import org.knime.core.node.config.ConfigRO;
-import org.knime.core.node.config.ConfigWO;
-
-import org.knime.base.node.viz.aggregation.AggregationMethod;
-import org.knime.base.node.viz.histogram.HistogramLayout;
-import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;
-import org.knime.base.node.viz.histogram.util.ColorColumn;
-
 import java.awt.Color;
 import java.awt.Point;
 import java.awt.Rectangle;
@@ -77,6 +61,21 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.knime.base.node.viz.aggregation.AggregationMethod;
+import org.knime.base.node.viz.histogram.HistogramLayout;
+import org.knime.base.node.viz.histogram.datamodel.AbstractHistogramVizModel.HistogramHiliteCalculator;
+import org.knime.base.node.viz.histogram.util.ColorColumn;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.RowKey;
+import org.knime.core.data.def.DoubleCell;
+import org.knime.core.data.def.StringCell;
+import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.config.Config;
+import org.knime.core.node.config.ConfigRO;
+import org.knime.core.node.config.ConfigWO;
 
 /**
  * This class represents one bin in the histogram. A bin represents a value of
@@ -668,7 +667,7 @@ public class BinDataModel implements Serializable {
 
     /**
      * @param config the config object to use
-     * @param exec the {@link ExecutionMonitor} to provide progress messages
+     * @param exec the optional {@link ExecutionMonitor} to provide progress messages
      * @throws CanceledExecutionException if the operation is canceled
      */
     public void save2File(final ConfigWO config,
@@ -689,7 +688,9 @@ public class BinDataModel implements Serializable {
             final ConfigWO barConfig = barsConf.addConfig(CFG_BAR + idx++);
             bar.save2File(barConfig, exec);
         }
-        exec.checkCanceled();
+        if (exec != null) {
+            exec.checkCanceled();
+        }
     }
 
     /**
