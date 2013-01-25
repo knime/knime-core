@@ -52,6 +52,7 @@ package org.knime.testing.core;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.util.ArrayList;
@@ -62,14 +63,16 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.regex.Pattern;
 
+import junit.framework.TestCase;
+
 import org.eclipse.osgi.baseadaptor.bundlefile.BundleEntry;
 import org.eclipse.osgi.baseadaptor.loader.BaseClassLoader;
 import org.eclipse.osgi.baseadaptor.loader.ClasspathManager;
+import org.junit.Test;
 
 /**
- * This class collects all classes in the same classpath entry as itself. This
- * can either be a directory (if started from within the IDE) or a JAR file (if
- * started from an Eclipse installation).
+ * This class collects all classes in the same classpath entry as itself. This can either be a directory (if started
+ * from within the IDE) or a JAR file (if started from an Eclipse installation).
  *
  * @author Thorsten Meinl, University of Konstanz
  */
@@ -84,8 +87,7 @@ public abstract class AbstractTestcaseCollector {
     }
 
     /**
-     * Creates new collector. A list of classes that should be excluded can be
-     * given.
+     * Creates new collector. A list of classes that should be excluded can be given.
      *
      * @param excludedTestcases a list with classes to be excluded
      */
@@ -96,8 +98,7 @@ public abstract class AbstractTestcaseCollector {
     }
 
     /**
-     * Returns a list with class names that potentially contains JUnit test
-     * methods.
+     * Returns a list with class names that contain JUnit test methods or are old-style (JUnit3) testcases.
      *
      * @return a list with class names
      * @throws IOException if an I/O error occurs while collecting the classes
@@ -105,8 +106,7 @@ public abstract class AbstractTestcaseCollector {
     public List<String> getUnittestsClasses() throws IOException {
         BaseClassLoader cl = (BaseClassLoader)getClass().getClassLoader();
         ClasspathManager cpm = cl.getClasspathManager();
-        String classPath =
-                this.getClass().getName().replace(".", "/") + ".class";
+        String classPath = this.getClass().getName().replace(".", "/") + ".class";
 
         BundleEntry be = cpm.findLocalEntry(classPath);
         URL localUrl = be.getLocalURL();
@@ -117,13 +117,10 @@ public abstract class AbstractTestcaseCollector {
             path = path.replaceFirst(Pattern.quote(classPath) + "$", "");
             collectInDirectory(new File(path), "", classNames);
         } else if ("jar".equals(localUrl.getProtocol())) {
-            String path =
-                    localUrl.getPath().replaceFirst("^file:", "")
-                            .replaceFirst("\\!.+$", "");
+            String path = localUrl.getPath().replaceFirst("^file:", "").replaceFirst("\\!.+$", "");
             collectInJar(new JarFile(path), classNames);
         } else {
-            throw new IllegalStateException("Cannot read from protocol '"
-                    + localUrl.getProtocol() + "'");
+            throw new IllegalStateException("Cannot read from protocol '" + localUrl.getProtocol() + "'");
         }
 
         classNames.remove(this.getClass().getName());
@@ -139,14 +136,24 @@ public abstract class AbstractTestcaseCollector {
                 it.remove();
             } else {
                 try {
-                    Class<?> c =
-                            Class.forName(className, true, getClass()
-                                    .getClassLoader());
+                    Class<?> c = Class.forName(className, true, getClass().getClassLoader());
                     // remove abstract and non-public classes, they
                     // cannot be JUnit testcases
-                    if (((c.getModifiers() & Modifier.ABSTRACT) != 0)
-                            || ((c.getModifiers() & Modifier.PUBLIC) == 0)) {
+                    if (((c.getModifiers() & Modifier.ABSTRACT) != 0) || ((c.getModifiers() & Modifier.PUBLIC) == 0)) {
                         it.remove();
+                    } else if (!TestCase.class.isAssignableFrom(c)) {
+                        // check if there is at least one test method in the class
+                        // if it is not a JUnit3-style testcase
+                        boolean testMethodFound = false;
+                        for (Method m : c.getMethods()) {
+                            if (m.getAnnotation(Test.class) != null) {
+                                testMethodFound = true;
+                                break;
+                            }
+                        }
+                        if (!testMethodFound) {
+                            it.remove();
+                        }
                     }
                 } catch (ClassNotFoundException ex) {
                     // strange?!
@@ -157,38 +164,31 @@ public abstract class AbstractTestcaseCollector {
     }
 
     /**
-     * Recursively Collects and returns all classes (excluding inner classes)
-     * that are in the specified directory.
+     * Recursively Collects and returns all classes (excluding inner classes) that are in the specified directory.
      *
      * @param directory the directory
      * @param packageName the package name, initially the empty string
      * @param classNames a list that is filled with class names
      */
-    private void collectInDirectory(final File directory,
-            final String packageName, final List<String> classNames) {
+    private void collectInDirectory(final File directory, final String packageName, final List<String> classNames) {
         for (File f : directory.listFiles()) {
             if (f.isDirectory()) {
-                collectInDirectory(f, packageName + f.getName() + ".",
-                        classNames);
-            } else if (f.getName().endsWith(".class")
-                    && !f.getName().contains("$")) {
-                String s =
-                        packageName + f.getName().replaceFirst("\\.class$", "");
+                collectInDirectory(f, packageName + f.getName() + ".", classNames);
+            } else if (f.getName().endsWith(".class") && !f.getName().contains("$")) {
+                String s = packageName + f.getName().replaceFirst("\\.class$", "");
                 classNames.add(s);
             }
         }
     }
 
     /**
-     * Collects and returns all classes inside the given JAR file (excluding
-     * inner classes).
+     * Collects and returns all classes inside the given JAR file (excluding inner classes).
      *
      * @param jar the jar file
      * @param classNames a list that is filled with class names
      * @throws IOException if an I/O error occurs
      */
-    private void collectInJar(final JarFile jar, final List<String> classNames)
-            throws IOException {
+    private void collectInJar(final JarFile jar, final List<String> classNames) throws IOException {
         Enumeration<JarEntry> entries = jar.entries();
         while (entries.hasMoreElements()) {
             JarEntry e = entries.nextElement();
