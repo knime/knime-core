@@ -138,7 +138,7 @@ public class FileReaderAdvancedDialog extends JDialog {
      */
     private void initialize() {
         this.setSize(520, 425);
-        this.setTitle("Filereader: Advanced Settings");
+        this.setTitle("File Reader: Advanced Settings");
         this.setContentPane(getJContentPane());
     }
 

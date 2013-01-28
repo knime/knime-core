@@ -44,13 +44,14 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   07.05.2012 (kilian): created
  */
 package org.knime.base.node.preproc.rounddouble;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.math.RoundingMode;
 
 import org.knime.core.data.DataCell;
@@ -64,43 +65,43 @@ import org.knime.core.data.def.StringCell;
 
 /**
  * Creating data cells containing the rounded values.
- * 
+ *
  * @author Kilian Thiel, KNIME.com, Berlin, Germany
  */
 class RoundDoubleCellFactory extends AbstractCellFactory {
-    
+
     private int m_precision = 0;
-    
+
     private RoundingMode m_roundingMode;
-    
-    private NumberMode m_numberMode;    
-    
+
+    private NumberMode m_numberMode;
+
     private boolean m_outputAsString;
-    
+
     private int[] m_colIndexToRound;
-    
-    
+
+
     /**
      * Creates instance of <code>RoundDoubleCellFactory</code> with specified
      * precision.
-     * 
+     *
      * @param precision The decimal place to round to.
      * @param numberMode The mode of the precision to round to (decimal place,
      * significant figures).
-     * @param roundingMode The mode to round the double values. 
+     * @param roundingMode The mode to round the double values.
      * additional column or if the old values will be replaced.
-     * @param outputAsString Specifies whether rounded values will be 
+     * @param outputAsString Specifies whether rounded values will be
      * represented as strings or doubles.
      * @param colIndexToRound The indices of the columns containing the values
      * to round.
      * @param newColSpecs The specs of the new columns (replaced or appended).
      */
-    public RoundDoubleCellFactory(final int precision, 
-            final NumberMode numberMode, final RoundingMode roundingMode, 
-            final boolean outputAsString, final int[] colIndexToRound, 
+    public RoundDoubleCellFactory(final int precision,
+            final NumberMode numberMode, final RoundingMode roundingMode,
+            final boolean outputAsString, final int[] colIndexToRound,
             final DataColumnSpec[] newColSpecs) {
         super(newColSpecs);
-        
+
         // check for invalid arguments
         if (roundingMode == null) {
             throw new IllegalArgumentException(
@@ -114,7 +115,7 @@ class RoundDoubleCellFactory extends AbstractCellFactory {
             throw new IllegalArgumentException(
                     "Number mode may not be null!");
         }
-        
+
         m_precision = precision;
         m_roundingMode = roundingMode;
         m_outputAsString = outputAsString;
@@ -131,122 +132,63 @@ class RoundDoubleCellFactory extends AbstractCellFactory {
         int noCols = row.getNumCells();
         int nextIndexToRound = 0;
         int currIndexToRound = -1;
-        
+
         // walk through all columns and round if specified
         for (int i = 0; i < noCols; i++) {
-            
+
             // get next index of column to round (if still columns to round
             // are available).
             if (nextIndexToRound < m_colIndexToRound.length) {
                 currIndexToRound = m_colIndexToRound[nextIndexToRound];
             }
-            
+
             // if value needs to be rounded
             if (i == currIndexToRound) {
-                // check for missing
+                final DataCell outCell;
                 if (row.getCell(i).isMissing()) {
-                    newCells[nextIndexToRound] = DataType.getMissingCell();
+                    outCell = DataType.getMissingCell();
                 } else {
-                    double value = ((DoubleValue)row.getCell(i))
-                                .getDoubleValue();
-                
+                    double value = ((DoubleValue)row.getCell(i)).getDoubleValue();
+
                     // check for infinity or nan
                     if (Double.isInfinite(value) || Double.isNaN(value)) {
-                        newCells[nextIndexToRound] = createDataCell(value);
-                    // if values are in range -> round
+                        // this isn't nice as we shouldn't have NaN and Inf in the input ... but that's a problem
+                        // somewhere else
+                        outCell = m_outputAsString ? new StringCell(((Double)value).toString()) : new DoubleCell(value);
                     } else {
-                        BigDecimal bd = null;
+                        // if values are in range -> round
+                        BigDecimal bd = new BigDecimal(value);
 
-                        // decimal places or significant figures
-                        if (m_numberMode.equals(NumberMode.DECIMAL_PLACES)) {
-                            bd = new BigDecimal(value).setScale(m_precision,
-                                            m_roundingMode);
-                        } else {
-                            double roundedValue = roundToSignificantFigures(
-                                    value, m_precision, m_roundingMode);
-                            
-                            // check rounded value for infinity or nan
-                            if (Double.isInfinite(roundedValue) 
-                                    || Double.isNaN(roundedValue)) {
-                                newCells[nextIndexToRound] = createDataCell(
-                                        roundedValue);
-                            } else {
-                                bd = new BigDecimal(roundedValue);
-                            }
+                        switch (m_numberMode) {
+                            case DECIMAL_PLACES:
+                                bd = bd.setScale(m_precision, m_roundingMode);
+                                break;
+                            case SIGNIFICANT_FIGURES:
+                                bd = bd.round(new MathContext(m_precision, m_roundingMode));
+                                break;
+                            default:
+                                throw new IllegalStateException();
                         }
-                        
-                        // create data cell out of big decimal value
-                        if (bd != null) {
-                            newCells[nextIndexToRound] = createDataCell(bd);
+
+                        if (m_outputAsString) {
+                            outCell = new StringCell(bd.toString());
+                        } else {
+                            double roundedValue = bd.doubleValue();
+                            // check rounded value for nan (not sure why this could be the case)
+                            if (Double.isNaN(roundedValue)) {
+                                outCell = DataType.getMissingCell();
+                            } else {
+                                outCell = new DoubleCell(roundedValue);
+                            }
                         }
                     }
                 }
-                    
                 // increment index of included column indices
-                nextIndexToRound++;
+                newCells[nextIndexToRound++] = outCell;
             }
         }
-        
+
         return newCells;
     }
-    
-    private DataCell createDataCell(final double value) {
-        DataCell cell = null;
-        if (!m_outputAsString) {
-            cell = new DoubleCell(value);
-        } else {
-            cell = new StringCell(new Double(value).toString());
-        }
-        return cell;
-    }
-    
-    private DataCell createDataCell(final BigDecimal value) {
-        DataCell cell = null;
-        if (!m_outputAsString) {
-            cell = new DoubleCell(value.doubleValue());
-        } else {
-            cell = new StringCell(value.toString());
-        }
-        return cell;
-    }
 
-    private static double roundToSignificantFigures(final double number, 
-            final int precision, final RoundingMode roundingMode) {
-        // avoid NaN result 
-        if (number == 0) {
-            return 0;
-        }
-        
-        // determine maximum power to avoid infinity magnitude
-        final double maxPowerOfTen = Math.floor(Math.log10(Double.MAX_VALUE));
-
-        // avoid log of negative numbers
-        double posNum = number;
-        if (number < 0) {
-            posNum = -number;
-        }
-        final double d = Math.ceil(Math.log10(posNum));
-        final int pow = precision - (int)d;
-
-        // power (pow) may not be larger than allowed maximum power
-        // if so, split up scaling factors
-        double firstScalingFactor = 1.0;
-        double secondScalingFactor = 1.0;
-        if (pow > maxPowerOfTen) {
-            firstScalingFactor = Math.pow(10.0, maxPowerOfTen);
-            secondScalingFactor = Math.pow(10.0, pow - maxPowerOfTen);
-        } else {
-            firstScalingFactor = Math.pow(10.0, pow);
-        }
-
-        // scale by factors
-        double toBeRounded = number * firstScalingFactor * secondScalingFactor;
-
-        // apply rounding mode
-        BigDecimal scaled = new BigDecimal(toBeRounded).setScale(0, 
-                roundingMode);
-        
-        // re-scale by factors
-        return scaled.doubleValue() / firstScalingFactor / secondScalingFactor;
-    }
 }
