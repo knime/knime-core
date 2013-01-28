@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: KNIME Workbench Repository
 Bundle-SymbolicName: org.knime.workbench.repository;singleton:=true
-Bundle-Version: 2.7.1.qualifier
+Bundle-Version: 2.8.0.qualifier
 Bundle-ClassPath: knime-workbench-repository.jar,
  lib/schemas.jar
 Bundle-Activator: org.knime.workbench.repository.KNIMERepositoryPlugin
