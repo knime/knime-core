@@ -1989,27 +1989,28 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
-    /* Recursively continue to trigger execution of nodes until first
+    /** Recursively continue to trigger execution of nodes until first
      * unexecuted node of specified type is encountered.
      *
-     * @param NodeID node to start from
+     * @param id NodeID node to start from
      * @param <T> ...
      * @param nodeModelClass the interface of the "stepping" nodes
      */
     private <T> void stepExecutionUpToNodeType(final NodeID id, final Class<T> nodeModelClass,
             final NodeModelFilter<T> filter) {
         NodeContainer nc = getNodeContainer(id);
-        NodeOutPort[] incoming = assemblePredecessorOutPorts(id);
-        for (int i = 0; i < incoming.length; i++) {
-            if (incoming[i] == null) {
-                if (!nc.getInPort(i).getPortType().isOptional()) {
-                    return;  // stop here
-                }
-            } else {
-                State state = incoming[i].getNodeState();
-                if (!State.EXECUTED.equals(state)
-                        && !state.executionInProgress()) {
-                    return;  // stop here
+        if (nc instanceof SingleNodeContainer) {
+            NodeOutPort[] incoming = assemblePredecessorOutPorts(id);
+            for (int i = 0; i < incoming.length; i++) {
+                if (incoming[i] == null) {
+                    if (!nc.getInPort(i).getPortType().isOptional()) {
+                        return;  // stop here
+                    }
+                } else {
+                    State state = incoming[i].getNodeState();
+                    if (!State.EXECUTED.equals(state) && !state.executionInProgress()) {
+                        return;  // stop here
+                    }
                 }
             }
         }
@@ -2028,9 +2029,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     // if current nodeModel is of class nodeModelClass and not filtered
                     if (nodeModelClass.isInstance(snc.getNodeModel())) {
                         final T nodeModel = (T) snc.getNodeModel();
-                    	if (filter.include(nodeModel)) {
-                    	    return;  // stop here
-                    	}
+                        if (filter.include(nodeModel)) {
+                            return;  // stop here
+                        }
                     }
                 }
                 this.markAndQueueNodeAndPredecessors(id, -1);
