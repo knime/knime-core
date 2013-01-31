@@ -46,6 +46,7 @@ import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
+import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.EncryptionKeySupplier;
@@ -81,6 +82,10 @@ public class KNIMETestingApplication implements IApplication {
      */
     @Override
     public Object start(final IApplicationContext context) throws Exception {
+        // we need a display, initialized as early as possible, otherwise closing JFrames may result
+        // in X errors (BadWindow) under Linux
+        PlatformUI.createDisplay();
+
         // unless the user specified this property, we set it to true here
         // (true means no icons etc will be loaded, if it is false, the
         // loading of the repository manager is likely to print many errors
@@ -115,6 +120,7 @@ public class KNIMETestingApplication implements IApplication {
 
         if ((m_testNamePattern == null) || (m_rootDir == null)) {
             // if no (or not enough) command line arguments were specified:
+
             final AtomicBoolean okayBoolean = new AtomicBoolean(false);
             SwingUtilities.invokeAndWait(new Runnable() {
                 @Override
