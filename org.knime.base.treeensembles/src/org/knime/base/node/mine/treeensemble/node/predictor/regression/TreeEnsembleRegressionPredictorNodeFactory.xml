@@ -9,7 +9,7 @@
 
 	<fullDescription>
 		<intro>
-            Applies regression from from a tree ensemble model by using the mean of the individual predictions.
+            Applies regression from a tree ensemble model by using the mean of the individual predictions.
 		</intro>
 	    <option name="Response Column Name">
 	       Name of the 1st output column. It contains the mean response of all models. A second column with the suffix
