@@ -165,10 +165,8 @@ public class ExportPreferencesAction extends Action {
             NodeLogger.getLogger(ExportPreferencesAction.class).info(
                     "Exporting preferences to file "
                             + outFile.getAbsolutePath());
-            /* Do not export the default values. */
-            prefService.exportPreferences(prefService.getRootNode(), out,
-                    new String[]{
-                    "bundle_defaults"}); //, "configuration", "profile"});
+            /* Do not export the default values and the profile (contains only update site URLs). */
+            prefService.exportPreferences(prefService.getRootNode(), out, new String[]{"bundle_defaults", "profile"});
         } catch (Throwable t) {
             String msg = "Unable to write preferences to output file";
             if (t.getMessage() != null && !t.getMessage().isEmpty()) {
