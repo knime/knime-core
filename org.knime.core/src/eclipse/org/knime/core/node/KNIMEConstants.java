@@ -125,8 +125,14 @@ public final class KNIMEConstants {
      * org.knime.core.data.container.DataContainer#DEF_MAX_CELLS_IN_MEMORY}.
      * @since 2.6
      */
-    public static final String PROPERTY_CELLS_IN_MEMORY =
-        "org.knime.container.cellsinmemory";
+    public static final String PROPERTY_CELLS_IN_MEMORY = "org.knime.container.cellsinmemory";
+
+    /** Java property name to specify the minimum free disc space in MB that needs to be available. If less is
+     * available, no further table files & blobs will be created (resulting in an exception). Default is
+     * {@value org.knime.core.data.container.DataContainer#DEF_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB} MB.
+     * @since 2.8
+     */
+    public static final String PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB = "org.knime.container.minspace.temp";
 
     /** Java property to enable/disable table stream compression. Compression
      * results in smaller temp-file sizes but also (sometimes significant)

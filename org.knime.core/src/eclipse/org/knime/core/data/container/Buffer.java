@@ -595,8 +595,7 @@ class Buffer implements KNIMEStreamConstants {
             }
         } catch (Throwable e) {
             if (!(e instanceof IOException)) {
-                LOGGER.coding("Writing cells to temporary buffer must not " + "throw " + e.getClass().getSimpleName(),
-                              e);
+                LOGGER.coding("Writing cells to temporary buffer must not throw " + e.getClass().getSimpleName(), e);
             }
             StringBuilder builder = new StringBuilder("Error while writing to buffer");
             if (m_binFile != null) {
@@ -1271,9 +1270,8 @@ class Buffer implements KNIMEStreamConstants {
         return serializer;
     }
 
-    private void
-            writeBlobDataCell(final BlobDataCell cell, final BlobAddress a, final DataCellSerializer<DataCell> ser)
-                    throws IOException {
+    private void writeBlobDataCell(final BlobDataCell cell, final BlobAddress a,
+                                   final DataCellSerializer<DataCell> ser) throws IOException {
         // addRow will make sure that m_indicesOfBlobInColumns is initialized
         // when this method is called. If this method is called from a different
         // buffer object, it means that this buffer has been closed!
@@ -1774,11 +1772,21 @@ class Buffer implements KNIMEStreamConstants {
      * {@link #MAX_FILES_TO_CREATE_BEFORE_GC} files the garbage collector. This fixes an unreported problem on windows,
      * where (although the file reference is null) there seems to be a hidden file lock, which yields a
      * "not enough system resources to perform operation" error.
+     * @throws IOException If there is not enough space left on the partition of the temp folder
      */
-    private static void onFileCreated() {
+    private static void onFileCreated() throws IOException {
         int count = FILES_CREATED_COUNTER.incrementAndGet();
+        long freeSpace = DataContainer.TEMP_DIRECTORY.getUsableSpace();
+        long minSpace = DataContainer.MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB * (1024L * 1024L);
+        if (freeSpace < minSpace) {
+            throw new IOException("The partition of the temp directory \"" + DataContainer.TEMP_DIRECTORY
+                                  + "\" is too low on disc space (" + freeSpace / (1024 * 1024) + "MB available but "
+                                  + "at least " + DataContainer.MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB + "MB are required). "
+                                  + " You can tweak the limit by changing the \""
+                                  + KNIMEConstants.PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB + "\" java property.");
+        }
         if (count % MAX_FILES_TO_CREATE_BEFORE_GC == 0) {
-            LOGGER.debug("created " + count + " files, performing garbage " + "collection to release handles");
+            LOGGER.debug("created " + count + " files, performing garbage collection to release handles");
             System.gc();
         }
     }
