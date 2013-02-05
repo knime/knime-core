@@ -90,7 +90,7 @@ public class ImageCompNodeFactory
      */
     @Override
     protected boolean hasDialog() {
-        return false;
+        return true;
     }
 
     /**
@@ -98,7 +98,7 @@ public class ImageCompNodeFactory
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return null;
+        return new ImageCompNodeDialog();
     }
 
 }

@@ -3,14 +3,16 @@
 <knimeNode type="Other">
 	<name>Image Comparator</name>
 	<shortDescription>
-	    Compares two PNG or SVG images.
+	    Compares two PNG or SVG images.  Fails if unequal.
 	</shortDescription>
 	<fullDescription>
 		<intro>
 		Compares two PNG or SVG images: PNGs are compared based on their byte arrays, SVGs based on the XML string. 
         Other image types and more fuzzy-like comparisons are not yet supported.
 		</intro>
-		
+		<option name="% mismatched pixel allowed">value between 0 and 100 which defines the percentage of pixels
+		which can be mismatching without the node failing</option>
+
 	</fullDescription>
 	<ports>
         <inPort name="Image Input" index="0">Image at port one</inPort>

@@ -50,9 +50,9 @@
  */
 package org.knime.testing.imagecomp;
 
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
 
 import org.knime.base.data.xml.SvgCell;
 import org.knime.core.data.DataCell;
@@ -66,6 +66,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -76,6 +77,8 @@ import org.knime.core.node.port.image.ImagePortObject;
  * @author Iris Adae, University of Konstanz
  */
 public class ImageCompNodeModel extends NodeModel {
+    
+    private final SettingsModelDoubleBounded m_allowance = ImageCompNodeDialog.getAllowanceModel();
 
     /**
      * New node model with on image port input and a data table output.
@@ -110,12 +113,8 @@ public class ImageCompNodeModel extends NodeModel {
         DataCell cell1 = ipo1.toDataCell();
         DataCell cell2 = ipo2.toDataCell();
         if(cell1.getType().isASuperTypeOf(PNGImageContent.TYPE)){
-        	byte[] b1 = ((PNGImageValue)cell1).getImageContent().getByteArrayReference();
-        	byte[] b2 = ((PNGImageValue)cell2).getImageContent().getByteArrayReference();
-
-        	if(!Arrays.equals(b1, b2)){
-    			throw new IOException("PNG images don't match");
-        	}
+            
+            comparePNGs((PNGImageValue) cell1, (PNGImageValue) cell2, m_allowance.getDoubleValue() * 0.01); 
         
         } else if(cell1.getType().isASuperTypeOf(SvgCell.TYPE)){
             // compare SVGs
@@ -128,6 +127,53 @@ public class ImageCompNodeModel extends NodeModel {
         }
         
         return new PortObject[] {};
+    }
+    
+    /*
+     * Compares two png images. If the image sizes and types match, an exception
+     * will be thrown, if the image pixel-wise disagreement exceeds the
+     * specified amount (allowedDisagreement - [0,1]).
+     */
+    private final void comparePNGs(PNGImageValue val1, PNGImageValue val2,
+            double allowedDisagreement) throws IOException {
+
+        // create awt images
+        BufferedImage image1 =(BufferedImage) val1.getImageContent().getImage();
+        BufferedImage image2 = (BufferedImage) val2.getImageContent().getImage();
+                
+        
+        if (image1.getWidth() != image2.getWidth()
+                || image1.getHeight() != image2.getHeight()) {
+            throw new RuntimeException("PNG image sizes doesn't match.");
+        }
+        
+        if(image1.getType() != image2.getType()) {
+            throw new RuntimeException("PNG image types doesn't match.");
+        }
+        
+        
+        int width = image1.getWidth();
+        int height = image2.getHeight();        
+
+        // pixel-wise agreement
+        int pixErrors = 0;
+        int maxPixError =
+                (int)Math.round(allowedDisagreement * width * height);
+        for (int x = 0; x < width; x++) {
+            for (int y = 0; y < height; y++) {
+                if (image1.getRGB(x, y) != image2.getRGB(x, y)) {
+                    pixErrors++;
+                }
+            }
+        }
+
+        if (pixErrors > maxPixError) {
+            double pixPerc = pixErrors * 1.0 / (1.0*width*height);
+            throw new RuntimeException(
+                    "PNG images doesn't match (more than "
+                            + (allowedDisagreement * 100) + "% disagreement): " + pixPerc  * 100 + "%");
+        }
+
     }
 
     /**
@@ -155,6 +201,7 @@ public class ImageCompNodeModel extends NodeModel {
      */
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
+        m_allowance.saveSettingsTo(settings);
     }
 
     /**
@@ -163,6 +210,8 @@ public class ImageCompNodeModel extends NodeModel {
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        // new since 2.8.0
+//        m_allowance.validateSettings(settings);
     }
 
     /**
@@ -171,6 +220,12 @@ public class ImageCompNodeModel extends NodeModel {
     @Override
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        try {
+             m_allowance.loadSettingsFrom(settings);
+        } catch ( InvalidSettingsException ise) {
+            // new since 2.8.0
+            m_allowance.setDoubleValue(0.0);
+        }
     }
 
     /**
