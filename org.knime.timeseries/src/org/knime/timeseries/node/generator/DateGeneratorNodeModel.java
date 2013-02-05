@@ -53,6 +53,7 @@ package org.knime.timeseries.node.generator;
 import java.io.File;
 import java.io.IOException;
 import java.util.Calendar;
+import java.util.TimeZone;
 
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
@@ -68,24 +69,24 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.timeseries.util.SettingsModelCalendar;
 
 /**
  * Generates equidistant times.
- * 
+ *
  * @author Fabian Dill, KNIME.com AG, Zurich, Switzerland
  *
  */
 public class DateGeneratorNodeModel extends NodeModel {
 
-    private final SettingsModelCalendar m_from = DateGeneratorNodeDialog
-        .createStartingPointModel();
-    private final SettingsModelCalendar m_to = DateGeneratorNodeDialog
-        .createEndPointModel();
-    private final SettingsModelInteger m_noOfRows = DateGeneratorNodeDialog
-        .createNumberOfRowsModel();
-    
+    private final SettingsModelCalendar m_from = DateGeneratorNodeDialog.createStartingPointModel();
+    private final SettingsModelCalendar m_to = DateGeneratorNodeDialog.createEndPointModel();
+    private final SettingsModelInteger m_noOfRows = DateGeneratorNodeDialog.createNumberOfRowsModel();
+
+    private final SettingsModelBoolean m_useExecution = DateGeneratorNodeDialog.createUseCurrentForStart();
+
     /**
      *
      */
@@ -100,10 +101,25 @@ public class DateGeneratorNodeModel extends NodeModel {
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
-        validateDates(m_from, m_to);
-        return new DataTableSpec[] {
-                createOutSpec()
-        };
+        validateDates(m_to);
+        final Calendar from;
+        if (m_useExecution.getBooleanValue()) {
+            from = Calendar.getInstance(TimeZone.getDefault());
+            from.setTimeInMillis(System.currentTimeMillis() + TimeZone.getDefault().getRawOffset());
+            // no validation of from date necessary
+        } else {
+            from = m_from.getCalendar();
+            validateDates(m_from);
+        }
+        int noRows = m_noOfRows.getIntValue();
+        long offset = calculateOffset(from, m_to.getCalendar(), noRows);
+        // if no of row = 1 we simply return the start date
+        if (Math.abs(offset) <= 0 && noRows > 1) {
+           setWarningMessage(
+                    "Number of rows too large for entered time period! "
+                    + "All rows will contain the same time stamp.");
+        }
+        return new DataTableSpec[] {createOutSpec()};
     }
 
     private DataTableSpec createOutSpec() {
@@ -111,16 +127,15 @@ public class DateGeneratorNodeModel extends NodeModel {
                 "Date and time", DateAndTimeCell.TYPE);
         return new DataTableSpec(creator.createSpec());
     }
-    
-    private static long calculateOffset(final Calendar from, final Calendar to, 
+
+    private static long calculateOffset(final Calendar from, final Calendar to,
             final int noOfRows) {
         if (noOfRows <= 1) {
             return 0;
         }
-        // if offset is smaller than a second milliseconds 
+        // if offset is smaller than a second milliseconds
         // might be of interest
-        return (to.getTimeInMillis() - from.getTimeInMillis())
-                / (noOfRows - 1);
+        return (to.getTimeInMillis() - from.getTimeInMillis()) / (noOfRows - 1);
     }
 
     /**
@@ -132,10 +147,17 @@ public class DateGeneratorNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         // prepare the calendars
         Calendar from = m_from.getCalendar();
+        // new since 2.8. the start time is the current time.
+        if (m_useExecution.getBooleanValue()) {
+            from = Calendar.getInstance(TimeZone.getDefault());
+            from.setTimeInMillis(System.currentTimeMillis() + TimeZone.getDefault().getRawOffset());
+        }
         Calendar to = m_to.getCalendar();
-        boolean useDate = m_from.useDate() || m_to.useDate();
-        boolean useTime = m_from.useTime() || m_to.useTime();
-        boolean useMillis = m_from.useMilliseconds() || m_to.useMilliseconds();
+
+        // if the use execution time is set, we ignore the settings for the from date
+        boolean useDate = (m_from.useDate() && !m_useExecution.getBooleanValue()) || m_to.useDate();
+        boolean useTime = (m_from.useTime() && !m_useExecution.getBooleanValue()) || m_to.useTime();
+        boolean useMillis = (m_from.useMilliseconds() && !m_useExecution.getBooleanValue()) || m_to.useMilliseconds();
         if (useDate && !useTime) {
             DateAndTimeCell.resetTimeFields(from);
             DateAndTimeCell.resetTimeFields(to);
@@ -143,28 +165,23 @@ public class DateGeneratorNodeModel extends NodeModel {
             DateAndTimeCell.resetDateFields(from);
             DateAndTimeCell.resetDateFields(to);
         }
+
         if (!useMillis) {
             from.clear(Calendar.MILLISECOND);
             to.clear(Calendar.MILLISECOND);
         }
-        BufferedDataContainer container = exec.createDataContainer(
-                createOutSpec());
-        int nrRows = m_noOfRows.getIntValue(); 
+
+        BufferedDataContainer container = exec.createDataContainer(createOutSpec());
+        int nrRows = m_noOfRows.getIntValue();
         long offset = calculateOffset(from, to, nrRows);
         long currentTime = from.getTimeInMillis();
-        Calendar test = DateAndTimeCell.getUTCCalendar();
-        test.setTimeInMillis(currentTime);
-        int currentRow = 0;
         for (int i = 0; i < nrRows; i++) {
             // zero based row key as FileReader
             RowKey key = new RowKey("Row" + i);
-            DateAndTimeCell cell = new DateAndTimeCell(currentTime, 
-                    useDate, useTime, useMillis);
+            DateAndTimeCell cell = new DateAndTimeCell(currentTime, useDate, useTime, useMillis);
             container.addRowToTable(new DefaultRow(key, cell));
             currentTime += offset;
-            currentRow++;
-            exec.setProgress(currentRow / (double)nrRows, "Generating row #" 
-                    + currentRow);
+            exec.setProgress((i + 1) / (double)nrRows, "Generating row #" + (i + 1));
             exec.checkCanceled();
         }
         container.close();
@@ -189,6 +206,7 @@ public class DateGeneratorNodeModel extends NodeModel {
         m_from.saveSettingsTo(settings);
         m_to.saveSettingsTo(settings);
         m_noOfRows.saveSettingsTo(settings);
+        m_useExecution.saveSettingsTo(settings);
     }
 
     /**
@@ -200,44 +218,31 @@ public class DateGeneratorNodeModel extends NodeModel {
         m_from.validateSettings(settings);
         m_to.validateSettings(settings);
         m_noOfRows.validateSettings(settings);
-        SettingsModelInteger noRowsModel = m_noOfRows
-            .createCloneWithValidatedValue(settings);
-        SettingsModelCalendar from = m_from.createCloneWithValidatedValue(
-                settings);
-        SettingsModelCalendar to = m_to.createCloneWithValidatedValue(settings);
-        validateDates(from, to);
-        int noRows = noRowsModel.getIntValue();
-        long offset = calculateOffset(from.getCalendar(), to.getCalendar(), 
-                noRows);
-        // if no of row = 1 we simply return the start date
-        if (offset <= 0 && noRows > 1) {
-            throw new InvalidSettingsException(
-                    "Number of rows too large for entered time period! " 
-                    + "Steps are smaller than a millisecond. " 
-                    + "Please reduce number of rows.");
+        // we only validate the true date if we do not use the execution time
+        boolean checkFrom = true;
+        try {
+            SettingsModelBoolean useEx = m_useExecution.createCloneWithValidatedValue(settings);
+            if (useEx.getBooleanValue()) {
+                checkFrom = false;
+            }
+
+        } catch (Exception e) {
+              //  Do nothing, backward compatibility
         }
+        if (checkFrom) {
+            SettingsModelCalendar from = m_from.createCloneWithValidatedValue(settings);
+            validateDates(from);
+        }
+        SettingsModelCalendar to = m_to.createCloneWithValidatedValue(settings);
+        validateDates(to);
+
     }
 
-    private static void validateDates(final SettingsModelCalendar start, 
-            final SettingsModelCalendar end)
+    private static void validateDates(final SettingsModelCalendar time)
         throws InvalidSettingsException {
         // check for !useDate and !useTime
-        if (!start.useDate() && !start.useTime()) {
-            throw new InvalidSettingsException(
-                    "Timestamp must consists of date or time!");
-        }
-        if (!end.useDate() && !end.useTime()) {
-            throw new InvalidSettingsException(
-                    "Timestamp must consists of date or time!");
-        }
-        
-        if (end.getCalendar().before(start.getCalendar())
-                || end.getCalendar().getTimeInMillis() == start.getCalendar()
-                .getTimeInMillis()) {
-            throw new InvalidSettingsException("End point "
-                    + end.toString()
-                    + " must be after starting point "
-                    + start.toString());
+        if (!time.useDate() && !time.useTime()) {
+            throw new InvalidSettingsException("Timestamp must consists of date or time!");
         }
     }
 
@@ -251,6 +256,14 @@ public class DateGeneratorNodeModel extends NodeModel {
         m_from.loadSettingsFrom(settings);
         m_to.loadSettingsFrom(settings);
         m_noOfRows.loadSettingsFrom(settings);
+        // new since 2.8.
+        try {
+            m_useExecution.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ie) {
+            // set default value
+            m_useExecution.setBooleanValue(false);
+
+        }
     }
 
 
