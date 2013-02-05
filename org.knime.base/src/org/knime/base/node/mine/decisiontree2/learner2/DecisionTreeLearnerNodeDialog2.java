@@ -53,9 +53,12 @@ package org.knime.base.node.mine.decisiontree2.learner2;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.knime.base.node.mine.decisiontree2.PMMLMissingValueStrategy;
+import org.knime.base.node.mine.decisiontree2.PMMLNoTrueChildStrategy;
 import org.knime.core.data.NominalValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
+import org.knime.core.node.defaultnodesettings.DialogComponentButtonGroup;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
 import org.knime.core.node.defaultnodesettings.DialogComponentStringSelection;
@@ -76,6 +79,7 @@ public class DecisionTreeLearnerNodeDialog2 extends DefaultNodeSettingsPane {
      * Constructor: create NodeDialog with one column selectors and two other
      * properties.
      */
+    @SuppressWarnings("unchecked")
     public DecisionTreeLearnerNodeDialog2() {
         createNewGroup("General");
         // class column selection
@@ -162,6 +166,30 @@ public class DecisionTreeLearnerNodeDialog2 extends DefaultNodeSettingsPane {
                 maxNominalBinary.getModel().setEnabled(selected);
             }
         });
+
+        createNewTab("PMMLSettings");
+        //
+        createNewGroup("No true child strategy");
+        String[] methodsnTC =
+                {PMMLNoTrueChildStrategy.RETURN_LAST_PREDICTION.toString(),
+                 PMMLNoTrueChildStrategy.RETURN_NULL_PREDICTION.toString()};
+        this.addDialogComponent(new DialogComponentButtonGroup(
+                createSettingsnoTrueChildMethod(), true,
+                null , methodsnTC));
+        closeCurrentGroup();
+        createNewGroup("Missing Value Strategy");
+        String[] methodsMV =
+            {PMMLMissingValueStrategy.LAST_PREDICTION.toString(),
+//                PMMLMissingValueStrategy.NULL_PREDICTION.toString(),// not supported in predictor
+                PMMLMissingValueStrategy.DEFAULT_CHILD.toString(),
+//                PMMLMissingValueStrategy.WEIGHTED_CONFIDENCE.toString(), // not supported in predictor
+//                PMMLMissingValueStrategy.AGGREGATE_NODES.toString(), // not supported in predictor
+                PMMLMissingValueStrategy.NONE.toString()
+                };
+        this.addDialogComponent(new DialogComponentButtonGroup(createSettingsmissValueStrategyMethod(), true,
+                                                               null, methodsMV));
+        closeCurrentGroup();
+
     }
 
     /**
@@ -179,6 +207,24 @@ public class DecisionTreeLearnerNodeDialog2 extends DefaultNodeSettingsPane {
         return new SettingsModelString(
                 DecisionTreeLearnerNodeModel2.KEY_SPLIT_QUALITY_MEASURE,
                 DecisionTreeLearnerNodeModel2.DEFAULT_SPLIT_QUALITY_MEASURE);
+    }
+
+    /**
+     * @return noTrueChild method
+     */
+    static SettingsModelString createSettingsnoTrueChildMethod() {
+        return new SettingsModelString(
+                    DecisionTreeLearnerNodeModel2.KEY_NOTRUECHILD,
+                    PMMLNoTrueChildStrategy.RETURN_NULL_PREDICTION.toString());
+    }
+
+    /**
+     * @return missingValueStrategy method
+     */
+    static SettingsModelString createSettingsmissValueStrategyMethod() {
+        return new SettingsModelString(
+                    DecisionTreeLearnerNodeModel2.KEY_MISSINGSTRATEGY,
+                    PMMLMissingValueStrategy.LAST_PREDICTION.toString());
     }
 
     /**

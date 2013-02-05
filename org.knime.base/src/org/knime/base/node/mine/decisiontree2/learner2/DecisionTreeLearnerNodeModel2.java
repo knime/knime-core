@@ -67,6 +67,7 @@ import java.util.zip.GZIPOutputStream;
 import org.knime.base.node.mine.decisiontree2.PMMLArrayType;
 import org.knime.base.node.mine.decisiontree2.PMMLDecisionTreeTranslator;
 import org.knime.base.node.mine.decisiontree2.PMMLMissingValueStrategy;
+import org.knime.base.node.mine.decisiontree2.PMMLNoTrueChildStrategy;
 import org.knime.base.node.mine.decisiontree2.PMMLOperator;
 import org.knime.base.node.mine.decisiontree2.PMMLPredicate;
 import org.knime.base.node.mine.decisiontree2.PMMLSetOperator;
@@ -290,6 +291,18 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
     public static final int DEFAULT_NUM_PROCESSORS = MAX_NUM_PROCESSORS;
 
     /**
+     * The config key for the no true child strategy.
+     */
+    public static final String KEY_NOTRUECHILD = "CFG_NOTRUECHILD";
+
+
+    /**
+     * The config key for the missing value strategy.
+     */
+    public static final String KEY_MISSINGSTRATEGY = "CFG_MISSINGSTRATEGY";
+
+
+    /**
      * The column which contains the classification Information.
      */
     private final SettingsModelString m_classifyColumn =
@@ -348,13 +361,16 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
             DecisionTreeLearnerNodeDialog2.createSettingsBinaryNominalSplit();
 
     private final SettingsModelBoolean m_skipColumns =
-            DecisionTreeLearnerNodeDialog2
-            .createSettingsSkipNominalColumnsWithoutDomain();
+            DecisionTreeLearnerNodeDialog2.createSettingsSkipNominalColumnsWithoutDomain();
 
     private final SettingsModelBoolean m_filterNominalValuesFromParent =
-            DecisionTreeLearnerNodeDialog2.
-            createSettingsFilterNominalValuesFromParent(
-                    m_binaryNominalSplitMode);
+            DecisionTreeLearnerNodeDialog2.createSettingsFilterNominalValuesFromParent(m_binaryNominalSplitMode);
+
+    private final SettingsModelString m_noTrueChild =
+            DecisionTreeLearnerNodeDialog2.createSettingsnoTrueChildMethod();
+
+    private final SettingsModelString m_missingValues =
+            DecisionTreeLearnerNodeDialog2.createSettingsmissValueStrategyMethod();
 
 
     /**
@@ -363,8 +379,7 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
      * <code>binaryNominalSplits</code> is <code>true</code>; if the number
      * of nominal values is higher, a heuristic is applied.
      */
-    private final SettingsModelIntegerBounded
-           m_maxNumNominalsForCompleteComputation =
+    private final SettingsModelIntegerBounded m_maxNumNominalsForCompleteComputation =
            DecisionTreeLearnerNodeDialog2.createSettingsBinaryMaxNominalValues();
 
     private final SettingsModelIntegerBounded m_parallelProcessing =
@@ -498,7 +513,8 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
                 /* strategy has to be set explicitly as the default in PMML is
                     none, which means rows with missing values are not
                     classified. */
-                PMMLMissingValueStrategy.LAST_PREDICTION);
+                PMMLMissingValueStrategy.get(m_missingValues.getStringValue()),
+                PMMLNoTrueChildStrategy.get(m_noTrueChild.getStringValue()));
         m_decisionTree.setColorColumn(colorColumn);
 
         // prune the tree
@@ -904,6 +920,15 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
             // for new models this is enabled by default but not for old ones
             m_skipColumns.setBooleanValue(false);
         }
+        /* Added with 2.8 to include missing values strategy and no true child strategy. */
+        if (settings.containsKey(KEY_NOTRUECHILD) && settings.containsKey(KEY_MISSINGSTRATEGY)) {
+            m_noTrueChild.loadSettingsFrom(settings);
+            m_missingValues.loadSettingsFrom(settings);
+        } else {
+            // previous always Missing values = null was produced
+            m_noTrueChild.setStringValue(PMMLNoTrueChildStrategy.RETURN_NULL_PREDICTION.toString());
+            m_missingValues.setStringValue(PMMLMissingValueStrategy.LAST_PREDICTION.toString());
+        }
     }
 
     /**
@@ -924,6 +949,8 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
         m_binaryNominalSplitMode.saveSettingsTo(settings);
         m_filterNominalValuesFromParent.saveSettingsTo(settings);
         m_skipColumns.saveSettingsTo(settings);
+        m_noTrueChild.saveSettingsTo(settings);
+        m_missingValues.saveSettingsTo(settings);
     }
 
     /**
@@ -965,6 +992,12 @@ public class DecisionTreeLearnerNodeModel2 extends NodeModel {
          * that have too many nominal values. */
         if (settings.containsKey(KEY_SKIP_COLUMNS)) {
             m_skipColumns.validateSettings(settings);
+        }
+        /* Added with 2.8 to include missing values strategy and no true child strategy. */
+        if (settings.containsKey(KEY_NOTRUECHILD) && settings.containsKey(KEY_MISSINGSTRATEGY)) {
+            m_noTrueChild.validateSettings(settings);
+            // added true child with missing values, so when one of them is in, both are in
+            m_missingValues.validateSettings(settings);
         }
     }
 
