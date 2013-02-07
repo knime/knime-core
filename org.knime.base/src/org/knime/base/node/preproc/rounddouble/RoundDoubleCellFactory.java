@@ -54,6 +54,7 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.math.RoundingMode;
 
+import org.knime.base.node.preproc.rounddouble.RoundDoubleConfigKeys.RoundOutputType;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataRow;
@@ -70,36 +71,30 @@ import org.knime.core.data.def.StringCell;
  */
 class RoundDoubleCellFactory extends AbstractCellFactory {
 
-    private int m_precision = 0;
+    private final int m_precision;
 
-    private RoundingMode m_roundingMode;
+    private final RoundingMode m_roundingMode;
 
-    private NumberMode m_numberMode;
+    private final NumberMode m_numberMode;
 
-    private boolean m_outputAsString;
+    private final RoundOutputType m_outputType;
 
-    private int[] m_colIndexToRound;
+    private final int[] m_colIndexToRound;
 
 
     /**
-     * Creates instance of <code>RoundDoubleCellFactory</code> with specified
-     * precision.
+     * Creates instance of <code>RoundDoubleCellFactory</code> with specified precision.
      *
      * @param precision The decimal place to round to.
-     * @param numberMode The mode of the precision to round to (decimal place,
-     * significant figures).
-     * @param roundingMode The mode to round the double values.
-     * additional column or if the old values will be replaced.
-     * @param outputAsString Specifies whether rounded values will be
-     * represented as strings or doubles.
-     * @param colIndexToRound The indices of the columns containing the values
-     * to round.
+     * @param numberMode The mode of the precision to round to (decimal place, significant figures).
+     * @param roundingMode The mode to round the double values. additional column or if the old values will be replaced.
+     * @param outputType Specifies whether rounded values will be represented as strings or doubles.
+     * @param colIndexToRound The indices of the columns containing the values to round.
      * @param newColSpecs The specs of the new columns (replaced or appended).
      */
-    public RoundDoubleCellFactory(final int precision,
-            final NumberMode numberMode, final RoundingMode roundingMode,
-            final boolean outputAsString, final int[] colIndexToRound,
-            final DataColumnSpec[] newColSpecs) {
+    RoundDoubleCellFactory(final int precision, final NumberMode numberMode, final RoundingMode roundingMode,
+                           final RoundOutputType outputType, final int[] colIndexToRound,
+       final DataColumnSpec[] newColSpecs) {
         super(newColSpecs);
 
         // check for invalid arguments
@@ -118,7 +113,7 @@ class RoundDoubleCellFactory extends AbstractCellFactory {
 
         m_precision = precision;
         m_roundingMode = roundingMode;
-        m_outputAsString = outputAsString;
+        m_outputType = outputType;
         m_colIndexToRound = colIndexToRound;
         m_numberMode = numberMode;
     }
@@ -152,9 +147,15 @@ class RoundDoubleCellFactory extends AbstractCellFactory {
 
                     // check for infinity or nan
                     if (Double.isInfinite(value) || Double.isNaN(value)) {
-                        // this isn't nice as we shouldn't have NaN and Inf in the input ... but that's a problem
-                        // somewhere else
-                        outCell = m_outputAsString ? new StringCell(((Double)value).toString()) : new DoubleCell(value);
+                        switch (m_outputType) {
+                            case Double:
+                                // this isn't nice as we shouldn't have NaN and Inf in the input ...
+                                // but that's a problem somewhere else
+                                outCell = new DoubleCell(value);
+                                break;
+                            default:
+                                outCell = new StringCell(new Double(value).toString());
+                        }
                     } else {
                         // if values are in range -> round
                         BigDecimal bd = new BigDecimal(value);
@@ -169,18 +170,7 @@ class RoundDoubleCellFactory extends AbstractCellFactory {
                             default:
                                 throw new IllegalStateException();
                         }
-
-                        if (m_outputAsString) {
-                            outCell = new StringCell(bd.toString());
-                        } else {
-                            double roundedValue = bd.doubleValue();
-                            // check rounded value for nan (not sure why this could be the case)
-                            if (Double.isNaN(roundedValue)) {
-                                outCell = DataType.getMissingCell();
-                            } else {
-                                outCell = new DoubleCell(roundedValue);
-                            }
-                        }
+                        outCell = m_outputType.createCell(bd);
                     }
                 }
                 // increment index of included column indices

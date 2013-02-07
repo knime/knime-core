@@ -6,6 +6,7 @@
     </shortDescription>
     <fullDescription>
         <intro>
+        <p>
 			Rounds double values to the specified decimal place or significant 
 			figures, applying the specified rounding method. The columns 
 			containing the double values can be specified. The rounded values 
@@ -16,29 +17,42 @@
 			To round the values seven different rounding modes are available:
 			UP, DOWN, CEILING, FLOOR, HALF_UP, HALF_DOWN, HALF_EVEN. For the
             detailed description of each rounding mode please see the			
-			<a href="http://docs.oracle.com/javase/6/docs/api/index.html?java/math/RoundingMode.html">Java documentation</a>.			
+			<a href="http://docs.oracle.com/javase/6/docs/api/index.html?java/math/RoundingMode.html">Java documentation</a>.		
+		</p>
+		<p>
+		  The output formatting can be of different types, which are described by example below. Rounding the 
+		  numbers 1.23501, 0.00000035239 and -3.123103E9 to 3 significant digits (HALF_UP) will produce:
+		</p>
+		<table>
+		  <tr>
+		    <th>Input</th>         <th>Double(*)</th>           <th>Standard String</th>    <th>Plain String (no exponent)</th>     <th>Engineering String</th>
+	      </tr>
+		  <tr>
+			<td>1.23501</td>       <td>1.24</td>             <td>"1.24"</td>             <td>"1.24"</td>                         <td>"1.24"</td>
+		  </tr>
+		  <tr>
+			<td>0.00000035239</td> <td>0.000000352</td>      <td>"3.52E-7"</td>          <td>"0.000000352"</td>                  <td>"352E-9"</td>
+          </tr>
+		  <tr>
+			<td>-3123103001</td>   <td>-3120000000</td>      <td>"-3.12E+9"</td>         <td>"-3120000000"</td>                  <td>"-3.12E+9"</td>
+          </tr>
+		</table>
+		<p>(*)Note that the "Double" output option may yield unexpected results due to numerical precision issue when representing floating point numbers. 
+		For example a number such as 0.1 can sometimes be represented as 0.09999999999999999.</p>
 		</intro>
 		<option name="Column selection">
 			The columns containing double values to round.
 		</option>
-        <option name="Append rounded values as additional columns">
+        <option name="Append as new columns (specify suffix)">
             If checked the rounded values will be appended as additional 
             columns. For each selected column one additional column containing
             the rounded values will be appended. If not checked, the input 
-            double values will be replaced by the rounded values. 
-        </option>
-	    <option name="Column suffix">
-            If "Append rounded values as additional columns" is checked a 
-            column suffix must be specified. The names of the new columns 
-            are those of the original columns with the specified suffix 
+            double values will be replaced by the rounded values. The names of the 
+            new columns are those of the original columns with the specified suffix 
             appended.
         </option>
-        <option name="Format as string">
-            If checked, the rounded values in the output table will be 
-            represented as strings. The rounded double values may have another
-            scale as specified by the setting "Precision", since e.g. 
-            trailing zeros will be removed. The rounded values represented as 
-            strings will always have the exact scale which is specified. 
+        <option name="Output format">
+            Specify the output format here. See table above. 
         </option>        
         <option name="Precision">
             The scale of the double values to round to. If the scale is reduced
