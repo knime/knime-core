@@ -56,7 +56,7 @@
           <b>Java Snippet Methods:</b><br/>
           <i>getCell(name, type)*</i> : Get value of a cell by column name<br/>
           <i>isType(name, type)*</i> : Test for type by column name<br/>
-          <i>isMissing(name, type)*</i> : Check if missing by column name<br/>
+          <i>isMissing(name)*</i> : Check if missing by column name<br/>
           <i>getColumnCount(index, type)</i>  : Number of columns in the input table<br/>
           <i>getColumnName(index)</i>  : Retrieve column name at index<br/>
           <br/>
