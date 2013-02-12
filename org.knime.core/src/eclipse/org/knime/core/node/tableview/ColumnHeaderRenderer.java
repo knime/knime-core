@@ -55,11 +55,13 @@ import java.awt.Graphics;
 import javax.swing.Icon;
 import javax.swing.JTable;
 import javax.swing.UIManager;
+import javax.swing.plaf.LabelUI;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.JTableHeader;
 import javax.swing.table.TableModel;
 
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.renderer.MultiLineBasicLabelUI;
 import org.knime.core.node.tableview.TableSortOrder.TableSortKey;
 import org.knime.core.node.util.ViewUtils;
 
@@ -79,6 +81,7 @@ public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
     private static final long serialVersionUID = -2356486759304444805L;
 
     private boolean m_showIcon = true;
+    private boolean m_wrapHeader = false;
 
     private static final Icon ICON_PRIM_DES = ViewUtils.loadIcon(
             ColumnHeaderRenderer.class,
@@ -95,6 +98,36 @@ public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
     private static final Icon ICON_SEC_ASC = ViewUtils.loadIcon(
             ColumnHeaderRenderer.class,
             "icon/table_sort_ascending_secondary.png");
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void updateUI() {
+        super.updateUI();
+        MultiLineBasicLabelUI ui2 = new MultiLineBasicLabelUI();
+        ui2.setWrapLongLines(isWrapHeader());
+        setUI(ui2);
+    }
+
+    /** Whether column names are wrapped, default is false.
+     * @param value to set
+     * @since 2.8
+     */
+    public void setWrapHeader(final boolean value) {
+        if (value != m_wrapHeader) {
+            m_wrapHeader = value;
+            updateUI();
+        }
+    }
+
+    /** see {@link #setWrapHeader(boolean)}.
+     * @return the wrapHeader
+     * @since 2.8
+     */
+    public boolean isWrapHeader() {
+        return m_wrapHeader;
+    }
 
     /**
      * @return the showIcon
@@ -132,7 +165,7 @@ public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
         Object newValue = value;
         if (value instanceof DataColumnSpec) {
             DataColumnSpec colSpec = (DataColumnSpec)value;
-            newValue =  colSpec.getName();
+            newValue = colSpec.getName();
             if (isShowIcon()) {
                 typeIcon = colSpec.getType().getIcon();
             }
@@ -146,6 +179,17 @@ public class ColumnHeaderRenderer extends DefaultTableCellRenderer {
         setToolTipText(newValue != null ? newValue.toString() : null);
         setValue(newValue);
         return this;
+    }
+
+    /** See {@link MultiLineBasicLabelUI#getPreferredTextWidth(javax.swing.JComponent)}.
+     * @return This size or -1 if unknown.
+     */
+    int getPreferredTextWidth() {
+        LabelUI ui2 = getUI();
+        if (ui2 instanceof MultiLineBasicLabelUI) {
+            return ((MultiLineBasicLabelUI)ui2).getPreferredTextWidth(this);
+        }
+        return -1;
     }
 
     /**

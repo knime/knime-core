@@ -58,6 +58,7 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 
 import javax.swing.JTable;
+import javax.swing.SwingConstants;
 import javax.swing.UIManager;
 import javax.swing.border.Border;
 import javax.swing.event.TableModelEvent;
@@ -239,16 +240,14 @@ public final class TableRowHeaderView extends JTable {
             m_tempHSBColor = new float[3];
         }
         float[] hsb = m_tempHSBColor;
-        if (back != null) {
-            Color.RGBtoHSB(back.getRed(), back.getGreen(), back.getBlue(),
-                    hsb);
-            if (hsb[2] > 0.5f) {
-                fore = Color.BLACK;
-            } else {
-                fore = Color.WHITE;
-            }
-            super.selectionForeground = fore;
+        Color.RGBtoHSB(back.getRed(), back.getGreen(), back.getBlue(),
+                       hsb);
+        if (hsb[2] > 0.5f) {
+            fore = Color.BLACK;
+        } else {
+            fore = Color.WHITE;
         }
+        super.selectionForeground = fore;
         super.selectionBackground = back;
     }
 
@@ -261,13 +260,15 @@ public final class TableRowHeaderView extends JTable {
     public void setTableHeader(final JTableHeader newTableHeader) {
         if (newTableHeader != null) {
             ColumnHeaderRenderer renderer = new ColumnHeaderRenderer();
-            renderer.setHorizontalAlignment(ColumnHeaderRenderer.CENTER);
+            renderer.setHorizontalAlignment(SwingConstants.CENTER);
             newTableHeader.setDefaultRenderer(renderer);
             renderer.setShowIcon(false);
             newTableHeader.addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(final MouseEvent e) {
-                    onMouseClickInHeader();
+                    if (e.isControlDown()) {
+                        onMouseClickInHeader();
+                    }
                 }
 
             });

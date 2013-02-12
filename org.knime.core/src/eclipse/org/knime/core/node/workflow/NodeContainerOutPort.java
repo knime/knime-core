@@ -201,10 +201,10 @@ public class NodeContainerOutPort extends NodePortAdaptor
             m_portView.setTitle(getPortName() + " - "
                     + m_snc.getDisplayLabel());
         }
-        m_portView.openView();
         m_portView.update(getPortObject(), getPortObjectSpec(),
                 getFlowObjectStack(),
                 m_snc.getNode().getCredentialsProvider());
+        m_portView.openView();
     }
 
     /** {@inheritDoc} */

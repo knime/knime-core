@@ -52,10 +52,13 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 import java.awt.Cursor;
 import java.awt.Dimension;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -66,6 +69,7 @@ import java.util.Collection;
 
 import javax.swing.AbstractAction;
 import javax.swing.AbstractButton;
+import javax.swing.Action;
 import javax.swing.JCheckBox;
 import javax.swing.JCheckBoxMenuItem;
 import javax.swing.JComponent;
@@ -127,6 +131,10 @@ public class TableView extends JScrollPane {
 
     /** Whether or not column header resizing is allowed. Defaults to false. */
     private boolean m_isColumnHeaderResizingAllowed;
+
+    /**
+     * @since 2.8 */
+    private boolean m_isPreferredSizeDataDependent = false;
 
     /** Position (row, col) for "Find" menu entry. It either points to the
      * location of the last match or (0,0). */
@@ -205,6 +213,30 @@ public class TableView extends JScrollPane {
             }
         });
     } // TableView(TableContentView)
+
+    /** {@inheritDoc} */
+    @Override
+    public Dimension getPreferredSize() {
+        // get pref size from all view content and limit it by 2/3 physical screen size
+        Dimension superPrefSize = super.getPreferredSize();
+        if (super.isPreferredSizeSet() || !isPreferredSizeDataDependent()) {
+            return superPrefSize;
+        }
+        Dimension contentPrefSize = getContentTable().getPreferredSize();
+        Dimension rowHeadPrefSize = rowHeader != null ? rowHeader.getPreferredSize() : new Dimension(0, 0);
+        Dimension colHeadPrefSize = columnHeader != null ? columnHeader.getPreferredSize() : new Dimension(0, 0);
+        int prefContentWidth = contentPrefSize.width + rowHeadPrefSize.width + colHeadPrefSize.width;
+        int prefContentHeight = contentPrefSize.height + rowHeadPrefSize.height + rowHeadPrefSize.height;
+
+        GraphicsDevice gd = GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice();
+        int screenWidth = 2 * gd.getDisplayMode().getWidth() / 3;
+        int screenHeight = 1 * gd.getDisplayMode().getHeight() / 3;
+
+        int calcWidth = Math.max(superPrefSize.width, Math.min(screenWidth, prefContentWidth));
+        int calcHeight = Math.max(superPrefSize.height, Math.min(screenHeight, prefContentHeight));
+
+        return new Dimension(calcWidth, calcHeight);
+    }
 
     /**
      * Constructs new View by calling
@@ -522,7 +554,7 @@ public class TableView extends JScrollPane {
 
     /** Set the height of the column header view. If none has been set
      * (i.e. no data is available), this method does nothing.
-     * @param newHeight The new height.
+     * @param newHeight The new height. -1 will unset any preferred size.
      */
     public void setColumnHeaderViewHeight(final int newHeight) {
         JViewport header = getColumnHeader();
@@ -537,11 +569,19 @@ public class TableView extends JScrollPane {
             v = getContentTable().getTableHeader();
         }
         if (v != null) {
-            v.setSize(getSize().width, newHeight);
-            // must clone object as it could be used some other place, too.
-            Dimension d = new Dimension(v.getPreferredSize());
-            d.height = newHeight;
-            v.setPreferredSize(d);
+            if (newHeight < 0) {
+                v.setPreferredSize(null);
+                Dimension calculatedPreferredSize = v.getPreferredSize();
+                if (calculatedPreferredSize != null) {
+                    v.setSize(getPreferredSize());
+                }
+            } else {
+                v.setSize(getSize().width, newHeight);
+                // must clone object as it could be used some other place, too.
+                Dimension d = new Dimension(v.getPreferredSize());
+                d.height = newHeight;
+                v.setPreferredSize(d);
+            }
         }
     }
 
@@ -578,6 +618,26 @@ public class TableView extends JScrollPane {
         return getHeaderTable().isShowColorInfo();
     }
 
+    /** Forwards to {@link TableContentView#setWrapColumnHeader(boolean)} and if argument is true also
+     * sets {@link #setColumnHeaderResizingAllowed(boolean)}.
+     * @param value passed on
+     * @since 2.8
+     */
+    public final void setWrapColumnHeader(final boolean value) {
+        getContentTable().setWrapColumnHeader(value);
+        if (value) {
+            setColumnHeaderResizingAllowed(true);
+        }
+    }
+
+    /** Get the {@link #setWrapColumnHeader(boolean)} property.
+     * @return ...
+     * @since 2.8
+     */
+    public final boolean isWrapColumnHeader() {
+        return getContentTable().isWrapHeader();
+    }
+
     /**
      * Set whether or not the icon in the column header is to be displayed.
      * Delegate method to {@link TableView#setShowColorInfo(boolean)}.
@@ -604,6 +664,23 @@ public class TableView extends JScrollPane {
      */
     public boolean isColumnHeaderResizingAllowed() {
         return m_isColumnHeaderResizingAllowed;
+    }
+
+    /** Should the preferred size of the view be derived from the content (at most 2/3 of the screen real estate)?
+     * Default is false.
+     * @param value the value to set
+     * @since 2.8
+     */
+    public void setPreferredSizeDataDependent(final boolean value) {
+        m_isPreferredSizeDataDependent = value;
+    }
+
+    /** see {@link #setPreferredSizeDataDependent(boolean)}.
+     * @return the isPreferredSizeDataDependent
+     * @since 2.8
+     */
+    public boolean isPreferredSizeDataDependent() {
+        return m_isPreferredSizeDataDependent;
     }
 
     /**
@@ -775,7 +852,7 @@ public class TableView extends JScrollPane {
      */
     private void registerAction(final TableAction action) {
         KeyStroke stroke = action.getKeyStroke();
-        Object name = action.getValue(TableAction.NAME);
+        Object name = action.getValue(Action.NAME);
         if (stroke != null) {
             getInputMap(WHEN_IN_FOCUSED_WINDOW).put(stroke, name);
             getActionMap().put(name, action);
@@ -1080,7 +1157,7 @@ public class TableView extends JScrollPane {
         if (m_findAction == null) {
             String name = "Find...";
             KeyStroke stroke = KeyStroke.getKeyStroke(
-                    KeyEvent.VK_F, KeyEvent.CTRL_DOWN_MASK);
+                    KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK);
             TableAction action = new TableAction(stroke, name) {
                 @Override
                 public void actionPerformed(final ActionEvent e) {
@@ -1147,7 +1224,7 @@ public class TableView extends JScrollPane {
         if (m_gotoRowAction == null) {
             String name = "Go to Row...";
             KeyStroke stroke = KeyStroke.getKeyStroke(
-                    KeyEvent.VK_L, KeyEvent.CTRL_DOWN_MASK);
+                    KeyEvent.VK_L, InputEvent.CTRL_DOWN_MASK);
             TableAction action = new TableAction(stroke, name) {
                 @Override
                 public void actionPerformed(final ActionEvent e) {
@@ -1249,6 +1326,16 @@ public class TableView extends JScrollPane {
                 int oldHeight = getColumnHeaderViewHeight();
                 setColumnHeaderViewHeight(oldHeight + diff);
                 m_oldMouseY = getColumnHeaderViewHeight();
+            }
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void mouseClicked(final MouseEvent e) {
+            if (e.getClickCount() == 2 && canResize((Component)e.getSource(), e)) {
+                setColumnHeaderViewHeight(-1);
             }
         }
 
