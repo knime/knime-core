@@ -114,6 +114,8 @@ public class TableNodeView extends NodeView {
         TableContentModel cntModel = nodeModel.getContentModel();
         assert (cntModel != null);
         m_tableView = new TableView(cntModel);
+        m_tableView.setWrapColumnHeader(true);
+        m_tableView.setPreferredSizeDataDependent(true);
         cntModel.addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(final TableModelEvent e) {
