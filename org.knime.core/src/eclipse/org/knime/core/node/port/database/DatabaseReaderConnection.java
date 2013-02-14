@@ -371,6 +371,8 @@ public final class DatabaseReaderConnection {
                 }, exec);
             } finally {
                 if (m_stmt != null) {
+                    m_stmt.getConnection().commit();
+                    m_stmt.getConnection().setAutoCommit(true);
                     m_stmt.close();
                     m_stmt = null;
                 }
@@ -445,6 +447,8 @@ public final class DatabaseReaderConnection {
                 return buf.getTable();
             } finally {
                 if (m_stmt != null) {
+                    m_stmt.getConnection().commit();
+                    m_stmt.getConnection().setAutoCommit(true);
                     m_stmt.close();
                     m_stmt = null;
                 }
