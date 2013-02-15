@@ -394,15 +394,14 @@ public class DatabaseConnectionSettings {
 
     /**
      * Used to sync access to mySQL databases.
-     * @param connection (not null) used to sync mySQL database access
+     * @param conn same conn, used to sync mySQL database access
      * @return sync object which is either the given connection inherit from
-     *         "com.mysql" or an new object (no sync necessary)
-     * @throws NullPointerException if the given connection is null
+     *         "com.mysql" or null, or an new object (no sync necessary)
      */
     // FIX 2642: parallel database reader execution fails for mySQL
-    final Object syncConnection(final Connection connection) {
-        if (connection.getClass().getCanonicalName().startsWith("com.mysql")) {
-            return connection;
+    final Object syncConnection(final Connection conn) {
+        if (conn != null && conn.getClass().getCanonicalName().startsWith("com.mysql")) {
+            return conn;
         } else {
             return new Object();
         }

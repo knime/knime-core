@@ -124,8 +124,8 @@ public final class DatabaseWriterConnection {
                 try {
                     // try to count all rows to see if table exists
                     final String query = "SELECT * FROM " + table + " WHERE 1 = 0";
-                    LOGGER.debug("Executing SQL statement \"" + query + "\"");
                     statement = conn.createStatement();
+                    LOGGER.debug("Executing SQL statement as executeQuery: " + query);
                     rs = statement.executeQuery(query);
                 } catch (SQLException sqle) {
                     if (statement == null) {
@@ -136,9 +136,8 @@ public final class DatabaseWriterConnection {
                             + "\" does not exist in database, "
                             + "will create new table.");
                     // and create new table
-                    final String query = "CREATE TABLE " + table + " "
-                        + createStmt(spec, sqlTypes);
-                    LOGGER.debug("Executing SQL statement \"" + query + "\"");
+                    final String query = "CREATE TABLE " + table + " " + createStmt(spec, sqlTypes);
+                    LOGGER.debug("Executing SQL statement as execute: " + query);
                     statement.execute(query);
                 }
                 // if table exists
@@ -266,20 +265,18 @@ public final class DatabaseWriterConnection {
                     statement = conn.createStatement();
                     // remove existing table (if any)
                     final String query = "DROP TABLE " + table;
-                    LOGGER.debug("Executing SQL statement \"" + query + "\"");
+                    LOGGER.debug("Executing SQL statement as execute: " + query);
                     statement.execute(query);
                 } catch (Throwable t) {
                     if (statement == null) {
                         throw new SQLException("Could not create SQL statement,"
                             + " reason: " + t.getMessage(), t);
                     }
-                    LOGGER.info("Can't drop table \"" + table
-                            + "\", will create new table.");
+                    LOGGER.info("Can't drop table \"" + table + "\", will create new table.");
                 }
                 // and create new table
-                final String query = "CREATE TABLE " + table + " "
-                    + createStmt(spec, sqlTypes);
-                LOGGER.debug("Executing SQL statement \"" + query + "\"");
+                final String query = "CREATE TABLE " + table + " " + createStmt(spec, sqlTypes);
+                LOGGER.debug("Executing SQL statement as execute: " + query);
                 statement.execute(query);
                 statement.close();
             }
@@ -308,10 +305,11 @@ public final class DatabaseWriterConnection {
             int curBatchSize = 0;
 
             // create table meta data with empty column information
-            final String query = "INSERT INTO "
-                + table + " VALUES " + wildcard.toString();
-            LOGGER.debug("Executing SQL statement \"" + query + "\"");
+            final String query = "INSERT INTO " + table + " VALUES " + wildcard.toString();
+            LOGGER.debug("Executing SQL statement as prepareStatement: " + query);
             final PreparedStatement stmt = conn.prepareStatement(query);
+            // remember auto-commit flag
+            final boolean autoCommit = conn.getAutoCommit();
             try {
                 conn.setAutoCommit(false);
                 for (RowIterator it = data.iterator(); it.hasNext(); cnt++) {
@@ -371,13 +369,14 @@ public final class DatabaseWriterConnection {
                         }
                     }
                 }
-                conn.commit();
-                conn.setAutoCommit(true);
+                if (!conn.getAutoCommit()) {
+                    conn.commit();
+                }
+                conn.setAutoCommit(autoCommit);
                 if (allErrors == 0) {
                     return null;
                 } else {
-                    return "Errors \"" + allErrors + "\" writing "
-                        + rowCount + " rows.";
+                    return "Errors \"" + allErrors + "\" writing " + rowCount + " rows.";
                 }
             } finally {
                 stmt.close();
@@ -442,8 +441,10 @@ public final class DatabaseWriterConnection {
             // count number of rows added to current batch
             int curBatchSize = 0;
 
-            LOGGER.debug("Executing SQL statement \"" + query + "\"");
+            LOGGER.debug("Executing SQL statement as prepareStatement: " + query);
             final PreparedStatement stmt = conn.prepareStatement(query.toString());
+            // remember auto-commit flag
+            final boolean autoCommit = conn.getAutoCommit();
             try {
                 conn.setAutoCommit(false);
                 for (RowIterator it = data.iterator(); it.hasNext(); cnt++) {
@@ -514,8 +515,10 @@ public final class DatabaseWriterConnection {
                         }
                     }
                 }
-                conn.commit();
-                conn.setAutoCommit(true);
+                if (!conn.getAutoCommit()) {
+                    conn.commit();
+                }
+                conn.setAutoCommit(autoCommit);
                 if (allErrors == 0) {
                     return null;
                 } else {
@@ -575,8 +578,10 @@ public final class DatabaseWriterConnection {
             // count number of rows added to current batch
             int curBatchSize = 0;
 
-            LOGGER.debug("Executing SQL statement \"" + query + "\"");
+            LOGGER.debug("Executing SQL statement as prepareStatement: " + query);
             final PreparedStatement stmt = conn.prepareStatement(query.toString());
+            // remember auto-commit flag
+            final boolean autoCommit = conn.getAutoCommit();
             try {
                 conn.setAutoCommit(false);
                 for (RowIterator it = data.iterator(); it.hasNext(); cnt++) {
@@ -639,8 +644,10 @@ public final class DatabaseWriterConnection {
                         }
                     }
                 }
-                conn.commit();
-                conn.setAutoCommit(true);
+                if (!conn.getAutoCommit()) {
+                    conn.commit();
+                }
+                conn.setAutoCommit(autoCommit);
                 if (allErrors == 0) {
                     return null;
                 } else {
