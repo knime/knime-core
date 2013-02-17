@@ -88,6 +88,7 @@ import org.knime.core.data.renderer.DataValueRenderer;
 public final class TableRowHeaderView extends JTable {
     private static final long serialVersionUID = 4115412802300446736L;
     private Color m_headerBackground;
+    private boolean m_isShowColorInfo;
 
     /**
      * Instantiates new view based on a <code>TableRowHeaderModel</code>.
@@ -97,6 +98,7 @@ public final class TableRowHeaderView extends JTable {
     private TableRowHeaderView(final TableRowHeaderModel dm) {
         super(dm);
         getTableHeader().setReorderingAllowed(false);
+        setShowColorInfo(true);
         new RowHeaderHeightMouseListener(this);
     } // TableRowHeaderView
 
@@ -127,7 +129,9 @@ public final class TableRowHeaderView extends JTable {
         });
         // set renderer for table (similar to column header renderer)
         // do not call the method setRenderer because it might be overridden
-        aColumn.setCellRenderer(DataCellHeaderRenderer.newInstance());
+        DataCellHeaderRenderer renderer = DataCellHeaderRenderer.newInstance();
+        renderer.showIcon(m_isShowColorInfo);
+        aColumn.setCellRenderer(renderer);
         assert (getColumnCount() == 1);
     }
 
@@ -293,6 +297,7 @@ public final class TableRowHeaderView extends JTable {
             ((DataCellHeaderRenderer)renderer).showIcon(isShowColor);
         }
         boolean newValue = isShowColorInfo();
+        m_isShowColorInfo = newValue;
         if (oldValue != newValue) {
             repaint();
         }
@@ -305,13 +310,31 @@ public final class TableRowHeaderView extends JTable {
      *      <code>false</code> otherwise
      */
     public boolean isShowColorInfo() {
-        TableCellRenderer renderer =
-            getColumnModel().getColumn(0).getCellRenderer();
+        TableCellRenderer renderer = getColumnModel().getColumn(0).getCellRenderer();
         if (renderer instanceof DataCellHeaderRenderer) {
             return ((DataCellHeaderRenderer)renderer).isShowIcon();
         }
         return false;
     } // isShowColorInfo()
+
+    /** Iterates all rows, determines best width and sets it. This method is expensive (as it iterates the rows).
+     * @since 2.8
+     */
+    public void sizeWidthToFit() {
+        int bestFit = -1;
+        int rowCount = getRowCount();
+        for (int i = 0; i < rowCount; i++) {
+            TableCellRenderer cellRenderer = getCellRenderer(i, 0);
+            Component rendererComponent = prepareRenderer(cellRenderer, i, 0);
+            bestFit = Math.max(bestFit, rendererComponent.getPreferredSize().width);
+        }
+        if (bestFit > 0) {
+            // no idea why there are ~2 pixel missing. String is clipped if omitted.
+            TableColumn column = getColumnModel().getColumn(0);
+            column.setPreferredWidth(bestFit + 2);
+            column.setWidth(bestFit + 2);
+        }
+    }
 
     /**
      * Overridden in order to fire an event that an individual row has

@@ -251,57 +251,56 @@ public class OutPortView extends JFrame {
 
     /** Internal update method that creates new tabs and displays them. */
     private void updateInternal(final UpdateObject updateObject) {
-        // add all port object tabs
-        final Map<String, JComponent> views
-            = new LinkedHashMap<String, JComponent>();
-        PortObject portObject = updateObject.m_portObject;
-        PortObjectSpec portObjectSpec =
-            updateObject.m_portObjectSpec;
-        FlowObjectStack stack = updateObject.m_flowObjectStack;
-        CredentialsProvider credentials =
-            updateObject.m_credentialsProvider;
-        if (portObject != null) {
-            JComponent[] poViews = portObject.getViews();
-            if (poViews != null) {
-                for (JComponent comp : poViews) {
-                    // fix 2379: CredentialsProvider needed in
-                    // DatabasePortObject to create db connection
-                    // while accessing data for preview
-                    if (comp instanceof DatabaseOutPortPanel) {
-                        DatabaseOutPortPanel dbcomp
-                        = (DatabaseOutPortPanel) comp;
-                        dbcomp.setCredentialsProvider(credentials);
-                    }
-                    views.put(comp.getName(), comp);
-                }
-            }
-        } else {
-            // what to display, if no port object is available?
-            JPanel noDataPanel = new JPanel();
-            noDataPanel.setLayout(new BorderLayout());
-            Box boexle = Box.createHorizontalBox();
-            boexle.add(Box.createHorizontalGlue());
-            boexle.add(new JLabel("No data available!"));
-            boexle.add(Box.createHorizontalGlue());
-            noDataPanel.add(boexle, BorderLayout.CENTER);
-            noDataPanel.setName("No Table");
-            views.put("No Table", noDataPanel);
-        }
-        JComponent[] posViews = portObjectSpec == null
-        ? new JComponent[0] : portObjectSpec.getViews();
-        if (posViews != null) {
-            for (JComponent comp : posViews) {
-                views.put(comp.getName(), comp);
-            }
-        }
-
-        FlowObjectStackView stackView = new FlowObjectStackView();
-        stackView.update(stack);
-        views.put("Flow Variables", stackView);
-
         ViewUtils.invokeAndWaitInEDT(new Runnable() {
             @Override
             public void run() {
+                // add all port object tabs
+                final Map<String, JComponent> views
+                    = new LinkedHashMap<String, JComponent>();
+                PortObject portObject = updateObject.m_portObject;
+                PortObjectSpec portObjectSpec =
+                    updateObject.m_portObjectSpec;
+                FlowObjectStack stack = updateObject.m_flowObjectStack;
+                CredentialsProvider credentials =
+                    updateObject.m_credentialsProvider;
+                if (portObject != null) {
+                    JComponent[] poViews = portObject.getViews();
+                    if (poViews != null) {
+                        for (JComponent comp : poViews) {
+                            // fix 2379: CredentialsProvider needed in
+                            // DatabasePortObject to create db connection
+                            // while accessing data for preview
+                            if (comp instanceof DatabaseOutPortPanel) {
+                                DatabaseOutPortPanel dbcomp
+                                = (DatabaseOutPortPanel) comp;
+                                dbcomp.setCredentialsProvider(credentials);
+                            }
+                            views.put(comp.getName(), comp);
+                        }
+                    }
+                } else {
+                    // what to display, if no port object is available?
+                    JPanel noDataPanel = new JPanel();
+                    noDataPanel.setLayout(new BorderLayout());
+                    Box boexle = Box.createHorizontalBox();
+                    boexle.add(Box.createHorizontalGlue());
+                    boexle.add(new JLabel("No data available!"));
+                    boexle.add(Box.createHorizontalGlue());
+                    noDataPanel.add(boexle, BorderLayout.CENTER);
+                    noDataPanel.setName("No Table");
+                    views.put("No Table", noDataPanel);
+                }
+                JComponent[] posViews = portObjectSpec == null ? new JComponent[0] : portObjectSpec.getViews();
+                if (posViews != null) {
+                    for (JComponent comp : posViews) {
+                        views.put(comp.getName(), comp);
+                    }
+                }
+
+                FlowObjectStackView stackView = new FlowObjectStackView();
+                stackView.update(stack);
+                views.put("Flow Variables", stackView);
+
                 m_tabbedPane.removeAll();
                 for (Map.Entry<String, JComponent>entry
                         : views.entrySet()) {

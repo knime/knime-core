@@ -87,7 +87,6 @@ public class BufferedDataTableView extends JComponent {
         m_dataView.setWrapColumnHeader(true);
         m_dataView.getContentModel().setSortingAllowed(true);
         m_dataView.registerNavigationActions();
-        m_dataView.getHeaderTable().setShowColorInfo(false);
         updateDataTable();
     }
 
