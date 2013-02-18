@@ -221,13 +221,15 @@ final class DBDialogPane extends JPanel {
         m_driver.removeAllItems();
         // update list of registered driver
         updateDriver();
-        String select = settings.getString("driver",
-                m_driver.getSelectedItem().toString());
-        m_driver.setSelectedItem(select);
+        // check if at least one driver is selected and the list is not empty
+        final Object selectedDriver = m_driver.getSelectedItem();
+        if (selectedDriver != null) {
+            String select = settings.getString("driver", selectedDriver.toString());
+            m_driver.setSelectedItem(select);
+        }
         // update list of urls
         m_db.removeAllItems();
-        for (String databaseURL
-                : DatabaseConnectionSettings.DATABASE_URLS.getHistory()) {
+        for (String databaseURL : DatabaseConnectionSettings.DATABASE_URLS.getHistory()) {
             m_db.addItem(databaseURL);
         }
         String dbName = settings.getString("database", null);

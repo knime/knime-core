@@ -81,6 +81,15 @@ public interface FlowVariableResolvable {
                     break;
                 }
                 int endIndex = command.indexOf("}$$", currentIndex);
+                if (endIndex < 0) {
+                    String badVarName;
+                    if (command.length() - currentIndex > 20) {
+                        badVarName = command.substring(currentIndex, currentIndex + 19) + "...";
+                    } else {
+                        badVarName = command.substring(currentIndex);
+                    }
+                    throw new IllegalArgumentException("Variable identifier \"" + badVarName + "\" is not closed");
+                }
                 String var = command.substring(currentIndex + 4, endIndex);
                 switch (command.charAt(currentIndex + 3)) {
                     case 'I' :
@@ -97,6 +106,19 @@ public interface FlowVariableResolvable {
                         String s = model.delegatePeekFlowVariableString(var);
                         command = command.replace("$${S" + var + "}$$", s);
                         break;
+                    default:
+                        String badVarName;
+                        if (endIndex > currentIndex) {
+                            badVarName = command.substring(currentIndex, endIndex + "}$$".length());
+                        } else if (command.indexOf("\n", currentIndex) >= 0) {
+                            badVarName = command.substring(currentIndex, command.indexOf("\n", currentIndex)) + "...";
+                        } else if (command.length() - currentIndex > 20) {
+                            badVarName = command.substring(currentIndex, currentIndex + 20) + "...";
+                        } else {
+                            badVarName = command.substring(currentIndex);
+                        }
+                        throw new IllegalArgumentException("Invalid flow variable identifier \"" + badVarName + "\"; "
+                                + "it should start with a type identifer.");
                 }
             } while (true);
             return command;

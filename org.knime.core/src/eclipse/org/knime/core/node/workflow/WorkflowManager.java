@@ -7691,10 +7691,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             while (it.hasNext()) {
                 Entry<NodeID, T> next = it.next();
                 NodeID id = next.getKey();
-                NodeContainer nc = getNodeContainer(id);
+                SingleNodeContainer nc = (SingleNodeContainer)getNodeContainer(id);
                 if (!filter.include(next.getValue())) {
                     it.remove();
                 } else if (!State.EXECUTED.equals(nc.getState())) {
+                    it.remove();
+                } else if (nc.isInactive()) {
                     it.remove();
                 }
             }
