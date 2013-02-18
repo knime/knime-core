@@ -186,6 +186,7 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataArray getDataArray(final int index) {
         if (index == 0) {
             return m_fusionTable;
@@ -207,7 +208,6 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] data,
             final ExecutionContext exec) throws Exception {
-
         // determine the indices of the selected columns
         List<String> inlcludedCols = m_selectedColumns.getIncludeList();
         int[] selectedColIndices = new int[inlcludedCols.size()];
@@ -218,6 +218,10 @@ public class HierarchicalClusterNodeModel extends NodeModel implements
         }
 
         BufferedDataTable inputData = data[0];
+        if (inputData.getRowCount() > 65500) {
+            throw new RuntimeException("At most 65,500 patterns can be clustered");
+        }
+
 
         DataTable outputData = null;
 

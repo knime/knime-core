@@ -112,6 +112,8 @@ import org.knime.core.node.config.ConfigWO;
  * It is also possible to save the contents of the matrix into a node settings
  * object and load it again from there afterwards.
  *
+ * The maximum number of rows/column that the matrix may contain is 65,500.
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public final class HalfIntMatrix {
@@ -128,11 +130,17 @@ public final class HalfIntMatrix {
      */
     public HalfIntMatrix(final int rows, final boolean withDiagonal) {
         m_withDiagonal = withDiagonal;
+        long size;
         if (withDiagonal) {
-            m_matrix = new int[(rows * rows + rows) / 2];
+            size = (rows * (long)rows + rows) / 2;
         } else {
-            m_matrix = new int[(rows * rows - rows) / 2];
+            size = (rows * (long)rows - rows) / 2;
         }
+        if (size > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("Too many rows, only 65,000 rows are possible");
+        }
+        m_matrix = new int[(int)size];
+
     }
 
     /**
