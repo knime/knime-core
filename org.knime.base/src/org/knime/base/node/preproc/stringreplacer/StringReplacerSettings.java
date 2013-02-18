@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   18.06.2007 (thor): created
  */
@@ -56,7 +56,7 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * This class holds the settings for the string replacer node.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class StringReplacerSettings {
@@ -74,9 +74,32 @@ public class StringReplacerSettings {
 
     private String m_replacement;
 
+    /** @since 2.8 */
+    private boolean m_enableEscaping;
+
+    /**
+     * Returns whether escaping via a backslash is enabled.
+     *
+     * @return <code>true</code> if the backslash is an escape character, <code>false</code> otherwise
+     * @since 2.8
+     */
+    public boolean enableEscaping() {
+        return m_enableEscaping;
+    }
+
+    /**
+     * Sets whether escaping via a backslash is enabled.
+     *
+     * @param enable <code>true</code> if the backslash is an escape character, <code>false</code> otherwise
+     * @since 2.8
+     */
+    public void enableEscaping(final boolean enable) {
+        m_enableEscaping = enable;
+    }
+
     /**
      * Returns if the pattern should match case sensitive or not.
-     * 
+     *
      * @return <code>true</code> if the matches should be case sensitive,
      *         <code>false</code> otherwise
      */
@@ -86,7 +109,7 @@ public class StringReplacerSettings {
 
     /**
      * Sets if the pattern should match case sensitive or not.
-     * 
+     *
      * @param b <code>true</code> if the matches should be case sensitive,
      *            <code>false</code> otherwise
      */
@@ -96,7 +119,7 @@ public class StringReplacerSettings {
 
     /**
      * Returns the name of the column that should be processed.
-     * 
+     *
      * @return the column's name
      */
     public String columnName() {
@@ -105,7 +128,7 @@ public class StringReplacerSettings {
 
     /**
      * Sets the name of the column that should be processed.
-     * 
+     *
      * @param colName the column's name
      */
     public void columnName(final String colName) {
@@ -115,7 +138,7 @@ public class StringReplacerSettings {
     /**
      * Returns if a new column should be created instead of overriding the
      * values in the target column.
-     * 
+     *
      * @return <code>true</code> if a new column should be created,
      *         <code>false</code> otherwise
      * @see #newColumnName()
@@ -127,7 +150,7 @@ public class StringReplacerSettings {
     /**
      * Sets if a new column should be created instead of overriding the values
      * in the target column.
-     * 
+     *
      * @param b <code>true</code> if a new column should be created,
      *            <code>false</code> otherwise
      * @see #newColumnName(String)
@@ -138,7 +161,7 @@ public class StringReplacerSettings {
 
     /**
      * Loads the settings from the node settings object.
-     * 
+     *
      * @param settings node settings
      * @throws InvalidSettingsException if settings are missing
      */
@@ -151,11 +174,14 @@ public class StringReplacerSettings {
         m_pattern = settings.getString("pattern");
         m_replaceAllOccurrences = settings.getBoolean("replaceAllOccurences");
         m_replacement = settings.getString("replacement");
+
+        /** @since 2.8 */
+        m_enableEscaping = settings.getBoolean("enableEscaping", false);
     }
 
     /**
      * Loads the settings from the node settings object.
-     * 
+     *
      * @param settings node settings
      */
     public void loadSettingsForDialog(final NodeSettingsRO settings) {
@@ -167,11 +193,12 @@ public class StringReplacerSettings {
         m_replaceAllOccurrences =
                 settings.getBoolean("replaceAllOccurences", false);
         m_replacement = settings.getString("replacement", "");
+        m_enableEscaping = settings.getBoolean("enableEscaping", false);
     }
 
     /**
      * Returns the name of the new column.
-     * 
+     *
      * @return the new column's name
      * @see #createNewColumn()
      */
@@ -181,7 +208,7 @@ public class StringReplacerSettings {
 
     /**
      * Sets the name of the new column.
-     * 
+     *
      * @param colName the new column's name
      * @see #createNewColumn(boolean)
      */
@@ -191,7 +218,7 @@ public class StringReplacerSettings {
 
     /**
      * Returns the pattern.
-     * 
+     *
      * @return the pattern
      */
     public String pattern() {
@@ -200,7 +227,7 @@ public class StringReplacerSettings {
 
     /**
      * Sets the pattern.
-     * 
+     *
      * @param pattern the pattern
      */
     public void pattern(final String pattern) {
@@ -210,10 +237,10 @@ public class StringReplacerSettings {
     /**
      * Returns if the whole string or all occurrences of the pattern should be
      * replaced.
-     * 
+     *
      * @return <code>true</code> if all occurrences should be replaced,
      *         <code>false</code> if the whole string should be replaced
-     * 
+     *
      */
     public boolean replaceAllOccurrences() {
         return m_replaceAllOccurrences;
@@ -222,10 +249,10 @@ public class StringReplacerSettings {
     /**
      * Sets if the whole string or all occurrences of the pattern should be
      * replaced.
-     * 
+     *
      * @param b <code>true</code> if all occurrences should be replaced,
      *         <code>false</code> if the whole string should be replaced
-     * 
+     *
      */
     public void replaceAllOccurrences(final boolean b) {
         m_replaceAllOccurrences = b;
@@ -233,7 +260,7 @@ public class StringReplacerSettings {
 
     /**
      * Returns the replacement text.
-     * 
+     *
      * @return the replacement text
      */
     public String replacement() {
@@ -242,7 +269,7 @@ public class StringReplacerSettings {
 
     /**
      * Sets the replacement text.
-     * 
+     *
      * @param replacement the replacement text
      */
     public void replacement(final String replacement) {
@@ -251,7 +278,7 @@ public class StringReplacerSettings {
 
     /**
      * Save the settings into the node settings object.
-     * 
+     *
      * @param settings node settings
      */
     public void saveSettings(final NodeSettingsWO settings) {
@@ -262,5 +289,6 @@ public class StringReplacerSettings {
         settings.addString("pattern", m_pattern);
         settings.addBoolean("replaceAllOccurences", m_replaceAllOccurrences);
         settings.addString("replacement", m_replacement);
+        settings.addBoolean("enableEscaping", m_enableEscaping);
     }
 }

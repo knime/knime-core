@@ -25,6 +25,11 @@
             characters <b>*</b> and <b>?</b> are not allowed in the pattern in this case. 
         </option>
         <option name="Case sensitive search">Check this if the pattern should be case sensitive</option>
+        <option name="Use backslash as escape character">
+            If you want to replace the wildcard characters <b>*</b> and <b>?</b> themselves, you need to enable this
+            option and escape them using a backslash (<b>\*</b> or <b>\?</b>). In order to replace a backslash you need
+            to escape the backslash, too (<b>\\</b>). 
+        </option>
         <option name="Append new column">
             Creates a new column with the name entered in the text field instead of replacing the values in the original column.
         </option>

@@ -167,7 +167,7 @@ public class StringReplacerNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         exec.setMessage("Searching & Replacing");
-        String regex = WildcardMatcher.wildcardToRegex(m_settings.pattern());
+        String regex = WildcardMatcher.wildcardToRegex(m_settings.pattern(), m_settings.enableEscaping());
         // support for \n and international characters
         int flags = Pattern.DOTALL | Pattern.MULTILINE;
         if (!m_settings.caseSensitive()) {

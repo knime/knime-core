@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   18.06.2007 (thor): created
  */
@@ -76,7 +76,7 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
 /**
  * This is the dialog for the string replacer node where the user can
  * enter the pattern, the replacement string and several other options.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class StringReplacerDialog extends NodeDialogPane {
@@ -90,34 +90,36 @@ public class StringReplacerDialog extends NodeDialogPane {
 
     private final JCheckBox m_createNewCol = new JCheckBox();
 
+    private final JCheckBox m_enableEscaping = new JCheckBox();
+
     private final JTextField m_newColName = new JTextField("New Column");
 
     private final JTextField m_pattern = new JTextField();
-    
+
     private final JRadioButton m_wholeWordReplacement = new JRadioButton();
-    
+
     private final JRadioButton m_replaceOccurrences = new JRadioButton();
-    
+
     private final JTextField m_replacement = new JTextField();
-   
+
     /**
      * Creates a new dialog.
      */
     public StringReplacerDialog() {
         JPanel p = new JPanel(new GridBagLayout());
-        
+
         GridBagConstraints c = new GridBagConstraints();
         c.insets = new Insets(5, 5, 5, 5);
         c.gridx = 0;
         c.gridy = 0;
         c.anchor = GridBagConstraints.NORTHWEST;
-        
-        
+
+
         p.add(new JLabel("Target column   "), c);
         c.gridx++;
         c.gridwidth = 2;
         p.add(m_colName, c);
-        
+
         c.gridy++;
         c.gridx = 0;
         c.gridwidth = 1;
@@ -129,7 +131,7 @@ public class StringReplacerDialog extends NodeDialogPane {
         p.add(m_pattern, c);
         c.weightx = 0.0;
         c.fill = GridBagConstraints.NONE;
-        
+
         c.gridy++;
         c.gridx = 0;
         c.gridwidth = 1;
@@ -141,7 +143,7 @@ public class StringReplacerDialog extends NodeDialogPane {
         p.add(m_replacement, c);
         c.fill = GridBagConstraints.NONE;
         c.weightx = 0.0;
-        
+
         ButtonGroup b = new ButtonGroup();
         b.add(m_wholeWordReplacement);
         b.add(m_replaceOccurrences);
@@ -153,7 +155,7 @@ public class StringReplacerDialog extends NodeDialogPane {
         p.add(new JLabel("Replace whole string   "), c);
         c.gridx++;
         p.add(m_wholeWordReplacement, c);
-        
+
         c.gridy++;
         c.gridx = 0;
         c.gridwidth = 1;
@@ -172,16 +174,23 @@ public class StringReplacerDialog extends NodeDialogPane {
 
         c.gridy++;
         c.gridx = 0;
+        p.add(new JLabel("Use backslash as escape character   "), c);
+        c.gridx++;
+        p.add(m_enableEscaping, c);
+
+        c.gridy++;
+        c.gridx = 0;
         p.add(new JLabel("Append new column   "), c);
         c.gridx++;
         p.add(m_createNewCol, c);
-        
+
         m_createNewCol.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 m_newColName.setEnabled(m_createNewCol.isSelected());
             }
         });
-        
+
         c.gridx++;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.weightx = 1.0;
@@ -190,9 +199,9 @@ public class StringReplacerDialog extends NodeDialogPane {
 
         addTab("Standard settings", p);
     }
-    
-    
-    
+
+
+
     /**
      * {@inheritDoc}
      */
@@ -200,7 +209,7 @@ public class StringReplacerDialog extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
         m_settings.loadSettingsForDialog(settings);
-        
+
         m_caseSensitiv.setSelected(m_settings.caseSensitive());
         m_colName.update(specs[0], m_settings.columnName());
         m_createNewCol.setSelected(m_settings.createNewColumn());
@@ -216,6 +225,7 @@ public class StringReplacerDialog extends NodeDialogPane {
             m_wholeWordReplacement.doClick();
         }
         m_replacement.setText(m_settings.replacement());
+        m_enableEscaping.setSelected(m_settings.enableEscaping());
     }
 
     /**
@@ -231,7 +241,8 @@ public class StringReplacerDialog extends NodeDialogPane {
         m_settings.pattern(m_pattern.getText());
         m_settings.replaceAllOccurrences(m_replaceOccurrences.isSelected());
         m_settings.replacement(m_replacement.getText());
-        
+        m_settings.enableEscaping(m_enableEscaping.isSelected());
+
         m_settings.saveSettings(settings);
     }
 
