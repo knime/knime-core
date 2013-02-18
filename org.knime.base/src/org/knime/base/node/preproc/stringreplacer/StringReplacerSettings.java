@@ -76,6 +76,28 @@ public class StringReplacerSettings {
 
     /** @since 2.8 */
     private boolean m_enableEscaping;
+    /** @since 2.8 */
+    private boolean m_patternIsRegex;
+
+
+    /**
+     * Returns whether the pattern is a regular expression or a simple wildcard pattern.
+     *
+     * @return <code>true</code> if it is a regular expression, <code>false</code> if it contains wildcards
+     */
+    public boolean patternIsRegex() {
+        return m_patternIsRegex;
+    }
+
+    /**
+     * Sets whether the pattern is a regular expression or a simple wildcard pattern.
+     *
+     * @param regex <code>true</code> if it is a regular expression, <code>false</code> if it contains wildcards
+     */
+    public void patternIsRegex(final boolean regex) {
+        m_patternIsRegex = regex;
+    }
+
 
     /**
      * Returns whether escaping via a backslash is enabled.
@@ -177,6 +199,7 @@ public class StringReplacerSettings {
 
         /** @since 2.8 */
         m_enableEscaping = settings.getBoolean("enableEscaping", false);
+        m_patternIsRegex = settings.getBoolean("patternIsRegex", false);
     }
 
     /**
@@ -194,6 +217,7 @@ public class StringReplacerSettings {
                 settings.getBoolean("replaceAllOccurences", false);
         m_replacement = settings.getString("replacement", "");
         m_enableEscaping = settings.getBoolean("enableEscaping", false);
+        m_patternIsRegex = settings.getBoolean("patternIsRegex", false);
     }
 
     /**
@@ -290,5 +314,6 @@ public class StringReplacerSettings {
         settings.addBoolean("replaceAllOccurences", m_replaceAllOccurrences);
         settings.addString("replacement", m_replacement);
         settings.addBoolean("enableEscaping", m_enableEscaping);
+        settings.addBoolean("patternIsRegex", m_patternIsRegex);
     }
 }

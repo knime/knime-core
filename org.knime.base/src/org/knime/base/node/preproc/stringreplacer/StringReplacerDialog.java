@@ -63,6 +63,8 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.StringValue;
@@ -96,11 +98,17 @@ public class StringReplacerDialog extends NodeDialogPane {
 
     private final JTextField m_pattern = new JTextField();
 
-    private final JRadioButton m_wholeWordReplacement = new JRadioButton();
+    private final JRadioButton m_wholeWordReplacement = new JRadioButton("... whole string");
 
-    private final JRadioButton m_replaceOccurrences = new JRadioButton();
+    private final JRadioButton m_replaceOccurrences = new JRadioButton("... all occurrences");
+
+    private final JRadioButton m_wildcardPattern = new JRadioButton("Wildcard pattern");
+
+    private final JRadioButton m_regularExpression = new JRadioButton("Regular expression");
 
     private final JTextField m_replacement = new JTextField();
+
+    private final JLabel m_escapeLabel = new JLabel("Use backslash as escape character   ");
 
     /**
      * Creates a new dialog.
@@ -120,10 +128,35 @@ public class StringReplacerDialog extends NodeDialogPane {
         c.gridwidth = 2;
         p.add(m_colName, c);
 
+
+        ButtonGroup bg = new ButtonGroup();
+        bg.add(m_wildcardPattern);
+        bg.add(m_regularExpression);
+        c.gridy++;
+        c.gridx = 0;
+        int oldSep = c.insets.bottom;
+        c.insets.bottom = 0;
+        c.gridwidth = 1;
+        p.add(new JLabel("Pattern type   "), c);
+        c.gridx++;
+        c.gridwidth = 2;
+        p.add(m_wildcardPattern, c);
+        c.insets.bottom = oldSep;
+        c.gridy++;
+        p.add(m_regularExpression, c);
+
+        m_wildcardPattern.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                m_escapeLabel.setEnabled(m_wildcardPattern.isSelected());
+                m_enableEscaping.setEnabled(m_wildcardPattern.isSelected());
+            }
+        });
+
         c.gridy++;
         c.gridx = 0;
         c.gridwidth = 1;
-        p.add(new JLabel("Wildcard pattern   "), c);
+        p.add(new JLabel("Pattern   "), c);
         c.gridx++;
         c.gridwidth = 2;
         c.fill = GridBagConstraints.HORIZONTAL;
@@ -144,37 +177,32 @@ public class StringReplacerDialog extends NodeDialogPane {
         c.fill = GridBagConstraints.NONE;
         c.weightx = 0.0;
 
-        ButtonGroup b = new ButtonGroup();
-        b.add(m_wholeWordReplacement);
-        b.add(m_replaceOccurrences);
+        bg = new ButtonGroup();
+        bg.add(m_wholeWordReplacement);
+        bg.add(m_replaceOccurrences);
         c.gridy++;
         c.gridx = 0;
         c.gridwidth = 1;
-        int oldSep = c.insets.bottom;
-        c.insets.bottom = 1;
-        p.add(new JLabel("Replace whole string   "), c);
+        oldSep = c.insets.bottom;
+        c.insets.bottom = 0;
+        p.add(new JLabel("Replace ...   "), c);
         c.gridx++;
+        c.gridwidth = 2;
         p.add(m_wholeWordReplacement, c);
+        c.insets.bottom = oldSep;
+        c.gridy++;
+        p.add(m_replaceOccurrences, c);
 
         c.gridy++;
         c.gridx = 0;
         c.gridwidth = 1;
-        c.insets.bottom = oldSep;
-        c.insets.top = 1;
-        p.add(new JLabel("Replace all occurrences of pattern   "), c);
-        c.gridx++;
-        p.add(m_replaceOccurrences, c);
-        c.insets.top = oldSep;
-
-        c.gridy++;
-        c.gridx = 0;
         p.add(new JLabel("Case sensitive search   "), c);
         c.gridx++;
         p.add(m_caseSensitiv, c);
 
         c.gridy++;
         c.gridx = 0;
-        p.add(new JLabel("Use backslash as escape character   "), c);
+        p.add(m_escapeLabel, c);
         c.gridx++;
         p.add(m_enableEscaping, c);
 
@@ -226,6 +254,11 @@ public class StringReplacerDialog extends NodeDialogPane {
         }
         m_replacement.setText(m_settings.replacement());
         m_enableEscaping.setSelected(m_settings.enableEscaping());
+        if (m_settings.patternIsRegex()) {
+            m_regularExpression.doClick();
+        } else {
+            m_wildcardPattern.doClick();
+        }
     }
 
     /**
@@ -242,6 +275,7 @@ public class StringReplacerDialog extends NodeDialogPane {
         m_settings.replaceAllOccurrences(m_replaceOccurrences.isSelected());
         m_settings.replacement(m_replacement.getText());
         m_settings.enableEscaping(m_enableEscaping.isSelected());
+        m_settings.patternIsRegex(m_regularExpression.isSelected());
 
         m_settings.saveSettings(settings);
     }
