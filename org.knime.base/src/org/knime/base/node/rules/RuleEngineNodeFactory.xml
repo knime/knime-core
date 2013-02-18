@@ -36,7 +36,7 @@ STRINGLIST := '(' STRING (',' STRING)* ')'
         The most simple rule is a comparison between a column and another column, a fixed number or string.
         The LIKE operator treats the fixed string as a wildcard pattern (with * and ?) as wildcards,
         the IN operator compares the column value to a list of strings and evaluates to <i>true</i> if at least
-        one value in the list is equal to the column's value.
+        one value in the list is equal to the column's value. Note that all operators are case-sensitive!
         </p>
         <p>The outcome of a rule can either be a fixed string, a fixed number, or a reference to another column. The
         type of the outcome column is the common super type of all possible outcomes including the default label. If the outcome
@@ -53,7 +53,7 @@ STRINGLIST := '(' STRING (',' STRING)* ')'
         <p>Some example rules:</p>
         <pre>
         $Col0$ > 5 => "Positive"
-        $Col0$ == "Active" AND $Col1" &lt;= 5 => "Outlier"
+        $Col0$ = "Active" AND $Col1$" &lt;= 5 => "Outlier"
         $Col0$ LIKE "Market Street*" AND 
             ($Col1 IN ("married", "divorced") 
                 OR $Col2$ > 40) => "Strange"
