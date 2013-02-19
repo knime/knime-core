@@ -68,7 +68,6 @@ import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.util.Arrays;
 
 import org.knime.core.data.BooleanValue;
 import org.knime.core.data.DataCell;
@@ -252,7 +251,7 @@ public final class DatabaseReaderConnection {
                     }
                     LOGGER.debug("Executing SQL statement as executeQuery: " + oQueries[selectIndex]);
                     result = m_stmt.executeQuery(oQueries[selectIndex]);
-                    LOGGER.debug("Reading meta data from database ResultSet...");                
+                    LOGGER.debug("Reading meta data from database ResultSet...");
                     m_spec = createTableSpec(result.getMetaData());
                 } finally {
                     if (result != null) {
@@ -312,9 +311,9 @@ public final class DatabaseReaderConnection {
                 final String selectQuery = oQueries[oQueries.length - 1];
                 LOGGER.debug("Executing SQL statement as executeQuery: " + selectQuery);
                 final ResultSet result = m_stmt.executeQuery(selectQuery);
-                LOGGER.debug("Reading meta data from database ResultSet...");                
+                LOGGER.debug("Reading meta data from database ResultSet...");
                 m_spec = createTableSpec(result.getMetaData());
-                LOGGER.debug("Parsing database ResultSet...");                
+                LOGGER.debug("Parsing database ResultSet...");
                 return exec.createBufferedDataTable(new DataTable() {
                     /** {@inheritDoc} */
                     @Override
@@ -333,7 +332,11 @@ public final class DatabaseReaderConnection {
                     if (!conn.getAutoCommit()) {
                         conn.commit();
                     }
-                    conn.setAutoCommit(autoCommit);
+                    try {
+                        conn.setAutoCommit(autoCommit);
+                    } catch (Exception e) {
+                        // might not be supported, HIVE
+                    }
                     m_stmt.close();
                     m_stmt = null;
                 }
@@ -392,11 +395,11 @@ public final class DatabaseReaderConnection {
                     m_stmt.execute(oQueries[i]);
                 }
                 final String lastQuery = oQueries[oQueries.length - 1];
-                LOGGER.debug("Executing SQL statement as executeQuery: " + lastQuery);                
+                LOGGER.debug("Executing SQL statement as executeQuery: " + lastQuery);
                 final ResultSet result = m_stmt.executeQuery(lastQuery);
-                LOGGER.debug("Reading meta data from database ResultSet...");                
+                LOGGER.debug("Reading meta data from database ResultSet...");
                 m_spec = createTableSpec(result.getMetaData());
-                LOGGER.debug("Parsing database ResultSet...");                
+                LOGGER.debug("Parsing database ResultSet...");
                 DBRowIterator it = new DBRowIterator(result);
                 DataContainer buf = new DataContainer(m_spec);
                 while (it.hasNext()) {
@@ -409,7 +412,11 @@ public final class DatabaseReaderConnection {
                     if (!conn.getAutoCommit()) {
                         conn.commit();
                     }
-                    conn.setAutoCommit(autoCommit);
+                    try {
+                        conn.setAutoCommit(autoCommit);
+                    } catch (Exception e) {
+                        // might not be supported, HIVE
+                    }
                     m_stmt.close();
                     m_stmt = null;
                 }

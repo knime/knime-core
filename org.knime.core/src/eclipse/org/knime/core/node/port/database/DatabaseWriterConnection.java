@@ -311,7 +311,11 @@ public final class DatabaseWriterConnection {
             // remember auto-commit flag
             final boolean autoCommit = conn.getAutoCommit();
             try {
-                conn.setAutoCommit(false);
+                try {
+                    conn.setAutoCommit(false);
+                } catch (Exception e) {
+                    // might not be supported, HIVE
+                }
                 for (RowIterator it = data.iterator(); it.hasNext(); cnt++) {
                     exec.checkCanceled();
                     exec.setProgress(1.0 * cnt / rowCount, "Row " + "#" + cnt);
@@ -372,7 +376,11 @@ public final class DatabaseWriterConnection {
                 if (!conn.getAutoCommit()) {
                     conn.commit();
                 }
-                conn.setAutoCommit(autoCommit);
+                try {
+                    conn.setAutoCommit(autoCommit);
+                } catch (Exception e) {
+                    // might not be supported, HIVE
+                }
                 if (allErrors == 0) {
                     return null;
                 } else {
@@ -446,7 +454,11 @@ public final class DatabaseWriterConnection {
             // remember auto-commit flag
             final boolean autoCommit = conn.getAutoCommit();
             try {
-                conn.setAutoCommit(false);
+                try {
+                    conn.setAutoCommit(false);
+                } catch (Exception e) {
+                    // might not be supported, HIVE
+                }
                 for (RowIterator it = data.iterator(); it.hasNext(); cnt++) {
                     exec.checkCanceled();
                     exec.setProgress(1.0 * cnt / rowCount, "Row " + "#" + cnt);
@@ -518,7 +530,11 @@ public final class DatabaseWriterConnection {
                 if (!conn.getAutoCommit()) {
                     conn.commit();
                 }
-                conn.setAutoCommit(autoCommit);
+                try {
+                    conn.setAutoCommit(autoCommit);
+                } catch (Exception e) {
+                    // might not be supported, HIVE
+                }
                 if (allErrors == 0) {
                     return null;
                 } else {
@@ -583,7 +599,11 @@ public final class DatabaseWriterConnection {
             // remember auto-commit flag
             final boolean autoCommit = conn.getAutoCommit();
             try {
-                conn.setAutoCommit(false);
+                try {
+                    conn.setAutoCommit(false);
+                } catch (Exception e) {
+                    // might not be supported, HIVE
+                }
                 for (RowIterator it = data.iterator(); it.hasNext(); cnt++) {
                     exec.checkCanceled();
                     exec.setProgress(1.0 * cnt / rowCount, "Row " + "#" + cnt);
@@ -647,7 +667,11 @@ public final class DatabaseWriterConnection {
                 if (!conn.getAutoCommit()) {
                     conn.commit();
                 }
-                conn.setAutoCommit(autoCommit);
+                try {
+                    conn.setAutoCommit(autoCommit);
+                } catch (Exception e) {
+                    // might not be supported, HIVE
+                }
                 if (allErrors == 0) {
                     return null;
                 } else {
