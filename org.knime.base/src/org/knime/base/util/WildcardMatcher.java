@@ -203,6 +203,7 @@ public final class WildcardMatcher {
      * @param enableEscaping <code>true</code> if the wildcards may be escaped (i.e. they loose their special meaning)
      *            by prepending a backslash
      * @return the corresponding regular expression
+     * @since 2.8
      */
     public static String wildcardToRegex(final String wildcard, final boolean enableEscaping) {
         StringBuilder buf = new StringBuilder(wildcard.length() + 20);

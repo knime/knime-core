@@ -84,6 +84,7 @@ public class StringReplacerSettings {
      * Returns whether the pattern is a regular expression or a simple wildcard pattern.
      *
      * @return <code>true</code> if it is a regular expression, <code>false</code> if it contains wildcards
+     * @since 2.8
      */
     public boolean patternIsRegex() {
         return m_patternIsRegex;
@@ -93,6 +94,7 @@ public class StringReplacerSettings {
      * Sets whether the pattern is a regular expression or a simple wildcard pattern.
      *
      * @param regex <code>true</code> if it is a regular expression, <code>false</code> if it contains wildcards
+     * @since 2.8
      */
     public void patternIsRegex(final boolean regex) {
         m_patternIsRegex = regex;
