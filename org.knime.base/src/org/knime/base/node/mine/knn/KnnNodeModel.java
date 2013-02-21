@@ -136,28 +136,25 @@ public class KnnNodeModel extends NodeModel {
             if (cs.getType().isCompatible(DoubleValue.class)) {
                 featureColumns.add(i);
             } else if (!cs.getName().equals(m_settings.classColumn())) {
-                setWarningMessage("Input table contains more than one "
-                        + "non-numeric column; they will be ignored.");
+                setWarningMessage("Input table contains more than one non-numeric column; they will be ignored.");
             }
             i++;
         }
 
         for (int k : featureColumns) {
-            DataColumnSpec cs = inSpecs[0].getColumnSpec(k);
-            int secondColIndex = inSpecs[1].findColumnIndex(cs.getName());
+            final DataColumnSpec cs0 = inSpecs[0].getColumnSpec(k);
+            int secondColIndex = inSpecs[1].findColumnIndex(cs0.getName());
             if (secondColIndex == -1) {
-                throw new InvalidSettingsException(
-                        "Second input table does not"
-                                + " contain a column named '" + cs.getName()
-                                + "'");
+                throw new InvalidSettingsException("Second input table does not contain a column: '"
+                                                   + cs0.getName() + "'");
             }
 
-            if (inSpecs[1].getColumnSpec(secondColIndex).equalStructure(cs)) {
+            final DataColumnSpec cs1 = inSpecs[1].getColumnSpec(secondColIndex);
+            if (cs0.getName().equals(cs1.getName()) && cs1.getType().isCompatible(DoubleValue.class)) {
                 firstToSecond.put(k, secondColIndex);
             } else {
-                throw new InvalidSettingsException("Column '" + cs.getName()
-                        + "' from the second table is not compatible with the "
-                        + "corresponding column from the first table.");
+                throw new InvalidSettingsException("Column '" + cs1.getName() + "' from second table is not compatible "
+                        + "with corresponding column '" + cs0.getName() + "' from first table.");
             }
         }
     }
