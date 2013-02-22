@@ -7,6 +7,12 @@
                 <message_argument value="2.7.1"/>
             </message_arguments>
         </filter>
+        <filter id="924844039">
+            <message_arguments>
+                <message_argument value="2.7.2"/>
+                <message_argument value="2.7.1"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.dmg.pmml40.ACTIVATIONFUNCTION">
         <filter id="305422471">
