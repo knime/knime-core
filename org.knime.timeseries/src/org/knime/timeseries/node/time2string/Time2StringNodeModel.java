@@ -125,7 +125,8 @@ public class Time2StringNodeModel extends SimpleStreamableFunctionNodeModel {
                 if (colSpec.getType().isCompatible(DateAndTimeValue.class)) {
                     String colName = colSpec.getName();
                     m_selectedCol.setStringValue(colName);
-                    setWarningMessage("Auto-configure: selected " + colName);
+                    m_newColName.setStringValue(colName + "_" + COL_NAME_SUFFIX);
+                    setWarningMessage("Auto-selected column: '" + colName + "'");
                     break;
                 }
             }
