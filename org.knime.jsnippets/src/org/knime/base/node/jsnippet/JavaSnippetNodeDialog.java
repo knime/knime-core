@@ -88,6 +88,7 @@ import org.fife.rsta.ac.java.JavaLanguageSupport;
 import org.fife.ui.rsyntaxtextarea.ErrorStrip;
 import org.fife.ui.rsyntaxtextarea.SyntaxConstants;
 import org.fife.ui.rsyntaxtextarea.folding.Fold;
+import org.fife.ui.rsyntaxtextarea.folding.FoldManager;
 import org.fife.ui.rtextarea.RTextScrollPane;
 import org.knime.base.node.jsnippet.guarded.GuardedDocument;
 import org.knime.base.node.jsnippet.template.AddTemplateDialog;
@@ -397,6 +398,7 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
         m_snippetTextArea = new JSnippetTextArea(m_snippet);
 
         // reset style which causes a recreation of the folds
+        // this code is also executed in "onOpen" but that is not called for the template viewer tab
         m_snippetTextArea.setSyntaxEditingStyle(
                 SyntaxConstants.SYNTAX_STYLE_NONE);
         m_snippetTextArea.setSyntaxEditingStyle(
@@ -648,6 +650,18 @@ public class JavaSnippetNodeDialog extends NodeDialogPane {
     public void onOpen() {
         m_snippetTextArea.requestFocus();
         m_snippetTextArea.requestFocusInWindow();
+        // reset style which causes a recreation of the popup window with
+        // the side effect, that all folds are recreated, so that we must collapse
+        // them next (bug 4061)
+        m_snippetTextArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_NONE);
+        m_snippetTextArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
+        // collapse all folds
+        FoldManager foldManager = m_snippetTextArea.getFoldManager();
+        int foldCount = foldManager.getFoldCount();
+        for (int i = 0; i < foldCount; i++) {
+            Fold fold = foldManager.getFold(i);
+            fold.setCollapsed(true);
+        }
     }
 
     /**
