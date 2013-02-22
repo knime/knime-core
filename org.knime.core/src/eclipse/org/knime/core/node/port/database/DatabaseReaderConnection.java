@@ -289,7 +289,7 @@ public final class DatabaseReaderConnection {
                     // fix 2741: postgresql databases ignore fetchsize when
                     // AUTOCOMMIT on; setting it to false
                     if (m_stmt.getClass().getCanonicalName().startsWith("org.postgresql")) {
-                        conn.setAutoCommit(false);
+                        DatabaseConnectionSettings.setAutoCommit(conn, false);
                     }
                     m_stmt.setFetchSize(DatabaseConnectionSettings.FETCH_SIZE);
                 } else {
@@ -332,11 +332,7 @@ public final class DatabaseReaderConnection {
                     if (!conn.getAutoCommit()) {
                         conn.commit();
                     }
-                    try {
-                        conn.setAutoCommit(autoCommit);
-                    } catch (Exception e) {
-                        // might not be supported, HIVE
-                    }
+                    DatabaseConnectionSettings.setAutoCommit(conn, autoCommit);
                     m_stmt.close();
                     m_stmt = null;
                 }
@@ -364,7 +360,7 @@ public final class DatabaseReaderConnection {
                         // fix 2741: postgresql databases ignore fetchsize when
                         // AUTOCOMMIT on; setting it to false
                         if (m_stmt.getClass().getCanonicalName().startsWith("org.postgresql")) {
-                            conn.setAutoCommit(false);
+                            DatabaseConnectionSettings.setAutoCommit(conn, false);
                         }
                         m_stmt.setFetchSize(DatabaseConnectionSettings.FETCH_SIZE);
                     } else {
@@ -412,11 +408,7 @@ public final class DatabaseReaderConnection {
                     if (!conn.getAutoCommit()) {
                         conn.commit();
                     }
-                    try {
-                        conn.setAutoCommit(autoCommit);
-                    } catch (Exception e) {
-                        // might not be supported, HIVE
-                    }
+                    DatabaseConnectionSettings.setAutoCommit(conn, autoCommit);
                     m_stmt.close();
                     m_stmt = null;
                 }
