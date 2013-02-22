@@ -215,6 +215,31 @@ final class WorkflowCipher implements Cloneable {
         return !isNullCipher();
     }
 
+    /** Implementation of {@link WorkflowManager#getCipherFileName(String)}.
+     * @param wfm ...
+     * @param name ...
+     * @return ...
+     */
+    static String getCipherFileName(final WorkflowManager wfm, final String name) {
+        boolean isEncrypted;
+        WorkflowManager curWFM = wfm;
+        do {
+            isEncrypted = curWFM.getWorkflowCipher().isEncrypted();
+            curWFM = curWFM.getParent();
+        } while (!isEncrypted && curWFM != null);
+        if (isEncrypted) {
+            return getCipherFileName(name);
+        }
+        return name;
+    }
+
+    /** The name appended with '.encrypted'.
+     * @param name ...
+     * @return name + ".encrypted" */
+    static String getCipherFileName(final String name) {
+        return name.concat(".encrypted");
+    }
+
     /** @return the hint/copyright associated with this cipher (user message).*/
     String getPasswordHint() {
         return m_passwordHint;

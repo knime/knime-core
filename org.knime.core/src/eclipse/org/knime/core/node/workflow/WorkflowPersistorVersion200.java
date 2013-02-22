@@ -508,14 +508,14 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             CanceledExecutionException, LockFailedException {
         Role r = wm.getTemplateInformation().getRole();
         String fName = Role.Template.equals(r) ? TEMPLATE_FILE : WORKFLOW_FILE;
+        fName = wm.getParent().getCipherFileName(fName);
         if (!workflowDirRef.fileLockRootForVM()) {
             throw new LockFailedException("Can't write workflow to \""
                     + workflowDirRef
                     + "\" because the directory can't be locked");
         }
         try {
-            if (workflowDirRef.equals(wm.getNodeContainerDirectory())
-                    && !wm.isDirty()) {
+            if (workflowDirRef.equals(wm.getNodeContainerDirectory()) && !wm.isDirty()) {
                 return fName;
             }
             // delete "old" node directories if not saving to the working
@@ -600,10 +600,11 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             }
             saveEditorUIInformation(wm, settings);
 
-            if (wm.getParent().isEncrypted()) {
-                fName = fName.concat(".encryped");
-            }
             File workflowFile = new File(workflowDir, fName);
+            String toBeDeletedFileName = Role.Template.equals(r) ? TEMPLATE_FILE : WORKFLOW_FILE;
+            new File(workflowDir, toBeDeletedFileName).delete();
+            new File(workflowDir, WorkflowCipher.getCipherFileName(toBeDeletedFileName)).delete();
+
             OutputStream os = new FileOutputStream(workflowFile);
             os = wm.getParent().cipherOutput(os);
             settings.saveToXML(os);

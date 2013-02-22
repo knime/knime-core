@@ -211,9 +211,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         fileStoreMon.setProgress(1.0);
         // file name has already correct ending
         OutputStream os = new FileOutputStream(nodeFile.getFile());
-        if (snc.getParent().isEncrypted()) {
-            os = snc.getParent().cipherOutput(os);
-        }
+        os = snc.getParent().cipherOutput(os);
         settings.saveToXML(new BufferedOutputStream(os));
         execMon.setProgress(1.0);
     }
