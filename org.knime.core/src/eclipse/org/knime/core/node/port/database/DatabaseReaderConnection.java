@@ -116,8 +116,6 @@ public final class DatabaseReaderConnection {
 
     private DatabaseQueryConnectionSettings m_conn;
 
-    private Statement m_stmt;
-
     /**
      * Creates a empty handle for a new connection.
      * @param conn a database connection object
@@ -131,19 +129,9 @@ public final class DatabaseReaderConnection {
      * Sets a new connection object.
      * @param conn the connection
      */
-    public void setDBQueryConnection(
-            final DatabaseQueryConnectionSettings conn) {
+    public void setDBQueryConnection(final DatabaseQueryConnectionSettings conn) {
         m_conn = conn;
         m_spec = null;
-        if (m_stmt != null) {
-            try {
-                m_stmt.close();
-            } catch (SQLException sqle) {
-                LOGGER.debug("Error while closing SQL statement, reason "
-                        + sqle.getMessage());
-            }
-        }
-        m_stmt = null;
     }
 
     /**
@@ -178,12 +166,9 @@ public final class DatabaseReaderConnection {
      * Inits the statement and - if necessary - the database connection.
      * @throws SQLException if the connection to the database or the statement could not be created
      */
-    private void initStatement(final CredentialsProvider cp) throws SQLException {
-        if (m_stmt == null) {
-            final Connection conn = initConnection(cp);
-            synchronized (m_conn.syncConnection(conn)) {
-                m_stmt = conn.createStatement();
-            }
+    private Statement initStatement(final CredentialsProvider cp, final Connection conn) throws SQLException {
+        synchronized (m_conn.syncConnection(conn)) {
+            return conn.createStatement();
         }
     }
 
@@ -205,58 +190,48 @@ public final class DatabaseReaderConnection {
      */
     public DataTableSpec getDataTableSpec(final CredentialsProvider cp)
             throws SQLException {
-        if (m_spec == null || m_stmt == null) {
-            final Connection conn;
-            try {
-                conn = m_conn.createConnection(cp);
-            } catch (SQLException sql) {
-                if (m_stmt != null) {
-                    try {
-                        m_stmt.close();
-                    } catch (SQLException e) {
-                        LOGGER.debug(e);
-                    }
-                    m_stmt = null;
+        if (m_spec != null) {
+            return m_spec;
+        }
+        // retrieve connection
+        final Connection conn = initConnection(cp);
+        synchronized (m_conn.syncConnection(conn)) {
+            final String[] oQueries =  m_conn.getQuery().split(SQL_QUERY_SEPARATOR);
+            final int selectIndex = oQueries.length - 1;
+            // replace SELECT (last) query with wrapped statement
+            /* Fixed Bug 2874. For sqlite the data must always be
+             * fetched as the column type string is returned
+             * for all columns when fetching only meta data. */
+            if (!m_conn.getDriver().startsWith("org.sqlite")) {
+                // Bug 2041: to limit the number of row during configure, mysql
+                // does not optimize 'WHERE 1 = 0', better use 'LIMIT 0'
+                if (m_conn.getDriver().startsWith("com.mysql")) {
+                    oQueries[selectIndex] += " LIMIT 0";
+                } else {
+                    final int hashAlias = System.identityHashCode(this);
+                    oQueries[selectIndex] = "SELECT * FROM (" + oQueries[selectIndex] + ") "
+                        + "table_" + hashAlias + " WHERE 1 = 0";
                 }
-                throw sql;
-            } catch (Throwable t) {
-                throw new SQLException(t);
             }
-            synchronized (m_conn.syncConnection(conn)) {
-                final String[] oQueries =  m_conn.getQuery().split(
-                        SQL_QUERY_SEPARATOR);
-                final int selectIndex = oQueries.length - 1;
-                // replace SELECT (last) query with wrapped statement
-                /* Fixed Bug 2874. For sqlite the data must always be
-                 * fetched as the column type string is returned
-                 * for all columns when fetching only meta data. */
-                if (!m_conn.getDriver().startsWith("org.sqlite")) {
-                    // Bug 2041: to limit the number of row during configure, mysql
-                    // does not optimize 'WHERE 1 = 0', better use 'LIMIT 0'
-                    if (m_conn.getDriver().startsWith("com.mysql")) {
-                        oQueries[selectIndex] += " LIMIT 0";
-                    } else {
-                        final int hashAlias = System.identityHashCode(this);
-                        oQueries[selectIndex] = "SELECT * FROM (" + oQueries[selectIndex] + ") "
-                            + "table_" + hashAlias + " WHERE 1 = 0";
-                    }
+            ResultSet result = null;
+            final Statement stmt = initStatement(cp, conn);
+            try {
+                // execute all except the last query
+                for (int i = 0; i < oQueries.length - 1; i++) {
+                    LOGGER.debug("Executing SQL statement as execute: " + oQueries[i]);
+                    stmt.execute(oQueries[i]);
                 }
-                ResultSet result = null;
-                try {
-                    m_stmt = conn.createStatement();
-                    // execute all except the last query
-                    for (int i = 0; i < oQueries.length - 1; i++) {
-                        LOGGER.debug("Executing SQL statement as execute: " + oQueries[i]);
-                        m_stmt.execute(oQueries[i]);
-                    }
-                    LOGGER.debug("Executing SQL statement as executeQuery: " + oQueries[selectIndex]);
-                    result = m_stmt.executeQuery(oQueries[selectIndex]);
-                    LOGGER.debug("Reading meta data from database ResultSet...");
-                    m_spec = createTableSpec(result.getMetaData());
-                } finally {
-                    if (result != null) {
-                        result.close();
-                    }
+                LOGGER.debug("Executing SQL statement as executeQuery: " + oQueries[selectIndex]);
+                result = stmt.executeQuery(oQueries[selectIndex]);
+                LOGGER.debug("Reading meta data from database ResultSet...");
+                m_spec = createTableSpec(result.getMetaData());
+            } finally {
+                if (result != null) {
+                    result.close();
+                }
+                if (stmt != null) {
+                	// Bug 4071: statemnt(s) not closed when fetching meta data
+                    stmt.close();
                 }
             }
         }
@@ -277,28 +252,28 @@ public final class DatabaseReaderConnection {
     public BufferedDataTable createTable(final ExecutionContext exec,
             final CredentialsProvider cp)
             throws CanceledExecutionException, SQLException {
-        initStatement(cp);
         m_blobFactory = new BinaryObjectCellFactory(exec);
         // retrieve connection
         final Connection conn = initConnection(cp);
         synchronized (m_conn.syncConnection(conn)) {
             // remember auto-commit flag
             final boolean autoCommit = conn.getAutoCommit();
+            final Statement stmt = initStatement(cp, conn);
             try {
                 if (DatabaseConnectionSettings.FETCH_SIZE != null) {
                     // fix 2741: postgresql databases ignore fetchsize when
                     // AUTOCOMMIT on; setting it to false
-                    if (m_stmt.getClass().getCanonicalName().startsWith("org.postgresql")) {
+                    if (stmt.getClass().getCanonicalName().startsWith("org.postgresql")) {
                         DatabaseConnectionSettings.setAutoCommit(conn, false);
                     }
-                    m_stmt.setFetchSize(DatabaseConnectionSettings.FETCH_SIZE);
+                    stmt.setFetchSize(DatabaseConnectionSettings.FETCH_SIZE);
                 } else {
                     // fix 2040: mySQL databases read everything into one, big
                     // ResultSet leading to an heap space error
                     // Integer.MIN_VALUE is an indicator in order to enable
                     // streaming results
-                    if (m_stmt.getClass().getCanonicalName().startsWith("com.mysql")) {
-                        m_stmt.setFetchSize(Integer.MIN_VALUE);
+                    if (stmt.getClass().getCanonicalName().startsWith("com.mysql")) {
+                        stmt.setFetchSize(Integer.MIN_VALUE);
                         LOGGER.info("Database fetchsize for mySQL database set to \"" + Integer.MIN_VALUE + "\".");
                     }
                 }
@@ -306,11 +281,11 @@ public final class DatabaseReaderConnection {
                 // execute all except the last query
                 for (int i = 0; i < oQueries.length - 1; i++) {
                     LOGGER.debug("Executing SQL statement as execute: " + oQueries[i]);
-                    m_stmt.execute(oQueries[i]);
+                    stmt.execute(oQueries[i]);
                 }
                 final String selectQuery = oQueries[oQueries.length - 1];
                 LOGGER.debug("Executing SQL statement as executeQuery: " + selectQuery);
-                final ResultSet result = m_stmt.executeQuery(selectQuery);
+                final ResultSet result = stmt.executeQuery(selectQuery);
                 LOGGER.debug("Reading meta data from database ResultSet...");
                 m_spec = createTableSpec(result.getMetaData());
                 LOGGER.debug("Parsing database ResultSet...");
@@ -328,13 +303,12 @@ public final class DatabaseReaderConnection {
 
                 }, exec);
             } finally {
-                if (m_stmt != null) {
+                if (stmt != null) {
                     if (!conn.getAutoCommit()) {
                         conn.commit();
                     }
                     DatabaseConnectionSettings.setAutoCommit(conn, autoCommit);
-                    m_stmt.close();
-                    m_stmt = null;
+                    stmt.close();
                 }
             }
         }
@@ -347,29 +321,29 @@ public final class DatabaseReaderConnection {
      * @throws SQLException if the connection could not be opened
      */
     DataTable createTable(final int cachedNoRows, final CredentialsProvider cp) throws SQLException {
-        initStatement(cp);
         // retrieve connection
         final Connection conn = initConnection(cp);
         synchronized (m_conn.syncConnection(conn)) {
             // remember auto-commit flag
             final boolean autoCommit = conn.getAutoCommit();
+            final Statement stmt = initStatement(cp, conn);
             try {
                 final String[] oQueries = m_conn.getQuery().split(SQL_QUERY_SEPARATOR);
                 if (cachedNoRows < 0) {
                     if (DatabaseConnectionSettings.FETCH_SIZE != null) {
                         // fix 2741: postgresql databases ignore fetchsize when
                         // AUTOCOMMIT on; setting it to false
-                        if (m_stmt.getClass().getCanonicalName().startsWith("org.postgresql")) {
+                        if (stmt.getClass().getCanonicalName().startsWith("org.postgresql")) {
                             DatabaseConnectionSettings.setAutoCommit(conn, false);
                         }
-                        m_stmt.setFetchSize(DatabaseConnectionSettings.FETCH_SIZE);
+                        stmt.setFetchSize(DatabaseConnectionSettings.FETCH_SIZE);
                     } else {
                         // fix 2040: mySQL databases read everything into one
                         // big ResultSet leading to an heap space error
                         // Integer.MIN_VALUE is an indicator in order to enable
                         // streaming results
-                        if (m_stmt.getClass().getCanonicalName().startsWith("com.mysql")) {
-                            m_stmt.setFetchSize(Integer.MIN_VALUE);
+                        if (stmt.getClass().getCanonicalName().startsWith("com.mysql")) {
+                            stmt.setFetchSize(Integer.MIN_VALUE);
                             LOGGER.info("Database fetchsize for mySQL database set to \"" + Integer.MIN_VALUE + "\".");
                         }
                     }
@@ -380,7 +354,7 @@ public final class DatabaseReaderConnection {
                     oQueries[selectIdx] = "SELECT * FROM (" + oQueries[selectIdx] + ") table_" + hashAlias;
                     try {
                         // bugfix 2925: may fail, e.g. on sqlite
-                        m_stmt.setMaxRows(cachedNoRows);
+                        stmt.setMaxRows(cachedNoRows);
                     } catch (SQLException sqle) {
                         LOGGER.warn("Can't set max rows on statement, reason: " + sqle.getMessage());
                     }
@@ -388,11 +362,11 @@ public final class DatabaseReaderConnection {
                 // execute all except the last query
                 for (int i = 0; i < oQueries.length - 1; i++) {
                     LOGGER.debug("Executing SQL statement as execute: " + oQueries[i]);
-                    m_stmt.execute(oQueries[i]);
+                    stmt.execute(oQueries[i]);
                 }
                 final String lastQuery = oQueries[oQueries.length - 1];
                 LOGGER.debug("Executing SQL statement as executeQuery: " + lastQuery);
-                final ResultSet result = m_stmt.executeQuery(lastQuery);
+                final ResultSet result = stmt.executeQuery(lastQuery);
                 LOGGER.debug("Reading meta data from database ResultSet...");
                 m_spec = createTableSpec(result.getMetaData());
                 LOGGER.debug("Parsing database ResultSet...");
@@ -404,13 +378,12 @@ public final class DatabaseReaderConnection {
                 buf.close();
                 return buf.getTable();
             } finally {
-                if (m_stmt != null) {
+                if (stmt != null) {
                     if (!conn.getAutoCommit()) {
                         conn.commit();
                     }
                     DatabaseConnectionSettings.setAutoCommit(conn, autoCommit);
-                    m_stmt.close();
-                    m_stmt = null;
+                    stmt.close();
                 }
             }
         }
