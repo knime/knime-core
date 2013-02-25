@@ -230,7 +230,7 @@ public final class DatabaseReaderConnection {
                     result.close();
                 }
                 if (stmt != null) {
-                	// Bug 4071: statemnt(s) not closed when fetching meta data
+                    // Bug 4071: statement(s) not closed when fetching meta data
                     stmt.close();
                 }
             }
