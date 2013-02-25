@@ -623,11 +623,9 @@ public final class DatabaseReaderConnection {
             }
             int rowId = m_rowCounter;
             try {
-                // Bug 4066: #getRow only returns 1 (first index) if fetch size set; that is, depending on this
-                // property all reader nodes generate row IDs starting at 0 or 1
-                rowId = m_result.getRow() - 1;
+                rowId = m_result.getRow();
                 // Bug 2729: ResultSet#getRow return 0 if there is no row id
-                if (rowId < 0) {
+                if (rowId <= 0) {
                     // use row counter
                     rowId = m_rowCounter;
                 }
