@@ -5876,12 +5876,22 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     }
 
     /** @param out The output
-     * @return see {@link WorkflowCipher#cipherOutput(
-     * WorkflowManager, OutputStream)}.
-     * @throws IOException If fails */
-    public OutputStream cipherOutput(final OutputStream out)
+     * @return see {@link WorkflowCipher#cipherOutput(WorkflowManager, OutputStream)}.
+     * @throws IOException If fails
+     * @noreference This method is not intended to be referenced by clients. */
+    public final OutputStream cipherOutput(final OutputStream out)
         throws IOException {
         return m_cipher.cipherOutput(this, out);
+    }
+
+    /** Returns the argument string unless this workflow or any of the parent wfms is encrypted.
+     * Then it appends ".encrypted" to the argument.
+     * @param fileName Suggest file name
+     * @return fileName, possibly appended with ".encrypted".
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public final String getCipherFileName(final String fileName) {
+        return WorkflowCipher.getCipherFileName(this, fileName);
     }
 
     ///////////////////////////////////

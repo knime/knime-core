@@ -57,7 +57,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -553,6 +555,25 @@ public class DatabaseConnectionSettings {
             }
             if (conn != null) {
                 conn = null;
+            }
+        }
+    }
+
+    private static final Set<Class<? extends Connection>> AUTOCOMMIT_EXCEPTIONS =
+        new HashSet<Class<? extends Connection>>();
+    /**
+     * Calls {@link java.sql.Connection#setAutoCommit(boolean)} on the connection given the commit flag and catches
+     * all <code>Exception</code>s, which is reported only once.
+     * @param conn the Connection to call auto commit on.
+     * @param commit the commit flag.
+     */
+    static synchronized void setAutoCommit(final Connection conn, final boolean commit) {
+        try {
+            conn.setAutoCommit(commit);
+        } catch (Exception e) {
+            if (!AUTOCOMMIT_EXCEPTIONS.contains(conn.getClass())) {
+                AUTOCOMMIT_EXCEPTIONS.add(conn.getClass());
+                LOGGER.debug(conn.getClass() + "#setAutoCommit(" + commit + ") error, reason: ", e);
             }
         }
     }

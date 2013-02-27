@@ -54,6 +54,7 @@ import java.security.NoSuchAlgorithmException;
 
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
@@ -132,10 +133,15 @@ public class LockMetaNodeAction extends AbstractNodeAction {
             return false;
         }
         Object model = nodes[0].getModel();
-        if (!(model instanceof WorkflowManager)) {
+        if (model instanceof WorkflowManager) {
+            WorkflowManager metaNode = (WorkflowManager)model;
+            if (metaNode.isWriteProtected()) {
+                return false;
+            }
+            return true;
+        } else {
             return false;
         }
-        return true;
     }
 
     /** {@inheritDoc} */
@@ -155,7 +161,7 @@ public class LockMetaNodeAction extends AbstractNodeAction {
         }
         LockMetaNodeDialog lockDialog =
             new LockMetaNodeDialog(shell, metaNodeWFM);
-        if (lockDialog.open() != LockMetaNodeDialog.OK) {
+        if (lockDialog.open() != Window.OK) {
             return;
         }
         String password = lockDialog.getPassword();
