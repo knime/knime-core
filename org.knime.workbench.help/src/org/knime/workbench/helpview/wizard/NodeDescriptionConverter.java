@@ -151,6 +151,8 @@ public final class NodeDescriptionConverter {
 
     private int m_nrPlugins;
 
+    private boolean m_isFragment;
+
     private int m_currentPlugin;
 
     private boolean m_first;
@@ -357,7 +359,7 @@ public final class NodeDescriptionConverter {
         // at the end -> persist plugin.xml
         Document doc = m_pluginXML;
         Source src = new DOMSource(doc);
-        File f = new File(m_destinationDir, "plugin.xml");
+        File f = new File(m_destinationDir, m_isFragment ? "fragment.xml" : "plugin.xml");
         Result streamResult = new StreamResult(f);
         TransformerFactory tf = TransformerFactory.newInstance();
         Transformer serializer = tf.newTransformer();
@@ -406,7 +408,13 @@ public final class NodeDescriptionConverter {
     private void parsePluginXML() throws Exception {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = dbf.newDocumentBuilder();
-        File location = new File(getPluginDir(), "plugin.xml");
+        File location = new File(getPluginDir(), "fragment.xml");
+        if (location.exists()) {
+            m_isFragment = true;
+        } else {
+            location = new File(getPluginDir(), "plugin.xml");
+            m_isFragment = false;
+        }
         m_pluginXML = builder.parse(location);
     }
 
