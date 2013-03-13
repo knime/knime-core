@@ -59,7 +59,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.jar.Attributes;
@@ -148,6 +151,8 @@ public final class NodeDescriptionConverter {
 
     private int m_nrPlugins;
 
+    private boolean m_isFragment;
+
     private int m_currentPlugin;
 
     private boolean m_first;
@@ -162,27 +167,18 @@ public final class NodeDescriptionConverter {
      * @return all extensions to the knmie node and knime category extension
      *         points
      */
-    static IConfigurationElement[] getConfigurationElements() {
-        IConfigurationElement[] nodes =
-                Platform.getExtensionRegistry().getConfigurationElementsFor(
-                        "org.knime.workbench.repository.nodes");
-        IConfigurationElement[] categories =
-                Platform.getExtensionRegistry().getConfigurationElementsFor(
-                        "org.knime.workbench.repository.categories");
-        IConfigurationElement[] metaNodes =
-                Platform.getExtensionRegistry().getConfigurationElementsFor(
-                        "org.knime.workbench.repository.metanode");
+    static List<IConfigurationElement> getConfigurationElements() {
+        List<IConfigurationElement> configElements = new ArrayList<IConfigurationElement>();
+        configElements.addAll(Arrays.asList(Platform.getExtensionRegistry()
+                .getConfigurationElementsFor("org.knime.workbench.repository.nodes")));
+        configElements.addAll(Arrays.asList(Platform.getExtensionRegistry()
+                .getConfigurationElementsFor("org.knime.workbench.repository.categories")));
+        configElements.addAll(Arrays.asList(Platform.getExtensionRegistry()
+                .getConfigurationElementsFor("org.knime.workbench.repository.metanode")));
+        configElements.addAll(Arrays.asList(Platform.getExtensionRegistry()
+                .getConfigurationElementsFor("org.knime.workbench.repository.nodesets")));
 
-        IConfigurationElement[] configs =
-                new IConfigurationElement[nodes.length + categories.length
-                        + metaNodes.length];
-
-        System.arraycopy(nodes, 0, configs, 0, nodes.length);
-        System.arraycopy(categories, 0, configs, nodes.length,
-                categories.length);
-        System.arraycopy(metaNodes, 0, configs, nodes.length
-                + categories.length, metaNodes.length);
-        return configs;
+        return configElements;
     }
 
     /**
@@ -208,7 +204,7 @@ public final class NodeDescriptionConverter {
      */
     public void buildDocumentationFor(final Pattern pattern,
             File destinationDir) throws Exception {
-        IConfigurationElement[] configs = getConfigurationElements();
+        List<IConfigurationElement> configs = getConfigurationElements();
         Set<String> processed = new HashSet<String>();
         if (destinationDir == null) {
             destinationDir = getPluginDir();
@@ -250,6 +246,7 @@ public final class NodeDescriptionConverter {
                     throws InvocationTargetException, InterruptedException {
                 try {
                     m_first = true;
+                    monitor.beginTask("Building documentation", m_nrPlugins);
                     for (String s : plugins) {
                         if (m_monitor.isCanceled()) {
                             m_canceled = true;
@@ -257,6 +254,7 @@ public final class NodeDescriptionConverter {
                         }
                         buildDocumentationFor(s);
                         m_currentPlugin++;
+                        monitor.worked(m_currentPlugin);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -358,10 +356,10 @@ public final class NodeDescriptionConverter {
         // processing
         processAll(root.getChildren(), null);
 
-        // at the end -> persist pluginxml
+        // at the end -> persist plugin.xml
         Document doc = m_pluginXML;
         Source src = new DOMSource(doc);
-        File f = new File(m_destinationDir, "plugin.xml");
+        File f = new File(m_destinationDir, m_isFragment ? "fragment.xml" : "plugin.xml");
         Result streamResult = new StreamResult(f);
         TransformerFactory tf = TransformerFactory.newInstance();
         Transformer serializer = tf.newTransformer();
@@ -410,7 +408,13 @@ public final class NodeDescriptionConverter {
     private void parsePluginXML() throws Exception {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = dbf.newDocumentBuilder();
-        File location = new File(getPluginDir(), "plugin.xml");
+        File location = new File(getPluginDir(), "fragment.xml");
+        if (location.exists()) {
+            m_isFragment = true;
+        } else {
+            location = new File(getPluginDir(), "plugin.xml");
+            m_isFragment = false;
+        }
         m_pluginXML = builder.parse(location);
     }
 

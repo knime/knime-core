@@ -315,6 +315,17 @@
             name="Community Nodes"
             path="/">
       </category>
+      <category
+            icon="icons/16x16/weka.ico"
+            level-id="weka"
+            name="Weka"
+            path="/"/>
+      <category
+            icon="icons/16x16/report.png"
+            level-id="report"
+            name="Reporting"
+            path="/">
+      </category>            
    </extension>
             
      <extension

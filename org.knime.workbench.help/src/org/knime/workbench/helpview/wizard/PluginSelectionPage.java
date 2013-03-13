@@ -55,6 +55,7 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.net.URL;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.eclipse.core.runtime.FileLocator;
@@ -226,8 +227,7 @@ public class PluginSelectionPage extends WizardPage {
     }
 
     private void initTable() {
-        IConfigurationElement[] configs = NodeDescriptionConverter
-            .getConfigurationElements();
+        List<IConfigurationElement> configs = NodeDescriptionConverter.getConfigurationElements();
         Set<String>grayed = new HashSet<String>();
         Set<String>checked = new HashSet<String>();
         Set<String>all = new HashSet<String>();
