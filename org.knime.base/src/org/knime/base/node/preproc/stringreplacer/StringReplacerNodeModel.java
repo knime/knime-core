@@ -249,7 +249,7 @@ public class StringReplacerNodeModel extends NodeModel {
         if (s.columnName() == null) {
             throw new InvalidSettingsException("No column selected");
         }
-        if (s.pattern() == null || s.pattern().length() == 0) {
+        if (s.pattern() == null) {
             throw new InvalidSettingsException("No pattern given");
         }
         if (s.replacement() == null) {
