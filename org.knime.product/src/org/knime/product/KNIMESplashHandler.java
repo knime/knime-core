@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -21,10 +20,12 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.osgi.service.datalocation.Location;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
+import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
@@ -33,12 +34,10 @@ import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
 /**
- * This is the dynamic splash screen for KNIME that offers 3rd party vendors to
- * add their own little icons to it via the extension point
- * <code>org.knime.product.splashExtension</code>.
- * The order of the splash icons can be configured by a file <tt>splash.config</tt> in the installation directory.
- * The file is expected to contains the plug-in symbolic names in the desired order. Plug-in not mentioned in the
- * file are sorted by the standard sort order.
+ * This is the dynamic splash screen for KNIME that offers 3rd party vendors to add their own little icons to it via the
+ * extension point <code>org.knime.product.splashExtension</code>. The order of the splash icons can be configured by a
+ * file <tt>splash.config</tt> in the installation directory. The file is expected to contains the plug-in symbolic
+ * names in the desired order. Plug-ins not mentioned in the file are sorted by the standard sort order.
  *
  * @since 2.0
  * @author Thorsten Meinl, University of Konstanz
@@ -110,13 +109,7 @@ public class KNIMESplashHandler extends BasicSplashHandler {
         }
     }
 
-
-    private final ArrayList<Image> m_images = new ArrayList<Image>();
-
-    private final ArrayList<String> m_tooltips = new ArrayList<String>();
-
-    private static final String SPLASH_EXTENSION_ID =
-            "org.knime.product.splashExtension";
+    private static final String SPLASH_EXTENSION_ID = "org.knime.product.splashExtension";
 
     private static final String ELEMENT_ICON = "icon";
 
@@ -124,21 +117,17 @@ public class KNIMESplashHandler extends BasicSplashHandler {
 
     private static final String DEFAULT_TOOLTIP = "Image";
 
-    private static final int MAX_IMAGE_WIDTH = 50;
-
-    private static final int MAX_IMAGE_HEIGHT = 50;
-
     private static final int SPLASH_SCREEN_BEVEL = 8;
 
-    private static final Rectangle PROGRESS_RECT = new Rectangle(5, 295, 445,
-            15);
+    private static final Rectangle PROGRESS_RECT = new Rectangle(5, 295, 445, 15);
 
-    private static final Rectangle MESSAGE_RECT =
-            new Rectangle(7, 272, 445, 20);
+    private static final Rectangle MESSAGE_RECT = new Rectangle(7, 272, 445, 20);
 
     private Composite m_iconPanel;
 
     private Label m_installedExtensions;
+
+    private final List<Image> m_images = new ArrayList<Image>();
 
     /**
      * {@inheritDoc}
@@ -150,10 +139,51 @@ public class KNIMESplashHandler extends BasicSplashHandler {
         splash.setLayout(null);
         // Force shell to inherit the splash background
         splash.setBackgroundMode(SWT.INHERIT_DEFAULT);
+        List<IConfigurationElement> splashExtensions = readSplashExtensions();
+
+        // If no splash extensions were loaded abort the splash handler
+        if (splashExtensions.size() < 1) {
+            initProgressBar();
+            doEventLoop();
+            return;
+        }
+
+        int horizontalSpacing = 10;
+        int iconSize = 50;
+        int columnCount = (getUsableSplashScreenWidth() + horizontalSpacing) / (iconSize + horizontalSpacing);
+        int maxIcons = columnCount;
+
+        if (splashExtensions.size() > columnCount) {
+            iconSize = 32;
+            horizontalSpacing = 8;
+            columnCount = (getUsableSplashScreenWidth() + horizontalSpacing) / (iconSize + horizontalSpacing);
+            maxIcons = columnCount;
+
+            if (splashExtensions.size() > columnCount) {
+                iconSize = 24;
+                horizontalSpacing = 6;
+                columnCount = (getUsableSplashScreenWidth() + horizontalSpacing) / (iconSize + horizontalSpacing);
+                maxIcons = columnCount * 2; // two rows
+            }
+        }
+
+        // Create the icon panel
+        createUICompositeIconPanel(columnCount, horizontalSpacing, splashExtensions);
+        // Create the images
+        createUIImages(splashExtensions, maxIcons, iconSize);
+
+        // Configure the image panel bounds
+        configureUICompositeIconPanelBounds();
+        // Enter event loop and prevent the RCP application from
+        // loading until all work is done
+        initProgressBar();
+        doEventLoop();
+    }
+
+    private List<IConfigurationElement> readSplashExtensions() {
         // Get all splash handler extensions
         IExtension[] extensions =
-                Platform.getExtensionRegistry()
-                        .getExtensionPoint(SPLASH_EXTENSION_ID).getExtensions();
+                Platform.getExtensionRegistry().getExtensionPoint(SPLASH_EXTENSION_ID).getExtensions();
 
         List<IConfigurationElement> configElements = new ArrayList<IConfigurationElement>();
 
@@ -190,38 +220,13 @@ public class KNIMESplashHandler extends BasicSplashHandler {
                 } catch (IOException ex) {
                     Bundle thisBundle = FrameworkUtil.getBundle(getClass());
                     Platform.getLog(thisBundle).log(new Status(IStatus.ERROR, thisBundle.getSymbolicName(),
-                                                               "Error while reading splash config file", ex));
+                                                            "Error while reading splash config file", ex));
                 }
             }
         }
         Collections.sort(configElements, comparator);
-
-
-        // Process all splash handler extensions
-        for (IConfigurationElement elem : configElements) {
-            processSplashElements(elem);
-        }
-
-        // If no splash extensions were loaded abort the splash handler
-        if (!hasSplashExtensions()) {
-            initProgressBar();
-            doEventLoop();
-            return;
-        }
-
-        // Create the icon panel
-        createUICompositeIconPanel();
-        // Create the images
-        createUIImages();
-
-        // Configure the image panel bounds
-        configureUICompositeIconPanelBounds();
-        // Enter event loop and prevent the RCP application from
-        // loading until all work is done
-        initProgressBar();
-        doEventLoop();
+        return configElements;
     }
-
 
     private void initProgressBar() {
         setProgressRect(PROGRESS_RECT);
@@ -229,58 +234,86 @@ public class KNIMESplashHandler extends BasicSplashHandler {
         getContent();
     }
 
-    private boolean hasSplashExtensions() {
-        return !m_images.isEmpty();
+    private Image getSplashIcon(final IConfigurationElement splashExtension, final int iconSize) {
+        String iconImageFilePath = null;
+        iconImageFilePath = splashExtension.getAttribute(ELEMENT_ICON + iconSize);
+        if (iconImageFilePath == null) {
+            iconImageFilePath = splashExtension.getAttribute(ELEMENT_ICON);
+        }
+
+        // Abort if an icon attribute was not specified - which is weird since it is required
+        if ((iconImageFilePath == null) || (iconImageFilePath.length() == 0)) {
+            return null;
+        }
+
+        // Create a corresponding image descriptor
+        ImageDescriptor descriptor =
+                AbstractUIPlugin.imageDescriptorFromPlugin(splashExtension.getNamespaceIdentifier(), iconImageFilePath);
+        // Abort if no corresponding image was found
+        if (descriptor == null) {
+            return null;
+        }
+
+        ImageData imageData = descriptor.getImageData();
+        if (imageData == null) {
+            return null;
+        }
+        if ((imageData.width > iconSize) || (imageData.height > iconSize)) {
+            return new Image(Display.getDefault(), imageData.scaledTo(iconSize, iconSize));
+        } else {
+            return new Image(Display.getDefault(), imageData);
+        }
     }
 
-    private void createUIImages() {
-        Iterator<Image> imageIterator = m_images.iterator();
-        Iterator<String> tooltipIterator = m_tooltips.iterator();
-        int i = 1;
-        int columnCount = ((GridLayout)m_iconPanel.getLayout()).numColumns;
-        // Create all the images
-        // Abort if we run out of columns (left-over images will not fit within
-        // the usable splash screen width)
-        while (imageIterator.hasNext() && (i <= columnCount)) {
-            Image image = imageIterator.next();
-            String tooltip = tooltipIterator.next();
+    private String getTooltip(final IConfigurationElement splashExtension) {
+        // Get attribute tooltip
+        String tooltip = splashExtension.getAttribute(ELEMENT_TOOLTIP);
+        // If a tooltip is not defined, give it a default
+        if ((tooltip == null) || (tooltip.length() == 0)) {
+            return DEFAULT_TOOLTIP;
+        } else {
+            return tooltip;
+        }
+    }
+
+    private void createUIImages(final List<IConfigurationElement> splashExtensions, final int maxIcons,
+                                final int iconSize) {
+        int count = 0;
+        for (IConfigurationElement splash : splashExtensions) {
+            Image image = getSplashIcon(splash, iconSize);
+            if (image == null) {
+                continue;
+            }
+            m_images.add(image);
+            String tooltip = getTooltip(splash);
+
             // Create the image using a label widget
             Label label = new Label(m_iconPanel, SWT.NONE);
             label.setImage(image);
             label.setToolTipText(tooltip);
-            i++;
+            if (++count >= maxIcons) {
+                break;
+            }
         }
     }
 
-    private void createUICompositeIconPanel() {
+    private void createUICompositeIconPanel(final int columnCount, final int horizontalSpacing, final List<IConfigurationElement> splashExtensions) {
         Shell splash = getSplash();
         // Create the composite
         m_iconPanel = new Composite(splash, SWT.NONE);
 
-        int maxWidth = 0;
-        for (Image img : m_images) {
-            maxWidth = Math.max(maxWidth, img.getBounds().width + 3);
-        }
-
-        final int horizontalSpacing = 10;
-        // each item requires space "(maxWidth + horizontalSpacing)", except
-        // for the very last image
-        int maxColumnCount =
-                (getUsableSplashScreenWidth() + horizontalSpacing)
-                        / (maxWidth + horizontalSpacing);
         // Limit size to the maximum number of columns if the number of images
         // exceed this amount; otherwise, use the exact number of columns
         // required.
-        int actualColumnCount = Math.min(m_images.size(), maxColumnCount);
         // Configure the layout
-        GridLayout layout = new GridLayout(actualColumnCount, true);
+        GridLayout layout = new GridLayout(columnCount, true);
         layout.horizontalSpacing = horizontalSpacing;
-        layout.verticalSpacing = 0;
+        layout.verticalSpacing = 5;
         layout.marginHeight = 0;
         layout.marginWidth = 0;
         m_iconPanel.setLayout(layout);
 
-        if (m_images.size() > 0) {
+        if (splashExtensions.size() > 0) {
             m_installedExtensions = new Label(splash, SWT.NONE);
             m_installedExtensions.setText("Installed Extensions:");
 
@@ -299,15 +332,14 @@ public class KNIMESplashHandler extends BasicSplashHandler {
     private void configureUICompositeIconPanelBounds() {
         // Determine the size of the panel and position it at the bottom-right
         // of the splash screen.
-        Point panelSize =
-                m_iconPanel.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
+        Point panelSize = m_iconPanel.computeSize(SWT.DEFAULT, SWT.DEFAULT, true);
 
         int xWidth = panelSize.x;
         int yWidth = panelSize.y;
 
         /*
          * On Mac OS X the origin of the coordinate system is in the bottom left
-         * corner. Therefor we need other y coordinates here.
+         * corner. Therefore we need other y coordinates here.
          */
         int y = 225;
         if (Platform.OS_MACOSX.equals(Platform.getOS())) {
@@ -319,62 +351,6 @@ public class KNIMESplashHandler extends BasicSplashHandler {
     private int getUsableSplashScreenWidth() {
         // Splash screen width minus two graphic border bevel widths
         return getSplash().getSize().x - (SPLASH_SCREEN_BEVEL * 2);
-    }
-
-
-    private void processSplashElements(
-            final IConfigurationElement configurationElement) {
-        // Attribute: icon
-        processSplashElementIcon(configurationElement);
-        // Attribute: tooltip
-        processSplashElementTooltip(configurationElement);
-    }
-
-    private void processSplashElementTooltip(
-            final IConfigurationElement configurationElement) {
-        // Get attribute tooltip
-        String tooltip = configurationElement.getAttribute(ELEMENT_TOOLTIP);
-        // If a tooltip is not defined, give it a default
-        if ((tooltip == null) || (tooltip.length() == 0)) {
-            m_tooltips.add(DEFAULT_TOOLTIP);
-        } else {
-            m_tooltips.add(tooltip);
-        }
-    }
-
-    private void processSplashElementIcon(
-            final IConfigurationElement configurationElement) {
-        // Get attribute icon
-        String iconImageFilePath =
-                configurationElement.getAttribute(ELEMENT_ICON);
-        // Abort if an icon attribute was not specified
-        if ((iconImageFilePath == null) || (iconImageFilePath.length() == 0)) {
-            return;
-        }
-        // Create a corresponding image descriptor
-        ImageDescriptor descriptor =
-                AbstractUIPlugin.imageDescriptorFromPlugin(
-                        configurationElement.getNamespaceIdentifier(),
-                        iconImageFilePath);
-        // Abort if no corresponding image was found
-        if (descriptor == null) {
-            return;
-        }
-        // Create the image
-        Image image = descriptor.createImage();
-        // Abort if image creation failed
-        if (image == null) {
-            return;
-        }
-        // Abort if the image does not have dimensions of 50x50
-        if ((image.getBounds().width > MAX_IMAGE_WIDTH)
-                || (image.getBounds().height > MAX_IMAGE_HEIGHT)) {
-            // Dipose of the image
-            image.dispose();
-            return;
-        }
-        // Store the image and tooltip
-        m_images.add(image);
     }
 
     private void doEventLoop() {
