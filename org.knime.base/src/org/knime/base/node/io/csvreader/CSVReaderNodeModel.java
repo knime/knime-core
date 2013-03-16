@@ -145,6 +145,12 @@ final class CSVReaderNodeModel extends NodeModel {
         boolean supportShortLines = m_config.isSupportShortLines();
         settings.setSupportShortLines(supportShortLines);
 
+        int skipFirstLinesCount = m_config.getSkipFirstLinesCount();
+        settings.setSkipFirstLines(skipFirstLinesCount);
+
+        long limitRowsCount = m_config.getLimitRowsCount();
+        settings.setMaximumNumberOfRowsToRead(limitRowsCount);
+
         settings = FileAnalyzer.analyze(settings, null);
         SettingsStatus status = settings.getStatusOfSettings();
         if (status.getNumOfErrors() > 0) {
