@@ -473,6 +473,8 @@ public class KnnNodeModel extends NodeModel {
                 MutableDouble v = classWeights.get(classVal);
                 if (v == null) {
                     output.add(new DoubleCell(0));
+//                } else if (Double.isInfinite(v.doubleValue())) { // if distance to prototype is 0
+//                    output.add(new DoubleCell(1));
                 } else {
                     output.add(new DoubleCell(v.doubleValue() / weightSum));
                 }
