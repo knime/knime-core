@@ -50,7 +50,8 @@
 package org.knime.core.data.util.memory;
 
 import java.lang.ref.WeakReference;
-import java.util.LinkedList;
+import java.util.LinkedHashMap;
+import java.util.Map.Entry;
 
 import org.knime.core.node.NodeLogger;
 
@@ -60,40 +61,41 @@ import org.knime.core.node.NodeLogger;
  * @author dietzc
  */
 public class MemoryObjectTracker {
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(MemoryObjectTracker.class);
+    private final NodeLogger LOGGER = NodeLogger.getLogger(MemoryObjectTracker.class);
 
     /*
     * The list of tracked objects, whose memory will be freed, if the
     * memory runs out.
     */
-    private static final LinkedList<WeakReference<MemoryReleasable>> TRACKED_OBJECTS =
-            new LinkedList<WeakReference<MemoryReleasable>>();
+    private final LinkedHashMap<Integer, WeakReference<MemoryReleasable>> TRACKED_OBJECTS =
+            new LinkedHashMap<Integer, WeakReference<MemoryReleasable>>();
+
+    // Singleton instance of this object
+    private MemoryObjectTracker m_instance;
 
     /*
     * Memory Warning System
     */
-    private static final MemoryWarningSystem MEMORY_WARNING_SYSTEM = new MemoryWarningSystem();
+    private final MemoryWarningSystem MEMORY_WARNING_SYSTEM = new MemoryWarningSystem();
 
-    static {
-        MemoryWarningSystem.setPercentageUsageThreshold(0.7);
+    /*
+     * Private constructor, singleton
+     */
+    private MemoryObjectTracker() {
 
-        MEMORY_WARNING_SYSTEM.addListener(new MemoryWarningSystem.Listener() {
+        MEMORY_WARNING_SYSTEM.setPercentageUsageThreshold(0.7);
 
+        MEMORY_WARNING_SYSTEM.registerListener(new MemoryWarningSystem.MemoryWarningListener() {
+
+            @Override
             public void memoryUsageLow(final long usedMemory, final long maxMemory) {
 
                 synchronized (TRACKED_OBJECTS) {
-
                     LOGGER.debug("low memory. used mem: " + usedMemory + ";max mem: " + maxMemory + ".");
                     freeAllMemory();
-
                 }
-
             }
         });
-    }
-
-    private MemoryObjectTracker() {
-        // utility class
 
     }
 
@@ -104,21 +106,27 @@ public class MemoryObjectTracker {
      *
      * @param obj
      */
-    public static void trackMemoryReleasableObject(final MemoryReleasable obj) {
+    public void addMemoryReleaseable(final MemoryReleasable obj) {
         synchronized (TRACKED_OBJECTS) {
             WeakReference<MemoryReleasable> ref = new WeakReference<MemoryReleasable>(obj);
-            TRACKED_OBJECTS.add(ref);
+            TRACKED_OBJECTS.put(obj.hashCode(), ref);
             LOGGER.debug(TRACKED_OBJECTS.size() + " objects tracked");
         }
     }
 
+    public void removeMemoryReleaseable(final MemoryReleasable obj) {
+        synchronized (TRACKED_OBJECTS) {
+            TRACKED_OBJECTS.remove(obj.hashCode());
+        }
+    }
+
     /**
-     * Heuristic to make sure that memory is available for a given object
-     * TODO: This is not working yet.
+     * Heuristic to make sure that memory is available for a given object TODO: This is not working yet.
      *
      * @param allocator
+     * @return
      */
-    public static <T> T safeInstantiation(final MemoryAllocator<T> allocator) {
+    public <T> T safeInstantiation(final MemoryAllocator<T> allocator) {
         synchronized (TRACKED_OBJECTS) {
             freeAllMemory();
             return allocator.allocate();
@@ -133,17 +141,16 @@ public class MemoryObjectTracker {
     *
     * TODO: Is there a better way than just cleaning everything? LRU?
     */
-    private synchronized static void freeAllMemory() {
+    private synchronized void freeAllMemory() {
         synchronized (TRACKED_OBJECTS) {
 
-            WeakReference<MemoryReleasable> ref;
             int countT = 0;
 
-            while (TRACKED_OBJECTS.size() > 1) {
-                ref = TRACKED_OBJECTS.removeFirst();
-                MemoryReleasable memoryReleasable = ref.get();
+            for (Entry<Integer, WeakReference<MemoryReleasable>> entry : TRACKED_OBJECTS.entrySet()) {
+                MemoryReleasable memoryReleasable = entry.getValue().get();
                 if (memoryReleasable != null) {
-                    if (memoryReleasable.freeMemory() > 0) {
+                    if (memoryReleasable.memoryAlert()) {
+                        TRACKED_OBJECTS.remove(entry.getKey());
                         countT++;
                     }
                 }
@@ -151,5 +158,15 @@ public class MemoryObjectTracker {
 
             LOGGER.debug(countT + " tracked objects have been released.");
         }
+    }
+
+    /**
+     * Singleton on MemoryObjectTracker
+     */
+    public MemoryObjectTracker getInstance() {
+        if (m_instance == null) {
+            m_instance = new MemoryObjectTracker();
+        }
+        return m_instance;
     }
 }

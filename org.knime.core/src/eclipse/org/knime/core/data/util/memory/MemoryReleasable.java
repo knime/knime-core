@@ -27,15 +27,14 @@ package org.knime.core.data.util.memory;
  *
  * Marks an object that is able to free memory on demand.
  *
- * @author Martin Horn, University of Konstanz
+ * @author Martin Horn, Christian Dietz University of Konstanz
  *
  */
 public interface MemoryReleasable {
         /**
          *
-         * @return the approximate number of bytes which have been released, or
-         *         will be released with the next garbage collection cycle
+         * @return true, if object may be removed from ObjectTracker
          */
-        public long freeMemory();
+        public boolean memoryAlert();
 
 }
