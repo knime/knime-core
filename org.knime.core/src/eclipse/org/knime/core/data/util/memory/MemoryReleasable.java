@@ -39,6 +39,6 @@ public interface MemoryReleasable {
         /**
          * Unique ID in VM
          */
-        public int id();
+        public int vmUniqueId();
 
 }

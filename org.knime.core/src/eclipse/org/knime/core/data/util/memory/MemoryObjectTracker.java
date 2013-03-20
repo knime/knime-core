@@ -116,7 +116,6 @@ public class MemoryObjectTracker {
             public void memoryUsageLow(final long usedMemory, final long maxMemory) {
 
                 synchronized (TRACKED_OBJECTS) {
-                    System.out.println("######## Warning thrown ########");
                     LOGGER.debug("low memory . used mem: " + usedMemory + ";max mem: " + maxMemory + ".");
                     switch (m_strategy) {
                         case FREE_ONE:
@@ -149,11 +148,11 @@ public class MemoryObjectTracker {
     public void addMemoryReleaseable(final MemoryReleasable obj) {
         synchronized (TRACKED_OBJECTS) {
             if (m_blockConcurrency) {
-                m_keysToAdd.put(obj.id(), new WeakReference<MemoryReleasable>(obj));
+                m_keysToAdd.put(obj.vmUniqueId(), new WeakReference<MemoryReleasable>(obj));
             } else {
                 WeakReference<MemoryReleasable> ref = new WeakReference<MemoryReleasable>(obj);
-                TRACKED_OBJECTS.put(obj.id(), ref);
-                LOGGER.debug(TRACKED_OBJECTS.size() + " objects tracked" + " Latest Obj: " + obj.id());
+                TRACKED_OBJECTS.put(obj.vmUniqueId(), ref);
+                LOGGER.debug(TRACKED_OBJECTS.size() + " objects tracked" + " Latest Obj: " + obj.vmUniqueId());
             }
         }
     }
@@ -161,9 +160,9 @@ public class MemoryObjectTracker {
     public void removeMemoryReleaseable(final MemoryReleasable obj) {
         synchronized (TRACKED_OBJECTS) {
             if (m_blockConcurrency) {
-                m_keysToRemove.add(obj.id());
+                m_keysToRemove.add(obj.vmUniqueId());
             } else {
-                TRACKED_OBJECTS.remove(obj.id());
+                TRACKED_OBJECTS.remove(obj.vmUniqueId());
             }
         }
     }
@@ -175,11 +174,11 @@ public class MemoryObjectTracker {
      */
     public void promoteMemoryReleaseable(final MemoryReleasable obj) {
         synchronized (TRACKED_OBJECTS) {
-            if (m_keysToRemove.contains(obj.id())) {
-                m_keysToRemove.remove(obj.id());
+            if (m_keysToRemove.contains(obj.vmUniqueId())) {
+                m_keysToRemove.remove(obj.vmUniqueId());
             }
 
-            TRACKED_OBJECTS.get(obj.id());
+            TRACKED_OBJECTS.get(obj.vmUniqueId());
         }
     }
 
@@ -205,7 +204,6 @@ public class MemoryObjectTracker {
     * "Old" objects are removed first (LRU fashion, accessOrder on LinkedHashMap)
     */
     private void freeAllMemory(final double percentage) {
-        System.out.println("Free Memory called");
         synchronized (TRACKED_OBJECTS) {
 
             m_blockConcurrency = true;
