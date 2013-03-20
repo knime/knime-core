@@ -61,6 +61,18 @@ import org.knime.core.node.NodeLogger;
  * @author dietzc
  */
 public class MemoryObjectTracker {
+
+    enum Strategy {
+        /* Completely frees memory */
+        FREE_ALL,
+        /* Free a certain percentage of all objects in the memory.*/
+        FREE_PERCENTAGE,
+        /* Remove oldest object (possible) */
+        FREE_ONE;
+    }
+
+    private Strategy m_strategy = Strategy.FREE_ONE;
+
     private final NodeLogger LOGGER = NodeLogger.getLogger(MemoryObjectTracker.class);
 
     /*
@@ -68,10 +80,10 @@ public class MemoryObjectTracker {
     * memory runs out.
     */
     private final LinkedHashMap<Integer, WeakReference<MemoryReleasable>> TRACKED_OBJECTS =
-            new LinkedHashMap<Integer, WeakReference<MemoryReleasable>>();
+            new LinkedHashMap<Integer, WeakReference<MemoryReleasable>>(300, 0.75f, true);
 
     // Singleton instance of this object
-    private MemoryObjectTracker m_instance;
+    private static MemoryObjectTracker m_instance;
 
     /*
     * Memory Warning System
@@ -92,7 +104,21 @@ public class MemoryObjectTracker {
 
                 synchronized (TRACKED_OBJECTS) {
                     LOGGER.debug("low memory. used mem: " + usedMemory + ";max mem: " + maxMemory + ".");
-                    freeAllMemory();
+                    switch (m_strategy) {
+                        case FREE_ONE:
+                            freeAllMemory(0);
+                            break;
+                        case FREE_ALL:
+                            freeAllMemory(100);
+                            break;
+                        case FREE_PERCENTAGE:
+                            freeAllMemory(0.5);
+                            break;
+                        default:
+                            LOGGER.warn("Unknown MemoryObjectTracker.Strategy, using default");
+                            freeAllMemory(100);
+                            break;
+                    }
                 }
             }
         });
@@ -120,6 +146,13 @@ public class MemoryObjectTracker {
         }
     }
 
+    public void promoteMemoryReleaseable(final MemoryReleasable obj) {
+        synchronized (TRACKED_OBJECTS) {
+            // Getting is enought. HashMap is access ordered.
+            TRACKED_OBJECTS.get(obj.hashCode());
+        }
+    }
+
     /**
      * Heuristic to make sure that memory is available for a given object TODO: This is not working yet.
      *
@@ -128,7 +161,7 @@ public class MemoryObjectTracker {
      */
     public <T> T safeInstantiation(final MemoryAllocator<T> allocator) {
         synchronized (TRACKED_OBJECTS) {
-            freeAllMemory();
+            freeAllMemory(100);
             return allocator.allocate();
         }
     }
@@ -139,13 +172,13 @@ public class MemoryObjectTracker {
     * TODO: Are there race conditions if freeMemory is called and at the
     * same time some performs a null check on getData in a cell?!
     *
-    * TODO: Is there a better way than just cleaning everything? LRU?
+    * "Old" objects are removed first (LRU fashion, accessOrder on LinkedHashMap)
     */
-    private synchronized void freeAllMemory() {
+    private void freeAllMemory(final double percentage) {
         synchronized (TRACKED_OBJECTS) {
 
+            double initSize = TRACKED_OBJECTS.keySet().size();
             int countT = 0;
-
             for (Entry<Integer, WeakReference<MemoryReleasable>> entry : TRACKED_OBJECTS.entrySet()) {
                 MemoryReleasable memoryReleasable = entry.getValue().get();
                 if (memoryReleasable != null) {
@@ -153,6 +186,9 @@ public class MemoryObjectTracker {
                         TRACKED_OBJECTS.remove(entry.getKey());
                         countT++;
                     }
+                }
+                if (countT / initSize >= percentage) {
+                    break;
                 }
             }
 
@@ -163,7 +199,7 @@ public class MemoryObjectTracker {
     /**
      * Singleton on MemoryObjectTracker
      */
-    public MemoryObjectTracker getInstance() {
+    public static MemoryObjectTracker getInstance() {
         if (m_instance == null) {
             m_instance = new MemoryObjectTracker();
         }
