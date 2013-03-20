@@ -22,6 +22,8 @@ import org.knime.core.node.NodeLogger;
  */
 public class MemoryWarningSystem {
 
+    private static MemoryWarningSystem m_instance = null;
+
     /* Standard Logger */
     private final NodeLogger LOGGER = NodeLogger.getLogger(MemoryWarningSystem.class);
 
@@ -43,7 +45,7 @@ public class MemoryWarningSystem {
     /**
      * Singleton here?
      */
-    public MemoryWarningSystem() {
+    private MemoryWarningSystem() {
 
         final long maxMem = computeMaxMem();
 
@@ -54,9 +56,11 @@ public class MemoryWarningSystem {
             @Override
             public void handleNotification(final Notification n, final Object hb) {
                 if (n.getType().equals(MemoryNotificationInfo.MEMORY_THRESHOLD_EXCEEDED)) {
-
-                    for (MemoryWarningListener listener : listeners) {
-                        listener.memoryUsageLow(computeUsedMem(), maxMem);
+                    long computeUsedMem = computeUsedMem();
+                    synchronized (listeners) {
+                        for (MemoryWarningListener listener : listeners) {
+                            listener.memoryUsageLow(computeUsedMem, maxMem);
+                        }
                     }
                 }
             }
@@ -70,7 +74,9 @@ public class MemoryWarningSystem {
      * @return
      */
     public boolean registerListener(final MemoryWarningListener listener) {
-        return listeners.add(listener);
+        synchronized (listeners) {
+            return listeners.add(listener);
+        }
     }
 
     /**
@@ -80,7 +86,9 @@ public class MemoryWarningSystem {
      * @return
      */
     public boolean removeListener(final MemoryWarningListener listener) {
-        return listeners.remove(listener);
+        synchronized (listeners) {
+            return listeners.remove(listener);
+        }
     }
 
     /**
@@ -93,6 +101,7 @@ public class MemoryWarningSystem {
         if (percentage <= 0.0 || percentage > 1.0) {
             throw new IllegalArgumentException("Percentage not in range");
         }
+
         long warningThreshold = (long)(computeMaxMem() * percentage);
 
         m_memPool.setUsageThreshold(warningThreshold);
@@ -162,6 +171,16 @@ public class MemoryWarningSystem {
             }
         }
         throw new AssertionError("Could not find tenured space");
+    }
+
+    /**
+     * Singleton on MemoryObjectTracker
+     */
+    public static MemoryWarningSystem getInstance() {
+        if (m_instance == null) {
+            m_instance = new MemoryWarningSystem();
+        }
+        return m_instance;
     }
 
 }

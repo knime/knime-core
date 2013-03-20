@@ -32,9 +32,13 @@ package org.knime.core.data.util.memory;
  */
 public interface MemoryReleasable {
         /**
-         *
          * @return true, if object may be removed from ObjectTracker
          */
         public boolean memoryAlert();
+
+        /**
+         * Unique ID in VM
+         */
+        public int id();
 
 }

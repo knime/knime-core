@@ -50,8 +50,12 @@
 package org.knime.core.data.util.memory;
 
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 
 import org.knime.core.node.NodeLogger;
 
@@ -71,7 +75,8 @@ public class MemoryObjectTracker {
         FREE_ONE;
     }
 
-    private Strategy m_strategy = Strategy.FREE_ONE;
+    /* Release Strategy */
+    private Strategy m_strategy = Strategy.FREE_ALL;
 
     private final NodeLogger LOGGER = NodeLogger.getLogger(MemoryObjectTracker.class);
 
@@ -88,7 +93,15 @@ public class MemoryObjectTracker {
     /*
     * Memory Warning System
     */
-    private final MemoryWarningSystem MEMORY_WARNING_SYSTEM = new MemoryWarningSystem();
+    private final MemoryWarningSystem MEMORY_WARNING_SYSTEM = MemoryWarningSystem.getInstance();
+
+    // If true, thread can't access add/remove methods from tracker, as freeMemory is currently evaluating. avoids concurrency exception
+    private boolean m_blockConcurrency = false;
+
+    private Set<Integer> m_keysToRemove = new HashSet<Integer>();
+
+    private Map<Integer, WeakReference<MemoryReleasable>> m_keysToAdd =
+            new HashMap<Integer, WeakReference<MemoryReleasable>>();
 
     /*
      * Private constructor, singleton
@@ -103,7 +116,8 @@ public class MemoryObjectTracker {
             public void memoryUsageLow(final long usedMemory, final long maxMemory) {
 
                 synchronized (TRACKED_OBJECTS) {
-                    LOGGER.debug("low memory. used mem: " + usedMemory + ";max mem: " + maxMemory + ".");
+                    System.out.println("######## Warning thrown ########");
+                    LOGGER.debug("low memory . used mem: " + usedMemory + ";max mem: " + maxMemory + ".");
                     switch (m_strategy) {
                         case FREE_ONE:
                             freeAllMemory(0);
@@ -134,22 +148,38 @@ public class MemoryObjectTracker {
      */
     public void addMemoryReleaseable(final MemoryReleasable obj) {
         synchronized (TRACKED_OBJECTS) {
-            WeakReference<MemoryReleasable> ref = new WeakReference<MemoryReleasable>(obj);
-            TRACKED_OBJECTS.put(obj.hashCode(), ref);
-            LOGGER.debug(TRACKED_OBJECTS.size() + " objects tracked");
+            if (m_blockConcurrency) {
+                m_keysToAdd.put(obj.id(), new WeakReference<MemoryReleasable>(obj));
+            } else {
+                WeakReference<MemoryReleasable> ref = new WeakReference<MemoryReleasable>(obj);
+                TRACKED_OBJECTS.put(obj.id(), ref);
+                LOGGER.debug(TRACKED_OBJECTS.size() + " objects tracked" + " Latest Obj: " + obj.id());
+            }
         }
     }
 
     public void removeMemoryReleaseable(final MemoryReleasable obj) {
         synchronized (TRACKED_OBJECTS) {
-            TRACKED_OBJECTS.remove(obj.hashCode());
+            if (m_blockConcurrency) {
+                m_keysToRemove.add(obj.id());
+            } else {
+                TRACKED_OBJECTS.remove(obj.id());
+            }
         }
     }
 
+    /**
+     * Promotes obj in LRU Cache. If obj was added to removeList before, it will be removed from removeList
+     *
+     * @param obj
+     */
     public void promoteMemoryReleaseable(final MemoryReleasable obj) {
         synchronized (TRACKED_OBJECTS) {
-            // Getting is enought. HashMap is access ordered.
-            TRACKED_OBJECTS.get(obj.hashCode());
+            if (m_keysToRemove.contains(obj.id())) {
+                m_keysToRemove.remove(obj.id());
+            }
+
+            TRACKED_OBJECTS.get(obj.id());
         }
     }
 
@@ -175,24 +205,41 @@ public class MemoryObjectTracker {
     * "Old" objects are removed first (LRU fashion, accessOrder on LinkedHashMap)
     */
     private void freeAllMemory(final double percentage) {
+        System.out.println("Free Memory called");
         synchronized (TRACKED_OBJECTS) {
 
-            double initSize = TRACKED_OBJECTS.keySet().size();
-            int countT = 0;
+            m_blockConcurrency = true;
+            double initSize = TRACKED_OBJECTS.size();
+            int count = 0;
+
             for (Entry<Integer, WeakReference<MemoryReleasable>> entry : TRACKED_OBJECTS.entrySet()) {
                 MemoryReleasable memoryReleasable = entry.getValue().get();
                 if (memoryReleasable != null) {
                     if (memoryReleasable.memoryAlert()) {
-                        TRACKED_OBJECTS.remove(entry.getKey());
-                        countT++;
+                        m_keysToRemove.add(entry.getKey());
+                        count++;
                     }
                 }
-                if (countT / initSize >= percentage) {
+                if (count / initSize >= percentage) {
                     break;
                 }
             }
+            m_blockConcurrency = false;
 
-            LOGGER.debug(countT + " tracked objects have been released.");
+            // Remove keys from tracker
+            for (Integer key : m_keysToRemove) {
+                TRACKED_OBJECTS.remove(key);
+            }
+
+            // Add blocked keys
+            for (Entry<Integer, WeakReference<MemoryReleasable>> entry : m_keysToAdd.entrySet()) {
+                TRACKED_OBJECTS.put(entry.getKey(), entry.getValue());
+            }
+
+            m_keysToAdd.clear();
+            m_keysToRemove.clear();
+
+            LOGGER.debug(count + " tracked objects have been released.");
         }
     }
 
