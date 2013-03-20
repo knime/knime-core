@@ -50,6 +50,7 @@
  */
 package org.knime.workbench.editor2.commands;
 
+import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Dimension;
 import org.eclipse.draw2d.geometry.Rectangle;
 import org.knime.core.node.workflow.NodeUIInformation;
@@ -118,8 +119,10 @@ public class ChangeWorkflowPortBarCommand extends AbstractKNIMECommand {
                 m_newBounds.width, m_newBounds.height, true);
         // must set explicitly so that event is fired by container
         barModel.setUIInfo(uiInfo);
-        m_bar.getFigure().setBounds(m_newBounds);
-        m_bar.getFigure().getLayoutManager().layout(m_bar.getFigure());
+        IFigure fig = m_bar.getFigure();
+        fig.setBounds(m_newBounds);
+        fig.getParent().setConstraint(fig, m_newBounds);
+        m_bar.getParent().refresh();
     }
 
     /**
@@ -135,8 +138,10 @@ public class ChangeWorkflowPortBarCommand extends AbstractKNIMECommand {
                 m_oldBounds.width, m_oldBounds.height, true);
         // must set explicitly so that event is fired by container
         barModel.setUIInfo(uiInfo);
-        m_bar.getFigure().setBounds(m_oldBounds);
-        m_bar.getFigure().getLayoutManager().layout(m_bar.getFigure());
+        IFigure fig = m_bar.getFigure();
+        fig.setBounds(m_oldBounds);
+        fig.getParent().setConstraint(fig, m_oldBounds);
+        m_bar.getParent().refresh();
     }
 
 }
