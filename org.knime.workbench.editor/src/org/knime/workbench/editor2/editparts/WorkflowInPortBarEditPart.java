@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   20.02.2008 (Fabian Dill): created
  */
@@ -55,27 +55,26 @@ import java.util.List;
 
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodePort;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.figures.WorkflowInPortBarFigure;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class WorkflowInPortBarEditPart extends AbstractWorkflowPortBarEditPart {
 
     /**
-     * 
      * {@inheritDoc}
      */
     @Override
     protected List<NodePort> getModelChildren() {
         WorkflowManager manager = ((WorkflowPortBar)getModel())
             .getWorkflowManager();
-        List<NodePort> ports 
+        List<NodePort> ports
             = new ArrayList<NodePort>();
         for (int i = 0; i < manager.getNrWorkflowIncomingPorts(); i++) {
             ports.add(manager.getInPort(i));
@@ -87,18 +86,16 @@ public class WorkflowInPortBarEditPart extends AbstractWorkflowPortBarEditPart {
      */
     @Override
     protected IFigure createFigure() {
-        WorkflowInPortBarFigure fig = new WorkflowInPortBarFigure();
-        NodeUIInformation uiInfo = ((WorkflowPortBar)getModel())
-            .getUIInfo();
+        WorkflowInPortBarFigure fig;
+        NodeUIInformation uiInfo = ((WorkflowPortBar)getModel()).getUIInfo();
         if (uiInfo != null && uiInfo.isFilledProperly()) {
             int[] bounds = uiInfo.getBounds();
             Rectangle newBounds = new Rectangle(
                     bounds[0], bounds[1], bounds[2], bounds[3]);
-            fig.setBounds(newBounds);
-            // TODO: do we need this? or is it enought o set the bounds?
-            fig.setInitialized(true);
+            return new WorkflowInPortBarFigure(newBounds);
+        } else {
+            return new WorkflowInPortBarFigure(getMinMaxXcoordInWorkflow()[0] /* pass the min workflow coord */);
         }
-        return fig;
     }
 
 }

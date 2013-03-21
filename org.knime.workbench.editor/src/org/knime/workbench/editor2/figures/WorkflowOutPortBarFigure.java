@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   20.02.2008 (Fabian Dill): created
  */
@@ -54,48 +54,70 @@ import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.geometry.Rectangle;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class WorkflowOutPortBarFigure extends AbstractWorkflowPortBarFigure {
-    
-//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-//            WorkflowOutPortBarFigure.class);
 
-    
+
+    private final int m_minXCoord;
+
     /**
-     * 
+     * @param uiInfo from the UI info
+     */
+    public WorkflowOutPortBarFigure(final Rectangle uiInfo) {
+        m_minXCoord = 0; // not needed
+        setBounds(uiInfo);
+        setInitialized(true);
+    }
+
+    /**
+     * If no UI info is available the bar places itself right of all flow components.
+     * @param maxWorkflowWidth the maximum of all x-coordinates of all parts of the workflow
+     */
+    public WorkflowOutPortBarFigure(final int maxWorkflowWidth) {
+        setInitialized(false);
+        m_minXCoord = maxWorkflowWidth;
+    }
+
+    /**
+     *
      * {@inheritDoc}
      */
     @Override
     public void paint(final Graphics graphics) {
         Rectangle parent = getParent().getBounds().getCopy();
-        // TODO: do we need the ui info or is it enough to ask for a 
-        // flag initialized?
         if (!isInitialized()) {
-            Rectangle newBounds = new Rectangle(
-                    parent.width - WIDTH 
-                        - AbstractPortFigure.WF_PORT_SIZE - OFFSET, 
-                    OFFSET, WIDTH + AbstractPortFigure.WF_PORT_SIZE, 
-                    parent.height - (2 * OFFSET));
+            int barWidth = WIDTH + AbstractPortFigure.WF_PORT_SIZE + OFFSET;
+            int xLoc;
+            if (parent.width - barWidth - 50 <= m_minXCoord) {
+                // the parent size is determined by the workflow parts (and not the window/view port size)
+                // place the bar right of the last workflow part
+                xLoc = m_minXCoord + 50;
+            } else {
+                // place the bar at the right border of the parent
+                xLoc = parent.width - barWidth;
+            }
+            Rectangle newBounds =
+                    new Rectangle(xLoc, OFFSET, WIDTH + AbstractPortFigure.WF_PORT_SIZE, parent.height - (2 * OFFSET));
             setInitialized(true);
             setBounds(newBounds);
         }
         super.paint(graphics);
     }
-    
+
     @Override
-    protected void fillShape(Graphics graphics) {
+    protected void fillShape(final Graphics graphics) {
         graphics.fillRectangle(
-                getBounds().x + AbstractPortFigure.WF_PORT_SIZE, 
-                getBounds().y, 
-                getBounds().width - AbstractPortFigure.WF_PORT_SIZE, 
+                getBounds().x + AbstractPortFigure.WF_PORT_SIZE,
+                getBounds().y,
+                getBounds().width - AbstractPortFigure.WF_PORT_SIZE,
                 getBounds().height);
     }
-    
-    
+
+
     @Override
-    protected void outlineShape(Graphics graphics) {
+    protected void outlineShape(final Graphics graphics) {
         Rectangle r = getBounds().getCopy();
         r.x += AbstractPortFigure.WF_PORT_SIZE;
         r.width -= AbstractPortFigure.WF_PORT_SIZE;
@@ -105,5 +127,5 @@ public class WorkflowOutPortBarFigure extends AbstractWorkflowPortBarFigure {
         int h = r.height - Math.max(1, lineWidth);
         graphics.drawRectangle(x, y, w, h);
     }
-    
+
 }
