@@ -36,9 +36,4 @@ public interface MemoryReleasable {
          */
         public boolean memoryAlert(MemoryAlertObject obj);
 
-        /**
-         * Unique ID in VM
-         */
-        public int vmUniqueId();
-
 }

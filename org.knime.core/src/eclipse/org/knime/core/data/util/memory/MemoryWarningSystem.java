@@ -20,7 +20,7 @@ import org.knime.core.node.NodeLogger;
  *
  * @author dietzc
  */
-public class MemoryWarningSystem {
+public final class MemoryWarningSystem {
 
     private static MemoryWarningSystem m_instance = null;
 

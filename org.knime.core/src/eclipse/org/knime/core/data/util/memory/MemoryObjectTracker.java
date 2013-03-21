@@ -49,13 +49,14 @@
  */
 package org.knime.core.data.util.memory;
 
-import java.lang.ref.WeakReference;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
+import java.util.WeakHashMap;
 
 import org.knime.core.node.NodeLogger;
 
@@ -64,7 +65,7 @@ import org.knime.core.node.NodeLogger;
  *
  * @author dietzc
  */
-public class MemoryObjectTracker {
+public final class MemoryObjectTracker {
 
     enum Strategy {
         /* Completely frees memory */
@@ -84,8 +85,10 @@ public class MemoryObjectTracker {
     * The list of tracked objects, whose memory will be freed, if the
     * memory runs out.
     */
-    private final LinkedHashMap<Integer, WeakReference<MemoryReleasable>> TRACKED_OBJECTS =
-            new LinkedHashMap<Integer, WeakReference<MemoryReleasable>>(300, 0.75f, true);
+    private final WeakHashMap<MemoryReleasable, Long> TRACKED_OBJECTS =
+            new WeakHashMap<MemoryReleasable, Long>();
+
+    private long m_lastAccess;
 
     // Singleton instance of this object
     private static MemoryObjectTracker m_instance;
@@ -94,14 +97,6 @@ public class MemoryObjectTracker {
     * Memory Warning System
     */
     private final MemoryWarningSystem MEMORY_WARNING_SYSTEM = MemoryWarningSystem.getInstance();
-
-    // If true, thread can't access add/remove methods from tracker, as freeMemory is currently evaluating. avoids concurrency exception
-    private boolean m_blockConcurrency = false;
-
-    private Set<Integer> m_keysToRemove = new HashSet<Integer>();
-
-    private Map<Integer, WeakReference<MemoryReleasable>> m_keysToAdd =
-            new HashMap<Integer, WeakReference<MemoryReleasable>>();
 
     /*
      * Private constructor, singleton
@@ -147,23 +142,14 @@ public class MemoryObjectTracker {
      */
     public void addMemoryReleaseable(final MemoryReleasable obj) {
         synchronized (TRACKED_OBJECTS) {
-            if (m_blockConcurrency) {
-                m_keysToAdd.put(obj.vmUniqueId(), new WeakReference<MemoryReleasable>(obj));
-            } else {
-                WeakReference<MemoryReleasable> ref = new WeakReference<MemoryReleasable>(obj);
-                TRACKED_OBJECTS.put(obj.vmUniqueId(), ref);
-                LOGGER.debug(TRACKED_OBJECTS.size() + " objects tracked" + " Latest Obj: " + obj.vmUniqueId());
-            }
+            TRACKED_OBJECTS.put(obj, m_lastAccess++);
+            LOGGER.debug(TRACKED_OBJECTS.size() + " objects tracked, Latest Obj: " + obj);
         }
     }
 
     public void removeMemoryReleaseable(final MemoryReleasable obj) {
         synchronized (TRACKED_OBJECTS) {
-            if (m_blockConcurrency) {
-                m_keysToRemove.add(obj.vmUniqueId());
-            } else {
-                TRACKED_OBJECTS.remove(obj.vmUniqueId());
-            }
+            TRACKED_OBJECTS.remove(obj);
         }
     }
 
@@ -174,48 +160,41 @@ public class MemoryObjectTracker {
      */
     public void promoteMemoryReleaseable(final MemoryReleasable obj) {
         synchronized (TRACKED_OBJECTS) {
-            if (m_keysToRemove.contains(obj.vmUniqueId())) {
-                m_keysToRemove.remove(obj.vmUniqueId());
-            }
-
-            TRACKED_OBJECTS.get(obj.vmUniqueId());
-        }
-    }
-
-    /**
-     * Heuristic to make sure that memory is available for a given object TODO: This is not working yet.
-     *
-     * @param allocator
-     * @return
-     */
-    public <T> T safeInstantiation(final MemoryAllocator<T> allocator) {
-        synchronized (TRACKED_OBJECTS) {
-            freeAllMemory(100);
-            return allocator.allocate();
+            TRACKED_OBJECTS.put(obj, m_lastAccess++);
         }
     }
 
     /*
-    * Frees the memory of all objects in the list.
-    *
-    * TODO: Are there race conditions if freeMemory is called and at the
-    * same time some performs a null check on getData in a cell?!
-    *
-    * "Old" objects are removed first (LRU fashion, accessOrder on LinkedHashMap)
+    * Frees the memory of some objects in the list.
     */
     private void freeAllMemory(final double percentage) {
         synchronized (TRACKED_OBJECTS) {
 
-            m_blockConcurrency = true;
             double initSize = TRACKED_OBJECTS.size();
             int count = 0;
+            List<Map.Entry<MemoryReleasable, Long>> entryValues =
+                    new LinkedList<Map.Entry<MemoryReleasable, Long>>(TRACKED_OBJECTS.entrySet());
+            Collections.sort(entryValues, new Comparator<Map.Entry<MemoryReleasable, Long>>() {
+                @Override
+                public int compare(final Entry<MemoryReleasable, Long> o1, final Entry<MemoryReleasable, Long> o2) {
+                    if (o1.getValue() < o2.getValue()) {
+                        return -1;
+                    } else if (o1.getValue() > o2.getValue()) {
+                        return +1;
+                    } else {
+                        assert false : "Equal update time stamp";
+                        return 0;
+                    }
+                }
+            });
 
-            for (Entry<Integer, WeakReference<MemoryReleasable>> entry : TRACKED_OBJECTS.entrySet()) {
-                MemoryReleasable memoryReleasable = entry.getValue().get();
+            for (Iterator<Map.Entry<MemoryReleasable, Long>> it = entryValues.iterator(); it.hasNext();) {
+                Map.Entry<MemoryReleasable, Long> entry = it.next();
+                MemoryReleasable memoryReleasable = entry.getKey();
                 if (memoryReleasable != null) {
                     // Since now the memory alert object is null. may change in the future
                     if (memoryReleasable.memoryAlert(null)) {
-                        m_keysToRemove.add(entry.getKey());
+                        entryValues.remove(entry);
                         count++;
                     }
                 }
@@ -223,20 +202,7 @@ public class MemoryObjectTracker {
                     break;
                 }
             }
-            m_blockConcurrency = false;
-
-            // Remove keys from tracker
-            for (Integer key : m_keysToRemove) {
-                TRACKED_OBJECTS.remove(key);
-            }
-
-            // Add blocked keys
-            for (Entry<Integer, WeakReference<MemoryReleasable>> entry : m_keysToAdd.entrySet()) {
-                TRACKED_OBJECTS.put(entry.getKey(), entry.getValue());
-            }
-
-            m_keysToAdd.clear();
-            m_keysToRemove.clear();
+            TRACKED_OBJECTS.entrySet().retainAll(entryValues);
 
             LOGGER.debug(count + " tracked objects have been released.");
         }

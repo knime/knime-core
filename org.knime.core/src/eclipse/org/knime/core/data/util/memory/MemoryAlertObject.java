@@ -54,6 +54,6 @@ package org.knime.core.data.util.memory;
  *
  * @author dietzc
  */
-public class MemoryAlertObject {
+public final class MemoryAlertObject {
     // class for future purposes
 }
