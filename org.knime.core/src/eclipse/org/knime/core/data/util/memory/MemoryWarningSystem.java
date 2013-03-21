@@ -73,10 +73,8 @@ public final class MemoryWarningSystem {
      * @param listener
      * @return
      */
-    public boolean registerListener(final MemoryWarningListener listener) {
-        synchronized (m_instance) {
-            return listeners.add(listener);
-        }
+    public synchronized boolean registerListener(final MemoryWarningListener listener) {
+        return listeners.add(listener);
     }
 
     /**
@@ -85,10 +83,8 @@ public final class MemoryWarningSystem {
      * @param listener
      * @return
      */
-    public boolean removeListener(final MemoryWarningListener listener) {
-        synchronized (m_instance) {
-            return listeners.remove(listener);
-        }
+    public synchronized boolean removeListener(final MemoryWarningListener listener) {
+        return listeners.remove(listener);
     }
 
     /**
