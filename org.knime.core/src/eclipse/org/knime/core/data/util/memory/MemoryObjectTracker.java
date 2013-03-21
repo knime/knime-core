@@ -85,8 +85,7 @@ public final class MemoryObjectTracker {
     * The list of tracked objects, whose memory will be freed, if the
     * memory runs out.
     */
-    private final WeakHashMap<MemoryReleasable, Long> TRACKED_OBJECTS =
-            new WeakHashMap<MemoryReleasable, Long>();
+    private final WeakHashMap<MemoryReleasable, Long> TRACKED_OBJECTS = new WeakHashMap<MemoryReleasable, Long>();
 
     private long m_lastAccess;
 
@@ -168,44 +167,42 @@ public final class MemoryObjectTracker {
     * Frees the memory of some objects in the list.
     */
     private void freeAllMemory(final double percentage) {
-        synchronized (TRACKED_OBJECTS) {
-
-            double initSize = TRACKED_OBJECTS.size();
-            int count = 0;
-            List<Map.Entry<MemoryReleasable, Long>> entryValues =
-                    new LinkedList<Map.Entry<MemoryReleasable, Long>>(TRACKED_OBJECTS.entrySet());
-            Collections.sort(entryValues, new Comparator<Map.Entry<MemoryReleasable, Long>>() {
-                @Override
-                public int compare(final Entry<MemoryReleasable, Long> o1, final Entry<MemoryReleasable, Long> o2) {
-                    if (o1.getValue() < o2.getValue()) {
-                        return -1;
-                    } else if (o1.getValue() > o2.getValue()) {
-                        return +1;
-                    } else {
-                        assert false : "Equal update time stamp";
-                        return 0;
-                    }
-                }
-            });
-
-            for (Iterator<Map.Entry<MemoryReleasable, Long>> it = entryValues.iterator(); it.hasNext();) {
-                Map.Entry<MemoryReleasable, Long> entry = it.next();
-                MemoryReleasable memoryReleasable = entry.getKey();
-                if (memoryReleasable != null) {
-                    // Since now the memory alert object is null. may change in the future
-                    if (memoryReleasable.memoryAlert(null)) {
-                        entryValues.remove(entry);
-                        count++;
-                    }
-                }
-                if (count / initSize >= percentage) {
-                    break;
+        double initSize = TRACKED_OBJECTS.size();
+        int count = 0;
+        List<Map.Entry<MemoryReleasable, Long>> entryValues =
+                new LinkedList<Map.Entry<MemoryReleasable, Long>>(TRACKED_OBJECTS.entrySet());
+        Collections.sort(entryValues, new Comparator<Map.Entry<MemoryReleasable, Long>>() {
+            @Override
+            public int compare(final Entry<MemoryReleasable, Long> o1, final Entry<MemoryReleasable, Long> o2) {
+                if (o1.getValue() < o2.getValue()) {
+                    return -1;
+                } else if (o1.getValue() > o2.getValue()) {
+                    return +1;
+                } else {
+                    assert false : "Equal update time stamp";
+                    return 0;
                 }
             }
-            TRACKED_OBJECTS.entrySet().retainAll(entryValues);
+        });
+
+        for (Iterator<Map.Entry<MemoryReleasable, Long>> it = entryValues.iterator(); it.hasNext();) {
+            Map.Entry<MemoryReleasable, Long> entry = it.next();
+            MemoryReleasable memoryReleasable = entry.getKey();
+            if (memoryReleasable != null) {
+                // Since now the memory alert object is null. may change in the future
+                if (memoryReleasable.memoryAlert(null)) {
+                    TRACKED_OBJECTS.remove(entry);
+                    count++;
+                }
+            }
+
+            if (count / initSize >= percentage) {
+                break;
+            }
 
             LOGGER.debug(count + " tracked objects have been released.");
         }
+
     }
 
     /**

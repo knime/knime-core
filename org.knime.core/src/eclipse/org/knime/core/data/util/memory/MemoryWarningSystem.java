@@ -4,10 +4,10 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryNotificationInfo;
 import java.lang.management.MemoryPoolMXBean;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.management.Notification;
 import javax.management.NotificationEmitter;
@@ -38,7 +38,7 @@ public final class MemoryWarningSystem {
         public void memoryUsageLow(long usedMemory, long maxMemory);
     }
 
-    private final Collection<MemoryWarningListener> listeners = new ArrayList<MemoryWarningListener>();
+    private final Set<MemoryWarningListener> listeners = new HashSet<MemoryWarningListener>();
 
     private final MemoryPoolMXBean m_memPool = findTenuredGenPool();
 
@@ -57,7 +57,7 @@ public final class MemoryWarningSystem {
             public void handleNotification(final Notification n, final Object hb) {
                 if (n.getType().equals(MemoryNotificationInfo.MEMORY_THRESHOLD_EXCEEDED)) {
                     long computeUsedMem = computeUsedMem();
-                    synchronized (listeners) {
+                    synchronized (m_instance) {
                         for (MemoryWarningListener listener : listeners) {
                             listener.memoryUsageLow(computeUsedMem, maxMem);
                         }
@@ -74,7 +74,7 @@ public final class MemoryWarningSystem {
      * @return
      */
     public boolean registerListener(final MemoryWarningListener listener) {
-        synchronized (listeners) {
+        synchronized (m_instance) {
             return listeners.add(listener);
         }
     }
@@ -86,7 +86,7 @@ public final class MemoryWarningSystem {
      * @return
      */
     public boolean removeListener(final MemoryWarningListener listener) {
-        synchronized (listeners) {
+        synchronized (m_instance) {
             return listeners.remove(listener);
         }
     }
