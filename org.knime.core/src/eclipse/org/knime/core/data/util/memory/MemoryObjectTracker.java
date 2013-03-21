@@ -213,7 +213,8 @@ public class MemoryObjectTracker {
             for (Entry<Integer, WeakReference<MemoryReleasable>> entry : TRACKED_OBJECTS.entrySet()) {
                 MemoryReleasable memoryReleasable = entry.getValue().get();
                 if (memoryReleasable != null) {
-                    if (memoryReleasable.memoryAlert()) {
+                    // Since now the memory alert object is null. may change in the future
+                    if (memoryReleasable.memoryAlert(null)) {
                         m_keysToRemove.add(entry.getKey());
                         count++;
                     }

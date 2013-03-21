@@ -34,7 +34,7 @@ public interface MemoryReleasable {
         /**
          * @return true, if object may be removed from ObjectTracker
          */
-        public boolean memoryAlert();
+        public boolean memoryAlert(MemoryAlertObject obj);
 
         /**
          * Unique ID in VM
