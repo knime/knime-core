@@ -58,6 +58,7 @@ package org.knime.core.node.workflow;
  * loops and try-catch-constructs.
  *
  * @author M. Berthold, KNIME.com, Zurich, Switzerland
+ * @since 2.8
  */
 public class FlowScopeContext extends FlowObject {
 

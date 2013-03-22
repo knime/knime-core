@@ -54,6 +54,7 @@ package org.knime.core.node.workflow;
  * Complement to {@link ScopeStartNode}.
  *
  * @author M. Berthold, University of Konstanz
+ * @since 2.8
  */
 public interface ScopeEndNode {
     // marker interface only

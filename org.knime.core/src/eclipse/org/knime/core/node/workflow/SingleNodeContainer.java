@@ -1287,6 +1287,7 @@ public final class SingleNodeContainer extends NodeContainer {
     /** Check if the given node is part of a scope (loop, try/catch...).
      *
      * @return true if node is part of a scope context.
+     * @since 2.8
      */
     public boolean isMemberOfScope() {
         synchronized (m_nodeMutex) {
@@ -1330,6 +1331,7 @@ public final class SingleNodeContainer extends NodeContainer {
     /**
      * @param nodeModelClass
      * @return return true if underlying NodeModel implements the given class/interface
+     * @since 2.8
      */
     public boolean isModelCompatibleTo(final Class<?> nodeModelClass) {
         return this.getNode().isModelCompatibleTo(nodeModelClass);

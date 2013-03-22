@@ -5402,6 +5402,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      *
      * @param anchor node
      * @return list of nodes.
+     * @since 2.8
      */
     public List<NodeContainer> getNodesInScope(final SingleNodeContainer anchor) {
         ArrayList<NodeContainer> result = new ArrayList<NodeContainer>();

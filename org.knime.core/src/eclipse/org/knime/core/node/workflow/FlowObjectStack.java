@@ -270,6 +270,7 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
      * @param type The desired FlowObject class
      * @param isInactiveScope the desired flag status
      * @see java.util.Stack#peek()
+     * @since 2.8
      */
     public <T extends FlowScopeContext> T peekScopeContext(final Class<T> type, final boolean isInactiveScope) {
         for (int i = m_stack.size() - 1; i >= 0; i--) {
@@ -314,6 +315,7 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
      * @return The first (top-most) element on the stack of class
      * <code>type</code> or <code>null</code> if no such element is available.
      * @see java.util.Stack#pop()
+     * @since 2.8
      */
     public <T extends FlowScopeContext> T popScopeContext(final Class<T> type, final boolean isInactiveScope) {
         for (int i = m_stack.size() - 1; i >= 0; i--) {

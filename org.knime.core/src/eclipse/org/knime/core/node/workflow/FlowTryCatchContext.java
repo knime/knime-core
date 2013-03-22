@@ -51,6 +51,7 @@ package org.knime.core.node.workflow;
 /** Pushed on top of the stack inside a try-catch construct.
  *
  * @author M. Berthold, KNIME.com, Zurich, Switzerland
+ * @since 2.8
  */
 public final class FlowTryCatchContext extends FlowScopeContext {
     // marker class. @see FlowLoopContext for proper implementation

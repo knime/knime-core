@@ -61,6 +61,7 @@ package org.knime.core.node.workflow;
  * the scope.
  *
  * @author M. Berthold, University of Konstanz & Bernd Wiswedel, KNIME.com
+ * @since 2.8
  */
 public interface ScopeStartNode {
     // marker interface only
