@@ -1295,6 +1295,9 @@ public final class SingleNodeContainer extends NodeContainer {
             // the node is the end of a Scope (since those don't have their own
             // scope object on the outgoing stack anymore.
             FlowObjectStack fos = m_node.getFlowObjectStack();
+            if (fos == null) {
+                return false;
+            }
             return (this.isModelCompatibleTo(ScopeEndNode.class)
                     || this.isModelCompatibleTo(ScopeStartNode.class)
                     || (null != fos.peek(FlowScopeContext.class)));
