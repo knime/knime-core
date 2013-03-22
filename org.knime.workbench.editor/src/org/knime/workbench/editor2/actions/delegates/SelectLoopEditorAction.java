@@ -43,32 +43,30 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * -------------------------------------------------------------------
  *
  * History
- *   Apr 16, 2008 (mb): created
- *   Sep 22, 2008 (mb): added loop termination criterion.
+ *   21.03.2013 (Peter Ohl): created
  */
-package org.knime.core.node.workflow;
+package org.knime.workbench.editor2.actions.delegates;
 
-/** Interface implemented by {@link org.knime.core.node.NodeModel} classes
- * to define a loop start node. The framework will take care of the details,
- * such as finding the appropriate end node in the workflow (can be accessed
- * after the first loop iteration using the <code>getLoopEndNode()</code>
- * method defined in the abstract <code>NodeModel</code> class) and preparing
- * the flow object stack.
+import org.knime.workbench.editor2.WorkflowEditor;
+import org.knime.workbench.editor2.actions.AbstractNodeAction;
+import org.knime.workbench.editor2.actions.SelectLoopAction;
+
+/**
+ * Editor action for "Select Loop".
  *
- * <p>In comparison to an ordinary nodes, loop start nodes don't get their
- * <code>reset()</code> method called between loop iterations (although the
- * node is executed) but the output tables are cleared; secondly, if a loop
- * start node defines new data that needs to be kept between loop iterations
- * it must implement the {@link org.knime.core.node.BufferedDataTableHolder}
- * interface and return the important tables in the corresponding get method
- * (it should return null _after_ the last iteration if the tables should not
- * be persisted with saving the workflow).
- *
- * @author M. Berthold, University of Konstanz & Bernd Wiswedel, KNIME.com
+ * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
  */
-public interface LoopStartNode extends ScopeStartNode {
-    // marker interface only
+public class SelectLoopEditorAction extends AbstractEditorAction {
+    /**
+     * @see
+     * org.knime.workbench.editor2.actions.delegates.AbstractEditorAction
+     *      #createAction(org.knime.workbench.editor2.WorkflowEditor)
+     */
+    @Override
+    protected AbstractNodeAction createAction(final WorkflowEditor editor) {
+        return new SelectLoopAction(editor);
+    }
 }

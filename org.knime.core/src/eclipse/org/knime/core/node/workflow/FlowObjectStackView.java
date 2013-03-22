@@ -138,15 +138,23 @@ final class FlowObjectStackView extends JPanel {
                         o = "Unknown Type: " + v.getType();
                     }
                     obj[3] = o;
-                } else if (s instanceof InactiveBranchFlowLoopContext) {
-                    obj[2] = "Inactive Loop Mark";
-                    obj[3] = null;
                 } else if (s instanceof FlowLoopContext) {
                     duplicateElementsSet.clear();
-                    obj[2] = "Loop (" + (loopCount++) + ")";
-                    obj[3] = null;
+                    if (!((FlowLoopContext)s).isInactiveScope()) {
+                        obj[2] = "Loop (" + (loopCount++) + ")";
+                        obj[3] = null;
+                    } else {
+                        obj[2] = "Inactive Loop Mark";
+                        obj[3] = null;
+                    }
                 } else if (s instanceof InnerFlowLoopContext) {
                     obj[2] = "Loop-Execute";
+                    obj[3] = null;
+                } else if (s instanceof FlowScopeContext) {
+                    obj[2] = "Try-Catch Scope"  + (((FlowScopeContext)s).isInactiveScope() ? " (inactive)" : "");
+                    obj[3] = null;
+                } else {
+                    obj[2] = "unknown:" + s.toString();
                     obj[3] = null;
                 }
                 values.add(obj);

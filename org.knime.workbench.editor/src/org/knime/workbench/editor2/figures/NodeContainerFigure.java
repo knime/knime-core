@@ -57,6 +57,7 @@ import org.eclipse.draw2d.FlowLayout;
 import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.Label;
+import org.eclipse.draw2d.OrderedLayout;
 import org.eclipse.draw2d.RectangleFigure;
 import org.eclipse.draw2d.RelativeLocator;
 import org.eclipse.draw2d.ToolbarLayout;
@@ -797,6 +798,12 @@ public class NodeContainerFigure extends RectangleFigure {
         private static final String BACKGROUND_LOOPER_END =
                 "icons/node/background_looper_end.png";
 
+        private static final String BACKGROUND_SCOPE_START =
+                "icons/node/background_scope_start.png";
+
+        private static final String BACKGROUND_SCOPE_END =
+                "icons/node/background_scope_end.png";
+
         private static final String BACKGROUND_QUICKFORM =
             "icons/node/background_quickform.png";
 
@@ -942,6 +949,10 @@ public class NodeContainerFigure extends RectangleFigure {
                 str = BACKGROUND_LOOPER_START;
             } else if (type.equals(NodeType.LoopEnd)) {
                 str = BACKGROUND_LOOPER_END;
+            } else if (type.equals(NodeType.ScopeStart)) {
+                str = BACKGROUND_SCOPE_START;
+            } else if (type.equals(NodeType.ScopeEnd)) {
+                str = BACKGROUND_SCOPE_END;
             } else if (type.equals(NodeType.QuickForm)) {
                 str = BACKGROUND_QUICKFORM;
             } else {
@@ -1027,8 +1038,8 @@ public class NodeContainerFigure extends RectangleFigure {
             // a line
 
             final FlowLayout layout = new FlowLayout(true);
-            layout.setMajorAlignment(ToolbarLayout.ALIGN_CENTER);
-            layout.setMinorAlignment(ToolbarLayout.ALIGN_CENTER);
+            layout.setMajorAlignment(OrderedLayout.ALIGN_CENTER);
+            layout.setMinorAlignment(OrderedLayout.ALIGN_CENTER);
             layout.setMajorSpacing(3);
             setLayoutManager(layout);
 
@@ -1149,7 +1160,7 @@ public class NodeContainerFigure extends RectangleFigure {
             setBounds(new Rectangle(0, 0, ProgressFigure.WIDTH,
                     ProgressFigure.HEIGHT));
             final ToolbarLayout layout = new ToolbarLayout(false);
-            layout.setMinorAlignment(ToolbarLayout.ALIGN_CENTER);
+            layout.setMinorAlignment(OrderedLayout.ALIGN_CENTER);
             layout.setStretchMinorAxis(true);
             setLayoutManager(layout);
             m_label = new Label();
@@ -1203,7 +1214,7 @@ public class NodeContainerFigure extends RectangleFigure {
         public InfoWarnErrorFigure() {
 
             final ToolbarLayout layout = new ToolbarLayout(false);
-            layout.setMinorAlignment(ToolbarLayout.ALIGN_CENTER);
+            layout.setMinorAlignment(OrderedLayout.ALIGN_CENTER);
             layout.setStretchMinorAxis(true);
             setLayoutManager(layout);
             m_label = new Label();

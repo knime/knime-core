@@ -40,35 +40,38 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME.  The owner of a Node
+ *  propagated with or for interoperation with KNIME. The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
+ * ------------------------------------------------------------------------
  *
- * History
- *   Apr 16, 2008 (mb): created
- *   Sep 22, 2008 (mb): added loop termination criterion.
  */
 package org.knime.core.node.workflow;
 
-/** Interface implemented by {@link org.knime.core.node.NodeModel} classes
- * to define a loop start node. The framework will take care of the details,
- * such as finding the appropriate end node in the workflow (can be accessed
- * after the first loop iteration using the <code>getLoopEndNode()</code>
- * method defined in the abstract <code>NodeModel</code> class) and preparing
- * the flow object stack.
+/** Pushed on top of the stack inside a try-catch construct.
  *
- * <p>In comparison to an ordinary nodes, loop start nodes don't get their
- * <code>reset()</code> method called between loop iterations (although the
- * node is executed) but the output tables are cleared; secondly, if a loop
- * start node defines new data that needs to be kept between loop iterations
- * it must implement the {@link org.knime.core.node.BufferedDataTableHolder}
- * interface and return the important tables in the corresponding get method
- * (it should return null _after_ the last iteration if the tables should not
- * be persisted with saving the workflow).
- *
- * @author M. Berthold, University of Konstanz & Bernd Wiswedel, KNIME.com
+ * @author M. Berthold, KNIME.com, Zurich, Switzerland
  */
-public interface LoopStartNode extends ScopeStartNode {
-    // marker interface only
+public final class FlowTryCatchContext extends FlowScopeContext {
+    // marker class. @see FlowLoopContext for proper implementation
+    // of hashCode and equals when members are added.
+
+    /* static variable names for information put on the stack by the WFM */
+    public static String ERROR_FLAG = "_error_caught";
+    public static String ERROR_NODE = "_error_node";
+    public static String ERROR_REASON = "_error_reason";
+    public static String ERROR_STACKTRACE = "_error_stacktrace";
+
+    /** {@inheritDoc} */
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean equals(final Object obj) {
+        return super.equals(obj);
+    }
+
 }

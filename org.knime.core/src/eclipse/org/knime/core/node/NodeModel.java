@@ -82,10 +82,13 @@ import org.knime.core.node.streamable.StreamableOperatorInternals;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.FlowLoopContext;
 import org.knime.core.node.workflow.FlowObjectStack;
+import org.knime.core.node.workflow.FlowScopeContext;
+import org.knime.core.node.workflow.FlowTryCatchContext;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.ICredentials;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.LoopStartNode;
+import org.knime.core.node.workflow.ScopeStartNode;
 
 
 /**
@@ -1432,8 +1435,12 @@ public abstract class NodeModel {
             throw new IllegalStateException(
                 "continueLoop called from non-end node (Coding Error)!");
         }
-        FlowLoopContext slc = m_flowObjectStack.peek(
-                FlowLoopContext.class);
+        FlowLoopContext slc = m_flowObjectStack.peek(FlowLoopContext.class);
+        if (slc != null && slc.isInactiveScope()) {
+            m_logger.coding("Encountered an inactive FlowLoopContext in continueLoop.");
+            // continue with historically "correct" solution:
+            slc = m_flowObjectStack.peekScopeContext(FlowLoopContext.class, false);
+        }
         if (slc == null) {
             // wrong wiring of the pipeline: head seems to be missing!
             throw new IllegalStateException(
@@ -1456,6 +1463,21 @@ public abstract class NodeModel {
 
     final FlowLoopContext getLoopContext() {
         return m_loopContext;
+    }
+
+    /**
+     * Return appropriate FlowLoopContext object depending on the type of ScopeStartNode.
+     *
+     * @return initial FlowLoopContext object to be put on stack.
+     */
+    final FlowScopeContext getInitialScopeContext() {
+        if (this instanceof LoopStartNode) {
+            return new FlowLoopContext();
+        }
+        if (this instanceof ScopeStartNode) {
+            return new FlowTryCatchContext();
+        }
+        return null;
     }
 
     final void clearLoopContext() {

@@ -46,29 +46,55 @@
  * ---------------------------------------------------------------------
  *
  * History
- *   Apr 16, 2008 (mb): created
- *   Sep 22, 2008 (mb): added loop termination criterion.
+ *   Sept 30, 2010 (mb): created
  */
-package org.knime.core.node.workflow;
+package org.knime.base.node.flowcontrol.trycatch.genericcatch;
 
-/** Interface implemented by {@link org.knime.core.node.NodeModel} classes
- * to define a loop start node. The framework will take care of the details,
- * such as finding the appropriate end node in the workflow (can be accessed
- * after the first loop iteration using the <code>getLoopEndNode()</code>
- * method defined in the abstract <code>NodeModel</code> class) and preparing
- * the flow object stack.
- *
- * <p>In comparison to an ordinary nodes, loop start nodes don't get their
- * <code>reset()</code> method called between loop iterations (although the
- * node is executed) but the output tables are cleared; secondly, if a loop
- * start node defines new data that needs to be kept between loop iterations
- * it must implement the {@link org.knime.core.node.BufferedDataTableHolder}
- * interface and return the important tables in the corresponding get method
- * (it should return null _after_ the last iteration if the tables should not
- * be persisted with saving the workflow).
- *
- * @author M. Berthold, University of Konstanz & Bernd Wiswedel, KNIME.com
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
+
+/**
+ * @author M. Berthold, University of Konstanz
  */
-public interface LoopStartNode extends ScopeStartNode {
-    // marker interface only
+public class VariablePortCatchNodeFactory extends NodeFactory<GenericCatchNodeModel> {
+
+    /**
+     * Create factory, that instantiates nodes.
+     */
+    public VariablePortCatchNodeFactory() {
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public GenericCatchNodeModel createNodeModel() {
+        return new GenericCatchNodeModel(FlowVariablePortObject.TYPE);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public NodeView<GenericCatchNodeModel> createNodeView(final int index,
+            final GenericCatchNodeModel model) {
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected boolean hasDialog() {
+        return false;
+    }
+
 }

@@ -60,7 +60,7 @@ import org.knime.core.node.util.ConvenienceMethods;
  *
  * @author M. Berthold, University of Konstanz
  */
-public class FlowLoopContext extends FlowObject {
+public class FlowLoopContext extends FlowScopeContext {
 
     private int m_iterationIndex = 0;
     private ILoopStartWriteFileStoreHandler m_fileStoreHandler;

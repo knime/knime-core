@@ -57,6 +57,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -102,8 +104,9 @@ import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.CredentialsProvider;
 import org.knime.core.node.workflow.FlowLoopContext;
 import org.knime.core.node.workflow.FlowObjectStack;
+import org.knime.core.node.workflow.FlowScopeContext;
+import org.knime.core.node.workflow.FlowTryCatchContext;
 import org.knime.core.node.workflow.FlowVariable;
-import org.knime.core.node.workflow.InactiveBranchFlowLoopContext;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.LoopStartNode;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
@@ -111,6 +114,8 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessageEvent;
 import org.knime.core.node.workflow.NodeMessageListener;
+import org.knime.core.node.workflow.ScopeEndNode;
+import org.knime.core.node.workflow.ScopeStartNode;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.execresult.NodeExecutionResult;
@@ -817,37 +822,52 @@ public final class Node implements NodeModelWarningListener {
 
         // check if the node is part of a skipped branch and return
         // appropriate objects without actually configuring the node.
-        if (!isInactiveBranchConsumer() && containsInactiveObjects(rawData)) {
-            // inactive loop start node must indicate to their loop
-            // end node that they were inactive...
-            if (m_model instanceof LoopStartNode) {
-                FlowObjectStack outStack = getOutgoingFlowObjectStack();
-                outStack.push(new InactiveBranchFlowLoopContext());
+        // We also need to make sure that we don't run InactiveBranchConsumers
+        // if they are in the middle of an inactive scope or loop so this
+        // check is not trivial...
+        boolean isInactive = false;
+        // are we not a consumer and any of the incoming branches are inactive?
+        isInactive = isInactive || (!isInactiveBranchConsumer() && containsInactiveObjects(rawData));
+        // are we a consumer but in the middle of an inactive scope?
+        FlowObjectStack inStack = getFlowObjectStack();
+        FlowScopeContext peekfsc = inStack.peek(FlowScopeContext.class);
+        if (peekfsc != null) {
+            isInactive = isInactive || peekfsc.isInactiveScope();
+        }
+        if (isInactive) {
+            if (m_model instanceof ScopeStartNode) {
+                // inactive scope start node must indicate to their scope
+                // end node that they were inactive...
+                FlowScopeContext fsc = getOutgoingFlowObjectStack().peek(FlowScopeContext.class);
+                assert fsc != null;
+                fsc.inactiveScope(true);
             }
-            // loop end nodes can be inactive if and only if their
-            // loop start node is inactive
-            if (m_model instanceof LoopEndNode) {
-                FlowObjectStack inStack = getFlowObjectStack();
-                InactiveBranchFlowLoopContext peek =
-                    inStack.peek(InactiveBranchFlowLoopContext.class);
-                if (peek == null) {
-                    // we can not handle this case: the End Loop node needs
+            if (m_model instanceof ScopeEndNode) {
+                // scope end nodes can be inactive if and only if their scope start node is
+                // inactive as well (which we should see in the scope context object).
+                if (peekfsc == null) {
+                    createErrorMessageAndNotify("Missing Scope Start Node in inactive branch.");
+                    return false;
+                }
+                if (!peekfsc.isInactiveScope()) {
+                    // we can not handle this case: the End scope node needs
                     // to trigger re-execution which it won't in an inactive
                     // branch
-                    createErrorMessageAndNotify("Loop End node in inactive "
-                            + "branch not allowed.");
+                    createErrorMessageAndNotify("Active Scope End node in inactive branch not allowed.");
                     return false;
                 } else {
-                    // also the loop start node is inactive, so the entire
-                    // loop is inactive
-                    inStack.pop(InactiveBranchFlowLoopContext.class);
+                    // also the scope start node is inactive, so the entire
+                    // loop is inactive.
+                    // Pop Scope object
+                    // => this is done in configure, not needed here! (MB: Hittisau 2013)
+//                    getOutgoingFlowObjectStack().pop(FlowScopeContext.class);
                 }
             }
-            // normal node: skip execution
+            // just a normal node: skip execution and fill output ports with inactive markers
             PortObject[] outs = new PortObject[getNrOutPorts()];
             Arrays.fill(outs, InactiveBranchPortObject.INSTANCE);
             setOutPortObjects(outs, false);
-            assert m_model.hasContent() == false;
+            assert !m_model.hasContent();
             return true;
         }
 
@@ -862,8 +882,7 @@ public final class Node implements NodeModelWarningListener {
                 // TODO NEWWFM state event
                 // TODO: also notify message/progress listeners
                 createErrorMessageAndNotify(
-                        "Couldn't get data from predecessor (Port No."
-                        + i + ").");
+                        "Couldn't get data from predecessor (Port No." + i + ").");
                 // notifyStateListeners(new NodeStateChangedEvent.EndExecute());
                 return false;
             }
@@ -908,6 +927,29 @@ public final class Node implements NodeModelWarningListener {
                 reset();
                 createWarningMessageAndNotify("Execution canceled");
                 return false;
+            } else {
+                // check if we are inside a try-catch block (only if it was a real
+                // error - not when canceled!)
+                FlowObjectStack flowObjectStack = getFlowObjectStack();
+                FlowTryCatchContext tcslc = flowObjectStack.peek(FlowTryCatchContext.class);
+                if ((tcslc != null) && (!tcslc.isInactiveScope())) {
+                    // failure inside an active try-catch:
+                    // make node inactive but preserve error message.
+                    reset();
+                    PortObject[] outs = new PortObject[getNrOutPorts()];
+                    Arrays.fill(outs, InactiveBranchPortObject.INSTANCE);
+                    setOutPortObjects(outs, false);
+                    createErrorMessageAndNotify("Execution failed in Try-Catch block: " + th.getMessage());
+                    // and push information onto stack so catch-node can report it:
+                    FlowObjectStack fos = getNodeModel().getOutgoingFlowObjectStack();
+                    fos.push(new FlowVariable(FlowTryCatchContext.ERROR_FLAG, 1));
+                    fos.push(new FlowVariable(FlowTryCatchContext.ERROR_NODE, getName()));
+                    fos.push(new FlowVariable(FlowTryCatchContext.ERROR_REASON, th.getMessage()));
+                    StringWriter thstack = new StringWriter();
+                    th.printStackTrace(new PrintWriter(thstack));
+                    fos.push(new FlowVariable(FlowTryCatchContext.ERROR_STACKTRACE, thstack.toString()));
+                    return true;
+                }
             }
             String message = "Execute failed: ";
             if (th.getMessage() != null && th.getMessage().length() >= 5) {
@@ -942,7 +984,7 @@ public final class Node implements NodeModelWarningListener {
         // (for instance used in group by loop start node)
         BufferedDataTable[] previousInternalHeldTables = m_internalHeldTables;
         if (previousInternalHeldTables != null
-                && !getLoopRole().equals(LoopRole.BEGIN)) {
+                && !this.isModelCompatibleTo(LoopStartNode.class)) {
             m_logger.coding("Found internal tables for non loop "
                     + "start node: " + getName());
         }
@@ -1291,7 +1333,12 @@ public final class Node implements NodeModelWarningListener {
         if (isLoopRestart) { // just as an assertion
             FlowObjectStack inStack = getFlowObjectStack();
             FlowLoopContext flc = inStack.peek(FlowLoopContext.class);
-            if (flc == null && !getLoopRole().equals(LoopRole.BEGIN)) {
+            if (flc != null && flc.isInactiveScope()) {
+                m_logger.coding("Encountered an inactive FlowLoopContext in a loop restart.");
+                // continue with historically "correct" solution:
+                flc = inStack.peekScopeContext(FlowLoopContext.class, false);
+            }
+            if (flc == null && !this.isModelCompatibleTo(LoopStartNode.class)) {
                 m_logger.coding("Encountered a loop restart action but there is"
                         + " no loop context on the flow object stack (node "
                         + getName() + ")");
@@ -1433,7 +1480,7 @@ public final class Node implements NodeModelWarningListener {
      * @since 2.6
      */
     public void setForceSynchronousIO(final boolean value) {
-        m_forceSychronousIO = value || LoopRole.END.equals(getLoopRole());
+        m_forceSychronousIO = value || this.isModelCompatibleTo(LoopEndNode.class);
     }
 
     /** Getter for {@link #setForceSynchronousIO(boolean)}.
@@ -1603,21 +1650,29 @@ public final class Node implements NodeModelWarningListener {
                 // check if the node is part of a skipped branch and return
                 // appropriate specs without actually configuring the node.
                 // Note that we must also check the incoming variable port!
+                boolean isInactive = false;
                 if (!isInactiveBranchConsumer()) {
                     for (int i = 0; i < rawInSpecs.length; i++) {
-                        if (rawInSpecs[i]
-                                    instanceof InactiveBranchPortObjectSpec) {
-                            for (int j = 0; j < m_outputs.length; j++) {
-                                m_outputs[j].spec =
-                                    InactiveBranchPortObjectSpec.INSTANCE;
-                            }
-                            if (success) {
-                                m_logger.debug("Configure skipped. ("
-                                        + getName() + " in inactive branch.)");
-                            }
-                            return true;
+                        if (rawInSpecs[i] instanceof InactiveBranchPortObjectSpec) {
+                            isInactive = true;
+                            break;
                         }
                     }
+                } else {
+                    FlowLoopContext flc = getFlowObjectStack().peek(FlowLoopContext.class);
+                    if (flc != null && flc.isInactiveScope()) {
+                        isInactive = true;
+                    }
+                }
+                if (isInactive) {
+                    for (int j = 0; j < m_outputs.length; j++) {
+                        m_outputs[j].spec =
+                            InactiveBranchPortObjectSpec.INSTANCE;
+                    }
+                    if (success) {
+                        m_logger.debug("Configure skipped. (" + getName() + " in inactive branch.)");
+                    }
+                    return true;
                 }
                 if (m_variablesSettings != null) {
                     newVariables = applySettingsUsingFlowObjectStack();
@@ -2103,8 +2158,16 @@ public final class Node implements NodeModelWarningListener {
      * @return The stack of flow variables that the node added in its client
      *         code (configure & execute).
      */
-    public FlowObjectStack getOutgoingFlowObjectStack(){
+    public FlowObjectStack getOutgoingFlowObjectStack() {
         return m_model.getOutgoingFlowObjectStack();
+    }
+
+    /**
+     * @param nodeModelClass
+     * @return return true if underlying NodeModel implements the given class/interface
+     */
+    public boolean isModelCompatibleTo(final Class<?> nodeModelClass) {
+        return nodeModelClass.isAssignableFrom(this.getNodeModel().getClass());
     }
 
     public void clearLoopContext() {
@@ -2115,24 +2178,16 @@ public final class Node implements NodeModelWarningListener {
         return m_model.getLoopContext();
     }
 
+    public FlowScopeContext getInitialScopeContext() {
+        return m_model.getInitialScopeContext();
+    }
+
     public boolean getPauseLoopExecution() {
         return m_model.getPauseLoopExecution();
     }
 
     public void setPauseLoopExecution(final boolean ple) {
         m_model.setPauseLoopExecution(ple);
-    }
-
-    public static enum LoopRole { BEGIN, END, NONE }
-
-    public final LoopRole getLoopRole() {
-        if (m_model instanceof LoopStartNode) {
-            return LoopRole.BEGIN;
-        } else if (m_model instanceof LoopEndNode) {
-            return LoopRole.END;
-        } else {
-            return LoopRole.NONE;
-        }
     }
 
     public void setLoopEndNode(final Node tail) {

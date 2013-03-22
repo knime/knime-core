@@ -40,35 +40,21 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME. The owner of a Node
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
+ * History
+ *   Apr 16, 2008 (berthold): created
  */
 package org.knime.core.node.workflow;
 
-/** Pushed to stack if a loop start node is inactive (entire loop part of
- * an inactive branch). A loop end node will silently turn inactive too
- * if such an object is on the stack. If no such object is on the stack,
- * the loop end node will fail.
+/**
+ * Complement to {@link ScopeStartNode}.
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author M. Berthold, University of Konstanz
  */
-public final class InactiveBranchFlowLoopContext extends FlowObject {
-    // marker class. @see FlowLoopContext for proper implementation
-    // of hashCode and equals when members are added.
-
-    /** {@inheritDoc} */
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public boolean equals(final Object obj) {
-        return super.equals(obj);
-    }
-
+public interface ScopeEndNode {
+    // marker interface only
 }

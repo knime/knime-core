@@ -66,7 +66,7 @@ import org.eclipse.swt.events.MenuDetectListener;
 import org.eclipse.swt.graphics.Point;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.knime.core.node.KNIMEConstants;
-import org.knime.core.node.Node.LoopRole;
+import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -92,6 +92,7 @@ import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.ResumeLoopAction;
 import org.knime.workbench.editor2.actions.RevealMetaNodeTemplateAction;
 import org.knime.workbench.editor2.actions.SaveAsMetaNodeTemplateAction;
+import org.knime.workbench.editor2.actions.SelectLoopAction;
 import org.knime.workbench.editor2.actions.SetNodeDescriptionAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
 import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
@@ -208,7 +209,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                         (NodeContainer)((NodeContainerEditPart)p).getModel();
                 if (container instanceof SingleNodeContainer) {
                     SingleNodeContainer snc = (SingleNodeContainer)container;
-                    if (snc.getLoopRole().equals(LoopRole.END)) {
+                    if (snc.isModelCompatibleTo(LoopEndNode.class)) {
                         // pause loop execution
                         action = m_actionRegistry.getAction(PauseLoopExecutionAction.ID);
                         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
@@ -248,6 +249,28 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
         action = m_actionRegistry.getAction(ExpandMetaNodeAction.ID);
         manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
         ((AbstractNodeAction)action).update();
+        // insert "select loop" if loop nodes are selected
+        boolean addSelectLoop = true;
+        for (Object p : parts) {
+            if (!(p instanceof NodeContainerEditPart)) {
+                addSelectLoop = false;
+                break;
+            }
+            NodeContainer nc = ((NodeContainerEditPart)p).getNodeContainer();
+            if (!(nc instanceof SingleNodeContainer)) {
+                addSelectLoop = false;
+                break;
+            }
+            if (!((SingleNodeContainer)nc).isMemberOfScope()) {
+                addSelectLoop = false;
+                break;
+            }
+        }
+        if (addSelectLoop) {
+            action = m_actionRegistry.getAction(SelectLoopAction.ID);
+            manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP, action);
+            ((AbstractNodeAction)action).update();
+        }
 
         // depending on the current selection: add the actions for the port
         // views and the node views

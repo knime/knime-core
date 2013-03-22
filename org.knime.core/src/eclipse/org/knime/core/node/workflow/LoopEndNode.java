@@ -44,16 +44,17 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Apr 16, 2008 (berthold): created
  */
 package org.knime.core.node.workflow;
 
 /**
- * 
- * @author berthold, University of Konstanz
+ * Complement to @see{LoopStartNode}.
+ *
+ * @author M. Berthold, University of Konstanz
  */
-public interface LoopEndNode {
-
+public interface LoopEndNode extends ScopeEndNode {
+    // marker interface only
 }

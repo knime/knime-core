@@ -48,35 +48,32 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import java.util.List;
+
+import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
-import org.knime.core.node.workflow.SingleNodeContainer.LoopStatus;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
- * Action to resume execution of a paused loop.
+ * Action to select all of the nodes contained within the surrounding loop.
  *
- * @author M. Berthold, University of Konstanz
+ * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
  */
-public class ResumeLoopAction extends AbstractNodeAction {
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(ResumeLoopAction.class);
+public class SelectLoopAction extends AbstractNodeAction {
+
+    /** unique ID for this action. * */
+    public static final String ID = "knime.action.selectLoop";
 
     /**
-     * unique ID for this action.
-     */
-    public static final String ID = "knime.action.resumeloop";
-
-    /**
+     *
      * @param editor The workflow editor
      */
-    public ResumeLoopAction(final WorkflowEditor editor) {
+    public SelectLoopAction(final WorkflowEditor editor) {
         super(editor);
     }
 
@@ -93,7 +90,7 @@ public class ResumeLoopAction extends AbstractNodeAction {
      */
     @Override
     public String getText() {
-        return "Resume Loop Execution";
+        return "Select Loop";
     }
 
     /**
@@ -101,16 +98,7 @@ public class ResumeLoopAction extends AbstractNodeAction {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/resume.png");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public ImageDescriptor getDisabledImageDescriptor() {
-        return ImageRepository
-                .getImageDescriptor("icons/resume_diabled.png");
+        return ImageRepository.getImageDescriptor("icons/select_loop.gif");
     }
 
     /**
@@ -118,52 +106,45 @@ public class ResumeLoopAction extends AbstractNodeAction {
      */
     @Override
     public String getToolTipText() {
-        return "Resume Loop Execution.";
+        return "Select all of the nodes contained within the surrounding loop";
     }
 
     /**
-     * @return <code>true</code>, if just one loop end node part is selected
-     *         which is executable and a loop is in progress.
-     *
+     * @return <code>true</code> if at we have a single node which has a
+     *         dialog
      * @see org.eclipse.gef.ui.actions.WorkbenchPartAction#calculateEnabled()
      */
     @Override
     protected boolean calculateEnabled() {
-        NodeContainerEditPart[] parts =
+        NodeContainerEditPart[] selected =
             getSelectedParts(NodeContainerEditPart.class);
-        if (parts.length != 1) {
+        if (selected.length != 1) {
             return false;
         }
-        // enabled if the one selected node is a configured and "in progress"
-        // LoopEndNode
-        NodeContainer nc = parts[0].getNodeContainer();
-        if (nc instanceof SingleNodeContainer) {
-            SingleNodeContainer snc = (SingleNodeContainer)nc;
-            if (snc.isModelCompatibleTo(LoopEndNode.class)
-                && snc.getLoopStatus().equals(LoopStatus.PAUSED)) {
-                return true;
-            }
+        NodeContainer node = selected[0].getNodeContainer();
+        if (!(node instanceof SingleNodeContainer)) {
+            return false;
+        }
+        if (((SingleNodeContainer)node).isMemberOfScope()) {
+             return true;
         }
         return false;
     }
 
     /**
-     * Resume paused loop.
-     *
      * {@inheritDoc}
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        LOGGER.debug("Creating 'Resume Loop Execution' job for "
-                + nodeParts.length + " node(s)...");
-        WorkflowManager manager = getManager();
-        for (NodeContainerEditPart p : nodeParts) {
-            NodeContainer nc = p.getNodeContainer();
-            if (nc instanceof SingleNodeContainer) {
-                SingleNodeContainer snc = (SingleNodeContainer)nc;
-                if (snc.isModelCompatibleTo(LoopEndNode.class)
-                    && snc.getLoopStatus().equals(LoopStatus.PAUSED)) {
-                    manager.resumeLoopExecution(snc, /*oneStep=*/false);
+        WorkflowManager wfm = getManager();
+        for (NodeContainerEditPart selNode : nodeParts) {
+            NodeContainer selNC = selNode.getNodeContainer();
+            if (selNC instanceof SingleNodeContainer) {
+                EditPartViewer viewer = selNode.getViewer();
+                List<NodeContainer> loopNodes = wfm.getNodesInScope((SingleNodeContainer)selNC);
+                for (NodeContainer nc : loopNodes) {
+                    NodeContainerEditPart sel = (NodeContainerEditPart)viewer.getEditPartRegistry().get(nc);
+                    viewer.appendSelection(sel);
                 }
             }
         }
