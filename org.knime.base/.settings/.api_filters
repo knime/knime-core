@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.base" version="2">
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.InactiveBranchFlowLoopContext">
+        <filter id="305422471">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.InactiveBranchFlowLoopContext"/>
+                <message_argument value="org.knime.base_2.7.2"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="META-INF/MANIFEST.MF" type="schemaorg_apache_xmlbeans.system.sEF316ABABAA840DCBC7DB6F63E1CF526.TypeSystemHolder">
         <filter id="305422471">
             <message_arguments>
