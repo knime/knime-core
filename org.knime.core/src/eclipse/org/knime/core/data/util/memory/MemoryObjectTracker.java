@@ -49,23 +49,26 @@
  */
 package org.knime.core.data.util.memory;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.WeakHashMap;
 
+import org.apache.commons.io.FileUtils;
 import org.knime.core.node.NodeLogger;
 
 /**
- * API not public yet
+ * API not public yet.
  *
  * @author dietzc
  */
 public final class MemoryObjectTracker {
+
+    private static final MemoryAlertObject MEMORY_ALERT = new MemoryAlertObject();
 
     enum Strategy {
         /* Completely frees memory */
@@ -79,7 +82,7 @@ public final class MemoryObjectTracker {
     /* Release Strategy */
     private Strategy m_strategy = Strategy.FREE_ALL;
 
-    private final NodeLogger LOGGER = NodeLogger.getLogger(MemoryObjectTracker.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(MemoryObjectTracker.class);
 
     /*
     * The list of tracked objects, whose memory will be freed, if the
@@ -101,31 +104,27 @@ public final class MemoryObjectTracker {
      * Private constructor, singleton
      */
     private MemoryObjectTracker() {
-
         MEMORY_WARNING_SYSTEM.setPercentageUsageThreshold(0.7);
-
         MEMORY_WARNING_SYSTEM.registerListener(new MemoryWarningSystem.MemoryWarningListener() {
 
             @Override
             public void memoryUsageLow(final long usedMemory, final long maxMemory) {
-
-                synchronized (TRACKED_OBJECTS) {
-                    LOGGER.debug("low memory . used mem: " + usedMemory + ";max mem: " + maxMemory + ".");
-                    switch (m_strategy) {
-                        case FREE_ONE:
-                            freeAllMemory(0);
-                            break;
-                        case FREE_ALL:
-                            freeAllMemory(100);
-                            break;
-                        case FREE_PERCENTAGE:
-                            freeAllMemory(0.5);
-                            break;
-                        default:
-                            LOGGER.warn("Unknown MemoryObjectTracker.Strategy, using default");
-                            freeAllMemory(100);
-                            break;
-                    }
+                LOGGER.debug("Low memory encountered. Used memory: " + FileUtils.byteCountToDisplaySize(usedMemory)
+                             + "; maximum memory: " + FileUtils.byteCountToDisplaySize(maxMemory) + ".");
+                switch (m_strategy) {
+                    case FREE_ONE:
+                        freeAllMemory(0);
+                        break;
+                    case FREE_ALL:
+                        freeAllMemory(100);
+                        break;
+                    case FREE_PERCENTAGE:
+                        freeAllMemory(0.5);
+                        break;
+                    default:
+                        LOGGER.warn("Unknown MemoryObjectTracker.Strategy, using default");
+                        freeAllMemory(100);
+                        break;
                 }
             }
         });
@@ -140,15 +139,24 @@ public final class MemoryObjectTracker {
      * @param obj
      */
     public void addMemoryReleaseable(final MemoryReleasable obj) {
-        synchronized (TRACKED_OBJECTS) {
-            TRACKED_OBJECTS.put(obj, m_lastAccess++);
-            LOGGER.debug(TRACKED_OBJECTS.size() + " objects tracked, Latest Obj: " + obj);
+        if (obj != null) {
+            synchronized (TRACKED_OBJECTS) {
+                TRACKED_OBJECTS.put(obj, m_lastAccess++);
+                LOGGER.debug("Adding " + obj.getClass().getName() + " (" + TRACKED_OBJECTS.size() + " in total)");
+            }
         }
     }
 
     public void removeMemoryReleaseable(final MemoryReleasable obj) {
-        synchronized (TRACKED_OBJECTS) {
-            TRACKED_OBJECTS.remove(obj);
+        if (obj != null) {
+            synchronized (TRACKED_OBJECTS) {
+                String name = obj.getClass().getName();
+                if (TRACKED_OBJECTS.remove(obj) == null) {
+                    LOGGER.debug("Attempted to remove " + name + ", which was not tracked");
+                } else {
+                    LOGGER.debug("Removing " + name + " (" + TRACKED_OBJECTS.size() + " remaining)");
+                }
+            }
         }
     }
 
@@ -158,8 +166,10 @@ public final class MemoryObjectTracker {
      * @param obj
      */
     public void promoteMemoryReleaseable(final MemoryReleasable obj) {
-        synchronized (TRACKED_OBJECTS) {
-            TRACKED_OBJECTS.put(obj, m_lastAccess++);
+        if (obj != null) {
+            synchronized (TRACKED_OBJECTS) {
+                TRACKED_OBJECTS.put(obj, m_lastAccess++);
+            }
         }
     }
 
@@ -167,10 +177,16 @@ public final class MemoryObjectTracker {
     * Frees the memory of some objects in the list.
     */
     private void freeAllMemory(final double percentage) {
-        double initSize = TRACKED_OBJECTS.size();
-        int count = 0;
+        int initSize = TRACKED_OBJECTS.size();
+
         List<Map.Entry<MemoryReleasable, Long>> entryValues =
-                new LinkedList<Map.Entry<MemoryReleasable, Long>>(TRACKED_OBJECTS.entrySet());
+                new ArrayList<Map.Entry<MemoryReleasable, Long>>(initSize);
+
+        int count = 0;
+        synchronized (TRACKED_OBJECTS) {
+            entryValues.addAll(TRACKED_OBJECTS.entrySet());
+        }
+
         Collections.sort(entryValues, new Comparator<Map.Entry<MemoryReleasable, Long>>() {
             @Override
             public int compare(final Entry<MemoryReleasable, Long> o1, final Entry<MemoryReleasable, Long> o2) {
@@ -185,28 +201,39 @@ public final class MemoryObjectTracker {
             }
         });
 
+        LOGGER.debug("Trying to release " + entryValues.size() + " memory objects");
         for (Iterator<Map.Entry<MemoryReleasable, Long>> it = entryValues.iterator(); it.hasNext();) {
             Map.Entry<MemoryReleasable, Long> entry = it.next();
             MemoryReleasable memoryReleasable = entry.getKey();
             if (memoryReleasable != null) {
-                // Since now the memory alert object is null. may change in the future
-                if (memoryReleasable.memoryAlert(null)) {
-                    TRACKED_OBJECTS.remove(entry);
+                boolean isToRemove;
+                try {
+                    isToRemove = memoryReleasable.memoryAlert(MEMORY_ALERT);
+                } catch (Exception e) {
+                    LOGGER.error("Exception while alerting low memory condition", e);
+                    isToRemove = true;
+                }
+                if (isToRemove) {
+                    synchronized (TRACKED_OBJECTS) {
+                        TRACKED_OBJECTS.remove(entry);
+                    }
                     count++;
                 }
             }
 
-            if (count / initSize >= percentage) {
+            if (count / (double)initSize >= percentage) {
                 break;
             }
-
-            LOGGER.debug(count + " tracked objects have been released.");
         }
-
+        int remaining;
+        synchronized (TRACKED_OBJECTS) {
+            remaining = TRACKED_OBJECTS.size();
+        }
+        LOGGER.debug(count + "/" + initSize + " tracked objects have been released (" + remaining + " remaining)");
     }
 
     /**
-     * Singleton on MemoryObjectTracker
+     * @return singleton on MemoryObjectTracker.
      */
     public static MemoryObjectTracker getInstance() {
         if (m_instance == null) {
