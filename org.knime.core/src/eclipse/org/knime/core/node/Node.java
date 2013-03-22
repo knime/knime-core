@@ -2170,6 +2170,24 @@ public final class Node implements NodeModelWarningListener {
         return nodeModelClass.isAssignableFrom(this.getNodeModel().getClass());
     }
 
+    /** Possible roles of loop roles. */
+    @Deprecated
+    public static enum LoopRole { BEGIN, END, NONE }
+
+    /**
+     * @return role of loop node.
+     */
+    @Deprecated
+    public final LoopRole getLoopRole() {
+        if (isModelCompatibleTo(LoopStartNode.class)) {
+            return LoopRole.BEGIN;
+        } else if (isModelCompatibleTo(LoopEndNode.class)) {
+            return LoopRole.END;
+        } else {
+            return LoopRole.NONE;
+        }
+    }
+
     /** Clear loop context member of NodeModel.
      */
     public void clearLoopContext() {

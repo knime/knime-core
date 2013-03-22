@@ -1456,6 +1456,14 @@ public final class SingleNodeContainer extends NodeContainer {
         return m_node.isInactiveBranchConsumer();
     }
 
+    /**
+     * @return role of loop node.
+     */
+    @Deprecated
+    public Node.LoopRole getLoopRole() {
+        return getNode().getLoopRole();
+    }
+
     /** Possible loop states. */
     public static enum LoopStatus { NONE, RUNNING, PAUSED, FINISHED };
     /**
