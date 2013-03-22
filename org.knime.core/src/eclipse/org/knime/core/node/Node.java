@@ -2163,33 +2163,55 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /**
-     * @param nodeModelClass
+     * @param nodeModelClass class or interface to check for.
      * @return return true if underlying NodeModel implements the given class/interface
      */
     public boolean isModelCompatibleTo(final Class<?> nodeModelClass) {
         return nodeModelClass.isAssignableFrom(this.getNodeModel().getClass());
     }
 
+    /** Clear loop context member of NodeModel.
+     */
     public void clearLoopContext() {
         m_model.clearLoopContext();
     }
 
+    /**
+     * @return loop context members of NodeModel.
+     */
     public FlowLoopContext getLoopContext() {
         return m_model.getLoopContext();
     }
 
+    /**
+     * @return initial FlowLoopContext object to be put on stack.
+     */
     public FlowScopeContext getInitialScopeContext() {
         return m_model.getInitialScopeContext();
     }
 
+    /**
+     * @see NodeModel#getPauseLoopExecution
+     *
+     * @return true if loop execution was paused.
+     */
     public boolean getPauseLoopExecution() {
         return m_model.getPauseLoopExecution();
     }
 
+    /**
+     * @see NodeModel#setPauseLoopExecution
+     *
+     * @param ple new state.
+     */
     public void setPauseLoopExecution(final boolean ple) {
         m_model.setPauseLoopExecution(ple);
     }
 
+    /** Make model aware of corresponding LoopEndNode.
+     *
+     * @param tail the node.
+     */
     public void setLoopEndNode(final Node tail) {
         if (tail == null) {
             m_model.setLoopEndNode(null);
@@ -2202,6 +2224,10 @@ public final class Node implements NodeModelWarningListener {
         }
     }
 
+    /** Make model aware of corresponding LoopStartNode.
+     *
+     * @param head the node.
+     */
     public void setLoopStartNode(final Node head) {
         if (head == null) {
             m_model.setLoopStartNode(null);
@@ -2215,6 +2241,8 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /**
+     * @see NodeModel#getLoopStartNode()
+     * @return corresponding loop start node.
      * @since 2.6
      */
     public LoopStartNode getLoopStartNode() {
@@ -2222,6 +2250,7 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /**
+     * @return corresponding loop end node.
      * @since 2.6
      */
     public LoopEndNode getLoopEndNode() {
@@ -2230,6 +2259,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * @see NodeModel#resetAndConfigureLoopBody()
+     * @return true (default) if loop body nodes have to be reset/configure during each iteration.
      */
     public boolean resetAndConfigureLoopBody() {
         return getNodeModel().resetAndConfigureLoopBody();
