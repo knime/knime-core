@@ -2165,6 +2165,7 @@ public final class Node implements NodeModelWarningListener {
     /**
      * @param nodeModelClass class or interface to check for.
      * @return return true if underlying NodeModel implements the given class/interface
+     * @since 2.8
      */
     public boolean isModelCompatibleTo(final Class<?> nodeModelClass) {
         return nodeModelClass.isAssignableFrom(this.getNodeModel().getClass());
@@ -2203,6 +2204,7 @@ public final class Node implements NodeModelWarningListener {
 
     /**
      * @return initial FlowLoopContext object to be put on stack.
+     * @since 2.8
      */
     public FlowScopeContext getInitialScopeContext() {
         return m_model.getInitialScopeContext();

@@ -25,20 +25,6 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/eclipse/org/knime/core/node/Node.java" type="org.knime.core.node.Node">
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.Node"/>
-                <message_argument value="getLoopRole()"/>
-            </message_arguments>
-        </filter>
-        <filter id="338886760">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.Node.LoopRole"/>
-                <message_argument value="org.knime.core_2.8.0"/>
-            </message_arguments>
-        </filter>
-    </resource>
     <resource path="src/eclipse/org/knime/core/node/NodeContentPersistor.java" type="org.knime.core.node.NodeContentPersistor">
         <filter id="643842064">
             <message_arguments>
@@ -63,14 +49,6 @@
                 <message_argument value="WorkflowFileStoreHandlerRepository"/>
                 <message_argument value="PasteWorkflowContentPersistor"/>
                 <message_argument value="getFileStoreHandlerRepository()"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/SingleNodeContainer.java" type="org.knime.core.node.workflow.SingleNodeContainer">
-        <filter id="338792546">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer"/>
-                <message_argument value="getLoopRole()"/>
             </message_arguments>
         </filter>
     </resource>
