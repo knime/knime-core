@@ -39,7 +39,7 @@
 <!ELEMENT p (#PCDATA | br | b | i | u | a | tt | ul | ol | sup | sub)* >
 <!ELEMENT ul (li)+ >
 <!ELEMENT ol (li)+ >
-<!ELEMENT li (#PCDATA) >
+<!ELEMENT li (#PCDATA | br | b | i | u | a | tt)* >
 <!ELEMENT h3 (#PCDATA) >
 <!ELEMENT h4 (#PCDATA) >
 <!ELEMENT h (#PCDATA) >

@@ -79,4 +79,630 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/xmlbeans/org/knime/node2012/LiDocument.java" type="org.knime.node2012.LiDocument">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.LiDocument"/>
+                <message_argument value="addNewLi()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.LiDocument"/>
+                <message_argument value="getLi()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.LiDocument"/>
+                <message_argument value="setLi(LiDocument.Li)"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.LiDocument"/>
+                <message_argument value="getLi()"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.LiDocument"/>
+                <message_argument value="setLi(String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.LiDocument"/>
+                <message_argument value="xgetLi()"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.LiDocument"/>
+                <message_argument value="xsetLi(XmlString)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="addNewLi()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="getLi()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="setLi(LiDocument.Li)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node2012/LiDocument.java" type="org.knime.node2012.LiDocument$Li">
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="Li"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node2012/OlDocument.java" type="org.knime.node2012.OlDocument$Ol">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.OlDocument.Ol"/>
+                <message_argument value="addNewLi()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.OlDocument.Ol"/>
+                <message_argument value="getLiArray()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.OlDocument.Ol"/>
+                <message_argument value="getLiArray(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.OlDocument.Ol"/>
+                <message_argument value="insertNewLi(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.OlDocument.Ol"/>
+                <message_argument value="setLiArray(LiDocument.Li[])"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.OlDocument.Ol"/>
+                <message_argument value="setLiArray(int, LiDocument.Li)"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.OlDocument.Ol"/>
+                <message_argument value="addLi(String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.OlDocument.Ol"/>
+                <message_argument value="addNewLi()"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.OlDocument.Ol"/>
+                <message_argument value="getLiArray()"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.OlDocument.Ol"/>
+                <message_argument value="getLiArray(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.OlDocument.Ol"/>
+                <message_argument value="insertLi(int, String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.OlDocument.Ol"/>
+                <message_argument value="insertNewLi(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.OlDocument.Ol"/>
+                <message_argument value="setLiArray(String[])"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.OlDocument.Ol"/>
+                <message_argument value="setLiArray(int, String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.OlDocument.Ol"/>
+                <message_argument value="xgetLiArray()"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.OlDocument.Ol"/>
+                <message_argument value="xgetLiArray(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.OlDocument.Ol"/>
+                <message_argument value="xgetLiList()"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.OlDocument.Ol"/>
+                <message_argument value="xsetLiArray(XmlString[])"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.OlDocument.Ol"/>
+                <message_argument value="xsetLiArray(int, XmlString)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="addNewLi()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="getLiArray()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="getLiArray(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="insertNewLi(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="setLiArray(LiDocument.Li[])"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="setLiArray(int, LiDocument.Li)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node2012/UlDocument.java" type="org.knime.node2012.UlDocument$Ul">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.UlDocument.Ul"/>
+                <message_argument value="addNewLi()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.UlDocument.Ul"/>
+                <message_argument value="getLiArray()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.UlDocument.Ul"/>
+                <message_argument value="getLiArray(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.UlDocument.Ul"/>
+                <message_argument value="insertNewLi(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.UlDocument.Ul"/>
+                <message_argument value="setLiArray(LiDocument.Li[])"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.UlDocument.Ul"/>
+                <message_argument value="setLiArray(int, LiDocument.Li)"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.UlDocument.Ul"/>
+                <message_argument value="addLi(String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.UlDocument.Ul"/>
+                <message_argument value="addNewLi()"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.UlDocument.Ul"/>
+                <message_argument value="getLiArray()"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.UlDocument.Ul"/>
+                <message_argument value="getLiArray(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.UlDocument.Ul"/>
+                <message_argument value="insertLi(int, String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.UlDocument.Ul"/>
+                <message_argument value="insertNewLi(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.UlDocument.Ul"/>
+                <message_argument value="setLiArray(String[])"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.UlDocument.Ul"/>
+                <message_argument value="setLiArray(int, String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.UlDocument.Ul"/>
+                <message_argument value="xgetLiArray()"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.UlDocument.Ul"/>
+                <message_argument value="xgetLiArray(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.UlDocument.Ul"/>
+                <message_argument value="xgetLiList()"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.UlDocument.Ul"/>
+                <message_argument value="xsetLiArray(XmlString[])"/>
+            </message_arguments>
+        </filter>
+        <filter id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.UlDocument.Ul"/>
+                <message_argument value="xsetLiArray(int, XmlString)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="addNewLi()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="getLiArray()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="getLiArray(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="insertNewLi(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="setLiArray(LiDocument.Li[])"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="setLiArray(int, LiDocument.Li)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node2012/impl/LiDocumentImpl.java" type="org.knime.node2012.impl.LiDocumentImpl">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.LiDocumentImpl"/>
+                <message_argument value="getLi()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.LiDocumentImpl"/>
+                <message_argument value="setLi(String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.LiDocumentImpl"/>
+                <message_argument value="xgetLi()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.LiDocumentImpl"/>
+                <message_argument value="xsetLi(XmlString)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="addNewLi()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="getLi()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="setLi(LiDocument.Li)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node2012/impl/LiDocumentImpl.java" type="org.knime.node2012.impl.LiDocumentImpl$LiImpl">
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="LiImpl"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node2012/impl/OlDocumentImpl.java" type="org.knime.node2012.impl.OlDocumentImpl$OlImpl">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.OlDocumentImpl.OlImpl"/>
+                <message_argument value="addLi(String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.OlDocumentImpl.OlImpl"/>
+                <message_argument value="addNewLi()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.OlDocumentImpl.OlImpl"/>
+                <message_argument value="getLiArray()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.OlDocumentImpl.OlImpl"/>
+                <message_argument value="getLiArray(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.OlDocumentImpl.OlImpl"/>
+                <message_argument value="insertLi(int, String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.OlDocumentImpl.OlImpl"/>
+                <message_argument value="insertNewLi(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.OlDocumentImpl.OlImpl"/>
+                <message_argument value="setLiArray(String[])"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.OlDocumentImpl.OlImpl"/>
+                <message_argument value="setLiArray(int, String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.OlDocumentImpl.OlImpl"/>
+                <message_argument value="xgetLiArray()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.OlDocumentImpl.OlImpl"/>
+                <message_argument value="xgetLiArray(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.OlDocumentImpl.OlImpl"/>
+                <message_argument value="xgetLiList()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.OlDocumentImpl.OlImpl"/>
+                <message_argument value="xsetLiArray(XmlString[])"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.OlDocumentImpl.OlImpl"/>
+                <message_argument value="xsetLiArray(int, XmlString)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="addNewLi()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="getLiArray()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="getLiArray(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="insertNewLi(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="setLiArray(LiDocument.Li[])"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="setLiArray(int, LiDocument.Li)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node2012/impl/UlDocumentImpl.java" type="org.knime.node2012.impl.UlDocumentImpl$UlImpl">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.UlDocumentImpl.UlImpl"/>
+                <message_argument value="addLi(String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.UlDocumentImpl.UlImpl"/>
+                <message_argument value="addNewLi()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.UlDocumentImpl.UlImpl"/>
+                <message_argument value="getLiArray()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.UlDocumentImpl.UlImpl"/>
+                <message_argument value="getLiArray(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.UlDocumentImpl.UlImpl"/>
+                <message_argument value="insertLi(int, String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.UlDocumentImpl.UlImpl"/>
+                <message_argument value="insertNewLi(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.UlDocumentImpl.UlImpl"/>
+                <message_argument value="setLiArray(String[])"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.UlDocumentImpl.UlImpl"/>
+                <message_argument value="setLiArray(int, String)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.UlDocumentImpl.UlImpl"/>
+                <message_argument value="xgetLiArray()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.UlDocumentImpl.UlImpl"/>
+                <message_argument value="xgetLiArray(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.UlDocumentImpl.UlImpl"/>
+                <message_argument value="xgetLiList()"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.UlDocumentImpl.UlImpl"/>
+                <message_argument value="xsetLiArray(XmlString[])"/>
+            </message_arguments>
+        </filter>
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.UlDocumentImpl.UlImpl"/>
+                <message_argument value="xsetLiArray(int, XmlString)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="addNewLi()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="getLiArray()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="getLiArray(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="insertNewLi(int)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="setLiArray(LiDocument.Li[])"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="setLiArray(int, LiDocument.Li)"/>
+            </message_arguments>
+        </filter>
+    </resource>
 </component>

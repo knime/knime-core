@@ -162,7 +162,18 @@
       </xs:sequence>
     </xs:complexType>
   </xs:element>
-  <xs:element name="li" type="xs:string"/>
+  <xs:element name="li">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="br"/>
+        <xs:element ref="b"/>
+        <xs:element ref="i"/>
+        <xs:element ref="u"/>
+        <xs:element ref="a"/>
+        <xs:element ref="tt"/>
+      </xs:choice>
+    </xs:complexType>
+  </xs:element>
   <xs:element name="h3" type="xs:string"/>
   <xs:element name="h4" type="xs:string"/>
   <xs:element name="h" type="xs:string"/>
