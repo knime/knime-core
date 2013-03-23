@@ -381,7 +381,7 @@ class Buffer implements KNIMEStreamConstants {
 
     /**
      * Field that is non-null in the following cases. - Writes data into m_list (
-     * {@link WhileWritingMemoryReleasableNotifier}), - Closed and holds data in m_list (
+     * {@link BufferMemoryReleasable}), - Closed and holds data in m_list (
      * {@link WhileReadingMemoryReleasableNotifier}), - Reads data back into memory
      */
     private MemoryReleasable m_memoryReleasable;
@@ -475,8 +475,6 @@ class Buffer implements KNIMEStreamConstants {
         m_localRepository = localRep;
         m_fileStoreHandler = fileStoreHandler;
         m_fileStoreHandlerRepository = fileStoreHandler.getFileStoreHandlerRepository();
-        m_memoryReleasable = new WhileWritingMemoryReleasableNotifier();
-        MemoryObjectTracker.getInstance().addMemoryReleaseable(m_memoryReleasable);
     }
 
     /**
@@ -590,9 +588,9 @@ class Buffer implements KNIMEStreamConstants {
         try {
             BlobSupportDataRow row = saveBlobsAndFileStores(r, isCopyOfExisting, forceCopyOfBlobs);
             m_list.add(row);
-            incrementSize();
-            int size = m_list.size();
-            if (size > m_maxRowsInMem) {
+            int oldTotalSize = getAndIncrementSize();
+            int currentListSize = m_list.size();
+            if (currentListSize > m_maxRowsInMem) {
                 if (m_outStream == null) {
                     writeAllRowsFromListToFile(true);
                     // write next row to file directly
@@ -601,6 +599,10 @@ class Buffer implements KNIMEStreamConstants {
                 } else {
                     writeRow(m_list.remove(0), m_outStream);
                 }
+            } else if (oldTotalSize == 0) {
+                // starting to cache rows in memory, add mem observer
+                m_memoryReleasable = new BufferMemoryReleasable();
+                MemoryObjectTracker.getInstance().addMemoryReleaseable(m_memoryReleasable);
             }
         } catch (Throwable e) {
             if (!(e instanceof IOException)) {
@@ -888,9 +890,10 @@ class Buffer implements KNIMEStreamConstants {
         }
     }
 
-    /** Increments the row counter by one, used in addRow. */
-    void incrementSize() {
-        m_size++;
+    /** Increments the row counter by one, used in addRow.
+     * @return previous size (before incrementing it). */
+    private int getAndIncrementSize() {
+        return m_size++;
     }
 
     /**
@@ -908,16 +911,10 @@ class Buffer implements KNIMEStreamConstants {
     /** Closes by creating shortcut array for file access. */
     synchronized void closeInternal() {
         // everything is in the list, i.e. in memory
-        MemoryObjectTracker memoryTracker = MemoryObjectTracker.getInstance();
-        if (m_memoryReleasable != null) {
-            memoryTracker.removeMemoryReleaseable(m_memoryReleasable);
-        }
         if (m_outStream == null) {
             // disallow modification
             List<BlobSupportDataRow> newList = Collections.unmodifiableList(m_list);
             m_list = newList;
-            m_memoryReleasable = new WhileReadingMemoryReleasableNotifier();
-            memoryTracker.addMemoryReleaseable(m_memoryReleasable);
         } else {
             try {
                 assert (m_list.isEmpty()) : "In-Memory list is not empty.";
@@ -929,6 +926,9 @@ class Buffer implements KNIMEStreamConstants {
                 LOGGER.debug("Buffer file (" + m_binFile.getAbsolutePath() + ") is " + size + "MB in size");
             } catch (IOException ioe) {
                 throw new RuntimeException("Cannot close stream of file \"" + m_binFile.getName() + "\"", ioe);
+            }
+            if (m_memoryReleasable != null) {
+                MemoryObjectTracker.getInstance().removeMemoryReleaseable(m_memoryReleasable);
             }
         }
         m_localRepository = null;
@@ -1181,8 +1181,8 @@ class Buffer implements KNIMEStreamConstants {
     }
 
     /** Called from back into memory iterator when the last row was read. */
-    final void onAllRowsReadBackIntoMemory() {
-        m_memoryReleasable = new WhileReadingMemoryReleasableNotifier();
+    final synchronized void onAllRowsReadBackIntoMemory() {
+        m_memoryReleasable = new BufferMemoryReleasable();
         MemoryObjectTracker.getInstance().addMemoryReleaseable(m_memoryReleasable);
     }
 
@@ -1319,7 +1319,7 @@ class Buffer implements KNIMEStreamConstants {
         return serializer;
     }
 
-    private void writeBlobDataCell(final BlobDataCell cell, 
+    private void writeBlobDataCell(final BlobDataCell cell,
         final BlobAddress a, final DataCellSerializer<DataCell> ser) throws IOException {
         // addRow will make sure that m_indicesOfBlobInColumns is initialized
         // when this method is called. If this method is called from a different
@@ -1859,36 +1859,29 @@ class Buffer implements KNIMEStreamConstants {
         }
     }
 
-    private final class WhileWritingMemoryReleasableNotifier implements MemoryReleasable {
+    private final class BufferMemoryReleasable implements MemoryReleasable {
 
         @Override
         public boolean memoryAlert(final MemoryAlertObject alert) {
             synchronized (Buffer.this) {
-                m_maxRowsInMem = 0;
-                try {
-                    int nrRowsWritten = writeAllRowsFromListToFile(true);
-                    LOGGER.debug("Wrote " + nrRowsWritten + " rows in order to free memory");
-                } catch (IOException ioe) {
-                    LOGGER.error("Failed to swap to disc while freeing memory", ioe);
+                if (m_list == null) {
+                    // cleared while sleeping on Buffer.this
+                    return true;
+                } else {
+                    // is buffer open and addRow can be called
+                    boolean isWhileWritingTable = m_list instanceof ArrayList;
+                    try {
+                        int nrRowsWritten = writeAllRowsFromListToFile(isWhileWritingTable);
+                        LOGGER.debug("Wrote " + nrRowsWritten + " rows in order to free memory");
+                        if (!isWhileWritingTable) {
+                            closeInternal();
+                            m_list = null;
+                        }
+                    } catch (IOException ioe) {
+                        LOGGER.error("Failed to swap to disc while freeing memory", ioe);
+                    }
+                    return false; // don't unregister, we do it ourselves
                 }
-                return false; // don't unregister, we do it ourselves
-            }
-        }
-    }
-
-    private final class WhileReadingMemoryReleasableNotifier implements MemoryReleasable {
-        @Override
-        public boolean memoryAlert(final MemoryAlertObject alert) {
-            synchronized (Buffer.this) {
-                try {
-                    int nrRowsWritten = writeAllRowsFromListToFile(false);
-                    closeInternal();
-                    m_list = null;
-                    LOGGER.debug("Wrote " + nrRowsWritten + " rows in order to free memory");
-                } catch (IOException ioe) {
-                    LOGGER.error("Failed to swap to disc while freeing memory", ioe);
-                }
-                return false; // don't unregister, we do it ourselves
             }
         }
     }
