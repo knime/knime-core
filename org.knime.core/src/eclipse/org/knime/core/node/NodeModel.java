@@ -1205,6 +1205,7 @@ public abstract class NodeModel {
      * @throws NullPointerException If the argument is null
      * @throws NoSuchElementException If no such variable with the correct
      * type is available.
+     * @since 2.8
      */
     public final String peekFlowVariableString(final String name) {
         try {
@@ -1234,6 +1235,7 @@ public abstract class NodeModel {
      * @throws NullPointerException If the argument is null
      * @throws NoSuchElementException If no such variable with the correct
      * type is available.
+     * @since 2.8
      */
     public final double peekFlowVariableDouble(final String name) {
         try {
@@ -1263,6 +1265,7 @@ public abstract class NodeModel {
      * @throws NullPointerException If the argument is null
      * @throws NoSuchElementException If no such variable with the correct
      * type is available.
+     * @since 2.8
      */
     public final int peekFlowVariableInt(final String name) {
         try {
