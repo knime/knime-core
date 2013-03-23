@@ -94,7 +94,7 @@ public class HelpviewPlugin extends AbstractUIPlugin {
             ClassLoader cl = Thread.currentThread().getContextClassLoader();
             try {
                 Thread.currentThread().setContextClassLoader(JettyLogger.class.getClassLoader());
-                System.setProperty("org.mortbay.log.class",JettyLogger.class.getName());
+                System.setProperty("org.mortbay.log.class", JettyLogger.class.getName());
                 Log.getLog();
             } finally {
                 Thread.currentThread().setContextClassLoader(cl);

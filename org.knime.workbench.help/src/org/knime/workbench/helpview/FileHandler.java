@@ -70,7 +70,8 @@ import org.osgi.framework.Bundle;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-class FileHandler extends AbstractHandler {
+final class FileHandler extends AbstractHandler {
+    /** Singleton instance of this handler. */
     static final FileHandler instance = new FileHandler();
 
     private static final MimeTypes MIME_MAP = new MimeTypes();
@@ -118,8 +119,7 @@ class FileHandler extends AbstractHandler {
         }
 
         response.setStatus(HttpServletResponse.SC_OK);
-        response.setContentType(new String(MIME_MAP.getMimeByExtension(file)
-                .asArray()));
+        response.setContentType(new String(MIME_MAP.getMimeByExtension(file).asArray(), "US-ASCII"));
 
         byte[] buf = new byte[16384];
         OutputStream out = response.getOutputStream();

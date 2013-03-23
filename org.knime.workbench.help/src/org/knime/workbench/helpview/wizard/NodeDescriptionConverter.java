@@ -55,8 +55,9 @@ import static org.knime.workbench.repository.util.DynamicNodeDescriptionCreator.
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -91,7 +92,6 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 import org.knime.core.node.NodeLogger;
-import org.knime.workbench.helpview.HelpviewPlugin;
 import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.IRepositoryObject;
@@ -111,8 +111,7 @@ import org.w3c.dom.NodeList;
  * @author Thorsten Meinl, University of Konstanz
  */
 public final class NodeDescriptionConverter {
-    private final static NodeLogger LOGGER = NodeLogger
-            .getLogger(NodeDescriptionConverter.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeDescriptionConverter.class);
 
     private static final String NODES = "$nodes";
 
@@ -138,8 +137,7 @@ public final class NodeDescriptionConverter {
 
     private File m_destinationDir;
 
-    private static final NodeDescriptionConverter instance =
-            new NodeDescriptionConverter();
+    private static final NodeDescriptionConverter instance = new NodeDescriptionConverter();
 
     private String m_pluginID;
 
@@ -202,16 +200,13 @@ public final class NodeDescriptionConverter {
      *            into the plugin's directory.
      * @throws Exception if an error occurs
      */
-    public void buildDocumentationFor(final Pattern pattern,
-            File destinationDir) throws Exception {
+    public synchronized void buildDocumentationFor(final Pattern pattern,
+            final File destinationDir) throws Exception {
         List<IConfigurationElement> configs = getConfigurationElements();
         Set<String> processed = new HashSet<String>();
-        if (destinationDir == null) {
-            destinationDir = getPluginDir();
-        }
 
         LOGGER.info("Building documentation for " + pattern.toString()
-                + " into " + destinationDir.getAbsolutePath());
+                + (destinationDir != null ? (" into " + destinationDir.getAbsolutePath()) : ""));
 
         for (IConfigurationElement e : configs) {
             String pluginId = e.getNamespaceIdentifier();
@@ -276,7 +271,7 @@ public final class NodeDescriptionConverter {
      *
      * @return singleton instance of this class
      */
-    public static final NodeDescriptionConverter instance() {
+    public static NodeDescriptionConverter instance() {
         return instance;
     }
 
@@ -340,12 +335,12 @@ public final class NodeDescriptionConverter {
         File nodesDir =
                 new File(m_destinationDir, HTML_DIR + File.separator
                         + NODES_DIR);
-        if (!nodesDir.exists()) {
-            nodesDir.mkdirs();
+        if (!nodesDir.exists() && !nodesDir.mkdirs()) {
+            throw new IOException("Could not create directory '" + nodesDir + "'");
         }
         File tocsDir = new File(m_destinationDir, TOC_DIR);
-        if (!tocsDir.exists()) {
-            tocsDir.mkdirs();
+        if (!tocsDir.exists() && !tocsDir.mkdirs()) {
+            throw new IOException("Could not create directory '" + tocsDir + "'");
         }
 
         parsePluginXML();
@@ -397,8 +392,8 @@ public final class NodeDescriptionConverter {
         File outFile =
                 new File(m_destinationDir, "META-INF" + File.separator
                         + "MANIFEST.MF");
-        if (!outFile.getParentFile().exists()) {
-            outFile.getParentFile().mkdirs();
+        if (!outFile.getParentFile().exists() && !outFile.getParentFile().mkdirs()) {
+            throw new IOException("Could not create directory '" + outFile.getParentFile() + "'");
         }
         FileOutputStream outStream = new FileOutputStream(outFile);
         manifest.write(outStream);
@@ -422,10 +417,8 @@ public final class NodeDescriptionConverter {
         NodeList extensions = m_pluginXML.getElementsByTagName(EXT);
         for (int i = 0; i < extensions.getLength(); i++) {
             Element extension = (Element)extensions.item(i);
-            if (extension.hasAttribute(POINT)) {
-                if (extension.getAttribute(POINT).equals(HELP_TOC)) {
-                    return extension;
-                }
+            if (extension.hasAttribute(POINT) && extension.getAttribute(POINT).equals(HELP_TOC)) {
+                return extension;
             }
         }
         return null;
@@ -481,9 +474,8 @@ public final class NodeDescriptionConverter {
                     File.separator + HTML_DIR + "/" + NODES_DIR + "/" + "Meta_"
                             + fileName(metaNode.getName()) + ".html";
             File nodeDescription = new File(m_destinationDir, relativePath);
-            FileWriter writer = new FileWriter(nodeDescription);
+            Writer writer = new OutputStreamWriter(new FileOutputStream(nodeDescription), "UTF-8");
             writer.write(builder.toString());
-            writer.flush();
             writer.close();
             // append topic
             Element topic = nodeToc.createElement("topic");
@@ -577,7 +569,7 @@ public final class NodeDescriptionConverter {
             root.setAttribute("label", fileName(getFullPath(c)));
             /*
              * <toc link_to=../org.knime.workbench.help/toc.xml#root
-             * label=c.getID();
+             * label=c.getID()
              */
         } else {
             String parentsPluginID = ((Category)c.getParent()).getPluginID();
@@ -624,9 +616,8 @@ public final class NodeDescriptionConverter {
                     HTML_DIR + "/" + NODES_DIR + "/" + fileName(node.getID())
                             + ".html";
             File nodeDescription = new File(m_destinationDir, relativePath);
-            FileWriter writer = new FileWriter(nodeDescription);
+            Writer writer = new OutputStreamWriter(new FileOutputStream(nodeDescription), "UTF-8");
             writer.write(builder.toString());
-            writer.flush();
             writer.close();
             // append topic
             Element topic = nodeToc.createElement("topic");
@@ -640,24 +631,14 @@ public final class NodeDescriptionConverter {
     }
 
     /**
+     * Returns the file object of the current plugin.
      *
-     * @return path of this plugin
+     * @return path of the current plugin (m_pluginId)
      * @throws IOException if something went wrong
      */
     private File getPluginDir() throws IOException {
-        URL devWorkSpace;
-        if (m_pluginID != null) {
-            devWorkSpace =
-                    FileLocator
-                            .toFileURL(FileLocator.find(Platform
-                                    .getBundle(m_pluginID), new Path("/"), null));
-        } else {
-            devWorkSpace =
-                    FileLocator.toFileURL(FileLocator.find(HelpviewPlugin
-                            .getDefault().getBundle(), new Path("/"), null));
-        }
-        File loc = new File(devWorkSpace.getFile());
-        return loc;
+        URL devWorkSpace = FileLocator.toFileURL(FileLocator.find(Platform.getBundle(m_pluginID), new Path("/"), null));
+        return new File(devWorkSpace.getFile());
     }
 
     /**
