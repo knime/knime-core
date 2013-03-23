@@ -106,7 +106,10 @@ public class DataContainerTest extends TestCase {
             container.addRowToTable(it.next());
         }
         container.close();
-        container.getBufferedTable().getBuffer().writeAllRowsFromListToFile(false);
+        Buffer buffer = container.getBufferedTable().getBuffer();
+        synchronized (buffer) {
+            buffer.writeAllRowsFromListToFile(false);
+        }
         RowIterator tableIterator = container.getTable().iterator();
         for (RowIterator it = generateRows(100000); it.hasNext();) {
             assertEquals(it.next(), tableIterator.next());
@@ -127,7 +130,10 @@ public class DataContainerTest extends TestCase {
         for (i = 0; i < count / 2; i++) {
             assertEquals(it.next(), tableIterator.next());
         }
-        container.getBufferedTable().getBuffer().writeAllRowsFromListToFile(false);
+        Buffer buffer = container.getBufferedTable().getBuffer();
+        synchronized (buffer) {
+            buffer.writeAllRowsFromListToFile(false);
+        }
         
         for (; i < count; i++) {
             assertEquals(it.next(), tableIterator.next());
@@ -142,7 +148,10 @@ public class DataContainerTest extends TestCase {
         for (; i < nrRows / 2; i++) {
             cont.addRowToTable(it.next());
         }
-        cont.getBuffer().writeAllRowsFromListToFile(true);
+        Buffer buffer = cont.getBuffer();
+        synchronized (buffer) {
+            buffer.writeAllRowsFromListToFile(true);
+        }
         for (; i < nrRows; i++) {
             cont.addRowToTable(it.next());
         }
