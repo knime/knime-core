@@ -35,20 +35,22 @@
       <xs:attribute name="icon" type="xs:string"/>
       <xs:attribute name="type" default="Unknown">
         <xs:simpleType>
-          <xs:restriction base="xs:token">
-            <xs:enumeration value="Source"/>
-            <xs:enumeration value="Sink"/>
-            <xs:enumeration value="Learner"/>
-            <xs:enumeration value="Predictor"/>
-            <xs:enumeration value="Manipulator"/>
-            <xs:enumeration value="Visualizer"/>
-            <xs:enumeration value="Meta"/>
-            <xs:enumeration value="LoopStart"/>
-            <xs:enumeration value="LoopEnd"/>
-            <xs:enumeration value="QuickForm"/>
-            <xs:enumeration value="Other"/>
-            <xs:enumeration value="Unknown"/>
-          </xs:restriction>
+        	<xs:restriction base="xs:token">
+        		<xs:enumeration value="Source" />
+        		<xs:enumeration value="Sink" />
+        		<xs:enumeration value="Learner" />
+        		<xs:enumeration value="Predictor" />
+        		<xs:enumeration value="Manipulator" />
+        		<xs:enumeration value="Visualizer" />
+        		<xs:enumeration value="Meta" />
+        		<xs:enumeration value="LoopStart" />
+        		<xs:enumeration value="LoopEnd" />
+        		<xs:enumeration value="QuickForm" />
+        		<xs:enumeration value="Other" />
+        		<xs:enumeration value="Unknown" />
+        		<xs:enumeration value="ScopeStart"></xs:enumeration>
+        		<xs:enumeration value="ScopeEnd"></xs:enumeration>
+        	</xs:restriction>
         </xs:simpleType>
       </xs:attribute>
       <xs:attribute name="deprecated" default="false">
