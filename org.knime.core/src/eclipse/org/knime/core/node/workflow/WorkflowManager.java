@@ -5427,6 +5427,34 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     if (os.contains(anchorFSC)) {
                         result.add(nc);
                     }
+                } else {
+                    // WorkflowManager: we need to check the outgoing ports individually:
+                    for (int i = 0; i < nc.getNrOutPorts(); i++) {
+                        FlowObjectStack fos = nc.getOutPort(i).getFlowObjectStack();
+                        if (fos != null) {
+                            // only check if outport is (internally) connected
+                            List<FlowObject> os = fos.getFlowObjectsOwnedBy(anchorFSC.getOwner());
+                            if (os.contains(anchorFSC)) {
+                                result.add(nc);
+                                break;
+                            }
+                        }
+                    }
+                    // check inports, too, in case an inport connected to the loop ends inside the metanode:
+                    for (int i = 0; i < nc.getNrInPorts(); i++) {
+                        if (nc instanceof WorkflowManager) {
+                            FlowObjectStack fos = ((WorkflowManager)nc).getInPort(i).getUnderlyingPort()
+                                    .getFlowObjectStack();
+                            if (fos != null) {
+                                // only check if outport is (internally) connected
+                                List<FlowObject> os = fos.getFlowObjectsOwnedBy(anchorFSC.getOwner());
+                                if (os.contains(anchorFSC)) {
+                                    result.add(nc);
+                                    break;
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
