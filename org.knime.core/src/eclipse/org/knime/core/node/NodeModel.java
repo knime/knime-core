@@ -1206,7 +1206,7 @@ public abstract class NodeModel {
      * @throws NoSuchElementException If no such variable with the correct
      * type is available.
      */
-    protected final String peekFlowVariableString(final String name) {
+    public final String peekFlowVariableString(final String name) {
         try {
             return m_outgoingFlowObjectStack.peekFlowVariable(
                     name, FlowVariable.Type.STRING).getStringValue();
@@ -1235,7 +1235,7 @@ public abstract class NodeModel {
      * @throws NoSuchElementException If no such variable with the correct
      * type is available.
      */
-    protected final double peekFlowVariableDouble(final String name) {
+    public final double peekFlowVariableDouble(final String name) {
         try {
             return m_outgoingFlowObjectStack.peekFlowVariable(
                     name, FlowVariable.Type.DOUBLE).getDoubleValue();
@@ -1264,7 +1264,7 @@ public abstract class NodeModel {
      * @throws NoSuchElementException If no such variable with the correct
      * type is available.
      */
-    protected final int peekFlowVariableInt(final String name) {
+    public final int peekFlowVariableInt(final String name) {
         try {
             return m_outgoingFlowObjectStack.peekFlowVariable(
                     name, FlowVariable.Type.INTEGER).getIntValue();

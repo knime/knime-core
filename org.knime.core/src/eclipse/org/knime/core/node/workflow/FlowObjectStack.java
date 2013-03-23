@@ -327,11 +327,12 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
         return null;
     }
 
-    /** Get the variable with the given name or null if no such variable
-     * is on the stack.
+    /** Get the variable with the given name. Throws and exception if
+     * no such variable is on the stack.
      * @param name To peek
      * @param type The type of the variable to seek.
-     * @return the variable or null
+     * @return the variable
+     * @throws NoSuchElementException if variable does not exist
      */
     public FlowVariable peekFlowVariable(final String name, final Type type) {
         for (int i = m_stack.size() - 1; i >= 0; i--) {
