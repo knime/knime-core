@@ -5406,16 +5406,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public List<NodeContainer> getNodesInScope(final SingleNodeContainer anchor) {
         ArrayList<NodeContainer> result = new ArrayList<NodeContainer>();
-        // get closest scope context for given anchor
+        // get closest (=top of stack) scope context for given anchor
         FlowScopeContext anchorFSC = anchor.getFlowObjectStack().peek(FlowScopeContext.class);
         if (anchor.isModelCompatibleTo(ScopeStartNode.class)) {
             anchorFSC = anchor.getOutgoingFlowObjectStack().peek(FlowScopeContext.class);
         }
         if (anchorFSC == null) {
-            // not in loop: bail!
+            // not in a loop: bail!
             result.add(anchor);
             return result;
         }
+        // check for all nodes in workflow if they have the same scope context object on their stack:
         NodeID anchorOwner = anchorFSC.getOwner();
         for (NodeContainer nc : m_workflow.getNodeValues()) {
             if (anchorOwner.equals(nc.getID())) {
@@ -5429,30 +5430,36 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     }
                 } else {
                     // WorkflowManager: we need to check the outgoing ports individually:
-                    for (int i = 0; i < nc.getNrOutPorts(); i++) {
-                        FlowObjectStack fos = nc.getOutPort(i).getFlowObjectStack();
-                        if (fos != null) {
-                            // only check if outport is (internally) connected
-                            List<FlowObject> os = fos.getFlowObjectsOwnedBy(anchorFSC.getOwner());
-                            if (os.contains(anchorFSC)) {
-                                result.add(nc);
-                                break;
-                            }
-                        }
-                    }
-                    // check inports, too, in case an inport connected to the loop ends inside the metanode:
-                    for (int i = 0; i < nc.getNrInPorts(); i++) {
-                        if (nc instanceof WorkflowManager) {
-                            FlowObjectStack fos = ((WorkflowManager)nc).getInPort(i).getUnderlyingPort()
-                                    .getFlowObjectStack();
+                    if (nc instanceof WorkflowManager) {
+                        boolean isIn = false;
+                        WorkflowManager wfm = (WorkflowManager)nc;
+                        for (int i = 0; i < wfm.getNrOutPorts(); i++) {
+                            FlowObjectStack fos = wfm.getOutPort(i).getFlowObjectStack();
                             if (fos != null) {
                                 // only check if outport is (internally) connected
                                 List<FlowObject> os = fos.getFlowObjectsOwnedBy(anchorFSC.getOwner());
                                 if (os.contains(anchorFSC)) {
-                                    result.add(nc);
+                                    isIn = true;
                                     break;
                                 }
                             }
+                        }
+                        if (!isIn) {
+                            // check inports, too, in case an inport connected to the loop ends inside the metanode:
+                            for (int i = 0; i < wfm.getNrInPorts(); i++) {
+                                FlowObjectStack fos = wfm.getInPort(i).getUnderlyingPort().getFlowObjectStack();
+                                if (fos != null) {
+                                    // only check if inport is actually connected
+                                    List<FlowObject> os = fos.getFlowObjectsOwnedBy(anchorFSC.getOwner());
+                                    if (os.contains(anchorFSC)) {
+                                        isIn = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                        if (isIn) {
+                            result.add(nc);
                         }
                     }
                 }
