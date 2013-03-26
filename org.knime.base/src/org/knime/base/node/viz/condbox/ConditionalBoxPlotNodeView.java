@@ -102,7 +102,7 @@ public class ConditionalBoxPlotNodeView extends NodeView<NodeModel> {
             } else {
                 m_plotter.setToolTipText("");
             }
-            m_plotter.setNormalizeTabCheckboxSelected(hasNumColSpec);
+            m_plotter.setNormalizeTabCheckboxSelected(false);
         }
     }
 
