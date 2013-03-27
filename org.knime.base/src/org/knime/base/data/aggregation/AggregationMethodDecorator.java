@@ -1,6 +1,6 @@
 /*
  * ------------------------------------------------------------------------
- * Copyright (C) 2003 - 2011 University of Konstanz, Germany and KNIME GmbH,
+ * Copyright (C) 2003 - 2013 University of Konstanz, Germany and KNIME GmbH,
  * Konstanz, Germany Website: http://www.knime.org; Email: contact@knime.org
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License, Version 3, as published by the

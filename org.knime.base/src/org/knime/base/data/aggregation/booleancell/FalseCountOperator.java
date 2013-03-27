@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -48,15 +48,14 @@
 
 package org.knime.base.data.aggregation.booleancell;
 
-import org.knime.core.data.BooleanValue;
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataType;
-import org.knime.core.data.def.IntCell;
-
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
+import org.knime.core.data.BooleanValue;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
+import org.knime.core.data.def.IntCell;
 
 /**
  * Returns the count false boolean cells per group.
@@ -78,7 +77,7 @@ public class FalseCountOperator extends AggregationOperator {
             final OperatorColumnSettings opColSettings) {
         this(new OperatorData("False Count", "#False", false, false,
                 BooleanValue.class, false),
-                globalSettings, setInclMissingFlag(opColSettings));
+                globalSettings, AggregationOperator.setInclMissingFlag(opColSettings, false));
     }
 
     /**Constructor for class TrueCountOperator.
@@ -91,20 +90,6 @@ public class FalseCountOperator extends AggregationOperator {
             final OperatorColumnSettings opColSettings) {
         super(operatorData, globalSettings, opColSettings);
     }
-
-    /**
-     * Ensure that the flag is set correctly since this method does not
-     * support changing of the missing cell handling option.
-     *
-     * @param opColSettings the {@link OperatorColumnSettings} to set
-     * @return the correct {@link OperatorColumnSettings}
-     */
-    private static OperatorColumnSettings setInclMissingFlag(
-            final OperatorColumnSettings opColSettings) {
-        opColSettings.setInclMissing(false);
-        return opColSettings;
-    }
-
 
     /**
      * {@inheritDoc}

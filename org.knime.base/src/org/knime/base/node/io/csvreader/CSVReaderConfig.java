@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -74,6 +74,8 @@ final class CSVReaderConfig {
     private boolean m_hasColHeader;
     private String m_commentStart;
     private boolean m_supportShortLines;
+    private long m_limitRowsCount;
+    private int m_skipFirstLinesCount;
 
 
     /**
@@ -89,6 +91,8 @@ final class CSVReaderConfig {
         m_hasRowHeader = true;
         m_hasColHeader = true;
         m_supportShortLines = false;
+        m_limitRowsCount = -1L;
+        m_skipFirstLinesCount = -1;
     }
 
     /** Load settings, used in dialog (no errors).
@@ -110,6 +114,8 @@ final class CSVReaderConfig {
         m_hasRowHeader = settings.getBoolean("hasRowHeader", m_hasRowHeader);
         m_hasColHeader = settings.getBoolean("hasColHeader", m_hasColHeader);
         m_supportShortLines = settings.getBoolean("supportShortLines", m_supportShortLines);
+        m_limitRowsCount = settings.getLong("limitRowsCount", m_limitRowsCount);
+        m_skipFirstLinesCount = settings.getInt("skipFirstLinesCount", m_skipFirstLinesCount);
     }
 
     /** Load in model, fail if settings are invalid.
@@ -136,6 +142,9 @@ final class CSVReaderConfig {
         m_hasColHeader = settings.getBoolean("hasColHeader");
         // added in 2.7
         m_supportShortLines = settings.getBoolean("supportShortLines", m_supportShortLines);
+        // added in 2.8
+        m_limitRowsCount = settings.getLong("limitRowsCount", m_limitRowsCount);
+        m_skipFirstLinesCount = settings.getInt("skipFirstLinesCount", m_skipFirstLinesCount);
     }
 
     /** Save configuration to argument.
@@ -152,6 +161,8 @@ final class CSVReaderConfig {
         settings.addBoolean("hasRowHeader", m_hasRowHeader);
         settings.addBoolean("hasColHeader", m_hasColHeader);
         settings.addBoolean("supportShortLines", m_supportShortLines);
+        settings.addLong("limitRowsCount", m_limitRowsCount);
+        settings.addInt("skipFirstLinesCount", m_skipFirstLinesCount);
     }
 
     /** @return the url */
@@ -231,11 +242,31 @@ final class CSVReaderConfig {
         m_supportShortLines = supportShortLines;
     }
 
-    /**
-     * @return the supportShortLines
-     */
+    /** @return the supportShortLines */
     boolean isSupportShortLines() {
         return m_supportShortLines;
     }
+
+    /** @return the limitRowsCount (smaller 0 if unlimited). */
+    long getLimitRowsCount() {
+        return m_limitRowsCount;
+    }
+
+    /** @param value the limitRowsCount to set (smaller 0 if unlimited). */
+    void setLimitRowsCount(final long value) {
+        m_limitRowsCount = value;
+    }
+
+    /** @return the skipFirstLinesCount (smaller 0 if none to skip). */
+    int getSkipFirstLinesCount() {
+        return m_skipFirstLinesCount;
+    }
+
+    /** @param value the skipFirstLinesCount to set (smaller 0 if none to skip). */
+    void setSkipFirstLinesCount(final int value) {
+        m_skipFirstLinesCount = value;
+    }
+
+
 
 }

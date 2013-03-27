@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   18.06.2007 (thor): created
  */
@@ -63,6 +63,8 @@ import javax.swing.JPanel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 import javax.swing.border.Border;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.StringValue;
@@ -76,7 +78,7 @@ import org.knime.core.node.util.ColumnSelectionComboxBox;
 /**
  * This is the dialog for the string replacer node where the user can
  * enter the pattern, the replacement string and several other options.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class StringReplacerDialog extends NodeDialogPane {
@@ -90,38 +92,71 @@ public class StringReplacerDialog extends NodeDialogPane {
 
     private final JCheckBox m_createNewCol = new JCheckBox();
 
+    private final JCheckBox m_enableEscaping = new JCheckBox();
+
     private final JTextField m_newColName = new JTextField("New Column");
 
     private final JTextField m_pattern = new JTextField();
-    
-    private final JRadioButton m_wholeWordReplacement = new JRadioButton();
-    
-    private final JRadioButton m_replaceOccurrences = new JRadioButton();
-    
+
+    private final JRadioButton m_wholeWordReplacement = new JRadioButton("... whole string");
+
+    private final JRadioButton m_replaceOccurrences = new JRadioButton("... all occurrences");
+
+    private final JRadioButton m_wildcardPattern = new JRadioButton("Wildcard pattern");
+
+    private final JRadioButton m_regularExpression = new JRadioButton("Regular expression");
+
     private final JTextField m_replacement = new JTextField();
-   
+
+    private final JLabel m_escapeLabel = new JLabel("Use backslash as escape character   ");
+
     /**
      * Creates a new dialog.
      */
     public StringReplacerDialog() {
         JPanel p = new JPanel(new GridBagLayout());
-        
+
         GridBagConstraints c = new GridBagConstraints();
         c.insets = new Insets(5, 5, 5, 5);
         c.gridx = 0;
         c.gridy = 0;
         c.anchor = GridBagConstraints.NORTHWEST;
-        
-        
+
+
         p.add(new JLabel("Target column   "), c);
         c.gridx++;
         c.gridwidth = 2;
         p.add(m_colName, c);
-        
+
+
+        ButtonGroup bg = new ButtonGroup();
+        bg.add(m_wildcardPattern);
+        bg.add(m_regularExpression);
+        c.gridy++;
+        c.gridx = 0;
+        int oldSep = c.insets.bottom;
+        c.insets.bottom = 0;
+        c.gridwidth = 1;
+        p.add(new JLabel("Pattern type   "), c);
+        c.gridx++;
+        c.gridwidth = 2;
+        p.add(m_wildcardPattern, c);
+        c.insets.bottom = oldSep;
+        c.gridy++;
+        p.add(m_regularExpression, c);
+
+        m_wildcardPattern.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                m_escapeLabel.setEnabled(m_wildcardPattern.isSelected());
+                m_enableEscaping.setEnabled(m_wildcardPattern.isSelected());
+            }
+        });
+
         c.gridy++;
         c.gridx = 0;
         c.gridwidth = 1;
-        p.add(new JLabel("Wildcard pattern   "), c);
+        p.add(new JLabel("Pattern   "), c);
         c.gridx++;
         c.gridwidth = 2;
         c.fill = GridBagConstraints.HORIZONTAL;
@@ -129,7 +164,7 @@ public class StringReplacerDialog extends NodeDialogPane {
         p.add(m_pattern, c);
         c.weightx = 0.0;
         c.fill = GridBagConstraints.NONE;
-        
+
         c.gridy++;
         c.gridx = 0;
         c.gridwidth = 1;
@@ -141,47 +176,49 @@ public class StringReplacerDialog extends NodeDialogPane {
         p.add(m_replacement, c);
         c.fill = GridBagConstraints.NONE;
         c.weightx = 0.0;
-        
-        ButtonGroup b = new ButtonGroup();
-        b.add(m_wholeWordReplacement);
-        b.add(m_replaceOccurrences);
+
+        bg = new ButtonGroup();
+        bg.add(m_wholeWordReplacement);
+        bg.add(m_replaceOccurrences);
         c.gridy++;
         c.gridx = 0;
         c.gridwidth = 1;
-        int oldSep = c.insets.bottom;
-        c.insets.bottom = 1;
-        p.add(new JLabel("Replace whole string   "), c);
+        oldSep = c.insets.bottom;
+        c.insets.bottom = 0;
+        p.add(new JLabel("Replace ...   "), c);
         c.gridx++;
+        c.gridwidth = 2;
         p.add(m_wholeWordReplacement, c);
-        
-        c.gridy++;
-        c.gridx = 0;
-        c.gridwidth = 1;
         c.insets.bottom = oldSep;
-        c.insets.top = 1;
-        p.add(new JLabel("Replace all occurrences of pattern   "), c);
-        c.gridx++;
+        c.gridy++;
         p.add(m_replaceOccurrences, c);
-        c.insets.top = oldSep;
 
         c.gridy++;
         c.gridx = 0;
+        c.gridwidth = 1;
         p.add(new JLabel("Case sensitive search   "), c);
         c.gridx++;
         p.add(m_caseSensitiv, c);
 
         c.gridy++;
         c.gridx = 0;
+        p.add(m_escapeLabel, c);
+        c.gridx++;
+        p.add(m_enableEscaping, c);
+
+        c.gridy++;
+        c.gridx = 0;
         p.add(new JLabel("Append new column   "), c);
         c.gridx++;
         p.add(m_createNewCol, c);
-        
+
         m_createNewCol.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 m_newColName.setEnabled(m_createNewCol.isSelected());
             }
         });
-        
+
         c.gridx++;
         c.fill = GridBagConstraints.HORIZONTAL;
         c.weightx = 1.0;
@@ -190,9 +227,9 @@ public class StringReplacerDialog extends NodeDialogPane {
 
         addTab("Standard settings", p);
     }
-    
-    
-    
+
+
+
     /**
      * {@inheritDoc}
      */
@@ -200,7 +237,7 @@ public class StringReplacerDialog extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
         m_settings.loadSettingsForDialog(settings);
-        
+
         m_caseSensitiv.setSelected(m_settings.caseSensitive());
         m_colName.update(specs[0], m_settings.columnName());
         m_createNewCol.setSelected(m_settings.createNewColumn());
@@ -216,6 +253,12 @@ public class StringReplacerDialog extends NodeDialogPane {
             m_wholeWordReplacement.doClick();
         }
         m_replacement.setText(m_settings.replacement());
+        m_enableEscaping.setSelected(m_settings.enableEscaping());
+        if (m_settings.patternIsRegex()) {
+            m_regularExpression.doClick();
+        } else {
+            m_wildcardPattern.doClick();
+        }
     }
 
     /**
@@ -231,7 +274,9 @@ public class StringReplacerDialog extends NodeDialogPane {
         m_settings.pattern(m_pattern.getText());
         m_settings.replaceAllOccurrences(m_replaceOccurrences.isSelected());
         m_settings.replacement(m_replacement.getText());
-        
+        m_settings.enableEscaping(m_enableEscaping.isSelected());
+        m_settings.patternIsRegex(m_regularExpression.isSelected());
+
         m_settings.saveSettings(settings);
     }
 

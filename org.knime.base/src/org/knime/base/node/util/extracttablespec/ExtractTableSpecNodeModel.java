@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2012
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   03.06.2012 (kilian): created
  */
@@ -53,9 +53,11 @@ package org.knime.base.node.util.extracttablespec;
 import java.io.File;
 import java.io.IOException;
 
-import org.knime.base.data.util.DataTableSpecExtractor;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.util.DataTableSpecExtractor;
+import org.knime.core.data.util.DataTableSpecExtractor.PossibleValueOutputFormat;
+import org.knime.core.data.util.DataTableSpecExtractor.PropertyHandlerOutputFormat;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -70,7 +72,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
  * The node model of the extract table spec node. The node extracts information
  * from the spec of the input table, such as column names, types, lower and
  * upper bounds etc.
- * 
+ *
  * @author Kilian Thiel, KNIME.com, Berlin, Germany
  */
 class ExtractTableSpecNodeModel extends NodeModel {
@@ -79,25 +81,25 @@ class ExtractTableSpecNodeModel extends NodeModel {
      * Default value of the extract property handler settings.
      */
     public static final boolean DEF_EXTRACT_PROPERTY_HANDLERS = false;
-    
+
     /**
      * Default value of the possible value as collection value.
      */
     public static final boolean DEF_POSSIBLE_VALUES_AS_COLLECTION = false;
-    
+
     private final SettingsModelBoolean m_extractPropertyHandlersModel =
         ExtractTableSpecNodeDialog.getExtractPropertyHandlersModel();
-    
-    private final SettingsModelBoolean m_possibleValuesAsCollection = 
+
+    private final SettingsModelBoolean m_possibleValuesAsCollection =
         ExtractTableSpecNodeDialog.getPossibleValuesAsCollectionModel();
-    
+
     /**
      * Constructor of <code>ExtractTableSpecNodeModel</code>.
      */
     public ExtractTableSpecNodeModel() {
         super(1, 1);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -117,24 +119,24 @@ class ExtractTableSpecNodeModel extends NodeModel {
         return new BufferedDataTable[] {exec.createBufferedDataTable(
                 getExtractedDataTable(inData[0].getDataTableSpec()), exec)};
     }
-    
+
     /**
      * Creates a data table with the meta information extracted from the given
      * spec as data rows/cols.
-     * 
+     *
      * @param spec The table spec to extract the meta information from.
-     * @return The data table containing the meta information from the given 
+     * @return The data table containing the meta information from the given
      * spec.
      */
     private DataTable getExtractedDataTable(final DataTableSpec spec) {
         DataTableSpecExtractor extractor = new DataTableSpecExtractor();
-        extractor.setExtractPossibleValuesAsCollection(
-                m_possibleValuesAsCollection.getBooleanValue());
-        extractor.setExtractPropertyHandlers(
-                m_extractPropertyHandlersModel.getBooleanValue());
+        extractor.setPossibleValueOutputFormat(m_possibleValuesAsCollection.getBooleanValue()
+                       ? PossibleValueOutputFormat.Collection : PossibleValueOutputFormat.Hide);
+        extractor.setPropertyHandlerOutputFormat(m_extractPropertyHandlersModel.getBooleanValue()
+                       ? PropertyHandlerOutputFormat.Boolean : PropertyHandlerOutputFormat.Hide);
         return extractor.extract(spec);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -171,12 +173,12 @@ class ExtractTableSpecNodeModel extends NodeModel {
     protected void reset() {
         // Nothing to do ...
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
+    protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         // Nothing to do ...
@@ -186,9 +188,9 @@ class ExtractTableSpecNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
+    protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         // Nothing to do ...
-    }    
+    }
 }

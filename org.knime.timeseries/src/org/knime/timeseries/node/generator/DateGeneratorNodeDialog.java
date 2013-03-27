@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   05.06.2009 (Fabian Dill): created
  */
@@ -52,9 +52,14 @@ package org.knime.timeseries.node.generator;
 
 import java.util.Calendar;
 
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
 import org.knime.core.data.date.DateAndTimeCell;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
+import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentNumber;
+import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.timeseries.util.DialogComponentCalendar;
@@ -66,33 +71,55 @@ import org.knime.timeseries.util.SettingsModelCalendar;
  */
 public class DateGeneratorNodeDialog extends DefaultNodeSettingsPane {
 
+
+
     /**
-     * 
+     *
      */
     public DateGeneratorNodeDialog() {
+
+        final SettingsModelBoolean useCurrentForStart = createUseCurrentForStart();
+        final SettingsModelCalendar startingPointModel = createStartingPointModel();
+
         createNewGroup("Generated rows:");
-        addDialogComponent(new DialogComponentNumber(
-               createNumberOfRowsModel(), "Number of rows:", 10));
+        addDialogComponent(new DialogComponentNumber(createNumberOfRowsModel(), "Number of rows:", 10));
         closeCurrentGroup();
-        addDialogComponent(new DialogComponentCalendar(
-               createStartingPointModel(), "Starting point:"));
-        addDialogComponent(new DialogComponentCalendar(
-               createEndPointModel(), "End point:"));
+        addDialogComponent(new DialogComponentBoolean(useCurrentForStart, "Use execution time as starting time"));
+        addDialogComponent(new DialogComponentCalendar(startingPointModel, "Starting point:"));
+        addDialogComponent(new DialogComponentCalendar(createEndPointModel(), "End point:"));
+
+        useCurrentForStart.addChangeListener(new ChangeListener() {
+            @Override
+            public void stateChanged(final ChangeEvent e) {
+                // synchronize useCurrentforstart with the deactivation of the starting time
+                if (useCurrentForStart.getBooleanValue()) {
+                    startingPointModel.setEnabled(false);
+                } else {
+                    startingPointModel.setEnabled(true);
+                }
+            }
+        });
+
     }
-    
-    
+
+
     /**
-     * 
+     * @return the boolean model for using the execution time as the start time of the interval
+     */
+    static SettingsModelBoolean createUseCurrentForStart() {
+        return new SettingsModelBoolean("StartTimeIsExecutionTime", false);
+    }
+
+
+    /**
+     *
      * @return the model for the number of rows to be generated
      */
     static SettingsModelInteger createNumberOfRowsModel() {
-        return new SettingsModelIntegerBounded(
-                "number-of-generated-rows",
-                1000, 1, Integer.MAX_VALUE);
+        return new SettingsModelIntegerBounded("number-of-generated-rows", 1000, 1, Integer.MAX_VALUE);
     }
 
     /**
-     * 
      * @return the calendar model for the starting point
      */
     static SettingsModelCalendar createStartingPointModel() {
@@ -102,11 +129,10 @@ public class DateGeneratorNodeDialog extends DefaultNodeSettingsPane {
     }
 
     /**
-     * 
      * @return the calendar model for the end point
      */
     static SettingsModelCalendar createEndPointModel() {
         return new SettingsModelCalendar("end-point", null);
     }
-    
+
 }

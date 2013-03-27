@@ -45,6 +45,13 @@
 		<option name="Support Short Lines">
           Select this box if some rows may be shorter than others (filled with missings).  
 		</option>
+		<option name="Skip first lines">
+          If enabled, the specified number of lines are skipped in the input file before the parsing starts.   
+		</option>
+		<option name="Limit rows">
+          If enabled, only the specified number of data rows are read. The column header row (if selected) is 
+          not taken into account.    
+		</option>
 	</fullDescription>
 	<ports>
 		<outPort index="0" name="File Table">

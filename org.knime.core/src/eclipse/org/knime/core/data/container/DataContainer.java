@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -140,11 +140,14 @@ public class DataContainer implements RowAppender {
     public static final boolean DEF_GZIP_COMPRESSION = true;
 
     /** See {@link KNIMEConstants#PROPERTY_CELLS_IN_MEMORY}. */
-    public static final String PROPERTY_CELLS_IN_MEMORY =
-        KNIMEConstants.PROPERTY_CELLS_IN_MEMORY;
+    public static final String PROPERTY_CELLS_IN_MEMORY = KNIMEConstants.PROPERTY_CELLS_IN_MEMORY;
 
     /** The default number of cells to be held in memory. */
     public static final int DEF_MAX_CELLS_IN_MEMORY = 100000;
+
+    /** Default minimum disc space requirement, see {@link KNIMEConstants#PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB}.
+     * @since 2.8 */
+    public static final int DEF_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB = 100;
 
     /** For asynchronous table writing (default) the cache size. It's the number
      * of rows that are kept in memory until handed off to the write routines.
@@ -174,6 +177,24 @@ public class DataContainer implements RowAppender {
             }
         }
         MAX_CELLS_IN_MEMORY = size;
+
+        int minFreeDiscSpaceMB = DEF_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB;
+        String minFree = System.getProperty(KNIMEConstants.PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB);
+        if (minFree != null) {
+            String s = minFree.trim();
+            try {
+                int newSize = Integer.parseInt(s);
+                if (newSize < 0) {
+                    throw new NumberFormatException("minFreeDiscSpace < 0" + newSize);
+                }
+                minFreeDiscSpaceMB = newSize;
+                LOGGER.debug("Setting min free disc space to " + minFreeDiscSpaceMB + "MB");
+            } catch (NumberFormatException e) {
+                LOGGER.warn("Unable to parse property \"" + KNIMEConstants.PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB
+                            + "\", using default (" + DEF_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB + "MB)", e);
+            }
+        }
+        MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB = minFreeDiscSpaceMB;
 
         int asyncCacheSize = DEF_ASYNC_CACHE_SIZE;
         String envAsyncCache = KNIMEConstants.PROPERTY_ASYNC_WRITE_CACHE_SIZE;
@@ -212,6 +233,10 @@ public class DataContainer implements RowAppender {
      * using the java property {@link #PROPERTY_CELLS_IN_MEMORY}.
      */
     public static final int MAX_CELLS_IN_MEMORY;
+
+    /** Minimum disc space requirement, see {@link KNIMEConstants#PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB}.
+     * @since 2.8 */
+    public static final int MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB;
 
     /**
      * The number of possible values being kept at most. If the number of
@@ -843,6 +868,15 @@ public class DataContainer implements RowAppender {
         m_size += 1;
     } // addRowToTable(DataRow)
 
+    /** @return size of buffer temp file in bytes, -1 if not set. Only for debugging/test purposes. */
+    long getBufferFileSize() {
+        Buffer b = m_table != null ? m_table.getBuffer() : m_buffer;
+        if (b != null) {
+            return b.getBufferFileSize();
+        }
+        return -1L;
+    }
+
     /**
      * Get an internal id for the buffer being used. This ID is used in
      * conjunction with blob serialization to locate buffers. Blobs that belong
@@ -1262,6 +1296,9 @@ public class DataContainer implements RowAppender {
     private static final SimpleDateFormat DATE_FORMAT =
         new SimpleDateFormat("yyyyMMdd");
 
+    /** The temp folder (see @link {@link KNIMEConstants#getKNIMETempDir()}. */
+    static final File TEMP_DIRECTORY = new File(KNIMEConstants.getKNIMETempDir());
+
     /** Creates a temp file called "knime_container_<i>date</i>_xxxx.zip" and
      * marks it for deletion upon exit. This method is used to init the file
      * when the data container flushes to disk. It is also used when the nodes
@@ -1276,8 +1313,7 @@ public class DataContainer implements RowAppender {
         }
         String fileName = "knime_container_" + date + "_";
         String suffix = ".bin.gz";
-        File f = File.createTempFile(fileName, suffix,
-                new File(KNIMEConstants.getKNIMETempDir()));
+        File f = File.createTempFile(fileName, suffix, TEMP_DIRECTORY);
         f.deleteOnExit();
         return f;
     }

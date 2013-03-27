@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -57,6 +57,7 @@ import java.awt.Graphics;
 import java.awt.Insets;
 import java.awt.Rectangle;
 
+import javax.swing.Icon;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.SwingUtilities;
@@ -70,12 +71,22 @@ import javax.swing.plaf.basic.BasicLabelUI;
  */
 public class MultiLineBasicLabelUI extends BasicLabelUI {
 
+    private boolean m_isWrapLongLines = false;
+
     /** Delegates to {@link #getPreferredSize(JComponent)}.
      * @see BasicLabelUI#getMaximumSize(JComponent)
      */
     @Override
     public Dimension getMaximumSize(final JComponent c) {
         return getPreferredSize(c);
+    }
+
+    /** Enable floating text, line breaks are added as needed.
+     * @param value to set (default is false)
+     * @since 2.8
+     */
+    public void setWrapLongLines(final boolean value) {
+        m_isWrapLongLines = value;
     }
 
     /** Delegates to {@link #getPreferredSize(JComponent)}.
@@ -105,25 +116,61 @@ public class MultiLineBasicLabelUI extends BasicLabelUI {
         JLabel label = (JLabel)c;
         String text = label.getText();
         Insets insets = label.getInsets(m_viewInsets);
+        Icon icon = label.isEnabled() ? label.getIcon() : label.getDisabledIcon();
         Font font = label.getFont();
 
         int dx = insets.left + insets.right;
         int dy = insets.top + insets.bottom;
 
         if ((text == null) || (font == null)) {
-            return new Dimension(dx, dy);
+            int width = dx;
+            int height = dy;
+            if (icon != null) {
+                width += icon.getIconWidth();
+                height += icon.getIconHeight();
+            }
+            return new Dimension(width, height);
         } else {
             FontMetrics fm = label.getFontMetrics(font);
             String[] splittedString = splitStrings(text);
-            int height = dy + splittedString.length * fm.getHeight();
+            int height = splittedString.length * fm.getHeight();
             int width = 0;
             for (String part : splittedString) {
                 int curWidth = SwingUtilities.computeStringWidth(fm, part);
                 width = Math.max(width, curWidth);
             }
+            if (icon != null) {
+                width += icon.getIconWidth() + label.getIconTextGap();
+                height = Math.max(height, icon.getIconHeight());
+            }
             width += dx;
+            height += dy;
             return new Dimension(width, height);
         }
+    }
+
+    /** Get the width of the text. The size of {@link #getPreferredSize(JComponent)}, which is occupied by text
+     * (no icon, no icon-text gap, no insets).
+     * @param c ...
+     * @return ...
+     * @since 2.8
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public final int getPreferredTextWidth(final JComponent c) {
+        JLabel label = (JLabel)c;
+        String text = label.getText();
+        Font font = label.getFont();
+        if (text == null || font == null) {
+            return 0;
+        }
+        FontMetrics fm = label.getFontMetrics(font);
+        String[] splittedString = splitStrings(text);
+        int width = 0;
+        for (String part : splittedString) {
+            int curWidth = SwingUtilities.computeStringWidth(fm, part);
+            width = Math.max(width, curWidth);
+        }
+        return width;
     }
 
     /**
@@ -133,8 +180,9 @@ public class MultiLineBasicLabelUI extends BasicLabelUI {
     public void paint(final Graphics g, final JComponent c) {
         JLabel label = (JLabel)c;
         String text = label.getText();
+        Icon icon = label.isEnabled() ? label.getIcon() : label.getDisabledIcon();
 
-        if (text == null) {
+        if (text == null && icon == null) {
             return;
         }
 
@@ -146,28 +194,57 @@ public class MultiLineBasicLabelUI extends BasicLabelUI {
         m_paintViewR.width = c.getWidth() - (insets.left + insets.right);
         m_paintViewR.height = c.getHeight() - (insets.top + insets.bottom);
 
+        // all assigments only temporary - modified by layoutCL down below
         m_paintIconR.x = 0;
         m_paintIconR.y = 0;
-        m_paintIconR.width = 0;
-        m_paintIconR.height = 0;
+        m_paintIconR.width = icon != null ? icon.getIconWidth() : 0;
+        m_paintIconR.height = icon != null ? icon.getIconHeight() : 0;
         m_paintTextR.x = 0;
         m_paintTextR.y = 0;
-        m_paintTextR.width = 0;
-        m_paintTextR.height = 0;
+        int maxTextWidth = m_paintViewR.width - (icon != null ? icon.getIconWidth() + label.getIconTextGap() : 0);
+        m_paintTextR.width = maxTextWidth;
+        m_paintTextR.height = m_paintViewR.height;
 
         String[] splits = splitStrings(text);
+        if (icon != null) {
+            icon.paintIcon(c, g, m_paintViewR.x, m_paintViewR.y);
+        }
+        int yOffset = m_paintViewR.y + fm.getAscent();
         for (int i = 0; i < splits.length; i++) {
-            String s = splits[i];
-            String clippedText = layoutCL(label, fm, s, null, m_paintViewR,
-                    m_paintIconR, m_paintTextR);
-            int textX = m_paintTextR.x;
-            int textY = m_paintTextR.y + fm.getAscent() + i * fm.getHeight();
+            String currentLine = splits[i];
+            String s;
+            int startChar = 0;
+            boolean oneMoreIteration;
+            do {
+                if (m_isWrapLongLines) {
+                    // is there enough space for another row after drawing this line?
+                    if (yOffset + fm.getHeight() <= m_paintViewR.height) {
+                        // cut text and avoid clipping ("...")
+                        int end = autoSplit(currentLine, fm, startChar, Math.max(maxTextWidth, 0));
+                        s = currentLine.substring(startChar, end);
+                        startChar = end;
+                        oneMoreIteration = startChar < currentLine.length();
+                    } else {
+                        // take remainder of text, will likely clip and add '...'
+                        s = currentLine.substring(startChar, currentLine.length());
+                        oneMoreIteration = false;
+                    }
+                } else {
+                    s = currentLine;
+                    oneMoreIteration = false;
+                }
+                // this modifies the rectangle arguments
+                String clippedText = layoutCL(label, fm, s, icon, m_paintViewR, m_paintIconR, m_paintTextR);
+                int textX = m_paintTextR.x;
+                int textY = yOffset;
 
-            if (label.isEnabled()) {
-                paintEnabledText(label, g, clippedText, textX, textY);
-            } else {
-                paintDisabledText(label, g, clippedText, textX, textY);
-            }
+                if (label.isEnabled()) {
+                    paintEnabledText(label, g, clippedText, textX, textY);
+                } else {
+                    paintDisabledText(label, g, clippedText, textX, textY);
+                }
+                yOffset += fm.getHeight();
+            } while (oneMoreIteration);
         }
     }
 
@@ -180,6 +257,53 @@ public class MultiLineBasicLabelUI extends BasicLabelUI {
             m_string = s;
         }
         return m_splittedStrings;
+    }
+
+    /** Determines split position in string argument so that the first half can be represented in less than maxWidth
+     * pixels. Does some magic to find good line breaks
+     * @param s The string
+     * @param fm The font
+     * @param startIndex Where to start (called in a loop)
+     * @param maxWidth The text area max width
+     * @return the end index of the sub string that can be fully drawn in a line.
+     */
+    private int autoSplit(final String s, final FontMetrics fm, final int startIndex, final int maxWidth) {
+        final int sEnd = s.length();
+        int newEnd = sEnd;
+        // This is the naive way. Serious performance hit when run on 20k columns with long names (and then resizing)
+        // the column header.
+        /* while (SwingUtilities.computeStringWidth(fm, s.substring(startIndex, newEnd)) > maxWidth) {
+         *     newEnd -= 1;
+         * } */
+
+        // some pseudo binary search to find a good index.
+        for (int step = (newEnd - startIndex) / 2; step > 0; step = step / 2) {
+            if (SwingUtilities.computeStringWidth(fm, s.substring(startIndex, newEnd)) < maxWidth) {
+                if (newEnd >= sEnd) {
+                    return sEnd;
+                }
+                newEnd = Math.min(sEnd, newEnd + step);
+            } else {
+                newEnd = Math.max(startIndex, newEnd - step);
+            }
+        }
+        // above for loop ended with modifying "newEnd". Bound it again.
+        while (SwingUtilities.computeStringWidth(fm, s.substring(startIndex, newEnd)) > maxWidth) {
+            newEnd = Math.max(startIndex, newEnd - 1);
+        }
+        // if there is a space char near the calculated split point use that one instead
+        if (newEnd - startIndex > 6) {
+            for (int i = newEnd - 1; i > newEnd - 3; i--) {
+                switch (s.charAt(i)) {
+                    case ' ':
+                    case '\t':
+                        newEnd = i;
+                        break;
+                    default:
+                }
+            }
+        }
+        return Math.max(startIndex + 1, newEnd);
     }
 
 }

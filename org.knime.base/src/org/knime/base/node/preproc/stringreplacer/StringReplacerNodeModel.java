@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -101,13 +101,17 @@ public class StringReplacerNodeModel extends NodeModel {
             final Pattern p) throws InvalidSettingsException {
         DataColumnSpec colSpec;
         if (m_settings.createNewColumn()) {
-            colSpec = new DataColumnSpecCreator(m_settings.newColumnName(),
-                            StringCell.TYPE).createSpec();
+            colSpec = new DataColumnSpecCreator(m_settings.newColumnName(), StringCell.TYPE).createSpec();
         } else {
-            colSpec = new DataColumnSpecCreator(m_settings.columnName(),
-                    StringCell.TYPE).createSpec();
+            colSpec = new DataColumnSpecCreator(m_settings.columnName(), StringCell.TYPE).createSpec();
         }
 
+        final String replacement;
+        if (m_settings.patternIsRegex()) {
+            replacement = m_settings.replacement();
+        } else {
+            replacement = m_settings.replacement().replaceAll("(\\$\\d+)", "\\\\$1");
+        }
         final int index = spec.findColumnIndex(m_settings.columnName());
         SingleCellFactory cf = new SingleCellFactory(colSpec) {
             @Override
@@ -120,10 +124,9 @@ public class StringReplacerNodeModel extends NodeModel {
                 final String stringValue = ((StringValue)cell).getStringValue();
                 Matcher m = p.matcher(stringValue);
                 if (m_settings.replaceAllOccurrences()) {
-                    return new StringCell(m
-                            .replaceAll(m_settings.replacement()));
+                    return new StringCell(m.replaceAll(replacement));
                 } else if (m.matches()) {
-                    return new StringCell(m_settings.replacement());
+                    return new StringCell(m.replaceAll(replacement));
                 } else {
                     return new StringCell(stringValue);
                 }
@@ -167,19 +170,23 @@ public class StringReplacerNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         exec.setMessage("Searching & Replacing");
-        String regex = WildcardMatcher.wildcardToRegex(m_settings.pattern());
+        String regex;
+        int flags = 0;
+        if (m_settings.patternIsRegex()) {
+            regex = m_settings.pattern();
+        } else {
+            regex = WildcardMatcher.wildcardToRegex(m_settings.pattern(), m_settings.enableEscaping());
+            flags = Pattern.DOTALL | Pattern.MULTILINE;
+        }
         // support for \n and international characters
-        int flags = Pattern.DOTALL | Pattern.MULTILINE;
         if (!m_settings.caseSensitive()) {
             flags |= Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE;
         }
         Pattern p = Pattern.compile(regex, flags);
 
-        ColumnRearranger crea =
-                createRearranger(inData[0].getDataTableSpec(), p);
+        ColumnRearranger crea = createRearranger(inData[0].getDataTableSpec(), p);
 
-        return new BufferedDataTable[]{exec.createColumnRearrangeTable(
-                inData[0], crea, exec)};
+        return new BufferedDataTable[]{exec.createColumnRearrangeTable(inData[0], crea, exec)};
     }
 
 
@@ -207,8 +214,6 @@ public class StringReplacerNodeModel extends NodeModel {
      */
     @Override
     protected void reset() {
-        // TODO Auto-generated method stub
-
     }
 
     /**
@@ -238,22 +243,20 @@ public class StringReplacerNodeModel extends NodeModel {
         StringReplacerSettings s = new StringReplacerSettings();
         s.loadSettings(settings);
 
-        if (s.createNewColumn() && (s.newColumnName() == null
-                || s.newColumnName().trim().length() == 0)) {
-            throw new InvalidSettingsException(
-                    "No name for the new column given");
+        if (s.createNewColumn() && (s.newColumnName() == null || s.newColumnName().trim().length() == 0)) {
+            throw new InvalidSettingsException("No name for the new column given");
         }
         if (s.columnName() == null) {
             throw new InvalidSettingsException("No column selected");
         }
-        if (s.pattern() == null || s.pattern().length() == 0) {
+        if (s.pattern() == null) {
             throw new InvalidSettingsException("No pattern given");
         }
         if (s.replacement() == null) {
             throw new InvalidSettingsException("No replacement string given");
         }
 
-        if (s.replaceAllOccurrences() && s.pattern().contains("*")) {
+        if (s.replaceAllOccurrences() && s.patternIsRegex() && s.pattern().contains("*")) {
             throw new InvalidSettingsException(
                     "'*' is not allowed when all occurrences of the "
                             + "pattern should be replaced");

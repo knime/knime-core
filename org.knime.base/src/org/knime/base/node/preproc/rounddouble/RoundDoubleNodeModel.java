@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2012
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -59,24 +59,21 @@ import java.util.List;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
+import org.knime.base.node.preproc.rounddouble.RoundDoubleConfigKeys.RoundOutputType;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.container.ColumnRearranger;
-import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.StringCell;
-import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelBoolean;
 import org.knime.core.node.defaultnodesettings.SettingsModelColumnFilter2;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
+import org.knime.core.node.streamable.simple.SimpleStreamableFunctionNodeModel;
 import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
 
 /**
@@ -87,7 +84,7 @@ import org.knime.core.node.util.filter.NameFilterConfiguration.FilterResult;
  *
  * @author Kilian Thiel, KNIME.com, Berlin, Germany
  */
-class RoundDoubleNodeModel extends NodeModel {
+class RoundDoubleNodeModel extends SimpleStreamableFunctionNodeModel {
 
     /**
      * Default precision to round to.
@@ -142,6 +139,9 @@ class RoundDoubleNodeModel extends NodeModel {
      */
     public static final boolean DEF_OUTPUT_AS_STRING = false;
 
+    /** Default output type (double type, rounded). */
+    public static final String DEF_OUTPUT_TYPE = RoundDoubleConfigKeys.RoundOutputType.Double.getLabel();
+
 
     private SettingsModelColumnFilter2 m_filterDoubleColModel =
         RoundDoubleNodeDialog.getFilterDoubleColModel();
@@ -158,8 +158,8 @@ class RoundDoubleNodeModel extends NodeModel {
     private SettingsModelString m_roundingModeModel =
         RoundDoubleNodeDialog.getRoundingModelStringModel();
 
-    private SettingsModelBoolean m_outputAsString =
-        RoundDoubleNodeDialog.getOutputAsStringModel();
+    private SettingsModelString m_outputTypeModel = RoundDoubleNodeDialog.getOutputTypeModel();
+
 
     private SettingsModelString m_numberModeModel =
         RoundDoubleNodeDialog.getNumberModeStringModel();
@@ -167,48 +167,13 @@ class RoundDoubleNodeModel extends NodeModel {
     /**
      * Creates new instance of <code>RoundDoubleNodeModel</code>.
      */
-    public RoundDoubleNodeModel() {
-        super(1, 1);
-        m_appendColumnsModel.addChangeListener(
-                new AppendColumnChangeListener());
+    RoundDoubleNodeModel() {
+        m_appendColumnsModel.addChangeListener(new AppendColumnChangeListener());
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc} */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
-            throws InvalidSettingsException {
-        DataTableSpec inSpec = inSpecs[0];
-        return new DataTableSpec[] {createRearranger(inSpec).createSpec()};
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
-        BufferedDataTable data = inData[0];
-        DataTableSpec dataSpec = data.getDataTableSpec();
-        ColumnRearranger cR = createRearranger(dataSpec);
-        return new BufferedDataTable[] {exec.createColumnRearrangeTable(data,
-                cR, exec)};
-    }
-
-    /**
-     * Creates and returns the <code>ColumnRearranger</code> used to create the
-     * output spec as well as the output data table.
-     *
-     * @param dataSpec The original input data table spec.
-     * @return The ColumnRearranger used to create the output spec
-     * as well as the output data table.
-     * @throws InvalidSettingsException If the input spec contains no columns
-     * containing double cells, or if the columns of the include list are not
-     * contained in the input spec.
-     */
-    private ColumnRearranger createRearranger(final DataTableSpec dataSpec)
-    throws InvalidSettingsException {
+    public ColumnRearranger createColumnRearranger(final DataTableSpec dataSpec) throws InvalidSettingsException {
         //
         /// SPEC CHECKS
         //
@@ -235,7 +200,7 @@ class RoundDoubleNodeModel extends NodeModel {
                 m_roundingModeModel.getStringValue());
         NumberMode numberMode = NumberMode.valueByDescription(
                 m_numberModeModel.getStringValue());
-        boolean outputAsString = m_outputAsString.getBooleanValue();
+        final RoundOutputType outputType = RoundOutputType.valueByTextLabel(m_outputTypeModel.getStringValue());
         String colSuffix = m_columnSuffixModel.getStringValue();
 
         // get array of indices of included columns
@@ -244,12 +209,12 @@ class RoundDoubleNodeModel extends NodeModel {
         ColumnRearranger cR = new ColumnRearranger(dataSpec);
         // create spec of new output columns
         DataColumnSpec[] newColsSpecs = getNewColSpecs(append, colSuffix,
-                outputAsString, filteredCols.getIncludes(), dataSpec);
+                outputType, filteredCols.getIncludes(), dataSpec);
 
         // Pass all necessary parameters to the cell factory, which rounds
         // the values and creates new cells to replace or append.
         RoundDoubleCellFactory cellFac = new RoundDoubleCellFactory(precision,
-                numberMode, roundingMode, outputAsString, includedColIndices,
+                numberMode, roundingMode, outputType, includedColIndices,
                 newColsSpecs);
 
         // replace or append columns
@@ -263,7 +228,7 @@ class RoundDoubleNodeModel extends NodeModel {
     }
 
     private static final DataColumnSpec[] getNewColSpecs(final boolean append,
-            final String colSuffix, final boolean outputAsString,
+            final String colSuffix, final RoundOutputType outputType,
             final String[] colNamesToRound, final DataTableSpec origInSpec) {
         DataColumnSpec[] appColumnSpecs =
             new DataColumnSpec[colNamesToRound.length];
@@ -280,14 +245,7 @@ class RoundDoubleNodeModel extends NodeModel {
             }
 
             // create a DoubleCell spec or a StringCell spec
-            DataColumnSpec newCol;
-            if (!outputAsString) {
-                newCol = new DataColumnSpecCreator(newColName, DoubleCell.TYPE)
-                        .createSpec();
-            } else {
-                newCol = new DataColumnSpecCreator(newColName, StringCell.TYPE)
-                        .createSpec();
-            }
+            DataColumnSpec newCol = new DataColumnSpecCreator(newColName, outputType.getDataCellType()).createSpec();
 
             // collect column specs
             appColumnSpecs[i] = newCol;
@@ -329,7 +287,7 @@ class RoundDoubleNodeModel extends NodeModel {
         m_appendColumnsModel.saveSettingsTo(settings);
         m_columnSuffixModel.saveSettingsTo(settings);
         m_roundingModeModel.saveSettingsTo(settings);
-        m_outputAsString.saveSettingsTo(settings);
+        m_outputTypeModel.saveSettingsTo(settings);
         m_numberModeModel.saveSettingsTo(settings);
     }
 
@@ -344,7 +302,12 @@ class RoundDoubleNodeModel extends NodeModel {
         m_appendColumnsModel.validateSettings(settings);
         m_columnSuffixModel.validateSettings(settings);
         m_roundingModeModel.validateSettings(settings);
-        m_outputAsString.validateSettings(settings);
+        try {
+            // added in 2.8
+            m_outputTypeModel.validateSettings(settings);
+        } catch (InvalidSettingsException ise) {
+            RoundDoubleNodeDialog.getOutputAsStringModel().validateSettings(settings);
+        }
         m_numberModeModel.validateSettings(settings);
 
         // additional sanity checks
@@ -408,7 +371,19 @@ class RoundDoubleNodeModel extends NodeModel {
         m_appendColumnsModel.loadSettingsFrom(settings);
         m_columnSuffixModel.loadSettingsFrom(settings);
         m_roundingModeModel.loadSettingsFrom(settings);
-        m_outputAsString.loadSettingsFrom(settings);
+        try {
+            m_outputTypeModel.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
+            SettingsModelBoolean outputAsStringModelDeprecated = RoundDoubleNodeDialog.getOutputAsStringModel();
+            outputAsStringModelDeprecated.loadSettingsFrom(settings);
+            RoundOutputType mappedType;
+            if (outputAsStringModelDeprecated.getBooleanValue()) {
+                mappedType = RoundOutputType.StringStandard;
+            } else {
+                mappedType = RoundOutputType.Double;
+            }
+            m_outputTypeModel.setStringValue(mappedType.getLabel());
+        }
         m_numberModeModel.loadSettingsFrom(settings);
     }
 

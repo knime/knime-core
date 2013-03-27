@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   18.06.2007 (thor): created
  */
@@ -52,7 +52,7 @@ package org.knime.base.util;
 
 /**
  * Simple class to convert wildcard patterns into regular expressions.
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public final class WildcardMatcher {
@@ -180,29 +180,56 @@ public final class WildcardMatcher {
 //        WildcardMatcher m = new WildcardMatcher("ab*ab");
 //        System.out.println(m.matches("abaab"));
 //    }
-    
+
     private WildcardMatcher() { }
-    
+
     /**
      * Converts a wildcard pattern containing '*' and '?' as meta characters
      * into a regular expression.
-     * 
-     * @param wildcard a wildcard expression 
+     *
+     * @param wildcard a wildcard expression
      * @return the corresponding regular expression
      */
     public static String wildcardToRegex(final String wildcard) {
+        return wildcardToRegex(wildcard, false);
+    }
+
+    /**
+     * Converts a wildcard pattern containing '*' and '?' as meta characters into a regular expression. Optionally,
+     * the backslash can be enabled as escape character for the wildcards. In this case a backslash has a special
+     * meaning and needs may need to be escaped itself.
+     *
+     * @param wildcard a wildcard expression
+     * @param enableEscaping <code>true</code> if the wildcards may be escaped (i.e. they loose their special meaning)
+     *            by prepending a backslash
+     * @return the corresponding regular expression
+     * @since 2.8
+     */
+    public static String wildcardToRegex(final String wildcard, final boolean enableEscaping) {
         StringBuilder buf = new StringBuilder(wildcard.length() + 20);
-        
+
         for (int i = 0; i < wildcard.length(); i++) {
             char c = wildcard.charAt(i);
             switch (c) {
                 case '*':
-                    buf.append(".*");
+                    if (enableEscaping && (i > 0) && (wildcard.charAt(i - 1) == '\\')) {
+                        buf.append('*');
+                    } else {
+                        buf.append(".*");
+                    }
                     break;
                 case '?':
-                    buf.append(".");
+                    if (enableEscaping && (i > 0) && (wildcard.charAt(i - 1) == '\\')) {
+                        buf.append('?');
+                    } else {
+                        buf.append(".");
+                    }
                     break;
                 case '\\':
+                    if (enableEscaping) {
+                        buf.append(c);
+                        break;
+                    }
                 case '^':
                 case '$':
                 case '[':
@@ -221,7 +248,7 @@ public final class WildcardMatcher {
                     buf.append(c);
             }
         }
-        
+
         return buf.toString();
     }
 }

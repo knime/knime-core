@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Dec 17, 2005 (wiswedel): created
  */
@@ -79,11 +79,11 @@ import org.knime.core.util.SimpleFileFilter;
  * Panel that contains an editable Combo Box showing the file to read from and a
  * button to trigger a file chooser. The elements in the combo are files that
  * have been recently used.
- * 
+ *
  * <p>This file may move to a different package (utility class in core) when
  * we decide that people benefit from it. So far, we do not recommend
  * to use this class elsewhere as it is subject to change.
- * 
+ *
  * @see org.knime.core.node.util.StringHistory
  * @author Bernd Wiswedel, University of Konstanz
  */
@@ -92,15 +92,15 @@ final class FilesHistoryPanel extends JPanel {
     private final JComboBox m_textBox;
 
     private final JButton m_chooseButton;
-    
+
     private final String[] m_suffixes;
-    
+
     private final String m_historyID;
 
     /**
      * Creates new instance, sets properties, for instance renderer,
      * accordingly.
-     * @param historyID Identifier for the string history, 
+     * @param historyID Identifier for the string history,
      *        see {@link StringHistory}.
      * @param suffixes The set of suffixes for the file chooser.
      */
@@ -121,6 +121,7 @@ final class FilesHistoryPanel extends JPanel {
         m_textBox.setRenderer(new MyComboBoxRenderer());
         m_chooseButton = new JButton("Browse...");
         m_chooseButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 String newFile = getOutputFileName();
                 if (newFile != null) {
@@ -142,7 +143,7 @@ final class FilesHistoryPanel extends JPanel {
             fileChooser.setFileFilter(new SimpleFileFilter(m_suffixes));
         }
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        
+
         String f = m_textBox.getEditor().getItem().toString();
         File dirOrFile = getFile(f);
         if (dirOrFile.isDirectory()) {
@@ -165,7 +166,7 @@ final class FilesHistoryPanel extends JPanel {
 
     /**
      * Get currently selected file.
-     * 
+     *
      * @return the current file url
      * @see javax.swing.JComboBox#getSelectedItem()
      */
@@ -175,7 +176,7 @@ final class FilesHistoryPanel extends JPanel {
 
     /**
      * Set the file url as default.
-     * 
+     *
      * @param url the file to choose
      * @see javax.swing.JComboBox#setSelectedItem(java.lang.Object)
      */
@@ -208,7 +209,7 @@ final class FilesHistoryPanel extends JPanel {
         Dimension newMin = new Dimension(0, getPreferredSize().height);
         setMinimumSize(newMin);
     }
-    
+
     /** Adds the specified file to the history. Does nothing if the file is
      * null or does not exist.
      * @param file File to add to history.
@@ -221,7 +222,7 @@ final class FilesHistoryPanel extends JPanel {
 
     /**
      * Tries to create a File from the passed string.
-     * 
+     *
      * @param url the string to transform into an File
      * @return File if entered value could be properly transformed
      * @throws MalformedURLException if the value passed was invalid
@@ -250,7 +251,7 @@ final class FilesHistoryPanel extends JPanel {
     /**
      * Return a file object for the given fileName. It makes sure that if the
      * fileName is not absolute it will be relative to the user's home dir.
-     * 
+     *
      * @param fileName the file name to convert to a file
      * @return a file representing fileName
      */

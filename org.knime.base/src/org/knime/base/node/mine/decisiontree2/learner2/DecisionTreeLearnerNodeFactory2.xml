@@ -96,6 +96,23 @@
 		    in the tree viewer. Enabling this option will post-process the tree
 		    and filter invalid checks.    
 		</option>	
+		<option name = "No true child strategy">
+		If the scoring reaches a node, at which its attributes value is unknown, one of the two following strategies can be used:
+		<br/>
+		<b>returnNullPrediciton:</b> predict a missing value <br/>
+		<b>returnLastPrediction:</b> return the majority class of the last node
+		</option>
+		
+		<option name = "Missing value strategy">
+		If there are missing values in the data to be predicted, a strategy can be chosen how to handle 
+		them:<br/>
+			    <b>lastPrediction:</b> use the last known class <br/>
+	<!--<b>nullPrediction:</b> predict a missing value<br/>--><!-- not supported -->
+		<b>defaultChild:</b> use the default child and continue traversing its path<br/>
+	<!--  	<b>weightedConfidence:</b> weight the output of each subtree<br/>--><!-- not supported -->
+	<!--  	<b>aggregateNodes:</b> <br/>--><!-- not supported -->
+		<b>NONE:</b> use the noTrueChildStrategy
+		</option>
 	</fullDescription>
 	<ports>
 		<inPort index="0" name="Input data">

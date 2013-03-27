@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -61,6 +61,7 @@ import org.knime.core.data.DataValue;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
@@ -615,5 +616,97 @@ public abstract class AggregationOperator implements AggregationMethod {
         return getLabel()
         + " Skipped: " + m_skipped
         + " Incl. missing: " + inclMissingCells();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((m_globalSettings == null) ? 0 : m_globalSettings.hashCode());
+        result = prime * result + ((m_opColSettings == null) ? 0 : m_opColSettings.hashCode());
+        result = prime * result + ((m_operatorData == null) ? 0 : m_operatorData.hashCode());
+        result = prime * result + ((m_skipMsg == null) ? 0 : m_skipMsg.hashCode());
+        result = prime * result + (m_skipped ? 1231 : 1237);
+        return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        AggregationOperator other = (AggregationOperator)obj;
+        if (m_operatorData == null) {
+            if (other.m_operatorData != null) {
+                return false;
+            }
+        } else if (!m_operatorData.equals(other.m_operatorData)) {
+            return false;
+        }
+        if (m_globalSettings == null) {
+            if (other.m_globalSettings != null) {
+                return false;
+            }
+        } else if (!m_globalSettings.equals(other.m_globalSettings)) {
+            return false;
+        }
+        if (m_opColSettings == null) {
+            if (other.m_opColSettings != null) {
+                return false;
+            }
+        } else if (!m_opColSettings.equals(other.m_opColSettings)) {
+            return false;
+        }
+        if (m_skipMsg == null) {
+            if (other.m_skipMsg != null) {
+                return false;
+            }
+        } else if (!m_skipMsg.equals(other.m_skipMsg)) {
+            return false;
+        }
+        if (m_skipped != other.m_skipped) {
+            return false;
+        }
+        if (other.hasOptionalSettings()) {
+            if (hasOptionalSettings()) {
+                //check the optional settings as well
+                final NodeSettings s1 = new NodeSettings("s1");
+                other.saveSettingsTo(s1);
+                final NodeSettings s2 = new NodeSettings("s2");
+                saveSettingsTo(s2);
+                return !s1.equals(s2);
+            } else {
+                return true;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Ensure that the include missing flag of the given {@link OperatorColumnSettings} object
+     * is set to the given flag.
+     *
+     * @param opColSettings the {@link OperatorColumnSettings} to set
+     * @param incl <code>true</code> if missing values should be included
+     * otherwise <code>false</code>
+     * @return the correct {@link OperatorColumnSettings}
+     * @since 2.8
+     */
+    public static OperatorColumnSettings setInclMissingFlag(
+            final OperatorColumnSettings opColSettings, final boolean incl) {
+        opColSettings.setInclMissing(incl);
+        return opColSettings;
     }
 }

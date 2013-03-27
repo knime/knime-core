@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,7 +50,12 @@
  */
 package org.knime.base.node.jsnippet;
 
+import java.awt.FlowLayout;
+import java.util.Map;
+
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
 import org.knime.base.node.jsnippet.ui.ColumnList;
@@ -63,6 +68,7 @@ import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
+import org.knime.core.node.workflow.FlowVariable;
 
 /**
  * The dialog of the java edit variable node.
@@ -70,6 +76,8 @@ import org.knime.core.node.port.PortObjectSpec;
  * @author Heiko Hofer
  */
 public class JavaEditVarNodeDialog extends JavaSnippetNodeDialog {
+
+    private JCheckBox m_runOnExecuteChecker;
 
     /**
      * Create a new Dialog.
@@ -79,6 +87,29 @@ public class JavaEditVarNodeDialog extends JavaSnippetNodeDialog {
     @SuppressWarnings("rawtypes")
     public JavaEditVarNodeDialog(final Class templateMetaCategory) {
         super(templateMetaCategory);
+    }
+
+    /**
+     * Create a new Dialog.
+     * @param templateMetaCategory the meta category used in the templates
+     * tab or to create templates
+     * @param isPreview if this is a preview used for showing templates.
+     */
+    @SuppressWarnings("rawtypes")
+    protected JavaEditVarNodeDialog(final Class templateMetaCategory,
+                                 final boolean isPreview) {
+        super(templateMetaCategory, isPreview);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void setEnabled(final boolean enabled) {
+        if (isEnabled() != enabled) {
+            m_runOnExecuteChecker.setEnabled(enabled);
+        }
+        super.setEnabled(enabled);
     }
 
     /**
@@ -120,10 +151,51 @@ public class JavaEditVarNodeDialog extends JavaSnippetNodeDialog {
         return flowVarScroller;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected JPanel createOptionsPanel() {
+        JPanel p = new JPanel(new FlowLayout(FlowLayout.LEADING));
+        m_runOnExecuteChecker = new JCheckBox("Run only on execution");
+        m_runOnExecuteChecker.setToolTipText("If selected, the snippet is run only when the node is executed.");
+        p.add(m_runOnExecuteChecker);
+        return p;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected JavaSnippetNodeDialog createPreview() {
+        return new JavaEditVarNodeDialog(m_templateMetaCategory, true);
+    }
+
     /** {@inheritDoc} */
     @Override
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs) throws NotConfigurableException {
         loadSettingsFrom(settings, new DataTableSpec[]{new DataTableSpec()});
+        m_runOnExecuteChecker.setSelected(m_settings.isRunOnExecute());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void applyTemplate(final JSnippetTemplate template,
+                              final DataTableSpec spec,
+                              final Map<String, FlowVariable> flowVariables) {
+        super.applyTemplate(template, spec, flowVariables);
+        m_runOnExecuteChecker.setSelected(m_settings.isRunOnExecute());
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void preSaveSettings(final JavaSnippetSettings s) {
+        s.setRunOnExecute(m_runOnExecuteChecker.isSelected());
     }
 }

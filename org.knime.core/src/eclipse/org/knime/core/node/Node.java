@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -1878,7 +1878,15 @@ public final class Node implements NodeModelWarningListener {
         l.save(settings);
     }
 
-    void saveInternals(final File internDir, final ExecutionMonitor exec)
+    /** Call {@link NodeModel#saveInternals(File, ExecutionMonitor)} and handles errors by logging to the NodeLogger
+     * or setting a warning message at the node.
+     * @param internDir ...
+     * @param exec ...
+     * @throws CanceledExecutionException ...
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    // Called by 3rd party executor
+    public void saveInternals(final File internDir, final ExecutionMonitor exec)
             throws CanceledExecutionException {
         if (internDir.exists()) {
             FileUtil.deleteRecursively(internDir);
@@ -1912,7 +1920,15 @@ public final class Node implements NodeModelWarningListener {
         }
     }
 
-    void loadInternals(final File internDir, final ExecutionMonitor exec)
+    /** Call {@link NodeModel#loadInternals(File, ExecutionMonitor)} and handles errors by logging to the NodeLogger
+     * or setting a warning message at the node.
+     * @param internDir ...
+     * @param exec ...
+     * @throws CanceledExecutionException ...
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    // Called by 3rd party executor
+    public void loadInternals(final File internDir, final ExecutionMonitor exec)
             throws CanceledExecutionException {
         if (m_model.hasContent()) {
             try {

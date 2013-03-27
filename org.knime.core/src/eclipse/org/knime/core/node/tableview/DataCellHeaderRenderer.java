@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * 2006-06-08 (tm): reviewed
  */
 package org.knime.core.node.tableview;
@@ -59,37 +59,37 @@ import javax.swing.UIManager;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableModel;
 
-/** 
+/**
  * Class to render a <code>DataCell</code> in a row header of a
  * <code>JTable</code>. The layout of the component being returned is the same
  * as a TableHeader in a <code>JTable</code>, i.e. it uses the look and feel
  * of a table header. This renderer component allows to encode the hilite
  * status of the row being displayed: Hilited rows have a different
  * background color than non-hilited rows. This implementation also allows
- * to encode the color information for a data cell (i.e. from the 
+ * to encode the color information for a data cell (i.e. from the
  * <code>ColorHandler</code>) in a small icon.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
     private static final long serialVersionUID = -6837071446890050246L;
 
-    /** 
+    /**
      * Factory method to create a new instance of this class.
-     * 
+     *
      * @return a new <code>DataCellHeaderRenderer</code>
      */
-    public static final DataCellHeaderRenderer newInstance() { 
+    public static final DataCellHeaderRenderer newInstance() {
         return new DataCellHeaderRenderer();
     } // newInstance()
 
-    
-    // user should use newInstance instead 
+
+    // user should use newInstance instead
     private DataCellHeaderRenderer() {
         setTableHeaderLaF();
         showIcon(true);
     } // DataCellHeaderRenderer()
-    
+
     /**
      * {@inheritDoc}
      */
@@ -114,7 +114,7 @@ final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
         return super.getTableCellRendererComponent(table, value, isSelected,
                 hasFocus, row, column);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -128,19 +128,19 @@ final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
         }
         super.setBounds(x, y, width, height);
     }
-    
-    
-    /** 
+
+
+    /**
      * Set the color information for the next cell to be rendered. This method
-     * should be called right before the 
+     * should be called right before the
      * {@link DefaultTableCellRenderer#getTableCellRendererComponent(
-     * javax.swing.JTable, java.lang.Object, boolean, boolean, int, int)} 
+     * javax.swing.JTable, java.lang.Object, boolean, boolean, int, int)}
      * method is called. It sets the color info of the row (or key) that is
      * rendered. In a table, e.g., you should override the
      * {@link javax.swing.JTable#prepareRenderer(
      * javax.swing.table.TableCellRenderer, int, int)} method and call this
      * method first before calling <code>super.prepareRenderer</code>.
-     * 
+     *
      * @param color the color information.
      * @see javax.swing.JTable#prepareRenderer(
      *      javax.swing.table.TableCellRenderer, int, int)
@@ -151,11 +151,11 @@ final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
             icon.setColor(color);
         }
     } // setColor(Color)
-    
-    
-    /** 
+
+
+    /**
      * Enable/Disable the color information output.
-     * 
+     *
      * @param isShowIcon <code>true</code> for show icon, <code>false</code>
      * otherwise
      */
@@ -165,22 +165,21 @@ final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
         }
         setIcon(isShowIcon ? new ColorIcon() : null);
     } // showIcon(boolean)
-    
-    
-    /** 
+
+    /**
      * Is the icon with the color info shown?
-     * 
+     *
      * @return <code>true</code> if it's there, <code>false</code> otherwise
      */
     public boolean isShowIcon() {
         return getIcon() != null;
     }
-        
-    
-    /** 
+
+
+    /**
      * Catches look and feel changes and updates the layout of the renderer.
      * This renderer simulates the table header look and feel.
-     * 
+     *
      * @see javax.swing.JComponent#updateUI()
      */
     @Override
@@ -188,20 +187,20 @@ final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
         super.updateUI();
         setTableHeaderLaF();
     } // updateUI()
-    
-    
-    /** 
+
+
+    /**
      * Called when look and feel changes. Sets border and fore- and background
      * color according the TableHeader property.
-     */ 
+     */
     private void setTableHeaderLaF() {
         setForeground(UIManager.getColor("TableHeader.foreground"));
         setBackground(UIManager.getColor("TableHeader.background"));
         setFont(UIManager.getFont("TableHeader.font"));
         setBorder(UIManager.getBorder("TableHeader.cellBorder"));
     } // setTableHeaderLaF()
-    
-    
+
+
     /**
      * Private icon that is shown in front of the value to encode the hilite
      * status. This icon is a simple bubble. The code is mainly copied from
@@ -218,32 +217,32 @@ final class DataCellHeaderRenderer extends DefaultTableCellRenderer {
         public int getIconHeight() {
             return m_height;
         }
-        
+
         /**
          * {@inheritDoc}
          */
         public int getIconWidth() {
             return m_width;
         }
-        
+
         /**
          * @param height new height to set.
          */
         public void setIconHeight(final int height) {
             m_height = height;
         }
-        
+
         /**
          * @param width new width to set.
          */
         public void setIconWidth(final int width) {
             m_width = width;
         }
-        
-        /** 
-         * Setting a color the icon should have. Used to encode the hilite 
+
+        /**
+         * Setting a color the icon should have. Used to encode the hilite
          * status.
-         * 
+         *
          * @param color New color for the icon.
          */
         public void setColor(final Color color) {

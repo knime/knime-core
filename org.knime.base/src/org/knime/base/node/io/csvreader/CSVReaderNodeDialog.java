@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -52,7 +52,11 @@ package org.knime.base.node.io.csvreader;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -62,7 +66,9 @@ import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JSpinner;
 import javax.swing.JTextField;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -91,6 +97,11 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
     private final JCheckBox m_hasRowHeaderChecker;
     private final JCheckBox m_hasColHeaderChecker;
     private final JCheckBox m_supportShortLinesChecker;
+    private final JCheckBox m_limitRowsChecker;
+    private final JSpinner m_limitRowsSpinner;
+    private final JCheckBox m_skipFirstLinesChecker;
+    private final JSpinner m_skipFirstLinesSpinner;
+
 
     /** Create new dialog, init layout. */
     CSVReaderNodeDialog() {
@@ -114,22 +125,68 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
         m_hasRowHeaderChecker = new JCheckBox("Has Row Header");
         m_hasColHeaderChecker = new JCheckBox("Has Column Header");
         m_supportShortLinesChecker = new JCheckBox("Support Short Lines");
+        m_skipFirstLinesChecker = new JCheckBox("Skip first lines ");
+        m_skipFirstLinesSpinner = new JSpinner(new SpinnerNumberModel(1, 1, Integer.MAX_VALUE, 1));
+        m_skipFirstLinesChecker.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(final ItemEvent e) {
+                m_skipFirstLinesSpinner.setEnabled(m_skipFirstLinesChecker.isSelected());
+            }
+        });
+        m_skipFirstLinesChecker.doClick();
+        m_limitRowsChecker = new JCheckBox("Limit rows ");
+        m_limitRowsSpinner = new JSpinner(new SpinnerNumberModel(50, 0, Integer.MAX_VALUE, 50));
+        m_limitRowsChecker.addItemListener(new ItemListener() {
+            @Override
+            public void itemStateChanged(final ItemEvent e) {
+                m_limitRowsSpinner.setEnabled(m_limitRowsChecker.isSelected());
+            }
+        });
+        m_limitRowsChecker.doClick();
         panel.add(getInFlowLayout(m_filePanel, button), BorderLayout.NORTH);
-        JPanel centerPanel = new JPanel(new GridLayout(0, 2));
-        centerPanel.add(getInFlowLayout(m_colDelimiterField,
-                new JLabel("Column Delimiter ")));
-        centerPanel.add(getInFlowLayout(m_rowDelimiterField,
-                new JLabel("Row Delimiter ")));
-        centerPanel.add(getInFlowLayout(m_quoteStringField,
-                new JLabel("Quote Char ")));
-        centerPanel.add(getInFlowLayout(m_commentStartField,
-                new JLabel("Comment Char ")));
-        centerPanel.add(getInFlowLayout(m_hasColHeaderChecker));
-        centerPanel.add(getInFlowLayout(m_hasRowHeaderChecker));
-        centerPanel.add(getInFlowLayout(m_supportShortLinesChecker));
+        JPanel centerPanel = createPanel();
         panel.add(centerPanel, BorderLayout.CENTER);
-        panel.add(new JLabel("   "), BorderLayout.WEST);
+        panel.add(new JLabel(" "), BorderLayout.WEST);
         addTab("CSV Reader", panel);
+    }
+
+    private JPanel createPanel() {
+        JPanel centerPanel = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.anchor = GridBagConstraints.WEST;
+        centerPanel.add(getInFlowLayout(m_colDelimiterField, new JLabel("Column Delimiter ")), gbc);
+        gbc.gridx += 1;
+        centerPanel.add(getInFlowLayout(m_rowDelimiterField, new JLabel("Row Delimiter ")), gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy += 1;
+        centerPanel.add(getInFlowLayout(m_quoteStringField, new JLabel("Quote Char ")), gbc);
+        gbc.gridx += 1;
+        centerPanel.add(getInFlowLayout(m_commentStartField, new JLabel("Comment Char ")), gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy += 1;
+        centerPanel.add(getInFlowLayout(m_hasColHeaderChecker), gbc);
+        gbc.gridx += 1;
+        centerPanel.add(getInFlowLayout(m_hasRowHeaderChecker), gbc);
+
+        gbc.gridx = 0;
+        gbc.gridy += 1;
+        centerPanel.add(getInFlowLayout(m_supportShortLinesChecker), gbc);
+
+        gbc.gridy += 1;
+        centerPanel.add(getInFlowLayout(m_skipFirstLinesChecker), gbc);
+        gbc.gridx += 1;
+        centerPanel.add(getInFlowLayout(m_skipFirstLinesSpinner), gbc);
+        gbc.gridy += 1;
+        gbc.gridx = 0;
+        centerPanel.add(getInFlowLayout(m_limitRowsChecker), gbc);
+        gbc.gridx += 1;
+        centerPanel.add(getInFlowLayout(m_limitRowsSpinner), gbc);
+        return centerPanel;
     }
 
     private static JPanel getInFlowLayout(final JComponent... comps) {
@@ -170,6 +227,22 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
         m_hasColHeaderChecker.setSelected(config.hasColHeader());
         m_hasRowHeaderChecker.setSelected(config.hasRowHeader());
         m_supportShortLinesChecker.setSelected(config.isSupportShortLines());
+        int skipFirstLinesCount = config.getSkipFirstLinesCount();
+        if (skipFirstLinesCount > 0) {
+            m_skipFirstLinesChecker.setSelected(true);
+            m_skipFirstLinesSpinner.setValue(skipFirstLinesCount);
+        } else {
+            m_skipFirstLinesChecker.setSelected(false);
+            m_skipFirstLinesSpinner.setValue(1);
+        }
+        long limitRowsCount = config.getLimitRowsCount();
+        if (limitRowsCount >= 0) { // 0 is allowed -- will only read header
+            m_limitRowsChecker.setSelected(true);
+            m_limitRowsSpinner.setValue(limitRowsCount);
+        } else {
+            m_limitRowsChecker.setSelected(false);
+            m_limitRowsSpinner.setValue(50);
+        }
     }
 
 
@@ -220,6 +293,10 @@ final class CSVReaderNodeDialog extends NodeDialogPane {
         config.setHasRowHeader(m_hasRowHeaderChecker.isSelected());
         config.setHasColHeader(m_hasColHeaderChecker.isSelected());
         config.setSupportShortLines(m_supportShortLinesChecker.isSelected());
+        int skiptFirstLines = (Integer)(m_skipFirstLinesChecker.isSelected() ? m_skipFirstLinesSpinner.getValue() : -1);
+        config.setSkipFirstLinesCount(skiptFirstLines);
+        int limitRows = (Integer)(m_limitRowsChecker.isSelected() ? m_limitRowsSpinner.getValue() : -1);
+        config.setLimitRowsCount(limitRows);
         config.saveSettingsTo(settings);
     }
 
