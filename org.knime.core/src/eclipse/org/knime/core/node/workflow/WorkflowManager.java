@@ -1999,42 +1999,51 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     private <T> void stepExecutionUpToNodeType(final NodeID id, final Class<T> nodeModelClass,
             final NodeModelFilter<T> filter) {
         NodeContainer nc = getNodeContainer(id);
-        NodeOutPort[] incoming = assemblePredecessorOutPorts(id);
-        for (int i = 0; i < incoming.length; i++) {
-            if (incoming[i] == null) {
-                if (!nc.getInPort(i).getPortType().isOptional()) {
-                    return;  // stop here
-                }
-            } else {
-                State state = incoming[i].getNodeState();
-                if (!State.EXECUTED.equals(state)
-                        && !state.executionInProgress()) {
-                    return;  // stop here
+        if (nc instanceof SingleNodeContainer) {
+            // for single Node Containers we need to make sure that they are
+            // fully connected and all predecessors are executed or executing:
+            // 2.7.1.: fixes bug #____ where we also did that for Metanodes - not
+            // all inports need to be connected (or executing/executed)
+            // 2.7.2.: caused bug #.
+            NodeOutPort[] incoming = assemblePredecessorOutPorts(id);
+            for (int i = 0; i < incoming.length; i++) {
+                if (incoming[i] == null) {
+                    if (!nc.getInPort(i).getPortType().isOptional()) {
+                        return;  // stop here
+                    }
+                } else {
+                    State state = incoming[i].getNodeState();
+                    if (!State.EXECUTED.equals(state) && !state.executionInProgress()) {
+                        return;  // stop here
+                    }
                 }
             }
-        }
-        // node has all required predecessors and they are all marked
-        // or executing or executed....
-        State state = nc.getState();
-        if (!State.EXECUTED.equals(state) && !state.executionInProgress()) {
-            // the node itself is not yet marked/executed - mark it
-            if (nc.isLocalWFM()) {
-                ((WorkflowManager)nc).stepExecutionUpToNodeType(nodeModelClass, filter);
-            } else {
-                assert nc instanceof SingleNodeContainer;
+            // node has all required predecessors and they are all marked
+            // or executing or executed....
+            State state = nc.getState();
+            if (!State.EXECUTED.equals(state) && !state.executionInProgress()) {
+                // the node itself is not yet marked/executed - mark it
                 SingleNodeContainer snc = (SingleNodeContainer)nc;
                 // ...but first check if it's not the stopping type!
                 if (!snc.isInactive()) {
                     // if current nodeModel is of class nodeModelClass and not filtered
                     if (nodeModelClass.isInstance(snc.getNodeModel())) {
                         final T nodeModel = (T) snc.getNodeModel();
-                    	if (filter.include(nodeModel)) {
-                    	    return;  // stop here
-                    	}
+                        if (filter.include(nodeModel)) {
+                            return;  // stop here
+                        }
                     }
                 }
                 this.markAndQueueNodeAndPredecessors(id, -1);
             }
+        } else {
+            // fixes bug #: for metanodes we can't really check much: there may
+            // be unconnected inports, executing metanode containing some not
+            // (yet) executing/executed nodes etc.
+            // Just step in and check the SNCs inside - for those we know
+            // what to do!
+            assert nc.isLocalWFM();
+            ((WorkflowManager)nc).stepExecutionUpToNodeType(nodeModelClass, filter);
         }
         // and also mark successors
         stepExecutionUpToNodeTypeSuccessorsOnly(id, nodeModelClass, filter);
