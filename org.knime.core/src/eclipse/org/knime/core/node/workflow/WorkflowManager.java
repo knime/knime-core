@@ -2655,8 +2655,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     throw new IllegalLoopException("Node in loop body not in"
                         + " same workflow as head&tail!");
                 } else if (!nc.isResetable()) {
-                    LOGGER.warn("Node " + nc.getNameWithID() + " not resetable "
-                            + "during loop run, it is " + nc.getState());
+                    // do not warn - this can actually happen if we (try to) enter a metanode with two inports twice.
                     continue;
                 }
                 if (nc instanceof SingleNodeContainer) {
@@ -3994,9 +3993,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                                 // as a "flag" that we have already done it:
                                 invokeResetOnSingleNodeContainer(lsnc);
                                 configureSingleNodeContainer(lsnc, true);
-                                // and now launch the proper reset (&configure!)
-                                // for this branch:
-                                resetAndConfigureNode(lsid);
+                                // and now launch the proper reset (&configure!) for this branch:
+                                // Fix for bug #4148:
+                                // instead of a call to resetNodeAndSuccessors()
+                                // call the following to avoid checking for "isResetAble()"
+                                // which will fail in nested loops with "affected" loops
+                                // within a metanode
+                                resetNodeAndSuccessors(lsid);
+                                // and launch configure starting with this node
+                                configureNodeAndSuccessors(lsid, true);
                             }
                         }
                     }
