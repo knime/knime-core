@@ -52,14 +52,14 @@
 package org.knime.base.node.viz.plotter.box;
 
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
 
 import org.knime.base.node.viz.condbox.ConditionalBoxPlotNodeModel;
 import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
 import org.knime.base.util.coordinate.Coordinate;
-import org.knime.core.data.DataColumnDomain;
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DoubleValue;
 
 /**
  *
@@ -87,14 +87,17 @@ public class ConditionalBoxPlotter extends BoxPlotter {
              * numerical column to all box plots. In this way they all use the
              * same scale and the whole domain range is displayed.
              */
-            coordinates.put(colSpec, Coordinate.createCoordinate(numColSpec));
+            coordinates.put(colSpec, Coordinate.createCoordinate(colSpec));
         }
         setCoordinates(coordinates);
 
-        DataColumnDomain domain = numColSpec.getDomain();
+        /*DataColumnDomain domain = numColSpec.getDomain();
         double min = ((DoubleValue)domain.getLowerBound()).getDoubleValue();
         double max = ((DoubleValue)domain.getUpperBound()).getDoubleValue();
-        createYCoordinate(min, max);
+        createYCoordinate(min, max);*/
+
+        // hack to achieve an empty y axis
+        createNominalYCoordinate(new LinkedHashSet<DataCell>());
     }
 
     /**
