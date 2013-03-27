@@ -79,6 +79,52 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/xmlbeans/org/knime/node2012/KnimeNodeDocument.java" type="org.knime.node2012.KnimeNodeDocument$KnimeNode$Type">
+        <filter comment="changes in node.dtd/node.xsd - not API protected" id="403767336">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.KnimeNodeDocument.KnimeNode.Type"/>
+                <message_argument value="INT_SCOPE_END"/>
+            </message_arguments>
+        </filter>
+        <filter comment="changes in node.dtd/node.xsd - not API protected" id="403767336">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.KnimeNodeDocument.KnimeNode.Type"/>
+                <message_argument value="INT_SCOPE_START"/>
+            </message_arguments>
+        </filter>
+        <filter comment="changes in node.dtd/node.xsd - not API protected" id="403767336">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.KnimeNodeDocument.KnimeNode.Type"/>
+                <message_argument value="SCOPE_END"/>
+            </message_arguments>
+        </filter>
+        <filter comment="changes in node.dtd/node.xsd - not API protected" id="403767336">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.KnimeNodeDocument.KnimeNode.Type"/>
+                <message_argument value="SCOPE_START"/>
+            </message_arguments>
+        </filter>
+        <filter comment="changes in node.dtd/node.xsd - not API protected" id="1211105284">
+            <message_arguments>
+                <message_argument value="INT_SCOPE_END"/>
+            </message_arguments>
+        </filter>
+        <filter comment="changes in node.dtd/node.xsd - not API protected" id="1211105284">
+            <message_arguments>
+                <message_argument value="INT_SCOPE_START"/>
+            </message_arguments>
+        </filter>
+        <filter comment="changes in node.dtd/node.xsd - not API protected" id="1211105284">
+            <message_arguments>
+                <message_argument value="SCOPE_END"/>
+            </message_arguments>
+        </filter>
+        <filter comment="changes in node.dtd/node.xsd - not API protected" id="1211105284">
+            <message_arguments>
+                <message_argument value="SCOPE_START"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/xmlbeans/org/knime/node2012/LiDocument.java" type="org.knime.node2012.LiDocument">
         <filter id="403804204">
             <message_arguments>
