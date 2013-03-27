@@ -822,6 +822,13 @@ public class DataContainer implements RowAppender {
         return m_table;
     }
 
+    /** Used in tests.
+     * @return underlying buffer (or null if not initialized after restore).
+     */
+    Buffer getBuffer() {
+        return m_buffer;
+    }
+
     /**
      * Get the currently set DataTableSpec.
      * @return The current spec.

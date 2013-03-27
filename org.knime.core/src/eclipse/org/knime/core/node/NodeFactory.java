@@ -112,6 +112,12 @@ public abstract class NodeFactory<T extends NodeModel> {
         LoopStart,
         /** End node of a loop. */
         LoopEnd,
+        /** Start node of a scope.
+         * @since 2.8*/
+        ScopeStart,
+        /** End node of a scope.
+         * @since 2.8*/
+        ScopeEnd,
         /** A node contributing to quick/web form. */
         QuickForm,
         /** All other nodes. */

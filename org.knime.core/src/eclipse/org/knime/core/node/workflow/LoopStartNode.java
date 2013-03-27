@@ -69,6 +69,6 @@ package org.knime.core.node.workflow;
  *
  * @author M. Berthold, University of Konstanz & Bernd Wiswedel, KNIME.com
  */
-public interface LoopStartNode {
+public interface LoopStartNode extends ScopeStartNode {
     // marker interface only
 }

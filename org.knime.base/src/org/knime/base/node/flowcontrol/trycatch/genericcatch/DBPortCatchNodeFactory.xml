@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="catch.png" type="ScopeEnd">
+    <name>Catch Errors (DB Ports)</name>
+    
+    <shortDescription>End of Try-Catch construct. Use second input if execution leading to first input failed.</shortDescription>
+    
+    <fullDescription>
+        <intro>
+        This nodes takes the data either from one of the input port or
+        concatenates the two (or three) tables if more than one branch
+        contains data.
+        </intro>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Original input">The original input</inPort>
+        <inPort index="1" name="Default input">The input to be used when execution on the main branch failed.</inPort>
+        <outPort index="0" name="Output">Original input or default if execution failed.</outPort>
+        <outPort index="1" name="Failure">Reasons for Failure (if any).</outPort>
+    </ports>
+</knimeNode>

@@ -105,6 +105,9 @@ import org.knime.core.data.filestore.internal.NotInWorkflowFileStoreHandlerRepos
 import org.knime.core.data.filestore.internal.NotInWorkflowWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.ROWriteFileStoreHandler;
 import org.knime.core.data.util.NonClosableOutputStream;
+import org.knime.core.data.util.memory.MemoryAlertObject;
+import org.knime.core.data.util.memory.MemoryObjectTracker;
+import org.knime.core.data.util.memory.MemoryReleasable;
 import org.knime.core.eclipseUtil.GlobalClassCreator;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -362,8 +365,8 @@ class Buffer implements KNIMEStreamConstants {
 
     /**
      * A map with other buffers that may have written certain blob cells. We reference them by using the bufferID that
-     * is written to the file. This temporary repository is exists only while a node is being executed. It is only
-     * important while writing to this buffer.
+     * is written to the file. This temporary repository exists only while a node is executing. It is only important
+     * while writing to this buffer.
      */
     private Map<Integer, ContainerTable> m_localRepository;
 
@@ -375,6 +378,13 @@ class Buffer implements KNIMEStreamConstants {
 
     /** Number of open file input streams on m_binFile. */
     private AtomicInteger m_nrOpenInputStreams = new AtomicInteger();
+
+    /**
+     * Field that is non-null in the following cases. - Writes data into m_list (
+     * {@link BufferMemoryReleasable}), - Closed and holds data in m_list (
+     * {@link WhileReadingMemoryReleasableNotifier}), - Reads data back into memory
+     */
+    private MemoryReleasable m_memoryReleasable;
 
     /**
      * the stream that writes to the file, it's a special object output stream, in which we can mark the end of an entry
@@ -574,24 +584,25 @@ class Buffer implements KNIMEStreamConstants {
      *            take ownership. This option is true for loop end nodes, which need to aggregate the data generated in
      *            the loop body
      */
-    void addRow(final DataRow r, final boolean isCopyOfExisting, final boolean forceCopyOfBlobs) {
+    synchronized void addRow(final DataRow r, final boolean isCopyOfExisting, final boolean forceCopyOfBlobs) {
         try {
             BlobSupportDataRow row = saveBlobsAndFileStores(r, isCopyOfExisting, forceCopyOfBlobs);
             m_list.add(row);
-            incrementSize();
-            // if threshold exceeded, write all rows to disk
-            if (m_list.size() > m_maxRowsInMem) {
-                ensureTempFileExists();
+            int oldTotalSize = getAndIncrementSize();
+            int currentListSize = m_list.size();
+            if (currentListSize > m_maxRowsInMem) {
                 if (m_outStream == null) {
-                    Buffer.onFileCreated();
-                    m_outStream = initOutFile(new BufferedOutputStream(new FileOutputStream(m_binFile)));
+                    writeAllRowsFromListToFile(true);
+                    // write next row to file directly
+                    MemoryObjectTracker.getInstance().removeMemoryReleaseable(m_memoryReleasable);
+                    m_memoryReleasable = null;
+                } else {
+                    writeRow(m_list.remove(0), m_outStream);
                 }
-                for (BlobSupportDataRow rowInList : m_list) {
-                    writeRow(rowInList, m_outStream);
-                }
-                m_list.clear();
-                // write next rows directly to file
-                m_maxRowsInMem = 0;
+            } else if (oldTotalSize == 0) {
+                // starting to cache rows in memory, add mem observer
+                m_memoryReleasable = new BufferMemoryReleasable();
+                MemoryObjectTracker.getInstance().addMemoryReleaseable(m_memoryReleasable);
             }
         } catch (Throwable e) {
             if (!(e instanceof IOException)) {
@@ -613,6 +624,30 @@ class Buffer implements KNIMEStreamConstants {
         }
     } // addRow(DataRow)
 
+    /**
+     * Write all rows from list into file. Used while rows are added and if low mem condition is met.
+     *
+     * @return number rows written
+     * @throws IOException ...
+     */
+    final int writeAllRowsFromListToFile(final boolean clearListAndReset) throws IOException {
+        assert Thread.holdsLock(this);
+        ensureTempFileExists();
+        int result = m_list.size();
+        if (m_outStream == null) {
+            Buffer.onFileCreated();
+            m_outStream = initOutFile(new BufferedOutputStream(new FileOutputStream(m_binFile)));
+            for (BlobSupportDataRow rowInList : m_list) {
+                writeRow(rowInList, m_outStream);
+            }
+            if (clearListAndReset) {
+                m_list.clear();
+                m_maxRowsInMem = 0;
+            }
+        }
+        return result;
+    }
+
     private BlobSupportDataRow saveBlobsAndFileStores(final DataRow row, final boolean isCopyOfExisting,
                                                       final boolean forceCopyOfBlobs) throws IOException {
         final int cellCount = row.getNumCells();
@@ -631,8 +666,7 @@ class Buffer implements KNIMEStreamConstants {
                     handleIncomingBlob(cell, col, row.getNumCells(), isCopyOfExisting, forceCopyOfBlobs);
             if (mustBeFlushedPriorSave(processedCell)) {
                 if (m_maxRowsInMem != 0) {
-                    LOGGER.debug("Forcing buffer to disc as it contains "
-                            + "file store cells that need special handling");
+                    LOGGER.debug("Forcing buffer to disc as it contains file store cells that need special handling");
                     m_maxRowsInMem = 0;
                 }
             }
@@ -856,9 +890,10 @@ class Buffer implements KNIMEStreamConstants {
         }
     }
 
-    /** Increments the row counter by one, used in addRow. */
-    void incrementSize() {
-        m_size++;
+    /** Increments the row counter by one, used in addRow.
+     * @return previous size (before incrementing it). */
+    private int getAndIncrementSize() {
+        return m_size++;
     }
 
     /**
@@ -870,6 +905,11 @@ class Buffer implements KNIMEStreamConstants {
     void close(final DataTableSpec spec) {
         assert spec != null : "Buffer is not open.";
         m_spec = spec;
+        closeInternal();
+    }
+
+    /** Closes by creating shortcut array for file access. */
+    synchronized void closeInternal() {
         // everything is in the list, i.e. in memory
         if (m_outStream == null) {
             // disallow modification
@@ -886,6 +926,9 @@ class Buffer implements KNIMEStreamConstants {
                 LOGGER.debug("Buffer file (" + m_binFile.getAbsolutePath() + ") is " + size + "MB in size");
             } catch (IOException ioe) {
                 throw new RuntimeException("Cannot close stream of file \"" + m_binFile.getName() + "\"", ioe);
+            }
+            if (m_memoryReleasable != null) {
+                MemoryObjectTracker.getInstance().removeMemoryReleaseable(m_memoryReleasable);
             }
         }
         m_localRepository = null;
@@ -1137,6 +1180,12 @@ class Buffer implements KNIMEStreamConstants {
         m_useBackIntoMemoryIterator = true;
     }
 
+    /** Called from back into memory iterator when the last row was read. */
+    final synchronized void onAllRowsReadBackIntoMemory() {
+        m_memoryReleasable = new BufferMemoryReleasable();
+        MemoryObjectTracker.getInstance().addMemoryReleaseable(m_memoryReleasable);
+    }
+
     /**
      * Get reference to the table repository that this buffer was initially instantiated with. Used for blob
      * reading/writing.
@@ -1270,8 +1319,8 @@ class Buffer implements KNIMEStreamConstants {
         return serializer;
     }
 
-    private void writeBlobDataCell(final BlobDataCell cell, final BlobAddress a,
-                                   final DataCellSerializer<DataCell> ser) throws IOException {
+    private void writeBlobDataCell(final BlobDataCell cell,
+        final BlobAddress a, final DataCellSerializer<DataCell> ser) throws IOException {
         // addRow will make sure that m_indicesOfBlobInColumns is initialized
         // when this method is called. If this method is called from a different
         // buffer object, it means that this buffer has been closed!
@@ -1538,6 +1587,7 @@ class Buffer implements KNIMEStreamConstants {
             }
             return f;
         } else {
+            MemoryObjectTracker.getInstance().promoteMemoryReleaseable(m_memoryReleasable);
             return new FromListIterator();
         }
     }
@@ -1761,6 +1811,10 @@ class Buffer implements KNIMEStreamConstants {
         }
         m_binFile = null;
         m_blobDir = null;
+        if (m_memoryReleasable != null) {
+            MemoryObjectTracker.getInstance().removeMemoryReleaseable(m_memoryReleasable);
+            m_memoryReleasable = null;
+        }
     }
 
     private static final int MAX_FILES_TO_CREATE_BEFORE_GC = 10000;
@@ -1772,6 +1826,7 @@ class Buffer implements KNIMEStreamConstants {
      * {@link #MAX_FILES_TO_CREATE_BEFORE_GC} files the garbage collector. This fixes an unreported problem on windows,
      * where (although the file reference is null) there seems to be a hidden file lock, which yields a
      * "not enough system resources to perform operation" error.
+     *
      * @throws IOException If there is not enough space left on the partition of the temp folder
      */
     private static void onFileCreated() throws IOException {
@@ -1780,10 +1835,10 @@ class Buffer implements KNIMEStreamConstants {
         long minSpace = DataContainer.MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB * (1024L * 1024L);
         if (freeSpace < minSpace) {
             throw new IOException("The partition of the temp directory \"" + DataContainer.TEMP_DIRECTORY
-                                  + "\" is too low on disc space (" + freeSpace / (1024 * 1024) + "MB available but "
-                                  + "at least " + DataContainer.MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB + "MB are required). "
-                                  + " You can tweak the limit by changing the \""
-                                  + KNIMEConstants.PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB + "\" java property.");
+                    + "\" is too low on disc space (" + freeSpace / (1024 * 1024) + "MB available but at least "
+                    + DataContainer.MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB + "MB are required). "
+                    + " You can tweak the limit by changing the \""
+                    + KNIMEConstants.PROPERTY_MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB + "\" java property.");
         }
         if (count % MAX_FILES_TO_CREATE_BEFORE_GC == 0) {
             LOGGER.debug("created " + count + " files, performing garbage collection to release handles");
@@ -1800,6 +1855,33 @@ class Buffer implements KNIMEStreamConstants {
                 LOGGER.debug(message);
             } else {
                 LOGGER.debug(message, t);
+            }
+        }
+    }
+
+    private final class BufferMemoryReleasable implements MemoryReleasable {
+
+        @Override
+        public boolean memoryAlert(final MemoryAlertObject alert) {
+            synchronized (Buffer.this) {
+                if (m_list == null) {
+                    // cleared while sleeping on Buffer.this
+                    return true;
+                } else {
+                    // is buffer open and addRow can be called
+                    boolean isWhileWritingTable = m_list instanceof ArrayList;
+                    try {
+                        int nrRowsWritten = writeAllRowsFromListToFile(isWhileWritingTable);
+                        LOGGER.debug("Wrote " + nrRowsWritten + " rows in order to free memory");
+                        if (!isWhileWritingTable) {
+                            closeInternal();
+                            m_list = null;
+                        }
+                    } catch (IOException ioe) {
+                        LOGGER.error("Failed to swap to disc while freeing memory", ioe);
+                    }
+                    return false; // don't unregister, we do it ourselves
+                }
             }
         }
     }
@@ -1858,6 +1940,7 @@ class Buffer implements KNIMEStreamConstants {
 
         // do not use iterator here, see inner class comment
         private int m_nextIndex = 0;
+        private final List<BlobSupportDataRow> m_listReference = m_list;
 
         /**
          * {@inheritDoc}
@@ -1883,26 +1966,22 @@ class Buffer implements KNIMEStreamConstants {
             synchronized (semaphore) {
                 // need to synchronize access to the list as the list is
                 // potentially modified by the backIntoMemoryIterator
-                if (m_nextIndex < m_list.size()) {
-                    return m_list.get(m_nextIndex++);
+                if (m_nextIndex < m_listReference.size()) {
+                    return m_listReference.get(m_nextIndex++);
                 }
                 if (backIntoMemoryIterator == null) {
-                    throw new InternalError("DataRow list contains fewer " + " elements than buffer (" + m_list.size()
-                            + " vs. " + size() + ")");
-                }
-                // intermediate change possible (by other iterator)
-                if (m_nextIndex < m_list.size()) {
-                    return m_list.get(m_nextIndex++);
+                    throw new InternalError("DataRow list contains fewer elements than buffer ("
+                            + m_listReference.size() + " vs. " + size() + ")");
                 }
                 BlobSupportDataRow next = (BlobSupportDataRow)m_backIntoMemoryIterator.next();
                 if (next == null) {
                     throw new InternalError("Unable to restore data row from disk");
                 }
-                m_list.add(next);
+                m_listReference.add(next);
                 if (++m_nextIndex >= size()) {
-                    assert !m_backIntoMemoryIterator.hasNext() : "File "
-                            + "iterator returns more rows than buffer contains";
+                    assert !m_backIntoMemoryIterator.hasNext() : "File iterator returns more rows than buffer contains";
                     m_backIntoMemoryIterator = null;
+                    onAllRowsReadBackIntoMemory();
                 }
                 return next;
             }

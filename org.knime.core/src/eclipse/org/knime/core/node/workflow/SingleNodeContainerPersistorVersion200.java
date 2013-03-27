@@ -200,7 +200,15 @@ public class SingleNodeContainerPersistorVersion200 extends
             } else if ("loopcontext_execute".equals(type)) {
                 result.add(new InnerFlowLoopContext());
             } else if ("loopcontext_inactive".equals(type)) {
-                result.add(new InactiveBranchFlowLoopContext());
+                FlowLoopContext flc = new FlowLoopContext();
+                flc.inactiveScope(true);
+                result.add(flc);
+            } else if ("scopecontext".equals(type)) {
+                result.add(new FlowScopeContext());
+            } else if ("scopecontext_inactive".equals(type)) {
+                FlowScopeContext slc = new FlowScopeContext();
+                slc.inactiveScope(true);
+                result.add(slc);
             } else {
                 throw new InvalidSettingsException(
                         "Unknown flow object type: " + type);
@@ -339,16 +347,25 @@ public class SingleNodeContainerPersistorVersion200 extends
                 sub.addString("type", "variable");
                 v.save(sub);
             } else if (s instanceof FlowLoopContext) {
-                NodeSettingsWO sub = stackSet.addNodeSettings("Loop_" + c);
-                sub.addString("type", "loopcontext");
+                if (!((FlowLoopContext)s).isInactiveScope()) {
+                    NodeSettingsWO sub = stackSet.addNodeSettings("Loop_" + c);
+                    sub.addString("type", "loopcontext");
+                } else {
+                    NodeSettingsWO sub = stackSet.addNodeSettings("Inactive_Loop_" + c);
+                    sub.addString("type", "loopcontext_inactive");
+                }
             } else if (s instanceof InnerFlowLoopContext) {
                 NodeSettingsWO sub =
                     stackSet.addNodeSettings("Loop_Execute_" + c);
                 sub.addString("type", "loopcontext_execute");
-            } else if (s instanceof InactiveBranchFlowLoopContext) {
-                NodeSettingsWO sub =
-                    stackSet.addNodeSettings("Inactive_Loop_" + c);
-                sub.addString("type", "loopcontext_inactive");
+            } else if (s instanceof FlowScopeContext) {
+                if (!((FlowScopeContext)s).isInactiveScope()) {
+                    NodeSettingsWO sub = stackSet.addNodeSettings("Scope_" + c);
+                    sub.addString("type", "scopecontext");
+                } else {
+                    NodeSettingsWO sub = stackSet.addNodeSettings("Inactive_Scope_" + c);
+                    sub.addString("type", "scopecontext_inactive");
+                }
             } else {
                 SAVE_LOGGER.error("Saving of flow objects of type \""
                         + s.getClass().getSimpleName() +  "\" not implemented");

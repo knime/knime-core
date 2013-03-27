@@ -62,7 +62,6 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
 
-import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
@@ -1175,6 +1174,19 @@ class Workflow {
         public int compareTo(final NodeAndInports o2) {
             return (Integer.valueOf(this.m_depth).compareTo(o2.m_depth));
         }
+        /** {@inheritDoc} */
+        @Override
+        public boolean equals(final Object obj) {
+            if (!(obj instanceof NodeAndInports)) {
+                return false;
+            }
+            return this.m_depth == ((NodeAndInports)obj).m_depth;
+        }
+        /** {@inheritDoc} */
+        @Override
+        public int hashCode() {
+            return m_nodeId.hashCode() + m_depth;
+        }
     }
 
     /** Return matching LoopEnd node for the given LoopStart.
@@ -1191,7 +1203,7 @@ class Workflow {
             throw new IllegalArgumentException("Not a Loop Start Node " + id);
         }
         SingleNodeContainer snc = (SingleNodeContainer)nc;
-        if (!LoopRole.BEGIN.equals(snc.getLoopRole())) {
+        if (!snc.isModelCompatibleTo(LoopStartNode.class)) {
             throw new IllegalArgumentException("Not a Loop Start Node " + id);
         }
         NodeID foundEnd = null;
@@ -1213,7 +1225,7 @@ class Workflow {
                 NodeContainer destNC = getNode(destID);
                 if (destNC instanceof SingleNodeContainer) {
                     SingleNodeContainer destSNC = (SingleNodeContainer)destNC;
-                    if (LoopRole.END.equals(destSNC.getLoopRole())) {
+                    if (destSNC.isModelCompatibleTo(LoopEndNode.class)) {
                         if (currentDepth == 0) {
                             if ((foundEnd != null)
                                     && (!foundEnd.equals(destID))) {
@@ -1228,7 +1240,7 @@ class Workflow {
                             currentDepth--;
                         }
                     }
-                    if (LoopRole.BEGIN.equals(destSNC.getLoopRole())) {
+                    if (destSNC.isModelCompatibleTo(LoopStartNode.class)) {
                         currentDepth++;
                     }
                 }
@@ -1252,7 +1264,7 @@ class Workflow {
             throw new IllegalArgumentException("Not a Loop End Node " + id);
         }
         SingleNodeContainer snc = (SingleNodeContainer)nc;
-        if (!LoopRole.END.equals(snc.getLoopRole())) {
+        if (!snc.isModelCompatibleTo(LoopEndNode.class)) {
             throw new IllegalArgumentException("Not a Loop End Node " + id);
         }
         NodeID foundStart = null;
@@ -1276,7 +1288,7 @@ class Workflow {
                 NodeContainer srcNC = getNode(srcID);
                 if (srcNC instanceof SingleNodeContainer) {
                     SingleNodeContainer srcSNC = (SingleNodeContainer)srcNC;
-                    if (LoopRole.BEGIN.equals(srcSNC.getLoopRole())) {
+                    if (srcSNC.isModelCompatibleTo(LoopStartNode.class)) {
                         if (currentDepth == 0) {
                             if ((foundStart != null)
                                 && (!foundStart.equals(srcID))) {
@@ -1291,7 +1303,7 @@ class Workflow {
                             currentDepth--;
                         }
                     }
-                    if (LoopRole.END.equals(srcSNC.getLoopRole())) {
+                    if (srcSNC.isModelCompatibleTo(LoopEndNode.class)) {
                         currentDepth++;
                     }
                 }

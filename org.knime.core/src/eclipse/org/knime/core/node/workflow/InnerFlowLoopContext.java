@@ -57,6 +57,10 @@ package org.knime.core.node.workflow;
  * order to remove any previously added flow variables. They are put onto
  * immediately following their removal to indicate an iteration start.
  *
+ * Note the difference to the normal FlowLoopContext object which is put
+ * onto the stack during configure! This object helps to keep the stack
+ * clean during the multiple subsequent execute-calls.
+ *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class InnerFlowLoopContext extends FlowObject {
