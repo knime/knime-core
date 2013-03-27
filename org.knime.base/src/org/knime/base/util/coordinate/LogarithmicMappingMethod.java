@@ -70,6 +70,36 @@ public class LogarithmicMappingMethod implements MappingMethod {
     public static final String ID_BASE_E = "lnMappingMethod";
 
     /**
+     * Identifier for a logarithmic mapping method with base 2 ( ld ).
+     * This identifier is deprecated, because the mapping with different bases produces the same results.
+     */
+    @Deprecated
+    public static final String ID_BASE_2 = "ldMappingMethod";
+
+    /**
+     * Identifier for a logarithmic mapping method with base 10 ( log ).
+     * This identifier is deprecated, because the mapping with different bases produces the same results.
+     */
+    @Deprecated
+    public static final String ID_BASE_10 = "logMappingMethod";
+
+    /**
+     *
+     */
+    public LogarithmicMappingMethod() {
+        // standard constructor, do nothing
+    }
+
+    /**
+     * @param base The base to which the logarithm is calculated
+     * This constructor is deprecated, because the mapping with different bases produces the same results.
+     */
+    @Deprecated
+    public LogarithmicMappingMethod(final double base) {
+        // do nothing
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
