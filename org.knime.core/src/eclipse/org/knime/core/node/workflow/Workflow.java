@@ -710,9 +710,8 @@ class Workflow {
                                 // entries that we already have
                                 // (parallel branches can cause this)
                             }
-                            if (nai.getDepth() != currDepth + 1) {
-                                // depth has to be smaller or equal
-                                assert nai.getDepth() < currDepth + 1;
+                            if (nai.getDepth() <= currDepth) {
+                                // fix depth if smaller or equal
                                 nai.setDepth(currDepth + 1);
                                 if (ix < currIndex) {
                                     // move this node to end of list if it was
@@ -725,6 +724,8 @@ class Workflow {
                                     // Make sure we still point to current node.
                                     currIndex--;
                                 }
+                            } else {
+                                // don't fix, depth is already larger. Node was seen previously
                             }
                         }
                     }
