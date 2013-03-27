@@ -54,6 +54,8 @@ public class DataContainerTest extends TestCase {
 
     private static final DataTableSpec EMPTY_SPEC = new DataTableSpec(
             new String[] {}, new DataType[] {});
+    private static final DataTableSpec SPEC_STR_INT_DBL = new DataTableSpec(new String[] {"String", "Int", "Double"}, 
+            new DataType[] {StringCell.TYPE, IntCell.TYPE, DoubleCell.TYPE});
 
     /**
      * Main method. Ignores argument.
@@ -95,6 +97,91 @@ public class DataContainerTest extends TestCase {
         c.close();
         // hm, does it work again?
         c.close(); // should ignore it
+    }
+    
+    public final void testMemoryAlertAfterClose() throws Exception {
+        DataContainer container = new DataContainer(SPEC_STR_INT_DBL, 
+                true, Integer.MAX_VALUE, false);
+        for (RowIterator it = generateRows(100000); it.hasNext();) {
+            container.addRowToTable(it.next());
+        }
+        container.close();
+        Buffer buffer = container.getBufferedTable().getBuffer();
+        synchronized (buffer) {
+            buffer.writeAllRowsFromListToFile(false);
+        }
+        RowIterator tableIterator = container.getTable().iterator();
+        for (RowIterator it = generateRows(100000); it.hasNext();) {
+            assertEquals(it.next(), tableIterator.next());
+        }
+    }
+    
+    public final void testMemoryAlertAfterCloseWhileReading() throws Exception {
+        DataContainer container = new DataContainer(SPEC_STR_INT_DBL, 
+                true, Integer.MAX_VALUE, false);
+        int count = 100000;
+        for (RowIterator it = generateRows(count); it.hasNext();) {
+            container.addRowToTable(it.next());
+        }
+        container.close();
+        RowIterator tableIterator = container.getTable().iterator();
+        RowIterator it = generateRows(count);
+        int i;
+        for (i = 0; i < count / 2; i++) {
+            assertEquals(it.next(), tableIterator.next());
+        }
+        Buffer buffer = container.getBufferedTable().getBuffer();
+        synchronized (buffer) {
+            buffer.writeAllRowsFromListToFile(false);
+        }
+        
+        for (; i < count; i++) {
+            assertEquals(it.next(), tableIterator.next());
+        }
+    }
+    
+    public void testMemoryAlertWhileWrite() throws Exception {
+        DataContainer cont = new DataContainer(SPEC_STR_INT_DBL, true, 1000000);
+        int nrRows = 10;
+        RowIterator it = generateRows(nrRows);
+        int i = 0;
+        for (; i < nrRows / 2; i++) {
+            cont.addRowToTable(it.next());
+        }
+        Buffer buffer = cont.getBuffer();
+        synchronized (buffer) {
+            buffer.writeAllRowsFromListToFile(true);
+        }
+        for (; i < nrRows; i++) {
+            cont.addRowToTable(it.next());
+        }
+        cont.close();
+        RowIterator tableIT = cont.getTable().iterator();
+        for (RowIterator r = generateRows(nrRows); r.hasNext();) {
+            DataRow expected = r.next();
+            DataRow actual = tableIT.next();
+            assertEquals(expected, actual);
+        }
+    }
+
+    private static RowIterator generateRows(final int count) {
+        return new RowIterator() {
+            
+            private int m_index = 0;
+            
+            @Override
+            public DataRow next() {
+                DefaultRow r = new DefaultRow(RowKey.createRowKey(m_index), 
+                        new StringCell("String " + m_index), new IntCell(m_index), new DoubleCell(m_index));
+                m_index++;
+                return r;
+            }
+            
+            @Override
+            public boolean hasNext() {
+                return m_index < count;
+            }
+        };
     }
 
     /**
@@ -292,7 +379,7 @@ public class DataContainerTest extends TestCase {
      * 
      */
     public void testBigFile() {
-        // with these setting (50, 100) it will write an 250MB cache file
+        // with these setting (50, 1000) it will write an 250MB cache file
         // (the latest data this value was checked: 31. August 2006...)
         final int colCount = 50;
         final int rowCount = 100;
@@ -322,6 +409,7 @@ public class DataContainerTest extends TestCase {
         final Throwable[] throwables = new Throwable[1];
         final DataTable table = container.getTable();
         Runnable runnable = new Runnable() {
+            @Override
             public void run() {
                 try {
                     int i = 0;
@@ -403,6 +491,7 @@ public class DataContainerTest extends TestCase {
             }
         }
         Runnable runnable = new Runnable() {
+            @Override
             public void run() {
                 try {
                     int i = 0;
