@@ -107,37 +107,17 @@ public abstract class Coordinate {
         addCoordinateFactory(IntValue.class, new IntegerCoordinateFactory());
         addCoordinateFactory(StringValue.class, new NominalCoordinateFactory());
 
-        AscendingNumericTickPolicyStrategy ascending =
-                new AscendingNumericTickPolicyStrategy();
-
-        DescendingNumericTickPolicyStrategy descending =
-                new DescendingNumericTickPolicyStrategy();
-
+        AscendingNumericTickPolicyStrategy ascending = new AscendingNumericTickPolicyStrategy();
+        DescendingNumericTickPolicyStrategy descending = new DescendingNumericTickPolicyStrategy();
         PercentagePolicyStrategy percentage = new PercentagePolicyStrategy();
-
-        addPolicy(DoubleValue.class, AscendingNumericTickPolicyStrategy.ID,
-                ascending);
-        addPolicy(DoubleValue.class, DescendingNumericTickPolicyStrategy.ID,
-                descending);
+        addPolicy(DoubleValue.class, AscendingNumericTickPolicyStrategy.ID, ascending);
+        addPolicy(DoubleValue.class, DescendingNumericTickPolicyStrategy.ID, descending);
         addPolicy(DoubleValue.class, PercentagePolicyStrategy.ID, percentage);
 
-        LogarithmicMappingMethod lnMappingMethod =
-                new LogarithmicMappingMethod();
-        LogarithmicMappingMethod log10MappingMethod =
-                new LogarithmicMappingMethod(10);
-        LogarithmicMappingMethod ldMappingMethod =
-                new LogarithmicMappingMethod(2);
-
-        addMappingMethod(DoubleValue.class, LogarithmicMappingMethod.ID_BASE_E,
-                lnMappingMethod);
-        addMappingMethod(DoubleValue.class,
-                LogarithmicMappingMethod.ID_BASE_10, log10MappingMethod);
-        addMappingMethod(DoubleValue.class, LogarithmicMappingMethod.ID_BASE_2,
-                ldMappingMethod);
-
+        LogarithmicMappingMethod lnMappingMethod = new LogarithmicMappingMethod();
+        addMappingMethod(DoubleValue.class, LogarithmicMappingMethod.ID_BASE_E, lnMappingMethod);
         SquareRootMappingMethod sqrt = new SquareRootMappingMethod();
-        addMappingMethod(
-                DoubleValue.class, SquareRootMappingMethod.ID_SQRT, sqrt);
+        addMappingMethod(DoubleValue.class, SquareRootMappingMethod.ID_SQRT, sqrt);
 
     }
 

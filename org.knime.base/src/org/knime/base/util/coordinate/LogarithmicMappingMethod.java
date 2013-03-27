@@ -60,6 +60,7 @@ import org.knime.core.data.def.DoubleCell;
  * creating ticks.
  *
  * @author Stephan Sellien, University of Konstanz
+ * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
 public class LogarithmicMappingMethod implements MappingMethod {
 
@@ -69,44 +70,9 @@ public class LogarithmicMappingMethod implements MappingMethod {
     public static final String ID_BASE_E = "lnMappingMethod";
 
     /**
-     * Identifier for a logarithmic mapping method with base 2 ( ld ).
-     */
-    public static final String ID_BASE_2 = "ldMappingMethod";
-
-    /**
-     * Identifier for a logarithmic mapping method with base 10 ( log ).
-     */
-    public static final String ID_BASE_10 = "logMappingMethod";
-
-    private double m_base;
-
-    private double m_logBase;
-
-    /**
-     * Creates a logarithmic mapping method. The standard base is e.
-     */
-    public LogarithmicMappingMethod() {
-        m_logBase = 1; // log_e(e) = 1
-        m_base = Math.E;
-    }
-
-    /**
-     * Creates a logarithmic mapping method with the given base.
-     *
-     * @param base the base of the logarithm
-     */
-    public LogarithmicMappingMethod(final double base) {
-        if (base <= 0.0) {
-            throw new IllegalArgumentException(
-                    "Base of logarithm must be greater than 0.");
-        }
-        m_logBase = Math.log(base);
-        m_base = base;
-    }
-
-    /**
      * {@inheritDoc}
      */
+    @Override
     public DataCell doMapping(final DataCell in) {
         if (!(in.getType().isCompatible(DoubleValue.class))) {
             // we can only map double values
@@ -121,7 +87,7 @@ public class LogarithmicMappingMethod implements MappingMethod {
         if (Double.isInfinite(value)) {
             value = Double.MAX_VALUE;
         }
-        value = Math.log(value) / m_logBase;
+        value = Math.log(value);
 
         return new DoubleCell(value);
     }
@@ -129,14 +95,9 @@ public class LogarithmicMappingMethod implements MappingMethod {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getDisplayName() {
-        if (m_base == Math.E) { // natural logarithm
-            return "ln(x)";
-        } else if (m_base == 2.0) { // binary logarithm
-            return "ld(x)";
-        } else {
-            return "log_" + m_base + "(x)";
-        }
+        return "log (x)";
     }
 
     /**
@@ -145,6 +106,7 @@ public class LogarithmicMappingMethod implements MappingMethod {
      * The logarithmic mapping method is usable if lower bound is greater or
      * equal 0 and the upper bound is greater than 1 for scaling reasons.
      */
+    @Override
     public boolean isCompatibleWithDomain(final DataColumnDomain domain) {
         if (domain == null || !domain.hasBounds()) {
             return false;
@@ -166,6 +128,7 @@ public class LogarithmicMappingMethod implements MappingMethod {
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getLabel(final DataCell cell) {
         if (cell == null || !cell.getType().isCompatible(DoubleValue.class)) {
             throw new IllegalArgumentException(
@@ -173,6 +136,6 @@ public class LogarithmicMappingMethod implements MappingMethod {
         }
         double value = ((DoubleValue)cell).getDoubleValue();
 
-        return Math.pow(m_base, value);
+        return Math.pow(Math.E, value);
     }
 }
