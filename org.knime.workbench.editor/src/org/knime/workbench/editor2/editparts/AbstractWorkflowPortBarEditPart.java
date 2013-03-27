@@ -58,14 +58,20 @@ import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPolicy;
 import org.eclipse.gef.Request;
 import org.eclipse.swt.widgets.Display;
+import org.knime.core.node.workflow.ConnectionContainer;
+import org.knime.core.node.workflow.ConnectionUIInformation;
+import org.knime.core.node.workflow.NodeAnnotation;
+import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodePort;
 import org.knime.core.node.workflow.NodePropertyChangedEvent;
 import org.knime.core.node.workflow.NodePropertyChangedListener;
 import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.node.workflow.WorkflowAnnotation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.WorkflowSelectionDragEditPartsTracker;
 import org.knime.workbench.editor2.editparts.policy.PortGraphicalRoleEditPolicy;
 import org.knime.workbench.editor2.figures.AbstractWorkflowPortBarFigure;
+import org.knime.workbench.editor2.figures.NodeContainerFigure;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
 
 /**
@@ -111,6 +117,68 @@ public abstract class AbstractWorkflowPortBarEditPart
                     new Rectangle(bounds[0], bounds[1], bounds[2], bounds[3]));
         }
         super.refreshVisuals();
+    }
+
+    /**
+     * returns the minX coordinate and the maxX coordinate of all nodes, annotations and bendpoints in the flow (taking
+     * the size of the elements into account). Or Integer.MIN/MAX_value if no elements exist.
+     * @return new int[] {minX, maxX};
+     */
+    protected int[] getMinMaxXcoordInWorkflow() {
+        int maxX = Integer.MIN_VALUE;
+        int minX = Integer.MAX_VALUE;
+        // find the smallest and the biggest X coordinate in all the UI infos in the flow
+        WorkflowManager manager = ((WorkflowPortBar)getModel()).getWorkflowManager();
+        for (NodeContainer nc : manager.getNodeContainers()) {
+            int nodeWidth = NodeContainerFigure.WIDTH;
+            NodeAnnotation nodeAnno = nc.getNodeAnnotation();
+            if (nodeAnno != null) {
+                if (nodeAnno.getWidth() > nodeWidth) {
+                    nodeWidth = nodeAnno.getWidth();
+                }
+            }
+            NodeUIInformation uiInfo = nc.getUIInformation();
+            if (uiInfo != null) {
+                int x = uiInfo.getBounds()[0];
+                // right border of node
+                x = x + (nodeWidth / 2);
+                if (maxX < x) {
+                    maxX = x;
+                }
+                // left border of node
+                x = x - nodeWidth;
+                if (minX > x) {
+                    minX = x;
+                }
+            }
+        }
+        for (WorkflowAnnotation anno : manager.getWorkflowAnnotations()) {
+            int x = anno.getX();
+            if (minX > x) {
+                minX = x;
+            }
+            x = x + anno.getWidth();
+            if (maxX < x) {
+                maxX = x;
+            }
+        }
+        for (ConnectionContainer conn : manager.getConnectionContainers()) {
+            ConnectionUIInformation uiInfo = conn.getUIInfo();
+            if (uiInfo != null) {
+                int[][] bendpoints = uiInfo.getAllBendpoints();
+                if (bendpoints != null) {
+                    for (int[] b : bendpoints) {
+                        if (maxX < b[0]) {
+                            maxX = b[0];
+                        }
+                        if (minX > b[0]) {
+                            minX = b[0];
+                        }
+                    }
+                }
+            }
+        }
+        return new int[] {minX, maxX};
     }
 
     /**

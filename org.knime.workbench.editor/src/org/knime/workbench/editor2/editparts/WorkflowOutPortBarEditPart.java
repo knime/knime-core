@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   20.02.2008 (Fabian Dill): created
  */
@@ -55,21 +55,21 @@ import java.util.List;
 
 import org.eclipse.draw2d.IFigure;
 import org.eclipse.draw2d.geometry.Rectangle;
-import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodePort;
+import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.figures.WorkflowOutPortBarFigure;
 import org.knime.workbench.editor2.model.WorkflowPortBar;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
-public class WorkflowOutPortBarEditPart 
+public class WorkflowOutPortBarEditPart
     extends AbstractWorkflowPortBarEditPart {
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -88,18 +88,16 @@ public class WorkflowOutPortBarEditPart
      */
     @Override
     protected IFigure createFigure() {
-        WorkflowOutPortBarFigure fig = new WorkflowOutPortBarFigure();
-        NodeUIInformation uiInfo = ((WorkflowPortBar)getModel())
-            .getUIInfo();
+        NodeUIInformation uiInfo = ((WorkflowPortBar)getModel()).getUIInfo();
         if (uiInfo != null && uiInfo.isFilledProperly()) {
             int[] bounds = uiInfo.getBounds();
             Rectangle newBounds = new Rectangle(
-                    bounds[0], bounds[1], bounds[2], bounds[3]); 
-            fig.setBounds(newBounds);
-            // TODO: do we need this? or is it enought o set the bounds?
-            fig.setInitialized(true);
+                    bounds[0], bounds[1], bounds[2], bounds[3]);
+            return new WorkflowOutPortBarFigure(newBounds);
+        } else {
+            int[] minmax = getMinMaxXcoordInWorkflow();
+            return new WorkflowOutPortBarFigure(minmax[1] /* pass the max x coord */);
         }
-        return fig;
     }
 
 }

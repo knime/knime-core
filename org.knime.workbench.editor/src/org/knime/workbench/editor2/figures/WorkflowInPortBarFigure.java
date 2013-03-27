@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   20.02.2008 (Fabian Dill): created
  */
@@ -54,38 +54,63 @@ import org.eclipse.draw2d.Graphics;
 import org.eclipse.draw2d.geometry.Rectangle;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class WorkflowInPortBarFigure extends AbstractWorkflowPortBarFigure {
-    
-    
+
+    private final int m_maxXcord;
+
+    /**
+     * If no UI info is available. Bar places itself left of all components
+     * @param maxXcoord the most left coordinate used by the workflow components
+     */
+    public WorkflowInPortBarFigure(final int maxXcoord) {
+        m_maxXcord = maxXcoord;
+        setInitialized(false);
+    }
+
+    /**
+     * @param uiInfo from the UI info
+     */
+    public WorkflowInPortBarFigure(final Rectangle uiInfo) {
+        m_maxXcord = 0; // not needed
+        setBounds(uiInfo);
+        setInitialized(true);
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public void paint(Graphics graphics) {
+    public void paint(final Graphics graphics) {
         Rectangle parent = getParent().getBounds().getCopy();
-        if (!isInitialized()) {    
-            Rectangle newBounds = new Rectangle(OFFSET, OFFSET, 
-                    WIDTH + AbstractPortFigure.WF_PORT_SIZE, 
-                    parent.height - (2 * OFFSET));
-            setBounds(newBounds);
+        if (!isInitialized()) {
+            int barWidth = WIDTH + AbstractPortFigure.WF_PORT_SIZE + OFFSET;
+            int xLoc;
+            if (barWidth + 10 >= m_maxXcord) {
+                xLoc = m_maxXcord - 50 - WIDTH - AbstractPortFigure.WF_PORT_SIZE;
+            } else {
+                xLoc = OFFSET;
+            }
+            Rectangle newBounds =
+                    new Rectangle(xLoc, OFFSET, WIDTH + AbstractPortFigure.WF_PORT_SIZE, parent.height - (2 * OFFSET));
             setInitialized(true);
+            setBounds(newBounds);
         }
         super.paint(graphics);
     }
 
     @Override
-    protected void fillShape(Graphics graphics) {
-        graphics.fillRectangle(getBounds().x, getBounds().y, 
-                getBounds().width - AbstractPortFigure.WF_PORT_SIZE, 
+    protected void fillShape(final Graphics graphics) {
+        graphics.fillRectangle(getBounds().x, getBounds().y,
+                getBounds().width - AbstractPortFigure.WF_PORT_SIZE,
                 getBounds().height);
     }
-    
-    
+
+
     @Override
-    protected void outlineShape(Graphics graphics) {
+    protected void outlineShape(final Graphics graphics) {
         Rectangle r = getBounds().getCopy();
         r.width -= AbstractPortFigure.WF_PORT_SIZE;
         int x = r.x + lineWidth / 2;
