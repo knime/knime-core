@@ -1797,8 +1797,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // do not worry about pipelines, just process all nodes "left
             // to right" and make sure we touch all of them (also yellow/green
             // nodes in a metanode that is connected to red nodes only)...
-            for (NodeID sortedID : m_workflow.createBreadthFirstSortedList(
-                     m_workflow.getNodeIDs(), true).keySet()) {
+            for (NodeID sortedID : m_workflow.createBreadthFirstSortedList(m_workflow.getNodeIDs(), true).keySet()) {
                 // TODO reset all nodes in reverse order first
                 NodeContainer nc = getNodeContainer(sortedID);
                 if (nc instanceof SingleNodeContainer) {
@@ -1813,9 +1812,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         // note that there still may be metanodes
                         // connected to this one which contain green
                         // nodes! (hence the brute force left-to-right approach
-                        configureSingleNodeContainer(
-                                (SingleNodeContainer)nc,
-                                /* keepNodemessage=*/ false);
+                        configureSingleNodeContainer((SingleNodeContainer)nc, /* keepNodemessage=*/ false);
                     }
                 } else {
                     assert nc instanceof WorkflowManager;
@@ -1893,8 +1890,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // loop start nodes inside this WFM
             resetAndConfigureAffectedLoopContext(this.getID(), inPorts);
             // now find all nodes that are directly affected:
-            ArrayList<NodeAndInports> nodes
-                              = m_workflow.findAllConnectedNodes(inPorts);
+            ArrayList<NodeAndInports> nodes = m_workflow.findAllConnectedNodes(inPorts);
             ListIterator<NodeAndInports> li = nodes.listIterator(nodes.size());
             while (li.hasPrevious()) {
                 NodeAndInports nai = li.previous();
@@ -1905,9 +1901,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         ((SingleNodeContainer)nc).reset();
                     } else {
                         assert nc instanceof WorkflowManager;
-                        ((WorkflowManager)nc)
-                              .resetNodesInWFMConnectedToInPorts(
-                                                             nai.getInports());
+                        ((WorkflowManager)nc).resetNodesInWFMConnectedToInPorts(nai.getInports());
                     }
                 }
             }
@@ -3895,8 +3889,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         // b) and then reset node itself
         if (nc instanceof SingleNodeContainer) {
-            invokeResetOnSingleNodeContainer(
-                    (SingleNodeContainer)nc);
+            invokeResetOnSingleNodeContainer((SingleNodeContainer)nc);
         } else {
             WorkflowManager wfm = (WorkflowManager)nc;
             // this is ok, since we will never call this again
@@ -3923,8 +3916,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // First find all the nodes in this workflow that are connected
         // to the origin:
         LinkedHashMap<NodeID, Set<Integer>> allnodes
-            = m_workflow.getBreadthFirstListOfNodeAndSuccessors(id,
-                       /*skipWFM=*/ true);
+               = m_workflow.getBreadthFirstListOfNodeAndSuccessors(id, /*skipWFM=*/ true);
         // the do cleanup
         resetAndConfigureAffectedLoopContext(allnodes);
     }
@@ -3943,8 +3935,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // First find all the nodes in this workflow that are connected
         // to the origin:
         LinkedHashMap<NodeID, Set<Integer>> allnodes
-            = m_workflow.getBreadthFirstListOfPortSuccessors(id, portIndices,
-                       /*skipWFM=*/ true);
+               = m_workflow.getBreadthFirstListOfPortSuccessors(id, portIndices, /*skipWFM=*/ true);
         // the do cleanup
         resetAndConfigureAffectedLoopContext(allnodes);
     }
@@ -3960,15 +3951,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         for (NodeID leid : allnodes.keySet()) {
             NodeContainer lenc = getNodeContainer(leid);
             if (lenc instanceof SingleNodeContainer) {
-                if (((SingleNodeContainer)lenc).getNodeModel()
-                        instanceof LoopEndNode) {
+                if (((SingleNodeContainer)lenc).getNodeModel() instanceof LoopEndNode) {
                     NodeID lsid;
                     try {
                         lsid = m_workflow.getMatchingLoopStart(leid);
                     } catch (Exception e) {
                         // this should have been caught earlier...
-                        LOGGER.coding("WorkflowManager.reset() LoopEnd "
-                            + "encountered invalid state: ", e);
+                        LOGGER.coding("WorkflowManager.reset() LoopEnd encountered invalid state: ", e);
                         lsid = null;
                     }
                     if ((lsid != null) && (!allnodes.containsKey(lsid))) {
