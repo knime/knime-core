@@ -2687,7 +2687,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 //                ((SingleNodeContainer)tailNode).markForExecution(true);
             } else {
                 // configure of tailNode failed! Abort execution of loop:
-                throw new IllegalLoopException("Loop end node could not be executed. Aborting Loop execution.");
+                // unqueue head node
+                headNode.markForExecution(false);
+                // and bail:
+                throw new IllegalLoopException("Loop end node could not be executed."
+                           + " This is likely due to a failure in the loop's body. Aborting Loop execution.");
             }
         } else {
             // (4b-5b) skip reset/configure... just clean outports
