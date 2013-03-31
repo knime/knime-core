@@ -1275,8 +1275,7 @@ class Workflow {
         while (!st.isEmpty()) {
             Pair<NodeID, Integer> p = st.pop();
             NodeID currentID = p.getFirst();
-            for (ConnectionContainer cc
-                    : m_connectionsByDest.get(currentID)) {
+            for (ConnectionContainer cc : m_connectionsByDest.get(currentID)) {
                 assert currentID.equals(cc.getDest());
                 int currentDepth = p.getSecond();
                 NodeID srcID = cc.getSource();
@@ -1291,12 +1290,10 @@ class Workflow {
                     SingleNodeContainer srcSNC = (SingleNodeContainer)srcNC;
                     if (srcSNC.isModelCompatibleTo(LoopStartNode.class)) {
                         if (currentDepth == 0) {
-                            if ((foundStart != null)
-                                && (!foundStart.equals(srcID))) {
-                                    // we can reach it twice but we should never
-                                    // reach another end node!
-                                throw new IllegalLoopException("Loops can not"
-                                    + " have more than one Start Node!");
+                            if ((foundStart != null) && (!foundStart.equals(srcID))) {
+                                // we can reach it twice but we should never
+                                // reach another end node!
+                                throw new IllegalLoopException("Loops can not have more than one Start Node!");
                             }
                             foundStart = srcID;
                             continue;
