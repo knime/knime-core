@@ -3980,7 +3980,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                                 configureSingleNodeContainer(lsnc, true);
                                 // and now launch the proper reset (&configure!) for this branch:
                                 // Fix for bug #4148:
-                                // instead of a call to resetNodeAndSuccessors()
+                                // instead of a call to resetAndConfigureNode(lsid)
                                 // call the following to avoid checking for "isResetAble()"
                                 // which will fail in nested loops with "affected" loops
                                 // within a metanode
