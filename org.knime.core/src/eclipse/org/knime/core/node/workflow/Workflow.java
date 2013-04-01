@@ -631,23 +631,36 @@ class Workflow {
         // "startNode" (which can be the WFM itself or a LoopStartNode or
         // any other "start" node) with a port index contained in the set
         for (ConnectionContainer cc : m_connectionsBySource.get(startID)) {
-            if ((startPorts == null)
-                        || (startPorts.contains(cc.getSourcePort()))) {
+            if ((startPorts == null) || (startPorts.contains(cc.getSourcePort()))) {
                 NodeID nextID = cc.getDest();
                 if (nextID.equals(endID)) {
                     // don't add the end node!
                 } else if (nextID.equals(this.getID())) {
                     // don't record outgoing connections
                     if (startID.equals(this.getID())) {
-                        assert cc.getType().
-                         equals(ConnectionContainer.ConnectionType.WFMTHROUGH);
+                        assert cc.getType().equals(ConnectionContainer.ConnectionType.WFMTHROUGH);
                     } else {
-                        assert cc.getType().
-                           equals(ConnectionContainer.ConnectionType.WFMOUT);
+                        assert cc.getType().equals(ConnectionContainer.ConnectionType.WFMOUT);
                     }
                 } else {
-                    tempOutput.add(new NodeAndInports(cc.getDest(),
-                            cc.getDestPort(), /*depth=*/0));
+                    int ix = 0;
+                    for (ix = 0; ix < tempOutput.size(); ix++) {
+                        if (tempOutput.get(ix).m_nodeId.equals(cc.getDest())) {
+                            break;
+                        }
+                    }
+                    if (ix >= tempOutput.size()) {
+                        // ...it's a node not yet in our list: add it
+                        tempOutput.add(new NodeAndInports(cc.getDest(), cc.getDestPort(), /*depth=*/0));
+                    } else {
+                        // node is already in list. Add port if not already contained:
+                        NodeAndInports nai = tempOutput.get(ix);
+                        if (!nai.getInports().contains(cc.getDestPort())) {
+                            nai.addInport(cc.getDestPort());
+                        } else {
+                            // ignore entries that we already have (parallel branches can cause this)
+                        }
+                    }
                 }
             }
         }
@@ -661,10 +674,8 @@ class Workflow {
             Set<Integer> currInports = tempOutput.get(currIndex).getInports();
             int currDepth = tempOutput.get(currIndex).getDepth();
             Set<Integer> currOutports = new HashSet<Integer>();
-            if ((currNode instanceof SingleNodeContainer)
-                || (currInports == null)) {
-                // simple: all outports are affected
-                // (SNC or WFM without listed inports)
+            if ((currNode instanceof SingleNodeContainer) || (currInports == null)) {
+                // simple: all outports are affected (SNC or WFM without listed inports)
                 for (int i = 0; i < currNode.getNrOutPorts(); i++) {
                     currOutports.add(i);
                 }
@@ -673,10 +684,8 @@ class Workflow {
                 // less simple: we need to determine which outports are
                 // connected to the listed inports:
                 for (Integer inPortIx : currInports) {
-                    Workflow currWorkflow
-                                  = ((WorkflowManager)currNode).getWorkflow();
-                    Set<Integer> connectedOutports
-                                   = currWorkflow.connectedOutPorts(inPortIx);
+                    Workflow currWorkflow = ((WorkflowManager)currNode).getWorkflow();
+                    Set<Integer> connectedOutports = currWorkflow.connectedOutPorts(inPortIx);
                     currOutports.addAll(connectedOutports);
                 }
             }
@@ -684,10 +693,8 @@ class Workflow {
                 if (currOutports.contains(cc.getSourcePort())) {
                     // only if one of the affected outports is connected:
                     NodeID destID = cc.getDest();
-                    if ((!destID.equals(this.getID()))
-                            && (!destID.equals(endID))) {
-                        // only if we have not yet reached an outport or
-                        // the "end" node
+                    if ((!destID.equals(this.getID())) && (!destID.equals(endID))) {
+                        // only if we have not yet reached an outport or the "end" node
                         // try to find node in existing list:
                         int ix = 0;
                         for (ix = 0; ix < tempOutput.size(); ix++) {
@@ -697,8 +704,7 @@ class Workflow {
                         }
                         if (ix >= tempOutput.size()) {
                             // ...it's a node not yet in our list: add it
-                            tempOutput.add(new NodeAndInports(destID,
-                                    cc.getDestPort(), currDepth + 1));
+                            tempOutput.add(new NodeAndInports(destID, cc.getDestPort(), currDepth + 1));
                         } else {
                             assert ix != currIndex;
                             // node is already in list, adjust depth to new
@@ -707,8 +713,7 @@ class Workflow {
                             if (!nai.getInports().contains(cc.getDestPort())) {
                                 nai.addInport(cc.getDestPort());
                             } else {
-                                // entries that we already have
-                                // (parallel branches can cause this)
+                                // ignore entries that we already have (parallel branches can cause this)
                             }
                             if (nai.getDepth() <= currDepth) {
                                 // fix depth if smaller or equal
