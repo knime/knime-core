@@ -63,7 +63,6 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -192,7 +191,7 @@ public class UngroupNodeModel extends NodeModel {
             throw new InvalidSettingsException("Invalid input data");
         }
         final BufferedDataTable table = inData[0];
-        int[] colIdxs = getSelectedColIdxs(table.getDataTableSpec(), m_collCols);
+        int[] colIdxs = compatibleGetSelectedColIds(table);
         if (colIdxs == null || colIdxs.length <= 0) {
             setWarningMessage("No ungroup column selected. Node returns input table.");
             return inData;
@@ -328,28 +327,26 @@ public class UngroupNodeModel extends NodeModel {
         }
         final DataCell[] cells = new DataCell[cellCount];
         int cellIdx = 0;
+        int newCellidx = 0;
         for (int i = 0, length = row.getNumCells(); i < length; i++) {
-            if (removeCollectionCol && map.containsKey(Integer.valueOf(i))) {
-                //skip the collection column
-                continue;
+            if (map.containsKey(Integer.valueOf(i))) {
+                if (!removeCollectionCol) {
+                    cells[cellIdx++] = row.getCell(i);
+                }
+                cells[cellIdx++] = newCells[newCellidx++];
+            } else {
+                cells[cellIdx++] = row.getCell(i);
             }
-            cells[cellIdx++] = row.getCell(i);
-        }
-        //append all new cells
-        for (DataCell newCell : newCells) {
-            cells[cellIdx++] = newCell;
         }
         return new DefaultRow(newKey, cells);
     }
 
     private int[] getSelectedColIdxs(final DataTableSpec spec,
-            final SettingsModelColumnFilter2 columnFilter)
+            final String... colNames)
     throws InvalidSettingsException {
-        final FilterResult filterResult = columnFilter.applyTo(spec);
-        final String[] featureNames = filterResult.getIncludes();
-        final int[] idxs = new int[featureNames.length];
-        for (int i = 0, length = featureNames.length; i < length; i++) {
-            final String name = featureNames[i];
+        final int[] idxs = new int[colNames.length];
+        for (int i = 0, length = colNames.length; i < length; i++) {
+            final String name = colNames[i];
             idxs[i] = spec.findColumnIndex(name);
             if (idxs[i] < 0) {
                 throw new InvalidSettingsException("Column with name "
@@ -392,26 +389,37 @@ public class UngroupNodeModel extends NodeModel {
             }
             collectionColsMap.put(colName, basicType);
         }
-        for (final DataColumnSpec origColSpec: spec) {
-            if (removeCollectionCol && collectionColsMap.containsKey(origColSpec.getName())) {
-                //skip the selected collection columns
-                continue;
-            }
-            specs.add(origColSpec);
-        }
         final DataColumnSpecCreator specCreator =
                 new DataColumnSpecCreator("dummy", StringCell.TYPE);
-        for (Entry<String, DataType> entry : collectionColsMap.entrySet()) {
-            if (removeCollectionCol) {
-                //keep the original column name if the collection columns are removed
-                specCreator.setName(entry.getKey());
+        for (final DataColumnSpec origColSpec: spec) {
+            final String origColName = origColSpec.getName();
+            final DataType resultType = collectionColsMap.get(origColName);
+            if (resultType != null) {
+                if (!removeCollectionCol) {
+                    specs.add(origColSpec);
+                    specCreator.setName(DataTableSpec.getUniqueColumnName(spec, origColName));
+                } else {
+                    specCreator.setName(origColName);
+                }
+                specCreator.setType(resultType);
+                specs.add(specCreator.createSpec());
             } else {
-                specCreator.setName(DataTableSpec.getUniqueColumnName(
-                                               spec, entry.getKey()));
+                specs.add(origColSpec);
             }
-            specCreator.setType(entry.getValue());
-            specs.add(specCreator.createSpec());
         }
+//        final DataColumnSpecCreator specCreator =
+//                new DataColumnSpecCreator("dummy", StringCell.TYPE);
+//        for (Entry<String, DataType> entry : collectionColsMap.entrySet()) {
+//            if (removeCollectionCol) {
+//                //keep the original column name if the collection columns are removed
+//                specCreator.setName(entry.getKey());
+//            } else {
+//                specCreator.setName(DataTableSpec.getUniqueColumnName(
+//                                               spec, entry.getKey()));
+//            }
+//            specCreator.setType(entry.getValue());
+//            specs.add(specCreator.createSpec());
+//        }
         final DataTableSpec resultSpec =
             new DataTableSpec(specs.toArray(new DataColumnSpec[0]));
         return resultSpec;
@@ -477,6 +485,8 @@ public class UngroupNodeModel extends NodeModel {
         try {
             // this option has been introduced in KNIME 2.8
             m_collCols.loadSettingsFrom(settings);
+            //set the old column name setting to null to indicate that the new settings should be used
+            m_columnName.setStringValue(null);
         } catch (InvalidSettingsException e) {
             //load and use the old settings
             m_columnName.loadSettingsFrom(settings);
@@ -525,6 +535,24 @@ public class UngroupNodeModel extends NodeModel {
                 throw new IOException(ex.getMessage());
             }
         }
+    }
+
+    /**
+     * @param table
+     * @return
+     * @throws InvalidSettingsException
+     */
+    private int[] compatibleGetSelectedColIds(final BufferedDataTable table) throws InvalidSettingsException {
+        final DataTableSpec spec = table.getDataTableSpec();
+        final String[] columnNames;
+        if (m_columnName.getStringValue() == null) {
+            //the column filter has been introduced in KNIME 2.8
+            final FilterResult filterResult = m_collCols.applyTo(spec);
+            columnNames = filterResult.getIncludes();
+        } else {
+            columnNames = new String[] {m_columnName.getStringValue()};
+        }
+        return getSelectedColIdxs(spec, columnNames);
     }
 
     /**
