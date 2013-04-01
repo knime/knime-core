@@ -1191,6 +1191,17 @@ public final class DataType {
         return new DataType(m_hasPreferredValueClass, m_valueClasses, m_collectionElementType, newAdapterList);
     }
 
+    /** Get a cell class that was used to create this type. The result may be null. Note, if a column's type returns a
+     * non-null cell class it doesn't necessarily mean that all elements in the column can be type-cast to that cell
+     * class.
+     *
+     * @return the cellClass
+     * @since 2.8
+     */
+    public Class<? extends DataCell> getCellClass() {
+        return m_cellClass;
+    }
+
     /**
      * Saves this <code>DataType</code> to the given
      * {@link org.knime.core.node.config.ConfigWO}.
