@@ -64,8 +64,6 @@ import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 import org.knime.core.node.port.pmml.preproc.PMMLPreprocTranslator;
 import org.knime.core.util.Pair;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 /**
  * @author morent
  *
@@ -96,7 +94,7 @@ public class PMMLOne2ManyTranslator implements PMMLPreprocTranslator {
      */
     @Override
     public List<Integer> initializeFrom(final DerivedField[] derivedFields) {
-       throw new NotImplementedException();
+       throw new UnsupportedOperationException(getClass().getName() + "#initializedFrom(.) not implemened.");
     }
 
     /**
