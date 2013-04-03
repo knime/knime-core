@@ -1869,8 +1869,8 @@ class Buffer implements KNIMEStreamConstants {
                     // cleared while sleeping on Buffer.this
                     return true;
                 } else {
-                    // is buffer open and addRow can be called
-                    boolean isWhileWritingTable = m_list instanceof ArrayList;
+                    // is buffer open and addRow can be called (close not called --> spec is null)
+                    boolean isWhileWritingTable = m_spec == null;
                     try {
                         int nrRowsWritten = writeAllRowsFromListToFile(isWhileWritingTable);
                         LOGGER.debug("Wrote " + nrRowsWritten + " rows in order to free memory");
