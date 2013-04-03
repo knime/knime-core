@@ -627,6 +627,7 @@ class Buffer implements KNIMEStreamConstants {
     /**
      * Write all rows from list into file. Used while rows are added and if low mem condition is met.
      *
+     * @param clearListAndReset If true the list will be cleared (true only if called during addRow/writing).
      * @return number rows written
      * @throws IOException ...
      */
