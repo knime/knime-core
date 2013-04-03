@@ -22,11 +22,13 @@
  */
 package org.knime.core.data.container;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Random;
 import java.util.Set;
 import java.util.Vector;
+import java.util.concurrent.atomic.AtomicReference;
 
 import junit.framework.TestCase;
 
@@ -161,6 +163,75 @@ public class DataContainerTest extends TestCase {
             DataRow expected = r.next();
             DataRow actual = tableIT.next();
             assertEquals(expected, actual);
+        }
+    }
+
+    public final void testMemoryAlertWhileRestore() throws Exception {
+        DataContainer container = new DataContainer(SPEC_STR_INT_DBL, true, /* no rows in mem */ 0, false);
+        int count = 100000;
+        for (RowIterator it = generateRows(count); it.hasNext();) {
+            container.addRowToTable(it.next());
+        }
+        container.close();
+        final Buffer buffer = container.getBufferedTable().getBuffer();
+        assertTrue(buffer.usesOutFile());
+        buffer.restoreIntoMemory();
+        RowIterator tableIterator1 = container.getTable().iterator();
+        RowIterator tableIterator2 = container.getTable().iterator();
+        RowIterator referenceIterator = generateRows(count);
+        int i;
+        for (i = 0; i < count; i++) {
+            if (i == count / 2) {
+                synchronized (buffer) {
+                    // currently it does nothing as memory alerts while restoring is not supported
+                    buffer.writeAllRowsFromListToFile(false);
+                }
+            }
+            RowIterator pushIterator, otherIterator;
+            if (i % 2 == 0) {
+                pushIterator = tableIterator1;
+                otherIterator = tableIterator2;
+            } else {
+                pushIterator = tableIterator2;
+                otherIterator = tableIterator1;
+            }
+            DataRow pushRow = pushIterator.next();
+            DataRow otherRow = otherIterator.next();
+            DataRow referenceRow = referenceIterator.next();
+            assertEquals(referenceRow, pushRow);
+            assertEquals(referenceRow, otherRow);
+        }
+        assertFalse(buffer.usesOutFile());
+        assertFalse(tableIterator1.hasNext());
+        assertFalse(tableIterator2.hasNext());
+        
+        final AtomicReference<Exception> ioReference = new AtomicReference<Exception>();
+        Thread restoreThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    buffer.writeAllRowsFromListToFile(false);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    ioReference.set(e);
+                }
+            }
+        }, "Buffer restore");
+        
+        tableIterator1 = container.getTable().iterator();
+        referenceIterator = generateRows(count);
+        for (i = 0; i < count; i++) {
+            if (i == 10) {
+                restoreThread.start();
+            }
+            DataRow row = tableIterator1.next();
+            DataRow referenceRow = referenceIterator.next();
+            assertEquals(referenceRow, row);
+        }
+        restoreThread.join();
+        assertFalse(buffer.usesOutFile());
+        if (ioReference.get() != null) {
+            fail(ioReference.get().getMessage());
         }
     }
 
