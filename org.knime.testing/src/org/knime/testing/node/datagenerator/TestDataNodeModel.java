@@ -25,6 +25,15 @@
 
 package org.knime.testing.node.datagenerator;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.LinkedList;
+import java.util.Random;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -52,15 +61,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelInteger;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.LinkedList;
-import java.util.Random;
 
 
 /**
@@ -108,6 +108,7 @@ public class TestDataNodeModel extends NodeModel {
         createNoOfSetItemsModel();
     private final SettingsModelInteger m_maxStringLength =
         createMaxStringLengthModel();
+    private final SettingsModelInteger m_noOfAllMissingRows = createNoOfAllMissingRowsModel();
 
     private final static Random rnd = new Random();
 
@@ -115,6 +116,13 @@ public class TestDataNodeModel extends NodeModel {
      */
     protected TestDataNodeModel() {
         super(0, 1);
+    }
+
+    /**
+     * @return the no of all missing rows
+     */
+    static SettingsModelInteger createNoOfAllMissingRowsModel() {
+        return new SettingsModelIntegerBounded("noOfAllMissingRows", 0, 0, Integer.MAX_VALUE);
     }
 
     /**
@@ -153,7 +161,7 @@ public class TestDataNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
+    protected DataTableSpec[] configure(@SuppressWarnings("unused") final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         return new DataTableSpec[] {createSpec()};
     }
@@ -162,11 +170,11 @@ public class TestDataNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+    protected BufferedDataTable[] execute(@SuppressWarnings("unused") final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         final BufferedDataContainer dc =
             exec.createDataContainer(createSpec());
-        final int noOfRows = m_noOfRows.getIntValue();
+        final int noOfRows = m_noOfRows.getIntValue() - m_noOfAllMissingRows.getIntValue();
         final int noOfListItems = m_noOfListItems.getIntValue();
         final int noOfSetItems = m_noOfSetItems.getIntValue();
         for (int rowIdx = 0; rowIdx < noOfRows; rowIdx++) {
@@ -207,6 +215,14 @@ public class TestDataNodeModel extends NodeModel {
 
             final DefaultRow row =
                 new DefaultRow(RowKey.createRowKey(rowIdx), cells);
+            dc.addRowToTable(row);
+        }
+        //add the all missing cells row last
+        final DataCell[] allMissing = new DataCell[23];
+        Arrays.fill(allMissing, getMissingVal(0));
+        for (int i = 0; i < m_noOfAllMissingRows.getIntValue(); i++) {
+            final DefaultRow row =
+                    new DefaultRow(RowKey.createRowKey(noOfRows + i), allMissing);
             dc.addRowToTable(row);
         }
         dc.close();
@@ -551,6 +567,7 @@ public class TestDataNodeModel extends NodeModel {
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("unused")
     @Override
     protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
@@ -561,6 +578,7 @@ public class TestDataNodeModel extends NodeModel {
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("unused")
     @Override
     protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
@@ -585,6 +603,11 @@ public class TestDataNodeModel extends NodeModel {
         m_noOfListItems.loadSettingsFrom(settings);
         m_noOfSetItems.loadSettingsFrom(settings);
         m_maxStringLength.loadSettingsFrom(settings);
+        try {
+            m_noOfAllMissingRows.loadSettingsFrom(settings);
+        } catch (final Exception e) {
+            // new introduced in 2.8
+        }
     }
 
     /**
@@ -596,6 +619,7 @@ public class TestDataNodeModel extends NodeModel {
         m_noOfListItems.saveSettingsTo(settings);
         m_noOfSetItems.saveSettingsTo(settings);
         m_maxStringLength.saveSettingsTo(settings);
+        m_noOfAllMissingRows.saveSettingsTo(settings);
     }
 
     /**

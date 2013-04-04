@@ -25,6 +25,9 @@
 		<option name="Maximum string length">
           The given number is the maximum length for the generated strings.
         </option>
+        <option name="Number of all missing rows">
+            The number of rows to append to the end of the table that contain in all columns a missing cell.
+        </option>
 	</fullDescription>
 	
 	<ports>

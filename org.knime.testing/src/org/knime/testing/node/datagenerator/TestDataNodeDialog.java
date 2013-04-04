@@ -74,5 +74,8 @@ public class TestDataNodeDialog extends DefaultNodeSettingsPane {
         addDialogComponent(new DialogComponentNumber(
                 TestDataNodeModel.createMaxStringLengthModel(),
                 "Maximum string length: ", Integer.valueOf(10)));
+        addDialogComponent(new DialogComponentNumber(
+                 TestDataNodeModel.createNoOfAllMissingRowsModel(),
+                 "Number of all missing rows: ", Integer.valueOf(10)));
     }
 }
