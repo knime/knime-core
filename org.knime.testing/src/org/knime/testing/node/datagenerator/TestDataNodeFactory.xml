@@ -15,7 +15,7 @@
 			visualization nodes.
 			</p>
 		</intro>
-		<option name="No of rows"> The number of rows to create</option>
+		<option name="Total no of rows"> The total number of rows to create</option>
 		<option name="No of list items"> 
 		  The number of items the collection columns should contain
 	    </option>
@@ -26,7 +26,7 @@
           The given number is the maximum length for the generated strings.
         </option>
         <option name="Number of all missing rows">
-            The number of rows to append to the end of the table that contain in all columns a missing cell.
+            The number of rows to append to the end of the table that with a missing cell in all columns.
         </option>
 	</fullDescription>
 	

@@ -27,6 +27,8 @@ package org.knime.testing.node.datagenerator;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -50,6 +52,8 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.LongCell;
 import org.knime.core.data.def.StringCell;
+import org.knime.core.data.uri.URIContent;
+import org.knime.core.data.uri.URIDataCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -75,6 +79,8 @@ public class TestDataNodeModel extends NodeModel {
         "carriage return and new line \r\n carriage return and new line",
         "tab\ttab", "comma,comma", "single quote'single quote",
         "    ", ""};
+    private static final String[] uriExtensions = new String[] {"", "csv", "xml", "html"};
+    private static final String[] uriSchemes = new String[] {"http", "https", "file", "sftp"};
     private static final int[] intVals = new int[] {Integer.MAX_VALUE,
         Integer.MIN_VALUE, -1, 1, 0, 65, 123789043, -489546568};
     private static final long[] longVals = new long[] {Long.MAX_VALUE,
@@ -172,14 +178,15 @@ public class TestDataNodeModel extends NodeModel {
     @Override
     protected BufferedDataTable[] execute(@SuppressWarnings("unused") final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
-        final BufferedDataContainer dc =
-            exec.createDataContainer(createSpec());
-        final int noOfRows = m_noOfRows.getIntValue() - m_noOfAllMissingRows.getIntValue();
+        final DataTableSpec newSpec = createSpec();
+        final BufferedDataContainer dc = exec.createDataContainer(newSpec);
+        final int totalNoOfRows = m_noOfRows.getIntValue();
+        final int noOfValueRows = totalNoOfRows - m_noOfAllMissingRows.getIntValue();
         final int noOfListItems = m_noOfListItems.getIntValue();
         final int noOfSetItems = m_noOfSetItems.getIntValue();
-        for (int rowIdx = 0; rowIdx < noOfRows; rowIdx++) {
-            exec.setProgress((double)rowIdx / noOfRows, "Generating row "
-                    + rowIdx + " of " + noOfRows);
+        for (int rowIdx = 0; rowIdx < noOfValueRows; rowIdx++) {
+            exec.setProgress((double)rowIdx / totalNoOfRows, "Generating row "
+                    + rowIdx + " of " + totalNoOfRows);
             exec.checkCanceled();
             final LinkedList<DataCell> cells = new LinkedList<DataCell>();
             cells.add(getStringVal(exec, rowIdx));
@@ -206,6 +213,10 @@ public class TestDataNodeModel extends NodeModel {
             cells.add(getBooleanListVal(noOfListItems));
             cells.add(getBooleanSetVal(noOfSetItems));
 
+            cells.add(getUriVal(rowIdx));
+            cells.add(getUriListVal(rowIdx, noOfListItems));
+            cells.add(getUriSetVal(rowIdx, noOfSetItems));
+
             cells.add(getMissingVal(rowIdx));
             cells.add(getMissingValListVal(rowIdx, noOfListItems));
             cells.add(getMissingValSetVal(rowIdx, noOfSetItems));
@@ -218,11 +229,14 @@ public class TestDataNodeModel extends NodeModel {
             dc.addRowToTable(row);
         }
         //add the all missing cells row last
-        final DataCell[] allMissing = new DataCell[23];
+        final DataCell[] allMissing = new DataCell[newSpec.getNumColumns()];
         Arrays.fill(allMissing, getMissingVal(0));
         for (int i = 0; i < m_noOfAllMissingRows.getIntValue(); i++) {
+            final int rowIdx = noOfValueRows + i;
+            exec.setProgress((double)rowIdx / totalNoOfRows, "Generating row "
+                    + rowIdx + " of " + totalNoOfRows);
             final DefaultRow row =
-                    new DefaultRow(RowKey.createRowKey(noOfRows + i), allMissing);
+                    new DefaultRow(RowKey.createRowKey(rowIdx), allMissing);
             dc.addRowToTable(row);
         }
         dc.close();
@@ -257,6 +271,51 @@ public class TestDataNodeModel extends NodeModel {
             return BooleanCell.TRUE;
         }
         return BooleanCell.FALSE;
+    }
+
+
+    private DataCell getUriVal(final int rowIdx){
+        final String scheme = uriSchemes[rowIdx % uriSchemes.length];
+        final String extension = uriExtensions[rowIdx % uriExtensions.length];
+        final StringBuilder buf = new StringBuilder();
+        buf.append(scheme);
+        buf.append("://");
+        if (!extension.isEmpty()) {
+            buf.append("C:/");
+        }
+        for (int i = 0; i < 15; i++) {
+            buf.append(String.valueOf((char) (rnd.nextInt(25) + 97)));
+        }
+        if (!extension.isEmpty()) {
+            buf.append(".");
+            buf.append(extension);
+        }
+        URI uri;
+        try {
+            uri = new URI(buf.toString());
+        } catch (final URISyntaxException e) {
+            return DataType.getMissingCell();
+        }
+        return new URIDataCell(new URIContent(uri, extension));
+    }
+
+    private DataCell getUriSetVal(final int rowIdx, final int i) {
+        return CollectionCellFactory.createSetCell(
+                createUriCellCollection(rowIdx, i));
+    }
+
+    private DataCell getUriListVal(final int rowIdx, final int i) {
+        return CollectionCellFactory.createListCell(
+                createUriCellCollection(rowIdx, i));
+    }
+
+    private Collection<DataCell> createUriCellCollection(final int start, final int noOf) {
+        final Collection<DataCell> cells =
+            new ArrayList<DataCell>(noOf);
+        for (int i = start; i < noOf + start; i++) {
+            cells.add(getUriVal(i));
+        }
+        return cells;
     }
 
     private DataCell getMissingVal(
@@ -535,6 +594,18 @@ public class TestDataNodeModel extends NodeModel {
         creator.setType(SetCell.getCollectionType(BooleanCell.TYPE));
         specs.add(creator.createSpec());
 
+
+        creator.setName("UriCol");
+        creator.setType(URIDataCell.TYPE);
+        specs.add(creator.createSpec());
+        creator.setName("UriListCol");
+        creator.setType(ListCell.getCollectionType(URIDataCell.TYPE));
+        specs.add(creator.createSpec());
+        creator.setName("UriSetCol");
+        creator.setType(SetCell.getCollectionType(URIDataCell.TYPE));
+        specs.add(creator.createSpec());
+
+
         creator.setName("MissingValStringCol");
         creator.setType(StringCell.TYPE);
         specs.add(creator.createSpec());
@@ -629,8 +700,20 @@ public class TestDataNodeModel extends NodeModel {
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_noOfRows.validateSettings(settings);
+        final int totalNoOfRows = ((SettingsModelInteger)
+                m_noOfRows.createCloneWithValidatedValue(settings)).getIntValue();
         m_noOfListItems.validateSettings(settings);
         m_noOfSetItems.validateSettings(settings);
         m_maxStringLength.validateSettings(settings);
+        int noOfMissingRows = 0;
+        try {
+            noOfMissingRows = ((SettingsModelInteger)
+                    m_noOfAllMissingRows.createCloneWithValidatedValue(settings)).getIntValue();
+        } catch (final Exception e) {
+            // new introduced in 2.8
+        }
+        if (totalNoOfRows < noOfMissingRows) {
+            throw new InvalidSettingsException("Total number of rows is less than the number of all missing rows");
+        }
     }
 }

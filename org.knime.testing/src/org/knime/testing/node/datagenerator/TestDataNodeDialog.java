@@ -63,7 +63,7 @@ public class TestDataNodeDialog extends DefaultNodeSettingsPane {
      */
     public TestDataNodeDialog() {
         addDialogComponent(new DialogComponentNumber(
-                TestDataNodeModel.createNoOfRowsModel(), "No of rows: ",
+                TestDataNodeModel.createNoOfRowsModel(), "Total no of rows: ",
                 Integer.valueOf(100)));
         addDialogComponent(new DialogComponentNumber(
                 TestDataNodeModel.createNoOfListItemsModel(),
