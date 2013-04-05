@@ -2023,7 +2023,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             State state = nc.getState();
             if (!State.EXECUTED.equals(state) && !state.executionInProgress()) {
                 // ...but first check if it's not the stopping type!
-                if ((nc instanceof SingleNodeContainer) && ((SingleNodeContainer)nc).isInactive()) {
+                if ((nc instanceof SingleNodeContainer) && !((SingleNodeContainer)nc).isInactive()) {
                     // the node itself is not yet marked/executed - mark it
                     SingleNodeContainer snc = (SingleNodeContainer)nc;
                     // if current nodeModel is of class nodeModelClass and not filtered
