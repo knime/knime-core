@@ -67,6 +67,8 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.event.CaretEvent;
+import javax.swing.event.CaretListener;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
@@ -230,10 +232,18 @@ public class RenameNodeDialogPane extends NodeDialogPane {
         newNameField.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(final FocusEvent e) {
+                // no op
             }
-
             @Override
             public void focusLost(final FocusEvent e) {
+                String newText = newNameField.getText();
+                colSet.setNewColumnName(newText);
+            }
+        });
+        // Bug 3993: Column Rename doesn't commit value on OK
+        newNameField.addCaretListener(new CaretListener() {
+            @Override
+            public void caretUpdate(final CaretEvent e) {
                 String newText = newNameField.getText();
                 colSet.setNewColumnName(newText);
             }
