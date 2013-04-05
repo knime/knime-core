@@ -1999,12 +1999,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     private <T> void stepExecutionUpToNodeType(final NodeID id, final Class<T> nodeModelClass,
             final NodeModelFilter<T> filter) {
         NodeContainer nc = getNodeContainer(id);
-        if (nc instanceof SingleNodeContainer) {
+        if (!nc.isLocalWFM()) { // single node container or meta node with other job manager (SGE, DR, ...)
             // for single Node Containers we need to make sure that they are
             // fully connected and all predecessors are executed or executing:
-            // 2.7.1.: fixes bug #____ where we also did that for Metanodes - not
+            // 2.7.1.: fixes bug #3976 where we also did that for Metanodes - not
             // all inports need to be connected (or executing/executed)
-            // 2.7.2.: caused bug #.
+            // 2.7.2.: caused bug #4149.
             NodeOutPort[] incoming = assemblePredecessorOutPorts(id);
             for (int i = 0; i < incoming.length; i++) {
                 if (incoming[i] == null) {
@@ -2022,10 +2022,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // or executing or executed....
             State state = nc.getState();
             if (!State.EXECUTED.equals(state) && !state.executionInProgress()) {
-                // the node itself is not yet marked/executed - mark it
-                SingleNodeContainer snc = (SingleNodeContainer)nc;
                 // ...but first check if it's not the stopping type!
-                if (!snc.isInactive()) {
+                if ((nc instanceof SingleNodeContainer) && ((SingleNodeContainer)nc).isInactive()) {
+                    // the node itself is not yet marked/executed - mark it
+                    SingleNodeContainer snc = (SingleNodeContainer)nc;
                     // if current nodeModel is of class nodeModelClass and not filtered
                     if (nodeModelClass.isInstance(snc.getNodeModel())) {
                         final T nodeModel = (T) snc.getNodeModel();
@@ -2035,9 +2035,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     }
                 }
                 this.markAndQueueNodeAndPredecessors(id, -1);
+            } else {
+                return;  // stop here, too! Fixes bug #4175 (new in 2.7.3)
             }
         } else {
-            // fixes bug #: for metanodes we can't really check much: there may
+            // fixes bug #4149: for metanodes we can't really check much: there may
             // be unconnected inports, executing metanode containing some not
             // (yet) executing/executed nodes etc.
             // Just step in and check the SNCs inside - for those we know
