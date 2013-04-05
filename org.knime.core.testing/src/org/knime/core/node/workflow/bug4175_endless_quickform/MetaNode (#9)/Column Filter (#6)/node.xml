@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config xmlns="http://www.knime.org/2008/09/XMLConfig" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.knime.org/2008/09/XMLConfig http://www.knime.org/XMLConfig_2008_09.xsd" key="settings.xml">
+<entry key="name" type="xstring" value="Column Filter"/>
+<config key="model">
+<config key="column-filter">
+<entry key="filter-type" type="xstring" value="STANDARD"/>
+<config key="included_names">
+<entry key="array-size" type="xint" value="104"/>
+<entry key="0" type="xstring" value="Row0"/>
+<entry key="1" type="xstring" value="Row1"/>
+<entry key="2" type="xstring" value="Row2"/>
+<entry key="3" type="xstring" value="Row3"/>
+<entry key="4" type="xstring" value="Row4"/>
+<entry key="5" type="xstring" value="Row5"/>
+<entry key="6" type="xstring" value="Row6"/>
+<entry key="7" type="xstring" value="Row7"/>
+<entry key="8" type="xstring" value="Row8"/>
+<entry key="9" type="xstring" value="Row9"/>
+<entry key="10" type="xstring" value="Row10"/>
+<entry key="11" type="xstring" value="Row11"/>
+<entry key="12" type="xstring" value="Row12"/>
+<entry key="13" type="xstring" value="Row13"/>
+<entry key="14" type="xstring" value="Row14"/>
+<entry key="15" type="xstring" value="Row15"/>
+<entry key="16" type="xstring" value="Row16"/>
+<entry key="17" type="xstring" value="Row17"/>
+<entry key="18" type="xstring" value="Row18"/>
+<entry key="19" type="xstring" value="Row19"/>
+<entry key="20" type="xstring" value="Row20"/>
+<entry key="21" type="xstring" value="Row21"/>
+<entry key="22" type="xstring" value="Row22"/>
+<entry key="23" type="xstring" value="Row23"/>
+<entry key="24" type="xstring" value="Row24"/>
+<entry key="25" type="xstring" value="Row25"/>
+<entry key="26" type="xstring" value="Row26"/>
+<entry key="27" type="xstring" value="Row27"/>
+<entry key="28" type="xstring" value="Row28"/>
+<entry key="29" type="xstring" value="Row29"/>
+<entry key="30" type="xstring" value="Row30"/>
+<entry key="31" type="xstring" value="Row31"/>
+<entry key="32" type="xstring" value="Row32"/>
+<entry key="33" type="xstring" value="Row33"/>
+<entry key="34" type="xstring" value="Row34"/>
+<entry key="35" type="xstring" value="Row35"/>
+<entry key="36" type="xstring" value="Row36"/>
+<entry key="37" type="xstring" value="Row37"/>
+<entry key="38" type="xstring" value="Row38"/>
+<entry key="39" type="xstring" value="Row39"/>
+<entry key="40" type="xstring" value="Row40"/>
+<entry key="41" type="xstring" value="Row41"/>
+<entry key="42" type="xstring" value="Row42"/>
+<entry key="43" type="xstring" value="Row43"/>
+<entry key="44" type="xstring" value="Row44"/>
+<entry key="45" type="xstring" value="Row45"/>
+<entry key="46" type="xstring" value="Row46"/>
+<entry key="47" type="xstring" value="Row47"/>
+<entry key="48" type="xstring" value="Row48"/>
+<entry key="49" type="xstring" value="Row49"/>
+<entry key="50" type="xstring" value="Row50"/>
+<entry key="51" type="xstring" value="Row51"/>
+<entry key="52" type="xstring" value="Row52"/>
+<entry key="53" type="xstring" value="Row53"/>
+<entry key="54" type="xstring" value="Row54"/>
+<entry key="55" type="xstring" value="Row55"/>
+<entry key="56" type="xstring" value="Row56"/>
+<entry key="57" type="xstring" value="Row57"/>
+<entry key="58" type="xstring" value="Row58"/>
+<entry key="59" type="xstring" value="Row59"/>
+<entry key="60" type="xstring" value="Row60"/>
+<entry key="61" type="xstring" value="Row61"/>
+<entry key="62" type="xstring" value="Row62"/>
+<entry key="63" type="xstring" value="Row63"/>
+<entry key="64" type="xstring" value="Row64"/>
+<entry key="65" type="xstring" value="Row65"/>
+<entry key="66" type="xstring" value="Row66"/>
+<entry key="67" type="xstring" value="Row67"/>
+<entry key="68" type="xstring" value="Row68"/>
+<entry key="69" type="xstring" value="Row69"/>
+<entry key="70" type="xstring" value="Row70"/>
+<entry key="71" type="xstring" value="Row71"/>
+<entry key="72" type="xstring" value="Row72"/>
+<entry key="73" type="xstring" value="Row73"/>
+<entry key="74" type="xstring" value="Row74"/>
+<entry key="75" type="xstring" value="Row75"/>
+<entry key="76" type="xstring" value="Row76"/>
+<entry key="77" type="xstring" value="Row77"/>
+<entry key="78" type="xstring" value="Row78"/>
+<entry key="79" type="xstring" value="Row79"/>
+<entry key="80" type="xstring" value="Row80"/>
+<entry key="81" type="xstring" value="Row81"/>
+<entry key="82" type="xstring" value="Row82"/>
+<entry key="83" type="xstring" value="Row83"/>
+<entry key="84" type="xstring" value="Row84"/>
+<entry key="85" type="xstring" value="Row85"/>
+<entry key="86" type="xstring" value="Row86"/>
+<entry key="87" type="xstring" value="Row87"/>
+<entry key="88" type="xstring" value="Row88"/>
+<entry key="89" type="xstring" value="Row89"/>
+<entry key="90" type="xstring" value="Row90"/>
+<entry key="91" type="xstring" value="Row91"/>
+<entry key="92" type="xstring" value="Row92"/>
+<entry key="93" type="xstring" value="Row93"/>
+<entry key="94" type="xstring" value="Row94"/>
+<entry key="95" type="xstring" value="Row95"/>
+<entry key="96" type="xstring" value="Row96"/>
+<entry key="97" type="xstring" value="Row97"/>
+<entry key="98" type="xstring" value="Row98"/>
+<entry key="99" type="xstring" value="Row99"/>
+<entry key="100" type="xstring" value="Cluster_0"/>
+<entry key="101" type="xstring" value="Cluster_1"/>
+<entry key="102" type="xstring" value="Cluster_2"/>
+<entry key="103" type="xstring" value="Cluster_3"/>
+</config>
+<config key="excluded_names">
+<entry key="array-size" type="xint" value="0"/>
+</config>
+<entry key="enforce_option" type="xstring" value="EnforceExclusion"/>
+</config>
+</config>
+<entry key="hasContent" type="xboolean" value="false"/>
+<entry key="isInactive" type="xboolean" value="false"/>
+<config key="ports">
+<config key="port_1">
+<entry key="index" type="xint" value="1"/>
+<entry key="port_dir_location" type="xstring" isnull="true" value=""/>
+</config>
+</config>
+<config key="filestores">
+<entry key="file_store_location" type="xstring" isnull="true" value=""/>
+<entry key="file_store_id" type="xstring" isnull="true" value=""/>
+</config>
+</config>
