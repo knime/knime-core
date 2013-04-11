@@ -1548,13 +1548,14 @@ public final class Node implements NodeModelWarningListener {
         try {
             m_model.validateSettings(fromModel);
         } catch (final Throwable e) {
+            String message = "Validation of node settings failed";
             if (!(e instanceof InvalidSettingsException)) {
-                m_logger.error("Validation of node settings failed with "
-                        + e.getClass().getSimpleName(), e);
+                message = message + " with " + e.getClass().getSimpleName() + ": " + e.getMessage();
+                m_logger.error(message, e);
+            } else {
+                message = message + ": " + e.getMessage();
             }
-            throw new InvalidSettingsException(
-                    "Errors loading flow variables into node : "
-                    + e.getMessage(), e);
+            throw new InvalidSettingsException(message, e);
         }
         try {
             m_model.loadValidatedSettingsFrom(fromModel);
