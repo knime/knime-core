@@ -50,7 +50,6 @@
 package org.knime.base.node.preproc.columnTrans;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
@@ -59,12 +58,12 @@ import org.knime.core.node.NodeView;
  
  * @author Tobias Koetter
  */
-public class Many2OneColNodeFactory extends NodeFactory {
+public class Many2OneColNodeFactory extends NodeFactory<Many2OneColNodeModel> {
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public Many2OneColNodeModel createNodeModel() {
         return new Many2OneColNodeModel();
     }
 
@@ -80,8 +79,8 @@ public class Many2OneColNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public NodeView<Many2OneColNodeModel> createNodeView(final int viewIndex,
+            final Many2OneColNodeModel nodeModel) {
         return null;
     }
 

@@ -44,23 +44,22 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.preproc.columnTrans;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
-public class One2ManyColNodeFactory extends NodeFactory {
+public class One2ManyColNodeFactory extends NodeFactory<One2ManyColNodeModel> {
 
     /**
-     * 
+     *
      */
     public One2ManyColNodeFactory() {
         super();
@@ -70,7 +69,7 @@ public class One2ManyColNodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public One2ManyColNodeModel createNodeModel() {
         return new One2ManyColNodeModel();
     }
 
@@ -82,14 +81,7 @@ public class One2ManyColNodeFactory extends NodeFactory {
         return 0;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView createNodeView(final int viewIndex, 
-            final NodeModel nodeModel) {
-        return null;
-    }
+
 
     /**
      * {@inheritDoc}
@@ -105,6 +97,15 @@ public class One2ManyColNodeFactory extends NodeFactory {
     @Override
     protected NodeDialogPane createNodeDialogPane() {
         return new One2ManyColNodeDialog();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeView<One2ManyColNodeModel> createNodeView(final int viewIndex,
+            final One2ManyColNodeModel nodeModel) {
+        return null;
     }
 
 }
