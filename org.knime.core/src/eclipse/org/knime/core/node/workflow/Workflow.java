@@ -102,8 +102,8 @@ class Workflow {
     Workflow(final NodeID id) {
         m_id = id;
         // add sets for this (meta-) node's in- and output connections
-        m_connectionsByDest.put(id, new HashSet<ConnectionContainer>());
-        m_connectionsBySource.put(id, new HashSet<ConnectionContainer>());
+        m_connectionsByDest.put(id, new LinkedHashSet<ConnectionContainer>());
+        m_connectionsBySource.put(id, new LinkedHashSet<ConnectionContainer>());
     }
 
     /**
@@ -149,8 +149,8 @@ class Workflow {
     void putNode(final NodeID id, final NodeContainer nc) {
         m_nodes.put(id, nc);
         // create Sets of in and outgoing connections
-        m_connectionsBySource.put(id, new HashSet<ConnectionContainer>());
-        m_connectionsByDest.put(id, new HashSet<ConnectionContainer>());
+        m_connectionsBySource.put(id, new LinkedHashSet<ConnectionContainer>());
+        m_connectionsByDest.put(id, new LinkedHashSet<ConnectionContainer>());
     }
 
     /** Remove given node.
