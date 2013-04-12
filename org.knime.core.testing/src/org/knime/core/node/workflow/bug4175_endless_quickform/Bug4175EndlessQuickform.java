@@ -76,7 +76,14 @@ public class Bug4175EndlessQuickform extends WorkflowTestCase {
         m.stepExecutionUpToNodeType(QuickFormInputNode.class, QuickFormInputNode.NOT_HIDDEN_FILTER);
         m.waitWhileInExecution(5, TimeUnit.SECONDS);
         checkState(m_tableViewEnd, State.EXECUTED);
-        
+    }
+    
+    public void testStepExecuteAfterExecuteAll() throws Exception {
+        executeAllAndWait();
+        checkState(m_tableViewEnd, State.EXECUTED);
+        WorkflowManager m = getManager();
+        m.stepExecutionUpToNodeType(QuickFormInputNode.class, QuickFormInputNode.NOT_HIDDEN_FILTER);
+        checkState(m_tableViewEnd, State.EXECUTED);
     }
 
     /** {@inheritDoc} */
