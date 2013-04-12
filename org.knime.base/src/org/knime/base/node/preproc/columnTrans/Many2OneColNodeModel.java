@@ -57,6 +57,7 @@ import org.knime.base.node.preproc.pmml.columnTrans.Many2OneColPMMLNodeModel;
  */
 public class Many2OneColNodeModel extends Many2OneColPMMLNodeModel {
     /**
+     * @since 2.8
      */
     public Many2OneColNodeModel() {
         super(false);

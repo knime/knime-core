@@ -16,6 +16,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/org/knime/base/node/preproc/columnTrans/Many2OneColNodeModel.java" type="org.knime.base.node.preproc.columnTrans.Many2OneColNodeModel">
+        <filter id="338886760">
+            <message_arguments>
+                <message_argument value="org.knime.base.node.preproc.columnTrans.Many2OneColNodeModel.IncludeMethod"/>
+                <message_argument value="org.knime.base_2.8.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/org/knime/base/node/preproc/filter/row/RowFilterNodeModel.java" type="org.knime.base.node.preproc.filter.row.RowFilterNodeModel">
         <filter comment="switch to PMML 4.1 (bug 3481), including rename of package pmml40 to pmml" id="571519004">
             <message_arguments>
