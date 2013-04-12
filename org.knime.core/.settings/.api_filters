@@ -16,7 +16,7 @@
         <filter comment="DataTableSpecCreator added" id="924844039">
             <message_arguments>
                 <message_argument value="2.7.4"/>
-                <message_argument value="2.7.1"/>
+                <message_argument value="2.7.2"/>
             </message_arguments>
         </filter>
     </resource>
