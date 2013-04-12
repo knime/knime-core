@@ -58,6 +58,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.zip.ZipEntry;
@@ -72,6 +73,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.ModelContent;
 import org.knime.core.node.ModelContentRO;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 import org.knime.core.node.port.PortObjectSpec;
@@ -123,6 +125,15 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
     /** Key for number of columns within this spec. */
     private static final String CFG_NR_COLUMNS = "number_columns";
 
+    /** Key for table spec properties. */
+    private static final String CFG_PROPERTIES = "spec_properties";
+
+    /** Key for 'key' field in properties map. */
+    private static final String CFG_PROPERTY_KEY = "key";
+
+    /** Key for 'value' field in properties map. */
+    private static final String CFG_PROPERTY_VALUE = "value";
+
     /** Key for this specs name. */
     private static final String CFG_SPEC_NAME = "spec_name";
 
@@ -169,8 +180,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         };
     }
 
-    private static DataColumnSpec[] appendTableSpecs(final DataTableSpec spec1,
-            final DataTableSpec spec2) {
+    private static DataColumnSpec[] appendTableSpecs(final DataTableSpec spec1, final DataTableSpec spec2) {
         final int l1 = spec1.getNumColumns();
         final int l2 = spec2.getNumColumns();
         // combine two column specs by copying them into one array of specs
@@ -285,7 +295,27 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
             ConfigRO column = config.getConfig(CFG_COLUMN_SPEC + i);
             specs[i] = DataColumnSpec.load(column);
         }
-        return new DataTableSpec(name, specs);
+
+        Map<String, String> map;
+        if (config.containsKey(CFG_PROPERTIES)) {
+            map = new LinkedHashMap<String, String>();
+            ConfigRO propertiesConfig = config.getConfig(CFG_PROPERTIES);
+            for (String s : propertiesConfig.keySet()) {
+                ConfigRO entryConfig = propertiesConfig.getConfig(s);
+                String key = entryConfig.getString(CFG_PROPERTY_KEY);
+                if (key == null || key.length() == 0) {
+                    throw new InvalidSettingsException("Invalid property key (empty or null)");
+                }
+                String value = entryConfig.getString(CFG_PROPERTY_VALUE);
+                if (map.put(key, value) != null) {
+                    throw new InvalidSettingsException("Duplicate key identifier \"" + key + "\"");
+                }
+            }
+        } else {
+            map = Collections.emptyMap();
+        }
+
+        return new DataTableSpec(name, specs, map);
     }
 
     /** Keeps column name to column index mapping for faster access. */
@@ -308,6 +338,9 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
 
     /** The index of the column holding the SizeHandler or -1 if not set. */
     private final int m_sizeHandlerColIndex;
+
+    /** See {@link #getProperties()}. */
+    private final Map<String, String> m_properties;
 
     /** Name used to create a new spec when no other name has been defined. */
     private static final String DFT_SPEC_NAME = "default";
@@ -375,6 +408,16 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
      *             method
      */
     public DataTableSpec(final String name, final DataColumnSpec... colSpecs) {
+        this(name, colSpecs, Collections.<String, String>emptyMap());
+    }
+
+
+    /** Constructor used eventually also by other constructors and the creator.
+     * @param name Name of spec.
+     * @param colSpecs Columns.
+     * @param properties Properties.
+     */
+    DataTableSpec(final String name, final DataColumnSpec[] colSpecs, final Map<String, String> properties) {
         m_name = (name == null ? DFT_SPEC_NAME : name);
         final int colCount = colSpecs.length;
         m_columnSpecs = new DataColumnSpec[colCount];
@@ -441,6 +484,8 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         m_sizeHandlerColIndex  = sizeHdlIdx;
         m_colorHandlerColIndex = colorHdlIdx;
         m_shapeHandlerColIndex = shapeHdlIdx;
+        m_properties = properties.isEmpty() ? Collections.<String, String>emptyMap()
+                : new LinkedHashMap<String, String>(properties);
     }
 
     /**
@@ -610,7 +655,22 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
                 return false;
             }
         }
+        if (!m_properties.equals(spec.m_properties)) {
+            return false;
+        }
         return true;
+    }
+
+    /** Properties defined on the table spec. Properties are (currently) not used anywhere in the KNIME core but used
+     * in 3rd party extensions to annotate the spec and keep information such as if the row id column is
+     * artificial or contains "real" information.
+     *
+     * <p>Most clients will never call this method. If you do a use case for properties consider to
+     * @return A read only map of the defined properties, never null.
+     * @since 2.8
+     */
+    public Map<String, String> getProperties() {
+        return Collections.unmodifiableMap(m_properties);
     }
 
     /**
@@ -653,6 +713,13 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
      */
     public DataColumnSpec getColumnSpec(final int index) {
         return m_columnSpecs[index];
+    }
+
+    /**
+     * @return the columnSpecs
+     */
+    DataColumnSpec[] getColumnSpecs() {
+        return m_columnSpecs;
     }
 
     /**
@@ -781,6 +848,7 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
             int colHash = getColumnSpec(i).hashCode();
             tempHash ^= colHash;
         }
+        tempHash ^= m_properties.hashCode();
         return tempHash;
     }
 
@@ -809,6 +877,15 @@ implements PortObjectSpec, Iterable<DataColumnSpec> {
         for (int i = 0; i < m_columnSpecs.length; i++) {
             ConfigWO column = config.addConfig(CFG_COLUMN_SPEC + i);
             m_columnSpecs[i].save(column);
+        }
+        if (!m_properties.isEmpty()) {
+            Config propertiesConfig = config.addConfig(CFG_PROPERTIES);
+            int i = 0;
+            for (Map.Entry<String, String> entry : m_properties.entrySet()) {
+                Config entryConfig = propertiesConfig.addConfig("prop-" + (i++));
+                entryConfig.addString(CFG_PROPERTY_KEY, entry.getKey());
+                entryConfig.addString(CFG_PROPERTY_VALUE, entry.getValue());
+            }
         }
     }
 

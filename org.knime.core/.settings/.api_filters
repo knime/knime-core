@@ -3886,6 +3886,24 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/data/DataTableSpec.java" type="org.knime.core.data.DataTableSpec">
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="2.8"/>
+                <message_argument value="2.7"/>
+                <message_argument value="getProperties()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/data/DataTableSpecCreator.java" type="org.knime.core.data.DataTableSpecCreator">
+        <filter id="1108344834">
+            <message_arguments>
+                <message_argument value="2.8"/>
+                <message_argument value="2.7"/>
+                <message_argument value="org.knime.core.data.DataTableSpecCreator"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/data/collection/BlobSupportDataCellIterator.java" type="org.knime.core.data.collection.BlobSupportDataCellIterator">
         <filter comment="added in 2.7 -- assuming this API is not yet implemented" id="403804204">
             <message_arguments>
