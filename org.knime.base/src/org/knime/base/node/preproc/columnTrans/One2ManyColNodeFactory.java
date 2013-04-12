@@ -67,6 +67,7 @@ public class One2ManyColNodeFactory extends NodeFactory<One2ManyColNodeModel> {
 
     /**
      * {@inheritDoc}
+     * @since 2.8
      */
     @Override
     public One2ManyColNodeModel createNodeModel() {
@@ -101,6 +102,7 @@ public class One2ManyColNodeFactory extends NodeFactory<One2ManyColNodeModel> {
 
     /**
      * {@inheritDoc}
+     * @since 2.8
      */
     @Override
     public NodeView<One2ManyColNodeModel> createNodeView(final int viewIndex,

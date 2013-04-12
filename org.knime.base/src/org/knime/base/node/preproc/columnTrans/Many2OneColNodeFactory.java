@@ -55,12 +55,13 @@ import org.knime.core.node.NodeView;
 /**
  * <code>NodeFactory</code> for the "BayesianPredictor" Node.
  * This is the description of the Bayesian Predictor
- 
+
  * @author Tobias Koetter
  */
 public class Many2OneColNodeFactory extends NodeFactory<Many2OneColNodeModel> {
     /**
      * {@inheritDoc}
+     * @since 2.8
      */
     @Override
     public Many2OneColNodeModel createNodeModel() {
@@ -77,6 +78,7 @@ public class Many2OneColNodeFactory extends NodeFactory<Many2OneColNodeModel> {
 
     /**
      * {@inheritDoc}
+     * @since 2.8
      */
     @Override
     public NodeView<Many2OneColNodeModel> createNodeView(final int viewIndex,

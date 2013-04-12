@@ -68,6 +68,7 @@ public class One2ManyColPMMLNodeFactory extends NodeFactory<One2ManyColPMMLNodeM
 
     /**
      * {@inheritDoc}
+     * @since 2.8
      */
     @Override
     public One2ManyColPMMLNodeModel createNodeModel() {
@@ -84,6 +85,7 @@ public class One2ManyColPMMLNodeFactory extends NodeFactory<One2ManyColPMMLNodeM
 
     /**
      * {@inheritDoc}
+     * @since 2.8
      */
     @Override
     public NodeView<One2ManyColPMMLNodeModel> createNodeView(final int viewIndex,

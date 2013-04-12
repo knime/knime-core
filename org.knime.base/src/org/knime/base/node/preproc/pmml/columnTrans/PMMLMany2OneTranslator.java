@@ -64,7 +64,7 @@ import org.knime.core.node.port.pmml.preproc.PMMLPreprocTranslator;
  * the derived field contains this column's name
  *
  * @author Alexander Fillbrunn
- *
+ * @since 2.8
  */
 public class PMMLMany2OneTranslator implements PMMLPreprocTranslator {
 

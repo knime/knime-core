@@ -56,6 +56,7 @@ import org.knime.core.node.NodeView;
  * <code>NodeFactory</code> for the "Many2OneColPMML" Node.
  *
  * @author Alexander Fillbrunn, Universitaet Konstanz
+ * @since 2.8
  */
 public class Many2OneColPMMLNodeFactory
         extends NodeFactory<Many2OneColPMMLNodeModel> {

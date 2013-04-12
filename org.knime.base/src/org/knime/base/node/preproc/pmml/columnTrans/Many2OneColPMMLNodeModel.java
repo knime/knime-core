@@ -84,6 +84,7 @@ import org.knime.core.node.port.pmml.PMMLPortObjectSpecCreator;
  *
  * @author Alexander Fillbrunn, Universitaet Konstanz
  * @author Tobias Koetter, University of Konstanz
+ * @since 2.8
  */
 public class Many2OneColPMMLNodeModel extends NodeModel {
 
