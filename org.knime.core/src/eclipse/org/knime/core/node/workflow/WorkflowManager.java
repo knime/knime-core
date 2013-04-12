@@ -5518,8 +5518,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.6
      */
     public List<NodeID> getLinkedMetaNodes(final boolean recurse) {
-        return fillLinkedMetaNodesList(
-                new ArrayList<NodeID>(), recurse);
+        synchronized (m_workflowMutex) {
+            return fillLinkedMetaNodesList(new ArrayList<NodeID>(), recurse);
+        }
     }
 
     private List<NodeID> fillLinkedMetaNodesList(
