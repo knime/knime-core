@@ -508,6 +508,9 @@
             category-path="/manipulation/pmml"
             factory-class="org.knime.base.node.preproc.pmml.columnTrans.One2ManyColPMMLNodeFactory"
             id="org.knime.base.node.preproc.columnTrans.One2ManyColPMMLNodeFactory" />
+            
+        <node category-path="/manipulation/pmml" factory-class="org.knime.base.node.preproc.pmml.columnTrans.Many2OneColPMMLNodeFactory"
+         id="org.knime.base.node.preproc.pmml.columnTrans.Many2OneColPMMLNodeFactory"/>
       <node
             category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.domain.DomainNodeFactory"

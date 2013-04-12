@@ -43,42 +43,36 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
- *
+ * ------------------------------------------------------------------------
  */
 package org.knime.base.node.preproc.pmml.columnTrans;
 
-import org.knime.base.node.preproc.columnTrans.One2ManyColNodeDialog;
+import org.knime.base.node.preproc.columnTrans.Many2OneColNodeDialog;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
+ * <code>NodeFactory</code> for the "Many2OneColPMML" Node.
  *
- * @author Dominik Morent, University of Konstanz
+ * @author Alexander Fillbrunn, Universitaet Konstanz
  */
-public class One2ManyColPMMLNodeFactory extends NodeFactory<One2ManyColPMMLNodeModel> {
+public class Many2OneColPMMLNodeFactory
+        extends NodeFactory<Many2OneColPMMLNodeModel> {
 
     /**
-     *
+     * {@inheritDoc}
      */
-    public One2ManyColPMMLNodeFactory() {
-        super();
+    @Override
+    public Many2OneColPMMLNodeModel createNodeModel() {
+        return new Many2OneColPMMLNodeModel();
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public One2ManyColPMMLNodeModel createNodeModel() {
-        return new One2ManyColPMMLNodeModel();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected int getNrNodeViews() {
+    public int getNrNodeViews() {
         return 0;
     }
 
@@ -86,8 +80,8 @@ public class One2ManyColPMMLNodeFactory extends NodeFactory<One2ManyColPMMLNodeM
      * {@inheritDoc}
      */
     @Override
-    public NodeView<One2ManyColPMMLNodeModel> createNodeView(final int viewIndex,
-            final One2ManyColPMMLNodeModel nodeModel) {
+    public NodeView<Many2OneColPMMLNodeModel> createNodeView(final int viewIndex,
+            final Many2OneColPMMLNodeModel nodeModel) {
         return null;
     }
 
@@ -95,7 +89,7 @@ public class One2ManyColPMMLNodeFactory extends NodeFactory<One2ManyColPMMLNodeM
      * {@inheritDoc}
      */
     @Override
-    protected boolean hasDialog() {
+    public boolean hasDialog() {
         return true;
     }
 
@@ -103,8 +97,9 @@ public class One2ManyColPMMLNodeFactory extends NodeFactory<One2ManyColPMMLNodeM
      * {@inheritDoc}
      */
     @Override
-    protected NodeDialogPane createNodeDialogPane() {
-        return new One2ManyColNodeDialog();
+    public NodeDialogPane createNodeDialogPane() {
+        return new Many2OneColNodeDialog();
     }
 
 }
+

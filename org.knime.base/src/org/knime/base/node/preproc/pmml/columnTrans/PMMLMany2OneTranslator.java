@@ -43,58 +43,50 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ---------------------------------------------------------------------
- *
- * History
- *   Jul 15, 2011 (morent): created
+ * ------------------------------------------------------------------------
  */
 package org.knime.base.node.preproc.pmml.columnTrans;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
+import org.dmg.pmml.ApplyDocument.Apply;
 import org.dmg.pmml.DATATYPE;
 import org.dmg.pmml.DerivedFieldDocument.DerivedField;
 import org.dmg.pmml.LocalTransformationsDocument.LocalTransformations;
-import org.dmg.pmml.NormDiscreteDocument.NormDiscrete;
 import org.dmg.pmml.OPTYPE;
 import org.dmg.pmml.TransformationDictionaryDocument.TransformationDictionary;
-import org.knime.core.node.port.pmml.preproc.DerivedFieldMapper;
 import org.knime.core.node.port.pmml.preproc.PMMLPreprocTranslator;
-import org.knime.core.util.Pair;
+
 
 /**
- * @author morent
+ * Adds a derived field to a pmml document's preprocessing description.
+ * For each row in the input table if one of the input fields has the value 1,
+ * the derived field contains this column's name
+ *
+ * @author Alexander Fillbrunn
  *
  */
-public class PMMLOne2ManyTranslator implements PMMLPreprocTranslator {
-    private final Map<String, List<Pair<String, String>>> m_columnMapping;
-    private final DerivedFieldMapper m_mapper;
+public class PMMLMany2OneTranslator implements PMMLPreprocTranslator {
+
+    private String m_appendedCol;
+    private String[] m_sourceCols;
 
     /**
-     * Creates an initialized translator that can export its configuration.
-     *
-     * @param columnMapping a mapping of column names to their associated
-     *      discretized columns
-     * @param mapper mapping data column names to PMML derived field names and
-     *      vice versa
+     * Constructor for PMMLMany2OneTranslator.
+     * @param appendedCol The name of the column that is appended to the input table
+     * @param sourceCols The columns that are evaluated to determine the content of the appended column
      */
-    public PMMLOne2ManyTranslator(
-            final Map<String, List<Pair<String, String>>> columnMapping,
-            final DerivedFieldMapper mapper) {
-        m_columnMapping = columnMapping;
-        m_mapper = mapper;
+    public PMMLMany2OneTranslator(final String appendedCol, final String[] sourceCols) {
+        m_appendedCol = appendedCol;
+        m_sourceCols = sourceCols;
     }
 
-
     /**
-     * Not yet implemented!
      * {@inheritDoc}
      */
     @Override
     public List<Integer> initializeFrom(final DerivedField[] derivedFields) {
-       throw new UnsupportedOperationException(getClass().getName() + "#initializeFrom(.) not implemented.");
+        throw new UnsupportedOperationException(getClass().getName() + "#initializeFrom(.) not implemented.");
     }
 
     /**
@@ -103,8 +95,8 @@ public class PMMLOne2ManyTranslator implements PMMLPreprocTranslator {
     @Override
     public TransformationDictionary exportToTransDict() {
         TransformationDictionary dictionary =
-                TransformationDictionary.Factory.newInstance();
-        dictionary.setDerivedFieldArray(createDerivedFields());
+            TransformationDictionary.Factory.newInstance();
+        dictionary.setDerivedFieldArray(new DerivedField[]{createDerivedField()});
         return dictionary;
     }
 
@@ -113,30 +105,37 @@ public class PMMLOne2ManyTranslator implements PMMLPreprocTranslator {
      */
     @Override
     public LocalTransformations exportToLocalTrans() {
-       LocalTransformations localTrans
-               = LocalTransformations.Factory.newInstance();
-       localTrans.setDerivedFieldArray(createDerivedFields());
-       return localTrans;
+        LocalTransformations localTrans = LocalTransformations.Factory.newInstance();
+        localTrans.setDerivedFieldArray(new DerivedField[]{createDerivedField()});
+        return localTrans;
     }
 
-    private DerivedField[] createDerivedFields() {
-        List<DerivedField> derivedFields = new ArrayList<DerivedField>();
-        for (Map.Entry<String, List<Pair<String, String>>> entry
-                : m_columnMapping.entrySet()) {
-            String columnName = entry.getKey();
-            String derivedName = m_mapper.getDerivedFieldName(columnName);
-            for (Pair<String, String> nameValue : entry.getValue()) {
-                DerivedField derivedField = DerivedField.Factory.newInstance();
-                derivedField.setName(nameValue.getFirst());
-                derivedField.setOptype(OPTYPE.ORDINAL);
-                derivedField.setDataType(DATATYPE.INTEGER);
-                NormDiscrete normDiscrete = derivedField.addNewNormDiscrete();
-                normDiscrete.setField(derivedName);
-                normDiscrete.setValue(nameValue.getSecond());
-                normDiscrete.setMapMissingTo(0);
-                derivedFields.add(derivedField);
+    private DerivedField createDerivedField() {
+        DerivedField derivedField = DerivedField.Factory.newInstance();
+        derivedField.setName(m_appendedCol);
+        derivedField.setDataType(DATATYPE.STRING);
+        derivedField.setOptype(OPTYPE.CATEGORICAL);
+
+        Apply parentApply = null;
+        for (String col : m_sourceCols) {
+            Apply ifApply;
+            if (parentApply == null) {
+                ifApply = derivedField.addNewApply();
+            } else {
+                ifApply = parentApply.addNewApply();
             }
+            ifApply.setFunction("if");
+            Apply innerIf = ifApply.addNewApply();
+            innerIf.setFunction("equal");
+            innerIf.addNewFieldRef().setField(col);
+            innerIf.addNewConstant().setStringValue("1");
+            ifApply.addNewConstant().setStringValue(col);
+            parentApply = ifApply;
         }
-        return derivedFields.toArray(new DerivedField[0]);
+        if (parentApply != null) {
+            parentApply.addNewConstant().setStringValue("missing");
+        }
+        return derivedField;
     }
+
 }
