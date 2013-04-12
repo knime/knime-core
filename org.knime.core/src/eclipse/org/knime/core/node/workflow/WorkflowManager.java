@@ -1981,7 +1981,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public <T> void stepExecutionUpToNodeType(final Class<T> nodeModelClass, final NodeModelFilter<T> filter) {
         synchronized (m_workflowMutex) {
-            HashMap<NodeID, Integer> nodes = m_workflow.getStartNodes(-1);
+            HashMap<NodeID, Integer> nodes = m_workflow.getStartNodes();
             for (NodeID id : nodes.keySet()) {
                 stepExecutionUpToNodeType(id, nodeModelClass, filter);
             }

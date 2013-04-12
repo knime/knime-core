@@ -502,28 +502,38 @@ class Workflow {
     	return result;
     }
 
-    /** Return list of nodes directly connected to given port or unconnected
-     * start nodes if inPort = -1.
+    /** Return list of nodes, which are either source nodes (no inputs) in this workflow or which are connected to
+     * a workflow input port.
      *
-     * @param inPort port index of -1 if no port given.
      * @return set of directly connected nodes or source nodes.
      */
-    HashMap<NodeID, Integer> getStartNodes(final int inPort) {
-    	LinkedHashMap<NodeID, Integer> result
-    	                = new LinkedHashMap<NodeID, Integer>();
-    	if (inPort < 0) {
-    		Set<NodeID> sources = getSourceNodes(m_nodes.keySet());
-    		for (NodeID id : sources) {
-    			result.put(id, -1);
-    		}
-    	} else {
-            for (ConnectionContainer cc : m_connectionsBySource.get(getID())) {
-                if (cc.getSourcePort() == inPort) {
-                    result.put(cc.getDest(), cc.getDestPort());
+    HashMap<NodeID, Integer> getStartNodes(/*final int inPort*/) {
+        LinkedHashMap<NodeID, Integer> result = new LinkedHashMap<NodeID, Integer>();
+//        if (inPort < 0) {
+        for (NodeID id : m_nodes.keySet()) {
+            Set<ConnectionContainer> ccByDest = getConnectionsByDest(id);
+            // either we have no incoming connections: it is a source!
+            boolean isSource = (ccByDest.size() == 0);
+            // or we find at least one port that is connected to an inport of the WFM
+            for (ConnectionContainer cc : ccByDest) {
+                if (cc.getSource().equals(this.getID())) {
+                    // node has incoming connection from metanode inport
+                    isSource = true;
                 }
             }
-    	}
-    	return result;
+            if (isSource) {
+                result.put(id, -1);
+            }
+        }
+//        } else {
+//            // only find nodes that are connected to this port (ignores true source nodes!)
+//            for (ConnectionContainer cc : m_connectionsBySource.get(getID())) {
+//                if (cc.getSourcePort() == inPort) {
+//                    result.put(cc.getDest(), cc.getDestPort());
+//                }
+//            }
+//        }
+        return result;
     }
 
     /** Determine outports which are connected (directly or indirectly) to
