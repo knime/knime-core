@@ -847,8 +847,8 @@ public abstract class NodeContainer implements NodeProgressListener {
                 setDirty();
             }
             notifyStateChangeListeners(new NodeStateEvent(getID(), m_state));
+            LOGGER.debug(this.getNameWithID() + " has new state: " + m_state);
         }
-        LOGGER.debug(this.getNameWithID() + " has new state: " + m_state);
         return changesMade;
     }
 
