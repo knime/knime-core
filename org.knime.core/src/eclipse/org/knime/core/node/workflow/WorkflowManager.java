@@ -2048,8 +2048,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // (yet) executing/executed nodes etc.
             // Just step in and check the SNCs inside - for those we know
             // what to do!
+
             assert nc.isLocalWFM();
-            ((WorkflowManager)nc).stepExecutionUpToNodeType(nodeModelClass, filter);
+            if (!State.EXECUTED.equals(nc.getState())) {
+                // if not yet fully executed step inside
+                ((WorkflowManager)nc).stepExecutionUpToNodeType(nodeModelClass, filter);
+            }
         }
         // and also mark successors
         stepExecutionUpToNodeTypeSuccessorsOnly(id, nodeModelClass, filter);
