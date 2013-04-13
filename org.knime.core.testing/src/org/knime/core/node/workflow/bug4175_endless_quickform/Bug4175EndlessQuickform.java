@@ -26,6 +26,7 @@ package org.knime.core.node.workflow.bug4175_endless_quickform;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import org.junit.Test;
 import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -77,7 +78,8 @@ public class Bug4175EndlessQuickform extends WorkflowTestCase {
         m.waitWhileInExecution(5, TimeUnit.SECONDS);
         checkState(m_tableViewEnd, State.EXECUTED);
     }
-    
+
+    @Test(timeout=2000L)
     public void testStepExecuteAfterExecuteAll() throws Exception {
         executeAllAndWait();
         checkState(m_tableViewEnd, State.EXECUTED);
