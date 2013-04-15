@@ -6,7 +6,8 @@ Bundle-Version: 2.8.0.qualifier
 Bundle-ClassPath: knime-core.jar,
  lib/saxon-he-9.2.0.5.jar,
  lib/stax-1.2.0.jar,
- lib/schemas.jar
+ lib/schemas.jar,
+ lib/jcalendar-1.4.jar
 Bundle-Activator: org.knime.core.internal.CorePlugin
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Export-Package: log4j,
