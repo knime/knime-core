@@ -78,7 +78,7 @@ public class PMMLMany2OneTranslator implements PMMLPreprocTranslator {
      */
     public PMMLMany2OneTranslator(final String appendedCol, final String[] sourceCols) {
         m_appendedCol = appendedCol;
-        m_sourceCols = sourceCols;
+        m_sourceCols = sourceCols.clone();
     }
 
     /**
@@ -94,8 +94,7 @@ public class PMMLMany2OneTranslator implements PMMLPreprocTranslator {
      */
     @Override
     public TransformationDictionary exportToTransDict() {
-        TransformationDictionary dictionary =
-            TransformationDictionary.Factory.newInstance();
+        final TransformationDictionary dictionary = TransformationDictionary.Factory.newInstance();
         dictionary.setDerivedFieldArray(new DerivedField[]{createDerivedField()});
         return dictionary;
     }
@@ -105,13 +104,13 @@ public class PMMLMany2OneTranslator implements PMMLPreprocTranslator {
      */
     @Override
     public LocalTransformations exportToLocalTrans() {
-        LocalTransformations localTrans = LocalTransformations.Factory.newInstance();
+        final LocalTransformations localTrans = LocalTransformations.Factory.newInstance();
         localTrans.setDerivedFieldArray(new DerivedField[]{createDerivedField()});
         return localTrans;
     }
 
     private DerivedField createDerivedField() {
-        DerivedField derivedField = DerivedField.Factory.newInstance();
+        final DerivedField derivedField = DerivedField.Factory.newInstance();
         derivedField.setName(m_appendedCol);
         derivedField.setDataType(DATATYPE.STRING);
         derivedField.setOptype(OPTYPE.CATEGORICAL);

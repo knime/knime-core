@@ -86,7 +86,7 @@ public abstract class AbstractMany2OneCellFactory implements CellFactory {
             final String appendedColumnName, final int[]includedColsIndices) {
         m_inputSpec = inputSpec;
         m_appendedColumnName = appendedColumnName;
-        m_includedColsIndices = includedColsIndices;
+        m_includedColsIndices = includedColsIndices.clone();
         m_columnNames = new HashSet<DataCell>();
         for (int i : m_includedColsIndices) {
             m_columnNames.add(new StringCell(
@@ -109,7 +109,7 @@ public abstract class AbstractMany2OneCellFactory implements CellFactory {
      * @return the indices of the condensed columns
      */
     public int[] getIncludedColIndices() {
-        return m_includedColsIndices;
+        return m_includedColsIndices.clone();
     }
 
     /**
@@ -120,7 +120,7 @@ public abstract class AbstractMany2OneCellFactory implements CellFactory {
         // new column
         DataColumnSpecCreator appendedColumnCreator
             = new DataColumnSpecCreator(m_appendedColumnName, StringCell.TYPE);
-        // possible values depend on allow multi occurences
+        // possible values depend on allow multi occurrences
             DataColumnDomainCreator possibleValuesCreator
                 = new DataColumnDomainCreator(m_columnNames);
             appendedColumnCreator.setDomain(

@@ -60,13 +60,6 @@ import org.knime.core.node.NodeView;
 public class One2ManyColPMMLNodeFactory extends NodeFactory<One2ManyColPMMLNodeModel> {
 
     /**
-     *
-     */
-    public One2ManyColPMMLNodeFactory() {
-        super();
-    }
-
-    /**
      * {@inheritDoc}
      * @since 2.8
      */
