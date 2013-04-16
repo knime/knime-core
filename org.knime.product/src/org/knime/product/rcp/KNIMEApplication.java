@@ -272,7 +272,7 @@ public class KNIMEApplication implements IApplication {
         }
 
         // -data @noDefault or -data not specified, prompt and set
-        ChooseWorkspaceData launchData = new ChooseWorkspaceData(instanceLoc.getDefault());
+        ChooseWorkspaceData launchData = new ChooseWorkspaceData(defaultLocation);
 
         boolean force = false;
         while (true) {
@@ -293,20 +293,18 @@ public class KNIMEApplication implements IApplication {
                     writeWorkspaceVersion();
                     return true;
                 }
+                // by this point it has been determined that the workspace is
+                // already in use -- force the user to choose again
+                MessageDialog.openError(shell,
+                                        IDEWorkbenchMessages.IDEApplication_workspaceInUseTitle,
+                                        IDEWorkbenchMessages.IDEApplication_workspaceInUseMessage);
             } catch (Exception e) {
                 MessageDialog
                         .openError(
                                 shell,
                                 IDEWorkbenchMessages.IDEApplication_workspaceCannotBeSetTitle,
                                 IDEWorkbenchMessages.IDEApplication_workspaceCannotBeSetMessage);
-                return false;
             }
-
-            // by this point it has been determined that the workspace is
-            // already in use -- force the user to choose again
-            MessageDialog.openError(shell,
-                    IDEWorkbenchMessages.IDEApplication_workspaceInUseTitle,
-                    IDEWorkbenchMessages.IDEApplication_workspaceInUseMessage);
         }
     }
 
@@ -342,21 +340,21 @@ public class KNIMEApplication implements IApplication {
             force = true;
 
             // 70576: don't accept empty input
-            if (instancePath.length() <= 0) {
+            if (instancePath.isEmpty()) {
                 MessageDialog
                         .openError(
                                 shell,
                                 IDEWorkbenchMessages.IDEApplication_workspaceEmptyTitle,
                                 IDEWorkbenchMessages.IDEApplication_workspaceEmptyMessage);
-                continue;
             }
-
             // create the workspace if it does not already exist
             File workspace = new File(instancePath);
-            if (!workspace.exists()) {
-                workspace.mkdir();
+            if (!workspace.exists() && !workspace.mkdir()) {
+                // selected fresh workspace not writable
+                MessageDialog.openError(shell, IDEWorkbenchMessages.IDEApplication_workspaceCannotBeSetTitle,
+                                        IDEWorkbenchMessages.IDEApplication_workspaceCannotBeSetMessage);
+                continue;
             }
-
             try {
                 // Don't use File.toURL() since it adds a leading slash that
                 // Platform does not
@@ -371,7 +369,7 @@ public class KNIMEApplication implements IApplication {
                                 shell,
                                 IDEWorkbenchMessages.IDEApplication_workspaceInvalidTitle,
                                 IDEWorkbenchMessages.IDEApplication_workspaceInvalidMessage);
-                continue;
+        		continue;
             }
         } while (!checkValidWorkspace(shell, url));
 
