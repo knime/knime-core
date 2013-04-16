@@ -1980,16 +1980,27 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.7
      */
     public <T> void stepExecutionUpToNodeType(final Class<T> nodeModelClass, final NodeModelFilter<T> filter) {
+        stepExecutionUpToNodeType(nodeModelClass, filter, new HashSet<NodeID>());
+    }
+
+    /** Implementation of {@link #stepExecutionUpToNodeType(Class, NodeModelFilter)}.
+     * @param nodeModelClass ...
+     * @param filter ...
+     * @param visitedNodes set of nodes which were already seen and either marked or aborted (initially empty)
+     *        see bug 41745
+     */
+    private <T> void stepExecutionUpToNodeType(final Class<T> nodeModelClass,
+                                               final NodeModelFilter<T> filter, final Set<NodeID> visitedNodes) {
         synchronized (m_workflowMutex) {
             HashMap<NodeID, Integer> nodes = m_workflow.getStartNodes();
             for (NodeID id : nodes.keySet()) {
-                stepExecutionUpToNodeType(id, nodeModelClass, filter);
+                stepExecutionUpToNodeType(id, nodeModelClass, filter, visitedNodes);
             }
             checkForNodeStateChanges(true);
         }
     }
 
-    /* Recursively continue to trigger execution of nodes until first
+    /** Recursively continue to trigger execution of nodes until first
      * unexecuted node of specified type is encountered.
      *
      * @param NodeID node to start from
@@ -1997,7 +2008,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param nodeModelClass the interface of the "stepping" nodes
      */
     private <T> void stepExecutionUpToNodeType(final NodeID id, final Class<T> nodeModelClass,
-            final NodeModelFilter<T> filter) {
+            final NodeModelFilter<T> filter, final Set<NodeID> visitedNodes) {
         assert Thread.holdsLock(m_workflowMutex); // lock prevents state transitions due to finished executions.
         NodeContainer nc = getNodeContainer(id);
         if (!nc.isLocalWFM()) { // single node container or meta node with other job manager (SGE, DR, ...)
@@ -2019,7 +2030,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     }
                 }
             }
-            // node has all required predecessors and they are all marked
+            if (!visitedNodes.add(id)) {
+                // each time we do something real with the node, we add it
+                // (makes some of the statements below useless..)
+                return;
+            }            // node has all required predecessors and they are all marked
             // or executing or executed....
             State state = nc.getState();
             if (State.EXECUTED.equals(state)) {
@@ -2056,10 +2071,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
         }
         // and also mark successors
-        stepExecutionUpToNodeTypeSuccessorsOnly(id, nodeModelClass, filter);
+        stepExecutionUpToNodeTypeSuccessorsOnly(id, nodeModelClass, filter, visitedNodes);
     }
 
-    /* Recursively continue to trigger execution of nodes until first
+    /** Recursively continue to trigger execution of nodes until first
      * unexecuted node of specified type is encountered. This routine
      * only inspects the successors of the given node, see
      * {@link #stepExecutionUpToNodeType(Class)} for the complementary
@@ -2070,12 +2085,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param nodeModelClass the interface of the "stepping" nodes
      */
     private <T> void stepExecutionUpToNodeTypeSuccessorsOnly(final NodeID id, final Class<T> nodeModelClass,
-            final NodeModelFilter<T> filter) {
+            final NodeModelFilter<T> filter, final Set<NodeID> visitedNodes) {
         for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
             if (!this.getID().equals(cc.getDest())) {
-                stepExecutionUpToNodeType(cc.getDest(), nodeModelClass, filter);
+                stepExecutionUpToNodeType(cc.getDest(), nodeModelClass, filter, visitedNodes);
             } else {
-                getParent().stepExecutionUpToNodeTypeSuccessorsOnly(cc.getDest(), nodeModelClass, filter);
+                getParent().stepExecutionUpToNodeTypeSuccessorsOnly(cc.getDest(), nodeModelClass, filter, visitedNodes);
             }
         }
     }
