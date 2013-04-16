@@ -49,8 +49,8 @@
  */
 package org.knime.core.node.workflow;
 
-import org.apache.xmlbeans.impl.common.XPath.ExecutionContext;
 import org.knime.core.node.CanceledExecutionException;
+import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.port.PortObject;
 
 /** Interface for NodeModels that support interactive views and repeated
