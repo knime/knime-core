@@ -1,7 +1,7 @@
 /* Created on Nov 23, 2006 12:07:08 PM by thor
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -1014,9 +1014,9 @@ public class BatchExecutor {
      * @param preferenceFile the preferences file
      * @throws FileNotFoundException if the given file is not a file or does not exist
      * @throws CoreException if applying the preferences fails
-     * @since 2.7
+     * @since 2.8
      */
-    protected static void setPreferences(final File preferenceFile) throws FileNotFoundException, CoreException {
+    public static void setPreferences(final File preferenceFile) throws FileNotFoundException, CoreException {
         if (!preferenceFile.isFile()) {
             throw new FileNotFoundException("Preference file '" + preferenceFile.getAbsolutePath() + "' does not exist");
         }

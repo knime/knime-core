@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -60,7 +60,7 @@ import org.knime.core.node.util.ConvenienceMethods;
  *
  * @author M. Berthold, University of Konstanz
  */
-public class FlowLoopContext extends FlowObject {
+public class FlowLoopContext extends FlowScopeContext {
 
     private int m_iterationIndex = 0;
     private ILoopStartWriteFileStoreHandler m_fileStoreHandler;

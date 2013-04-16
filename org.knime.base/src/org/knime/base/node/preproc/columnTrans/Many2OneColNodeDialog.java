@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,14 +44,15 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.preproc.columnTrans;
 
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import org.knime.base.node.preproc.columnTrans.Many2OneColNodeModel.IncludeMethod;
+import org.knime.base.node.preproc.pmml.columnTrans.Many2OneColPMMLNodeModel;
+import org.knime.base.node.preproc.pmml.columnTrans.Many2OneColPMMLNodeModel.IncludeMethod;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentBoolean;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
@@ -64,7 +65,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
  * <code>NodeDialog</code> for the "Many2One" Node.
- * 
+ *
  * @author Tobias Koetter
  */
 public class Many2OneColNodeDialog extends DefaultNodeSettingsPane {
@@ -77,10 +78,10 @@ public class Many2OneColNodeDialog extends DefaultNodeSettingsPane {
     private DialogComponentStringSelection m_includeMethod;
     // include/exclude pattern
     private DialogComponentString m_pattern;
-    // keep columns 
+    // keep columns
     private DialogComponentBoolean m_keepColumns;
 
-    
+
     /**
      * Adds textfield for new column name,
      * column filter for columns to condense,
@@ -93,13 +94,13 @@ public class Many2OneColNodeDialog extends DefaultNodeSettingsPane {
     public Many2OneColNodeDialog() {
         m_appendedColumnName = new DialogComponentString(
                 new SettingsModelString(
-                        Many2OneColNodeModel.CONDENSED_COL_NAME, 
+                        Many2OneColPMMLNodeModel.CONDENSED_COL_NAME,
                         "Condensed Column"), "Appended column name");
         m_columns2Condense = new DialogComponentColumnFilter(
                 new SettingsModelFilterString(
-                        Many2OneColNodeModel.SELECTED_COLS), 0);
+                        Many2OneColPMMLNodeModel.SELECTED_COLS), 0, true);
         final SettingsModelString includeModel = new SettingsModelString(
-                Many2OneColNodeModel.INCLUDE_METHOD, 
+                Many2OneColPMMLNodeModel.INCLUDE_METHOD,
                 Many2OneColNodeModel.IncludeMethod.Binary.name());
         String[] values = new String[IncludeMethod.values().length];
         for (int i = 0; i < IncludeMethod.values().length; i++) {
@@ -108,7 +109,7 @@ public class Many2OneColNodeDialog extends DefaultNodeSettingsPane {
         m_includeMethod = new DialogComponentStringSelection(
                 includeModel, "Include method", values);
         final SettingsModelString patternModel = new SettingsModelString(
-                Many2OneColNodeModel.RECOGNICTION_REGEX, "[^0]*");
+                Many2OneColPMMLNodeModel.RECOGNICTION_REGEX, "[^0]*");
         // initially disable/enable
         patternModel.setEnabled(includeModel.getStringValue()
                 .equals(Many2OneColNodeModel.IncludeMethod.
@@ -116,6 +117,7 @@ public class Many2OneColNodeDialog extends DefaultNodeSettingsPane {
         m_pattern = new DialogComponentString(patternModel, "Include Pattern");
         includeModel.addChangeListener(new ChangeListener() {
             // enable/disable depended on include method
+            @Override
             public void stateChanged(final ChangeEvent e) {
                     patternModel.setEnabled(includeModel.getStringValue()
                             .equals(Many2OneColNodeModel.IncludeMethod.
@@ -123,7 +125,7 @@ public class Many2OneColNodeDialog extends DefaultNodeSettingsPane {
             }
         });
         m_keepColumns = new DialogComponentBoolean(new SettingsModelBoolean(
-                Many2OneColNodeModel.KEEP_COLS, true),
+                Many2OneColPMMLNodeModel.KEEP_COLS, true),
                 "Keep original columns");
         addDialogComponent(m_columns2Condense);
         addDialogComponent(m_appendedColumnName);

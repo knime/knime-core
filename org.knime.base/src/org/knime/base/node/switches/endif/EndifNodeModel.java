@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -64,7 +64,6 @@ import java.util.zip.GZIPOutputStream;
 import org.knime.base.data.append.row.AppendedRowsIterator;
 import org.knime.base.data.append.row.AppendedRowsIterator.RuntimeCanceledExecutionException;
 import org.knime.base.data.append.row.AppendedRowsTable;
-import org.knime.base.node.io.pmml.write.PMMLWriterNodeModel;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowKey;
 import org.knime.core.node.BufferedDataContainer;
@@ -90,7 +89,7 @@ import org.knime.core.node.property.hilite.HiLiteTranslator;
 
 /**
  * End of an IF Statement. Takes the data from one or both input ports
- * (whereever it is available. If both input ports carry data the specs must
+ * (wherever it is available. If both input ports carry data the specs must
  * match and the two tables will be concatenated.
  *
  * @author M. Berthold, University of Konstanz
@@ -99,7 +98,7 @@ public class EndifNodeModel extends NodeModel
 implements InactiveBranchConsumer {
 
     private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(PMMLWriterNodeModel.class);
+            .getLogger(EndifNodeModel.class);
 
     /** NodeSettings key if to append suffix. If false, skip the rows. */
     static final String CFG_APPEND_SUFFIX = "append_suffix";

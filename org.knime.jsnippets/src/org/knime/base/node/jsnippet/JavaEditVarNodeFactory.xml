@@ -56,6 +56,13 @@
           defines a java field bound to a flow variable. Values assigned to this field
           in the snippet will set the value of the flow variable at the output.
         </option>
+        <option name="Run only on execution">  
+          If unselected, the snippet is run as soon as the node is configured (default). If selected, the snippet is 
+          run only once when the node is being executed (going from yellow to green state).  In this case variables 
+          are populated later, often causing downstream nodes to be not configurable as the created variables have a
+          meaningless default value. However, sometimes this is necessary when for instance the snippet involves
+          heavy computation, network access or other type of I/O. If unsure, leave unselected. 
+        </option>
     </fullDescription>
     <ports>
         <inPort name="Input variables (optional)" index="0">

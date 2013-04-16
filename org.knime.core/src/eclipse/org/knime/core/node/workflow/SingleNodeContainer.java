@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -82,7 +82,6 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
-import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeLogger;
@@ -907,16 +906,15 @@ public final class SingleNodeContainer extends NodeContainer {
 
     private IWriteFileStoreHandler initFileStore(
             final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository) {
-
-        FlowLoopContext upstreamFLC = getFlowObjectStack().peek(FlowLoopContext.class);
+        FlowLoopContext upstreamFLC = getFlowObjectStack().peekScopeContext(FlowLoopContext.class, false);
         NodeID outerStartNodeID = upstreamFLC == null ? null : upstreamFLC.getHeadNode();
         // loop start nodes will put their loop context on the outgoing flow object stack
         assert !getID().equals(outerStartNodeID) : "Loop start on incoming flow stack can't be node itself";
 
-        FlowLoopContext innerFLC = getOutgoingFlowObjectStack().peek(FlowLoopContext.class);
+        FlowLoopContext innerFLC = getOutgoingFlowObjectStack().peekScopeContext(FlowLoopContext.class, false);
         NodeID innerStartNodeID = innerFLC == null ? null : innerFLC.getHeadNode();
         // if there is a loop context on this node's stack, this node must be the start
-        assert !getLoopRole().equals(LoopRole.BEGIN) || getID().equals(innerStartNodeID);
+        assert !(this.isModelCompatibleTo(LoopStartNode.class)) || getID().equals(innerStartNodeID);
 
         IFileStoreHandler oldFSHandler = m_node.getFileStoreHandler();
         IWriteFileStoreHandler newFSHandler;
@@ -957,7 +955,7 @@ public final class SingleNodeContainer extends NodeContainer {
             // ordinary node contained in loop
             assert innerFLC == null && upstreamFLC != null;
             ILoopStartWriteFileStoreHandler upStreamFSHandler = upstreamFLC.getFileStoreHandler();
-            if (LoopRole.END.equals(m_node.getLoopRole())) {
+            if (this.isModelCompatibleTo(LoopEndNode.class)) {
                 if (upstreamFLC.getIterationIndex() > 0) {
                     newFSHandler = (IWriteFileStoreHandler)oldFSHandler;
                 } else {
@@ -1286,25 +1284,45 @@ public final class SingleNodeContainer extends NodeContainer {
         }
     }
 
+    /** Check if the given node is part of a scope (loop, try/catch...).
+     *
+     * @return true if node is part of a scope context.
+     * @since 2.8
+     */
+    public boolean isMemberOfScope() {
+        synchronized (m_nodeMutex) {
+            // we need to check if either a FlowScopeObject is on the stack or of
+            // the node is the end of a Scope (since those don't have their own
+            // scope object on the outgoing stack anymore.
+            FlowObjectStack fos = m_node.getFlowObjectStack();
+            if (fos == null) {
+                return false;
+            }
+            return (this.isModelCompatibleTo(ScopeEndNode.class)
+                    || this.isModelCompatibleTo(ScopeStartNode.class)
+                    || (null != fos.peek(FlowScopeContext.class)));
+        }
+    }
+
     /** Creates a copy of the stack held by the Node and modifies the copy
      * by pushing all outgoing flow variables onto it. If the node represents
-     * a loop end node, it will also pop the corresponding loop context
-     * (and thereby all variables added in the loop body).
+     * a scope end node, it will also pop the corresponding scope context
+     * (and thereby all variables added in the scope's body).
+     *
      * @return Such a (new!) stack. */
     public FlowObjectStack createOutFlowObjectStack() {
         synchronized (m_nodeMutex) {
             FlowObjectStack st = getFlowObjectStack();
             FlowObjectStack finalStack = new FlowObjectStack(getID(), st);
-            if (LoopRole.END.equals(getLoopRole())) {
-                finalStack.pop(FlowLoopContext.class);
+            if (this.isModelCompatibleTo(ScopeEndNode.class)) {
+                finalStack.pop(FlowScopeContext.class);
             }
             FlowObjectStack outgoingStack = getOutgoingFlowObjectStack();
             List<FlowObject> flowObjectsOwnedByThis;
             if (outgoingStack == null) { // not configured -> no stack
                 flowObjectsOwnedByThis = Collections.emptyList();
             } else {
-                flowObjectsOwnedByThis =
-                    outgoingStack.getFlowObjectsOwnedBy(getID(), Scope.Local);
+                flowObjectsOwnedByThis = outgoingStack.getFlowObjectsOwnedBy(getID(), Scope.Local);
             }
             for (FlowObject v : flowObjectsOwnedByThis) {
                 finalStack.push(v);
@@ -1314,10 +1332,12 @@ public final class SingleNodeContainer extends NodeContainer {
     }
 
     /**
-     * @return role of node within a loop
+     * @param nodeModelClass
+     * @return return true if underlying NodeModel implements the given class/interface
+     * @since 2.8
      */
-    public Node.LoopRole getLoopRole() {
-        return getNode().getLoopRole();
+    public boolean isModelCompatibleTo(final Class<?> nodeModelClass) {
+        return this.getNode().isModelCompatibleTo(nodeModelClass);
     }
 
     /**
@@ -1436,13 +1456,21 @@ public final class SingleNodeContainer extends NodeContainer {
         return m_node.isInactiveBranchConsumer();
     }
 
+    /**
+     * @return role of loop node.
+     */
+    @Deprecated
+    public Node.LoopRole getLoopRole() {
+        return getNode().getLoopRole();
+    }
+
     /** Possible loop states. */
     public static enum LoopStatus { NONE, RUNNING, PAUSED, FINISHED };
     /**
      * @return status of loop (determined from NodeState and LoopContext)
      */
     public LoopStatus getLoopStatus() {
-        if (getNode().getLoopRole().equals(LoopRole.END)) {
+        if (this.isModelCompatibleTo(LoopEndNode.class)) {
             if ((getNode().getLoopContext() != null)
                     || (getState().executionInProgress())) {
                 if ((getNode().getPauseLoopExecution())

@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: Decisions Tree Ensembles for KNIME
 Bundle-SymbolicName: org.knime.base.treeensembles;singleton:=true
-Bundle-Version: 2.7.2.qualifier
+Bundle-Version: 2.8.0.qualifier
 Bundle-Vendor: KNIME GmbH, Konstanz, Germany
 Require-Bundle: org.apache.commons.math;bundle-version="2.1.0",
  org.knime.base;bundle-version="[2.7.0,3.0.0)"

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,21 +50,21 @@
 package org.knime.base.node.preproc.columnTrans;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
  * <code>NodeFactory</code> for the "BayesianPredictor" Node.
  * This is the description of the Bayesian Predictor
- 
+
  * @author Tobias Koetter
  */
-public class Many2OneColNodeFactory extends NodeFactory {
+public class Many2OneColNodeFactory extends NodeFactory<Many2OneColNodeModel> {
     /**
      * {@inheritDoc}
+     * @since 2.8
      */
     @Override
-    public NodeModel createNodeModel() {
+    public Many2OneColNodeModel createNodeModel() {
         return new Many2OneColNodeModel();
     }
 
@@ -78,10 +78,11 @@ public class Many2OneColNodeFactory extends NodeFactory {
 
     /**
      * {@inheritDoc}
+     * @since 2.8
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public NodeView<Many2OneColNodeModel> createNodeView(final int viewIndex,
+            final Many2OneColNodeModel nodeModel) {
         return null;
     }
 

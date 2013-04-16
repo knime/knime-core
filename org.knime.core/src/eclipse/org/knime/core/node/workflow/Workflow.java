@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -62,7 +62,6 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
 
-import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
@@ -103,8 +102,8 @@ class Workflow {
     Workflow(final NodeID id) {
         m_id = id;
         // add sets for this (meta-) node's in- and output connections
-        m_connectionsByDest.put(id, new HashSet<ConnectionContainer>());
-        m_connectionsBySource.put(id, new HashSet<ConnectionContainer>());
+        m_connectionsByDest.put(id, new LinkedHashSet<ConnectionContainer>());
+        m_connectionsBySource.put(id, new LinkedHashSet<ConnectionContainer>());
     }
 
     /**
@@ -150,8 +149,8 @@ class Workflow {
     void putNode(final NodeID id, final NodeContainer nc) {
         m_nodes.put(id, nc);
         // create Sets of in and outgoing connections
-        m_connectionsBySource.put(id, new HashSet<ConnectionContainer>());
-        m_connectionsByDest.put(id, new HashSet<ConnectionContainer>());
+        m_connectionsBySource.put(id, new LinkedHashSet<ConnectionContainer>());
+        m_connectionsByDest.put(id, new LinkedHashSet<ConnectionContainer>());
     }
 
     /** Remove given node.
@@ -642,23 +641,36 @@ class Workflow {
         // "startNode" (which can be the WFM itself or a LoopStartNode or
         // any other "start" node) with a port index contained in the set
         for (ConnectionContainer cc : m_connectionsBySource.get(startID)) {
-            if ((startPorts == null)
-                        || (startPorts.contains(cc.getSourcePort()))) {
+            if ((startPorts == null) || (startPorts.contains(cc.getSourcePort()))) {
                 NodeID nextID = cc.getDest();
                 if (nextID.equals(endID)) {
                     // don't add the end node!
                 } else if (nextID.equals(this.getID())) {
                     // don't record outgoing connections
                     if (startID.equals(this.getID())) {
-                        assert cc.getType().
-                         equals(ConnectionContainer.ConnectionType.WFMTHROUGH);
+                        assert cc.getType().equals(ConnectionContainer.ConnectionType.WFMTHROUGH);
                     } else {
-                        assert cc.getType().
-                           equals(ConnectionContainer.ConnectionType.WFMOUT);
+                        assert cc.getType().equals(ConnectionContainer.ConnectionType.WFMOUT);
                     }
                 } else {
-                    tempOutput.add(new NodeAndInports(cc.getDest(),
-                            cc.getDestPort(), /*depth=*/0));
+                    int ix = 0;
+                    for (ix = 0; ix < tempOutput.size(); ix++) {
+                        if (tempOutput.get(ix).m_nodeId.equals(cc.getDest())) {
+                            break;
+                        }
+                    }
+                    if (ix >= tempOutput.size()) {
+                        // ...it's a node not yet in our list: add it
+                        tempOutput.add(new NodeAndInports(cc.getDest(), cc.getDestPort(), /*depth=*/0));
+                    } else {
+                        // node is already in list. Add port if not already contained:
+                        NodeAndInports nai = tempOutput.get(ix);
+                        if (!nai.getInports().contains(cc.getDestPort())) {
+                            nai.addInport(cc.getDestPort());
+                        } else {
+                            // ignore entries that we already have (parallel branches can cause this)
+                        }
+                    }
                 }
             }
         }
@@ -672,10 +684,8 @@ class Workflow {
             Set<Integer> currInports = tempOutput.get(currIndex).getInports();
             int currDepth = tempOutput.get(currIndex).getDepth();
             Set<Integer> currOutports = new HashSet<Integer>();
-            if ((currNode instanceof SingleNodeContainer)
-                || (currInports == null)) {
-                // simple: all outports are affected
-                // (SNC or WFM without listed inports)
+            if ((currNode instanceof SingleNodeContainer) || (currInports == null)) {
+                // simple: all outports are affected (SNC or WFM without listed inports)
                 for (int i = 0; i < currNode.getNrOutPorts(); i++) {
                     currOutports.add(i);
                 }
@@ -684,10 +694,8 @@ class Workflow {
                 // less simple: we need to determine which outports are
                 // connected to the listed inports:
                 for (Integer inPortIx : currInports) {
-                    Workflow currWorkflow
-                                  = ((WorkflowManager)currNode).getWorkflow();
-                    Set<Integer> connectedOutports
-                                   = currWorkflow.connectedOutPorts(inPortIx);
+                    Workflow currWorkflow = ((WorkflowManager)currNode).getWorkflow();
+                    Set<Integer> connectedOutports = currWorkflow.connectedOutPorts(inPortIx);
                     currOutports.addAll(connectedOutports);
                 }
             }
@@ -695,10 +703,8 @@ class Workflow {
                 if (currOutports.contains(cc.getSourcePort())) {
                     // only if one of the affected outports is connected:
                     NodeID destID = cc.getDest();
-                    if ((!destID.equals(this.getID()))
-                            && (!destID.equals(endID))) {
-                        // only if we have not yet reached an outport or
-                        // the "end" node
+                    if ((!destID.equals(this.getID())) && (!destID.equals(endID))) {
+                        // only if we have not yet reached an outport or the "end" node
                         // try to find node in existing list:
                         int ix = 0;
                         for (ix = 0; ix < tempOutput.size(); ix++) {
@@ -708,8 +714,7 @@ class Workflow {
                         }
                         if (ix >= tempOutput.size()) {
                             // ...it's a node not yet in our list: add it
-                            tempOutput.add(new NodeAndInports(destID,
-                                    cc.getDestPort(), currDepth + 1));
+                            tempOutput.add(new NodeAndInports(destID, cc.getDestPort(), currDepth + 1));
                         } else {
                             assert ix != currIndex;
                             // node is already in list, adjust depth to new
@@ -718,8 +723,7 @@ class Workflow {
                             if (!nai.getInports().contains(cc.getDestPort())) {
                                 nai.addInport(cc.getDestPort());
                             } else {
-                                // entries that we already have
-                                // (parallel branches can cause this)
+                                // ignore entries that we already have (parallel branches can cause this)
                             }
                             if (nai.getDepth() <= currDepth) {
                                 // fix depth if smaller or equal
@@ -1186,6 +1190,19 @@ class Workflow {
         public int compareTo(final NodeAndInports o2) {
             return (Integer.valueOf(this.m_depth).compareTo(o2.m_depth));
         }
+        /** {@inheritDoc} */
+        @Override
+        public boolean equals(final Object obj) {
+            if (!(obj instanceof NodeAndInports)) {
+                return false;
+            }
+            return this.m_depth == ((NodeAndInports)obj).m_depth;
+        }
+        /** {@inheritDoc} */
+        @Override
+        public int hashCode() {
+            return m_nodeId.hashCode() + m_depth;
+        }
     }
 
     /** Return matching LoopEnd node for the given LoopStart.
@@ -1202,7 +1219,7 @@ class Workflow {
             throw new IllegalArgumentException("Not a Loop Start Node " + id);
         }
         SingleNodeContainer snc = (SingleNodeContainer)nc;
-        if (!LoopRole.BEGIN.equals(snc.getLoopRole())) {
+        if (!snc.isModelCompatibleTo(LoopStartNode.class)) {
             throw new IllegalArgumentException("Not a Loop Start Node " + id);
         }
         NodeID foundEnd = null;
@@ -1224,7 +1241,7 @@ class Workflow {
                 NodeContainer destNC = getNode(destID);
                 if (destNC instanceof SingleNodeContainer) {
                     SingleNodeContainer destSNC = (SingleNodeContainer)destNC;
-                    if (LoopRole.END.equals(destSNC.getLoopRole())) {
+                    if (destSNC.isModelCompatibleTo(LoopEndNode.class)) {
                         if (currentDepth == 0) {
                             if ((foundEnd != null)
                                     && (!foundEnd.equals(destID))) {
@@ -1239,7 +1256,7 @@ class Workflow {
                             currentDepth--;
                         }
                     }
-                    if (LoopRole.BEGIN.equals(destSNC.getLoopRole())) {
+                    if (destSNC.isModelCompatibleTo(LoopStartNode.class)) {
                         currentDepth++;
                     }
                 }
@@ -1263,7 +1280,7 @@ class Workflow {
             throw new IllegalArgumentException("Not a Loop End Node " + id);
         }
         SingleNodeContainer snc = (SingleNodeContainer)nc;
-        if (!LoopRole.END.equals(snc.getLoopRole())) {
+        if (!snc.isModelCompatibleTo(LoopEndNode.class)) {
             throw new IllegalArgumentException("Not a Loop End Node " + id);
         }
         NodeID foundStart = null;
@@ -1273,8 +1290,7 @@ class Workflow {
         while (!st.isEmpty()) {
             Pair<NodeID, Integer> p = st.pop();
             NodeID currentID = p.getFirst();
-            for (ConnectionContainer cc
-                    : m_connectionsByDest.get(currentID)) {
+            for (ConnectionContainer cc : m_connectionsByDest.get(currentID)) {
                 assert currentID.equals(cc.getDest());
                 int currentDepth = p.getSecond();
                 NodeID srcID = cc.getSource();
@@ -1287,14 +1303,12 @@ class Workflow {
                 NodeContainer srcNC = getNode(srcID);
                 if (srcNC instanceof SingleNodeContainer) {
                     SingleNodeContainer srcSNC = (SingleNodeContainer)srcNC;
-                    if (LoopRole.BEGIN.equals(srcSNC.getLoopRole())) {
+                    if (srcSNC.isModelCompatibleTo(LoopStartNode.class)) {
                         if (currentDepth == 0) {
-                            if ((foundStart != null)
-                                && (!foundStart.equals(srcID))) {
-                                    // we can reach it twice but we should never
-                                    // reach another end node!
-                                throw new IllegalLoopException("Loops can not"
-                                    + " have more than one Start Node!");
+                            if ((foundStart != null) && (!foundStart.equals(srcID))) {
+                                // we can reach it twice but we should never
+                                // reach another end node!
+                                throw new IllegalLoopException("Loops can not have more than one Start Node!");
                             }
                             foundStart = srcID;
                             continue;
@@ -1302,7 +1316,7 @@ class Workflow {
                             currentDepth--;
                         }
                     }
-                    if (LoopRole.END.equals(srcSNC.getLoopRole())) {
+                    if (srcSNC.isModelCompatibleTo(LoopEndNode.class)) {
                         currentDepth++;
                     }
                 }

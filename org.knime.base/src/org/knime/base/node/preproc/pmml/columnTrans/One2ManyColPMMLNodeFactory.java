@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -51,27 +51,20 @@ package org.knime.base.node.preproc.pmml.columnTrans;
 import org.knime.base.node.preproc.columnTrans.One2ManyColNodeDialog;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
  *
  * @author Dominik Morent, University of Konstanz
  */
-public class One2ManyColPMMLNodeFactory extends NodeFactory {
-
-    /**
-     *
-     */
-    public One2ManyColPMMLNodeFactory() {
-        super();
-    }
+public class One2ManyColPMMLNodeFactory extends NodeFactory<One2ManyColPMMLNodeModel> {
 
     /**
      * {@inheritDoc}
+     * @since 2.8
      */
     @Override
-    public NodeModel createNodeModel() {
+    public One2ManyColPMMLNodeModel createNodeModel() {
         return new One2ManyColPMMLNodeModel();
     }
 
@@ -85,10 +78,11 @@ public class One2ManyColPMMLNodeFactory extends NodeFactory {
 
     /**
      * {@inheritDoc}
+     * @since 2.8
      */
     @Override
-    public NodeView createNodeView(final int viewIndex,
-            final NodeModel nodeModel) {
+    public NodeView<One2ManyColPMMLNodeModel> createNodeView(final int viewIndex,
+            final One2ManyColPMMLNodeModel nodeModel) {
         return null;
     }
 

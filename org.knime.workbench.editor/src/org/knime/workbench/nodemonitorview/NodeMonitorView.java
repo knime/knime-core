@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -92,6 +92,7 @@ import org.knime.core.node.config.base.AbstractConfigEntry;
 import org.knime.core.node.config.base.ConfigBase;
 import org.knime.core.node.config.base.ConfigEntries;
 import org.knime.core.node.port.PortObject;
+import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeOutPort;
@@ -302,7 +303,7 @@ public class NodeMonitorView extends ViewPart
         m_lastNode = null;
         getViewSite().getPage().addSelectionListener(this);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -431,8 +432,12 @@ public class NodeMonitorView extends ViewPart
         if ((nc instanceof SingleNodeContainer)
                 || nc.getNrOutPorts() > 0) {
             // for normal nodes port 0 is available (hidden variable OutPort!)
-            fvs = nc.getOutPort(0).getFlowObjectStack()
-                               .getAvailableFlowVariables().values();
+            FlowObjectStack fos = nc.getOutPort(0).getFlowObjectStack();
+            if (fos != null) {
+                fvs = fos.getAvailableFlowVariables().values();
+            } else {
+                fvs = null;
+            }
             m_info.setText("Node Variables");
         } else {
             // no output port on metanode - display workflow variables

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -50,6 +50,7 @@ package org.knime.base.node.preproc.columnTrans;
 
 
 
+import org.knime.base.node.preproc.pmml.columnTrans.One2ManyColPMMLNodeModel;
 import org.knime.core.data.NominalValue;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnFilter;
@@ -75,7 +76,7 @@ public class One2ManyColNodeDialog extends DefaultNodeSettingsPane {
         super();
         m_columnFilter = new DialogComponentColumnFilter(
                 new SettingsModelFilterString(
-                        One2ManyColNodeModel.CFG_COLUMNS), 0, 
+                        One2ManyColPMMLNodeModel.CFG_COLUMNS), 0, true,
                         NominalValue.class);
         setDefaultTabTitle("Columns to transform");
         addDialogComponent(m_columnFilter);

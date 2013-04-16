@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -40,35 +40,61 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME. The owner of a Node
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
+ * History
+ *   Sept 30, 2010 (mb): created
  */
-package org.knime.core.node.workflow;
+package org.knime.base.node.flowcontrol.trycatch.genericcatch;
 
-/** Pushed to stack if a loop start node is inactive (entire loop part of
- * an inactive branch). A loop end node will silently turn inactive too
- * if such an object is on the stack. If no such object is on the stack,
- * the loop end node will fail.
- *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
+import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
+
+/**
+ * @author M. Berthold, University of Konstanz
  */
-public final class InactiveBranchFlowLoopContext extends FlowObject {
-    // marker class. @see FlowLoopContext for proper implementation
-    // of hashCode and equals when members are added.
+public class VariablePortCatchNodeFactory extends NodeFactory<GenericCatchNodeModel> {
 
-    /** {@inheritDoc} */
-    @Override
-    public int hashCode() {
-        return super.hashCode();
+    /**
+     * Create factory, that instantiates nodes.
+     */
+    public VariablePortCatchNodeFactory() {
     }
 
     /** {@inheritDoc} */
     @Override
-    public boolean equals(final Object obj) {
-        return super.equals(obj);
+    protected NodeDialogPane createNodeDialogPane() {
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public GenericCatchNodeModel createNodeModel() {
+        return new GenericCatchNodeModel(FlowVariablePortObject.TYPE);
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public NodeView<GenericCatchNodeModel> createNodeView(final int index,
+            final GenericCatchNodeModel model) {
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    protected boolean hasDialog() {
+        return false;
     }
 
 }

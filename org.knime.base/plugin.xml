@@ -293,6 +293,12 @@
             path="/flowcontrol">
       </category>
       <category
+            icon="icons/16x16/trycatch.png"
+            level-id="trycatch"
+            name="Error Handling"
+            path="/flowcontrol">
+      </category>
+      <category
             description="Utility nodes supporting visualizations in KNIME"
             icon="icons/16x16/category_view-util.png"
             level-id="view-util"
@@ -502,6 +508,9 @@
             category-path="/manipulation/pmml"
             factory-class="org.knime.base.node.preproc.pmml.columnTrans.One2ManyColPMMLNodeFactory"
             id="org.knime.base.node.preproc.columnTrans.One2ManyColPMMLNodeFactory" />
+            
+        <node category-path="/manipulation/pmml" factory-class="org.knime.base.node.preproc.pmml.columnTrans.Many2OneColPMMLNodeFactory"
+         id="org.knime.base.node.preproc.pmml.columnTrans.Many2OneColPMMLNodeFactory"/>
       <node
             category-path="/manipulation/column/column-convert+replace"
             factory-class="org.knime.base.node.preproc.domain.DomainNodeFactory"
@@ -1375,6 +1384,42 @@
             expert-flag="false"
             factory-class="org.knime.base.node.preproc.columnaggregator.ColumnAggregatorNodeFactory"
             id="org.knime.base.node.preproc.columnaggregator.ColumnAggregatorNodeFactory">
+      </node>
+      <node
+            category-path="/flowcontrol/trycatch"
+            expert-flag="false"
+            factory-class="org.knime.base.node.flowcontrol.trycatch.generictry.DataPortTryNodeFactory"
+            id="org.knime.base.node.flowcontrol.trycatch.generictry.DataPortTryNodeFactory">
+      </node>
+      <node
+            category-path="/flowcontrol/trycatch"
+            expert-flag="false"
+            factory-class="org.knime.base.node.flowcontrol.trycatch.generictry.VariablePortTryNodeFactory"
+            id="org.knime.base.node.flowcontrol.trycatch.generictry.VariablePortTryNodeFactory">
+      </node>
+      <node
+            category-path="/flowcontrol/trycatch"
+            expert-flag="false"
+            factory-class="org.knime.base.node.flowcontrol.trycatch.genericcatch.DataPortCatchNodeFactory"
+            id="org.knime.base.node.flowcontrol.trycatch.genericcatch.DataPortCatchNodeFactory">
+      </node>
+      <node
+            category-path="/flowcontrol/trycatch"
+            expert-flag="false"
+            factory-class="org.knime.base.node.flowcontrol.trycatch.genericcatch.VariablePortCatchNodeFactory"
+            id="org.knime.base.node.flowcontrol.trycatch.genericcatch.VariablePortCatchNodeFactory">
+      </node>
+      <node
+            category-path="/flowcontrol/trycatch"
+            expert-flag="false"
+            factory-class="org.knime.base.node.flowcontrol.trycatch.genericcatch.DBPortCatchNodeFactory"
+            id="org.knime.base.node.flowcontrol.trycatch.genericcatch.DBPortCatchNodeFactory">
+      </node>
+      <node
+            category-path="/flowcontrol/trycatch"
+            expert-flag="false"
+            factory-class="org.knime.base.node.flowcontrol.trycatch.genericcatch.GenericPortCatchNodeFactory"
+            id="org.knime.base.node.flowcontrol.trycatch.genericcatch.GenericPortCatchNodeFactory">
       </node>
       <!-- new ones -->
       

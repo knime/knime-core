@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -48,10 +48,10 @@
 
 package org.knime.base.data.aggregation;
 
-import org.knime.core.data.DataColumnSpec;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import org.knime.core.data.DataColumnSpec;
 
 
 /**
@@ -159,5 +159,53 @@ public class OperatorColumnSettings {
             throw new NullPointerException("key must not be null");
         }
         return m_keyValueMap.get(key);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + (m_inclMissingCells ? 1231 : 1237);
+        result = prime * result + ((m_keyValueMap == null) ? 0 : m_keyValueMap.hashCode());
+        result = prime * result + ((m_origColSpec == null) ? 0 : m_origColSpec.hashCode());
+        return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        OperatorColumnSettings other = (OperatorColumnSettings)obj;
+        if (m_inclMissingCells != other.m_inclMissingCells) {
+            return false;
+        }
+        if (m_keyValueMap == null) {
+            if (other.m_keyValueMap != null) {
+                return false;
+            }
+        } else if (!m_keyValueMap.equals(other.m_keyValueMap)) {
+            return false;
+        }
+        if (m_origColSpec == null) {
+            if (other.m_origColSpec != null) {
+                return false;
+            }
+        } else if (!m_origColSpec.equals(other.m_origColSpec)) {
+            return false;
+        }
+        return true;
     }
 }

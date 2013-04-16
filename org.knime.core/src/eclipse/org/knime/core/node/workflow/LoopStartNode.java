@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -69,6 +69,6 @@ package org.knime.core.node.workflow;
  *
  * @author M. Berthold, University of Konstanz & Bernd Wiswedel, KNIME.com
  */
-public interface LoopStartNode {
+public interface LoopStartNode extends ScopeStartNode {
     // marker interface only
 }

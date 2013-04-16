@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -90,6 +90,7 @@ public class AndElementOperator extends AggregationOperator {
                     "Maximum unique values number to big");
         }
     }
+
     /**Constructor for class AndElementOperator.
      * @param globalSettings the global settings
      * @param opColSettings the operator column specific settings

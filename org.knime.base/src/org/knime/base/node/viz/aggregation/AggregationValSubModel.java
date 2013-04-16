@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -191,6 +191,7 @@ implements Serializable, AggregationModel<S, H> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getRowCount() {
         return m_rowCounter;
     }
@@ -198,6 +199,7 @@ implements Serializable, AggregationModel<S, H> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getValueCount() {
         return m_valueCounter;
     }
@@ -205,6 +207,7 @@ implements Serializable, AggregationModel<S, H> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public double getAggregationSum() {
         return m_aggrSum;
     }
@@ -213,6 +216,7 @@ implements Serializable, AggregationModel<S, H> {
      * @param method the {@link AggregationMethod} to use
      * @return the aggregation value of this sub element
      */
+    @Override
     public double getAggregationValue(final AggregationMethod method) {
         if (AggregationMethod.COUNT.equals(method)) {
             return m_rowCounter;
@@ -234,6 +238,7 @@ implements Serializable, AggregationModel<S, H> {
     /**
      * @return the color to use for this sub element
      */
+    @Override
     public Color getColor() {
         return m_color;
     }
@@ -241,6 +246,7 @@ implements Serializable, AggregationModel<S, H> {
     /**
      * @return the shape
      */
+    @Override
     public S getShape() {
         return m_shape;
     }
@@ -263,6 +269,7 @@ implements Serializable, AggregationModel<S, H> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public H getHiliteShape() {
         return m_hilitedShape;
     }
@@ -277,6 +284,7 @@ implements Serializable, AggregationModel<S, H> {
     /**
      * @return <code>true</code> if the element is selected
      */
+    @Override
     public boolean isSelected() {
         return m_isSelected;
     }
@@ -284,6 +292,7 @@ implements Serializable, AggregationModel<S, H> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isEmpty() {
         return m_rowCounter < 1;
     }
@@ -291,6 +300,7 @@ implements Serializable, AggregationModel<S, H> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public boolean isPresentable() {
         return m_presentable;
     }
@@ -312,6 +322,7 @@ implements Serializable, AggregationModel<S, H> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getName() {
         //this element has no name
         return null;
@@ -320,6 +331,7 @@ implements Serializable, AggregationModel<S, H> {
     /**
      * @return the enableHiliting variable
      */
+    @Override
     public boolean supportsHiliting() {
         return m_supportHiliting;
     }
@@ -371,6 +383,7 @@ implements Serializable, AggregationModel<S, H> {
     /**
      * @return <code>true</code> if at least one row of this element is hilited
      */
+    @Override
     public boolean isHilited() {
         if (!m_supportHiliting) {
             throw new UnsupportedOperationException(
@@ -449,6 +462,7 @@ implements Serializable, AggregationModel<S, H> {
     /**
      * {@inheritDoc}
      */
+    @Override
     public int getHiliteRowCount() {
         if (!m_supportHiliting) {
             throw new UnsupportedOperationException(
@@ -475,7 +489,6 @@ implements Serializable, AggregationModel<S, H> {
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected AggregationValSubModel <S, H> clone()
     throws CloneNotSupportedException {
@@ -507,7 +520,7 @@ implements Serializable, AggregationModel<S, H> {
 
     /**
      * @param config the config object to use
-     * @param exec the {@link ExecutionMonitor} to provide progress messages
+     * @param exec the optional {@link ExecutionMonitor} to provide progress messages
      * @throws CanceledExecutionException if the operation is canceled
      */
     public void save2File(final ConfigWO config,
@@ -517,6 +530,8 @@ implements Serializable, AggregationModel<S, H> {
         config.addDouble(CFG_AGGR_SUM, getAggregationSum());
         config.addInt(CFG_ROW_COUNTER, getRowCount());
         config.addInt(CFG_VALUE_COUNTER, getValueCount());
-        exec.checkCanceled();
+        if (exec != null) {
+            exec.checkCanceled();
+        }
     }
 }

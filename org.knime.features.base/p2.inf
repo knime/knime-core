@@ -1,6 +1,11 @@
 #
-#Mon Oct 01 17:46:43 CEST 2012
+#Mon Jan 28 12:11:18 CET 2013
 provides.1.name=org.knime.features.explorer.feature.group
 provides.1.version=2.5.2.99999
-instructions.configure=org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type\:0,location\:http${\#58}//www.knime.org/update/2.7/);org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type\:1,location\:http${\#58}//www.knime.org/update/2.7/);org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:0,location\:http${\#58}//www.knime.org/update/2.7/,enabled\:true);org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:1,location\:http${\#58}//www.knime.org/update/2.7/,enabled\:true);
+instructions.configure=org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type\:0,location\:http${\#58}//www.knime.org/update/2.8/);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.removeRepository(type\:1,location\:http${\#58}//www.knime.org/update/2.8/);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:0,location\:http${\#58}//www.knime.org/update/2.8/,enabled\:true);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:1,location\:http${\#58}//www.knime.org/update/2.8/,enabled\:true);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:0,location\:http${\#58}//tech.knime.org/update/community-contributions/2.8/,enabled\:true);\
+  org.eclipse.equinox.p2.touchpoint.eclipse.addRepository(type\:1,location\:http${\#58}//tech.knime.org/update/community-contributions/2.8/,enabled\:true);
 provides.1.namespace=org.eclipse.equinox.p2.iu

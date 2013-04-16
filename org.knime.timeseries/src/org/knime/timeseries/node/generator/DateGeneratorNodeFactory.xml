@@ -13,6 +13,7 @@
         
         
         <option name="Number of rows">How many rows should be generated</option>  
+        <option name="Use execution time as starting time">Select this option to use the execution time of the node as the start time.</option>  
         <option name="From">Starting point of the time series</option>        
         <option name="To">End point of the time series</option>        
     </fullDescription>

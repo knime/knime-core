@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -114,6 +114,8 @@ public class TableNodeView extends NodeView {
         TableContentModel cntModel = nodeModel.getContentModel();
         assert (cntModel != null);
         m_tableView = new TableView(cntModel);
+        m_tableView.setWrapColumnHeader(true);
+        m_tableView.setPreferredSizeDataDependent(true);
         cntModel.addTableModelListener(new TableModelListener() {
             @Override
             public void tableChanged(final TableModelEvent e) {

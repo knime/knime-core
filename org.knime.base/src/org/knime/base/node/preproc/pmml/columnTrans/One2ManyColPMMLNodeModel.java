@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -85,10 +85,7 @@ public class One2ManyColPMMLNodeModel extends NodeModel {
     /** Config key for the columns 2 be transformed. */
     public static final String CFG_COLUMNS = "columns2Btransformed";
 
-//    private String[] m_includedColumns = new String[0];
-
-    private final SettingsModelFilterString m_includedColumns
-        = new SettingsModelFilterString(CFG_COLUMNS);
+    private final SettingsModelFilterString m_includedColumns = new SettingsModelFilterString(CFG_COLUMNS);
 
 
     // if several columns should be converted and the possible values
@@ -102,11 +99,9 @@ public class One2ManyColPMMLNodeModel extends NodeModel {
      * @param pmmlEnabled if PMML support should be enabled or not
      */
     public One2ManyColPMMLNodeModel(final boolean pmmlEnabled) {
-        super(pmmlEnabled ? new PortType[]{BufferedDataTable.TYPE,
-                new PortType(PMMLPortObject.class, true)}
-                : new PortType[]{BufferedDataTable.TYPE},
-                pmmlEnabled ? new PortType[]{BufferedDataTable.TYPE,
-                        new PortType(PMMLPortObject.class, true)}
+        super(pmmlEnabled ? new PortType[]{BufferedDataTable.TYPE, new PortType(PMMLPortObject.class, true)}
+                        : new PortType[]{BufferedDataTable.TYPE},
+                pmmlEnabled ? new PortType[]{BufferedDataTable.TYPE, new PortType(PMMLPortObject.class, true)}
                         : new PortType[]{BufferedDataTable.TYPE});
         m_pmmlEnabled = pmmlEnabled;
     }
@@ -158,22 +153,18 @@ public class One2ManyColPMMLNodeModel extends NodeModel {
         checkColumnsSpecs(dts);
 
         One2ManyCellFactory cellFactory = new One2ManyCellFactory(
-                dts, m_includedColumns.getIncludeList(),
-                m_appendOrgColName);
+                dts, m_includedColumns.getIncludeList(), m_appendOrgColName);
         BufferedDataTable outData =
-                exec.createColumnRearrangeTable(inData,
-                        createRearranger(dts, cellFactory), exec);
+                exec.createColumnRearrangeTable(inData, createRearranger(dts, cellFactory), exec);
 
         if (m_pmmlEnabled) {
             // the optional PMML in port (can be null)
             PMMLPortObject inPMMLPort = (PMMLPortObject)inObjects[1];
             PMMLOne2ManyTranslator trans = new PMMLOne2ManyTranslator(
-                    cellFactory.getColumnMapping(),
-                    new DerivedFieldMapper(inPMMLPort));
+                    cellFactory.getColumnMapping(), new DerivedFieldMapper(inPMMLPort));
             PMMLPortObjectSpecCreator creator = new PMMLPortObjectSpecCreator(
                     inPMMLPort, outData.getDataTableSpec());
-            PMMLPortObject outPMMLPort = new PMMLPortObject(
-                   creator.createSpec(), inPMMLPort);
+            PMMLPortObject outPMMLPort = new PMMLPortObject(creator.createSpec(), inPMMLPort);
             outPMMLPort.addGlobalTransformations(trans.exportToTransDict());
 
             return new PortObject[] {outData, outPMMLPort};
@@ -213,7 +204,7 @@ public class One2ManyColPMMLNodeModel extends NodeModel {
                 inDataSpec, m_includedColumns.getIncludeList(),
                 m_appendOrgColName);
         ColumnRearranger rearranger = createRearranger(inDataSpec, cellFactory);
-        
+
         if (m_pmmlEnabled) {
             PMMLPortObjectSpec pmmlSpec = (PMMLPortObjectSpec)inSpecs[1];
             PMMLPortObjectSpecCreator pmmlSpecCreator

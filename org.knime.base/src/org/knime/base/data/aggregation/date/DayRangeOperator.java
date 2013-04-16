@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -48,15 +48,14 @@
 
 package org.knime.base.data.aggregation.date;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.DataType;
-import org.knime.core.data.date.DateAndTimeValue;
-import org.knime.core.data.def.DoubleCell;
-
 import org.knime.base.data.aggregation.AggregationOperator;
 import org.knime.base.data.aggregation.GlobalSettings;
 import org.knime.base.data.aggregation.OperatorColumnSettings;
 import org.knime.base.data.aggregation.OperatorData;
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
+import org.knime.core.data.date.DateAndTimeValue;
+import org.knime.core.data.def.DoubleCell;
 
 
 /**
@@ -81,20 +80,7 @@ public class DayRangeOperator extends MillisRangeOperator {
             final OperatorColumnSettings opColSettings) {
         super(new OperatorData("Date range(day)", false, false,
                 DateAndTimeValue.class, false), globalSettings,
-                setInclMissingFlag(opColSettings));
-    }
-
-    /**
-     * Ensure that the flag is set correctly since this method does not
-     * support changing of the missing cell handling option.
-     *
-     * @param opColSettings the {@link OperatorColumnSettings} to set
-     * @return the correct {@link OperatorColumnSettings}
-     */
-    private static OperatorColumnSettings setInclMissingFlag(
-            final OperatorColumnSettings opColSettings) {
-        opColSettings.setInclMissing(false);
-        return opColSettings;
+                AggregationOperator.setInclMissingFlag(opColSettings, false));
     }
 
     /**

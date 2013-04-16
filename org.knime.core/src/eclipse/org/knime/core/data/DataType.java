@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -1189,6 +1189,17 @@ public final class DataType {
         }
         // non native type
         return new DataType(m_hasPreferredValueClass, m_valueClasses, m_collectionElementType, newAdapterList);
+    }
+
+    /** Get a cell class that was used to create this type. The result may be null. Note, if a column's type returns a
+     * non-null cell class it doesn't necessarily mean that all elements in the column can be type-cast to that cell
+     * class.
+     *
+     * @return the cellClass
+     * @since 2.8
+     */
+    public Class<? extends DataCell> getCellClass() {
+        return m_cellClass;
     }
 
     /**

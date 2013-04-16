@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -200,6 +200,7 @@ import org.knime.workbench.editor2.actions.ResetAction;
 import org.knime.workbench.editor2.actions.ResumeLoopAction;
 import org.knime.workbench.editor2.actions.RevealMetaNodeTemplateAction;
 import org.knime.workbench.editor2.actions.SaveAsMetaNodeTemplateAction;
+import org.knime.workbench.editor2.actions.SelectLoopAction;
 import org.knime.workbench.editor2.actions.SetNodeDescriptionAction;
 import org.knime.workbench.editor2.actions.StepLoopAction;
 import org.knime.workbench.editor2.actions.ToggleFlowVarPortsAction;
@@ -534,6 +535,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         AbstractNodeAction resume = new ResumeLoopAction(this);
         AbstractNodeAction executeAndView = new ExecuteAndOpenViewAction(this);
         AbstractNodeAction reset = new ResetAction(this);
+        AbstractNodeAction selectScope = new SelectLoopAction(this);
         AbstractNodeAction setNameAndDescription =
                 new SetNodeDescriptionAction(this);
         AbstractNodeAction toggleFlowVarPorts =
@@ -580,6 +582,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         m_actionRegistry.registerAction(resume);
         m_actionRegistry.registerAction(executeAndView);
         m_actionRegistry.registerAction(reset);
+        m_actionRegistry.registerAction(selectScope);
         m_actionRegistry.registerAction(toggleFlowVarPorts);
         m_actionRegistry.registerAction(setNameAndDescription);
         m_actionRegistry.registerAction(defaultOpenView);
@@ -1534,8 +1537,7 @@ public class WorkflowEditor extends GraphicalEditor implements
      *      org.eclipse.jface.viewers.ISelection)
      */
     @Override
-    public void selectionChanged(final IWorkbenchPart part,
-            final ISelection selection) {
+    public void selectionChanged(final IWorkbenchPart part, final ISelection selection) {
         // update available actions
         updateActions();
     }
@@ -1716,8 +1718,8 @@ public class WorkflowEditor extends GraphicalEditor implements
         // adjust offset to grid location
         if (getEditorSnapToGrid()) {
             // with grid enabled we use the grid size as offset (but at least a bit mire than the node width)
-        	xOffset = getEditorGridXOffset((int)(refNode.getFigure().getBounds().width * 1.1));
-        	yOffset = getEditorGridYOffset((int)(refNode.getFigure().getBounds().height * 1.1));
+            xOffset = getEditorGridXOffset((int)(refNode.getFigure().getBounds().width * 1.1));
+            yOffset = getEditorGridYOffset((int)(refNode.getFigure().getBounds().height * 1.1));
         }
 
         // first try: right of reference node
@@ -1948,7 +1950,6 @@ public class WorkflowEditor extends GraphicalEditor implements
     /**
      * Returns the closest location that is located on the grid.
      *
-     * @param gridContainer the pane with the grid containing the location
      * @param loc reference point for the closest grid location, must be translated relative to the container
      * @return closest grid point
      */
@@ -2101,7 +2102,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     /**
-     * Returns the closest location on the grid of the active editor, or the argument if no workflow editor is active
+     * Returns the closest location on the grid of the active editor, or the argument if no workflow editor is active.
      * @param loc the ref point
      * @return the closest location on the grid of the active editor, or the argument if no workflow editor is active
      * @see #getClosestGridLocation(Point)

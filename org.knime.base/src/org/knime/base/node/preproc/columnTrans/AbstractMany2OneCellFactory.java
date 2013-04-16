@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   14.05.2007 (Fabian Dill): created
  */
@@ -66,18 +66,18 @@ import org.knime.core.data.def.StringCell;
 import org.knime.core.node.ExecutionMonitor;
 
 /**
- * 
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public abstract class AbstractMany2OneCellFactory implements CellFactory {
-    
-    private String m_appendedColumnName;
-    private int[] m_includedColsIndices;
-    private Set<DataCell> m_columnNames;
-    private DataTableSpec m_inputSpec;
-    
+
+    private final String m_appendedColumnName;
+    private final int[] m_includedColsIndices;
+    private final Set<DataCell> m_columnNames;
+    private final DataTableSpec m_inputSpec;
+
     /**
-     * 
+     *
      * @param inputSpec input spec of the whole table
      * @param appendedColumnName name of the new column
      * @param includedColsIndices indices of columns to condense
@@ -86,41 +86,42 @@ public abstract class AbstractMany2OneCellFactory implements CellFactory {
             final String appendedColumnName, final int[]includedColsIndices) {
         m_inputSpec = inputSpec;
         m_appendedColumnName = appendedColumnName;
-        m_includedColsIndices = includedColsIndices;
+        m_includedColsIndices = includedColsIndices.clone();
         m_columnNames = new HashSet<DataCell>();
         for (int i : m_includedColsIndices) {
             m_columnNames.add(new StringCell(
                     m_inputSpec.getColumnSpec(i).getName()));
         }
     }
-    
-    
+
+
     /**
-     * 
+     *
      * @return name of the appended column
      */
     public String getAppendedColumnName() {
         return m_appendedColumnName;
     }
-    
-    
+
+
     /**
-     * 
+     *
      * @return the indices of the condensed columns
      */
     public int[] getIncludedColIndices() {
-        return m_includedColsIndices;
+        return m_includedColsIndices.clone();
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataColumnSpec[] getColumnSpecs() {
         // new column
-        DataColumnSpecCreator appendedColumnCreator 
+        DataColumnSpecCreator appendedColumnCreator
             = new DataColumnSpecCreator(m_appendedColumnName, StringCell.TYPE);
-        // possible values depend on allow multi occurences
-            DataColumnDomainCreator possibleValuesCreator 
+        // possible values depend on allow multi occurrences
+            DataColumnDomainCreator possibleValuesCreator
                 = new DataColumnDomainCreator(m_columnNames);
             appendedColumnCreator.setDomain(
                     possibleValuesCreator.createDomain());
@@ -130,15 +131,17 @@ public abstract class AbstractMany2OneCellFactory implements CellFactory {
     /**
      * {@inheritDoc}
      */
-    public void setProgress(final int curRowNr, 
+    @Override
+    public void setProgress(final int curRowNr,
             final int rowCount, final RowKey lastKey,
             final ExecutionMonitor exec) {
-        exec.setProgress((double)curRowNr / (double)rowCount); 
+        exec.setProgress((double)curRowNr / (double)rowCount);
     }
-    
+
     /**
      * {@inheritDoc}
      */
+    @Override
     public DataCell[] getCells(final DataRow row) {
         // find matching values
         int matchingValue = findColumnIndex(row);
@@ -154,10 +157,10 @@ public abstract class AbstractMany2OneCellFactory implements CellFactory {
 
     /**
      * Find the column names to put in the condensed column.
-     * 
+     *
      * @param row row to search for matching columns
      * @return matching  column names as StringCell array
      */
     public abstract int findColumnIndex(final DataRow row);
-    
+
 }

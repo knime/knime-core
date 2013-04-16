@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -65,6 +65,7 @@ import java.util.List;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.event.ChangeEvent;
@@ -107,10 +108,11 @@ public class MultipleURLList extends JScrollPane {
                 MultipleURLList.class.getResource("arrow_down.png")));
 
         public MyFilePanel(final String historyId,
-                final boolean markIfNonexisting, final String... suffixes) {
+                final boolean markIfNonexisting, final int mode, final String... suffixes) {
             super(new GridBagLayout());
 
             m_filesPanel = new FilesHistoryPanel(historyId, suffixes);
+            m_filesPanel.setSelectMode(mode);
             m_filesPanel.setMarkIfNonexisting(markIfNonexisting);
 
             GridBagConstraints c = new GridBagConstraints();
@@ -223,6 +225,8 @@ public class MultipleURLList extends JScrollPane {
 
     private final String[] m_suffixes;
 
+    private int m_selectionMode = JFileChooser.FILES_ONLY;
+
     private final ActionListener m_removeListener = new ActionListener() {
         @Override
         public void actionPerformed(final ActionEvent e) {
@@ -261,9 +265,7 @@ public class MultipleURLList extends JScrollPane {
     private final ActionListener m_selectListener = new ActionListener() {
         @Override
         public void actionPerformed(final ActionEvent e) {
-            if ((m_filePanels.size() > 0)
-                    && (m_filePanels.get(m_filePanels.size() - 1)
-                            .getSelectedFile().length() > 0)) {
+            if (!m_filePanels.isEmpty() && (m_filePanels.get(m_filePanels.size() - 1).getSelectedFile().length() > 0)) {
                 m_filePanels.add(createFilePanel());
                 update();
             }
@@ -313,8 +315,7 @@ public class MultipleURLList extends JScrollPane {
 
         for (i = 0; i < m_filePanels.size(); i++) {
             MyFilePanel fp = m_filePanels.get(i);
-            fp.m_remove.setEnabled((m_filePanels.size() > 0)
-                    && (fp.getSelectedFile().length() > 0));
+            fp.m_remove.setEnabled(!m_filePanels.isEmpty() && (fp.getSelectedFile().length() > 0));
             fp.m_up.setEnabled((i > 0) && (i < m_filePanels.size() - 1));
             fp.m_down.setEnabled(i < m_filePanels.size() - 2);
             p.add(fp, c);
@@ -382,9 +383,24 @@ public class MultipleURLList extends JScrollPane {
         update();
     }
 
+    /**
+     * Sets the select mode for the file chooser dialog.
+     *
+     * @param mode one of {@link JFileChooser#FILES_ONLY}, {@link JFileChooser#DIRECTORIES_ONLY}, or
+     *            {@link JFileChooser#FILES_AND_DIRECTORIES}
+     *
+     * @see JFileChooser#setFileSelectionMode(int)
+     * @since 2.8
+     */
+    public void setSelectionMode(final int mode) {
+        m_selectionMode = mode;
+        for (MyFilePanel p : m_filePanels) {
+            p.m_filesPanel.setSelectMode(mode);
+        }
+    }
+
     private MyFilePanel createFilePanel() {
-        MyFilePanel fp =
-                new MyFilePanel(m_historyId, m_markIfNonexisting, m_suffixes);
+        MyFilePanel fp = new MyFilePanel(m_historyId, m_markIfNonexisting, m_selectionMode, m_suffixes);
         fp.setSelectedFile(null);
         fp.addRemoveListener(m_removeListener);
         fp.addUpListener(m_upListener);

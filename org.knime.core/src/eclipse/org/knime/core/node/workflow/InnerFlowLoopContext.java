@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -56,6 +56,10 @@ package org.knime.core.node.workflow;
  * pop operation) from the stack immediately before an execution starts in
  * order to remove any previously added flow variables. They are put onto
  * immediately following their removal to indicate an iteration start.
+ *
+ * Note the difference to the normal FlowLoopContext object which is put
+ * onto the stack during configure! This object helps to keep the stack
+ * clean during the multiple subsequent execute-calls.
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */

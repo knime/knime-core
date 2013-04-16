@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -67,12 +67,12 @@ import org.knime.core.data.container.TableSpecReplacerTable;
 import org.knime.core.data.container.WrappedTable;
 import org.knime.core.data.filestore.FileStore;
 import org.knime.core.data.filestore.FileStoreCell;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.NotInWorkflowFileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.ROWriteFileStoreHandler;
-import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
-import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.util.KNIMEJob;
+import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.util.DuplicateKeyException;
 
@@ -345,7 +345,7 @@ public class ExecutionContext extends ExecutionMonitor {
      */
     public BufferedDataContainer createDataContainer(final DataTableSpec spec,
             final boolean initDomain, final int maxCellsInMemory) {
-        boolean forceCopyOfBlobs = LoopRole.END.equals(m_node.getLoopRole());
+        boolean forceCopyOfBlobs = m_node.isModelCompatibleTo(LoopEndNode.class);
         return new BufferedDataContainer(spec, initDomain, m_node,
                 m_memoryPolicy, forceCopyOfBlobs, maxCellsInMemory,
                 m_globalTableRepository, m_localTableRepository, m_fileStoreHandler);

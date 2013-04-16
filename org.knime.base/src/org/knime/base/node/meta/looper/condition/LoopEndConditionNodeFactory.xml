@@ -3,11 +3,11 @@
 <knimeNode icon="variable_condition_loop_end.png" type="LoopEnd">
     <name>Variable Condition Loop End</name>
 
-    <shortDescription>Loop end node that check for a condition in one of the flow variables</shortDescription>
+    <shortDescription>Loop end node that checks for a condition in one of the flow variables</shortDescription>
 
     <fullDescription>
         <intro>
-            In combination with a "Variable Condition Loop (Start)" node, this node lets you execute the body of the
+            In combination with a Generic Loop Start node, this node lets you execute the body of the
             loop until a certain condition on one of the flow variables is met. In the dialog you can choose one of the
             available flow variables and which condition should cause the loop to finish.
         </intro>

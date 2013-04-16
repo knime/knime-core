@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -84,9 +84,9 @@ public class BufferedDataTableView extends JComponent {
         setBackground(NodeView.COLOR_BACKGROUND);
 
         m_dataView = new TableView();
+        m_dataView.setWrapColumnHeader(true);
         m_dataView.getContentModel().setSortingAllowed(true);
         m_dataView.registerNavigationActions();
-        m_dataView.getHeaderTable().setShowColorInfo(false);
         updateDataTable();
     }
 

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -213,14 +213,14 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
                 while (nexts[i] != null || its[i].hasNext()) {
                     FlowObject o = nexts[i] != null ? nexts[i] : its[i].next();
                     nexts[i] = null;
-                    if (o instanceof FlowLoopContext) {
-                        // make sure loop contexts belong to same loops
+                    if (o instanceof FlowScopeContext) {
+                        // make sure scope contexts belong to same scopes
                         // (can be different objects, though - see bug #3208)
                         if (commonFlowO != null && !commonFlowO.equals(o)) {
                             throw new IllegalFlowObjectStackException(
                                     "Conflicting FlowObjects: " + o + " vs. "
                                     + commonFlowO
-                                    + " (loops not properly nested?)");
+                                    + " (loops/scopes not properly nested?)");
                         }
                         commonFlowO = o;
                         nexts[i] = o;
@@ -263,6 +263,26 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
     }
 
     /**
+     * @return The top-most element on the stack that complies with the given
+     * class argument and the inactive-flags or <code>null</code> if no such
+     * element is found.
+     * @param <T> The class type of the context object
+     * @param type The desired FlowObject class
+     * @param isInactiveScope the desired flag status
+     * @see java.util.Stack#peek()
+     * @since 2.8
+     */
+    public <T extends FlowScopeContext> T peekScopeContext(final Class<T> type, final boolean isInactiveScope) {
+        for (int i = m_stack.size() - 1; i >= 0; i--) {
+            FlowObject e = m_stack.get(i);
+            if (type.isInstance(e) && (type.cast(e).isInactiveScope() == isInactiveScope)) {
+                return type.cast(e);
+            }
+        }
+        return null;
+    }
+
+    /**
      * Removes all elements from the stack whose class is not of the given type.
      * It also removes the top-most element complying with the given class.
      * If no such element exists, the stack will be empty after this method is
@@ -283,11 +303,36 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
         return null;
     }
 
-    /** Get the variable with the given name or null if no such variable
-     * is on the stack.
+    /**
+     * Removes all elements from the stack whose class is not of the given type
+     * and inactive status setting.
+     * It also removes the top-most element complying with the given criteria.
+     * If no such element exists, the stack will be empty after this method is
+     * called.
+     * @param <T> The desired FlowObject type.
+     * @param type The class of that type.
+     * @param isInactiveScope the desired flag status
+     * @return The first (top-most) element on the stack of class
+     * <code>type</code> or <code>null</code> if no such element is available.
+     * @see java.util.Stack#pop()
+     * @since 2.8
+     */
+    public <T extends FlowScopeContext> T popScopeContext(final Class<T> type, final boolean isInactiveScope) {
+        for (int i = m_stack.size() - 1; i >= 0; i--) {
+            FlowObject e = m_stack.remove(i);
+            if (type.isInstance(e) && (type.cast(e).isInactiveScope() == isInactiveScope)) {
+                return type.cast(e);
+            }
+        }
+        return null;
+    }
+
+    /** Get the variable with the given name. Throws and exception if
+     * no such variable is on the stack.
      * @param name To peek
      * @param type The type of the variable to seek.
-     * @return the variable or null
+     * @return the variable
+     * @throws NoSuchElementException if variable does not exist
      */
     public FlowVariable peekFlowVariable(final String name, final Type type) {
         for (int i = m_stack.size() - 1; i >= 0; i--) {
@@ -335,17 +380,13 @@ public final class FlowObjectStack implements Iterable<FlowObject> {
     List<FlowObject> getFlowObjectsOwnedBy(final NodeID id,
             final Scope... ignoredScopes) {
         List<FlowObject> result = new ArrayList<FlowObject>();
-        boolean isInSequence = true;
         FilteredScopeIterator it =
             new FilteredScopeIterator(m_stack.iterator(), ignoredScopes);
         while (it.hasNext()) {
             FlowObject v = it.next();
             if (v.getOwner().equals(id)) {
-                isInSequence = false;
                 result.add(v);
             }
-            assert isInSequence || v.getOwner().equals(id)
-                : "FlowObjects are not ordered";
         }
         return result;
     }

@@ -128,6 +128,11 @@
             description="Resume loop execution"
             id="knime.commands.resumeloop"
             name="Resume loop execution"/>       
+      <command
+            categoryId="knime.command.category"
+            description="Select surrounding loop"
+            id="knime.action.selectLoop"
+            name="Select all of the nodes contained within the surrounding loop"/>       
    </extension>
    <extension
          point="org.eclipse.ui.editors">
@@ -414,8 +419,16 @@
                label="Send to Back"
                style="push"
                tooltip="Send the selected annotation to the back"/>     
-               
-               
+          <action
+               class="org.knime.workbench.editor2.actions.delegates.SelectLoopEditorAction"
+               definitionId="knime.action.selectLoop"
+               disabledIcon="icons/select_loop_dis.png"
+               icon="icons/select_loop.png"
+               id="org.knime.workbench.editor.actions.selectLoop"
+               label="Select Loop"
+               menubarPath="org.knime.workbench.editor.menu/group2"
+               style="push"
+               tooltip="Select all of the nodes contained within the surrounding loop"/>
       </editorContribution>
    </extension>
    <extension point="org.eclipse.ui.bindings">
@@ -509,6 +522,11 @@
             contextId="org.eclipse.ui.contexts.window"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="ALT+CTRL+F8"/>  
+      <key
+            commandId="knime.action.selectLoop"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="ALT+CTRL+F10"/>            
       <key
             commandId="knime.commands.editor.moveNodesUp"
             contextId="org.eclipse.ui.contexts.window"

@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -847,8 +847,8 @@ public abstract class NodeContainer implements NodeProgressListener {
                 setDirty();
             }
             notifyStateChangeListeners(new NodeStateEvent(getID(), m_state));
+            LOGGER.debug(this.getNameWithID() + " has new state: " + m_state);
         }
-        LOGGER.debug(this.getNameWithID() + " has new state: " + m_state);
         return changesMade;
     }
 

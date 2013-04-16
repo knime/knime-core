@@ -4,7 +4,7 @@
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
  *
- * Copyright, 2003 - 2011
+ * Copyright, 2003 - 2013
  * University of Konstanz, Germany
  * Chair for Bioinformatics and Information Mining (Prof. M. Berthold)
  * and KNIME GmbH, Konstanz, Germany
@@ -22,7 +22,7 @@
 -->
 <!ELEMENT knimeNode ( name, shortDescription, fullDescription, ports, views? ) >
 <!ATTLIST knimeNode icon CDATA #IMPLIED>
-<!ATTLIST knimeNode type (Source|Sink|Learner|Predictor|Manipulator|Visualizer|Meta|LoopStart|LoopEnd|QuickForm|Other|Unknown) "Unknown">
+<!ATTLIST knimeNode type (Source|Sink|Learner|Predictor|Manipulator|Visualizer|Meta|LoopStart|LoopEnd|ScopeStart|ScopeEnd|QuickForm|Other|Unknown) "Unknown">
 <!ATTLIST knimeNode deprecated (true|false) "false">
 
 <!ELEMENT name (#PCDATA) >
@@ -39,7 +39,7 @@
 <!ELEMENT p (#PCDATA | br | b | i | u | a | tt | ul | ol | sup | sub)* >
 <!ELEMENT ul (li)+ >
 <!ELEMENT ol (li)+ >
-<!ELEMENT li (#PCDATA) >
+<!ELEMENT li (#PCDATA | br | b | i | u | a | tt)* >
 <!ELEMENT h3 (#PCDATA) >
 <!ELEMENT h4 (#PCDATA) >
 <!ELEMENT h (#PCDATA) >

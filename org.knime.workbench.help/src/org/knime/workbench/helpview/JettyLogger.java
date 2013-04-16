@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -60,18 +60,9 @@ import org.mortbay.util.DateCache;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class JettyLogger implements Logger {
-    private static DateCache dateCache;
+    private static final DateCache DATE_CACHE = new DateCache("yyyy-MM-dd HH:mm:ss");
 
-    static {
-        try {
-            dateCache = new DateCache("yyyy-MM-dd HH:mm:ss");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    private final static boolean debug =
-            System.getProperty("DEBUG", null) != null;
+    private static final boolean DEBUG = System.getProperty("DEBUG", null) != null;
 
     private final String m_name;
 
@@ -109,8 +100,8 @@ public class JettyLogger implements Logger {
 
     @Override
     public void info(final String msg, final Object arg0, final Object arg1) {
-        String d = dateCache.now();
-        int ms = dateCache.lastMs();
+        String d = DATE_CACHE.now();
+        int ms = DATE_CACHE.lastMs();
         synchronized (m_buffer) {
             tag(d, ms, ":INFO:");
             format(msg, arg0, arg1);
@@ -120,9 +111,9 @@ public class JettyLogger implements Logger {
 
     @Override
     public void debug(final String msg, final Throwable th) {
-        if (debug) {
-            String d = dateCache.now();
-            int ms = dateCache.lastMs();
+        if (DEBUG) {
+            String d = DATE_CACHE.now();
+            int ms = DATE_CACHE.lastMs();
             synchronized (m_buffer) {
                 tag(d, ms, ":DBUG:");
                 format(msg);
@@ -134,9 +125,9 @@ public class JettyLogger implements Logger {
 
     @Override
     public void debug(final String msg, final Object arg0, final Object arg1) {
-        if (debug) {
-            String d = dateCache.now();
-            int ms = dateCache.lastMs();
+        if (DEBUG) {
+            String d = DATE_CACHE.now();
+            int ms = DATE_CACHE.lastMs();
             synchronized (m_buffer) {
                 tag(d, ms, ":DBUG:");
                 format(msg, arg0, arg1);
@@ -147,8 +138,8 @@ public class JettyLogger implements Logger {
 
     @Override
     public void warn(final String msg, final Object arg0, final Object arg1) {
-        String d = dateCache.now();
-        int ms = dateCache.lastMs();
+        String d = DATE_CACHE.now();
+        int ms = DATE_CACHE.lastMs();
         synchronized (m_buffer) {
             tag(d, ms, ":WARN:");
             format(msg, arg0, arg1);
@@ -158,8 +149,8 @@ public class JettyLogger implements Logger {
 
     @Override
     public void warn(final String msg, final Throwable th) {
-        String d = dateCache.now();
-        int ms = dateCache.lastMs();
+        String d = DATE_CACHE.now();
+        int ms = DATE_CACHE.lastMs();
         synchronized (m_buffer) {
             tag(d, ms, ":WARN:");
             format(msg);

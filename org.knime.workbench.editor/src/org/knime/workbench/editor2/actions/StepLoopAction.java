@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -49,8 +49,8 @@
 package org.knime.workbench.editor2.actions;
 
 import org.eclipse.jface.resource.ImageDescriptor;
-import org.knime.core.node.Node.LoopRole;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer.LoopStatus;
@@ -139,7 +139,7 @@ public class StepLoopAction extends AbstractNodeAction {
         NodeContainer nc = parts[0].getNodeContainer();
         if (nc instanceof SingleNodeContainer) {
             SingleNodeContainer snc = (SingleNodeContainer)nc;
-            if (snc.getLoopRole().equals(LoopRole.END)
+            if (snc.isModelCompatibleTo(LoopEndNode.class)
                 && snc.getLoopStatus().equals(LoopStatus.PAUSED)) {
                 // either the node is paused...
                 return true;
@@ -167,7 +167,7 @@ public class StepLoopAction extends AbstractNodeAction {
             NodeContainer nc = p.getNodeContainer();
             if (nc instanceof SingleNodeContainer) {
                 SingleNodeContainer snc = (SingleNodeContainer)nc;
-                if (snc.getLoopRole().equals(LoopRole.END)
+                if (snc.isModelCompatibleTo(LoopEndNode.class)
                     && snc.getLoopStatus().equals(LoopStatus.PAUSED)) {
                     manager.resumeLoopExecution(snc, /*oneStep=*/true);
                 } else if (manager.canExecuteNode(nc.getID())) {

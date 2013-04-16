@@ -1,7 +1,7 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Jun 16, 2007 (wiswedel): created
  */
@@ -78,14 +78,14 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ColumnSelectionComboxBox;
 
 /**
- * Dialog for Search & Replace (Dictionary) node. Contains a column 
+ * Dialog for Search & Replace (Dictionary) node. Contains a column
  * selection panel for target column selection, a file chooser panel to
  * select the dictionary location, and a checkbox + textfield for the new
  * column (if any).
  * @author Bernd Wiswedel, University of Konstanz
  */
 final class SearchReplaceDictNodeDialogPane extends NodeDialogPane {
-    
+
     private final ColumnSelectionComboxBox m_targetColBox;
     private final FilesHistoryPanel m_fileChooserPanel;
     private final JCheckBox m_appendChecker;
@@ -93,13 +93,14 @@ final class SearchReplaceDictNodeDialogPane extends NodeDialogPane {
     private final JTextField m_appendTextField;
 
     /** Inits GUI. */
-    @SuppressWarnings("unchecked")  
+    @SuppressWarnings("unchecked")
     public SearchReplaceDictNodeDialogPane() {
-        m_targetColBox = 
+        m_targetColBox =
             new ColumnSelectionComboxBox((Border)null, StringValue.class);
         m_fileChooserPanel = new FilesHistoryPanel("string_replace_dict");
         m_appendChecker = new JCheckBox("Append new column");
         m_appendChecker.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 m_appendTextField.setEnabled(m_appendChecker.isSelected());
             }
@@ -115,6 +116,7 @@ final class SearchReplaceDictNodeDialogPane extends NodeDialogPane {
             @Override
             public void keyTyped(final KeyEvent e) {
                 SwingUtilities.invokeLater(new Runnable() {
+                    @Override
                     public void run() {
                         String text = m_delimiterField.getText();
                         String newText;
@@ -148,10 +150,10 @@ final class SearchReplaceDictNodeDialogPane extends NodeDialogPane {
         m_appendTextField = new JTextField();
         layout();
     }
-    
+
     /** {@inheritDoc} */
     @Override
-    protected void loadSettingsFrom(final NodeSettingsRO settings, 
+    protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
         String targetCol = settings.getString(
                 SearchReplaceDictNodeModel.CFG_TARGET_COLUMN, null);
@@ -186,10 +188,10 @@ final class SearchReplaceDictNodeDialogPane extends NodeDialogPane {
             m_appendTextField.setText(appendCol);
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
-    protected void saveSettingsTo(final NodeSettingsWO settings) 
+    protected void saveSettingsTo(final NodeSettingsWO settings)
         throws InvalidSettingsException {
         String targetCol = m_targetColBox.getSelectedColumn();
         String dictLoc = m_fileChooserPanel.getSelectedFile();
@@ -212,8 +214,8 @@ final class SearchReplaceDictNodeDialogPane extends NodeDialogPane {
                 break;
             default:
                 throw new InvalidSettingsException(
-                        "\"" + delimString + "\" is not a valid delimiter, " 
-                        + "use any single character or \"\\t\" for a tab " 
+                        "\"" + delimString + "\" is not a valid delimiter, "
+                        + "use any single character or \"\\t\" for a tab "
                         + "character or \"\\\\\" for a single backslash.");
             }
         } else {
@@ -230,7 +232,7 @@ final class SearchReplaceDictNodeDialogPane extends NodeDialogPane {
         settings.addChar(
                 SearchReplaceDictNodeModel.CFG_DELIMITER_IN_DICT, delim);
     }
-    
+
     /** Layout the GUI elements with GridBagLayout. */
     private void layout() {
         JPanel panel = new JPanel(new GridBagLayout());
@@ -238,29 +240,29 @@ final class SearchReplaceDictNodeDialogPane extends NodeDialogPane {
         g.insets = new Insets(5, 5, 5, 5);
         g.gridy = 0;
         g.anchor = GridBagConstraints.EAST;
-        
+
         g.gridx = 0;
         panel.add(new JLabel("Target Column "), g);
-        
+
         g.gridy++;
         panel.add(new JLabel("Dictionary Location "), g);
-        
+
         g.gridy++;
         panel.add(new JLabel("Delimiter in Dictionary "), g);
-        
+
         g.gridy++;
         panel.add(m_appendChecker, g);
-        
+
         g.anchor = GridBagConstraints.WEST;
         g.weightx = 1.0;
         g.fill = GridBagConstraints.HORIZONTAL;
         g.gridy = 0;
         g.gridx++;
         panel.add(m_targetColBox, g);
-        
+
         g.gridy++;
         panel.add(m_fileChooserPanel, g);
-        
+
         g.fill = GridBagConstraints.NONE;
         g.weightx = 0.0;
         g.gridy++;
@@ -270,9 +272,9 @@ final class SearchReplaceDictNodeDialogPane extends NodeDialogPane {
         g.fill = GridBagConstraints.HORIZONTAL;
         g.gridy++;
         panel.add(m_appendTextField, g);
-        
+
         addTab("Default", panel);
-        
+
     }
-    
+
 }

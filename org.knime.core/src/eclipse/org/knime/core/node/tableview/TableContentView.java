@@ -1,7 +1,7 @@
 /*
  * ------------------------------------------------------------------------
  *
- *  Copyright (C) 2003 - 2011
+ *  Copyright (C) 2003 - 2013
  *  University of Konstanz, Germany and
  *  KNIME GmbH, Konstanz, Germany
  *  Website: http://www.knime.org; Email: contact@knime.org
@@ -122,6 +122,9 @@ public class TableContentView extends JTable {
      * to be shown.
      */
     private boolean m_isShowIconInColumnHeader;
+
+    /** See {@link #setWrapColumnHeader(boolean)}. */
+    private boolean m_isWrapHeader;
 
     /**
      * Creates empty content view. Consider
@@ -247,7 +250,7 @@ public class TableContentView extends JTable {
                             tcM.getColumn(i).setHeaderValue(headerValue);
                         }
                     }
-                    getTableHeader().repaint(); // repaint sort icon
+                    getTableHeader().revalidate(); // repaint sort icon
                     // property data update to row header view
                     // (only sort icon - data update done via TableModelEvent)
                     firePropertyChange(evt.getPropertyName(),
@@ -285,7 +288,6 @@ public class TableContentView extends JTable {
         setSelectionBackground(selColor);
         return super.prepareRenderer(renderer, row, column);
     }
-
 
     /**
      * Is the row count returned by {@link #getRowCount()} final?
@@ -419,6 +421,34 @@ public class TableContentView extends JTable {
         getContentModel().requestResetHiLite();
     } // hiliteSelected()
 
+    /** Should the column header names be wrapped if they are too long. Default is false.
+     * @param value New value. If set, it makes sense to also set
+     * {@link TableView#setColumnHeaderResizingAllowed(boolean)} to true.
+     * @since 2.8
+     */
+    public final void setWrapColumnHeader(final boolean value) {
+        if (value != m_isWrapHeader) {
+            m_isWrapHeader = value;
+            JTableHeader header = getTableHeader();
+            if (header == null) {
+                return;
+            }
+            TableCellRenderer r = header.getDefaultRenderer();
+            if (r instanceof ColumnHeaderRenderer) {
+                ColumnHeaderRenderer cr = (ColumnHeaderRenderer)r;
+                cr.setWrapHeader(value);
+            }
+        }
+    }
+
+    /** see {@link #setWrapColumnHeader(boolean)}.
+     * @return the isWrapHeader
+     * @since 2.8
+     */
+    public final boolean isWrapHeader() {
+        return m_isWrapHeader;
+    }
+
     /** Sets the property whether or not the icon in the column header
      * shall be shown. This typically represents the column's type icon
      * (the cell type contained in the column). Sometimes, this is not
@@ -518,6 +548,7 @@ public class TableContentView extends JTable {
     public void addColumn(final TableColumn aColumn) {
         assert (hasData());
         int i = aColumn.getModelIndex();
+        aColumn.sizeWidthToFit();
         DataTable data = getContentModel().getDataTable();
         DataColumnSpec headerValue = data.getDataTableSpec().getColumnSpec(i);
         aColumn.setHeaderValue(headerValue);
@@ -539,6 +570,61 @@ public class TableContentView extends JTable {
         }
         aColumn.setCellRenderer(renderer);
         super.addColumn(aColumn);
+    }
+
+    /** {@inheritDoc} */
+    @SuppressWarnings("serial")
+    @Override
+    protected JTableHeader createDefaultTableHeader() {
+        return new JTableHeader(columnModel) {
+            /** {@inheritDoc} */
+            @Override
+            public Dimension getPreferredSize() {
+                // get preferred width for all columns and if there is any one that needs more than allocated
+                // space add at most two more "rows" to the column header
+                Dimension d = super.getPreferredSize();
+                if (isPreferredSizeSet()) {
+                    return d;
+                }
+                TableCellRenderer r = getDefaultRenderer();
+                TableColumnModel cM = getColumnModel();
+                int prefHeight = d.height;
+                if (r instanceof ColumnHeaderRenderer && ((ColumnHeaderRenderer)r).isWrapHeader()) {
+                    ColumnHeaderRenderer chr = (ColumnHeaderRenderer)r;
+                    for (Enumeration<TableColumn> enu = cM.getColumns(); enu.hasMoreElements();) {
+                        TableColumn tc = enu.nextElement();
+                        int tcPreferredWidth = tc.getWidth(); // includes icon
+                        // this is what tc.sizeWidthToFit() does, too
+                        int col = TableContentView.this.convertColumnIndexToView(tc.getModelIndex());
+                        Component c = chr.getTableCellRendererComponent(TableContentView.this,
+                                            tc.getHeaderValue(), false, false, 0, col);
+                        Dimension prefSize = c.getPreferredSize();
+                        int prefTextWidth = prefSize.width; // includes icon
+                        if (c == chr) { // almost surely, unless overwritten
+                            int prefTextWidth2 = chr.getPreferredTextWidth();
+                            if (prefTextWidth2 > 0) {       // correct by icon space
+                                int iconWidth = prefSize.width - prefTextWidth2;
+                                prefTextWidth = prefTextWidth2;
+                                tcPreferredWidth -= iconWidth;
+                            }
+                        }
+                        int tcBestHeight;
+                        if (prefTextWidth > 2 * tcPreferredWidth) {
+                            tcBestHeight = 3 * d.height;
+                        } else if (prefTextWidth > tcPreferredWidth) {
+                            tcBestHeight = 2 * d.height;
+                        } else {
+                            tcBestHeight = d.height;
+                        }
+                        prefHeight = Math.max(prefHeight, Math.min(80, tcBestHeight));
+                    }
+                }
+                if (prefHeight != d.height) {
+                    return new Dimension(d.width, prefHeight);
+                }
+                return d;
+            }
+        };
     }
 
     /** Method being invoked when the table is (re-)constructed to get
@@ -565,7 +651,7 @@ public class TableContentView extends JTable {
         JTableHeader header = getTableHeader();
         // get column in which event occurred
         int columnInView = header.columnAtPoint(e.getPoint());
-        if (columnInView < 0) { // ouside columns
+        if (columnInView < 0) { // outside columns
             return;
         }
         Rectangle recOfColumn = header.getHeaderRect(columnInView);
@@ -577,7 +663,7 @@ public class TableContentView extends JTable {
             if (popup.getSubElements().length > 0) { // only if it has content
                 popup.show(header, e.getX(), e.getY());
             }
-        } else {
+        } else if (e.isControlDown()) {
             onSortRequest(convertColumnIndexToModel(columnInView));
         }
     }
@@ -851,6 +937,8 @@ public class TableContentView extends JTable {
      * @see JTableHeader#setDefaultRenderer(javax.swing.table.TableCellRenderer)
      */
     protected ColumnHeaderRenderer getNewColumnHeaderRenderer() {
-        return new ColumnHeaderRenderer();
+        ColumnHeaderRenderer r = new ColumnHeaderRenderer();
+        r.setWrapHeader(isWrapHeader());
+        return r;
     }
 }
