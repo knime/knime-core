@@ -73,6 +73,7 @@ import org.knime.core.node.workflow.FlowVariable;
  * variable from a list of flow variables.
  *
  * @author Kilian Thiel, KNIME.com, Berlin, Germany
+ * @since 2.8
  */
 public final class DialogComponentFlowVariableNameSelection
 extends DialogComponent {
