@@ -44,11 +44,9 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
- * History
- *   30.05.2012 (kilian): created
+ *
  */
-package org.knime.base.node.preproc.urltofilepathvariable.defaultnodesettings;
+package org.knime.core.node.defaultnodesettings;
 
 import java.awt.Color;
 import java.awt.Dimension;
@@ -66,62 +64,60 @@ import javax.swing.event.ChangeListener;
 
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.defaultnodesettings.DialogComponent;
-import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.FlowVariableListCellRenderer;
 import org.knime.core.node.workflow.FlowVariable;
 
 /**
- * Provides a standard component for a dialog that allows to select a flow 
+ * Provides a standard component for a dialog that allows to select a flow
  * variable from a list of flow variables.
- * 
+ *
  * @author Kilian Thiel, KNIME.com, Berlin, Germany
  */
-public final class DialogComponentFlowVariableNameSelection 
+public final class DialogComponentFlowVariableNameSelection
 extends DialogComponent {
 
     private JComboBox m_jcombobox;
-    
+
     private JLabel m_label;
-    
+
     private FlowVariable.Type[] m_flowVarTypes;
-        
+
     /**
-     * Constructor creates a label and a combobox and adds them to the 
-     * component panel. The given flow variables, which are of the specified 
+     * Constructor creates a label and a combobox and adds them to the
+     * component panel. The given flow variables, which are of the specified
      * types are added as items to the combobox. If no types are specified
      * all variables will be added.
-     * 
+     *
      * @param model The string model to store the name of the selected variable.
      * @param label The title of the label to show.
      * @param flowVars The flow variables to add to combobox.
-     * @param flowVarTypes The types of flow variables which are added to 
+     * @param flowVarTypes The types of flow variables which are added to
      * combobox.
      */
     public DialogComponentFlowVariableNameSelection(
             final SettingsModelString model, final String label,
-            final Collection<FlowVariable> flowVars, 
+            final Collection<FlowVariable> flowVars,
             final FlowVariable.Type... flowVarTypes) {
         super(model);
         if (flowVars == null) {
             throw new NullPointerException("Flow Variables may not be null!");
         }
-        
+
         if (label != null) {
             m_label = new JLabel(label);
             getComponentPanel().add(m_label);
         }
-        
+
         // save types, the will be needed again when items are replaced
         m_flowVarTypes = flowVarTypes;
-        
+
         m_jcombobox = new JComboBox(getFilteredFlowVariables(flowVars));
         m_jcombobox.setRenderer(new FlowVariableListCellRenderer());
         m_jcombobox.setEditable(false);
-        
+
         getComponentPanel().add(m_jcombobox);
-        
+
         m_jcombobox.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(final ItemEvent e) {
@@ -146,10 +142,10 @@ extends DialogComponent {
                 updateComponent();
             }
         });
-        
+
         updateComponent();
     }
-    
+
     private void updateModel() throws InvalidSettingsException {
         if (m_jcombobox.getSelectedItem() == null) {
             ((SettingsModelString)getModel()).setStringValue(null);
@@ -168,7 +164,7 @@ extends DialogComponent {
         ((SettingsModelString)getModel()).setStringValue(
                 ((FlowVariable)m_jcombobox.getSelectedItem()).getName());
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -223,7 +219,7 @@ extends DialogComponent {
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettingsBeforeSave() throws 
+    protected void validateSettingsBeforeSave() throws
     InvalidSettingsException {
         updateModel();
     }
@@ -252,7 +248,7 @@ extends DialogComponent {
     public void setToolTipText(final String text) {
         m_jcombobox.setToolTipText(text);
     }
-    
+
     /**
      * Sets the preferred size of the internal component.
      *
@@ -262,7 +258,7 @@ extends DialogComponent {
     public void setSizeComponents(final int width, final int height) {
         m_jcombobox.setPreferredSize(new Dimension(width, height));
     }
-    
+
     /**
      * Replaces the list of selectable flow variables in the component. If
      * <code>select</code> is specified (not null) and it exists in the
@@ -275,13 +271,13 @@ extends DialogComponent {
      *            list.
      */
     public void replaceListItems(final Collection<FlowVariable> newItems,
-            final String select) {        
+            final String select) {
         if (newItems == null || newItems.size() < 1) {
             throw new NullPointerException("The container with the new items"
                     + " can't be null or empty.");
         }
         Vector<FlowVariable> filteredItems = getFilteredFlowVariables(newItems);
-        
+
         final String sel;
         if (select == null) {
             sel = ((SettingsModelString)getModel()).getStringValue();
@@ -312,18 +308,18 @@ extends DialogComponent {
         m_jcombobox.setSize(m_jcombobox.getPreferredSize());
         getComponentPanel().validate();
     }
-    
+
     /**
      * Checks if the given flow variable is of the same type of any of the
      * specified types are returns <code>true</code> if so, otherwise
      * <code>false</code>.
-     * 
+     *
      * @param var The flow variable to check
      * @param flowVarTypes the valid types.
-     * @return <code>true</code> if flow variable is of any of the specified 
+     * @return <code>true</code> if flow variable is of any of the specified
      * types, otherwise <code>false</code>.
      */
-    private boolean isFlowVariableCompatible(final FlowVariable var, 
+    private boolean isFlowVariableCompatible(final FlowVariable var,
             final FlowVariable.Type ...flowVarTypes) {
         if (flowVarTypes != null) {
             for (FlowVariable.Type type : flowVarTypes) {
@@ -334,17 +330,17 @@ extends DialogComponent {
         }
         return false;
     }
-    
+
     /**
      * Returns a vector of the given flow variables that match any of the
      * specified types.
-     * 
+     *
      * @param flowVars The flow variables to filter.
      * @return The vector of filtered flow variables.
      */
     private Vector<FlowVariable> getFilteredFlowVariables(
             final Collection<FlowVariable> flowVars) {
-        Vector<FlowVariable> flowVarsAsVector = 
+        Vector<FlowVariable> flowVarsAsVector =
             new Vector<FlowVariable>(flowVars.size());
         if (m_flowVarTypes == null || m_flowVarTypes.length <= 0) {
             flowVarsAsVector.addAll(flowVars);
@@ -356,5 +352,5 @@ extends DialogComponent {
             }
         }
         return flowVarsAsVector;
-    }    
+    }
 }
