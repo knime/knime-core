@@ -171,7 +171,13 @@
     </dt>
     <dd>Sets the batch write size for writing data rows into a database. The
       default value is 1, that is one row at a time.</dd>
-
+      
+    <dt>
+      knime.database.enable.concurrency=<em>&lt;boolean&gt;</em>
+    </dt>
+    <dd>Set to synchronize access to databases. If true (default) the access to database driver
+      is synchronized based on the database connection, otherwise false.</dd>
+      
     <dt>
       knime.logfile.maxsize=<em>&lt;number&gt;</em>[mk]
     </dt>
