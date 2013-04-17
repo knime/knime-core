@@ -47,29 +47,32 @@
  */
 package org.knime.core.node;
 
+import org.knime.core.node.interactive.ReexecutionCallback;
+import org.knime.core.node.workflow.InteractiveNode;
+
 
 /**
  * Abstract implementation of a node view. A node view is the visual component
- * to a node, displaying a computed result (or the ongoing computation). 
- * 
+ * to a node, displaying a computed result (or the ongoing computation).
+ *
  * <p>
  * <strong>Note:</strong>Concrete implementations do not inherit from this class
- * directly but extend from {@link NodeView}. Nodes that open an external 
- * application extend from {@link ExternalApplicationNodeView}. 
- *  
+ * directly but extend from {@link NodeView}. Nodes that open an external
+ * application extend from {@link ExternalApplicationNodeView}.
+ *
  * @author Bernd Wiswedel, University of Konstanz
  * @param <T> the implementation of the {@link NodeModel} this node view
  *          is based on
  */
 public abstract class AbstractNodeView<T extends NodeModel> {
-    
+
     /**
      * The node logger for this class; do not make static to make sure the right
      * class name is printed in messages.
      */
     private final NodeLogger m_logger;
-    
-    /** Name of view. Used for log messages and suggested view title (if 
+
+    /** Name of view. Used for log messages and suggested view title (if
      * subclass allows view titles). */
     private String m_viewName;
 
@@ -77,7 +80,7 @@ public abstract class AbstractNodeView<T extends NodeModel> {
     private final T m_nodeModel;
 
     /** Creates new view. This constructor keeps the node model reference and
-     * instantiates the logger. 
+     * instantiates the logger.
      * @param nodeModel The underlying node model.
      * @throws NullPointerException If the <code>nodeModel</code> is null.
      */
@@ -88,7 +91,7 @@ public abstract class AbstractNodeView<T extends NodeModel> {
         m_logger = NodeLogger.getLogger(this.getClass());
         m_nodeModel = nodeModel;
     }
-    
+
     /**
      * Get reference to underlying <code>NodeModel</code>, never null.
      * @return NodeModel reference.
@@ -96,19 +99,33 @@ public abstract class AbstractNodeView<T extends NodeModel> {
     protected T getNodeModel() {
         return m_nodeModel;
     }
-    
-    /** Get reference to logger, never null. The logger is customized with an 
+
+    /** Get reference to logger, never null. The logger is customized with an
      * appropriate name (currently the runtime class of the view).
      * @return reference to logger */
     public NodeLogger getLogger() {
         return m_logger;
     }
 
+    /** Allows client views to trigger a re-execution of their underlying node. This method must only be called
+     * if the underlying NodeModel is an instance of {@link InteractiveNode} (otherwise an exception is thrown).
+     *
+     * @param callback The callback used by the framework to ask for confirmation/progress, etc...
+     * @since 2.8
+     */
+    protected void triggerReexecute(final ReexecutionCallback callback) {
+        if (!(getNodeModel() instanceof InteractiveNode)) {
+            throw new IllegalStateException("Node does not implement the "
+                    + InteractiveNode.class.getName() + " interface");
+        }
+        // TODO ... find framework (how?) and call re-execute
+    }
+
     /**
      * Called from the model that something has changed. It calls the abstract
-     * method {@link #modelChanged()}. 
-     * 
-     * <p>This method is called when the node makes state transitions that 
+     * method {@link #modelChanged()}.
+     *
+     * <p>This method is called when the node makes state transitions that
      * affect the node model content, i.e. after execute or reset or when the
      * highlight handler has changed.
      */
@@ -142,8 +159,8 @@ public abstract class AbstractNodeView<T extends NodeModel> {
      * events from their assigned models via the
      * {@link NodeModel#notifyViews(Object)} method. Can be used to
      * iteratively update the view during execute.
-     * 
-     * @param arg The argument that is provided in the 
+     *
+     * @param arg The argument that is provided in the
      * {@linkplain NodeModel#notifyViews(Object) notifyViews} method.
      */
     protected void updateModel(final Object arg) {
@@ -153,9 +170,9 @@ public abstract class AbstractNodeView<T extends NodeModel> {
 
     /** Called from the framework to open a new view or bring an existing
      * view to front. The title serves as default view name and should be
-     * shown in the view title bar if possible. This method must be called 
+     * shown in the view title bar if possible. This method must be called
      * at most once per view instance!
-     * @param title The view title. 
+     * @param title The view title.
      * @see #closeView() */
     final void openView(final String title) {
         synchronized (m_nodeModel) {
@@ -165,16 +182,16 @@ public abstract class AbstractNodeView<T extends NodeModel> {
         }
     }
 
-    /** Direct(!) subclasses override this method and open the view or frame. 
+    /** Direct(!) subclasses override this method and open the view or frame.
      * This method is called from {@link #openView(String)} and is called
      * at most once.
-     * @param title the default title of the view. It should be shown in the 
+     * @param title the default title of the view. It should be shown in the
      * view title bar (if at all possible).
      */
     abstract void callOpenView(final String title);
-    
+
     /** Closes the view and disposes all allocated resources. The view is not
-     * meant to be opened again. This method is the counterpart to 
+     * meant to be opened again. This method is the counterpart to
      * {@link #openView(String)}. (Core) Sub-classes may widen the scope of this
      * method. */
     void closeView() {
@@ -183,14 +200,14 @@ public abstract class AbstractNodeView<T extends NodeModel> {
             callCloseView();
         }
     }
-    
-    /** Called from {@link #closeView()} to close the view and release all 
+
+    /** Called from {@link #closeView()} to close the view and release all
      * allocated resources. The view will not be opened again. */
     abstract void callCloseView();
-    
+
     /** @return the viewName as set in the {@link #openView(String)} method. */
     String getViewName() {
         return m_viewName;
     }
-    
+
 }
