@@ -47,38 +47,28 @@
  *
  * Created on Apr 16, 2013 by Berthold
  */
-package org.knime.core.node.workflow;
+package org.knime.core.node.interactive;
 
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.port.PortObject;
+import org.knime.core.node.NodeView;
 
-/** Interface for NodeModels that support interactive views and repeated
- * execution when the view has been modified by the user.
+/** Additional interface to be implemented by a @see NodeFactory when the
+ * underlying @see NodeModel implements @see InteractiveNode, that is the
+ * NodeModel supports an interactive view and re-execution.
  *
  * @author B. Wiswedel, Th. Gabriel, M. Berthold
+ * @param <T> the underlying NodeModel implementing @see InteractiveNode
  * @since 2.8
  */
-public interface InteractiveNode {
-
-    /** Load content potentially modified from an interactive view.
-     *
-     * @param content the new content to be copied into the model
-     */
-    abstract void loadViewContent(final ViewContent content);
+public interface InteractiveNodeFactory<T extends InteractiveNode> {
 
     /**
-     * @return content required for the interactive view.
+     * @return true of the factory can create an interactive view object.
      */
-    abstract ViewContent saveViewContent();
+    public abstract boolean hasInteractiveView();
 
-    /** Execute an executed node again - usually this will be called after
-     * a modified content from the interactive view was loaded into the
-     * NodeModel.
-     *
-     * @param ec the execution context to create tables and monitor cancelation
-     * @return updated output objects.
-     * @throws CanceledExecutionException when interrupted by user
+    /**
+     * @param model the view operates on
+     * @return interactive view.
      */
-    abstract PortObject[] reExecute(ExecutionContext ec) throws CanceledExecutionException;
+    public NodeView getInteractiveView(final T model);
 }

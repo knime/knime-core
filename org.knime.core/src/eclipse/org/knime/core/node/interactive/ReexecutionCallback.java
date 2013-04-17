@@ -51,7 +51,7 @@ package org.knime.core.node.interactive;
 
 /** A callback object that view implementations need to provide when they want to re-execute their underlying node.
  *
- * @see org.knime.core.node.workflow.InteractiveNode
+ * @see org.knime.core.node.interactive.InteractiveNode
  * @see org.knime.core.node.AbstractNodeView#triggerReexecute
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland

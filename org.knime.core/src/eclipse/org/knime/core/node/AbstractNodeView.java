@@ -47,8 +47,8 @@
  */
 package org.knime.core.node;
 
+import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.ReexecutionCallback;
-import org.knime.core.node.workflow.InteractiveNode;
 
 
 /**

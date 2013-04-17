@@ -47,19 +47,27 @@
  *
  * Created on Apr 16, 2013 by Berthold
  */
-package org.knime.core.node.workflow;
+package org.knime.core.node.interactive;
 
-/** Interface for NodeModels that support interactive views in the Execution Wizard
- * or WebPortal together with repeated execution when the view has been modified by
- * the user.
+
+/** Additional interface to be implemented by a @see NodeFactory when the
+ * underlying @see NodeModel implements @see QuickFormNode, that is the
+ * NodeModel supports an interactive WebPortal/Execution-Wizard view and
+ * re-execution.
  *
  * @author B. Wiswedel, Th. Gabriel, M. Berthold
+ * @param <T> the underlying NodeModel implementing @see QuickFormNode
  * @since 2.8
  */
-public interface QuickFormNode extends InteractiveNode {
+public interface QuickFormNodeFactory<T extends QuickFormNode> {
 
     /**
-     * @return true of the view is to be displayed in the Wizard/WebPortal
+     * @return true of the factory can create an interactive view object.
      */
-    public boolean isVisible();
+    public abstract boolean hasInteractiveJavaScriptView();
+
+    /**
+     * @return view object which can be used with the underlying models @see ViewContent.
+     */
+    public Object getInteractiveJavaScriptView();
 }
