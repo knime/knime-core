@@ -49,12 +49,17 @@
  */
 package org.knime.core.node.workflow;
 
-/**
+/** Interface for NodeModels that support interactive views in the Execution Wizard
+ * or WebPortal together with repeated execution when the view has been modified by
+ * the user.
  *
  * @author B. Wiswedel, Th. Gabriel, M. Berthold
  * @since 2.8
  */
 public interface QuickFormNode extends InteractiveNode {
 
+    /**
+     * @return true of the view is to be displayed in the Wizard/WebPortal
+     */
     public boolean isVisible();
 }

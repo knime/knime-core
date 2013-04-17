@@ -50,14 +50,24 @@
 package org.knime.core.node.workflow;
 
 
-/**
+/** Additional interface to be implemented by a @see NodeFactory when the
+ * underlying @see NodeModel implements @see QuickFormNode, that is the
+ * NodeModel supports an interactive WebPortal/Execution-Wizard view and
+ * re-execution.
  *
  * @author B. Wiswedel, Th. Gabriel, M. Berthold
+ * @param <T> the underlying NodeModel implementing @see QuickFormNode
  * @since 2.8
  */
-public interface QuickFormNodeFactory {
+public interface QuickFormNodeFactory<T extends QuickFormNode> {
 
+    /**
+     * @return true of the factory can create an interactive view object.
+     */
     public abstract boolean hasInteractiveJavaScriptView();
 
+    /**
+     * @return view object which can be used with the underlying models @see ViewContent.
+     */
     public Object getInteractiveJavaScriptView();
 }

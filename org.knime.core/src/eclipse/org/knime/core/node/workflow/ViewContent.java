@@ -49,7 +49,8 @@
  */
 package org.knime.core.node.workflow;
 
-/**
+/** Container for all of the information transported inbetween a @see QuickFormNode
+ * and an interactive view running in the wizard or WebPortal.
  *
  * @author B. Wiswedel, Th. Gabriel, M. Berthold
  * @since 2.8

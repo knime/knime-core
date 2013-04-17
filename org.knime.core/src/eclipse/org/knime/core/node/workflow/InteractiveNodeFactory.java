@@ -51,14 +51,24 @@ package org.knime.core.node.workflow;
 
 import org.knime.core.node.NodeView;
 
-/**
+/** Additional interface to be implemented by a @see NodeFactory when the
+ * underlying @see NodeModel implements @see InteractiveNode, that is the
+ * NodeModel supports an interactive view and re-execution.
  *
  * @author B. Wiswedel, Th. Gabriel, M. Berthold
+ * @param <T> the underlying NodeModel implementing @see InteractiveNode
  * @since 2.8
  */
-public interface InteractiveNodeFactory {
+public interface InteractiveNodeFactory<T extends InteractiveNode> {
 
+    /**
+     * @return true of the factory can create an interactive view object.
+     */
     public abstract boolean hasInteractiveView();
 
-    public NodeView<? extends InteractiveNode> getInteractiveView();
+    /**
+     * @param model the view operates on
+     * @return interactive view.
+     */
+    public NodeView getInteractiveView(final T model);
 }
