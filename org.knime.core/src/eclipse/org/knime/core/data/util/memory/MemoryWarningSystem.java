@@ -154,10 +154,9 @@ public final class MemoryWarningSystem {
      * threshold.
      */
     private MemoryPoolMXBean findTenuredGenPool() {
+        List<String> asList = Arrays.asList("Tenured Gen", "PS Old Gen", "CMS Old Gen");
+
         for (MemoryPoolMXBean pool : ManagementFactory.getMemoryPoolMXBeans()) {
-
-            List<String> asList = Arrays.asList("Tenured Gen", "PS Old Gen");
-
             // I don't know whether this approach is better, or
             // whether
             // we should rather check for the pool name
