@@ -129,9 +129,24 @@ public class DatabaseConnectionSettings {
                         + "', using default '" + timeout + "'.");
             }
         }
-        LOGGER.info("Database login timeout: " + timeout + " sec.");
+        LOGGER.debug("Database login timeout: " + timeout + " sec.");
         DriverManager.setLoginTimeout(timeout);
         return timeout;
+    }
+
+    /**
+     * Used to control access to database driver. If <code>true</code> (default) the access to database driver
+     * is synchronized based on the database connection, otherwise false.
+     */
+    private static final boolean SQL_CONCURRENCY = initSQLConcurrency();
+    private static boolean initSQLConcurrency() {
+        String sconcurrency = System.getProperty(KNIMEConstants.PROPERTY_DATABASE_CONCURRENCY);
+        boolean concurrency = true; // default
+        if (sconcurrency != null) {
+            concurrency = Boolean.parseBoolean(sconcurrency);
+        }
+        LOGGER.debug("Database concurrency (sync via database connection) is " + concurrency + ".");
+        return concurrency;
     }
 
     /** {@link DriverManager} fetch size to chunk specified number of rows while reading from database. */
@@ -142,7 +157,7 @@ public class DatabaseConnectionSettings {
         if (fsize != null) {
             try {
                 int fetchsize = Integer.parseInt(fsize);
-                LOGGER.info("Database fetch size: " + fetchsize + " rows.");
+                LOGGER.debug("Database fetch size: " + fetchsize + " rows.");
                 return fetchsize;
             } catch (NumberFormatException nfe) {
                 LOGGER.warn("Database fetch size not valid '" + fsize
@@ -161,7 +176,7 @@ public class DatabaseConnectionSettings {
             try {
                 final int batchsize = Integer.parseInt(bsize);
                 if (batchsize > 0) {
-                    LOGGER.info("Database batch write size: " + batchsize + " rows.");
+                    LOGGER.debug("Database batch write size: " + batchsize + " rows.");
                     return batchsize;
                 } else {
                     LOGGER.warn("Database property knime.database.batch_write_size=" + batchsize
@@ -395,14 +410,12 @@ public class DatabaseConnectionSettings {
     }
 
     /**
-     * Used to sync access to mySQL databases.
-     * @param conn same conn, used to sync mySQL database access
-     * @return sync object which is either the given connection inherit from
-     *         "com.mysql" or null, or an new object (no sync necessary)
+     * Used to sync access to all databases depending if <code>SQL_CONCURRENCY</code> is true.
+     * @param conn connection used to sync access to all databases
+     * @return sync object which is either the given connection or an new object (no sync necessary)
      */
-    // FIX 2642: parallel database reader execution fails for mySQL
     final Object syncConnection(final Connection conn) {
-        if (conn != null && conn.getClass().getCanonicalName().startsWith("com.mysql")) {
+        if (SQL_CONCURRENCY && conn != null) {
             return conn;
         } else {
             return new Object();

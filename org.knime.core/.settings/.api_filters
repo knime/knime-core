@@ -25,6 +25,15 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/KNIMEConstants.java" type="org.knime.core.node.KNIMEConstants">
+        <filter id="1141899266">
+            <message_arguments>
+                <message_argument value="2.8"/>
+                <message_argument value="2.7"/>
+                <message_argument value="PROPERTY_DATABASE_CONCURRENCY"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/NodeContentPersistor.java" type="org.knime.core.node.NodeContentPersistor">
         <filter id="643842064">
             <message_arguments>

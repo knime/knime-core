@@ -225,6 +225,10 @@ public final class KNIMEConstants {
      * @since 2.6 */
     public static final String PROPERTY_DATABASE_BATCH_WRITE_SIZE = "knime.database.batch_write_size";
 
+    /** Java property used to switch off database access to same database connection, default is on.
+     * @since 2.8 */
+    public static final String PROPERTY_DATABASE_CONCURRENCY = "knime.database.enable.concurrency";
+
     /** @deprecated Use #PROPERTY_DATABASE_FETCHSIZE instead. */
     @Deprecated
     // obsolete as of v2.3
@@ -284,7 +288,7 @@ public final class KNIMEConstants {
 
 
     static {
-        BUILD_DATE = "March 28, 2013";
+        BUILD_DATE = "April 19, 2013";
         String versionString;
         Bundle coreBundle = OSGIHelper.getBundle(KNIMEConstants.class);
         if (coreBundle != null) {
