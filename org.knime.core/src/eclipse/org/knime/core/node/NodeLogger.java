@@ -60,6 +60,7 @@ import java.io.Writer;
 import java.net.InetAddress;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.NoSuchElementException;
 
 import org.apache.log4j.Appender;
 import org.apache.log4j.Level;
@@ -67,6 +68,7 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.PropertyConfigurator;
 import org.apache.log4j.WriterAppender;
+import org.apache.log4j.spi.Filter;
 import org.apache.log4j.varia.LevelRangeFilter;
 import org.apache.log4j.varia.NullAppender;
 import org.apache.log4j.xml.DOMConfigurator;
@@ -82,7 +84,7 @@ import org.knime.core.util.User;
  * root of the core package. The configuration can be overridden by specifying a
  * file in <code>-Dlog4j.configuration</code> (this is the standard log4j
  * behaviour). Furthermore, it is possible to add and remove additional writers
- * to this logger. Note, calling {@link #setLevelIntern(LEVEL)} does only effect
+ * to this logger. Note, calling {@link #setLevel(LEVEL)} does only effect
  * the minimum logging level of the default loggers. All other writers' levels
  * have to be set before hand.
  *
@@ -105,6 +107,27 @@ public final class NodeLogger {
         ALL
     }
 
+    /**
+     * Name of the default appender to System.out.
+     *
+     * @since 2.8
+     */
+    public static final String STDOUT_APPENDER = "stdout";
+
+    /**
+     * Name of the default appender to System.err.
+     *
+     * @since 2.8
+     */
+    public static final String STDERR_APPENDER = "stderr";
+
+    /**
+     * Name of the default appender to the log file.
+     *
+     * @since 2.8
+     */
+    public static final String LOGFILE_APPENDER = "logfile";
+
     /** The default log file name, <i>knime.log</i>. */
     public static final String LOG_FILE = "knime.log";
 
@@ -122,9 +145,6 @@ public final class NodeLogger {
      */
     private static final int MAX_CHARS = 10000;
 
-    /** <code>System.out</code> log appender. */
-    private static final Appender SOUT_APPENDER;
-
     /** Default log file appender. */
     private static final Appender FILE_APPENDER;
 
@@ -141,16 +161,7 @@ public final class NodeLogger {
             }
             // init root logger
             Logger root = Logger.getRootLogger();
-            Appender a = root.getAppender("stderr");
-            a = root.getAppender("stdout");
-            if (a != null) {
-                SOUT_APPENDER = a;
-            } else {
-                root.warn("Could not find 'stdout' appender");
-                SOUT_APPENDER = new NullAppender();
-            }
-
-            a = root.getAppender("logfile");
+            Appender a = root.getAppender("logfile");
             if (a != null) {
                 FILE_APPENDER = a;
             } else {
@@ -158,7 +169,6 @@ public final class NodeLogger {
                 FILE_APPENDER = new NullAppender();
             }
         } else {
-            SOUT_APPENDER = new NullAppender();
             FILE_APPENDER = new NullAppender();
         }
 
@@ -625,20 +635,25 @@ public final class NodeLogger {
      * all appenders.
      *
      * @param level new minimum logging level
+     * @deprecated user {@link #setAppenderLevelRange(String, LEVEL, LEVEL)} instead for more fine-grained control
      */
+    @Deprecated
     public static void setLevel(final LEVEL level) {
         getLogger(NodeLogger.class).info(
                 "Changing logging level to " + level.toString());
-        LevelRangeFilter filter = new LevelRangeFilter();
-        filter.setLevelMin(transLEVEL(level));
-        filter.setLevelMax(transLEVEL(LEVEL.FATAL));
-        FILE_APPENDER.clearFilters();
-        // SERR_APPENDER.clearFilters();
-        SOUT_APPENDER.clearFilters();
-        FILE_APPENDER.addFilter(filter);
-        // SERR_APPENDER.addFilter(filter);
-        SOUT_APPENDER.addFilter(filter);
+        try {
+            setAppenderLevelRange(STDOUT_APPENDER, level, LEVEL.FATAL);
+        } catch (NoSuchElementException ex) {
+            // ignore it
+        }
+        try {
+            setAppenderLevelRange(LOGFILE_APPENDER, level, LEVEL.FATAL);
+        } catch (NoSuchElementException ex) {
+            // ignore it
+        }
     }
+
+
 
     /**
      * Returns the minimum logging retrieved from the underlying Log4J logger.
@@ -732,6 +747,39 @@ public final class NodeLogger {
             return localMachine.getHostName();
         } catch (Exception uhe) {
             return "<unknown host>";
+        }
+    }
+
+    /**
+     * Sets a level range filter on the given appender.
+     *
+     * @param appenderName the name of the appender
+     * @param min the minimum logging level
+     * @param max the maximum logging level
+     * @throws NoSuchElementException if the given appender does not exist
+     * @since 2.8
+     */
+    public static void setAppenderLevelRange(final String appenderName, final LEVEL min, final LEVEL max) throws NoSuchElementException {
+        Logger root = Logger.getRootLogger();
+        Appender appender = root.getAppender(appenderName);
+        if (appender == null) {
+            throw new NoSuchElementException("Appender '" + appenderName + "' does not exist");
+        }
+
+        Filter filter = appender.getFilter();
+        while ((filter != null) && !(filter instanceof LevelRangeFilter)) {
+            filter = filter.getNext();
+        }
+        if (filter == null) {
+            // add a new level range filter
+            LevelRangeFilter levelFilter = new LevelRangeFilter();
+            levelFilter.setLevelMin(transLEVEL(min));
+            levelFilter.setLevelMax(transLEVEL(max));
+            appender.addFilter(levelFilter);
+        } else {
+            // modify existing level range filter
+            ((LevelRangeFilter) filter).setLevelMin(transLEVEL(min));
+            ((LevelRangeFilter) filter).setLevelMax(transLEVEL(max));
         }
     }
 }

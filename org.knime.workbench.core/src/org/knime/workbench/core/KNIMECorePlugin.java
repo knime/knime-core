@@ -132,7 +132,7 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
             String logLevelFile =
                 pStore.getString(HeadlessPreferencesConstants
                         .P_LOGLEVEL_LOG_FILE);
-            NodeLogger.setLevel(LEVEL.valueOf(logLevelFile));
+            NodeLogger.setAppenderLevelRange(NodeLogger.LOGFILE_APPENDER, LEVEL.valueOf(logLevelFile), LEVEL.FATAL);
 
             pStore.addPropertyChangeListener(new IPropertyChangeListener() {
 
@@ -195,7 +195,7 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
                             LOGGER.error("Invalid log level " + newName
                                     + ", using WARN");
                         }
-                        NodeLogger.setLevel(level);
+                        NodeLogger.setAppenderLevelRange(NodeLogger.LOGFILE_APPENDER, level, LEVEL.FATAL);
                     } else if (P_LOGLEVEL_CONSOLE.equals(
                             event.getProperty())) {
                         if (!(event.getNewValue() instanceof String)) {

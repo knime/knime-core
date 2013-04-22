@@ -1,0 +1,74 @@
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+    <appender name="stdout" class="org.apache.log4j.ConsoleAppender">
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p\t %t %c{1}\t %.10000m\n" />
+        </layout>
+        <filter class="org.apache.log4j.varia.LevelRangeFilter">
+            <param name="levelMin" value="WARN" />
+            <param name="levelMax" value="WARN" />
+        </filter>
+    </appender>
+
+    <appender name="stderr" class="org.apache.log4j.ConsoleAppender">
+        <param name="Target" value="System.err" />
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p\t %t %c{1}\t %.10000m\n" />
+        </layout>
+        <filter class="org.apache.log4j.varia.LevelRangeFilter">
+            <param name="levelMin" value="ERROR" />
+        </filter>
+    </appender>
+
+    <appender name="batchexec" class="org.apache.log4j.ConsoleAppender">
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p\t %t %c{1}\t %.10000m\n" />
+        </layout>
+        <filter class="org.apache.log4j.varia.LevelRangeFilter">
+            <param name="levelMin" value="INFO" />
+            <param name="levelMax" value="INFO" />
+        </filter>
+    </appender>
+
+    <appender name="logfile" class="org.knime.core.util.LogfileAppender">
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%d{ISO8601} %-5p %t %c{1} : %m%n" />
+        </layout>
+    </appender>
+
+    <!-- This appender is unused by default and should be used to enable debug
+        messages for certain loggers by appending it to them -->
+    <appender name="debug" class="org.apache.log4j.ConsoleAppender">
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%-5p\t %c{1}\t %.10000m\n" />
+        </layout>
+    </appender>
+
+
+<!--
+if you want to enable debug message for a specific package or class, add something like:
+
+<logger name="org.knime.dev.node.xyz">
+    <appender-ref ref="debug"/>
+</logger>
+-->
+
+    <logger name="org.knime.core.node.workflow.BatchExecutor">
+        <appender-ref ref="batchexec" />
+    </logger>
+
+    <logger name="com.knime.product.headless.ReportBatchExecutor">
+        <appender-ref ref="batchexec" />
+    </logger>
+
+    <logger name="org.openscience">
+        <level value="off" />
+    </logger>
+    
+    <root>
+        <level value="all" />
+        <appender-ref ref="stdout" />
+        <appender-ref ref="stderr" />
+        <appender-ref ref="logfile" />
+    </root>
+</log4j:configuration>

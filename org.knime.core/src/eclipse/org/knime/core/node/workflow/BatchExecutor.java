@@ -95,7 +95,6 @@ import org.knime.core.util.LockFailedException;
 import org.knime.core.util.MutableBoolean;
 import org.knime.core.util.tokenizer.Tokenizer;
 import org.knime.core.util.tokenizer.TokenizerSettings;
-
 /**
  * Simple utility class that takes a workflow, either in a directory or zipped into a single file, executes it and saves
  * the results in the end. If the input was a ZIP file the workflow is zipped back into a file.
@@ -150,6 +149,17 @@ public class BatchExecutor {
         public IllegalOptionException(final String message) {
             super(message);
         }
+
+        /**
+         * Creates a new exception with a cause.
+         *
+         * @param message a message
+         * @param cause a potential cause for this exception
+         * @since 2.8
+         */
+        public IllegalOptionException(final String message, final Throwable cause) {
+            super(message, cause);
+        }
     }
 
     /**
@@ -198,8 +208,9 @@ public class BatchExecutor {
     protected final List<WorkflowConfiguration> m_workflows = new ArrayList<WorkflowConfiguration>();
 
     /**
-     * If execution of multiple workflows should be stopped after the first error or if the remaining workflows
-     * should be run nevertheless.
+     * If execution of multiple workflows should be stopped after the first error or if the remaining workflows should
+     * be run nevertheless.
+     *
      * @since 2.7
      */
     protected boolean m_stopOnError = true;
@@ -224,7 +235,7 @@ public class BatchExecutor {
          * @param type type
          */
         Option(final int[] nodeIDs, final String name, final String value, final String type) {
-            m_nodeIDs = nodeIDs;
+            m_nodeIDs = nodeIDs.clone();
             m_name = name;
             m_value = value;
             m_type = type;
@@ -262,8 +273,9 @@ public class BatchExecutor {
                 }
                 if (login == null || password == null) {
                     if (cons == null) {
-                        if ((cons = System.console()) == null) {
-                            System.err.println("No console for credential prompt available");
+                        cons = System.console();
+                        if (cons == null) {
+                            LOGGER.error("No console for credential prompt available");
                             return credentials;
                         }
                     }
@@ -337,7 +349,7 @@ public class BatchExecutor {
         /** The output (zip) file. Either a file or an {@link #outputDir} should be given */
         public File outputFile;
 
-        /** The output directory. Either a directory or an {@link #outputFile} should be given*/
+        /** The output directory. Either a directory or an {@link #outputFile} should be given */
         public File outputDir;
 
         /** A collection of workflow variables. */
@@ -362,6 +374,7 @@ public class BatchExecutor {
      * @since 2.7
      */
     public BatchExecutor(final String[] args) throws IOException, CoreException, IllegalOptionException, BatchException {
+        this();
         if (args.length == 0) {
             throw new IllegalOptionException("No arguments provided");
         }
@@ -375,8 +388,8 @@ public class BatchExecutor {
      * @since 2.7
      */
     protected BatchExecutor() {
-        // only for internal use
     }
+
 
     /**
      * This method is called by the constructor in order to process the command line arguments. The default
@@ -523,7 +536,7 @@ public class BatchExecutor {
                 var = createWorkflowVariable(parts2);
             } catch (Exception e) {
                 throw new IllegalOptionException("Couldn't parse -workflow.variable " + "argument: " + s + ": "
-                        + e.getMessage());
+                        + e.getMessage(), e);
             }
             config.flowVariables.add(var);
         } else if ("-option".equals(parts[0])) {
@@ -534,7 +547,7 @@ public class BatchExecutor {
             try {
                 parts2 = splitOption(parts[1]);
             } catch (IndexOutOfBoundsException ex) {
-                throw new IllegalOptionException("Couldn't parse -option argument: " + s);
+                throw new IllegalOptionException("Couldn't parse -option argument: " + s, ex);
             }
             String[] nodeIDPath = parts2[0].split("/");
             int[] nodeIDs = new int[nodeIDPath.length];
@@ -591,11 +604,10 @@ public class BatchExecutor {
      * @since 2.7
      */
     protected String getReturnCodesHelp() {
-        return "The following return codes are defined:\n"
-                + "\t" + EXIT_SUCCESS + "\tupon successful execution\n"
-                + "\t" + EXIT_ERR_PRESTART + "\tif parameters are wrong or missing\n"
-                + "\t" + EXIT_ERR_LOAD + "\twhen an error occurs during loading a workflow\n"
-                + "\t" + EXIT_ERR_EXECUTION + "\tif an error during execution occurred\n";
+        return "The following return codes are defined:\n" + "\t" + EXIT_SUCCESS + "\tupon successful execution\n"
+                + "\t" + EXIT_ERR_PRESTART + "\tif parameters are wrong or missing\n" + "\t" + EXIT_ERR_LOAD
+                + "\twhen an error occurs during loading a workflow\n" + "\t" + EXIT_ERR_EXECUTION
+                + "\tif an error during execution occurred\n";
     }
 
     /**
@@ -626,16 +638,16 @@ public class BatchExecutor {
             BatchExecutor exec = new BatchExecutor(args);
             return exec.runAll();
         } catch (IOException ex) {
-            System.err.println("Error while reading input XML file: " + ex.getMessage());
+            LOGGER.error("Error while reading input XML file: " + ex.getMessage());
             return EXIT_ERR_PRESTART;
         } catch (CoreException ex) {
-            System.err.println("Error while reading preferences file: " + ex.getMessage());
+            LOGGER.error("Error while reading preferences file: " + ex.getMessage());
             return EXIT_ERR_PRESTART;
         } catch (IllegalOptionException ex) {
-            System.err.println(ex.getMessage());
+            LOGGER.error(ex.getMessage());
             return EXIT_ERR_PRESTART;
         } catch (BatchException ex) {
-            System.err.println(ex.getMessage());
+            LOGGER.error(ex.getMessage());
             return ex.getDetailCode();
         }
     }
@@ -820,16 +832,16 @@ public class BatchExecutor {
         int retVal = EXIT_SUCCESS;
 
         for (WorkflowConfiguration config : m_workflows) {
-            System.out.println("===== Executing workflow " + config.inputWorkflow + " =====");
+            LOGGER.info("===== Executing workflow " + config.inputWorkflow + " =====");
             int rv = runOne(config);
             if (rv != EXIT_SUCCESS) {
-                System.out.println("========= Workflow did not execute sucessfully ============");
+                LOGGER.info("========= Workflow did not execute sucessfully ============");
                 retVal = rv;
                 if (m_stopOnError) {
                     break;
                 }
             } else {
-                System.out.println("============= Workflow executed sucessfully ===============");
+                LOGGER.info("============= Workflow executed sucessfully ===============");
             }
         }
         return retVal;
@@ -841,41 +853,38 @@ public class BatchExecutor {
         try {
             wfm = loadWorkflow(config);
         } catch (IOException ex) {
-            System.err.println("IO error while loading the workflow");
+            LOGGER.error("IO error while loading the workflow");
             return EXIT_ERR_LOAD;
         } catch (InvalidSettingsException ex) {
-            System.err.println("Encountered invalid settings while loading the workflow");
+            LOGGER.error("Encountered invalid settings while loading the workflow");
             return EXIT_ERR_LOAD;
         } catch (CanceledExecutionException ex) {
-            System.err.println("Workflow loading was canceled by user");
+            LOGGER.error("Workflow loading was canceled by user");
             return EXIT_ERR_LOAD;
         } catch (UnsupportedWorkflowVersionException ex) {
-            System.err.println("Unsupported workflow version");
+            LOGGER.error("Unsupported workflow version");
             return EXIT_ERR_LOAD;
         } catch (LockFailedException ex) {
-            System.err.println("Unsupported workflow version");
+            LOGGER.error("Workflow is locked by another KNIME instance");
             return EXIT_ERR_LOAD;
         } catch (IllegalOptionException ex) {
-            System.err.println("Unknown or wrong option");
+            LOGGER.error("Unknown or wrong option");
             return EXIT_ERR_PRESTART;
         }
         boolean sucessful;
         try {
             sucessful = executeWorkflow(wfm, config);
         } catch (CanceledExecutionException ex) {
-            System.out.println("Workflow execution canceled");
             LOGGER.warn("Workflow execution canceled");
             return EXIT_ERR_EXECUTION;
         } catch (BatchException ex) {
-            System.err.println("Workflow execution failed: " + ex.getMessage());
             LOGGER.error("Workflow execution failed: " + ex.getMessage(), ex.getCause());
             return ex.getDetailCode();
         } finally {
             long elapsedTimeMillis = System.currentTimeMillis() - t;
             String niceTime = StringFormat.formatElapsedTime(elapsedTimeMillis);
             String timeString = "Finished in " + niceTime + " (" + elapsedTimeMillis + "ms)";
-            System.out.println(timeString);
-            LOGGER.debug("Workflow execution done " + timeString);
+            LOGGER.info("Workflow execution done " + timeString);
             LOGGER.debug("Status of workflow after execution:");
             LOGGER.debug("------------------------------------");
             dumpWorkflowToDebugLog(wfm);
@@ -886,13 +895,13 @@ public class BatchExecutor {
         try {
             saveWorkflow(wfm, config);
         } catch (IOException ex) {
-            System.err.println("IO error while saving workflow: " + ex.getMessage());
+            LOGGER.error("IO error while saving workflow: " + ex.getMessage());
             return EXIT_ERR_EXECUTION;
         } catch (CanceledExecutionException ex) {
-            System.err.println("Workflow saving canceled by user");
+            LOGGER.error("Workflow saving canceled by user");
             return EXIT_ERR_EXECUTION;
         } catch (LockFailedException ex) {
-            System.err.println("Failed to lock workflow before saving: " + ex.getMessage());
+            LOGGER.error("Failed to lock workflow before saving: " + ex.getMessage());
             return EXIT_ERR_EXECUTION;
         } finally {
             wfm.getParent().removeProject(wfm.getID());
@@ -1048,7 +1057,7 @@ public class BatchExecutor {
         if (isPromptForPassword) {
             Console cons;
             if ((cons = System.console()) == null) {
-                System.err.println("No console for password prompt available");
+                LOGGER.error("No console for password prompt available");
             } else {
                 char[] password = getPasswordFromConsole(cons);
                 masterKey = new String(password);
@@ -1074,7 +1083,7 @@ public class BatchExecutor {
             second = cons.readPassword("%s", "Reenter Password:");
             areEqual = Arrays.equals(first, second);
             if (!areEqual) {
-                System.out.println("Passwords don't match");
+                LOGGER.error("Passwords don't match");
             }
         } while (!areEqual);
         return first;
@@ -1156,8 +1165,7 @@ public class BatchExecutor {
      */
     private static void applyWorkflowVariables(final WorkflowManager wfm, final boolean reset,
                                                final Collection<FlowVariable> wkfVars) {
-
-        /**
+        /*
          * Check if the names of all passed flow variables are defined for the workflow. Only the name is used for the
          * comparison (not the type) to be consistent with the addWorkflowVariables method in the workflow manager.
          */
@@ -1184,7 +1192,6 @@ public class BatchExecutor {
                 str.append(f.getType()).append(")");
             }
             LOGGER.warn(str);
-            System.out.println(str);
         }
 
         for (FlowVariable f : wkfVars) {
