@@ -45,25 +45,60 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 17, 2013 by wiswedel
+ * Created on Apr 22, 2013 by Berthold
  */
 package org.knime.core.node.interactive;
 
-/** A callback object that view implementations need to provide when they want to re-execute their underlying node.
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
+
+/**
  *
- * @see org.knime.core.node.interactive.InteractiveNode
- * @see org.knime.core.node.AbstractNodeView#triggerReexecute
- *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author B. Wiswedel, M. Berthold, Th. Gabriel
  * @since 2.8
  */
-public abstract class ReexecutionCallback extends ConfigureCallback {
+public abstract class AbstractInteractiveView {
 
+    private WorkflowManager m_wfm;
+    private NodeID m_nodeID;
+    private NodeModel m_model;
 
-    /** When the user cancels the re-execution. Either while it is re-executing or before. */
-    public void onCancel() {
-        // ignore.
+    NodeModel getNodeModel() {
+        return m_model;
     }
 
+    void setWorkflowManagerAndNodeID(final WorkflowManager wfm, final NodeID id) {
+        m_wfm = wfm;
+        m_nodeID = id;
+        NodeContainer nc = m_wfm.getNodeContainer(m_nodeID);
+        if (!(nc instanceof SingleNodeContainer)) {
+            throw new RuntimeException("Internal Error: Wrong type of node in " + this.getClass().getName());
+        }
+        m_model = ((SingleNodeContainer)nc).getNodeModel();
+    }
 
+    /** Re-Execute underlying node. Also trigger:
+     * - reset of node and successors (ask user first!)
+     * - configure node and successors
+     * - execute node but not successors (can be canceled by user of fail during execution!)
+     *
+     * @param rec
+     */
+    protected final void triggerReExecution(final ReexecutionCallback rec) {
+        // m_wfm.reExecute(m_nodeID);
+    }
+
+    /** Make sure current node internals are used as new default NodeSettings.
+     * Results in:
+     * - reset of node and successors (ask user first!)
+     * - NodeModel.saveSettingsTo()
+     * - configure node and successors
+     *
+     */
+     protected final void setNewDefaultConfiguration(final ConfigureCallback ccb) {
+         // m_wfm.saveNodeSettingsToDefault(m_nodeID);
+     }
 }

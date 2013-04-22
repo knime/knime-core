@@ -45,25 +45,27 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 17, 2013 by wiswedel
+ * Created on Apr 22, 2013 by Berthold
  */
 package org.knime.core.node.interactive;
 
-/** A callback object that view implementations need to provide when they want to re-execute their underlying node.
+/**
  *
- * @see org.knime.core.node.interactive.InteractiveNode
- * @see org.knime.core.node.AbstractNodeView#triggerReexecute
- *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author B. Wiswedel, M. Berthold, Th. Gabriel
  * @since 2.8
  */
-public abstract class ReexecutionCallback extends ConfigureCallback {
+public abstract class ConfigureCallback {
 
+    /** Called from the framework when downstream nodes need to be reset and the user should confirm this.
+     * @param message The message to show, for instance in a popup.
+     * @return true if it's save to reset, false if the user cancel's the whole re-execution.
+     */
+    public abstract boolean confirmResetDownstreamNodes(final String message);
 
-    /** When the user cancels the re-execution. Either while it is re-executing or before. */
-    public void onCancel() {
-        // ignore.
-    }
-
+    /** When an error occurs. For instance: Node can't be re-executed because it has currently executing successors or
+     * the re-execute method failed in the NodeModel.
+     * @param errorMessage The error message.
+     */
+    public abstract void onError(final String errorMessage);
 
 }

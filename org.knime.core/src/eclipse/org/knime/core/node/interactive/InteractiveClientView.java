@@ -45,25 +45,28 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 17, 2013 by wiswedel
+ * Created on Apr 22, 2013 by Berthold
  */
 package org.knime.core.node.interactive;
 
-/** A callback object that view implementations need to provide when they want to re-execute their underlying node.
+import org.knime.core.node.NodeModel;
+
+
+/**
  *
- * @see org.knime.core.node.interactive.InteractiveNode
- * @see org.knime.core.node.AbstractNodeView#triggerReexecute
- *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
+ * @author B. Wiswedel, M. Berthold, Th. Gabriel
+ * @param <T>
  * @since 2.8
  */
-public abstract class ReexecutionCallback extends ConfigureCallback {
+public class InteractiveClientView<T extends NodeModel & InteractiveNode> extends AbstractInteractiveView {
 
-
-    /** When the user cancels the re-execution. Either while it is re-executing or before. */
-    public void onCancel() {
-        // ignore.
+    /**
+     * @return underlying InteractiveNode/Model
+     */
+    @SuppressWarnings("unchecked")
+    protected T getInteractiveNodeModel() {
+        NodeModel m = super.getNodeModel();
+        return (T)m;
     }
-
 
 }

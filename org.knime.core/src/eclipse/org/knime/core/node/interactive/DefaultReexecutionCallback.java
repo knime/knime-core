@@ -45,25 +45,33 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 17, 2013 by wiswedel
+ * Created on Apr 22, 2013 by Berthold
  */
 package org.knime.core.node.interactive;
 
-/** A callback object that view implementations need to provide when they want to re-execute their underlying node.
+import javax.swing.JOptionPane;
+
+/**
  *
- * @see org.knime.core.node.interactive.InteractiveNode
- * @see org.knime.core.node.AbstractNodeView#triggerReexecute
- *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
- * @since 2.8
+ * @author Th. Gabriel
  */
-public abstract class ReexecutionCallback extends ConfigureCallback {
+public class DefaultReexecutionCallback extends ReexecutionCallback {
 
-
-    /** When the user cancels the re-execution. Either while it is re-executing or before. */
-    public void onCancel() {
-        // ignore.
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean confirmResetDownstreamNodes(final String message) {
+        int answer = JOptionPane.showConfirmDialog(null, message, "Confirm Reset", JOptionPane.OK_CANCEL_OPTION);
+        return answer == JOptionPane.OK_OPTION;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void onError(final String errorMessage) {
+        JOptionPane.showMessageDialog(null, errorMessage, "Reset failed", JOptionPane.ERROR_MESSAGE);
+    }
 
 }
