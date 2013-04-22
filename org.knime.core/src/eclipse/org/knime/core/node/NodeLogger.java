@@ -60,6 +60,7 @@ import java.io.Writer;
 import java.net.InetAddress;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 import org.apache.log4j.Appender;
@@ -132,11 +133,11 @@ public final class NodeLogger {
     public static final String LOG_FILE = "knime.log";
 
     /** Keeps set of <code>NodeLogger</code> elements by class name as key. */
-    private static final HashMap<String, NodeLogger> LOGGERS =
+    private static final Map<String, NodeLogger> LOGGERS =
             new HashMap<String, NodeLogger>();
 
     /** Map of additionally added writers: Writer -> Appender. */
-    private static final HashMap<Writer, WriterAppender> WRITER =
+    private static final Map<Writer, WriterAppender> WRITER =
             new HashMap<Writer, WriterAppender>();
 
     /**
@@ -187,17 +188,15 @@ public final class NodeLogger {
             File log4j = new File(knimeDir, "log4j.xml");
 
             File legacyFile = new File(knimeDir, "log4j-1.1.0.xml");
-            if (legacyFile.exists()) {
-                if (!legacyFile.renameTo(log4j)) {
-                    System.err.println("There are two log4j configuration files"
-                            + " in your KNIME home directory ('"
-                            + knimeDir.getAbsolutePath()
-                            + " ') - or this directory is write-protected.");
-                    System.err.println("The 'log4j.xml' is the one actually used."
-                            + " Merge changes you may have made"
-                            + " to 'log4j-1.1.0.xml' and remove"
-                            + " 'log4j-1.1.0.xml' to get rid of this message.");
-                }
+            if (legacyFile.exists() && !legacyFile.renameTo(log4j)) {
+                System.err.println("There are two log4j configuration files"
+                        + " in your KNIME home directory ('"
+                        + knimeDir.getAbsolutePath()
+                        + " ') - or this directory is write-protected.");
+                System.err.println("The 'log4j.xml' is the one actually used."
+                        + " Merge changes you may have made"
+                        + " to 'log4j-1.1.0.xml' and remove"
+                        + " 'log4j-1.1.0.xml' to get rid of this message.");
             }
             if (!log4j.exists() || checkPreviousLog4j(log4j, latestLog4jConfig)) {
                 copyCurrentLog4j(log4j, latestLog4jConfig);
@@ -581,7 +580,7 @@ public final class NodeLogger {
      * @param minLevel The minimum level to output.
      * @param maxLevel The maximum level to output.
      */
-    public static final void addWriter(final Writer writer,
+    public static void addWriter(final Writer writer,
             final LEVEL minLevel, final LEVEL maxLevel) {
         // remove the writer first if existent
         if (WRITER.containsKey(writer)) {
@@ -607,7 +606,7 @@ public final class NodeLogger {
      *
      * @param writer The Writer to remove.
      */
-    public static final void removeWriter(final Writer writer) {
+    public static void removeWriter(final Writer writer) {
         Appender o = WRITER.get(writer);
         if (o != null) {
             if (o != FILE_APPENDER) {
@@ -759,7 +758,8 @@ public final class NodeLogger {
      * @throws NoSuchElementException if the given appender does not exist
      * @since 2.8
      */
-    public static void setAppenderLevelRange(final String appenderName, final LEVEL min, final LEVEL max) throws NoSuchElementException {
+    public static void setAppenderLevelRange(final String appenderName, final LEVEL min, final LEVEL max)
+            throws NoSuchElementException {
         Logger root = Logger.getRootLogger();
         Appender appender = root.getAppender(appenderName);
         if (appender == null) {
