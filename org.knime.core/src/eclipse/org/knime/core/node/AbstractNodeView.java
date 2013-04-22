@@ -47,8 +47,6 @@
  */
 package org.knime.core.node;
 
-import org.knime.core.node.interactive.InteractiveNode;
-import org.knime.core.node.interactive.ReexecutionCallback;
 
 
 /**
@@ -105,20 +103,6 @@ public abstract class AbstractNodeView<T extends NodeModel> {
      * @return reference to logger */
     public NodeLogger getLogger() {
         return m_logger;
-    }
-
-    /** Allows client views to trigger a re-execution of their underlying node. This method must only be called
-     * if the underlying NodeModel is an instance of {@link InteractiveNode} (otherwise an exception is thrown).
-     *
-     * @param callback The callback used by the framework to ask for confirmation/progress, etc...
-     * @since 2.8
-     */
-    protected void triggerReexecute(final ReexecutionCallback callback) {
-        if (!(getNodeModel() instanceof InteractiveNode)) {
-            throw new IllegalStateException("Node does not implement the "
-                    + InteractiveNode.class.getName() + " interface");
-        }
-        // TODO ... find framework (how?) and call re-execute
     }
 
     /**
