@@ -53,7 +53,8 @@ import javax.swing.JOptionPane;
 
 /**
  *
- * @author Th. Gabriel
+ * @author B. Wiswedel, M. Berthold, Th. Gabriel
+ * @since 2.8
  */
 public class DefaultReexecutionCallback extends ReexecutionCallback {
 
