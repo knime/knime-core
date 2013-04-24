@@ -60,6 +60,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -510,7 +511,7 @@ public abstract class NodeModel {
      *             null.
      * @see #execute(PortObject[],ExecutionContext)
      */
-    protected final PortObject[] executeModel(final PortObject[] data,
+    protected final PortObject[] executeModel(final PortObject[] data, final boolean reExecute,
             final ExecutionContext exec) throws Exception {
         assert (data != null && data.length == getNrInPorts());
         assert (exec != null);
@@ -536,7 +537,17 @@ public abstract class NodeModel {
 
         // temporary storage for result of derived model.
         // EXECUTE DERIVED MODEL
-        PortObject[] outData = execute(data, exec);
+        PortObject[] outData;
+        if (!reExecute) {
+            outData = execute(data, exec);
+        } else {
+            if (this instanceof InteractiveNode) {
+                outData = ((InteractiveNode)this).reExecute(data, exec);
+            } else {
+                m_logger.coding("Can not re-execute non interactive node. Using normal execute instead.");
+                outData = execute(data, exec);
+            }
+        }
 
         // if execution was canceled without exception flying return false
         if (exec.isCanceled()) {
@@ -1677,7 +1688,7 @@ public abstract class NodeModel {
                 for (int i = 0; i < inputs.length; i++) {
                     inObjects[i] = ((PortObjectInput)inputs[i]).getPortObject();
                 }
-                PortObject[] outObjects = executeModel(inObjects, ctx);
+                PortObject[] outObjects = executeModel(inObjects, false, ctx);
                 for (int i = 0; i < outputs.length; i++) {
                     ((PortObjectOutput)outputs[i]).setPortObject(outObjects[i]);
                 }

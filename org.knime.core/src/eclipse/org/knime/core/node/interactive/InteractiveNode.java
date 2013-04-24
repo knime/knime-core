@@ -76,9 +76,10 @@ public interface InteractiveNode {
      * a modified content from the interactive view was loaded into the
      * NodeModel.
      *
+     * @param data the input data (should be the same as during initial execute call)
      * @param ec the execution context to create tables and monitor cancelation
      * @return updated output objects.
      * @throws CanceledExecutionException when interrupted by user
      */
-    abstract PortObject[] reExecute(ExecutionContext ec) throws CanceledExecutionException;
+    abstract PortObject[] reExecute(PortObject[] data, ExecutionContext ec) throws CanceledExecutionException;
 }

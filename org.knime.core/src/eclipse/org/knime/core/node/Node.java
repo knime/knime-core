@@ -789,6 +789,19 @@ public final class Node implements NodeModelWarningListener {
         return false;
     }
 
+   /**
+    * @param rawData the data from the predecessor.
+    * @param reExecute is true when node is reExecuted
+    * @param exec The execution monitor.
+    * @return <code>true</code> if execution was successful otherwise
+    *         <code>false</code>.
+    * @see Node#execute(BufferedDataTable[],ExecutionContext)
+    */
+    @Deprecated
+    public boolean execute(final PortObject[] rawData, final ExecutionContext exec) {
+        return execute(rawData, false, exec);
+    }
+
     /**
      * Starts executing this node. If the node has been executed already, it
      * does nothing - just returns <code>true</code>.
@@ -804,14 +817,15 @@ public final class Node implements NodeModelWarningListener {
      * connected node.
      *
      * @param rawData the data from the predecessor.
+     * @param reExecute is true when node is reExecuted
      * @param exec The execution monitor.
      * @return <code>true</code> if execution was successful otherwise
      *         <code>false</code>.
      * @see NodeModel#execute(BufferedDataTable[],ExecutionContext)
      * @noreference This method is not intended to be referenced by clients.
+     * @since 2.8
      */
-    public boolean execute(final PortObject[] rawData,
-            final ExecutionContext exec) {
+    public boolean execute(final PortObject[] rawData, final boolean reExecute, final ExecutionContext exec) {
         // clear the message object
         clearNodeMessageAndNotify();
 
@@ -910,7 +924,7 @@ public final class Node implements NodeModelWarningListener {
         try {
             // INVOKE MODEL'S EXECUTE
             // (warnings will now be processed "automatically" - we listen)
-            rawOutData = invokeNodeModelExecute(exec, inData);
+            rawOutData = invokeNodeModelExecute(exec, inData, reExecute);
         } catch (Throwable th) {
             boolean isCanceled = th instanceof CanceledExecutionException;
             isCanceled = isCanceled || th instanceof InterruptedException;
@@ -1028,6 +1042,20 @@ public final class Node implements NodeModelWarningListener {
         return true;
     } // execute
 
+    /**
+     * @param exec The execution context.
+     * @param inData The input data to the node (excluding flow var port)
+     * @return The output of node
+     * @throws Exception An exception thrown by the client.
+     * @see invokeNodeModelExecute
+     * @since 2.6
+     */
+    @Deprecated
+    public PortObject[] invokeNodeModelExecute(final ExecutionContext exec,
+              final PortObject[] inData) throws Exception {
+        return invokeNodeModelExecute(exec, inData, false);
+    }
+
     /** Invokes protected method {@link NodeModel#executeModel(
      * PortObject[], ExecutionContext)}. Isolated in a separate method call
      * as it may be (ab)used by other executors.
@@ -1035,11 +1063,11 @@ public final class Node implements NodeModelWarningListener {
      * @param inData The input data to the node (excluding flow var port)
      * @return The output of node
      * @throws Exception An exception thrown by the client.
-     * @since 2.6 */
-    public PortObject[] invokeNodeModelExecute(
-            final ExecutionContext exec,
-            final PortObject[] inData) throws Exception {
-        return m_model.executeModel(inData, exec);
+     * @since 2.8
+     */
+    public PortObject[] invokeNodeModelExecute(final ExecutionContext exec,
+            final PortObject[] inData, final boolean reExecute) throws Exception {
+        return m_model.executeModel(inData, reExecute, exec);
     }
 
     /** Called after execute in order to put the computed result into the

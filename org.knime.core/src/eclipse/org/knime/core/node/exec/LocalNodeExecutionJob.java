@@ -69,8 +69,7 @@ public class LocalNodeExecutionJob extends NodeExecutionJob {
      * @param snc The node container to execute.
      * @param data Its input port object.
      */
-    public LocalNodeExecutionJob(
-            final SingleNodeContainer snc, final PortObject[] data) {
+    public LocalNodeExecutionJob(final SingleNodeContainer snc, final PortObject[] data) {
         super(snc, data);
     }
 
@@ -79,8 +78,7 @@ public class LocalNodeExecutionJob extends NodeExecutionJob {
     @Override
     public boolean cancel() {
         if (m_future == null) {
-            throw new IllegalStateException(
-                    "Future that represents the execution has not been set.");
+            throw new IllegalStateException("Future that represents the execution has not been set.");
         }
         return m_future.cancel(true);
     }
@@ -97,7 +95,7 @@ public class LocalNodeExecutionJob extends NodeExecutionJob {
     @Override
     public NodeContainerExecutionStatus mainExecute() {
         SingleNodeContainer snc = (SingleNodeContainer)getNodeContainer();
-        return snc.performExecuteNode(getPortObjects());
+        return snc.performExecuteNode(getPortObjects(), isSetForReExecution());
     }
 
     /**
@@ -107,5 +105,5 @@ public class LocalNodeExecutionJob extends NodeExecutionJob {
     public boolean isReConnecting() {
         return false;
     }
-    
+
 }

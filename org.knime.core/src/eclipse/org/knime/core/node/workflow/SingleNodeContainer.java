@@ -874,18 +874,30 @@ public final class SingleNodeContainer extends NodeContainer {
     }
 
     /**
-     * Execute underlying Node asynchronously. Make sure to give Workflow-
-     * Manager a chance to call pre- and postExecuteNode() appropriately and
-     * synchronize those parts (since they changes states!).
+     * See below.
      *
      * @param inObjects input data
      * @return whether execution was successful.
      * @throws IllegalStateException in case of illegal entry state.
      */
-    public NodeContainerExecutionStatus performExecuteNode(
-            final PortObject[] inObjects) {
-        IWriteFileStoreHandler fsh =
-            initFileStore(getParent().getFileStoreHandlerRepository());
+    @Deprecated
+    public NodeContainerExecutionStatus performExecuteNode(final PortObject[] inObjects) {
+        return performExecuteNode(inObjects, false);
+    }
+
+    /**
+     * Execute underlying Node asynchronously. Make sure to give Workflow-
+     * Manager a chance to call pre- and postExecuteNode() appropriately and
+     * synchronize those parts (since they changes states!).
+     *
+     * @param inObjects input data
+     * @param reExecute indicating of node is executed again
+     * @return whether execution was successful.
+     * @throws IllegalStateException in case of illegal entry state.
+     * @since 2.8
+     */
+    public NodeContainerExecutionStatus performExecuteNode(final PortObject[] inObjects, final boolean reExecute) {
+        IWriteFileStoreHandler fsh = initFileStore(getParent().getFileStoreHandlerRepository());
         m_node.setFileStoreHandler(fsh);
         // this call requires the FSH to be set on the node (ideally would take
         // it as an argument but createExecutionContext became API unfortunately)
@@ -899,12 +911,11 @@ public final class SingleNodeContainer extends NodeContainer {
         } catch (CanceledExecutionException e) {
             String errorString = "Execution canceled";
             LOGGER.warn(errorString);
-            setNodeMessage(new NodeMessage(
-                    NodeMessage.Type.WARNING, errorString));
+            setNodeMessage(new NodeMessage(NodeMessage.Type.WARNING, errorString));
             success = false;
         }
         // execute node outside any synchronization!
-        success = success && m_node.execute(inObjects, ec);
+        success = success && m_node.execute(inObjects, reExecute, ec);
         if (success) {
             // output tables are made publicly available (for blobs)
             putOutputTablesIntoGlobalRepository(ec);
@@ -913,8 +924,7 @@ public final class SingleNodeContainer extends NodeContainer {
             // a solid state again will be done by WorkflowManager (in
             // doAfterExecute().
         }
-        return success ? NodeContainerExecutionStatus.SUCCESS
-                : NodeContainerExecutionStatus.FAILURE;
+        return success ? NodeContainerExecutionStatus.SUCCESS : NodeContainerExecutionStatus.FAILURE;
     }
 
     private IWriteFileStoreHandler initFileStore(

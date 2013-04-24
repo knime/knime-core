@@ -53,6 +53,7 @@ import java.util.Arrays;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.StringFormat;
@@ -75,6 +76,11 @@ public abstract class NodeExecutionJob implements Runnable {
      * can never be true if the job manager does not allow a disconnect. */
     private boolean m_isSavedForDisconnect = false;
 
+    /** Flag indicating if this node is to be re-executed (true) or executed
+     * for the first time.
+     */
+    private boolean m_reExecution;
+
     private final NodeContainer m_nc;
     private final PortObject[] m_data;
 
@@ -85,22 +91,27 @@ public abstract class NodeExecutionJob implements Runnable {
      * @param data The input data of that node, must not be null,
      *           nor contain null elements.
      */
-    protected NodeExecutionJob(
-            final NodeContainer nc, final PortObject[] data) {
+    protected NodeExecutionJob(final NodeContainer nc, final PortObject[] data) {
         if (nc == null || data == null) {
             throw new NullPointerException("Args must not be null.");
         }
         for (int i = 0; i < data.length; i++) {
             PortType type = nc.getInPort(i).getPortType();
             if (data[i] == null && !type.isOptional()) {
-                throw new NullPointerException("Array arg must not contain "
-                        + "null for non-optional ports");
+                throw new NullPointerException("Array arg must not contain null for non-optional ports");
             }
         }
         m_nc = nc;
         m_data = data;
+        m_reExecution = false;
+        // also check if this is a re-execution request
+        if (m_nc instanceof InteractiveNode) {
+            if (InternalNodeContainerState.EXECUTED_MARKEDFOREXEC.equals(m_nc.getInternalState())) {
+                m_reExecution = true;
+            }
+        }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     public final void run() {
@@ -109,11 +120,10 @@ public abstract class NodeExecutionJob implements Runnable {
         // manager (the node will just return inactive branch objects)
         boolean executeInactive = false;
         if (m_nc instanceof SingleNodeContainer) {
-        	SingleNodeContainer snc = (SingleNodeContainer)m_nc;
-        	if (!snc.isInactiveBranchConsumer()
-        			&& Node.containsInactiveObjects(getPortObjects())) {
-        		executeInactive = true; 
-        	}
+            SingleNodeContainer snc = (SingleNodeContainer)m_nc;
+            if (!snc.isInactiveBranchConsumer() && Node.containsInactiveObjects(getPortObjects())) {
+                executeInactive = true;
+            }
         }
 
         if (!isReConnecting()) {
@@ -124,7 +134,7 @@ public abstract class NodeExecutionJob implements Runnable {
                     return;
                 }
                 if (!executeInactive) {
-                	beforeExecute();
+                    beforeExecute();
                 }
             } catch (Throwable throwable) {
                 logError(throwable);
@@ -159,16 +169,14 @@ public abstract class NodeExecutionJob implements Runnable {
                 final long time = System.currentTimeMillis();
                 m_logger.debug(m_nc.getNameWithID() + " Start execute");
                 if (executeInactive) {
-                	SingleNodeContainer snc = (SingleNodeContainer)m_nc;
-                	status = snc.performExecuteNode(getPortObjects());
+                    SingleNodeContainer snc = (SingleNodeContainer)m_nc;
+                    status = snc.performExecuteNode(getPortObjects());
                 } else {
-                	status = mainExecute();
+                    status = mainExecute();
                 }
                 if (status != null && status.isSuccess()) {
-                    String elapsed = StringFormat.formatElapsedTime(
-                            System.currentTimeMillis() - time);
-                    m_logger.info(m_nc.getNameWithID()
-                            + " End execute (" + elapsed + ")");
+                    String elapsed = StringFormat.formatElapsedTime(System.currentTimeMillis() - time);
+                    m_logger.info(m_nc.getNameWithID() + " End execute (" + elapsed + ")");
                 }
             }
         } catch (Throwable throwable) {
@@ -179,7 +187,7 @@ public abstract class NodeExecutionJob implements Runnable {
             // sets state POSTEXECUTE
             m_nc.notifyParentPostExecuteStart();
             if (!executeInactive) {
-            	afterExecute();
+                afterExecute();
             }
         } catch (Throwable throwable) {
             status = NodeContainerExecutionStatus.FAILURE;
@@ -274,6 +282,13 @@ public abstract class NodeExecutionJob implements Runnable {
      */
     boolean isSavedForDisconnect() {
         return m_isSavedForDisconnect;
+    }
+
+    /**
+     * @return true if the node is to be re-executed.
+     */
+    protected boolean isSetForReExecution() {
+        return m_reExecution;
     }
 
 }
