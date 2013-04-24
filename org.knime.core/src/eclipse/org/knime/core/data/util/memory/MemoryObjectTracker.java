@@ -111,21 +111,29 @@ public final class MemoryObjectTracker {
             public void memoryUsageLow(final long usedMemory, final long maxMemory) {
                 LOGGER.debug("Low memory encountered. Used memory: " + FileUtils.byteCountToDisplaySize(usedMemory)
                              + "; maximum memory: " + FileUtils.byteCountToDisplaySize(maxMemory) + ".");
+                final double percentageToFree;
                 switch (m_strategy) {
                     case FREE_ONE:
-                        freeAllMemory(0);
+                        percentageToFree = 0.0;
                         break;
                     case FREE_ALL:
-                        freeAllMemory(100);
+                        percentageToFree = 1.0;
                         break;
                     case FREE_PERCENTAGE:
-                        freeAllMemory(0.5);
+                        percentageToFree = 0.5;
                         break;
                     default:
+                        percentageToFree = 1.0;
                         LOGGER.warn("Unknown MemoryObjectTracker.Strategy, using default");
-                        freeAllMemory(100);
                         break;
                 }
+                // run in separate thread so that it can be debugged and we don't mess around with system threads
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        freeAllMemory(percentageToFree);
+                    }
+                }, "KNIME-Memory-Cleaner").start();
             }
         });
 
