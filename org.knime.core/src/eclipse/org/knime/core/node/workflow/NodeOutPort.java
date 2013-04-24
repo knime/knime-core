@@ -61,6 +61,8 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * be connected to it (which are part of the next nodes in the workflow).
  *
  * @author Thomas Gabriel, University of Konstanz
+ * @noextend This interface is not intended to be extended by clients.
+ * @noimplement This interface is not intended to be implemented by clients.
  */
 public interface NodeOutPort extends NodePort, NodeStateChangeListener {
 
@@ -96,6 +98,8 @@ public interface NodeOutPort extends NodePort, NodeStateChangeListener {
 
     /**
      * @return the state of the node owning this port.
+     * @since 2.8
+     * @noreference This method is not intended to be referenced by clients.
      */
     public InternalNodeContainerState getNodeState();
 

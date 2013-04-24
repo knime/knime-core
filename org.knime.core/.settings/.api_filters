@@ -43,12 +43,44 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/NodeModel.java" type="org.knime.core.node.NodeModel">
+        <filter comment="added new execute method in NodeModel to enable &quot;re-execution&quot; of interactive nodes" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.NodeModel"/>
+                <message_argument value="executeModel(PortObject[], ExecutionContext)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/NodePersistorVersion1xx.java" type="org.knime.core.node.NodePersistorVersion1xx">
         <filter id="643842064">
             <message_arguments>
                 <message_argument value="IFileStoreHandler"/>
                 <message_argument value="NodePersistorVersion1xx"/>
                 <message_argument value="getFileStoreHandler()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/NodeContainerOutPort.java" type="org.knime.core.node.workflow.NodeContainerOutPort">
+        <filter comment="added new node states and changed visibility of State class" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeContainerOutPort"/>
+                <message_argument value="getNodeState()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/NodeOutPort.java" type="org.knime.core.node.workflow.NodeOutPort">
+        <filter comment="added new node states and changed visibility of State class" id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeOutPort"/>
+                <message_argument value="getNodeState()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/NodeOutPortWrapper.java" type="org.knime.core.node.workflow.NodeOutPortWrapper">
+        <filter comment="added new node states and changed visibility of State class" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.NodeOutPortWrapper"/>
+                <message_argument value="getNodeState()"/>
             </message_arguments>
         </filter>
     </resource>

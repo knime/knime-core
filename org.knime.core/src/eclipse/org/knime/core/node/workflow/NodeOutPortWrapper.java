@@ -175,6 +175,7 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
 
     /**
      * {@inheritDoc}
+     * @since 2.8
      */
     @Override
     public InternalNodeContainerState getNodeState() {

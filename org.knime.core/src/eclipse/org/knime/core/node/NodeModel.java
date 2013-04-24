@@ -510,6 +510,9 @@ public abstract class NodeModel {
      *             does not match the number of outputs. Or if any of them is
      *             null.
      * @see #execute(PortObject[],ExecutionContext)
+     * @since 2.8
+     * @noreference This method is not intended to be referenced by clients
+     *              (use Node class instead)
      */
     protected final PortObject[] executeModel(final PortObject[] data, final boolean reExecute,
             final ExecutionContext exec) throws Exception {

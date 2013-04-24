@@ -132,9 +132,8 @@ public class NodeContainerOutPort extends NodePortAdaptor
         return getPortObjectSpec() instanceof InactiveBranchPortObjectSpec;
     }
 
-    /**
-     * {@inheritDoc}
-     */
+    /** {@inheritDoc}
+     * @since 2.8 */
     @Override
     public InternalNodeContainerState getNodeState() {
         return m_snc.getInternalState();

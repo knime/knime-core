@@ -286,6 +286,7 @@ public abstract class NodeExecutionJob implements Runnable {
 
     /**
      * @return true if the node is to be re-executed.
+     * @since 2.8
      */
     protected boolean isSetForReExecution() {
         return m_reExecution;
