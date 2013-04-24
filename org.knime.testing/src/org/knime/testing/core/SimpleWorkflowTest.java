@@ -61,7 +61,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeContainer.State;
+import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
@@ -137,10 +137,9 @@ public class SimpleWorkflowTest implements WorkflowTest {
         manager.executeAllAndWaitUntilDone();
 
         for (NodeContainer node : manager.getNodeContainers()) {
-            State status = node.getState();
-            if (!status.equals(State.EXECUTED)) {
-                String error =
-                        "Node '" + node.getNameWithID() + "' is not executed.";
+            NodeContainerState status = node.getNodeContainerState();
+            if (!status.isExecuted()) {
+                String error = "Node '" + node.getNameWithID() + "' is not executed.";
                 NodeMessage nodeMessage = node.getNodeMessage();
                 if (nodeMessage != null) {
                     error += "\n" + nodeMessage.getMessage();

@@ -68,7 +68,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeContainer.State;
+import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.SingleNodeContainer;
@@ -708,10 +708,9 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
      */
     private void checkNodeExecution(final WorkflowManager manager) {
         for (NodeContainer node : manager.getNodeContainers()) {
-            State status = node.getState();
+            NodeContainerState status = node.getNodeContainerState();
 
-            if (!status.equals(State.EXECUTED)
-                    && !m_requiredUnexecutedNodes.contains(node.getID())) {
+            if (!status.isExecuted() && !m_requiredUnexecutedNodes.contains(node.getID())) {
 
                 // not executed but supposed to be
 
@@ -726,8 +725,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                 }
                 // make sure to log an error - during wrapUp the test fails then
                 logger.error(msg);
-            } else if (status.equals(State.EXECUTED)
-                    && m_requiredUnexecutedNodes.contains(node.getID())) {
+            } else if (status.isExecuted() && m_requiredUnexecutedNodes.contains(node.getID())) {
 
                 // executed but shouldn't be
 
@@ -742,7 +740,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                 // executed state as expected
 
                 logger.debug("Node '" + node.getNameWithID() + "' is"
-                        + (status.equals(State.EXECUTED) ? " " : " not ")
+                        + (status.isExecuted() ? " " : " not ")
                         + "executed - which is good.");
             }
             if (node instanceof WorkflowManager) {
@@ -1247,7 +1245,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                 registerExecutedNodes((WorkflowManager)nc);
             }
 
-            if (!nc.getState().equals(State.EXECUTED)) {
+            if (!nc.getNodeContainerState().isExecuted()) {
                 continue;
             }
 
