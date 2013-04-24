@@ -21,20 +21,18 @@
  * History
  *   01.11.2008 (wiswedel): created
  */
-package org.knime.core.node.workflow.simpleLoop;
+package org.knime.core.node.workflow;
 
 import java.util.Map;
 
-import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowTestCase;
 import org.knime.testing.node.executioncount.ExecutionCountNodeModel;
 
 /**
  *
  * @author wiswedel, University of Konstanz
  */
-public class SimpleLoopTest extends WorkflowTestCase {
+public class SimpleLoop extends WorkflowTestCase {
 
     private NodeID m_loopStart;
     private NodeID m_loopEnd;
@@ -57,30 +55,30 @@ public class SimpleLoopTest extends WorkflowTestCase {
     }
 
     public void testExecuteFlow() throws Exception {
-        checkState(m_loopStart, State.CONFIGURED);
-        checkState(m_tblView, State.CONFIGURED);
+        checkState(m_loopStart, InternalNodeContainerState.CONFIGURED);
+        checkState(m_tblView, InternalNodeContainerState.CONFIGURED);
         executeAndWait(m_loopEnd);
         waitWhileInExecution();
-        checkState(m_loopEnd, State.EXECUTED);
+        checkState(m_loopEnd, InternalNodeContainerState.EXECUTED);
         Map<NodeID, ExecutionCountNodeModel> counterNodes =
             getManager().findNodes(ExecutionCountNodeModel.class, true);
         int inCount = counterNodes.get(m_counterInLoop).getCounter();
 
-        checkState(m_counterInLoop, State.EXECUTED);
+        checkState(m_counterInLoop, InternalNodeContainerState.EXECUTED);
         assertEquals("Expected 10 executions of node in loop", 10, inCount);
 
         int outCount = counterNodes.get(m_counterOutSourceLoop).getCounter();
-        checkState(m_counterOutSourceLoop, State.EXECUTED);
+        checkState(m_counterOutSourceLoop, InternalNodeContainerState.EXECUTED);
         assertEquals(
                 "Expected one execution of source nodes in loop", 1, outCount);
 
         int outCountSink = counterNodes.get(m_counterOutSinkLoop).getCounter();
-        checkState(m_counterOutSinkLoop, State.EXECUTED);
+        checkState(m_counterOutSinkLoop, InternalNodeContainerState.EXECUTED);
         assertEquals("Expected 10 executions of sink nodes in loop",
                 10, outCountSink);
 
         executeAndWait(m_tblView);
-        checkState(m_tblView, State.EXECUTED);
+        checkState(m_tblView, InternalNodeContainerState.EXECUTED);
 
         getManager().resetAndConfigureAll();
         assertEquals(getNrTablesInGlobalRepository(), 0);

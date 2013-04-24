@@ -286,7 +286,7 @@ public class SingleNodeContainerPersistorVersion200 extends
         saveSNCSettings(settings, snc);
         NodeContainerMetaPersistorVersion200.save(settings, snc, nodeDirRef);
         NodePersistorVersion200.save(snc, nodeXMLFileRef, exec, isSaveData
-                && snc.getState().equals(NodeContainer.State.EXECUTED));
+                && snc.getInternalState().equals(InternalNodeContainerState.EXECUTED));
         File nodeSettingsXMLFile = new File(nodeDir, settingsDotXML);
         OutputStream os = new FileOutputStream(nodeSettingsXMLFile);
         os = snc.getParent().cipherOutput(os);

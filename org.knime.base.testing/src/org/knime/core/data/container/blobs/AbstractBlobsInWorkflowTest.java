@@ -32,7 +32,6 @@ import org.knime.base.node.util.cache.CacheNodeFactory;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.FileUtil;
@@ -116,7 +115,7 @@ public abstract class AbstractBlobsInWorkflowTest extends TestCase {
         m_flow = m;
         m.executeAllAndWaitUntilDone();
         assertNull(failure.get());
-        assertTrue(m.getState().equals(State.EXECUTED));
+        assertTrue(m.getNodeContainerState().isExecuted());
     }
 
     /** {@inheritDoc} */

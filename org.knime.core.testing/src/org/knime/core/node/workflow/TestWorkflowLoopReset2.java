@@ -21,17 +21,15 @@
  * History
  *   01.11.2008 (wiswedel): created
  */
-package org.knime.core.node.workflow.testWorkflowLoopReset2;
+package org.knime.core.node.workflow;
 
-import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowTestCase;
 
 /**
  *
  * @author wiswedel, University of Konstanz
  */
-public class WorkflowLoopReset2 extends WorkflowTestCase {
+public class TestWorkflowLoopReset2 extends WorkflowTestCase {
 
     private NodeID m_dataGen1;
     private NodeID m_loopStartInMeta2;
@@ -52,22 +50,22 @@ public class WorkflowLoopReset2 extends WorkflowTestCase {
 
     public void testLoopEndReset() throws Exception {
         executeAllAndWait();
-        checkState(m_tableView3, State.EXECUTED);
+        checkState(m_tableView3, InternalNodeContainerState.EXECUTED);
         reset(m_loopEndInMeta3);
-        checkState(m_tableView3, State.CONFIGURED);
-        checkState(m_loopEndInMeta3, State.CONFIGURED);
-        checkState(m_loopStartInMeta2, State.CONFIGURED);
-        checkState(m_dataGen1, State.EXECUTED);
+        checkState(m_tableView3, InternalNodeContainerState.CONFIGURED);
+        checkState(m_loopEndInMeta3, InternalNodeContainerState.CONFIGURED);
+        checkState(m_loopStartInMeta2, InternalNodeContainerState.CONFIGURED);
+        checkState(m_dataGen1, InternalNodeContainerState.EXECUTED);
     }
 
     public void testDataGenReset() throws Exception {
         executeAllAndWait();
-        checkState(m_tableView3, State.EXECUTED);
+        checkState(m_tableView3, InternalNodeContainerState.EXECUTED);
         reset(m_dataGen1);
-        checkState(m_tableView3, State.CONFIGURED);
-        checkState(m_loopEndInMeta3, State.CONFIGURED);
-        checkState(m_loopStartInMeta2, State.CONFIGURED);
-        checkState(m_dataGen1, State.CONFIGURED);
+        checkState(m_tableView3, InternalNodeContainerState.CONFIGURED);
+        checkState(m_loopEndInMeta3, InternalNodeContainerState.CONFIGURED);
+        checkState(m_loopStartInMeta2, InternalNodeContainerState.CONFIGURED);
+        checkState(m_dataGen1, InternalNodeContainerState.CONFIGURED);
     }
 
 }

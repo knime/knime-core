@@ -79,6 +79,7 @@ import org.eclipse.ui.model.IWorkbenchAdapter;
 import org.eclipse.ui.model.IWorkbenchAdapter2;
 import org.eclipse.ui.model.WorkbenchLabelProvider;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -295,22 +296,17 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
                     // with this check only projects (
                     // direct children of the ROOT
                     // are displayed with state
-                    && ((WorkflowManager)projectNode).getID()
-                        .hasSamePrefix(WorkflowManager.ROOT.getID())) {
-                if (projectNode.getNodeMessage().getMessageType().equals(
-                        NodeMessage.Type.ERROR)) {
+                    && ((WorkflowManager)projectNode).getID().hasSamePrefix(WorkflowManager.ROOT.getID())) {
+                NodeContainerState state = projectNode.getNodeContainerState();
+                if (projectNode.getNodeMessage().getMessageType().equals(NodeMessage.Type.ERROR)) {
                     return ERROR;
                 }
-                switch (projectNode.getState()) {
-                case EXECUTED:
+                if (state.isExecuted()) {
                     return EXECUTED;
-                case EXECUTING:
-                case EXECUTINGREMOTELY:
+                } else if (state.isExecutionInProgress()) {
                     return EXECUTING;
-                case CONFIGURED:
-                case IDLE:
+                } else if (state.isConfigured()) {
                     return CONFIGURED;
-                default:
                 }
             } else {
                 return NODE;

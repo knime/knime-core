@@ -56,7 +56,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.StringFormat;
-import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
 
 /** Runnable that represents the execution of a node. This abstract class
@@ -207,7 +206,7 @@ public abstract class NodeExecutionJob implements Runnable {
      */
     protected abstract boolean isReConnecting();
 
-    /** Called right after the node has switched to the {@link State#PREEXECUTE}
+    /** Called right after the node has switched to the {@link InternalNodeContainerState#PREEXECUTE}
      * state. Remote job executors will setup the execution environment in this
      * step and therefore overwrite this (empty) method. */
     protected void beforeExecute() {
@@ -215,8 +214,8 @@ public abstract class NodeExecutionJob implements Runnable {
     }
 
     /** Called when the main execution takes place. The node will be in the
-     * appropriate state ({@link State#EXECUTING} or
-     * {@link State#EXECUTINGREMOTELY} when this method is called.
+     * appropriate state ({@link InternalNodeContainerState#EXECUTING} or
+     * {@link InternalNodeContainerState#EXECUTINGREMOTELY} when this method is called.
      * @return Whether the execution was successful.
      */
     protected abstract NodeContainerExecutionStatus mainExecute();

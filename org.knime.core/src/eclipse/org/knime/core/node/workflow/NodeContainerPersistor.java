@@ -75,7 +75,7 @@ public interface NodeContainerPersistor {
     boolean isDirtyAfterLoad();
 
     /** Does this persistor complain if its persisted state
-     * {@link NodeContainer#getState() state} does not match the state after
+     * {@link NodeContainer#getInternalState() state} does not match the state after
      * loading (typically all non-executed nodes are configured after load).
      * This is true for all SingleNodeContainer and newer meta nodes,
      * but it will be false for meta nodes, which are loaded from 1.x workflow.

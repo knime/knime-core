@@ -21,19 +21,17 @@
  * History
  *   01.11.2008 (wiswedel): created
  */
-package org.knime.core.node.workflow.metawithsinglenode;
+package org.knime.core.node.workflow;
 
 import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowTestCase;
 
 /**
  *
  * @author wiswedel, University of Konstanz
  */
-public class MetaFlowWithSingleNodeTest extends WorkflowTestCase {
+public class Metawithsinglenode extends WorkflowTestCase {
 
     private NodeID m_dataGen;
     private NodeID m_colFilterInMeta;
@@ -52,88 +50,88 @@ public class MetaFlowWithSingleNodeTest extends WorkflowTestCase {
     }
 
     public void testExecuteOneByOne() throws Exception {
-        checkState(m_dataGen, State.CONFIGURED);
-        checkState(m_colFilterInMeta, State.CONFIGURED);
-        checkMetaOutState(m_meta, 0, State.CONFIGURED);
-        checkState(m_tblView, State.CONFIGURED);
+        checkState(m_dataGen, InternalNodeContainerState.CONFIGURED);
+        checkState(m_colFilterInMeta, InternalNodeContainerState.CONFIGURED);
+        checkMetaOutState(m_meta, 0, InternalNodeContainerState.CONFIGURED);
+        checkState(m_tblView, InternalNodeContainerState.CONFIGURED);
 
         executeAndWait(m_dataGen);
-        checkState(m_dataGen, State.EXECUTED);
-        checkState(m_colFilterInMeta, State.CONFIGURED);
-        checkMetaOutState(m_meta, 0, State.CONFIGURED);
-        checkState(m_tblView, State.CONFIGURED);
+        checkState(m_dataGen, InternalNodeContainerState.EXECUTED);
+        checkState(m_colFilterInMeta, InternalNodeContainerState.CONFIGURED);
+        checkMetaOutState(m_meta, 0, InternalNodeContainerState.CONFIGURED);
+        checkState(m_tblView, InternalNodeContainerState.CONFIGURED);
 
         executeAndWait(m_colFilterInMeta);
-        checkState(m_dataGen, State.EXECUTED);
-        checkState(m_colFilterInMeta, State.EXECUTED);
-        checkMetaOutState(m_meta, 0, State.EXECUTED);
-        checkState(m_tblView, State.CONFIGURED);
+        checkState(m_dataGen, InternalNodeContainerState.EXECUTED);
+        checkState(m_colFilterInMeta, InternalNodeContainerState.EXECUTED);
+        checkMetaOutState(m_meta, 0, InternalNodeContainerState.EXECUTED);
+        checkState(m_tblView, InternalNodeContainerState.CONFIGURED);
 
         executeAndWait(m_tblView);
-        checkState(m_dataGen, State.EXECUTED);
-        checkState(m_colFilterInMeta, State.EXECUTED);
-        checkMetaOutState(m_meta, 0, State.EXECUTED);
-        checkState(m_tblView, State.EXECUTED);
+        checkState(m_dataGen, InternalNodeContainerState.EXECUTED);
+        checkState(m_colFilterInMeta, InternalNodeContainerState.EXECUTED);
+        checkMetaOutState(m_meta, 0, InternalNodeContainerState.EXECUTED);
+        checkState(m_tblView, InternalNodeContainerState.EXECUTED);
 
         // state may not have propagated to workflow
         waitWhileInExecution();
-        checkState(m_meta, State.EXECUTED);
+        checkState(m_meta, InternalNodeContainerState.EXECUTED);
 
     }
 
     public void testExecuteLast() throws Exception {
         executeAndWait(m_tblView);
-        checkState(m_dataGen, State.EXECUTED);
-        checkState(m_colFilterInMeta, State.EXECUTED);
-        checkMetaOutState(m_meta, 0, State.EXECUTED);
-        checkState(m_tblView, State.EXECUTED);
+        checkState(m_dataGen, InternalNodeContainerState.EXECUTED);
+        checkState(m_colFilterInMeta, InternalNodeContainerState.EXECUTED);
+        checkMetaOutState(m_meta, 0, InternalNodeContainerState.EXECUTED);
+        checkState(m_tblView, InternalNodeContainerState.EXECUTED);
     }
 
     public void testExecuteInMeta() throws Exception {
         executeAndWait(m_colFilterInMeta);
-        checkState(m_dataGen, State.EXECUTED);
-        checkState(m_colFilterInMeta, State.EXECUTED);
-        checkMetaOutState(m_meta, 0, State.EXECUTED);
-        checkState(m_tblView, State.CONFIGURED);
+        checkState(m_dataGen, InternalNodeContainerState.EXECUTED);
+        checkState(m_colFilterInMeta, InternalNodeContainerState.EXECUTED);
+        checkMetaOutState(m_meta, 0, InternalNodeContainerState.EXECUTED);
+        checkState(m_tblView, InternalNodeContainerState.CONFIGURED);
     }
 
     public void testExecuteAll() throws Exception {
         getManager().executeAllAndWaitUntilDone();
-        checkState(m_dataGen, State.EXECUTED);
-        checkState(m_colFilterInMeta, State.EXECUTED);
-        checkMetaOutState(m_meta, 0, State.EXECUTED);
-        checkState(m_tblView, State.EXECUTED);
+        checkState(m_dataGen, InternalNodeContainerState.EXECUTED);
+        checkState(m_colFilterInMeta, InternalNodeContainerState.EXECUTED);
+        checkMetaOutState(m_meta, 0, InternalNodeContainerState.EXECUTED);
+        checkState(m_tblView, InternalNodeContainerState.EXECUTED);
     }
 
     public void testRandomExecuteAndReset() throws Exception {
         executeAndWait(m_colFilterInMeta);
-        checkState(m_dataGen, State.EXECUTED);
-        checkState(m_colFilterInMeta, State.EXECUTED);
-        checkMetaOutState(m_meta, 0, State.EXECUTED);
-        checkState(m_tblView, State.CONFIGURED);
+        checkState(m_dataGen, InternalNodeContainerState.EXECUTED);
+        checkState(m_colFilterInMeta, InternalNodeContainerState.EXECUTED);
+        checkMetaOutState(m_meta, 0, InternalNodeContainerState.EXECUTED);
+        checkState(m_tblView, InternalNodeContainerState.CONFIGURED);
 
         assertTrue(getManager().canResetNode(m_meta));
         getManager().resetAndConfigureNode(m_meta);
-        checkState(m_dataGen, State.EXECUTED);
-        checkState(m_colFilterInMeta, State.CONFIGURED);
-        checkMetaOutState(m_meta, 0, State.CONFIGURED);
-        checkState(m_tblView, State.CONFIGURED);
+        checkState(m_dataGen, InternalNodeContainerState.EXECUTED);
+        checkState(m_colFilterInMeta, InternalNodeContainerState.CONFIGURED);
+        checkMetaOutState(m_meta, 0, InternalNodeContainerState.CONFIGURED);
+        checkState(m_tblView, InternalNodeContainerState.CONFIGURED);
 
         executeAndWait(m_tblView);
-        checkState(m_tblView, State.EXECUTED);
+        checkState(m_tblView, InternalNodeContainerState.EXECUTED);
 
         for (int i = 0; i < 10; i++) {
             getManager().resetAndConfigureNode(m_dataGen);
-            checkState(m_dataGen, State.CONFIGURED);
-            checkState(m_colFilterInMeta, State.CONFIGURED);
-            checkMetaOutState(m_meta, 0, State.CONFIGURED);
-            checkState(m_tblView, State.CONFIGURED);
+            checkState(m_dataGen, InternalNodeContainerState.CONFIGURED);
+            checkState(m_colFilterInMeta, InternalNodeContainerState.CONFIGURED);
+            checkMetaOutState(m_meta, 0, InternalNodeContainerState.CONFIGURED);
+            checkState(m_tblView, InternalNodeContainerState.CONFIGURED);
 
             executeAndWait(m_tblView);
-            checkState(m_dataGen, State.EXECUTED);
-            checkState(m_colFilterInMeta, State.EXECUTED);
-            checkMetaOutState(m_meta, 0, State.EXECUTED);
-            checkState(m_tblView, State.EXECUTED);
+            checkState(m_dataGen, InternalNodeContainerState.EXECUTED);
+            checkState(m_colFilterInMeta, InternalNodeContainerState.EXECUTED);
+            checkMetaOutState(m_meta, 0, InternalNodeContainerState.EXECUTED);
+            checkState(m_tblView, InternalNodeContainerState.EXECUTED);
         }
     }
 
@@ -147,25 +145,25 @@ public class MetaFlowWithSingleNodeTest extends WorkflowTestCase {
         m.removeConnection(c);
         assertNull(findInConnection(m_meta, 0));
 
-        checkState(m_colFilterInMeta, State.IDLE);
-        checkMetaOutState(m_meta, 0, State.IDLE);
+        checkState(m_colFilterInMeta, InternalNodeContainerState.IDLE);
+        checkMetaOutState(m_meta, 0, InternalNodeContainerState.IDLE);
         assertFalse(findParent(
                 m_colFilterInMeta).canExecuteNode(m_colFilterInMeta));
         assertFalse(m.canExecuteNode(m_tblView));
         assertFalse(m.canExecuteNode(m_meta));
 
         executeAndWait(m_colFilterInMeta);
-        checkState(m_meta, State.IDLE);
+        checkState(m_meta, InternalNodeContainerState.IDLE);
 
         m.addConnection(c.getSource(), c.getSourcePort(),
                 c.getDest(), c.getDestPort());
-        checkState(m_colFilterInMeta, State.CONFIGURED);
-        checkMetaOutState(m_meta, 0, State.CONFIGURED);
-        checkState(m_tblView, State.CONFIGURED);
+        checkState(m_colFilterInMeta, InternalNodeContainerState.CONFIGURED);
+        checkMetaOutState(m_meta, 0, InternalNodeContainerState.CONFIGURED);
+        checkState(m_tblView, InternalNodeContainerState.CONFIGURED);
 
         executeAndWait(m_tblView);
-        checkState(m_tblView, State.EXECUTED);
-        checkMetaOutState(m_meta, 0, State.EXECUTED);
+        checkState(m_tblView, InternalNodeContainerState.EXECUTED);
+        checkMetaOutState(m_meta, 0, InternalNodeContainerState.EXECUTED);
     }
 
     public void testDeleteInnerConnectionTryExecuteInsertAgain()
@@ -179,24 +177,24 @@ public class MetaFlowWithSingleNodeTest extends WorkflowTestCase {
         meta.removeConnection(c);
         assertNull(findInConnection(m_colFilterInMeta, 1));
 
-        checkState(m_colFilterInMeta, State.IDLE);
-        checkMetaOutState(m_meta, 0, State.IDLE);
+        checkState(m_colFilterInMeta, InternalNodeContainerState.IDLE);
+        checkMetaOutState(m_meta, 0, InternalNodeContainerState.IDLE);
         assertFalse(m.canExecuteNode(m_colFilterInMeta));
         assertFalse(m.canExecuteNode(m_tblView));
         assertFalse(m.canExecuteNode(m_meta));
 
         executeAndWait(m_colFilterInMeta);
-        checkState(m_meta, State.IDLE);
+        checkState(m_meta, InternalNodeContainerState.IDLE);
 
         meta.addConnection(c.getSource(), c.getSourcePort(),
                 c.getDest(), c.getDestPort());
-        checkState(m_colFilterInMeta, State.CONFIGURED);
-        checkMetaOutState(m_meta, 0, State.CONFIGURED);
-        checkState(m_tblView, State.CONFIGURED);
+        checkState(m_colFilterInMeta, InternalNodeContainerState.CONFIGURED);
+        checkMetaOutState(m_meta, 0, InternalNodeContainerState.CONFIGURED);
+        checkState(m_tblView, InternalNodeContainerState.CONFIGURED);
 
         executeAndWait(m_tblView);
-        checkState(m_tblView, State.EXECUTED);
-        checkMetaOutState(m_meta, 0, State.EXECUTED);
+        checkState(m_tblView, InternalNodeContainerState.EXECUTED);
+        checkMetaOutState(m_meta, 0, InternalNodeContainerState.EXECUTED);
     }
 
     public void testExecuteDeleteOuterConnection() throws Exception {
@@ -207,8 +205,8 @@ public class MetaFlowWithSingleNodeTest extends WorkflowTestCase {
         assertTrue(m.canRemoveConnection(connection));
         m.removeConnection(connection);
 
-        checkState(m_colFilterInMeta, State.IDLE);
-        checkMetaOutState(m_meta, 0, State.IDLE);
+        checkState(m_colFilterInMeta, InternalNodeContainerState.IDLE);
+        checkMetaOutState(m_meta, 0, InternalNodeContainerState.IDLE);
         assertFalse(meta.canExecuteNode(m_colFilterInMeta));
         assertFalse(m.canExecuteNode(m_tblView));
     }
@@ -221,8 +219,8 @@ public class MetaFlowWithSingleNodeTest extends WorkflowTestCase {
         assertTrue(meta.canRemoveConnection(connection));
         meta.removeConnection(connection);
 
-        checkState(m_colFilterInMeta, State.IDLE);
-        checkMetaOutState(m_meta, 0, State.IDLE);
+        checkState(m_colFilterInMeta, InternalNodeContainerState.IDLE);
+        checkMetaOutState(m_meta, 0, InternalNodeContainerState.IDLE);
         assertFalse(meta.canExecuteNode(m_colFilterInMeta));
         assertFalse(m.canExecuteNode(m_tblView));
     }
@@ -234,7 +232,7 @@ public class MetaFlowWithSingleNodeTest extends WorkflowTestCase {
         assertTrue(meta.canRemoveNode(m_colFilterInMeta));
         meta.removeNode(m_colFilterInMeta);
 
-        checkState(m_tblView, State.IDLE);
+        checkState(m_tblView, InternalNodeContainerState.IDLE);
         assertFalse(m.canExecuteNode(m_tblView));
     }
 }

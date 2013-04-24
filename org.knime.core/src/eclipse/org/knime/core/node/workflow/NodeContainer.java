@@ -102,7 +102,10 @@ public abstract class NodeContainer implements NodeProgressListener {
     private static final NodeLogger LOGGER =
         NodeLogger.getLogger(NodeContainer.class);
 
-    /** possible status values of a NodeContainer. */
+    /** Old and unfortunately public possible status values of a NodeContainer.
+     * Needed for backwards compatibility with RMI Execution 2.7 and before.
+     * */
+    @Deprecated
     public static enum State {
         IDLE,
         CONFIGURED,
@@ -129,7 +132,7 @@ public abstract class NodeContainer implements NodeProgressListener {
         }
     };
 
-    private State m_state;
+    private InternalNodeContainerState m_state;
 
     private final NodeID m_id;
 
@@ -207,7 +210,7 @@ public abstract class NodeContainer implements NodeProgressListener {
                             .getInstance();
         }
         m_id = id;
-        m_state = State.IDLE;
+        m_state = InternalNodeContainerState.IDLE;
         m_isDeletable = true;
         m_annotation = new NodeAnnotation(new NodeAnnotationData(true));
         m_annotation.registerOnNodeContainer(this);
@@ -358,33 +361,36 @@ public abstract class NodeContainer implements NodeProgressListener {
      */
     void queue(final PortObject[] inData) {
         synchronized (m_nodeMutex) {
-            switch (getState()) {
-            case MARKEDFOREXEC:
-                setState(State.QUEUED);
-                NodeExecutionJobManager jobManager = findJobManager();
-                try {
-                    NodeExecutionJob job = jobManager.submitJob(this, inData);
-                    setExecutionJob(job);
-                } catch (Throwable t) {
-                    String error = "Failed to submit job to job executor \""
-                        + jobManager + "\": " + t.getMessage();
-                    setNodeMessage(new NodeMessage(
-                            NodeMessage.Type.ERROR, error));
-                    LOGGER.error(error, t);
-                    notifyParentPreExecuteStart();
-                    try {
-                        notifyParentExecuteStart();
-                    } catch (IllegalFlowObjectStackException e) {
-                        // ignore, we have something more serious to deal with
-                    }
-                    notifyParentPostExecuteStart();
-                    notifyParentExecuteFinished(
-                            NodeContainerExecutionStatus.FAILURE);
-                }
-                return;
+            // switch state from marked to queued
+            switch (getInternalState()) {
+            case CONFIGURED_MARKEDFOREXEC:
+                setInternalState(InternalNodeContainerState.CONFIGURED_QUEUED);
+                break;
+            case EXECUTED_MARKEDFOREXEC:
+                setInternalState(InternalNodeContainerState.EXECUTED_QUEUED);
+                break;
             default:
                 throwIllegalStateException();
             }
+            // queue job if state change was successful
+            NodeExecutionJobManager jobManager = findJobManager();
+            try {
+                NodeExecutionJob job = jobManager.submitJob(this, inData);
+                setExecutionJob(job);
+            } catch (Throwable t) {
+                String error = "Failed to submit job to job executor \"" + jobManager + "\": " + t.getMessage();
+                setNodeMessage(new NodeMessage(NodeMessage.Type.ERROR, error));
+                LOGGER.error(error, t);
+                notifyParentPreExecuteStart();
+                try {
+                    notifyParentExecuteStart();
+                } catch (IllegalFlowObjectStackException e) {
+                    // ignore, we have something more serious to deal with
+                }
+                notifyParentPostExecuteStart();
+                notifyParentExecuteFinished(NodeContainerExecutionStatus.FAILURE);
+            }
+            return;
         }
     }
 
@@ -394,21 +400,21 @@ public abstract class NodeContainer implements NodeProgressListener {
      */
     abstract void mimicRemoteExecuting();
 
-    /** Puts this node (and all its children) into the {@link State#PREEXECUTE}
+    /** Puts this node (and all its children) into the {@link InternalNodeContainerState#PREEXECUTE}
      * state. This method is used when a workflow is executed remotely.
      * @throws IllegalStateException In case of an illegal state (e.g. a node
      * is already executing).
      */
     abstract void mimicRemotePreExecute();
 
-    /** Puts this node (and all its children) into the {@link State#POSTEXECUTE}
+    /** Puts this node (and all its children) into the {@link InternalNodeContainerState#POSTEXECUTE}
      * state. This method is used when a workflow is executed remotely.
      * @throws IllegalStateException In case of an illegal state.
      */
     abstract void mimicRemotePostExecute();
 
-    /** Put this node into either the {@link State#EXECUTED} or
-     * {@link State#IDLE} state depending on the argument. This method is
+    /** Put this node into either the {@link InternalNodeContainerState#EXECUTED} or
+     * {@link InternalNodeContainerState#IDLE} state depending on the argument. This method is
      * applied recursively on all of this node's children (if a meta node).
      * @param status Where to get the success flag from.
      * @throws IllegalStateException In case of an illegal state.
@@ -426,7 +432,7 @@ public abstract class NodeContainer implements NodeProgressListener {
             final NodeSettingsRO settings)
         throws InvalidSettingsException, NodeExecutionJobReconnectException {
         synchronized (m_nodeMutex) {
-            switch (getState()) {
+            switch (getInternalState()) {
             case EXECUTINGREMOTELY:
                 NodeExecutionJobManager jobManager = findJobManager();
                 try {
@@ -468,9 +474,9 @@ public abstract class NodeContainer implements NodeProgressListener {
     abstract void cancelExecution();
 
     void saveNodeExecutionJobReconnectInfo(final NodeSettingsWO settings) {
-        assert getState().equals(State.EXECUTINGREMOTELY)
+        assert getInternalState().equals(InternalNodeContainerState.EXECUTINGREMOTELY)
         : "Can't save node execution job, node is not executing "
-            + "remotely but " + getState();
+            + "remotely but " + getInternalState();
         NodeExecutionJobManager jobManager = findJobManager();
         NodeExecutionJob job = getExecutionJob();
         assert jobManager.canDisconnect(job)
@@ -537,7 +543,7 @@ public abstract class NodeContainer implements NodeProgressListener {
     }
 
     /** Called when the state of a node should switch from
-     * {@link State#QUEUED} to {@link State#PREEXECUTE}. The method is to be
+     * {@link InternalNodeContainerState#QUEUED} to {@link InternalNodeContainerState#PREEXECUTE}. The method is to be
      * called from the node's parent in a synchronized environment.
      * @return whether there was an actual state transition, false if the
      *         execution was canceled (cancel checking to be done in
@@ -553,8 +559,8 @@ public abstract class NodeContainer implements NodeProgressListener {
     abstract void performStateTransitionEXECUTING();
 
     /** Called when the state of a node should switch from
-     * {@link State#EXECUTING} (or {@link State#EXECUTINGREMOTELY}) to
-     * {@link State#POSTEXECUTE}. The method is to be called from the node's
+     * {@link InternalNodeContainerState#EXECUTING} (or {@link InternalNodeContainerState#EXECUTINGREMOTELY}) to
+     * {@link InternalNodeContainerState#POSTEXECUTE}. The method is to be called from the node's
      * parent in a synchronized environment. */
     abstract void performStateTransitionPOSTEXECUTE();
 
@@ -809,18 +815,33 @@ public abstract class NodeContainer implements NodeProgressListener {
        return m_stateChangeListeners.remove(listener);
    }
 
+   /**
+    * @since 2.8
+    */
+   public NodeContainerState getNodeContainerState() {
+       return getInternalState();
+   }
+
     /**
      * @return the status of this node
      */
-    public State getState() {
+    InternalNodeContainerState getInternalState() {
         return m_state;
+    }
+
+    /**
+     * @return the status of this node
+     */
+    @Deprecated
+    public State getState() {
+        return getInternalState().mapToOldStyleState();
     }
 
     /** Set new status and notify listeners.
      * @param state the new state
      */
-    protected void setState(final State state) {
-        setState(state, true);
+    void setInternalState(final InternalNodeContainerState state) {
+        setInternalState(state, true);
     }
 
     /** Set new status and notify listeners.
@@ -828,7 +849,7 @@ public abstract class NodeContainer implements NodeProgressListener {
      * @param setDirty whether to set this node &quot;dirty&quot; (needs save).
      * @return true if state was changed.
      */
-    protected boolean setState(final State state, final boolean setDirty) {
+    boolean setInternalState(final InternalNodeContainerState state, final boolean setDirty) {
         if (state == null) {
             throw new NullPointerException("State must not be null.");
         }
@@ -846,7 +867,7 @@ public abstract class NodeContainer implements NodeProgressListener {
             if (setDirty) {
                 setDirty();
             }
-            notifyStateChangeListeners(new NodeStateEvent(getID(), m_state));
+            notifyStateChangeListeners(new NodeStateEvent(getID(), m_state.mapToOldStyleState()));
             LOGGER.debug(this.getNameWithID() + " has new state: " + m_state);
         }
         return changesMade;
@@ -859,7 +880,7 @@ public abstract class NodeContainer implements NodeProgressListener {
      */
     protected void throwIllegalStateException() {
         String name = getNameWithID();
-        String state = "\"" + getState().toString() + "\"";
+        String state = "\"" + getInternalState().toString() + "\"";
         String methodName = "<unknown>";
         String clazz = "";
         StackTraceElement[] callStack = Thread.currentThread().getStackTrace();
@@ -1111,7 +1132,7 @@ public abstract class NodeContainer implements NodeProgressListener {
     /** @return Node name with status information.  */
     @Override
     public String toString() {
-        return getNameWithID() + " (" + getState() + ")";
+        return getNameWithID() + " (" + getInternalState() + ")";
     }
 
     /**
@@ -1367,7 +1388,7 @@ public abstract class NodeContainer implements NodeProgressListener {
      */
     protected void saveExecutionResult(
             final NodeContainerExecutionResult result) {
-        result.setSuccess(getState().equals(State.EXECUTED));
+        result.setSuccess(getInternalState().equals(InternalNodeContainerState.EXECUTED));
         result.setMessage(m_nodeMessage);
     }
 

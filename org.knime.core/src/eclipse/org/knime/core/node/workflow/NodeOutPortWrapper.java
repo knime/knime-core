@@ -58,6 +58,7 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
+import org.knime.core.node.workflow.NodeContainer.State;
 
 /**
  *
@@ -113,13 +114,12 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
             setPortName(name);
             m_underlyingPort.addNodeStateChangeListener(this);
             // if not null -> query state and throw event
-            notifyNodeStateChangeListener(new NodeStateEvent(
-                    new NodeID(0), m_underlyingPort.getNodeState()));
+            notifyNodeStateChangeListener(new NodeStateEvent(new NodeID(0),
+                                                             m_underlyingPort.getNodeState().mapToOldStyleState()));
         } else {
             setPortName(null);
             // if null: disconnected set state -> idle
-            notifyNodeStateChangeListener(new NodeStateEvent(
-                    new NodeID(0), NodeContainer.State.IDLE));
+            notifyNodeStateChangeListener(new NodeStateEvent(new NodeID(0), State.IDLE));
         }
     }
 
@@ -177,7 +177,7 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
      * {@inheritDoc}
      */
     @Override
-    public NodeContainer.State getNodeState() {
+    public InternalNodeContainerState getNodeState() {
         if (m_underlyingPort == null) {
             /*
              * Return the IDLE state if the underlying port is null.
@@ -194,7 +194,7 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
              * the SingleNodeContainer.
              * Meanwhile return IDLE.
              */
-            return NodeContainer.State.IDLE;
+            return InternalNodeContainerState.IDLE;
         }
         return m_underlyingPort.getNodeState();
     }
@@ -311,11 +311,7 @@ public class NodeOutPortWrapper extends NodePortAdaptor implements NodeOutPort {
      */
     @Override
     public void stateChanged(final NodeStateEvent state) {
-        if (state.getState().equals(NodeContainer.State.IDLE)
-                || state.getState().equals(NodeContainer.State.CONFIGURED)
-                || state.getState().equals(NodeContainer.State.EXECUTED)) {
-            notifyNodeStateChangeListener(state);
-        }
+        notifyNodeStateChangeListener(state);
     }
 
 }

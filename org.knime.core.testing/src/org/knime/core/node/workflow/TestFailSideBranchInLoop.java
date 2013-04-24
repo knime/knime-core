@@ -21,18 +21,14 @@
  * History
  *   19.06.2012 (wiswedel): created
  */
-package org.knime.core.node.workflow.testFailSideBranchInLoop;
+package org.knime.core.node.workflow;
 
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeContainer.State;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowTestCase;
 
 /**
  *
  * @author wiswedel, University of Konstanz
  */
-public class FailSideBranchInLoop extends WorkflowTestCase {
+public class TestFailSideBranchInLoop extends WorkflowTestCase {
 
     private NodeID m_dataGen2;
     private NodeID m_loopStart3;
@@ -51,34 +47,34 @@ public class FailSideBranchInLoop extends WorkflowTestCase {
     }
 
     public void disabledBug3292testExecuteFlowWithUnconfiguredCSVWriter() throws Exception {
-        checkState(m_dataGen2, State.CONFIGURED);
-        checkState(m_loopEnd4, State.CONFIGURED);
-        checkState(m_csvWriterInLoop13, State.IDLE);
+        checkState(m_dataGen2, InternalNodeContainerState.CONFIGURED);
+        checkState(m_loopEnd4, InternalNodeContainerState.CONFIGURED);
+        checkState(m_csvWriterInLoop13, InternalNodeContainerState.IDLE);
         getManager().executeUpToHere(m_loopEnd4);
         final NodeContainer loopEndNC = getManager().getNodeContainer(m_loopEnd4);
         waitWhile(loopEndNC, new Hold() {
 
             @Override
             protected boolean shouldHold() {
-                return loopEndNC.getState().executionInProgress();
+                return loopEndNC.getNodeContainerState().isExecutionInProgress();
             }
             @Override
             protected int getSecondsToWaitAtMost() {
                 return 2;
             }
         });
-        checkState(m_loopEnd4, State.CONFIGURED);
-        checkState(m_loopStart3, State.EXECUTED);
+        checkState(m_loopEnd4, InternalNodeContainerState.CONFIGURED);
+        checkState(m_loopStart3, InternalNodeContainerState.EXECUTED);
     }
 
     public void testExecuteFlowNoCSVWriter() throws Exception {
-        checkState(m_dataGen2, State.CONFIGURED);
-        checkState(m_loopEnd4, State.CONFIGURED);
+        checkState(m_dataGen2, InternalNodeContainerState.CONFIGURED);
+        checkState(m_loopEnd4, InternalNodeContainerState.CONFIGURED);
         deleteConnection(m_csvWriterInLoop13, 1);
-        checkState(m_csvWriterInLoop13, State.IDLE);
+        checkState(m_csvWriterInLoop13, InternalNodeContainerState.IDLE);
         executeAllAndWait();
-        checkState(m_loopEnd4, State.EXECUTED);
-        checkState(m_loopStart3, State.EXECUTED);
+        checkState(m_loopEnd4, InternalNodeContainerState.EXECUTED);
+        checkState(m_loopStart3, InternalNodeContainerState.EXECUTED);
     }
 
 }

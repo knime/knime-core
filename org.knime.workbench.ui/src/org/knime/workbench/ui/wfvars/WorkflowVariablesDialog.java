@@ -28,6 +28,7 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
@@ -90,8 +91,7 @@ public class WorkflowVariablesDialog extends Dialog {
 
             @Override
             public void stateChanged(final NodeStateEvent state) {
-                final boolean inProgress = !state.getState()
-                    .executionInProgress();
+                final boolean inProgress = !m_workflow.getNodeContainerState().isExecutionInProgress();
                 // switch to SWT thread
                 Display.getDefault().asyncExec(new Runnable() {
                     /**
@@ -266,7 +266,7 @@ public class WorkflowVariablesDialog extends Dialog {
         // have to disable the OK button in case the workflow is running
         super.create();
         // update button state...
-        setEditable(!m_workflow.getState().executionInProgress());
+        setEditable(!m_workflow.getNodeContainerState().isExecutionInProgress());
     }
 
     private int openConfirmationDialog() {
@@ -291,7 +291,7 @@ public class WorkflowVariablesDialog extends Dialog {
 
     private void addWorkflowVariable() {
         WorkflowVariablesEditDialog dialog = new WorkflowVariablesEditDialog();
-        if (dialog.open() == Dialog.CANCEL) {
+        if (dialog.open() == Window.CANCEL) {
             // if the user has canceled the dialog there is nothing left to do
             return;
         }
@@ -322,7 +322,7 @@ public class WorkflowVariablesDialog extends Dialog {
         WorkflowVariablesEditDialog dialog = new WorkflowVariablesEditDialog();
         dialog.create();
         dialog.loadFrom(selectedVar);
-        if (dialog.open() == Dialog.CANCEL) {
+        if (dialog.open() == Window.CANCEL) {
             // if the user has canceled the dialog there is nothing left to do
             return;
         } // else replace it...

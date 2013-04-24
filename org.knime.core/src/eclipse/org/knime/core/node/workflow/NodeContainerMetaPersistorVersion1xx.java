@@ -55,7 +55,6 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodePersistorVersion1xx;
 import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
@@ -81,7 +80,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
 
     private NodeUIInformation m_uiInfo;
 
-    private State m_state = State.IDLE;
+    private InternalNodeContainerState m_state = InternalNodeContainerState.IDLE;
 
     private NodeMessage m_nodeMessage;
 
@@ -176,7 +175,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
 
     /** {@inheritDoc} */
     @Override
-    public State getState() {
+    public InternalNodeContainerState getState() {
         return m_state;
     }
 
@@ -289,7 +288,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
             case EXECUTED:
             case EXECUTINGREMOTELY:
                 if (getLoadHelper().isTemplateFlow()) {
-                    m_state = NodeContainer.State.CONFIGURED;
+                    m_state = InternalNodeContainerState.CONFIGURED;
                 }
                 break;
             default:
@@ -297,12 +296,12 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
             }
         } catch (InvalidSettingsException e) {
             String error = "Can't restore node's state, fallback to "
-                + State.IDLE + ": " + e.getMessage();
+                + InternalNodeContainerState.IDLE + ": " + e.getMessage();
             loadResult.addError(error);
             getLogger().debug(error, e);
             setDirtyAfterLoad();
             isResetRequired = true;
-            m_state = State.IDLE;
+            m_state = InternalNodeContainerState.IDLE;
         }
         try {
             if (!getLoadHelper().isTemplateFlow()) {
@@ -390,7 +389,7 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
      * @return The state
      * @throws InvalidSettingsException In case of errors reading the argument
      */
-    protected State loadState(final NodeSettingsRO settings,
+    protected InternalNodeContainerState loadState(final NodeSettingsRO settings,
             final NodeSettingsRO parentSettings)
             throws InvalidSettingsException {
         boolean isOldAutoExecutable = false;
@@ -407,11 +406,11 @@ class NodeContainerMetaPersistorVersion1xx implements NodeContainerMetaPersistor
         boolean isExecuted = parentSettings.getBoolean("isExecuted");
         boolean isConfigured = parentSettings.getBoolean("isConfigured");
         if (isExecuted && !isOldAutoExecutable) {
-            return State.EXECUTED;
+            return InternalNodeContainerState.EXECUTED;
         } else if (isConfigured) {
-            return State.CONFIGURED;
+            return InternalNodeContainerState.CONFIGURED;
         } else {
-            return State.IDLE;
+            return InternalNodeContainerState.IDLE;
         }
     }
 

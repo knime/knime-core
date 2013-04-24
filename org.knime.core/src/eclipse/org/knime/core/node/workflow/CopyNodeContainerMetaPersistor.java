@@ -56,7 +56,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
-import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 /**
@@ -73,7 +72,7 @@ implements NodeContainerMetaPersistor {
     private final String m_customDescription;
     private int m_nodeIDSuffix;
     private final NodeSettingsRO m_jobManagerSettings;
-    private final State m_state;
+    private final InternalNodeContainerState m_state;
     private final NodeMessage m_nodeMessage;
     private final NodeUIInformation m_uiInformation;
     private final boolean m_isDeletable;
@@ -103,13 +102,13 @@ implements NodeContainerMetaPersistor {
             NodeExecutionJobManagerPool.saveJobManager(orig, jobMgrSettings);
         }
         m_jobManagerSettings = jobMgrSettings;
-        switch (original.getState()) {
+        switch (original.getInternalState()) {
         case IDLE:
         case UNCONFIGURED_MARKEDFOREXEC:
-            m_state = State.IDLE;
+            m_state = InternalNodeContainerState.IDLE;
             break;
         default:
-            m_state = State.CONFIGURED;
+            m_state = InternalNodeContainerState.CONFIGURED;
         }
         m_nodeMessage = original.getNodeMessage();
         if (original.getUIInformation() != null) {
@@ -179,7 +178,7 @@ implements NodeContainerMetaPersistor {
 
     /** {@inheritDoc} */
     @Override
-    public State getState() {
+    public InternalNodeContainerState getState() {
         return m_state;
     }
 

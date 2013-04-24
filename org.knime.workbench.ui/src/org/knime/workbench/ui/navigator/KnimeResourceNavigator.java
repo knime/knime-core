@@ -232,7 +232,6 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
      */
     @Override
     public void stateChanged(final NodeStateEvent state) {
-        LOGGER.debug("state changed to " + state.getState());
         doRefresh(state.getSource());
     }
 

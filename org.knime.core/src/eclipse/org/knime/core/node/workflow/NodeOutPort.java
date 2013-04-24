@@ -97,7 +97,7 @@ public interface NodeOutPort extends NodePort, NodeStateChangeListener {
     /**
      * @return the state of the node owning this port.
      */
-    public NodeContainer.State getNodeState();
+    public InternalNodeContainerState getNodeState();
 
 
     /**

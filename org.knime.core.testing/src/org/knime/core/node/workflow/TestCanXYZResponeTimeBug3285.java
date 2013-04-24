@@ -21,21 +21,19 @@
  * History
  *   01.11.2008 (wiswedel): created
  */
-package org.knime.core.node.workflow.testCanXYZResponeTimeBug3285;
+package org.knime.core.node.workflow;
 
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowTestCase;
 import org.knime.testing.node.blocking.BlockingRepository;
 
 /**
  *
  * @author wiswedel, University of Konstanz
  */
-public class CanXYZResponseTimeBug3285 extends WorkflowTestCase {
+public class TestCanXYZResponeTimeBug3285 extends WorkflowTestCase {
 
     /**  */
     private static final long MAX_TIME_MS = 250L;
@@ -63,8 +61,8 @@ public class CanXYZResponseTimeBug3285 extends WorkflowTestCase {
     }
 
     public void testCanXYZ() throws Exception {
-        checkState(m_dataGen1, State.CONFIGURED);
-        checkState(m_tableView98, State.CONFIGURED);
+        checkState(m_dataGen1, InternalNodeContainerState.CONFIGURED);
+        checkState(m_tableView98, InternalNodeContainerState.CONFIGURED);
         long time = System.currentTimeMillis();
         WorkflowManager m = getManager();
         assertTrue(m.canAddConnection(m_dataGen1, 1, m_tableView98, 1));
@@ -85,8 +83,8 @@ public class CanXYZResponseTimeBug3285 extends WorkflowTestCase {
 
     public void testCanXYZAfterExecute() throws Exception {
         executeAllAndWait();
-        checkState(m_dataGen1, State.EXECUTED);
-        checkState(m_tableView98, State.EXECUTED);
+        checkState(m_dataGen1, InternalNodeContainerState.EXECUTED);
+        checkState(m_tableView98, InternalNodeContainerState.EXECUTED);
         long time = System.currentTimeMillis();
         WorkflowManager m = getManager();
         assertTrue(m.canAddConnection(m_dataGen1, 1, m_tableView98, 1));
@@ -107,8 +105,8 @@ public class CanXYZResponseTimeBug3285 extends WorkflowTestCase {
 
     public void testShutdownAfterExecute() throws Exception {
         executeAllAndWait();
-        checkState(m_dataGen1, State.EXECUTED);
-        checkState(m_tableView98, State.EXECUTED);
+        checkState(m_dataGen1, InternalNodeContainerState.EXECUTED);
+        checkState(m_tableView98, InternalNodeContainerState.EXECUTED);
         long time = System.currentTimeMillis();
         WorkflowManager m = getManager();
         m.shutdown();
@@ -129,15 +127,15 @@ public class CanXYZResponseTimeBug3285 extends WorkflowTestCase {
         WorkflowManager m = getManager();
         m.addConnection(m_dataGen1, 1, m_lockProgrammatically100, 1);
         m.addConnection(m_lockProgrammatically100, 1, m_firstSplitter2, 1);
-        checkState(m_dataGen1, State.CONFIGURED);
-        checkState(m_tableView98, State.CONFIGURED);
+        checkState(m_dataGen1, InternalNodeContainerState.CONFIGURED);
+        checkState(m_tableView98, InternalNodeContainerState.CONFIGURED);
         ReentrantLock execLock = BlockingRepository.get(LOCK_ID);
         execLock.lock();
         try {
             m.executeUpToHere(m_tableView98);
             // can't tell about the data generator, but the remaining three
             // should be in some executing state
-            checkState(m_tableView98, State.MARKEDFOREXEC);
+            checkState(m_tableView98, InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
             long time = System.currentTimeMillis();
             assertFalse(m.canAddConnection(m_dataGen1, 1, m_tableView98, 1));
             assertFalse(m.canExecuteNode(m_dataGen1));
@@ -165,14 +163,14 @@ public class CanXYZResponseTimeBug3285 extends WorkflowTestCase {
         WorkflowManager m = getManager();
         m.addConnection(m_dataGen1, 1, m_failInExec99, 1);
         m.addConnection(m_failInExec99, 1, m_firstSplitter2, 1);
-        checkState(m_dataGen1, State.CONFIGURED);
-        checkState(m_tableView98, State.CONFIGURED);
+        checkState(m_dataGen1, InternalNodeContainerState.CONFIGURED);
+        checkState(m_tableView98, InternalNodeContainerState.CONFIGURED);
         long time = System.currentTimeMillis();
         m.executeUpToHere(m_tableView98);
         waitWhileNodeInExecution(m_tableView98);
         waitWhileNodeInExecution(m_failInExec99);
-        checkState(m_tableView98, State.CONFIGURED);
-        checkState(m_dataGen1, State.EXECUTED);
+        checkState(m_tableView98, InternalNodeContainerState.CONFIGURED);
+        checkState(m_dataGen1, InternalNodeContainerState.EXECUTED);
         time = System.currentTimeMillis() - time;
         assertTrue(String.format("Tests on workflow took too long (%d ms but limit at %d)", time, MAX_TIME_MS), time <= MAX_TIME_MS);
     }

@@ -333,8 +333,9 @@ public final class SingleNodeContainer extends NodeContainer {
     @Override
     void setJobManager(final NodeExecutionJobManager je) {
         synchronized (m_nodeMutex) {
-            switch (getState()) {
-            case QUEUED:
+            switch (getInternalState()) {
+            case CONFIGURED_QUEUED:
+            case EXECUTED_QUEUED:
             case PREEXECUTE:
             case EXECUTING:
             case EXECUTINGREMOTELY:
@@ -373,47 +374,47 @@ public final class SingleNodeContainer extends NodeContainer {
             }
             boolean prevInactivity = isInactive();
             // perform action
-            switch (getState()) {
+            switch (getInternalState()) {
             case IDLE:
                 if (nodeConfigure(inObjectSpecs)) {
-                    setState(State.CONFIGURED);
+                    setInternalState(InternalNodeContainerState.CONFIGURED);
                 } else {
-                    setState(State.IDLE);
+                    setInternalState(InternalNodeContainerState.IDLE);
                 }
                 break;
             case UNCONFIGURED_MARKEDFOREXEC:
                 if (nodeConfigure(inObjectSpecs)) {
-                    setState(State.MARKEDFOREXEC);
+                    setInternalState(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
                 } else {
-                    setState(State.UNCONFIGURED_MARKEDFOREXEC);
+                    setInternalState(InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC);
                 }
                 break;
             case CONFIGURED:
                 // m_node.reset();
                 boolean success = nodeConfigure(inObjectSpecs);
                 if (success) {
-                    setState(State.CONFIGURED);
+                    setInternalState(InternalNodeContainerState.CONFIGURED);
                 } else {
                     // m_node.reset();
-                    setState(State.IDLE);
+                    setInternalState(InternalNodeContainerState.IDLE);
                 }
                 break;
-            case MARKEDFOREXEC:
+            case CONFIGURED_MARKEDFOREXEC:
                 // these are dangerous - otherwise re-queued loop-ends are
                 // reset!
                 // m_node.reset();
                 success = nodeConfigure(inObjectSpecs);
                 if (success) {
-                    setState(State.MARKEDFOREXEC);
+                    setInternalState(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
                 } else {
                     // m_node.reset();
-                    setState(State.UNCONFIGURED_MARKEDFOREXEC);
+                    setInternalState(InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC);
                 }
                 break;
             case EXECUTINGREMOTELY: // this should only happen during load
                 success = nodeConfigure(inObjectSpecs);
                 if (!success) {
-                    setState(State.IDLE);
+                    setInternalState(InternalNodeContainerState.IDLE);
                 }
                 break;
             default:
@@ -422,10 +423,10 @@ public final class SingleNodeContainer extends NodeContainer {
             // if state stayed the same but inactivity of node changed
             // fake a state change to make sure it's displayed properly
             if (prevInactivity != isInactive()) {
-                State oldSt = this.getState();
-                setState(State.IDLE.equals(oldSt) ? State.CONFIGURED
-                        : State.IDLE);
-                setState(oldSt);
+                InternalNodeContainerState oldSt = this.getInternalState();
+                setInternalState(InternalNodeContainerState.IDLE.equals(oldSt) ? InternalNodeContainerState.CONFIGURED
+                        : InternalNodeContainerState.IDLE);
+                setInternalState(oldSt);
                 return true;
             }
             // compare old and new specs
@@ -474,9 +475,10 @@ public final class SingleNodeContainer extends NodeContainer {
      */
     @Override
     boolean isResetable() {
-        switch (getState()) {
+        switch (getInternalState()) {
         case EXECUTED:
-        case MARKEDFOREXEC:
+        case EXECUTED_MARKEDFOREXEC:
+        case CONFIGURED_MARKEDFOREXEC:
         case UNCONFIGURED_MARKEDFOREXEC:
         case CONFIGURED:
             return true;
@@ -489,7 +491,7 @@ public final class SingleNodeContainer extends NodeContainer {
     @Override
     boolean canPerformReset() {
         synchronized (m_nodeMutex) {
-            switch (getState()) {
+            switch (getInternalState()) {
             case EXECUTED:
                 return true;
             default:
@@ -503,19 +505,20 @@ public final class SingleNodeContainer extends NodeContainer {
      */
     void reset() {
         synchronized (m_nodeMutex) {
-            switch (getState()) {
+            switch (getInternalState()) {
             case EXECUTED:
+            case EXECUTED_MARKEDFOREXEC:
                 m_node.reset();
                 clearFileStoreHandler();
                 cleanOutPorts(false);
                 // After reset we need explicit configure!
-                setState(State.IDLE);
+                setInternalState(InternalNodeContainerState.IDLE);
                 return;
-            case MARKEDFOREXEC:
-                setState(State.CONFIGURED);
+            case CONFIGURED_MARKEDFOREXEC:
+                setInternalState(InternalNodeContainerState.CONFIGURED);
                 return;
             case UNCONFIGURED_MARKEDFOREXEC:
-                setState(State.IDLE);
+                setInternalState(InternalNodeContainerState.IDLE);
                 return;
             case CONFIGURED:
                 /*
@@ -524,7 +527,7 @@ public final class SingleNodeContainer extends NodeContainer {
                  */
                 m_node.reset();
                 clearFileStoreHandler();
-                setState(State.IDLE);
+                setInternalState(InternalNodeContainerState.IDLE);
                 return;
             default:
                 throwIllegalStateException();
@@ -559,23 +562,23 @@ public final class SingleNodeContainer extends NodeContainer {
     void markForExecution(final boolean flag) {
         synchronized (m_nodeMutex) {
             if (flag) {  // we want to mark the node for execution!
-                switch (getState()) {
+                switch (getInternalState()) {
                 case CONFIGURED:
-                    setState(State.MARKEDFOREXEC);
+                    setInternalState(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
                     return;
                 case IDLE:
-                    setState(State.UNCONFIGURED_MARKEDFOREXEC);
+                    setInternalState(InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC);
                     return;
                 default:
                     throwIllegalStateException();
                 }
             } else {  // we want to remove the mark for execution
-                switch (getState()) {
-                case MARKEDFOREXEC:
-                    setState(State.CONFIGURED);
+                switch (getInternalState()) {
+                case CONFIGURED_MARKEDFOREXEC:
+                    setInternalState(InternalNodeContainerState.CONFIGURED);
                     return;
                 case UNCONFIGURED_MARKEDFOREXEC:
-                    setState(State.IDLE);
+                    setInternalState(InternalNodeContainerState.IDLE);
                     return;
                 default:
                     throwIllegalStateException();
@@ -585,17 +588,17 @@ public final class SingleNodeContainer extends NodeContainer {
     }
 
     /**
-     * Mark underlying, executed node so that it can be re-executed
-     * (= update state accordingly). Used in loops to execute start
-     * more than once and when reset/configure is skipped in loop body.
+     * Mark underlying, executed node so that it can be re-executed (= update state accordingly).
+     * - Used in loops to execute start more than once and when reset/configure is skipped in loop body.
+     * - Used for re-execution of interactive nodes.
      *
      * @throws IllegalStateException in case of illegal entry state.
      */
-    void markForReExecutionInLoop() {
+    void markForReExecution() {
         synchronized (m_nodeMutex) {
-            switch (getState()) {
+            switch (getInternalState()) {
             case EXECUTED:
-                setState(State.MARKEDFOREXEC);
+                setInternalState(InternalNodeContainerState.EXECUTED_MARKEDFOREXEC);
                 return;
             default:
                 throwIllegalStateException();
@@ -607,14 +610,18 @@ public final class SingleNodeContainer extends NodeContainer {
     @Override
     void cancelExecution() {
         synchronized (m_nodeMutex) {
-            switch (getState()) {
+            switch (getInternalState()) {
             case UNCONFIGURED_MARKEDFOREXEC:
-                setState(State.IDLE);
+                setInternalState(InternalNodeContainerState.IDLE);
                 break;
-            case MARKEDFOREXEC:
-                setState(State.CONFIGURED);
+            case CONFIGURED_MARKEDFOREXEC:
+                setInternalState(InternalNodeContainerState.CONFIGURED);
                 break;
-            case QUEUED:
+            case EXECUTED_MARKEDFOREXEC:
+                setInternalState(InternalNodeContainerState.EXECUTED);
+                break;
+            case CONFIGURED_QUEUED:
+            case EXECUTED_QUEUED:
                 // m_executionFuture has not yet started or if it has started,
                 // it will not hand off to node implementation (otherwise it
                 // would be executing)
@@ -623,7 +630,11 @@ public final class SingleNodeContainer extends NodeContainer {
                 assert job != null : "node is queued but no job represents "
                     + "the execution task (is null)";
                 job.cancel();
-                setState(State.CONFIGURED);
+                if (InternalNodeContainerState.CONFIGURED_QUEUED.equals(getInternalState())) {
+                    setInternalState(InternalNodeContainerState.CONFIGURED);
+                } else {
+                    setInternalState(InternalNodeContainerState.EXECUTED);
+                }
                 break;
             case EXECUTING:
                 // future is running in thread pool, use ordinary cancel policy
@@ -645,7 +656,7 @@ public final class SingleNodeContainer extends NodeContainer {
                     // we can't decide on whether this node is now IDLE or
                     // CONFIGURED -- we rely on the parent to call configure
                     // (pessimistic guess here that node was not configured)
-                    setState(State.IDLE);
+                    setInternalState(InternalNodeContainerState.IDLE);
                 } else {
                     getProgressMonitor().setExecuteCanceled();
                     job.cancel();
@@ -655,7 +666,7 @@ public final class SingleNodeContainer extends NodeContainer {
                 // Too late - do nothing.
                 break;
             default:
-                LOGGER.warn("Strange state " + getState()
+                LOGGER.warn("Strange state " + getInternalState()
                         + " encountered in cancelExecution().");
             }
         }
@@ -667,9 +678,9 @@ public final class SingleNodeContainer extends NodeContainer {
         synchronized (m_nodeMutex) {
             NodeExecutionJob job = getExecutionJob();
             if (job != null && job.isSavedForDisconnect()) {
-                assert getState().executionInProgress();
+                assert getInternalState().isExecutionInProgress();
                 findJobManager().disconnect(job);
-            } else if (getState().executionInProgress()) {
+            } else if (getInternalState().isExecutionInProgress()) {
                 cancelExecution();
             }
             super.performShutdown();
@@ -686,10 +697,11 @@ public final class SingleNodeContainer extends NodeContainer {
     void mimicRemotePreExecute() {
         synchronized (m_nodeMutex) {
             getProgressMonitor().reset();
-            switch (getState()) {
-            case MARKEDFOREXEC:
+            switch (getInternalState()) {
+            case EXECUTED_MARKEDFOREXEC:
+            case CONFIGURED_MARKEDFOREXEC:
             case UNCONFIGURED_MARKEDFOREXEC:
-                setState(State.PREEXECUTE);
+                setInternalState(InternalNodeContainerState.PREEXECUTE);
                 break;
             case EXECUTED:
                 // ignore executed nodes
@@ -704,9 +716,9 @@ public final class SingleNodeContainer extends NodeContainer {
     @Override
     void mimicRemoteExecuting() {
         synchronized (m_nodeMutex) {
-            switch (getState()) {
+            switch (getInternalState()) {
             case PREEXECUTE:
-                setState(State.EXECUTINGREMOTELY);
+                setInternalState(InternalNodeContainerState.EXECUTINGREMOTELY);
                 break;
             case EXECUTED:
                 // ignore executed nodes
@@ -721,11 +733,11 @@ public final class SingleNodeContainer extends NodeContainer {
     @Override
     void mimicRemotePostExecute() {
         synchronized (m_nodeMutex) {
-            switch (getState()) {
+            switch (getInternalState()) {
             case PREEXECUTE: // in case of errors, e.g. flow stack problems
                              // encountered during doBeforeExecution
             case EXECUTINGREMOTELY:
-                setState(State.POSTEXECUTE);
+                setInternalState(InternalNodeContainerState.POSTEXECUTE);
                 break;
             case EXECUTED:
                 // ignore executed nodes
@@ -741,9 +753,9 @@ public final class SingleNodeContainer extends NodeContainer {
     void mimicRemoteExecuted(final NodeContainerExecutionStatus status) {
         boolean success = status.isSuccess();
         synchronized (m_nodeMutex) {
-            switch (getState()) {
+            switch (getInternalState()) {
             case POSTEXECUTE:
-                setState(success ? State.EXECUTED : State.IDLE);
+                setInternalState(success ? InternalNodeContainerState.EXECUTED : InternalNodeContainerState.IDLE);
                 break;
             case EXECUTED:
                 // ignore executed nodes
@@ -759,9 +771,10 @@ public final class SingleNodeContainer extends NodeContainer {
     boolean performStateTransitionPREEXECUTE() {
         synchronized (m_nodeMutex) {
             getProgressMonitor().reset();
-            switch (getState()) {
-            case QUEUED:
-                setState(State.PREEXECUTE);
+            switch (getInternalState()) {
+            case EXECUTED_QUEUED:
+            case CONFIGURED_QUEUED:
+                setInternalState(InternalNodeContainerState.PREEXECUTE);
                 return true;
             default:
                 // ignore any other state: other states indicate that the node
@@ -770,7 +783,7 @@ public final class SingleNodeContainer extends NodeContainer {
                 // typically from the UI thread)
                 if (!Thread.currentThread().isInterrupted()) {
                     LOGGER.debug("Execution of node " + getNameWithID()
-                            + " was probably canceled (node is " + getState()
+                            + " was probably canceled (node is " + getInternalState()
                             + " during 'preexecute') but calling thread is not"
                             + " interrupted");
                 }
@@ -783,13 +796,13 @@ public final class SingleNodeContainer extends NodeContainer {
     @Override
     void performStateTransitionEXECUTING() {
         synchronized (m_nodeMutex) {
-            switch (getState()) {
+            switch (getInternalState()) {
             case PREEXECUTE:
                 m_node.clearLoopContext();
                 if (findJobManager() instanceof ThreadNodeExecutionJobManager) {
-                    setState(State.EXECUTING);
+                    setInternalState(InternalNodeContainerState.EXECUTING);
                 } else {
-                    setState(State.EXECUTINGREMOTELY);
+                    setInternalState(InternalNodeContainerState.EXECUTINGREMOTELY);
                 }
                 break;
             default:
@@ -802,12 +815,12 @@ public final class SingleNodeContainer extends NodeContainer {
     @Override
     void performStateTransitionPOSTEXECUTE() {
         synchronized (m_nodeMutex) {
-            switch (getState()) {
+            switch (getInternalState()) {
             case PREEXECUTE: // in case of errors, e.g. flow stack problems
                              // encountered during doBeforeExecution
             case EXECUTING:
             case EXECUTINGREMOTELY:
-                setState(State.POSTEXECUTE);
+                setInternalState(InternalNodeContainerState.POSTEXECUTE);
                 break;
             default:
                 throwIllegalStateException();
@@ -820,7 +833,7 @@ public final class SingleNodeContainer extends NodeContainer {
     void performStateTransitionEXECUTED(
             final NodeContainerExecutionStatus status) {
         synchronized (m_nodeMutex) {
-            switch (getState()) {
+            switch (getInternalState()) {
             case POSTEXECUTE:
                 IFileStoreHandler fsh = m_node.getFileStoreHandler();
                 if (fsh instanceof IWriteFileStoreHandler) {
@@ -836,11 +849,11 @@ public final class SingleNodeContainer extends NodeContainer {
                 }
                 if (status.isSuccess()) {
                     if (m_node.getLoopContext() == null) {
-                        setState(State.EXECUTED);
+                        setInternalState(InternalNodeContainerState.EXECUTED);
                     } else {
                         // loop not yet done - "stay" configured until done.
                         assert getLoopStatus().equals(LoopStatus.RUNNING);
-                        setState(State.MARKEDFOREXEC);
+                        setInternalState(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
                     }
                 } else {
                     // node will be configured in doAfterExecute.
@@ -850,7 +863,7 @@ public final class SingleNodeContainer extends NodeContainer {
                     m_node.reset();
                     clearFileStoreHandler();
                     setNodeMessage(oldMessage);
-                    setState(State.IDLE);
+                    setInternalState(InternalNodeContainerState.IDLE);
                 }
                 setExecutionJob(null);
                 break;
@@ -1048,9 +1061,9 @@ public final class SingleNodeContainer extends NodeContainer {
             }
             SingleNodeContainerPersistor persistor =
                 (SingleNodeContainerPersistor)nodePersistor;
-            State state = persistor.getMetaPersistor().getState();
-            setState(state, false);
-            if (state.equals(State.EXECUTED)) {
+            InternalNodeContainerState state = persistor.getMetaPersistor().getState();
+            setInternalState(state, false);
+            if (state.equals(InternalNodeContainerState.EXECUTED)) {
                 m_node.putOutputTablesIntoGlobalRepository(getParent()
                         .getGlobalTableRepository());
             }
@@ -1077,7 +1090,7 @@ public final class SingleNodeContainer extends NodeContainer {
             final NodeContainerExecutionResult execResult,
             final ExecutionMonitor exec, final LoadResult loadResult) {
         synchronized (m_nodeMutex) {
-            if (State.EXECUTED.equals(getState())) {
+            if (InternalNodeContainerState.EXECUTED.equals(getInternalState())) {
                 LOGGER.debug(getNameWithID()
                         + " is alredy executed; won't load execution result");
                 return;
@@ -1354,7 +1367,7 @@ public final class SingleNodeContainer extends NodeContainer {
      * @param enablePausing if true, pause is enabled. Otherwise disabled.
      */
     void pauseLoopExecution(final boolean enablePausing) {
-        if (getState().executionInProgress()) {
+        if (getInternalState().isExecutionInProgress()) {
             getNode().setPauseLoopExecution(enablePausing);
         }
     }
@@ -1472,9 +1485,8 @@ public final class SingleNodeContainer extends NodeContainer {
     public LoopStatus getLoopStatus() {
         if (this.isModelCompatibleTo(LoopEndNode.class)) {
             if ((getNode().getLoopContext() != null)
-                    || (getState().executionInProgress())) {
-                if ((getNode().getPauseLoopExecution())
-                        && (getState().equals(State.MARKEDFOREXEC))) {
+                    || (getInternalState().isExecutionInProgress())) {
+                if ((getNode().getPauseLoopExecution()) && (getInternalState().equals(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC))) {
                     return LoopStatus.PAUSED;
                 } else {
                     return LoopStatus.RUNNING;

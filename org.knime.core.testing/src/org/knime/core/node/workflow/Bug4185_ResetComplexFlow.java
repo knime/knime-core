@@ -21,17 +21,16 @@
  * History
  *   01.11.2008 (wiswedel): created
  */
-package org.knime.core.node.workflow.bug4185_ResetComplexFlow;
+package org.knime.core.node.workflow;
 
-import org.knime.core.node.workflow.NodeContainer.State;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowTestCase;
-
+import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
+import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
+import static org.knime.core.node.workflow.InternalNodeContainerState.IDLE;
 /**
  *
  * @author wiswedel, University of Konstanz
  */
-public class ResetComplexFlow extends WorkflowTestCase {
+public class Bug4185_ResetComplexFlow extends WorkflowTestCase {
 
     private NodeID m_javaEditStart;
     private NodeID m_javaEditEnd;
@@ -49,20 +48,20 @@ public class ResetComplexFlow extends WorkflowTestCase {
 
     public void testExecuteAllAndReset() throws Exception {
         executeAllAndWait();
-        checkState(getManager(), State.EXECUTED);
+        checkState(getManager(), EXECUTED);
         getManager().getParent().resetAndConfigureNode(getManager().getID());
-        checkState(getManager(), State.CONFIGURED);
-        checkState(m_javaEditStart, State.CONFIGURED);
-        checkState(m_javaEditEnd, State.CONFIGURED);
+        checkState(getManager(), CONFIGURED);
+        checkState(m_javaEditStart, CONFIGURED);
+        checkState(m_javaEditEnd, CONFIGURED);
     }
 
     public void testExecuteAllResetStart() throws Exception {
         executeAllAndWait();
-        checkState(getManager(), State.EXECUTED);
+        checkState(getManager(), EXECUTED);
         getManager().resetAndConfigureNode(m_javaEditStart);
-        checkState(getManager(), State.CONFIGURED);
-        checkState(m_javaEditStart, State.CONFIGURED);
-        checkState(m_javaEditEnd, State.CONFIGURED);
+        checkState(getManager(), CONFIGURED);
+        checkState(m_javaEditStart, CONFIGURED);
+        checkState(m_javaEditEnd, CONFIGURED);
     }
     
     public void testDeleteConnectionToMetaExecuteFirst() throws Exception {
@@ -76,12 +75,12 @@ public class ResetComplexFlow extends WorkflowTestCase {
     private void internalTestDeleteConnectionToMeta(final boolean executeFirst) throws Exception {
         if (executeFirst) {
             executeAllAndWait();
-            checkState(getManager(), State.EXECUTED);
+            checkState(getManager(), EXECUTED);
         }
         deleteConnection(m_metaMiddle, 0);
-        checkState(getManager(), State.IDLE);
-        checkState(m_javaEditStart, State.CONFIGURED, State.EXECUTED);
-        checkState(m_javaEditEnd, State.IDLE);
+        checkState(getManager(), IDLE);
+        checkState(m_javaEditStart, CONFIGURED, EXECUTED);
+        checkState(m_javaEditEnd, IDLE);
     }
     
 

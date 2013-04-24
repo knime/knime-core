@@ -21,22 +21,18 @@
  * History
  *   01.11.2008 (wiswedel): created
  */
-package org.knime.core.node.workflow.bug4175_endless_quickform;
+package org.knime.core.node.workflow;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import org.knime.core.node.workflow.NodeContainer.State;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowTestCase;
 import org.knime.core.quickform.in.QuickFormInputNode;
 
 /**
  *
  * @author wiswedel, University of Konstanz
  */
-public class Bug4175EndlessQuickform extends WorkflowTestCase {
+public class Bug4175_endless_quickform extends WorkflowTestCase {
 
     private NodeID m_quickFormBoolean;
     private NodeID m_tableViewEnd;
@@ -51,10 +47,10 @@ public class Bug4175EndlessQuickform extends WorkflowTestCase {
     }
 
     public void testExecuteFlow() throws Exception {
-        checkState(m_quickFormBoolean, State.CONFIGURED);
-        checkState(m_tableViewEnd, State.IDLE);
+        checkState(m_quickFormBoolean, InternalNodeContainerState.CONFIGURED);
+        checkState(m_tableViewEnd, InternalNodeContainerState.IDLE);
         executeAndWait(m_tableViewEnd);
-        checkState(m_tableViewEnd, State.EXECUTED);
+        checkState(m_tableViewEnd, InternalNodeContainerState.EXECUTED);
     }
     
     public void testStepExecute() throws Exception {
@@ -71,20 +67,20 @@ public class Bug4175EndlessQuickform extends WorkflowTestCase {
         assertNotNull(booleanIn);
         waitingWFM.executeUpToHere(m_quickFormBoolean);
         m.waitWhileInExecution(5, TimeUnit.SECONDS);
-        checkState(m_quickFormBoolean, State.EXECUTED);
-        checkState(m_tableViewEnd, State.IDLE);
+        checkState(m_quickFormBoolean, InternalNodeContainerState.EXECUTED);
+        checkState(m_tableViewEnd, InternalNodeContainerState.IDLE);
         m.stepExecutionUpToNodeType(QuickFormInputNode.class, QuickFormInputNode.NOT_HIDDEN_FILTER);
         m.waitWhileInExecution(5, TimeUnit.SECONDS);
-        checkState(m_tableViewEnd, State.EXECUTED);
+        checkState(m_tableViewEnd, InternalNodeContainerState.EXECUTED);
     }
 
     public void testStepExecuteAfterExecuteAll() throws Exception {
         long start = System.currentTimeMillis();
         executeAllAndWait();
-        checkState(m_tableViewEnd, State.EXECUTED);
+        checkState(m_tableViewEnd, InternalNodeContainerState.EXECUTED);
         WorkflowManager m = getManager();
         m.stepExecutionUpToNodeType(QuickFormInputNode.class, QuickFormInputNode.NOT_HIDDEN_FILTER);
-        checkState(m_tableViewEnd, State.EXECUTED);
+        checkState(m_tableViewEnd, InternalNodeContainerState.EXECUTED);
         long delay = System.currentTimeMillis() - start;
         if (delay > 2000L) {
             fail("took too long to execute: " + delay / 1000L + "s");

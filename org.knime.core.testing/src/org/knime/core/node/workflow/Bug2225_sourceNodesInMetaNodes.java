@@ -21,20 +21,18 @@
  * History
  *   01.11.2008 (wiswedel): created
  */
-package org.knime.core.node.workflow.bug2225_sourceNodesInMetaNodes;
+package org.knime.core.node.workflow;
 
 import java.util.Map;
 
-import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowTestCase;
 import org.knime.testing.node.executioncount.ExecutionCountNodeModel;
 
 /**
  *
  * @author wiswedel, University of Konstanz
  */
-public class Bug2225SourceInMetaInLoopTest extends WorkflowTestCase {
+public class Bug2225_sourceNodesInMetaNodes extends WorkflowTestCase {
 
     private NodeID m_loopStart;
     private NodeID m_loopEnd;
@@ -56,28 +54,28 @@ public class Bug2225SourceInMetaInLoopTest extends WorkflowTestCase {
     }
 
     public void testExecuteFlow() throws Exception {
-        checkState(m_loopStart, State.CONFIGURED);
-        checkState(m_tblView, State.CONFIGURED);
+        checkState(m_loopStart, InternalNodeContainerState.CONFIGURED);
+        checkState(m_tblView, InternalNodeContainerState.CONFIGURED);
         executeAndWait(m_loopEnd);
         waitWhileInExecution();
-        checkState(m_loopEnd, State.EXECUTED);
+        checkState(m_loopEnd, InternalNodeContainerState.EXECUTED);
         Map<NodeID, ExecutionCountNodeModel> counterNodes =
             getManager().findNodes(ExecutionCountNodeModel.class, true);
         int inCount = counterNodes.get(m_counterInLoop).getCounter();
 
-        checkState(m_counterInLoop, State.EXECUTED);
+        checkState(m_counterInLoop, InternalNodeContainerState.EXECUTED);
         assert inCount == 1 : "Expected one execution of source node: " + inCount;
         int outCount = counterNodes.get(m_counterOutLoop).getCounter();
 
-        checkState(m_counterOutLoop, State.CONFIGURED);
+        checkState(m_counterOutLoop, InternalNodeContainerState.CONFIGURED);
         assert outCount == 0 : "Expected no execution of unconnected node: "
             + outCount;
 
         executeAndWait(m_tblView);
-        checkState(m_tblView, State.EXECUTED);
+        checkState(m_tblView, InternalNodeContainerState.EXECUTED);
 
         outCount = counterNodes.get(m_counterOutLoop).getCounter();
-        checkState(m_counterOutLoop, State.EXECUTED);
+        checkState(m_counterOutLoop, InternalNodeContainerState.EXECUTED);
         assert outCount == 1 : "Expected no execution of unconnected node: "
             + outCount;
 

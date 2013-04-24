@@ -93,7 +93,7 @@ public final class NodeDialog {
     private final NodeDialogPane m_dialogPane;
 
     /** The underlying node container. */
-    private final NodeContainer m_node;
+    private final NodeContainer m_nodeContainer;
 
     /** The hidden dialog. */
     private final JDialog m_dialog;
@@ -112,14 +112,14 @@ public final class NodeDialog {
      * order to view the <code>NodeDialogPane</code>.
      *
      * @param pane this dialog's underlying pane
-     * @param node the underlying node
+     * @param nc the underlying node
      */
-    public NodeDialog(final NodeDialogPane pane, final NodeContainer node) {
-        m_node = node;
+    public NodeDialog(final NodeDialogPane pane, final NodeContainer nc) {
+        m_nodeContainer = nc;
         // keep node dialog pane and init this dialog
         m_dialogPane = pane;
 
-        m_dialog = initDialog("Dialog - " + node.getDisplayLabel());
+        m_dialog = initDialog("Dialog - " + nc.getDisplayLabel());
 
         // init OK and Cancel button
         JPanel control = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -321,9 +321,9 @@ public final class NodeDialog {
         assert (event != null);
         try {
             // validate settings first
-            if (!m_node.areDialogAndNodeSettingsEqual()) {
+            if (!m_nodeContainer.areDialogAndNodeSettingsEqual()) {
                 // if the node is executed
-                if (m_node.getState().equals(NodeContainer.State.EXECUTED)) {
+                if (m_nodeContainer.getNodeContainerState().isExecuted()) {
                     // show option pane with reset warning
                     int r = JOptionPane.showConfirmDialog(m_dialog,
                             "Node is executed. Do you want to reset it\n"
@@ -334,14 +334,14 @@ public final class NodeDialog {
                     // if reset can be performed
                     if (r == JOptionPane.OK_OPTION) {
                         // try to load dialog settings to the model
-                        m_node.applySettingsFromDialog();
+                        m_nodeContainer.applySettingsFromDialog();
                         return true;
                     } else {
                         return false;
                     }
                 }
                 // try to load dialog settings to the model
-                m_node.applySettingsFromDialog();
+                m_nodeContainer.applySettingsFromDialog();
                 return true;
             } else {
                 return true; // nothing done - everything ok!

@@ -21,18 +21,16 @@
  * History
  *   01.11.2008 (wiswedel): created
  */
-package org.knime.core.node.workflow.bug4149a3976_quickformexecutionwithmetanodes;
+package org.knime.core.node.workflow;
 
-import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowTestCase;
 import org.knime.core.quickform.in.QuickFormInputNode;
 
 /**
  *
  * @author wiswedel, University of Konstanz
  */
-public class QuickFormExecutionWithMetanodesTest extends WorkflowTestCase {
+public class Bug4149a3976_quickformexecutionwithmetanodes extends WorkflowTestCase {
 
     private NodeID m_end1;
     private NodeID m_end2;
@@ -51,9 +49,9 @@ public class QuickFormExecutionWithMetanodesTest extends WorkflowTestCase {
     public void testExecuteFlow() throws Exception {
     	getManager().stepExecutionUpToNodeType(QuickFormInputNode.class, QuickFormInputNode.NOT_HIDDEN_FILTER);
     	waitWhileInExecution();
-        checkState(m_end1, State.EXECUTED);
-        checkState(m_end2, State.EXECUTED);
-        checkState(m_end3, State.EXECUTED);
+        checkState(m_end1, InternalNodeContainerState.EXECUTED);
+        checkState(m_end2, InternalNodeContainerState.EXECUTED);
+        checkState(m_end3, InternalNodeContainerState.EXECUTED);
     }
 
     /** {@inheritDoc} */

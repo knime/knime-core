@@ -21,23 +21,24 @@
  * History
  *   01.11.2008 (wiswedel): created
  */
-package org.knime.core.node.workflow.chainofnodesoneblocking;
+package org.knime.core.node.workflow;
+
+import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED;
+import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC;
+import static org.knime.core.node.workflow.InternalNodeContainerState.CONFIGURED_QUEUED;
+import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTED;
+import static org.knime.core.node.workflow.InternalNodeContainerState.EXECUTING;
+import static org.knime.core.node.workflow.InternalNodeContainerState.PREEXECUTE;
 
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeContainer.State;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowTestCase;
 import org.knime.testing.node.blocking.BlockingRepository;
 
 /**
  *
  * @author wiswedel, University of Konstanz
  */
-public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
+public class Chainofnodesoneblocking extends WorkflowTestCase {
 
     private static final String LOCK_ID = "chainofnodesoneblocking";
     private NodeID m_dataGen;
@@ -59,13 +60,13 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
     }
 
     public void testExecuteNoBlocking() throws Exception {
-        checkState(m_dataGen, State.CONFIGURED);
-        checkState(m_blocker, State.CONFIGURED);
-        checkState(m_colFilter, State.CONFIGURED);
-        checkState(m_tblView, State.CONFIGURED);
+        checkState(m_dataGen, CONFIGURED);
+        checkState(m_blocker, CONFIGURED);
+        checkState(m_colFilter, CONFIGURED);
+        checkState(m_tblView, CONFIGURED);
 
         executeAndWait(m_tblView);
-        checkState(m_tblView, State.EXECUTED);
+        checkState(m_tblView, EXECUTED);
     }
 
     public void testBlockingStates() throws Exception {
@@ -76,11 +77,11 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
             m.executeUpToHere(m_tblView);
             // can't tell about the data generator, but the remaining three
             // should be in some executing state
-            checkState(m_blocker, State.MARKEDFOREXEC,
-                    State.QUEUED, State.PREEXECUTE, State.EXECUTING);
-            checkState(m_colFilter, State.MARKEDFOREXEC);
-            checkState(m_tblView, State.MARKEDFOREXEC);
-            assertTrue(m.getState().executionInProgress());
+            checkState(m_blocker, CONFIGURED_MARKEDFOREXEC,
+                    CONFIGURED_QUEUED, PREEXECUTE, EXECUTING);
+            checkState(m_colFilter, CONFIGURED_MARKEDFOREXEC);
+            checkState(m_tblView, CONFIGURED_MARKEDFOREXEC);
+            assertTrue(m.getNodeContainerState().isExecutionInProgress());
         } finally {
             execLock.unlock();
         }
@@ -94,17 +95,17 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
         execLock.lock();
         try {
             m.executeUpToHere(m_tblView);
-            checkState(m_blocker, State.MARKEDFOREXEC, State.EXECUTING);
+            checkState(m_blocker, CONFIGURED_MARKEDFOREXEC, EXECUTING);
             final NodeContainer blockerNC = m.getNodeContainer(m_blocker);
             waitWhile(blockerNC, new Hold() {
                 @Override
                 protected boolean shouldHold() {
-                    return blockerNC.getState().equals(State.MARKEDFOREXEC)
-                    || blockerNC.getState().equals(State.QUEUED)
-                    || blockerNC.getState().equals(State.PREEXECUTE);
+                    return blockerNC.getInternalState().equals(CONFIGURED_MARKEDFOREXEC)
+                    || blockerNC.getInternalState().equals(CONFIGURED_QUEUED)
+                    || blockerNC.getInternalState().equals(PREEXECUTE);
                 }
             });
-            checkState(m_blocker, State.EXECUTING);
+            checkState(m_blocker, EXECUTING);
 
             // test reset node
             assertFalse(m.canResetNode(m_blocker));
@@ -138,12 +139,12 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
             waitWhile(blockerNC, new Hold() {
                 @Override
                 protected boolean shouldHold() {
-                    return !blockerNC.getState().equals(State.CONFIGURED);
+                    return !blockerNC.getInternalState().equals(CONFIGURED);
                 }
             });
-            checkState(m_blocker, State.CONFIGURED);
-            checkState(m_colFilter, State.CONFIGURED);
-            checkState(m_tblView, State.CONFIGURED);
+            checkState(m_blocker, CONFIGURED);
+            checkState(m_colFilter, CONFIGURED);
+            checkState(m_tblView, CONFIGURED);
             assertTrue(m.canRemoveConnection(cc));
         } finally {
             execLock.unlock();
@@ -158,8 +159,8 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
         try {
             m.executeUpToHere(m_tblView);
 
-            checkState(m_colFilter, State.MARKEDFOREXEC);
-            checkState(m_tblView, State.MARKEDFOREXEC);
+            checkState(m_colFilter, CONFIGURED_MARKEDFOREXEC);
+            checkState(m_tblView, CONFIGURED_MARKEDFOREXEC);
 
             // test reset node
             assertFalse(m.canResetNode(m_colFilter));
@@ -197,11 +198,11 @@ public class ChainOfNodesOneBlockingTest extends WorkflowTestCase {
             }
 
             m.cancelExecution(m.getNodeContainer(m_colFilter));
-            checkState(m_colFilter, State.CONFIGURED);
-            checkState(m_tblView, State.CONFIGURED);
+            checkState(m_colFilter, CONFIGURED);
+            checkState(m_tblView, CONFIGURED);
 
-            checkState(m_blocker, State.MARKEDFOREXEC,
-                    State.QUEUED, State.PREEXECUTE, State.EXECUTING);
+            checkState(m_blocker, CONFIGURED_MARKEDFOREXEC,
+                    CONFIGURED_QUEUED, PREEXECUTE, EXECUTING);
         } finally {
             execLock.unlock();
         }

@@ -75,7 +75,7 @@ public class CancelWorkflowAction extends AbstractWorkflowAction {
     public boolean isEnabled() {
         if (super.isEnabled()) {
             WorkflowManager workflow = getWorkflow();
-            return workflow.getState().executionInProgress();
+            return workflow.getNodeContainerState().isExecutionInProgress();
         }
         return false;
     }

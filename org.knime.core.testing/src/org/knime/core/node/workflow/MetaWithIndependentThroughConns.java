@@ -21,18 +21,16 @@
  * History
  *   01.11.2008 (wiswedel): created
  */
-package org.knime.core.node.workflow.metaWithIndependentThroughConns;
+package org.knime.core.node.workflow;
 
-import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowTestCase;
 
 /**
  *
  * @author wiswedel, University of Konstanz
  */
-public class MetaWithIndependentThroughConnsTest extends WorkflowTestCase {
+public class MetaWithIndependentThroughConns extends WorkflowTestCase {
 
     private NodeID m_topSource;
     private NodeID m_bottomSource;
@@ -53,78 +51,78 @@ public class MetaWithIndependentThroughConnsTest extends WorkflowTestCase {
     }
 
     public void testStateOfMeta() throws Exception {
-        checkState(m_topSource, State.CONFIGURED);
-        checkState(m_bottomSource, State.CONFIGURED);
-        checkState(m_metaWithOnlyThrough, State.CONFIGURED);
+        checkState(m_topSource, InternalNodeContainerState.CONFIGURED);
+        checkState(m_bottomSource, InternalNodeContainerState.CONFIGURED);
+        checkState(m_metaWithOnlyThrough, InternalNodeContainerState.CONFIGURED);
         executeAllAndWait();
-        checkState(m_topSource, State.EXECUTED);
-        checkState(m_metaWithOnlyThrough, State.EXECUTED);
+        checkState(m_topSource, InternalNodeContainerState.EXECUTED);
+        checkState(m_metaWithOnlyThrough, InternalNodeContainerState.EXECUTED);
 
         // reset one sink -- no change
         getManager().resetAndConfigureNode(m_topSink);
-        checkState(m_metaWithOnlyThrough, State.EXECUTED);
+        checkState(m_metaWithOnlyThrough, InternalNodeContainerState.EXECUTED);
 
         // reset one source -- meta node reset
         getManager().resetAndConfigureNode(m_topSource);
-        checkState(m_metaWithOnlyThrough, State.CONFIGURED);
+        checkState(m_metaWithOnlyThrough, InternalNodeContainerState.CONFIGURED);
         // unconnected through connection -- no change
-        checkState(m_bottomSink, State.EXECUTED);
+        checkState(m_bottomSink, InternalNodeContainerState.EXECUTED);
 
         executeAllAndWait();
-        checkState(m_metaWithOnlyThrough, State.EXECUTED);
+        checkState(m_metaWithOnlyThrough, InternalNodeContainerState.EXECUTED);
         getManager().getParent().resetAndConfigureNode(getManager().getID());
-        checkState(m_metaWithOnlyThrough, State.CONFIGURED);
+        checkState(m_metaWithOnlyThrough, InternalNodeContainerState.CONFIGURED);
     }
 
     public void testPullExecutionFromSink() throws Exception {
-        checkState(m_topSource, State.CONFIGURED);
+        checkState(m_topSource, InternalNodeContainerState.CONFIGURED);
         executeAndWait(m_topSink);
-        checkState(m_topSink, State.EXECUTED);
-        checkState(m_bottomSource, State.CONFIGURED);
-        checkState(m_bottomSink, State.CONFIGURED);
+        checkState(m_topSink, InternalNodeContainerState.EXECUTED);
+        checkState(m_bottomSource, InternalNodeContainerState.CONFIGURED);
+        checkState(m_bottomSink, InternalNodeContainerState.CONFIGURED);
 
         getManager().resetAndConfigureNode(m_topSource);
-        checkState(m_metaWithOnlyThrough, State.CONFIGURED);
+        checkState(m_metaWithOnlyThrough, InternalNodeContainerState.CONFIGURED);
     }
 
     public void testExecuteAllThenDeleteOneSourceConnection() throws Exception {
         executeAllAndWait();
-        checkState(m_topSink, State.EXECUTED);
-        checkState(m_bottomSink, State.EXECUTED);
+        checkState(m_topSink, InternalNodeContainerState.EXECUTED);
+        checkState(m_bottomSink, InternalNodeContainerState.EXECUTED);
         // remove top connection
         getManager().removeConnection(getManager().getIncomingConnectionFor(
                 m_metaWithOnlyThrough, 0));
-        checkState(m_topSource, State.EXECUTED);
-        checkState(m_topSink, State.IDLE);
+        checkState(m_topSource, InternalNodeContainerState.EXECUTED);
+        checkState(m_topSink, InternalNodeContainerState.IDLE);
 
-        checkState(m_bottomSink, State.EXECUTED);
+        checkState(m_bottomSink, InternalNodeContainerState.EXECUTED);
     }
 
     public void testExecuteAllThenDeleteThroughConnection() throws Exception {
         executeAllAndWait();
-        checkState(m_topSink, State.EXECUTED);
-        checkState(m_bottomSink, State.EXECUTED);
+        checkState(m_topSink, InternalNodeContainerState.EXECUTED);
+        checkState(m_bottomSink, InternalNodeContainerState.EXECUTED);
         // remove top through connection
         WorkflowManager internalWFM = (WorkflowManager)(getManager()
                              .getNodeContainer(m_metaWithOnlyThrough));
         internalWFM.removeConnection(internalWFM.getIncomingConnectionFor(
                 m_metaWithOnlyThrough, 0));
-        checkState(m_topSource, State.EXECUTED);
-        checkState(m_bottomSource, State.EXECUTED);
-        checkState(m_topSink, State.IDLE);
-        checkState(m_bottomSink, State.EXECUTED);
+        checkState(m_topSource, InternalNodeContainerState.EXECUTED);
+        checkState(m_bottomSource, InternalNodeContainerState.EXECUTED);
+        checkState(m_topSink, InternalNodeContainerState.IDLE);
+        checkState(m_bottomSink, InternalNodeContainerState.EXECUTED);
     }
 
     public void testExecuteAllThenResetOneSource() throws Exception {
         executeAllAndWait();
-        checkState(m_topSink, State.EXECUTED);
-        checkState(m_bottomSink, State.EXECUTED);
+        checkState(m_topSink, InternalNodeContainerState.EXECUTED);
+        checkState(m_bottomSink, InternalNodeContainerState.EXECUTED);
 
         getManager().resetAndConfigureNode(m_bottomSource);
-        checkState(m_topSource, State.EXECUTED);
-        checkState(m_topSink, State.EXECUTED);
+        checkState(m_topSource, InternalNodeContainerState.EXECUTED);
+        checkState(m_topSink, InternalNodeContainerState.EXECUTED);
 
-        checkState(m_bottomSink, State.CONFIGURED);
+        checkState(m_bottomSink, InternalNodeContainerState.CONFIGURED);
     }
 
     public void testInsertConnection() throws Exception {
@@ -134,19 +132,19 @@ public class MetaWithIndependentThroughConnsTest extends WorkflowTestCase {
                 m_metaWithOnlyThrough, 0));
 
         executeAllAndWait();
-        checkState(m_topSink, State.IDLE);
-        checkState(m_bottomSource, State.EXECUTED);
-        checkState(m_bottomSink, State.EXECUTED);
+        checkState(m_topSink, InternalNodeContainerState.IDLE);
+        checkState(m_bottomSource, InternalNodeContainerState.EXECUTED);
+        checkState(m_bottomSink, InternalNodeContainerState.EXECUTED);
 
         getManager().addConnection(m_bottomSource, 1, m_metaWithOnlyThrough, 0);
 
-        checkState(m_topSource, State.EXECUTED);
-        checkState(m_bottomSource, State.EXECUTED);
-        checkState(m_bottomSink, State.EXECUTED);
-        checkState(m_topSink, State.CONFIGURED);
+        checkState(m_topSource, InternalNodeContainerState.EXECUTED);
+        checkState(m_bottomSource, InternalNodeContainerState.EXECUTED);
+        checkState(m_bottomSink, InternalNodeContainerState.EXECUTED);
+        checkState(m_topSink, InternalNodeContainerState.CONFIGURED);
 
         executeAllAndWait();
-        checkState(m_topSink, State.EXECUTED);
+        checkState(m_topSink, InternalNodeContainerState.EXECUTED);
 
     }
 

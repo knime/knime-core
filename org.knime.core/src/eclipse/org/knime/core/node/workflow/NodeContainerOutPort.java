@@ -59,7 +59,6 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.ViewUtils;
-import org.knime.core.node.workflow.NodeContainer.State;
 
 /**
  * The implementation of an OutPort of a SingleNodeContainer - e.g. a "real"
@@ -116,14 +115,14 @@ public class NodeContainerOutPort extends NodePortAdaptor
         // the following test allows SingleNodeContainers/WFMs to hide
         // the PortObjects after a Node.execute() until the state of the
         // SNC/WFM has been adjusted to "EXECUTED"
-        return m_snc.getState().equals(State.EXECUTED)
+        return m_snc.getInternalState().equals(InternalNodeContainerState.EXECUTED)
                       ? m_snc.getNode().getOutputObject(getPortIndex()) : null;
     }
 
     /** {@inheritDoc} */
     @Override
     public String getPortSummary() {
-        return m_snc.getState().equals(State.EXECUTED)
+        return m_snc.getInternalState().equals(InternalNodeContainerState.EXECUTED)
             ? m_snc.getNode().getOutputObjectSummary(getPortIndex()) : null;
     }
 
@@ -137,8 +136,8 @@ public class NodeContainerOutPort extends NodePortAdaptor
      * {@inheritDoc}
      */
     @Override
-    public State getNodeState() {
-        return m_snc.getState();
+    public InternalNodeContainerState getNodeState() {
+        return m_snc.getInternalState();
     }
 
     /**
@@ -279,18 +278,14 @@ public class NodeContainerOutPort extends NodePortAdaptor
      */
     @Override
     public void stateChanged(final NodeStateEvent state) {
-        if (state.getState().equals(NodeContainer.State.IDLE)
-                || state.getState().equals(NodeContainer.State.CONFIGURED)
-                || state.getState().equals(NodeContainer.State.EXECUTED)) {
+        if (!m_snc.getNodeContainerState().isExecutionInProgress()) {
             notifyNodeStateChangeListener(state);
             if (m_portView != null) {
                 try {
-                    m_portView.update(getPortObject(), getPortObjectSpec(),
-                            getFlowObjectStack(),
+                    m_portView.update(getPortObject(), getPortObjectSpec(), getFlowObjectStack(),
                             m_snc.getNode().getCredentialsProvider());
                 } catch (Exception e) {
-                    NodeLogger.getLogger(getClass()).error(
-                            "Failed to update port view.", e);
+                    NodeLogger.getLogger(getClass()).error("Failed to update port view.", e);
                 }
             }
         }

@@ -21,19 +21,17 @@
  * History
  *   01.11.2008 (wiswedel): created
  */
-package org.knime.core.node.workflow.simplechainofnodes;
+package org.knime.core.node.workflow;
 
 import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowTestCase;
 
 /**
  *
  * @author wiswedel, University of Konstanz
  */
-public class ChainOfNodesTest extends WorkflowTestCase {
+public class Simplechainofnodes extends WorkflowTestCase {
 
     private NodeID m_dataGen;
     private NodeID m_colFilter;
@@ -52,82 +50,82 @@ public class ChainOfNodesTest extends WorkflowTestCase {
     }
 
     public void testExecuteOneByOne() throws Exception {
-        checkState(m_dataGen, State.CONFIGURED);
-        checkState(m_colFilter, State.CONFIGURED);
-        checkState(m_rowFilter, State.CONFIGURED);
-        checkState(m_tblView, State.CONFIGURED);
+        checkState(m_dataGen, InternalNodeContainerState.CONFIGURED);
+        checkState(m_colFilter, InternalNodeContainerState.CONFIGURED);
+        checkState(m_rowFilter, InternalNodeContainerState.CONFIGURED);
+        checkState(m_tblView, InternalNodeContainerState.CONFIGURED);
 
         executeAndWait(m_dataGen);
-        checkState(m_dataGen, State.EXECUTED);
-        checkState(m_colFilter, State.CONFIGURED);
-        checkState(m_rowFilter, State.CONFIGURED);
-        checkState(m_tblView, State.CONFIGURED);
+        checkState(m_dataGen, InternalNodeContainerState.EXECUTED);
+        checkState(m_colFilter, InternalNodeContainerState.CONFIGURED);
+        checkState(m_rowFilter, InternalNodeContainerState.CONFIGURED);
+        checkState(m_tblView, InternalNodeContainerState.CONFIGURED);
 
         executeAndWait(m_colFilter);
-        checkState(m_dataGen, State.EXECUTED);
-        checkState(m_colFilter, State.EXECUTED);
-        checkState(m_rowFilter, State.CONFIGURED);
-        checkState(m_tblView, State.CONFIGURED);
+        checkState(m_dataGen, InternalNodeContainerState.EXECUTED);
+        checkState(m_colFilter, InternalNodeContainerState.EXECUTED);
+        checkState(m_rowFilter, InternalNodeContainerState.CONFIGURED);
+        checkState(m_tblView, InternalNodeContainerState.CONFIGURED);
 
         executeAndWait(m_rowFilter);
-        checkState(m_dataGen, State.EXECUTED);
-        checkState(m_colFilter, State.EXECUTED);
-        checkState(m_rowFilter, State.EXECUTED);
-        checkState(m_tblView, State.CONFIGURED);
+        checkState(m_dataGen, InternalNodeContainerState.EXECUTED);
+        checkState(m_colFilter, InternalNodeContainerState.EXECUTED);
+        checkState(m_rowFilter, InternalNodeContainerState.EXECUTED);
+        checkState(m_tblView, InternalNodeContainerState.CONFIGURED);
 
         executeAndWait(m_tblView);
-        checkState(m_dataGen, State.EXECUTED);
-        checkState(m_colFilter, State.EXECUTED);
-        checkState(m_rowFilter, State.EXECUTED);
-        checkState(m_tblView, State.EXECUTED);
+        checkState(m_dataGen, InternalNodeContainerState.EXECUTED);
+        checkState(m_colFilter, InternalNodeContainerState.EXECUTED);
+        checkState(m_rowFilter, InternalNodeContainerState.EXECUTED);
+        checkState(m_tblView, InternalNodeContainerState.EXECUTED);
 
     }
 
     public void testExecuteLast() throws Exception {
         executeAndWait(m_tblView);
-        checkState(m_dataGen, State.EXECUTED);
-        checkState(m_colFilter, State.EXECUTED);
-        checkState(m_rowFilter, State.EXECUTED);
-        checkState(m_tblView, State.EXECUTED);
+        checkState(m_dataGen, InternalNodeContainerState.EXECUTED);
+        checkState(m_colFilter, InternalNodeContainerState.EXECUTED);
+        checkState(m_rowFilter, InternalNodeContainerState.EXECUTED);
+        checkState(m_tblView, InternalNodeContainerState.EXECUTED);
     }
 
     public void testExecuteAll() throws Exception {
         getManager().executeAllAndWaitUntilDone();
-        checkState(getManager(), State.EXECUTED);
-        checkState(m_dataGen, State.EXECUTED);
-        checkState(m_colFilter, State.EXECUTED);
-        checkState(m_rowFilter, State.EXECUTED);
-        checkState(m_tblView, State.EXECUTED);
+        checkState(getManager(), InternalNodeContainerState.EXECUTED);
+        checkState(m_dataGen, InternalNodeContainerState.EXECUTED);
+        checkState(m_colFilter, InternalNodeContainerState.EXECUTED);
+        checkState(m_rowFilter, InternalNodeContainerState.EXECUTED);
+        checkState(m_tblView, InternalNodeContainerState.EXECUTED);
     }
 
     public void testRandomExecuteAndReset() throws Exception {
         executeAndWait(m_rowFilter);
-        checkState(m_dataGen, State.EXECUTED);
-        checkState(m_colFilter, State.EXECUTED);
-        checkState(m_rowFilter, State.EXECUTED);
-        checkState(m_tblView, State.CONFIGURED);
+        checkState(m_dataGen, InternalNodeContainerState.EXECUTED);
+        checkState(m_colFilter, InternalNodeContainerState.EXECUTED);
+        checkState(m_rowFilter, InternalNodeContainerState.EXECUTED);
+        checkState(m_tblView, InternalNodeContainerState.CONFIGURED);
 
         assertTrue(getManager().canResetNode(m_colFilter));
         getManager().resetAndConfigureNode(m_colFilter);
-        checkState(m_dataGen, State.EXECUTED);
-        checkState(m_colFilter, State.CONFIGURED);
-        checkState(m_rowFilter, State.CONFIGURED);
-        checkState(m_tblView, State.CONFIGURED);
+        checkState(m_dataGen, InternalNodeContainerState.EXECUTED);
+        checkState(m_colFilter, InternalNodeContainerState.CONFIGURED);
+        checkState(m_rowFilter, InternalNodeContainerState.CONFIGURED);
+        checkState(m_tblView, InternalNodeContainerState.CONFIGURED);
 
         executeAndWait(m_tblView);
-        checkState(m_tblView, State.EXECUTED);
+        checkState(m_tblView, InternalNodeContainerState.EXECUTED);
 
         for (int i = 0; i < 10; i++) {
             getManager().resetAndConfigureNode(m_dataGen);
-            checkState(m_dataGen, State.CONFIGURED);
-            checkState(m_colFilter, State.CONFIGURED);
-            checkState(m_rowFilter, State.CONFIGURED);
-            checkState(m_tblView, State.CONFIGURED);
+            checkState(m_dataGen, InternalNodeContainerState.CONFIGURED);
+            checkState(m_colFilter, InternalNodeContainerState.CONFIGURED);
+            checkState(m_rowFilter, InternalNodeContainerState.CONFIGURED);
+            checkState(m_tblView, InternalNodeContainerState.CONFIGURED);
             executeAndWait(m_tblView);
-            checkState(m_dataGen, State.EXECUTED);
-            checkState(m_colFilter, State.EXECUTED);
-            checkState(m_rowFilter, State.EXECUTED);
-            checkState(m_tblView, State.EXECUTED);
+            checkState(m_dataGen, InternalNodeContainerState.EXECUTED);
+            checkState(m_colFilter, InternalNodeContainerState.EXECUTED);
+            checkState(m_rowFilter, InternalNodeContainerState.EXECUTED);
+            checkState(m_tblView, InternalNodeContainerState.EXECUTED);
         }
     }
 
@@ -141,23 +139,23 @@ public class ChainOfNodesTest extends WorkflowTestCase {
         assertTrue(m.canRemoveConnection(connection));
         m.removeConnection(connection);
 
-        checkState(m_rowFilter, State.IDLE);
+        checkState(m_rowFilter, InternalNodeContainerState.IDLE);
         assertFalse(m.canExecuteNode(m_rowFilter));
         assertFalse(m.canExecuteNode(m_tblView));
         assertTrue(m.canExecuteNode(m_colFilter));
 
         executeAndWait(m_colFilter);
-        checkState(m_colFilter, State.EXECUTED);
+        checkState(m_colFilter, InternalNodeContainerState.EXECUTED);
 
         executeAndWait(m_rowFilter);
-        checkState(m_rowFilter, State.IDLE);
+        checkState(m_rowFilter, InternalNodeContainerState.IDLE);
 
         m.addConnection(m_colFilter, 1, m_rowFilter, 1);
-        checkState(m_rowFilter, State.CONFIGURED);
-        checkState(m_tblView, State.CONFIGURED);
+        checkState(m_rowFilter, InternalNodeContainerState.CONFIGURED);
+        checkState(m_tblView, InternalNodeContainerState.CONFIGURED);
 
         executeAndWait(m_tblView);
-        checkState(m_tblView, State.EXECUTED);
+        checkState(m_tblView, InternalNodeContainerState.EXECUTED);
     }
 
     public void testExecuteDeleteConnection() throws Exception {
@@ -167,7 +165,7 @@ public class ChainOfNodesTest extends WorkflowTestCase {
         assertTrue(m.canRemoveConnection(connection));
         m.removeConnection(connection);
 
-        checkState(m_rowFilter, State.IDLE);
+        checkState(m_rowFilter, InternalNodeContainerState.IDLE);
         assertFalse(m.canExecuteNode(m_rowFilter));
         assertFalse(m.canExecuteNode(m_tblView));
     }
@@ -177,7 +175,7 @@ public class ChainOfNodesTest extends WorkflowTestCase {
         assertTrue(m.canRemoveNode(m_rowFilter));
         m.removeNode(m_rowFilter);
 
-        checkState(m_tblView, State.IDLE);
+        checkState(m_tblView, InternalNodeContainerState.IDLE);
         assertFalse(m.canExecuteNode(m_tblView));
     }
 
@@ -187,7 +185,7 @@ public class ChainOfNodesTest extends WorkflowTestCase {
         assertTrue(m.canRemoveNode(m_rowFilter));
         m.removeNode(m_rowFilter);
 
-        checkState(m_tblView, State.IDLE);
+        checkState(m_tblView, InternalNodeContainerState.IDLE);
         assertFalse(m.canExecuteNode(m_tblView));
     }
 

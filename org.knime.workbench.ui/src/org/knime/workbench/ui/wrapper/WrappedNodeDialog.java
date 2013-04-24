@@ -513,7 +513,7 @@ public class WrappedNodeDialog extends Dialog {
             // if the settings are equal and the node is executed
             // to the previous settings inform the user but do nothing
             // (no reset)
-            if (m_nodeContainer.getState().equals(NodeContainer.State.EXECUTED)) {
+            if (m_nodeContainer.getNodeContainerState().isExecuted()) {
                 if (m_nodeContainer.areDialogAndNodeSettingsEqual()) {
                     // settings not changed
                     informNothingChanged();
@@ -599,7 +599,7 @@ public class WrappedNodeDialog extends Dialog {
     protected boolean confirmApply() {
 
         // no confirm dialog necessary, if the node was not executed before
-        if (!m_nodeContainer.getState().equals(NodeContainer.State.EXECUTED)) {
+        if (!m_nodeContainer.getNodeContainerState().isExecuted()) {
             return true;
         }
 

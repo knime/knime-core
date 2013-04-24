@@ -21,17 +21,15 @@
  * History
  *   19.06.2012 (wiswedel): created
  */
-package org.knime.core.node.workflow.testFileStoreCountsInLoops;
+package org.knime.core.node.workflow;
 
 import java.io.File;
 
 import org.knime.core.node.ExecutionMonitor;
-import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowTestCase;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -78,12 +76,12 @@ public class TestFileStoreCountsInLoops extends WorkflowTestCase {
     }
 
     public void testExecuteAllAndCountFileStores() throws Exception {
-        checkState(m_dataGen1, State.CONFIGURED);
+        checkState(m_dataGen1, InternalNodeContainerState.CONFIGURED);
         assertEquals(0, getWriteFileStoreHandlers().size());
         executeAllAndWait();
-        checkState(m_testFS47, State.EXECUTED);
-        checkState(m_testFS88, State.IDLE); // still unconnected
-        checkState(m_createFS89, State.EXECUTED);
+        checkState(m_testFS47, InternalNodeContainerState.EXECUTED);
+        checkState(m_testFS88, InternalNodeContainerState.IDLE); // still unconnected
+        checkState(m_createFS89, InternalNodeContainerState.EXECUTED);
 
         File startFSDir = getFileStoresDirectory(m_loopStartOuter15);
         assertEquals(100, countFilesInDirectory(startFSDir));
@@ -105,7 +103,7 @@ public class TestFileStoreCountsInLoops extends WorkflowTestCase {
 
         // reset any node in body will reset entire loop
         getManager().resetAndConfigureNode(m_testFS31);
-        checkState(m_loopStartOuter15, State.CONFIGURED);
+        checkState(m_loopStartOuter15, InternalNodeContainerState.CONFIGURED);
 
         assertFalse("Directory must have been deleted: "
                 + startFSDir.getAbsolutePath(), startFSDir.exists());
@@ -125,10 +123,10 @@ public class TestFileStoreCountsInLoops extends WorkflowTestCase {
         initFlow();
         mgr = getManager(); // new instance
 
-        checkState(m_loopStartOuter15, State.EXECUTED);
-        checkState(m_loopEndOuter32, State.EXECUTED);
-        checkState(m_testFS47, State.EXECUTED);
-        checkState(m_testFS88, State.IDLE); // unconnected
+        checkState(m_loopStartOuter15, InternalNodeContainerState.EXECUTED);
+        checkState(m_loopEndOuter32, InternalNodeContainerState.EXECUTED);
+        checkState(m_testFS47, InternalNodeContainerState.EXECUTED);
+        checkState(m_testFS88, InternalNodeContainerState.IDLE); // unconnected
 
         File startFSDir = getFileStoresDirectory(m_loopStartOuter15);
         assertNull(startFSDir); // not extracted yet.
@@ -140,7 +138,7 @@ public class TestFileStoreCountsInLoops extends WorkflowTestCase {
 
         mgr.addConnection(m_testFS31, 1, m_testFS88, 1);
         executeAndWait(m_testFS88);
-        checkState(m_testFS88, State.CONFIGURED); // failure
+        checkState(m_testFS88, InternalNodeContainerState.CONFIGURED); // failure
         final NodeMessage msg = mgr.getNodeContainer(m_testFS88).getNodeMessage();
         assertEquals(NodeMessage.Type.ERROR, msg.getMessageType());
         assertTrue(msg.getMessage().contains("was restored"));
@@ -152,13 +150,13 @@ public class TestFileStoreCountsInLoops extends WorkflowTestCase {
 
     private void checkFileStoreAccessibility(final NodeID... ncs) throws Exception {
         WorkflowManager mgr = getManager();
-        checkState(m_testFS47, State.EXECUTED);
+        checkState(m_testFS47, InternalNodeContainerState.EXECUTED);
 
         for (NodeID id : ncs) {
             boolean isUpstreamMeta = mgr.getNodeContainer(id) instanceof WorkflowManager;
             mgr.addConnection(id, isUpstreamMeta ? 0 : 1, m_testFS88, 1);
             executeAndWait(m_testFS88);
-            checkState(m_testFS88, State.EXECUTED);
+            checkState(m_testFS88, InternalNodeContainerState.EXECUTED);
             deleteConnection(m_testFS88, 1);
         }
     }

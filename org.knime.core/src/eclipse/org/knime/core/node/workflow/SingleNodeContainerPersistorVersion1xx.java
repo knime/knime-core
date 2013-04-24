@@ -84,7 +84,6 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.missing.MissingNodeFactory;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -543,7 +542,7 @@ public class SingleNodeContainerPersistorVersion1xx
         return m_settingsFailPolicy;
     }
 
-    static final LoadNodeModelSettingsFailPolicy translateToFailPolicy(final State nodeState) {
+    static final LoadNodeModelSettingsFailPolicy translateToFailPolicy(final InternalNodeContainerState nodeState) {
         switch (nodeState) {
         case IDLE:
             return LoadNodeModelSettingsFailPolicy.IGNORE;

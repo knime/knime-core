@@ -43,48 +43,44 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
- * History
- *   20.09.2007 (Fabian Dill): created
+ * Created on Apr 24, 2013 by wiswedel
  */
 package org.knime.core.node.workflow;
 
-import java.util.EventObject;
-
 /**
+ * Possible status values of a NodeContainer. The actual implementation is an enum but is hidden to client
+ * (e.g. GUI) code so that new states can be added as needed.
  *
- * @author Fabian Dill, University of Konstanz
+ * @author Bernd Wiswedel, Michael Berthold, KNIME.com, Zurich, Switzerland
+ * @since 2.8
  */
-public class NodeStateEvent extends EventObject {
-
-    private final NodeContainer.State m_state;
+public interface NodeContainerState {
 
     /**
-     * @param src id of the node
-     * @param state the new state of the node
+     * @return true if node is idle (unconfigured, not queued, not marked).
      */
-    public NodeStateEvent(final NodeID src, final NodeContainer.State state) {
-        super(src);
-        m_state = state;
-    }
+    public boolean isIdle();
 
     /**
-     *
-     * @return the new state of the node
-     * @deprecated Don't get the state from the event but receive it from the node itself
+     * @return true if node is configured (not queued, not marked).
      */
-    @Deprecated
-    public NodeContainer.State getState() {
-        return m_state;
-    }
+    public boolean isConfigured();
 
     /**
-     *
-     * {@inheritDoc}
+     * @return true if node is executed and not marked for re-execution.
      */
-    @Override
-    public NodeID getSource() {
-        return (NodeID)super.getSource();
-    }
+    public boolean isExecuted();
+
+    /**
+     * @return true if node is executing or waiting to be executed (marked, queued,...)
+     */
+    public boolean isExecutionInProgress();
+
+    /**
+     * @return true if node is waiting to be executed (marked or queued).
+     */
+    public boolean isWaitingToBeExecuted();
+
 }

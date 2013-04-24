@@ -52,7 +52,6 @@ package org.knime.core.node.workflow;
 
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 
 interface NodeContainerMetaPersistor {
@@ -90,7 +89,7 @@ interface NodeContainerMetaPersistor {
 
     NodeSettingsRO getExecutionJobSettings();
 
-    State getState();
+    InternalNodeContainerState getState();
 
     NodeUIInformation getUIInfo();
 

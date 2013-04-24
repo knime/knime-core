@@ -21,7 +21,7 @@
  * History
  *   01.11.2008 (wiswedel): created
  */
-package org.knime.core.node.workflow.trycatch;
+package org.knime.core.node.workflow;
 
 import java.awt.Window.Type;
 import java.util.NoSuchElementException;
@@ -30,17 +30,15 @@ import junit.framework.Assert;
 
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.FlowVariable;
-import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
-import org.knime.core.node.workflow.WorkflowTestCase;
 
 /**
  *
  * @author M. Berthold, University of Konstanz
  */
-public class TryCatchAndNestedScopesTest extends WorkflowTestCase {
+public class Trycatch extends WorkflowTestCase {
 
     private NodeID m_try;
     private NodeID m_catch;
@@ -65,15 +63,15 @@ public class TryCatchAndNestedScopesTest extends WorkflowTestCase {
     public void testExecuted() throws Exception {
     	executeAllAndWait();
     	// check node states - inactive interna/active end.
-        checkState(m_try, State.EXECUTED);
-        checkState(m_catch, State.EXECUTED);
-        checkState(m_if, State.EXECUTED);
+        checkState(m_try, InternalNodeContainerState.EXECUTED);
+        checkState(m_catch, InternalNodeContainerState.EXECUTED);
+        checkState(m_if, InternalNodeContainerState.EXECUTED);
         assertTrue(((SingleNodeContainer)(getManager().getNodeContainer(m_if))).isInactive());
-        checkState(m_endif, State.EXECUTED);
+        checkState(m_endif, InternalNodeContainerState.EXECUTED);
         assertTrue(((SingleNodeContainer)(getManager().getNodeContainer(m_endif))).isInactive());
-        checkState(m_endloop, State.EXECUTED);
+        checkState(m_endloop, InternalNodeContainerState.EXECUTED);
         assertTrue(((SingleNodeContainer)(getManager().getNodeContainer(m_endloop))).isInactive());
-        checkState(m_catch, State.EXECUTED);
+        checkState(m_catch, InternalNodeContainerState.EXECUTED);
         assertFalse(((SingleNodeContainer)(getManager().getNodeContainer(m_catch))).isInactive());
         // check variable in scope and hiding outside
         SingleNodeContainer endifSNC = (SingleNodeContainer)(getManager().getNodeContainer(m_endif));

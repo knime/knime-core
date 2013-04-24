@@ -44,7 +44,6 @@ import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository
 import org.knime.core.data.filestore.internal.WriteFileStoreHandler;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 
@@ -57,7 +56,7 @@ public abstract class WorkflowTestCase extends TestCase {
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
     private WorkflowManager m_manager;
-    private ReentrantLock m_lock;
+    private final ReentrantLock m_lock;
 
     /**
      *
@@ -100,10 +99,13 @@ public abstract class WorkflowTestCase extends TestCase {
     protected File getDefaultWorkflowDirectory() throws Exception {
         ClassLoader l = getClass().getClassLoader();
         String workflowDirString = getClass().getPackage().getName();
-        URL workflowURL = l.getResource(workflowDirString.replace('.', '/'));
+        String workflowDirPath = workflowDirString.replace('.', '/');
+        String classSimpleName = getClass().getSimpleName();
+        classSimpleName = classSimpleName.substring(0, 1).toLowerCase() + classSimpleName.substring(1);
+        workflowDirPath = workflowDirPath.concat("/" + classSimpleName);
+        URL workflowURL = l.getResource(workflowDirPath);
         if (workflowURL == null) {
-            throw new Exception("Can't load workflow that's expected to be "
-                    + "in package " + workflowDirString);
+            throw new Exception("Can't load workflow that's expected to be in directory " + workflowDirPath);
         }
 
         if (!"file".equals(workflowURL.getProtocol())) {
@@ -133,16 +135,16 @@ public abstract class WorkflowTestCase extends TestCase {
     }
 
     protected void checkState(final NodeID id,
-            final State... expected) throws Exception {
+            final InternalNodeContainerState... expected) throws Exception {
         NodeContainer nc = findNodeContainer(id);
         checkState(nc, expected);
     }
 
     protected void checkState(final NodeContainer nc,
-            final State... expected) throws Exception {
-        State actual = nc.getState();
+            final InternalNodeContainerState... expected) throws Exception {
+        InternalNodeContainerState actual = nc.getInternalState();
         boolean matches = false;
-        for (State s : expected) {
+        for (InternalNodeContainerState s : expected) {
             if (actual.equals(s)) {
                 matches = true;
             }
@@ -158,16 +160,16 @@ public abstract class WorkflowTestCase extends TestCase {
     }
 
     protected void checkMetaOutState(final NodeID metaID, final int portIndex,
-            final State... expected) throws Exception {
+            final InternalNodeContainerState... expected) throws Exception {
         NodeContainer nc = findNodeContainer(metaID);
         if (!(nc instanceof WorkflowManager)) {
             throw new IllegalArgumentException("Node with ID " + metaID
                     + " is not a meta node: " + nc.getNameWithID());
         }
         WorkflowOutPort p = ((WorkflowManager)nc).getOutPort(portIndex);
-        State actual = p.getNodeState();
+        InternalNodeContainerState actual = p.getNodeState();
         boolean matches = false;
-        for (State s : expected) {
+        for (InternalNodeContainerState s : expected) {
             if (actual.equals(s)) {
                 matches = true;
             }
@@ -336,8 +338,8 @@ public abstract class WorkflowTestCase extends TestCase {
         waitWhile(node, new Hold() {
             @Override
             protected boolean shouldHold() {
-                State s = node.getState();
-                return s.executionInProgress();
+                InternalNodeContainerState s = node.getInternalState();
+                return s.isExecutionInProgress();
             }
         });
     }
@@ -401,7 +403,7 @@ public abstract class WorkflowTestCase extends TestCase {
                 /** {@inheritDoc} */
                 @Override
                 protected boolean shouldHold() {
-                    return m_manager.getState().executionInProgress();
+                    return m_manager.getInternalState().isExecutionInProgress();
                 }
                 /** {@inheritDoc} */
                 @Override

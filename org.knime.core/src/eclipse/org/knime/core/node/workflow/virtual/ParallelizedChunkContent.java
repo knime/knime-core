@@ -44,14 +44,13 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   Mar 30, 2011 (wiswedel): created
  */
 package org.knime.core.node.workflow.virtual;
 
 import org.knime.core.node.port.PortObject;
-import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.WorkflowManager;
 
@@ -66,7 +65,7 @@ public final class ParallelizedChunkContent {
 	private final NodeID m_virtualInputID;
 	private final NodeID m_virtualOutputID;
 	private final NodeID[] m_copiedLoopContent;
-	
+
 	/**
 	 * @param manager
 	 * @param virtualInputID
@@ -111,7 +110,7 @@ public final class ParallelizedChunkContent {
 	public NodeID[] getCopiedLoopContent() {
 		return m_copiedLoopContent;
 	}
-	
+
     /**
      * @param nmodel
      */
@@ -120,7 +119,7 @@ public final class ParallelizedChunkContent {
         m_manager.getNodeContainer(m_virtualOutputID)
                 .addNodeStateChangeListener(pccm);
     }
-	
+
     /**
      * @param nmodel
      */
@@ -147,16 +146,14 @@ public final class ParallelizedChunkContent {
      * @return true if chunk is completely executed.
      */
     public boolean isExecuted() {
-        return State.EXECUTED.equals(
-                m_manager.getNodeContainer(m_virtualOutputID).getState());
+        return m_manager.getNodeContainer(m_virtualOutputID).getNodeContainerState().isExecuted();
     }
-    
+
     /**
      * @return true if chunk is still being executed (or waiting to be...)
      */
     public boolean executionInProgress() {
-        return m_manager.getNodeContainer(
-                m_virtualOutputID).getState().executionInProgress();
+        return m_manager.getNodeContainer(m_virtualOutputID).getNodeContainerState().isExecutionInProgress();
     }
 
     /**

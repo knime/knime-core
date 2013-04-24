@@ -59,7 +59,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
-import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeMessage.Type;
 import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 import org.knime.core.util.FileUtil;
@@ -129,7 +128,7 @@ class NodeContainerMetaPersistorVersion200 extends
 
     /** {@inheritDoc} */
     @Override
-    protected State loadState(final NodeSettingsRO settings,
+    protected InternalNodeContainerState loadState(final NodeSettingsRO settings,
             final NodeSettingsRO parentSettings)
     throws InvalidSettingsException {
         String stateString = settings.getString(CFG_STATE);
@@ -137,7 +136,7 @@ class NodeContainerMetaPersistorVersion200 extends
             throw new InvalidSettingsException("State information is null");
         }
         try {
-            return State.valueOf(stateString);
+            return InternalNodeContainerState.valueOf(stateString);
         } catch (IllegalArgumentException e) {
             throw new InvalidSettingsException("Unable to parse state \""
                     + stateString + "\"");
@@ -278,23 +277,23 @@ class NodeContainerMetaPersistorVersion200 extends
             final NodeContainer nc) {
         String state;
         boolean mustAlsoSaveExecutorSettings = false;
-        switch (nc.getState()) {
+        switch (nc.getInternalState()) {
         case IDLE:
         case UNCONFIGURED_MARKEDFOREXEC:
-            state = State.IDLE.toString();
+            state = InternalNodeContainerState.IDLE.toString();
             break;
         case EXECUTED:
-            state = State.EXECUTED.toString();
+            state = InternalNodeContainerState.EXECUTED.toString();
             break;
         case EXECUTINGREMOTELY:
             if (nc.findJobManager().canDisconnect(nc.getExecutionJob())) {
                 // state will also be CONFIGURED only ... we set executing later
                 mustAlsoSaveExecutorSettings = true;
             }
-            state = State.EXECUTINGREMOTELY.toString();
+            state = InternalNodeContainerState.EXECUTINGREMOTELY.toString();
             break;
         default:
-            state = State.CONFIGURED.toString();
+            state = InternalNodeContainerState.CONFIGURED.toString();
         }
         settings.addString(CFG_STATE, state);
         return mustAlsoSaveExecutorSettings;
