@@ -384,7 +384,7 @@ public class NodeMonitorView extends ViewPart
             nc.addNodeStateChangeListener(NodeMonitorView.this);
         }
         m_title.setText(nc.getName() + "  (" + nc.getID() + ")");
-        m_state.setText(nc.getState().toString());
+        m_state.setText(nc.getNodeContainerState().toString());
         switch (m_choice) {
         case VARS:
             updateVariableTable(nc);

@@ -137,8 +137,7 @@ public class PauseLoopExecutionAction extends AbstractNodeAction {
         NodeContainer nc = parts[0].getNodeContainer();
         if (nc instanceof SingleNodeContainer) {
             SingleNodeContainer snc = (SingleNodeContainer)nc;
-            if ((snc.isModelCompatibleTo(LoopEndNode.class))
-                && (nc.getState().executionInProgress())) {
+            if ((snc.isModelCompatibleTo(LoopEndNode.class)) && (nc.getNodeContainerState().isExecutionInProgress())) {
                 return true;
             }
         }

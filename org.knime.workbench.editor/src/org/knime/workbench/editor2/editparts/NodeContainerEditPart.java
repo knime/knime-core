@@ -104,7 +104,6 @@ import org.knime.core.node.workflow.AbstractNodeExecutionJobManager;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation;
 import org.knime.core.node.workflow.NodeAnnotation;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessageEvent;
@@ -119,8 +118,6 @@ import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.NodeUIInformationEvent;
 import org.knime.core.node.workflow.NodeUIInformationListener;
-import org.knime.core.node.workflow.SingleNodeContainer;
-import org.knime.core.node.workflow.SingleNodeContainer.LoopStatus;
 import org.knime.core.node.workflow.WorkflowCipherPrompt;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.KNIMEEditorPlugin;
@@ -263,15 +260,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         checkMetaNodeTemplateIcon();
         checkMetaNodeLockIcon();
         // set the active (or disabled) state
-        boolean isInactive = false;
-        LoopStatus loopStatus = LoopStatus.NONE;
-        if (cont instanceof SingleNodeContainer) {
-            SingleNodeContainer snc = (SingleNodeContainer)cont;
-            isInactive = snc.isInactive();
-            loopStatus = snc.getLoopStatus();
-        }
-        ((NodeContainerFigure)getFigure()).setState(
-                cont.getState(), loopStatus, isInactive);
+        ((NodeContainerFigure)getFigure()).setStateFromNC(cont);
         // set the node message
         updateNodeMessage();
 
@@ -402,7 +391,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         // and leave the work to the previously started thread. This
         // works because we are retrieving the current state information!
         if (m_updateInProgress.compareAndSet(false, true)) {
-            Display.getDefault().asyncExec(new Runnable() {
+            SyncExecQueueDispatcher.asyncExec(new Runnable() {
                 @Override
                 public void run() {
                     // let others know we are in the middle of processing
@@ -410,15 +399,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                     NodeContainerFigure fig = (NodeContainerFigure)getFigure();
                     m_updateInProgress.set(false);
                     NodeContainer nc = getNodeContainer();
-                    State latestState = nc.getState();
-                    boolean isInactive = false;
-                    LoopStatus loopStatus = LoopStatus.NONE;
-                    if (nc instanceof SingleNodeContainer) {
-                        SingleNodeContainer snc = (SingleNodeContainer)nc;
-                        isInactive = snc.isInactive();
-                        loopStatus = snc.getLoopStatus();
-                    }
-                    fig.setState(latestState, loopStatus, isInactive);
+                    fig.setStateFromNC(nc);
                     updateNodeMessage();
                     // reset the tooltip text of the outports
                     for (Object part : getChildren()) {

@@ -52,8 +52,8 @@ package org.knime.workbench.editor2.figures;
 
 import org.eclipse.swt.graphics.Image;
 import org.knime.core.node.NodeFactory.NodeType;
-import org.knime.core.node.workflow.NodeContainer.State;
-import org.knime.core.node.workflow.SingleNodeContainer.LoopStatus;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.workbench.editor2.ImageRepository;
 
 
@@ -92,35 +92,21 @@ public class SubworkflowFigure extends NodeContainerFigure {
     }
 
     /**
-     *
      * {@inheritDoc}
-     *
      * Only reflects three different states: idle, executing, executed.
      */
     @Override
-    public void setState(final State state, 
-            final LoopStatus loopStatus,
-            final boolean isInactive) {
-        switch (state) {
-        case IDLE:
-        case CONFIGURED:
-            ((NodeContainerFigure.SymbolFigure)getSymbolFigure()).setIcon(
-                    IDLE_STATE);
-            break;
-        case MARKEDFOREXEC:
-        case UNCONFIGURED_MARKEDFOREXEC:
-        case QUEUED:
-        case EXECUTING:
-        case PREEXECUTE:
-        case POSTEXECUTE:
-        case EXECUTINGREMOTELY:
-            ((NodeContainerFigure.SymbolFigure)getSymbolFigure()).setIcon(
-                    EXECUTING_STATE);
-            break;
-        case EXECUTED:
-            ((NodeContainerFigure.SymbolFigure)getSymbolFigure()).setIcon(
-                    EXECUTED_STATE);
+    public void setStateFromNC(final NodeContainer nc) {
+        NodeContainerState state = nc.getNodeContainerState();
+        Image image;
+        if (state.isExecuted()) {
+            image = EXECUTED_STATE;
+        } else if (state.isExecutionInProgress()) {
+            image = EXECUTING_STATE;
+        } else {
+            image = IDLE_STATE;
         }
+        ((NodeContainerFigure.SymbolFigure)getSymbolFigure()).setIcon(image);
         revalidate();
     }
 

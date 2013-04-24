@@ -75,9 +75,10 @@ import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ConvenienceMethods;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeContainer.State;
+import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeUIInformation;
+import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer.LoopStatus;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.figures.ProgressFigure.ProgressMode;
@@ -533,50 +534,44 @@ public class NodeContainerFigure extends RectangleFigure {
 
     /**
      *
-     * @param state new state of underlying node
-     * @param loopStatus ...
-     * @param isInactive is true, the state is ignored and the inactive status
-     *            figure set.
+     * @param nc new state of underlying node
      */
-    public void setState(final NodeContainer.State state,
-            final LoopStatus loopStatus,
-            final boolean isInactive) {
+    public void setStateFromNC(final NodeContainer nc) {
+        boolean isInactive = false;
+        LoopStatus loopStatus = LoopStatus.NONE;
+        if (nc instanceof SingleNodeContainer) {
+            SingleNodeContainer snc = (SingleNodeContainer)nc;
+            isInactive = snc.isInactive();
+            loopStatus = snc.getLoopStatus();
+        }
+        NodeContainerState state = nc.getNodeContainerState();
         if (!isInactive) {
-            switch (state) {
-            case IDLE:
+            if (state.isIdle()) {
                 setStatusAmple();
                 m_statusFigure.setIcon(RED);
-                break;
-            case CONFIGURED:
+            } else if (state.isConfigured()) {
                 setStatusAmple();
                 m_statusFigure.setIcon(YELLOW);
-                break;
-            case EXECUTED:
+            } else if (state.isExecuted()) {
                 setStatusAmple();
                 m_statusFigure.setIcon(GREEN);
-                break;
-            case PREEXECUTE:
-            case EXECUTING:
-            case EXECUTINGREMOTELY:
-            case POSTEXECUTE:
-                setProgressBar(ProgressMode.EXECUTING);
-                break;
-            case MARKEDFOREXEC:
+            } else if (state.isWaitingToBeExecuted()) {
                 if (LoopStatus.PAUSED.equals(loopStatus)) {
                     setProgressBar(ProgressMode.PAUSED);
-                    break;
+                } else {
+                    setProgressBar(ProgressMode.QUEUED);
                 }
-                // if not - just handle it like QUEUED and U_ME
-            case UNCONFIGURED_MARKEDFOREXEC:
-            case QUEUED:
-                setProgressBar(ProgressMode.QUEUED);
-                break;
+            } else if (state.isExecutionInProgress()) {
+                setProgressBar(ProgressMode.EXECUTING);
+            } else {
+                setStatusAmple();
+                m_statusFigure.setIcon(INACTIVE);
             }
         } else {
             setStatusAmple();
             m_statusFigure.setIcon(INACTIVE);
         }
-        setLoopStatus(loopStatus, state);
+        setLoopStatus(loopStatus, state.isExecuted());
         repaint();
     }
 
@@ -1310,18 +1305,16 @@ public class NodeContainerFigure extends RectangleFigure {
      * Set the image indicating the loop status.
      *
      * @param loopStatus loop status of the loop end node
-     * @param state execution status of the node.
+     * @param isExecuted is true when node is executed
      */
-    private void setLoopStatus(final LoopStatus loopStatus,
-            final NodeContainer.State state) {
+    private void setLoopStatus(final LoopStatus loopStatus, final boolean isExecuted) {
         if (loopStatus.equals(LoopStatus.NONE)) {
             m_loopStatusFigure = null;
-        } else if (loopStatus.equals(LoopStatus.RUNNING)
-                || loopStatus.equals(LoopStatus.PAUSED)) {
+        } else if (loopStatus.equals(LoopStatus.RUNNING) || loopStatus.equals(LoopStatus.PAUSED)) {
             m_loopStatusFigure = LOOP_IN_PROGRESS_SIGN;
         } else {
             assert loopStatus.equals(LoopStatus.FINISHED);
-            if (state.equals(State.EXECUTED)) {
+            if (isExecuted) {
                 m_loopStatusFigure = LOOP_DONE_SIGN;
             } else {
                 m_loopStatusFigure = LOOP_NO_STATUS;

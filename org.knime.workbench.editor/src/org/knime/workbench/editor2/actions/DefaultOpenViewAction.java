@@ -143,9 +143,7 @@ public class DefaultOpenViewAction extends AbstractNodeAction {
         boolean atLeastOneNodeIsExecuted = false;
         for (int i = 0; i < parts.length; i++) {
             NodeContainer nc = parts[i].getNodeContainer();
-            atLeastOneNodeIsExecuted |= nc.getState().equals(
-                    NodeContainer.State.EXECUTED)
-            && nc.getNrViews() > 0;
+            atLeastOneNodeIsExecuted |= nc.getNodeContainerState().isExecuted() && nc.getNrViews() > 0;
         }
         return atLeastOneNodeIsExecuted;
 
@@ -164,8 +162,7 @@ public class DefaultOpenViewAction extends AbstractNodeAction {
             getSelectedParts(NodeContainerEditPart.class);
         for (NodeContainerEditPart p : parts) {
             final NodeContainer cont = p.getNodeContainer();
-            if (cont.getState().equals(NodeContainer.State.EXECUTED)
-                    && cont.getNrViews() > 0) {
+            if (cont.getNodeContainerState().isExecuted() && cont.getNrViews() > 0) {
                 SwingUtilities.invokeLater(new Runnable() {
                     @Override
                     public void run() {

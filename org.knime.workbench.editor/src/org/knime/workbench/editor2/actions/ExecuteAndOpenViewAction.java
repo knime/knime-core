@@ -53,6 +53,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.core.node.workflow.WorkflowManager;
@@ -150,26 +151,24 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
             cont.addNodeStateChangeListener(new NodeStateChangeListener() {
                 @Override
                 public void stateChanged(final NodeStateEvent state) {
+                    NodeContainerState ncState = cont.getNodeContainerState();
                     // check if the node has finished (either executed or
                     // removed from the queue)
-                    if (state.getSource() == cont.getID() && state.getState()
-                            .equals(NodeContainer.State.EXECUTED)) {
+                    if (state.getSource() == cont.getID() && ncState.isExecuted()) {
                         // if the node was successfully executed
                         // start the view
-                        if (cont.getState().equals(
-                                NodeContainer.State.EXECUTED)) {
+                        if (ncState.isExecuted()) {
                             Display.getDefault().asyncExec(new Runnable() {
                                 @Override
                                 public void run() {
                                     // run open view action
-                                    IAction viewAction = new OpenViewAction(
-                                            cont, 0);
+                                    IAction viewAction = new OpenViewAction(cont, 0);
                                     viewAction.run();
                                 }
                             });
                         }
                     }
-                    if (!cont.getState().executionInProgress()) {
+                    if (!ncState.isExecutionInProgress()) {
                         // in those cases remove the listener
                         cont.removeNodeStateChangeListener(this);
                     }

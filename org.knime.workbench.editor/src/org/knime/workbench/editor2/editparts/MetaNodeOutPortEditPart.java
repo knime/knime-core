@@ -53,6 +53,7 @@ package org.knime.workbench.editor2.editparts;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.draw2d.IFigure;
 import org.knime.core.node.NodeLogger;
@@ -165,26 +166,32 @@ public class MetaNodeOutPortEditPart extends AbstractPortEditPart
         return EMPTY_LIST;
     }
 
+    private final AtomicBoolean m_updateInProgress = new AtomicBoolean();
+
     /**
      *
      * {@inheritDoc}
      */
     @Override
     public void stateChanged(final NodeStateEvent state) {
-        SyncExecQueueDispatcher.asyncExec(new Runnable() {
-            @Override
-            public void run() {
-                if (!isActive()) {
-                    return;
+        if (m_updateInProgress.compareAndSet(false, true)) {
+            SyncExecQueueDispatcher.asyncExec(new Runnable() {
+                @Override
+                public void run() {
+                    m_updateInProgress.set(false);
+                    if (!isActive()) {
+                        return;
+                    }
+                    MetaNodeOutPortFigure fig = (MetaNodeOutPortFigure)getFigure();
+                    WorkflowOutPort model = (WorkflowOutPort)getModel();
+                    fig.setState(model.getNodeState());
+                    rebuildTooltip();
+                    WorkflowOutPort outPort = (WorkflowOutPort)getModel();
+                    fig.setInactive(outPort.isInactive());
+                    fig.repaint();
                 }
-                MetaNodeOutPortFigure fig = (MetaNodeOutPortFigure)getFigure();
-                fig.setState(state.getState());
-                rebuildTooltip();
-                WorkflowOutPort outPort = (WorkflowOutPort)getModel();
-                fig.setInactive(outPort.isInactive());
-                fig.repaint();
-            }
-        });
+            });
+        }
     }
 
 }

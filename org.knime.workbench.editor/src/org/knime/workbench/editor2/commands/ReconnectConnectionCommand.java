@@ -180,10 +180,8 @@ public class ReconnectConnectionCommand extends AbstractKNIMECommand {
             // something is very wrong here
             return;
         }
-        boolean oldExecuted = oldTarget.getState().equals(
-                NodeContainer.State.EXECUTED);
-        boolean newExecuted = newTarget.getState().equals(
-                NodeContainer.State.EXECUTED);
+        boolean oldExecuted = oldTarget.getNodeContainerState().isExecuted();
+        boolean newExecuted = newTarget.getNodeContainerState().isExecuted();
         // or new target node is executed
         if (m_confirm && (oldExecuted || newExecuted)) {
             // create comprehensible and correct confirmation message

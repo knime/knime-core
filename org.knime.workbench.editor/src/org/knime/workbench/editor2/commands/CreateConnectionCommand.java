@@ -57,7 +57,6 @@ import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.ConnectionUIInformation;
-import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.editparts.ConnectableEditPart;
 import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
@@ -294,14 +293,10 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
             // if target nodeport is already connected
             if (conn != null) {
                 // ask user if it should be replaced...
-                if (m_confirm
-                        // show confirmation message
-                        // only if target node is executed
-                        && m_targetNode.getNodeContainer().getState().equals(
-                                NodeContainer.State.EXECUTED)) {
+                if (m_confirm && m_targetNode.getNodeContainer().getNodeContainerState().isExecuted()) {
+                    // show confirmation message only if target node is executed
                     MessageDialogWithToggle msgD = openReconnectConfirmDialog(
-                            m_confirm,
-                            "Do you want to replace existing connection? \n"
+                            m_confirm, "Do you want to replace existing connection? \n"
                             + "This will reset the target node!");
                     m_confirm = !msgD.getToggleState();
                     if (msgD.getReturnCode() != IDialogConstants.YES_ID) {

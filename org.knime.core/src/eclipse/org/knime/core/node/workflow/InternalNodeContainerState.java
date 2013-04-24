@@ -115,6 +115,12 @@ enum InternalNodeContainerState implements NodeContainerState {
         }
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public boolean isExecutingRemotely() {
+        return EXECUTINGREMOTELY.equals(this);
+    }
+
     /** Translates this new state to the old style state that got deprecated with 2.8.
      * @return State
      * @see NodeContainer#getState()

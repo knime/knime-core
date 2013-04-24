@@ -156,7 +156,7 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.AbstractNodeExecutionJobManager;
 import org.knime.core.node.workflow.EditorUIInformation;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeContainer.State;
+import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeExecutionJobManager;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodePropertyChangedEvent;
@@ -1215,10 +1215,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                     new SaveWorkflowRunnable(this, file, exceptionMessage,
                             monitor);
 
-            State state = m_manager.getState();
-            wasInProgress =
-                    state.executionInProgress()
-                            && !state.equals(State.EXECUTINGREMOTELY);
+            NodeContainerState state = m_manager.getNodeContainerState();
+            wasInProgress = state.isExecutionInProgress() && !state.isExecutingRemotely();
 
             ps.run(true, false, saveWorflowRunnable);
             // after saving the workflow, check for the import marker

@@ -74,9 +74,15 @@ public interface NodeContainerState {
     public boolean isExecuted();
 
     /**
-     * @return true if node is executing or waiting to be executed (marked, queued,...)
+     * @return true if node is executing or waiting to be executed (marked, queued, executing)
      */
     public boolean isExecutionInProgress();
+
+    /** @return true if node is currently executing (not queued, not marked but executing) and it's using a
+     * non-default job manager. If so (SGE executor), the workflow can be saved without setting it dirty (SGE executor
+     * can restore running jobs)
+     */
+    public boolean isExecutingRemotely();
 
     /**
      * @return true if node is waiting to be executed (marked or queued).

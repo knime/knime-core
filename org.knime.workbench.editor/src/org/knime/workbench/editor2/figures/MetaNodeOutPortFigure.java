@@ -56,7 +56,7 @@ import org.eclipse.draw2d.geometry.Rectangle;
 import org.eclipse.swt.graphics.Image;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.port.PortType;
-import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeStateEvent;
 import org.knime.workbench.editor2.ImageRepository;
 import org.knime.workbench.editor2.editparts.MetaNodeOutPortEditPart;
@@ -79,7 +79,7 @@ public class MetaNodeOutPortFigure extends NodeOutPortFigure {
     public static final Image GREEN =
             ImageRepository.getImage("icons/ports/port_executed.png");
 
-    private NodeContainer.State m_currentState;
+    private NodeContainerState m_currentState;
     private Image m_currentImage;
     /**
      * @param type type of the port (data, db, model)
@@ -90,13 +90,9 @@ public class MetaNodeOutPortFigure extends NodeOutPortFigure {
      */
     public MetaNodeOutPortFigure(final PortType type,
             final int id, final int numPorts,
-            final String tooltip, final NodeContainer.State state) {
+            final String tooltip, final NodeContainerState state) {
         super(type, id, numPorts, true, tooltip);
-        if (state != null) {
-            m_currentState = state;
-        } else {
-            m_currentState = NodeContainer.State.IDLE;
-        }
+        m_currentState = state; // may be null, not connected
         m_currentImage = RED;
     }
 
@@ -107,7 +103,7 @@ public class MetaNodeOutPortFigure extends NodeOutPortFigure {
      *
      * @param state current state of the port (idle/spec/data)
      */
-    public void setState(final NodeContainer.State state) {
+    public void setState(final NodeContainerState state) {
         m_currentState = state;
     }
 
@@ -126,11 +122,11 @@ public class MetaNodeOutPortFigure extends NodeOutPortFigure {
     @Override
     protected void outlineShape(final Graphics graphics) {
         super.outlineShape(graphics);
-        if (m_currentState.equals(NodeContainer.State.IDLE)) {
+        if (m_currentState == null || m_currentState.isIdle()) {
             m_currentImage = RED;
-        } else if (m_currentState.equals(NodeContainer.State.CONFIGURED)) {
+        } else if (m_currentState.isConfigured()) {
             m_currentImage = YELLOW;
-        } else if (m_currentState.equals(NodeContainer.State.EXECUTED)) {
+        } else if (m_currentState.isExecuted()) {
             m_currentImage = GREEN;
         }
         if (!isInactive()) {

@@ -130,7 +130,7 @@ public class OpenMultiDialogAction extends AbstractNodeAction {
                 // don't do it in write protected meta nodes.
                 return false;
             }
-            if (nc.getState().executionInProgress()) {
+            if (nc.getNodeContainerState().isExecutionInProgress()) {
                 // can't do it with executing nodes.
                 return false;
             }

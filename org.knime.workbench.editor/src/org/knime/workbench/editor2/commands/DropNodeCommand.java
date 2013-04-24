@@ -28,7 +28,6 @@ import org.knime.core.node.NodeCreationContext;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.NodeContainer.State;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeUIInformation;
 import org.knime.core.node.workflow.SingleNodeContainer;
@@ -99,8 +98,7 @@ public class DropNodeCommand extends AbstractKNIMECommand {
 
             // Open the dialog. Some times.
             if (m_container instanceof SingleNodeContainer
-                    && m_container.getState().equals(State.IDLE)
-                    && m_container.hasDialog()
+                    && m_container.getNodeContainerState().isIdle() && m_container.hasDialog()
                     // and has only a variable in port
                     && m_container.getNrInPorts() == 1) {
                 // if not executable and has a dialog and is fully connected

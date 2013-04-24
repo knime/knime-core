@@ -51,6 +51,7 @@ package org.knime.workbench.editor2.actions.delegates;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.viewers.ISelection;
@@ -165,21 +166,20 @@ public abstract class AbstractEditorAction implements IEditorActionDelegate,
          * (Bernd) ran into serious problems when using meta nodes that
          * execute/reset nodes quickly (and frequently). There where
          * many (> 500000) runnables in the async-queue. */
-        private boolean m_isQueued;
+        private final AtomicBoolean m_isUpdateInProgress = new AtomicBoolean();
         /**
          *
          * {@inheritDoc}
          */
         @Override
         public void run() {
-            m_isQueued = false;
+            m_isUpdateInProgress.set(false);
             ISelectionProvider p = m_editor.getSite().getSelectionProvider();
             p.setSelection(p.getSelection());
         }
 
         private void asyncExec() {
-            if (!m_isQueued) {
-                m_isQueued = true;
+            if (m_isUpdateInProgress.compareAndSet(false, true)) {
                 SyncExecQueueDispatcher.asyncExec(this);
             }
         }
