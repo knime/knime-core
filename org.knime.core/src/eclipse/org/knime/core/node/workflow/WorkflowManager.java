@@ -2742,7 +2742,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     NodeContainer nc = m_workflow.getNode(id);
                     if (nc instanceof SingleNodeContainer) {
                         // make sure it's not already done...
-                        if (nc.getInternalState().equals(InternalNodeContainerState.IDLE) || nc.getInternalState().equals(InternalNodeContainerState.CONFIGURED)) {
+                        if (nc.getInternalState().equals(InternalNodeContainerState.IDLE)
+                                || nc.getInternalState().equals(InternalNodeContainerState.CONFIGURED)) {
                             ((SingleNodeContainer)nc).markForExecution(true);
                         }
                     } else {
@@ -2807,7 +2808,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         ((SingleNodeContainer)headNode).getNode().setLoopEndNode(
                 ((SingleNodeContainer)tailNode).getNode());
         // (9) and finally try to queue the head of this loop!
-        assert headNode.getInternalState().equals(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
+        assert headNode.getInternalState().equals(InternalNodeContainerState.EXECUTED_MARKEDFOREXEC);
         queueIfQueuable(headNode);
     }
 
