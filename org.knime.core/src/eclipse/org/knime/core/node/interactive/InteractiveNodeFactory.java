@@ -49,7 +49,9 @@
  */
 package org.knime.core.node.interactive;
 
+import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
+
 
 /** Additional interface to be implemented by a @see NodeFactory when the
  * underlying @see NodeModel implements @see InteractiveNode, that is the
@@ -59,7 +61,7 @@ import org.knime.core.node.NodeView;
  * @param <T> the underlying NodeModel implementing @see InteractiveNode
  * @since 2.8
  */
-public interface InteractiveNodeFactory<T extends InteractiveNode> {
+public interface InteractiveNodeFactory<T extends NodeModel & InteractiveNode> {
 
     /**
      * @return true of the factory can create an interactive view object.
@@ -67,8 +69,13 @@ public interface InteractiveNodeFactory<T extends InteractiveNode> {
     public abstract boolean hasInteractiveView();
 
     /**
+     * @return name of the interactive view.
+     */
+    public String getInteractiveViewName();
+
+    /**
      * @param model the view operates on
      * @return interactive view.
      */
-    public NodeView getInteractiveView(final T model);
+    public NodeView<T> createInteractiveView(final T model);
 }
