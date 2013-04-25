@@ -83,6 +83,7 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
 import org.knime.core.node.config.ConfigEditTreeModel;
+import org.knime.core.node.interactive.InteractiveNodeFactory;
 import org.knime.core.node.interrupt.InterruptibleNodeModel;
 import org.knime.core.node.missing.MissingNodeModel;
 import org.knime.core.node.port.PortObject;
@@ -1779,8 +1780,7 @@ public final class Node implements NodeModelWarningListener {
      * @return The node view with the specified index.
      * @throws ArrayIndexOutOfBoundsException If the view index is out of range.
      */
-    public AbstractNodeView<?> getView(
-            final int viewIndex, final String title) {
+    public AbstractNodeView<?> getView(final int viewIndex, final String title) {
         try {
             return m_factory.createAbstractNodeView(viewIndex, m_model);
         } catch (Throwable e) {
@@ -1791,7 +1791,7 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /**
-     * Closes all views.
+     * Closes all views (normal and interactive ones!).
      */
     public void closeAllViews() {
         Set<AbstractNodeView<?>> views =
@@ -1799,6 +1799,48 @@ public final class Node implements NodeModelWarningListener {
         for (AbstractNodeView<?> view : views) {
             view.closeView();
         }
+    }
+
+    /**
+     * Returns true if this node can show an interactive view.
+     * @return <code>true</code> if interactive view is available.
+     */
+    public boolean hasInteractiveView() {
+        if (m_factory instanceof InteractiveNodeFactory) {
+            return ((InteractiveNodeFactory)m_factory).hasInteractiveView();
+        }
+        return false;
+    }
+
+    /**
+     * Returns the name for the interactive node's view.
+     *
+     * @return The view's name.
+     */
+    public String getInteractiveViewName() {
+        if (m_factory instanceof InteractiveNodeFactory) {
+            return ((InteractiveNodeFactory)m_factory).getInteractiveViewName();
+        }
+        return "n/a";
+    }
+
+    /**
+     * Return a new instance of the interactive node's view (without opening it).
+     *
+     * @param title the displayed view title.
+     * @return The node view with the specified index.
+     */
+    public NodeView getInteractiveView(final String title) {
+        try {
+            if (m_factory instanceof InteractiveNodeFactory) {
+                return (((InteractiveNodeFactory)m_factory).createInteractiveView(m_model));
+            }
+        } catch (Throwable e) {
+            String errorMsg = "Interactive View instantiation failed: " + e.getMessage();
+            m_logger.error(errorMsg, e);
+            throw new RuntimeException(errorMsg, e);
+        }
+        return null;
     }
 
     /**

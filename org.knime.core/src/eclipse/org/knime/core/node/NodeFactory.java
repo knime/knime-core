@@ -130,8 +130,7 @@ public abstract class NodeFactory<T extends NodeModel> {
     }
 
     /** The logger for static methods. */
-    private static final NodeLogger LOGGER =
-            NodeLogger.getLogger(NodeFactory.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeFactory.class);
 
     private String m_nodeName;
 
@@ -474,8 +473,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      *         fails.
      */
     private String readShortDescriptionFromXML(final Element knimeNode) {
-        Node w3cNode =
-                knimeNode.getElementsByTagName("shortDescription").item(0);
+        Node w3cNode = knimeNode.getElementsByTagName("shortDescription").item(0);
         if (w3cNode == null) {
             return null;
         }
@@ -522,8 +520,7 @@ public abstract class NodeFactory<T extends NodeModel> {
                     throw new NumberFormatException();
                 }
             } catch (NumberFormatException nfe) {
-                m_logger.coding("Illegal index \"" + indexString
-                        + "\" in port description");
+                m_logger.coding("Illegal index \"" + indexString + "\" in port description");
                 continue;
             }
             addToPort(port);
@@ -761,8 +758,7 @@ public abstract class NodeFactory<T extends NodeModel> {
     protected T createNodeModel(final NodeCreationContext context) {
         // normally correct implementations overwrite this
         LOGGER.coding("If you register a node to be created in a certain"
-                + " context, you should extends "
-                + "ContextAwareNodeFactory");
+                + " context, you should extend ContextAwareNodeFactory");
         return createNodeModel();
     }
 
@@ -805,8 +801,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      */
     protected final String getNodeViewName(final int index) {
         Element e;
-        if ((m_views == null) || (index >= m_views.size())
-                || ((e = m_views.get(index)) == null)) {
+        if ((m_views == null) || (index >= m_views.size()) || ((e = m_views.get(index)) == null)) {
             return "NoName";
         } else {
             return e.getAttribute("name");
@@ -824,8 +819,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      *         {@link #getNrNodeViews()}
      * @see #getNrNodeViews()
      */
-    public abstract NodeView<T> createNodeView(final int viewIndex,
-            final T nodeModel);
+    public abstract NodeView<T> createNodeView(final int viewIndex, final T nodeModel);
 
     /** Generalization of {@link #createNodeView(int, NodeModel)} to allow for
      * creation of a more flexible {@link AbstractNodeView}. Implementations
@@ -846,8 +840,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      *         {@link #getNrNodeViews()}
      * @since 2.1
      */
-    public AbstractNodeView<T> createAbstractNodeView(final int viewIndex,
-            final T nodeModel) {
+    public AbstractNodeView<T> createAbstractNodeView(final int viewIndex, final T nodeModel) {
         return createNodeView(viewIndex, nodeModel);
     }
 
