@@ -867,7 +867,7 @@ public final class FileUtil {
      * @throws IllegalArgumentException if the URL is not a file URL
      */
     public static File getFileFromURL(final URL fileUrl) {
-        if (fileUrl.getProtocol().equalsIgnoreCase("file")) {
+        if (fileUrl.getProtocol().equalsIgnoreCase("file") || fileUrl.getProtocol().equalsIgnoreCase("knime")) {
             File dataFile = new File(fileUrl.getPath());
             if (!dataFile.exists()) {
                 try {
