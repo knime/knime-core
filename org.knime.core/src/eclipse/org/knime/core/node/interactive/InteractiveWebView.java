@@ -49,11 +49,48 @@
  */
 package org.knime.core.node.interactive;
 
+import org.knime.core.node.NodeModel;
+
 /**
  *
  * @author B. Wiswedel, M. Berthold, Th. Gabriel
  * @since 2.8
  */
-public class InteractiveWebView extends AbstractInteractiveView {
+public final class InteractiveWebView<T extends NodeModel & InteractiveNode> extends AbstractInteractiveNodeView<T> {
+
+    /**
+     * @param nodeModel
+     */
+    InteractiveWebView(final T nodeModel) {
+        super(nodeModel);
+        // TODO Auto-generated constructor stub
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void modelChanged() {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected final void callOpenView(final String title) {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected final void callCloseView() {
+        // TODO Auto-generated method stub
+
+    }
 
 }

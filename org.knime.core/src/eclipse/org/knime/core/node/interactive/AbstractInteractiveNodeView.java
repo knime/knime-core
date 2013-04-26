@@ -49,6 +49,7 @@
  */
 package org.knime.core.node.interactive;
 
+import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeID;
@@ -58,17 +59,22 @@ import org.knime.core.node.workflow.WorkflowManager;
 /**
  *
  * @author B. Wiswedel, M. Berthold, Th. Gabriel
+ * @param <T> underlying NodeModel
  * @since 2.8
  */
-public abstract class AbstractInteractiveView {
+public abstract class AbstractInteractiveNodeView<T extends NodeModel & InteractiveNode> extends AbstractNodeView<T> {
+
+    /**
+     * @param nodeModel
+     */
+    AbstractInteractiveNodeView(final T nodeModel) {
+        super(nodeModel);
+        // TODO Auto-generated constructor stub
+    }
 
     private WorkflowManager m_wfm;
     private NodeID m_nodeID;
-    private NodeModel m_model;
-
-    NodeModel getNodeModel() {
-        return m_model;
-    }
+    private T m_model;
 
     void setWorkflowManagerAndNodeID(final WorkflowManager wfm, final NodeID id) {
         m_wfm = wfm;
@@ -77,7 +83,11 @@ public abstract class AbstractInteractiveView {
         if (!(nc instanceof SingleNodeContainer)) {
             throw new RuntimeException("Internal Error: Wrong type of node in " + this.getClass().getName());
         }
-        m_model = ((SingleNodeContainer)nc).getNodeModel();
+        NodeModel nm = ((SingleNodeContainer)nc).getNodeModel();
+        if (!(nm instanceof InteractiveNode)) {
+            throw new RuntimeException("Internal Error: Wrong type of node in " + this.getClass().getName());
+        }
+        m_model = (T)nm;
     }
 
     /** Re-Execute underlying node. Also trigger:

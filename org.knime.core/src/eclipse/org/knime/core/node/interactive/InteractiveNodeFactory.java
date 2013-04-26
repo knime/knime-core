@@ -49,8 +49,8 @@
  */
 package org.knime.core.node.interactive;
 
+import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodeView;
 
 
 /** Additional interface to be implemented by a @see NodeFactory when the
@@ -77,5 +77,5 @@ public interface InteractiveNodeFactory<T extends NodeModel & InteractiveNode> {
      * @param model the view operates on
      * @return interactive view.
      */
-    public NodeView<T> createInteractiveView(final T model);
+    public AbstractNodeView<T> createInteractiveView(final T model);
 }

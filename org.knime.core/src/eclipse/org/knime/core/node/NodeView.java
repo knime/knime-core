@@ -297,9 +297,17 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
         return m_frame.getJMenuBar();
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     *
+     * <strong>Do not</strong> call this method. It's being used by the framework
+     * (if views are shown within a JFrame) or by eclipse (if available, i.e. when
+     * views are embedded in eclipse).
+     *
+     * @since 2.8
+     * @noreference This method is not intended to be referenced by clients.
+     */
     @Override
-    final void callOpenView(final String title) {
+    protected final void callOpenView(final String title) {
         try {
             onOpen();
         } catch (Throwable t) {
@@ -349,6 +357,8 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
      * derive this class, <strong>do not</strong> call this method. It's being
      * used by the framework (if views are shown within a JFrame) or by eclipse
      * (if available, i.e. when views are embedded in eclipse).
+     *
+     * @noreference This method is not intended to be referenced by clients.
      */
     @Override
     public final void callCloseView() {

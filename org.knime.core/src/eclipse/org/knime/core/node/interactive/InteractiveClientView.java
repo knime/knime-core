@@ -58,7 +58,15 @@ import org.knime.core.node.NodeModel;
  * @param <T>
  * @since 2.8
  */
-public class InteractiveClientView<T extends NodeModel & InteractiveNode> extends AbstractInteractiveView {
+public class InteractiveClientView<T extends NodeModel & InteractiveNode> extends AbstractInteractiveNodeView<T> {
+
+    /**
+     * @param nodeModel
+     */
+    InteractiveClientView(final T nodeModel) {
+        super(nodeModel);
+        // TODO Auto-generated constructor stub
+    }
 
     /**
      * @return underlying InteractiveNode/Model
@@ -67,6 +75,33 @@ public class InteractiveClientView<T extends NodeModel & InteractiveNode> extend
     protected T getInteractiveNodeModel() {
         NodeModel m = super.getNodeModel();
         return (T)m;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void modelChanged() {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void callOpenView(final String title) {
+        // TODO Auto-generated method stub
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected void callCloseView() {
+        // TODO Auto-generated method stub
+
     }
 
 }

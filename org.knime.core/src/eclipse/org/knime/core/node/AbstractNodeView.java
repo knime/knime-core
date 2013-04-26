@@ -81,8 +81,9 @@ public abstract class AbstractNodeView<T extends NodeModel> {
      * instantiates the logger.
      * @param nodeModel The underlying node model.
      * @throws NullPointerException If the <code>nodeModel</code> is null.
+     * @since 2.8
      */
-    AbstractNodeView(final T nodeModel) {
+    protected AbstractNodeView(final T nodeModel) {
         if (nodeModel == null) {
             throw new NullPointerException("Node Mode must not be null");
         }
@@ -171,8 +172,9 @@ public abstract class AbstractNodeView<T extends NodeModel> {
      * at most once.
      * @param title the default title of the view. It should be shown in the
      * view title bar (if at all possible).
+     * @since 2.8
      */
-    abstract void callOpenView(final String title);
+    protected abstract void callOpenView(final String title);
 
     /** Closes the view and disposes all allocated resources. The view is not
      * meant to be opened again. This method is the counterpart to
@@ -186,8 +188,11 @@ public abstract class AbstractNodeView<T extends NodeModel> {
     }
 
     /** Called from {@link #closeView()} to close the view and release all
-     * allocated resources. The view will not be opened again. */
-    abstract void callCloseView();
+     * allocated resources. The view will not be opened again.
+     *
+     * @since 2.8
+     **/
+    protected abstract void callCloseView();
 
     /** @return the viewName as set in the {@link #openView(String)} method. */
     String getViewName() {
