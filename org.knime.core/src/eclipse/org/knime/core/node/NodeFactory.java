@@ -965,4 +965,54 @@ public abstract class NodeFactory<T extends NodeModel> {
         LOADED_NODE_FACTORIES.add(factoryClass.getName());
     }
 
+    ////////////////////////////////////////////////////
+    // Factory methods for InteractiveNodeView providers
+    ////////////////////////////////////////////////////
+
+    /**
+     * @return true of the factory can create an interactive view object.
+     * @since 2.8
+     */
+    public boolean hasInteractiveView() {
+        return false;
+    }
+
+    /**
+     * @return name of the interactive view.
+     * @since 2.8
+     */
+    public String getInteractiveViewName() {
+        return "n/a";
+    }
+
+    /**
+     * @param model the view operates on
+     * @return interactive view.
+     * @since 2.8
+     */
+    public AbstractNodeView<T> createInteractiveView(final T model) {
+        return null;
+    }
+
+    ////////////////////////////////////////////
+    // Factory methods for WebNodeView providers
+    ////////////////////////////////////////////
+
+    /**
+     * @return true of the factory can create an web enabled view object.
+     * @since 2.8
+     */
+    public boolean hasInteractiveWebView() {
+        return false;
+    }
+
+    /**
+     * @return view object which can be used with the underlying models @see ViewContent.
+     * @since 2.8
+     */
+    public Object getInteractiveWebView() {
+        return null;
+    }
+
+
 }

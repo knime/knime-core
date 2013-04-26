@@ -83,7 +83,6 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
 import org.knime.core.node.config.ConfigEditTreeModel;
-import org.knime.core.node.interactive.InteractiveNodeFactory;
 import org.knime.core.node.interrupt.InterruptibleNodeModel;
 import org.knime.core.node.missing.MissingNodeModel;
 import org.knime.core.node.port.PortObject;
@@ -1806,10 +1805,7 @@ public final class Node implements NodeModelWarningListener {
      * @since 2.8
      */
     public boolean hasInteractiveView() {
-        if (m_factory instanceof InteractiveNodeFactory) {
-            return ((InteractiveNodeFactory)m_factory).hasInteractiveView();
-        }
-        return false;
+        return m_factory.hasInteractiveView();
     }
 
     /**
@@ -1819,10 +1815,7 @@ public final class Node implements NodeModelWarningListener {
      * @since 2.8
      */
     public String getInteractiveViewName() {
-        if (m_factory instanceof InteractiveNodeFactory) {
-            return ((InteractiveNodeFactory)m_factory).getInteractiveViewName();
-        }
-        return "n/a";
+        return m_factory.getInteractiveViewName();
     }
 
     /**
@@ -1834,15 +1827,12 @@ public final class Node implements NodeModelWarningListener {
      */
     public AbstractNodeView<?> getInteractiveView(final String title) {
         try {
-            if (m_factory instanceof InteractiveNodeFactory) {
-                return (((InteractiveNodeFactory)m_factory).createInteractiveView(m_model));
-            }
+            return m_factory.createInteractiveView(m_model);
         } catch (Throwable e) {
             String errorMsg = "Interactive View instantiation failed: " + e.getMessage();
             m_logger.error(errorMsg, e);
             throw new RuntimeException(errorMsg, e);
         }
-        return null;
     }
 
     /**
