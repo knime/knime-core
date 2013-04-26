@@ -51,7 +51,6 @@ package org.knime.core.node;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -60,6 +59,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.node.interactive.AbstractInteractiveNodeView;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -348,8 +348,20 @@ public abstract class NodeModel {
     final void registerView(final AbstractNodeView<?> view) {
         assert view != null;
         m_views.add(view);
-        m_logger.debug("Registering view at model (total count "
-                + m_views.size() + ")");
+        m_logger.debug("Registering view at model (total count " + m_views.size() + ")");
+    }
+
+    /**
+     * @return interactive node view or null if it does not (yet) exist.
+     * @since 2.8
+     */
+    public final AbstractInteractiveNodeView<?> getInteractiveNodeView() {
+        for (AbstractNodeView<?> abv : m_views) {
+            if (abv instanceof AbstractInteractiveNodeView) {
+                return (AbstractInteractiveNodeView<?>)abv;
+            }
+        }
+        return null;
     }
 
     /**
@@ -361,8 +373,7 @@ public abstract class NodeModel {
         assert view != null;
         boolean success = m_views.remove(view);
         if (success) {
-            m_logger.debug("Unregistering view from model ("
-                    + m_views.size() + " remaining).");
+            m_logger.debug("Unregistering view from model (" + m_views.size() + " remaining).");
         } else {
             m_logger.debug("Can't remove view from model, not registered.");
         }
@@ -377,13 +388,6 @@ public abstract class NodeModel {
             view.closeView();
         }
         m_views.clear();
-    }
-
-    /**
-     * @return All registered views.
-     */
-    final Collection<AbstractNodeView<?>> getViews() {
-        return Collections.unmodifiableCollection(m_views);
     }
 
     /**

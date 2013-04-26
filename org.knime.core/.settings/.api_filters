@@ -34,6 +34,14 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/Node.java" type="org.knime.core.node.Node">
+        <filter comment="removed. Bernd agrees." id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.Node"/>
+                <message_argument value="closeAllViews()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/NodeContentPersistor.java" type="org.knime.core.node.NodeContentPersistor">
         <filter id="643842064">
             <message_arguments>

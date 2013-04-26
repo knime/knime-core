@@ -65,6 +65,7 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
+import org.knime.core.node.interactive.AbstractInteractiveNodeView;
 import org.osgi.framework.Bundle;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -973,7 +974,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @return true of the factory can create an interactive view object.
      * @since 2.8
      */
-    public boolean hasInteractiveView() {
+    protected boolean hasInteractiveView() {
         return false;
     }
 
@@ -981,7 +982,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @return name of the interactive view.
      * @since 2.8
      */
-    public String getInteractiveViewName() {
+    protected String getInteractiveViewName() {
         return "n/a";
     }
 
@@ -990,7 +991,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @return interactive view.
      * @since 2.8
      */
-    public AbstractNodeView<T> createInteractiveView(final T model) {
+    protected AbstractInteractiveNodeView<?> createInteractiveView(final T model) {
         return null;
     }
 
@@ -1002,7 +1003,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @return true of the factory can create an web enabled view object.
      * @since 2.8
      */
-    public boolean hasInteractiveWebView() {
+    protected boolean hasInteractiveWebView() {
         return false;
     }
 
@@ -1010,7 +1011,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @return view object which can be used with the underlying models @see ViewContent.
      * @since 2.8
      */
-    public Object getInteractiveWebView() {
+    protected Object getInteractiveWebView() {
         return null;
     }
 
