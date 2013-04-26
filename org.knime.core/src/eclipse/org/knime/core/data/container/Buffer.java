@@ -903,14 +903,15 @@ class Buffer implements KNIMEStreamConstants {
      *
      * @param spec The spec the rows have to follow. No sanity check is done.
      */
-    void close(final DataTableSpec spec) {
+    synchronized void close(final DataTableSpec spec) {
         assert spec != null : "Buffer is not open.";
-        m_spec = spec;
         closeInternal();
+        m_spec = spec;
     }
 
     /** Closes by creating shortcut array for file access. */
-    synchronized void closeInternal() {
+    void closeInternal() {
+        assert Thread.holdsLock(this);
         // everything is in the list, i.e. in memory
         if (m_outStream == null) {
             // disallow modification
@@ -918,7 +919,9 @@ class Buffer implements KNIMEStreamConstants {
             m_list = newList;
         } else {
             try {
-                assert (m_list.isEmpty()) : "In-Memory list is not empty.";
+                // spec != null ==> called while reading from buffer (memoryAlert)
+                // spec == null ==> called while writing to buffer (close(DTS)) - list must be empty
+                assert (m_spec != null || m_list.isEmpty()) : "In-Memory list is not empty.";
                 m_shortCutsLookup = closeFile(m_outStream);
                 m_typeShortCuts = null; // garbage
                 m_list = null;
