@@ -316,6 +316,29 @@ public final class SingleNodeContainer extends NodeContainer {
 
     /** {@inheritDoc} */
     @Override
+    public boolean hasInteractiveView() {
+        return m_node.hasInteractiveView();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String getInteractiveViewName() {
+        return m_node.getInteractiveViewName();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public AbstractNodeView<NodeModel> getInteractiveView() {
+        String title = getNameWithID() + " (" + getInteractiveViewName() + ")";
+        String customName = getDisplayCustomLine();
+        if (!customName.isEmpty()) {
+            title += " - " + customName;
+        }
+        return (AbstractNodeView<NodeModel>)m_node.getInteractiveView(title);
+    }
+
+    /** {@inheritDoc} */
+    @Override
     void cleanup() {
         super.cleanup();
         m_node.cleanup();

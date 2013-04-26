@@ -90,6 +90,7 @@ import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
+import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -7288,6 +7289,24 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     @Override
     public String getNodeViewName(final int i) {
         throw new IndexOutOfBoundsException("WFM don't have views.");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public boolean hasInteractiveView() {
+        return false;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public String getInteractiveViewName() {
+        return "no view available";
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public AbstractNodeView<NodeModel> getInteractiveView() {
+        return null;
     }
 
     /**

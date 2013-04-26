@@ -1113,6 +1113,26 @@ public abstract class NodeContainer implements NodeProgressListener {
         }
     }
 
+    /* ------------- Interactive Views ---------------*/
+
+    /**
+     * @return true if node provides an interactive view.
+     * @since 2.8
+     */
+    public abstract boolean hasInteractiveView();
+
+    /**
+     * @return name of interactive view.
+     * @since 2.8
+     */
+    public abstract String getInteractiveViewName();
+
+    /**
+     * @return interactive view.
+     * @since 2.8
+     */
+    public abstract AbstractNodeView<NodeModel> getInteractiveView();
+
     /* ------------- Misc node info -------------- */
 
     public abstract URL getIcon();
