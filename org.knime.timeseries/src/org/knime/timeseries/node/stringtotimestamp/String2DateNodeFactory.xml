@@ -8,7 +8,11 @@
     <fullDescription>
         <intro>
             Parses the strings in the selected String column and converts them 
-            into date/time cells by using the entered format pattern.  
+            into date/time cells by using the entered format pattern.<br />
+            Note, the date parser uses localization settings so in order to 
+            parse foreign language date formats you will need to either convert 
+            these formats to the localized representation manually, or change 
+            the localization of your system to match that of your data source.
         </intro>
         <option name="Select column">
         Select the input column containing the timestamp string.
