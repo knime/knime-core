@@ -1794,8 +1794,7 @@ public final class Node implements NodeModelWarningListener {
      * Closes all views (normal and interactive ones!).
      */
     public void closeAllViews() {
-        Set<AbstractNodeView<?>> views =
-                new HashSet<AbstractNodeView<?>>(m_model.getViews());
+        Set<AbstractNodeView<?>> views = new HashSet<AbstractNodeView<?>>(m_model.getViews());
         for (AbstractNodeView<?> view : views) {
             view.closeView();
         }
@@ -1833,7 +1832,7 @@ public final class Node implements NodeModelWarningListener {
      * @return The node view with the specified index.
      * @since 2.8
      */
-    public NodeView getInteractiveView(final String title) {
+    public AbstractNodeView<?> getInteractiveView(final String title) {
         try {
             if (m_factory instanceof InteractiveNodeFactory) {
                 return (((InteractiveNodeFactory)m_factory).createInteractiveView(m_model));

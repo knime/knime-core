@@ -372,8 +372,7 @@ public abstract class NodeModel {
      * Unregisters all views from the model.
      */
     final void unregisterAllViews() {
-        m_logger.debug("Removing all (" + m_views.size()
-                + ") views from model.");
+        m_logger.debug("Removing all (" + m_views.size() + ") views from model.");
         for (AbstractNodeView<?> view : m_views) {
             view.closeView();
         }
