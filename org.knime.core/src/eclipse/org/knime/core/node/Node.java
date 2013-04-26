@@ -1804,6 +1804,7 @@ public final class Node implements NodeModelWarningListener {
     /**
      * Returns true if this node can show an interactive view.
      * @return <code>true</code> if interactive view is available.
+     * @since 2.8
      */
     public boolean hasInteractiveView() {
         if (m_factory instanceof InteractiveNodeFactory) {
@@ -1816,6 +1817,7 @@ public final class Node implements NodeModelWarningListener {
      * Returns the name for the interactive node's view.
      *
      * @return The view's name.
+     * @since 2.8
      */
     public String getInteractiveViewName() {
         if (m_factory instanceof InteractiveNodeFactory) {
@@ -1829,6 +1831,7 @@ public final class Node implements NodeModelWarningListener {
      *
      * @param title the displayed view title.
      * @return The node view with the specified index.
+     * @since 2.8
      */
     public NodeView getInteractiveView(final String title) {
         try {
