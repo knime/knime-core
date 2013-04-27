@@ -137,4 +137,19 @@ public interface IContainerObject extends IRepositoryObject {
      *         <code>false</code> otherwise
      */
     public boolean contains(IRepositoryObject child);
+
+    /**
+     * Returns whether this container object is locked or not. If it is locked, it only accepts
+     * children from org.knime or com.knime plug-ins.
+     *
+     * @return <code>true</code> if this container is locked, <code>false</code> otherwise
+     */
+    public boolean isLocked();
+
+    /**
+     * Returns the id of the plug-in which contributed this container.
+     *
+     * @return a plug-in id or <code>null</code> if the plug-in is unknown
+     */
+    public String getContributingPlugin();
 }

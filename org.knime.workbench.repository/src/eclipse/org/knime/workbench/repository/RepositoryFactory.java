@@ -271,10 +271,10 @@ public final class RepositoryFactory {
         // get the id of the contributing plugin
         String pluginID =
                 element.getDeclaringExtension().getNamespaceIdentifier();
+        boolean locked =
+                (element.getAttribute("locked") == null) || Boolean.parseBoolean(element.getAttribute("locked"));
 
-        Category cat =
-                new Category(id, str(element.getAttribute("name"),
-                        "!name is missing!"));
+        Category cat = new Category(id, str(element.getAttribute("name"), "!name is missing!"), pluginID, locked);
         cat.setPluginID(pluginID);
         cat.setDescription(str(element.getAttribute("description"), ""));
         cat.setAfterID(str(element.getAttribute("after"), ""));
@@ -325,8 +325,27 @@ public final class RepositoryFactory {
             container = (IContainerObject)obj;
         }
 
-        // append the newly created category to the container
-        container.addChild(cat);
+        String parentPluginId = container.getContributingPlugin();
+        if (parentPluginId == null) {
+            parentPluginId = "";
+        }
+        int secondDotIndex = pluginID.indexOf('.', pluginID.indexOf('.') + 1);
+        if (secondDotIndex == -1) {
+            secondDotIndex = 0;
+        }
+
+        if (!container.isLocked() ||
+                pluginID.equals(parentPluginId) ||
+                pluginID.startsWith("org.knime.") ||
+                pluginID.startsWith("com.knime.") ||
+                pluginID.regionMatches(0, parentPluginId, 0, secondDotIndex)) {
+            // container not locked, or both categories from same plug-in
+            // or the vendor is the same (comparing the first two parts of the plug-in ids)
+            container.addChild(cat);
+        } else {
+            LOGGER.error("Locked parent category for category " + cat.getID() + ": " + cat.getPath()
+                    + ". Category will NOT be added!");
+        }
 
         return cat;
     }

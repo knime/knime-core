@@ -64,7 +64,7 @@ public class Root extends AbstractContainerObject {
      * Constructor for a root.
      */
     public Root() {
-        super("", "Root");
+        super("", "Root", "org.knime.base", false);
     }
 
     protected Root(final Root copy) {

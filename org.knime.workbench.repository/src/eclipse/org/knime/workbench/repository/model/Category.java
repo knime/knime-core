@@ -72,6 +72,11 @@ public class Category extends AbstractContainerObject {
 
     private String m_pluginID;
 
+    /**
+     * Creates a new category that is a copy of the given category.
+     *
+     * @param copy the category that should be copied
+     */
     protected Category(final Category copy) {
         super(copy);
         this.m_description = copy.m_description;
@@ -81,12 +86,26 @@ public class Category extends AbstractContainerObject {
     }
 
     /**
-     * Creates a new repository category with the given level-id.
+     * Creates a new locked repository category with the given level-id and name.
      *
-     * @param id The id
+     * @param id the category's unique id
+     * @param name the category's display name
      */
     public Category(final String id, final String name) {
         super(id, name);
+    }
+
+
+    /**
+     * Creates a new repository category with the given level-id and name.
+     *
+     * @param id the category's unique id
+     * @param name the category's display name
+     * @param contributingPlugin the id of the plug-in which contributed this container object
+     * @param locked <code>true</code> if this category is locked, <code>false</code> otherwise
+     */
+    public Category(final String id, final String name, final String contributingPlugin, final boolean locked) {
+        super(id, name, contributingPlugin, locked);
     }
 
     /**

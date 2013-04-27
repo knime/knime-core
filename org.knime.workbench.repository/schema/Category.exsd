@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!-- Schema file written by PDE -->
-<schema targetNamespace="org.knime.workbench.repository">
+<schema targetNamespace="org.knime.workbench.repository" xmlns="http://www.w3.org/2001/XMLSchema">
 <annotation>
       <appInfo>
          <meta.schema plugin="org.knime.workbench.repository" id="category" name="Category"/>
@@ -12,6 +12,11 @@
    </annotation>
 
    <element name="extension">
+      <annotation>
+         <appInfo>
+            <meta.element />
+         </appInfo>
+      </annotation>
       <complexType>
          <sequence minOccurs="1" maxOccurs="unbounded">
             <choice>
@@ -97,6 +102,13 @@
                </appInfo>
             </annotation>
          </attribute>
+         <attribute name="locked" type="boolean" use="default" value="true">
+            <annotation>
+               <documentation>
+                  If true, only nodes or sub-categories from org.knime or com.knime plug-ins may be added to this category. If false every plug-in may add nodes and sub-categories.
+               </documentation>
+            </annotation>
+         </attribute>
       </complexType>
    </element>
 
@@ -120,15 +132,6 @@
 
    <annotation>
       <appInfo>
-         <meta.section type="apiInfo"/>
-      </appInfo>
-      <documentation>
-         [Enter API information here.]
-      </documentation>
-   </annotation>
-
-   <annotation>
-      <appInfo>
          <meta.section type="implementation"/>
       </appInfo>
       <documentation>
@@ -136,12 +139,13 @@
       </documentation>
    </annotation>
 
+
    <annotation>
       <appInfo>
-         <meta.section type="copyright"/>
+         <meta.section type="apiInfo"/>
       </appInfo>
       <documentation>
-         
+         [Enter API information here.]
       </documentation>
    </annotation>
 

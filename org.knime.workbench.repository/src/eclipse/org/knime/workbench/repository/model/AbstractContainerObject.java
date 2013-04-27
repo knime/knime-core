@@ -68,14 +68,34 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
 
     private boolean m_sortChildren = true;
 
+    private boolean m_isLocked = true;
+
+    private String m_contributingPlugin;
+
     /**
-     * Creates a new container object.
+     * Creates a new locked container object.
      *
      * @param id the object's unique id
      * @param name the object's display name
      */
     protected AbstractContainerObject(final String id, final String name) {
         super(id, name);
+    }
+
+
+    /**
+     * Creates a new container object.
+     *
+     * @param id the object's unique id
+     * @param name the object's display name
+     * @param contributingPlugin the id of the plug-in which contributed this container object
+     * @param locked <code>true</code> if this container is locked, <code>false</code> otherwise
+     */
+    protected AbstractContainerObject(final String id, final String name, final String contributingPlugin,
+                                      final boolean locked) {
+        this(id, name);
+        m_contributingPlugin = contributingPlugin;
+        m_isLocked = locked;
     }
 
     /**
@@ -598,5 +618,21 @@ public abstract class AbstractContainerObject extends AbstractRepositoryObject
     @Override
     public boolean contains(final IRepositoryObject child) {
         return m_children.contains(child);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isLocked() {
+        return m_isLocked;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getContributingPlugin() {
+        return m_contributingPlugin;
     }
 }

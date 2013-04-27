@@ -330,6 +330,12 @@ public final class RepositoryManager {
         //
         // Second, process the contributed nodes
         //
+
+        IContainerObject uncategorized = m_root.findContainer("/uncategorized");
+        if (uncategorized == null) {
+            // this should never happen, but who knows...
+            uncategorized = m_root;
+        }
         IExtension[] nodeExtensions = RepositoryManager.getExtensions(ID_NODE);
         for (IExtension ext : nodeExtensions) {
             // iterate through the config elements and create 'NodeTemplate'
@@ -370,14 +376,33 @@ public final class RepositoryManager {
                     // If parent category is illegal, log an error and append
                     // the node to the repository root.
                     if (parentContainer == null) {
-                        LOGGER.warn("Invalid category-path for node "
-                                + "contribution: '" + node.getCategoryPath()
-                                + "' - adding to root instead");
-                        m_root.addChild(node);
+                        LOGGER.error("Unknown category for node " + node.getID() + ": " + node.getCategoryPath()
+                                + ". Node will be added to 'Uncategorized' instead");
+                        uncategorized.addChild(node);
                     } else {
-                        // everything is fine, add the node to its parent
-                        // category
-                        parentContainer.addChild(node);
+                        String nodePluginId = ext.getNamespaceIdentifier();
+                        String categoryPluginId = parentContainer.getContributingPlugin();
+                        if (categoryPluginId == null) {
+                            categoryPluginId = "";
+                        }
+                        int secondDotIndex = nodePluginId.indexOf('.', nodePluginId.indexOf('.') + 1);
+                        if (secondDotIndex == -1) {
+                            secondDotIndex = 0;
+                        }
+
+                        if (!parentContainer.isLocked() ||
+                                nodePluginId.equals(categoryPluginId) ||
+                                nodePluginId.startsWith("org.knime.") ||
+                                nodePluginId.startsWith("com.knime.") ||
+                                nodePluginId.regionMatches(0, categoryPluginId, 0, secondDotIndex)) {
+                            // container not locked, or node and category from same plug-in
+                            // or the vendor is the same (comparing the first two parts of the plug-in ids)
+                            parentContainer.addChild(node);
+                        } else {
+                            LOGGER.error("Locked category for node " + node.getID() + ": " + node.getCategoryPath()
+                                        + ". Node will be added to 'Uncategorized' instead");
+                            uncategorized.addChild(node);
+                        }
                     }
 
                 } catch (Throwable t) {

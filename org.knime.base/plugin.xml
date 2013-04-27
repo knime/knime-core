@@ -318,6 +318,7 @@
             description="Nodes provided by the KNIME community"
             icon="icons/16x16/category_community_nodes.png"
             level-id="community"
+            locked="false"
             name="Community Nodes"
             path="/">
       </category>
@@ -330,6 +331,15 @@
             icon="icons/16x16/report.png"
             level-id="report"
             name="Reporting"
+            path="/">
+      </category>
+      <category
+            after="xml"
+            description="Uncategorized nodes"
+            icon="icons/16x16/category_uncategorized.png"
+            level-id="uncategorized"
+            locked="false"
+            name="Uncategorized"
             path="/">
       </category>            
    </extension>
