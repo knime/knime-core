@@ -65,7 +65,6 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
-import org.knime.core.node.interactive.AbstractInteractiveNodeView;
 import org.osgi.framework.Bundle;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -85,11 +84,9 @@ import org.xml.sax.helpers.DefaultHandler;
  * @param <T> the concrete type of the {@link NodeModel}
  */
 public abstract class NodeFactory<T extends NodeModel> {
-    private static final List<String> LOADED_NODE_FACTORIES =
-            new ArrayList<String>();
+    private static final List<String> LOADED_NODE_FACTORIES = new ArrayList<String>();
 
-    private static final List<String> RO_LIST =
-            Collections.unmodifiableList(LOADED_NODE_FACTORIES);
+    private static final List<String> RO_LIST = Collections.unmodifiableList(LOADED_NODE_FACTORIES);
 
     /**
      * Enum for all node types.
@@ -175,13 +172,8 @@ public abstract class NodeFactory<T extends NodeModel> {
 
     static {
         try {
-            String imagePath =
-                    NodeFactory.class.getPackage().getName().replace('.', '/')
-                            + "/default.png";
-
-            URL iconURL =
-                    NodeFactory.class.getClassLoader().getResource(imagePath);
-
+            String imagePath = NodeFactory.class.getPackage().getName().replace('.', '/') + "/default.png";
+            URL iconURL = NodeFactory.class.getClassLoader().getResource(imagePath);
             defaultIcon = iconURL;
         } catch (Exception ioe) {
             LOGGER.error("Default icon could not be read.", ioe);
@@ -209,8 +201,7 @@ public abstract class NodeFactory<T extends NodeModel> {
                         String path = NodeFactory.class.getPackage().getName();
                         if (pubId.equals("-//UNIKN//DTD KNIME Node 1.0//EN")) {
                             path = path.replace('.', '/') + "/Node1xx.dtd";
-                        } else if (pubId
-                                .equals("-//UNIKN//DTD KNIME Node 2.0//EN")) {
+                        } else if (pubId.equals("-//UNIKN//DTD KNIME Node 2.0//EN")) {
                             path = path.replace('.', '/') + "/Node.dtd";
                         } else {
                             return super.resolveEntity(pubId, sysId);
@@ -274,31 +265,24 @@ public abstract class NodeFactory<T extends NodeModel> {
         // fall back node name if no xml file available or invalid.
         String defaultNodeName = getClass().getSimpleName();
         if (defaultNodeName.endsWith("NodeFactory")) {
-            defaultNodeName =
-                    defaultNodeName.substring(0, defaultNodeName.length()
-                            - "NodeFactory".length());
+            defaultNodeName = defaultNodeName.substring(0, defaultNodeName.length() - "NodeFactory".length());
         } else if (defaultNodeName.endsWith("Factory")) {
-            defaultNodeName =
-                    defaultNodeName.substring(0, defaultNodeName.length()
-                            - "Factory".length());
+            defaultNodeName = defaultNodeName.substring(0, defaultNodeName.length() - "Factory".length());
         }
         URL icon = null;
         NodeType type = null;
         Element knimeNode = null;
         String nodeName = defaultNodeName;
         if (propInStream == null) {
-            m_logger.error("Could not find XML description "
-                    + "file for node '" + getClass().getName() + "'");
+            m_logger.error("Could not find XML description " + "file for node '" + getClass().getName() + "'");
         } else {
             Document doc = null;
             try {
                 synchronized (parser) {
                     parser.setErrorHandler(new DefaultHandler() {
                         @Override
-                        public void error(final SAXParseException ex)
-                                throws SAXException {
-                            m_logger.coding("XML node file does not conform "
-                                    + "with DTD: " + ex.getMessage(), ex);
+                        public void error(final SAXParseException ex) throws SAXException {
+                            m_logger.coding("XML node file does not conform " + "with DTD: " + ex.getMessage(), ex);
                         }
                     });
                     doc = parser.parse(new InputSource(propInStream));
@@ -306,12 +290,10 @@ public abstract class NodeFactory<T extends NodeModel> {
                 knimeNode = doc.getDocumentElement();
                 icon = readIconFromXML(knimeNode);
 
-
                 try {
                     type = NodeType.valueOf(knimeNode.getAttribute("type"));
                 } catch (IllegalArgumentException ex) {
-                    m_logger.coding("Unknown node type '"
-                            + knimeNode.getAttribute("type") + "'");
+                    m_logger.coding("Unknown node type '" + knimeNode.getAttribute("type") + "'");
                     type = NodeType.Unknown;
                 }
 
@@ -324,8 +306,7 @@ public abstract class NodeFactory<T extends NodeModel> {
                         knimeNode);
                 if (shortDescription == null
                         || shortDescription.length() == 0) {
-                    m_logger.coding("Unable to read \"shortDescription\" "
-                            + "tag from XML");
+                    m_logger.coding("Unable to read \"shortDescription\" " + "tag from XML");
                 }
                 readPortsFromXML(knimeNode);
                 readViewsFromXML(knimeNode);
@@ -371,9 +352,7 @@ public abstract class NodeFactory<T extends NodeModel> {
 
         do {
             path = clazz.getPackage().getName();
-            path =
-                    path.replace('.', '/') + "/" + clazz.getSimpleName()
-                            + ".xml";
+            path = path.replace('.', '/') + "/" + clazz.getSimpleName() + ".xml";
 
             propInStream = loader.getResourceAsStream(path);
             clazz = clazz.getSuperclass();
@@ -394,15 +373,12 @@ public abstract class NodeFactory<T extends NodeModel> {
         Bundle bundle = OSGIHelper.getBundle(this.getClass());
         if (bundle != null) { // for running in non-osgi context
             Dictionary<String, String> headers = bundle.getHeaders();
-
             Document doc = m_knimeNode.getOwnerDocument();
             Element bundleElement = doc.createElement("osgi-info");
-            bundleElement.setAttribute(
-                    "bundle-symbolic-name", bundle.getSymbolicName());
+            bundleElement.setAttribute("bundle-symbolic-name", bundle.getSymbolicName());
             bundleElement.setAttribute("bundle-name", headers.get("Bundle-Name"));
             bundleElement.setAttribute("bundle-vendor", headers.get("Bundle-Vendor"));
-            bundleElement.setAttribute(
-                    "factory-package", this.getClass().getPackage().getName());
+            bundleElement.setAttribute("factory-package", this.getClass().getPackage().getName());
             m_knimeNode.appendChild(bundleElement);
         }
     }
@@ -430,9 +406,7 @@ public abstract class NodeFactory<T extends NodeModel> {
             imagePath = imagePath.substring("./".length());
         }
         if (!imagePath.startsWith("/")) {
-            imagePath =
-                    getClass().getPackage().getName().replace('.', '/') + "/"
-                            + imagePath;
+            imagePath = getClass().getPackage().getName().replace('.', '/') + "/" + imagePath;
 
             Matcher m = ICON_PATH_PATTERN.matcher(imagePath);
             while (m.find()) {
@@ -562,8 +536,7 @@ public abstract class NodeFactory<T extends NodeModel> {
                     throw new NumberFormatException();
                 }
             } catch (NumberFormatException nfe) {
-                m_logger.coding("Invalid index \"" + indexString
-                        + "\" for view description.");
+                m_logger.coding("Invalid index \"" + indexString + "\" for view description.");
                 continue;
             }
             // make sure the description fits!
@@ -571,8 +544,7 @@ public abstract class NodeFactory<T extends NodeModel> {
                 m_views.add(null);
             }
             if (m_views.get(index) != null) {
-                m_logger.coding("Duplicate view description in "
-                        + "XML for index " + index + ".");
+                m_logger.coding("Duplicate view description in " + "XML for index " + index + ".");
             }
             m_views.set(index, view);
         }
@@ -581,8 +553,7 @@ public abstract class NodeFactory<T extends NodeModel> {
     private void addToPort(final Element port) {
         String elemName = port.getNodeName();
         if ("modelIn".equals(elemName) || "modelOut".equals(elemName)
-                || "predParamsIn".equals(elemName)
-                || "predParamsOut".equals(elemName)) {
+                || "predParamsIn".equals(elemName) || "predParamsOut".equals(elemName)) {
             throw new IllegalArgumentException(elemName + " is not supported "
                     + " inside the node factory xml file any more. "
                     + "It has been replaced by portIn/portOut. "
@@ -601,8 +572,7 @@ public abstract class NodeFactory<T extends NodeModel> {
             portList.add(null);
         }
         if (portList.get(index) != null) {
-            m_logger.coding("Duplicate port description in " + "XML for index "
-                    + index + ".");
+            m_logger.coding("Duplicate port description in " + "XML for index " + index + ".");
         }
 
         String portName = port.getAttribute("name");
@@ -736,8 +706,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      */
     protected final String getViewDescription(final int index) {
         Element e;
-        if ((m_views == null) || (index >= m_views.size())
-                || ((e = m_views.get(index)) == null)) {
+        if ((m_views == null) || (index >= m_views.size()) || ((e = m_views.get(index)) == null)) {
             return "No description available";
         } else {
             return e.getFirstChild().getNodeValue().trim().replaceAll(
@@ -754,7 +723,7 @@ public abstract class NodeFactory<T extends NodeModel> {
 
     /**
      * @param context
-     * @return
+     * @return new NodeModel
      */
     protected T createNodeModel(final NodeCreationContext context) {
         // normally correct implementations overwrite this
@@ -902,8 +871,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @param m The NodeModel to check against.
      */
     private void checkConsistency(final NodeModel m) {
-        if ((getNrNodeViews() > 0)
-                && ((m_views == null) || getNrNodeViews() != m_views.size())) {
+        if ((getNrNodeViews() > 0) && ((m_views == null) || getNrNodeViews() != m_views.size())) {
             m_logger.coding("Missing or surplus view description");
         }
 
@@ -961,59 +929,21 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @param factoryClass a factory class
      */
     @SuppressWarnings("rawtypes")
-    public static void addLoadedFactory(
-            final Class<? extends NodeFactory> factoryClass) {
+    public static void addLoadedFactory(final Class<? extends NodeFactory> factoryClass) {
         LOADED_NODE_FACTORIES.add(factoryClass.getName());
     }
 
-    ////////////////////////////////////////////////////
-    // Factory methods for InteractiveNodeView providers
-    ////////////////////////////////////////////////////
-
-    /**
-     * @return true of the factory can create an interactive view object.
-     * @since 2.8
-     */
-    protected boolean hasInteractiveView() {
-        return false;
-    }
+    /////////////////////////////////////////////////////////////
+    // Default Factory methods for InteractiveNodeView providers
+    // (implemented here because it needs access to the XML tree)
+    /////////////////////////////////////////////////////////////
 
     /**
      * @return name of the interactive view.
      * @since 2.8
      */
-    protected String getInteractiveViewName() {
+    public final String getInteractiveViewName() {
         return "n/a";
     }
-
-    /**
-     * @param model the view operates on
-     * @return interactive view.
-     * @since 2.8
-     */
-    protected AbstractInteractiveNodeView<?> createInteractiveView(final T model) {
-        return null;
-    }
-
-    ////////////////////////////////////////////
-    // Factory methods for WebNodeView providers
-    ////////////////////////////////////////////
-
-    /**
-     * @return true of the factory can create an web enabled view object.
-     * @since 2.8
-     */
-    protected boolean hasInteractiveWebView() {
-        return false;
-    }
-
-    /**
-     * @return view object which can be used with the underlying models @see ViewContent.
-     * @since 2.8
-     */
-    protected Object getInteractiveWebView() {
-        return null;
-    }
-
 
 }

@@ -85,6 +85,7 @@ import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
 import org.knime.core.node.config.ConfigEditTreeModel;
 import org.knime.core.node.interactive.AbstractInteractiveNodeView;
 import org.knime.core.node.interactive.InteractiveNode;
+import org.knime.core.node.interactive.InteractiveNodeFactory;
 import org.knime.core.node.interrupt.InterruptibleNodeModel;
 import org.knime.core.node.missing.MissingNodeModel;
 import org.knime.core.node.port.PortObject;
@@ -1796,10 +1797,13 @@ public final class Node implements NodeModelWarningListener {
      * @since 2.8
      */
     public boolean hasInteractiveView() {
+        if (!(m_factory instanceof InteractiveNodeFactory)) {
+            return false;
+        }
         if (!(m_model instanceof InteractiveNode)) {
             return false;
         }
-        return m_factory.hasInteractiveView();
+        return ((InteractiveNodeFactory)m_factory).hasInteractiveView();
     }
 
     /**
@@ -1820,8 +1824,13 @@ public final class Node implements NodeModelWarningListener {
      * @since 2.8
      */
     public AbstractInteractiveNodeView<?> getInteractiveView(final String title) {
+        if (!(m_factory instanceof InteractiveNodeFactory)) {
+            String errorMsg = "Interactive View instantiation failed: wrong factory!";
+            m_logger.error(errorMsg);
+            throw new RuntimeException(errorMsg);
+        }
         try {
-            return m_factory.createInteractiveView(m_model);
+            return ((InteractiveNodeFactory)m_factory).createInteractiveView(m_model);
         } catch (Throwable e) {
             String errorMsg = "Interactive View instantiation failed: " + e.getMessage();
             m_logger.error(errorMsg, e);
@@ -1947,7 +1956,7 @@ public final class Node implements NodeModelWarningListener {
                                                                        + exRef.get().getMessage(), exRef.get());
                         throw (RuntimeException) exRef.get();
                     } else {
-                    	// not possible since createNodeDialogPane does not throw Exceptions
+                        // not possible since createNodeDialogPane does not throw Exceptions
                     }
                 } else {
                     m_dialogPane = new EmptyNodeDialogPane();
@@ -1955,16 +1964,14 @@ public final class Node implements NodeModelWarningListener {
                 if (getNrOutPorts() > 0) {
                     m_dialogPane.addMiscTab();
                 }
-                if (NodeExecutionJobManagerPool
-                        .getNumberOfJobManagersFactories() > 1) {
+                if (NodeExecutionJobManagerPool.getNumberOfJobManagersFactories() > 1) {
                     // TODO: set the splittype depending on the nodemodel
                     SplitType splitType = SplitType.USER;
                     m_dialogPane.addJobMgrTab(splitType);
                 }
 
             } else {
-                throw new IllegalStateException(
-                        "Can't return dialog pane, node has no dialog!");
+                throw new IllegalStateException("Can't return dialog pane, node has no dialog!");
             }
         }
         return m_dialogPane;
