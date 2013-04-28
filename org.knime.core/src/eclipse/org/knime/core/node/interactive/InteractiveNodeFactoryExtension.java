@@ -51,13 +51,13 @@ package org.knime.core.node.interactive;
 
 import org.knime.core.node.NodeModel;
 
-/** Interface for NodeFactories of interactive nodes.
+/** Interface for NodeFactories of InteractiveNodeModels.
  *
  * @author B. Wiswedel, Th. Gabriel, M. Berthold
  * @param <T> requires NodeModel implementing InteractiveNode
  * @since 2.8
  */
-public interface InteractiveNodeFactory<T extends NodeModel & InteractiveNode> {
+public interface InteractiveNodeFactoryExtension<T extends NodeModel & InteractiveNode> {
 
     ////////////////////////////////////////////////////
     // Factory methods for InteractiveNodeView providers

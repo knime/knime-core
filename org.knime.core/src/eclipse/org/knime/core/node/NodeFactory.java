@@ -942,7 +942,8 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @return name of the interactive view.
      * @since 2.8
      */
-    public final String getInteractiveViewName() {
+    public String getInteractiveViewName() {
+        // TODO: needs to retrieve interactive view name from Node XML.
         return "n/a";
     }
 
