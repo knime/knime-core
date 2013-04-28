@@ -334,7 +334,6 @@
             path="/">
       </category>
       <category
-            after="xml"
             description="Uncategorized nodes"
             icon="icons/16x16/category_uncategorized.png"
             level-id="uncategorized"
