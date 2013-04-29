@@ -338,6 +338,7 @@ public final class SingleNodeContainer extends NodeContainer {
                 title += " - " + customName;
             }
             ainv = m_node.getInteractiveView(title);
+            ainv.setWorkflowManagerAndNodeID(getParent(), getID());
         }
         return ainv;
     }

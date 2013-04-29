@@ -80,7 +80,7 @@ public abstract class AbstractInteractiveNodeView<T extends NodeModel & Interact
      * @param wfm the parent WorkflowManager
      * @param id of the node
      */
-    void setWorkflowManagerAndNodeID(final WorkflowManager wfm, final NodeID id) {
+    public void setWorkflowManagerAndNodeID(final WorkflowManager wfm, final NodeID id) {
         m_wfm = wfm;
         m_nodeID = id;
         NodeContainer nc = m_wfm.getNodeContainer(m_nodeID);
