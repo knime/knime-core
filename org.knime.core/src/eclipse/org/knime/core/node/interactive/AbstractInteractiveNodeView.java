@@ -67,14 +67,12 @@ public abstract class AbstractInteractiveNodeView<T extends NodeModel & Interact
     /**
      * @param nodeModel the underlying model
      */
-    AbstractInteractiveNodeView(final T nodeModel) {
+    protected AbstractInteractiveNodeView(final T nodeModel) {
         super(nodeModel);
-        // TODO Auto-generated constructor stub
     }
 
     private WorkflowManager m_wfm;
     private NodeID m_nodeID;
-//    private T m_model;
 
     /** Set access to workflowmanager and node so the view can trigger re-execution. Not
      * part of the constructor so derived classes don't have access to this information.
@@ -86,6 +84,7 @@ public abstract class AbstractInteractiveNodeView<T extends NodeModel & Interact
         m_wfm = wfm;
         m_nodeID = id;
         NodeContainer nc = m_wfm.getNodeContainer(m_nodeID);
+        assert m_wfm.getNodeContainer(m_nodeID) == nc;  // !! constructor argument matches this info...
         if (!(nc instanceof SingleNodeContainer)) {
             throw new RuntimeException("Internal Error: Wrong type of node in " + this.getClass().getName());
         }
@@ -93,7 +92,13 @@ public abstract class AbstractInteractiveNodeView<T extends NodeModel & Interact
         if (!(nm instanceof InteractiveNode)) {
             throw new RuntimeException("Internal Error: Wrong type of node in " + this.getClass().getName());
         }
-//        m_model = (T)nm;
+    }
+
+    /**
+     * @return true if node can be re-executed.
+     */
+    protected final boolean canReExecute() {
+        return m_wfm.canReExecuteNode(m_nodeID);
     }
 
     /** Re-Execute underlying node. Also trigger:
