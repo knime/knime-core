@@ -65,7 +65,7 @@ import org.knime.core.node.workflow.WorkflowManager;
 public abstract class AbstractInteractiveNodeView<T extends NodeModel & InteractiveNode> extends AbstractNodeView<T> {
 
     /**
-     * @param nodeModel
+     * @param nodeModel the underlying model
      */
     AbstractInteractiveNodeView(final T nodeModel) {
         super(nodeModel);
@@ -74,8 +74,14 @@ public abstract class AbstractInteractiveNodeView<T extends NodeModel & Interact
 
     private WorkflowManager m_wfm;
     private NodeID m_nodeID;
-    private T m_model;
+//    private T m_model;
 
+    /** Set access to workflowmanager and node so the view can trigger re-execution. Not
+     * part of the constructor so derived classes don't have access to this information.
+     *
+     * @param wfm the parent WorkflowManager
+     * @param id of the node
+     */
     void setWorkflowManagerAndNodeID(final WorkflowManager wfm, final NodeID id) {
         m_wfm = wfm;
         m_nodeID = id;
@@ -87,7 +93,7 @@ public abstract class AbstractInteractiveNodeView<T extends NodeModel & Interact
         if (!(nm instanceof InteractiveNode)) {
             throw new RuntimeException("Internal Error: Wrong type of node in " + this.getClass().getName());
         }
-        m_model = (T)nm;
+//        m_model = (T)nm;
     }
 
     /** Re-Execute underlying node. Also trigger:
@@ -95,10 +101,10 @@ public abstract class AbstractInteractiveNodeView<T extends NodeModel & Interact
      * - configure node and successors
      * - execute node but not successors (can be canceled by user of fail during execution!)
      *
-     * @param rec
+     * @param rec callback for confirm messages and progress information.
      */
     protected final void triggerReExecution(final ReexecutionCallback rec) {
-        // m_wfm.reExecute(m_nodeID);
+        m_wfm.reExecuteNode(m_nodeID, rec);
     }
 
     /** Make sure current node internals are used as new default NodeSettings.
@@ -107,6 +113,7 @@ public abstract class AbstractInteractiveNodeView<T extends NodeModel & Interact
      * - NodeModel.saveSettingsTo()
      * - configure node and successors
      *
+     * @param ccb callback for confirm messages.
      */
      protected final void setNewDefaultConfiguration(final ConfigureCallback ccb) {
          // m_wfm.saveNodeSettingsToDefault(m_nodeID);
