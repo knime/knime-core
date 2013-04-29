@@ -51,9 +51,13 @@ package org.knime.core.node.interactive;
 
 import org.knime.core.node.NodeModel;
 
-/**
+/** Abstract base class for interactive views which are launched on the client side via
+ * an integrated browser. They only have indirect access to the NodeModel via get and
+ * setViewContent methods and therefore simulate the behaviour of the same view in the
+ * WebPortal.
  *
  * @author B. Wiswedel, M. Berthold, Th. Gabriel
+ * @param <T> requires a NodeModel implementing InteractiveNode as well
  * @since 2.8
  */
 public final class InteractiveWebView<T extends NodeModel & InteractiveNode> extends AbstractInteractiveNodeView<T> {

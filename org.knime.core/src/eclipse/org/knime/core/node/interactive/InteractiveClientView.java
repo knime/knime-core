@@ -52,7 +52,9 @@ package org.knime.core.node.interactive;
 import org.knime.core.node.NodeModel;
 
 
-/**
+/** Abstract base class for interactive views which are launched on the client side and
+ * have direct access to the NodeModel itself. A default implementation is InteractiveClientSWTView
+ * which brings along standard buttons for reexecution etc.
  *
  * @author B. Wiswedel, M. Berthold, Th. Gabriel
  * @param <T>
@@ -61,7 +63,7 @@ import org.knime.core.node.NodeModel;
 public class InteractiveClientView<T extends NodeModel & InteractiveNode> extends AbstractInteractiveNodeView<T> {
 
     /**
-     * @param nodeModel
+     * @param nodeModel the appropriate model.
      */
     InteractiveClientView(final T nodeModel) {
         super(nodeModel);

@@ -56,7 +56,7 @@ import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
 
-/**
+/** Abstract base class for all client side interactive views.
  *
  * @author B. Wiswedel, M. Berthold, Th. Gabriel
  * @param <T> underlying NodeModel
