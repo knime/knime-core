@@ -1987,7 +1987,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             if (!(InternalNodeContainerState.EXECUTED.equals(snc.getInternalState()))) {
                 return false;
             }
-            if (canResetNode(id)) {
+            if (!canResetNode(id)) {
                 return false;
             }
             return true;
