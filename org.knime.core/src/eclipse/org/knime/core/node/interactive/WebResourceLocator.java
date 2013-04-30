@@ -58,6 +58,7 @@ import org.eclipse.core.runtime.FileLocator;
 /**
  *
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * @since 2.8
  */
 public final class WebResourceLocator {
 
