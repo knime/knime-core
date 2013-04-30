@@ -66,6 +66,7 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
+import org.knime.core.node.interactive.AbstractInteractiveNodeView;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainerState;
@@ -1312,6 +1313,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
 
         final Set<AbstractNodeView<? extends NodeModel>> allViews =
                 new HashSet<AbstractNodeView<? extends NodeModel>>();
+        AbstractInteractiveNodeView<?> inv = null;
 
         /*
          * Opening views can be problematic, see
@@ -1324,9 +1326,9 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
          */
         if (m_testViews) {
             for (NodeContainer nodeCont : m_manager.getNodeContainers()) {
+                // test NodeViews
                 for (int i = 0; i < nodeCont.getNrViews(); i++) {
-                    logger.debug("opening view nr. " + i + " for node "
-                            + nodeCont.getName());
+                    logger.debug("opening view nr. " + i + " for node " + nodeCont.getName());
                     final AbstractNodeView<? extends NodeModel> view =
                             nodeCont.getView(i);
                     final int index = i;
@@ -1338,6 +1340,19 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                         @Override
                         public void run() {
                             Node.invokeOpenView(view, "View #" + index);
+                        }
+                    });
+                }
+                // test InteractiveNodeViews
+                if (nodeCont.hasInteractiveView()) {
+                    logger.debug("opening interactive view for node " + nodeCont.getName());
+                    final AbstractInteractiveNodeView<?> finalInv = inv = nodeCont.getInteractiveView();
+                    // open it now.
+                    ViewUtils.invokeAndWaitInEDT(new Runnable() {
+                        /** {@inheritDoc} */
+                        @Override
+                        public void run() {
+                            Node.invokeOpenView(finalInv, "Interactive View");
                         }
                     });
                 }
@@ -1438,6 +1453,11 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
             // always close these views.
             for (AbstractNodeView<? extends NodeModel> v : allViews) {
                 Node.invokeCloseView(v);
+            }
+            
+            // always close the interactive view.
+            if (inv != null) {
+                Node.invokeCloseView(inv);
             }
 
             wrapUp();
