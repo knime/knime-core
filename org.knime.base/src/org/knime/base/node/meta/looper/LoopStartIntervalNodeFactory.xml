@@ -27,6 +27,8 @@
             is greater than
             <i>to</i>
         </option>
+        <option name="Loop variable is">Select the type of the variable (integer or real numbers)</option>
+        <option name="Variable prefix">The prefix of the variable names</option>
     </fullDescription>
 
     <ports>

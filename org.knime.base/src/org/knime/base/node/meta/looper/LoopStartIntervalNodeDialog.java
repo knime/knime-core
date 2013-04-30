@@ -72,6 +72,8 @@ import org.knime.core.node.NotConfigurableException;
  * @author Thorsten Meinl, University of Konstanz
  */
 public class LoopStartIntervalNodeDialog extends NodeDialogPane {
+    private final JTextField m_prefix = new JTextField(10);
+
     private final JTextField m_from = new JTextField(10);
 
     private final JTextField m_to = new JTextField(10);
@@ -113,7 +115,6 @@ public class LoopStartIntervalNodeDialog extends NodeDialogPane {
         c.gridx = 1;
         p.add(m_step, c);
 
-
         c.gridx = 0;
         c.gridy++;
         c.anchor = GridBagConstraints.NORTHWEST;
@@ -123,9 +124,20 @@ public class LoopStartIntervalNodeDialog extends NodeDialogPane {
         c.gridy++;
         p.add(m_integerLoop, c);
 
+        c.gridx = 0;
+        c.gridy++;
+
         ButtonGroup bg = new ButtonGroup();
         bg.add(m_doubleLoop);
         bg.add(m_integerLoop);
+
+
+        c.gridx = 0;
+        c.gridy++;
+        c.anchor = GridBagConstraints.NORTHWEST;
+        p.add(new JLabel("Variable prefix   "), c);
+        c.gridx = 1;
+        p.add(m_prefix, c);
 
         addTab("Standard settings", p);
     }
@@ -137,6 +149,7 @@ public class LoopStartIntervalNodeDialog extends NodeDialogPane {
     protected void loadSettingsFrom(final NodeSettingsRO settings,
             final DataTableSpec[] specs) throws NotConfigurableException {
         m_settings.loadSettingsForDialog(settings);
+        m_prefix.setText(m_settings.prefix());
         m_from.setText(Double.toString(m_settings.from()));
         m_to.setText(Double.toString(m_settings.to()));
         m_step.setText(Double.toString(m_settings.step()));
@@ -150,6 +163,7 @@ public class LoopStartIntervalNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
+        m_settings.prefix(m_prefix.getText());
         m_settings.from(Double.parseDouble(m_from.getText()));
         m_settings.to(Double.parseDouble(m_to.getText()));
         m_settings.step(Double.parseDouble(m_step.getText()));

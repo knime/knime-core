@@ -68,6 +68,8 @@ public class LoopStartIntervalSettings {
 
     private boolean m_integerLoop;
 
+    private String m_prefix = "loop_";
+
     /**
      * Returns if the loop should iterate over integer and not doubles.
      *
@@ -141,6 +143,22 @@ public class LoopStartIntervalSettings {
     }
 
     /**
+     *
+     * @return the prefix to use for all variables
+     * @since 2.8
+     */
+    public String prefix() {
+        return m_prefix;
+    }
+
+    /**
+     * @param prefix the prefix to use for all variables
+     * @since 2.8
+     */
+    public void prefix(final String prefix) {
+        m_prefix = prefix;
+    }
+    /**
      * Loads the settings from the node settings object.
      *
      * @param settings a node settings object
@@ -150,6 +168,7 @@ public class LoopStartIntervalSettings {
         m_to = settings.getDouble("to", 1);
         m_step = settings.getDouble("step", 0.01);
         m_integerLoop = settings.getBoolean("integerLoop", false);
+        m_prefix = settings.getString("prefix", "loop_");
     }
 
     /**
@@ -164,6 +183,9 @@ public class LoopStartIntervalSettings {
         m_to = settings.getDouble("to");
         m_step = settings.getDouble("step");
         m_integerLoop = settings.getBoolean("integerLoop");
+        if (settings.containsKey("prefix")) {
+            m_prefix = settings.getString("prefix");
+        }
     }
 
     /**
@@ -176,5 +198,6 @@ public class LoopStartIntervalSettings {
         settings.addDouble("to", m_to);
         settings.addDouble("step", m_step);
         settings.addBoolean("integerLoop", m_integerLoop);
+        settings.addString("prefix", m_prefix);
     }
 }
