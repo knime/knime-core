@@ -63,10 +63,33 @@ import org.knime.core.node.NodeModel;
 public final class InteractiveWebView<T extends NodeModel & InteractiveNode> extends AbstractInteractiveNodeView<T> {
 
     /**
-     * @param nodeModel
+     * @param nodeModel the underlying model
+     * @param wvt the template to be used for the web view
      */
     protected InteractiveWebView(final T nodeModel, final WebViewTemplate wvt) {
         super(nodeModel);
+    }
+
+    /**
+     * Load a new ViewContent into the underlying NodeModel.
+     *
+     * @param vc the new content of the view.
+     */
+    protected final void loadViewContentIntoNode(final ViewContent vc) {
+        getNodeModel().loadViewContent(vc);
+    }
+
+    /**
+     * @return ViewContent of the underlying NodeModel.
+     */
+    protected final ViewContent getViewContentFromNode() {
+        return getNodeModel().createViewContent();
+    }
+
+    /** Set current ViewContent as new default settings of the underlying NodeModel.
+     */
+    protected final void makeViewContentNewDefault() {
+        // TODO
     }
 
     /**
@@ -75,8 +98,9 @@ public final class InteractiveWebView<T extends NodeModel & InteractiveNode> ext
     @Override
     protected void modelChanged() {
         // TODO Auto-generated method stub
-
     }
+
+
 
     /**
      * {@inheritDoc}
@@ -84,7 +108,6 @@ public final class InteractiveWebView<T extends NodeModel & InteractiveNode> ext
     @Override
     protected final void callOpenView(final String title) {
         // TODO Auto-generated method stub
-
     }
 
     /**
@@ -93,7 +116,6 @@ public final class InteractiveWebView<T extends NodeModel & InteractiveNode> ext
     @Override
     protected final void callCloseView() {
         // TODO Auto-generated method stub
-
     }
 
 }
