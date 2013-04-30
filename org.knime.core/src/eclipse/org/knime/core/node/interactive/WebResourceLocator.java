@@ -45,55 +45,56 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 22, 2013 by Berthold
+ * Created on 30.04.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
 package org.knime.core.node.interactive;
 
-import org.knime.core.node.NodeModel;
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
 
-/** Abstract base class for interactive views which are launched on the client side via
- * an integrated browser. They only have indirect access to the NodeModel via get and
- * setViewContent methods and therefore simulate the behaviour of the same view in the
- * WebPortal.
+import org.eclipse.core.runtime.FileLocator;
+
+/**
  *
- * @author B. Wiswedel, M. Berthold, Th. Gabriel
- * @param <T> requires a NodeModel implementing InteractiveNode as well
- * @since 2.8
+ * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
-public final class InteractiveWebView<T extends NodeModel & InteractiveNode> extends AbstractInteractiveNodeView<T> {
+public final class WebResourceLocator {
+
+    private final String m_pluginName;
+    private final String m_relativePath;
 
     /**
-     * @param nodeModel
+     * @param pluginName
+     * @param relativePath
+     *
      */
-    protected InteractiveWebView(final T nodeModel, final WebViewTemplate wvt) {
-        super(nodeModel);
+    public WebResourceLocator(final String pluginName, final String relativePath) {
+        m_pluginName = pluginName;
+        m_relativePath = relativePath.startsWith("/") ? relativePath : "/" + relativePath;
     }
 
     /**
-     * {@inheritDoc}
+     * @return the m_pluginName
      */
-    @Override
-    protected void modelChanged() {
-        // TODO Auto-generated method stub
-
+    public String getPluginName() {
+        return m_pluginName;
     }
 
     /**
-     * {@inheritDoc}
+     * @return the m_relativePath
      */
-    @Override
-    protected final void callOpenView(final String title) {
-        // TODO Auto-generated method stub
-
+    public String getRelativePath() {
+        return m_relativePath;
     }
 
     /**
-     * {@inheritDoc}
+     * @return the {@link File} that is denoted through this locator.
+     * @throws IOException
      */
-    @Override
-    protected final void callCloseView() {
-        // TODO Auto-generated method stub
-
+    public File getResource() throws IOException {
+        URL url = new URL("platform:/plugin/" + m_pluginName);
+        File dir = new File(FileLocator.resolve(url).getFile());
+        return new File(dir, m_relativePath);
     }
-
 }

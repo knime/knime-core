@@ -63,14 +63,15 @@ public interface InteractiveNode {
 
     /** Load content potentially modified from an interactive view.
      *
-     * @param content the new content to be copied into the model
+     * @param content The new content to be copied into the model.
      */
     abstract void loadViewContent(final ViewContent content);
 
     /**
-     * @return content required for the interactive view.
+     * Create content which can be used by the interactive view implementation.
+     * @return Content required for the interactive view.
      */
-    abstract ViewContent saveViewContent();
+    abstract ViewContent createViewContent();
 
     /** Execute an executed node again - usually this will be called after
      * a modified content from the interactive view was loaded into the

@@ -49,7 +49,7 @@
  */
 package org.knime.core.node.interactive;
 
-/** Container for all of the information transported inbetween a @see QuickFormNode
+/** Container for all of the information transported inbetween a {@link QuickFormNode}
  * and an interactive view running in the wizard or WebPortal.
  *
  * @author B. Wiswedel, Th. Gabriel, M. Berthold

@@ -112,6 +112,19 @@ public abstract class AbstractInteractiveNodeView<T extends NodeModel & Interact
         m_wfm.reExecuteNode(m_nodeID, rec);
     }
 
+    protected final void loadViewContentIntoNode(final ViewContent vc) {
+
+    }
+
+    protected final ViewContent getViewContentFromNode() {
+        return null;
+    }
+
+    protected final void makeViewContentNewDefault() {
+
+    }
+
+
     /** Make sure current node internals are used as new default NodeSettings.
      * Results in:
      * - reset of node and successors (ask user first!)
