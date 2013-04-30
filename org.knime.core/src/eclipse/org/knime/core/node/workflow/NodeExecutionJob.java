@@ -105,8 +105,9 @@ public abstract class NodeExecutionJob implements Runnable {
         m_data = data;
         m_reExecution = false;
         // also check if this is a re-execution request
-        if (m_nc instanceof InteractiveNode) {
-            if (InternalNodeContainerState.EXECUTED_MARKEDFOREXEC.equals(m_nc.getInternalState())) {
+        if ((m_nc instanceof SingleNodeContainer)
+                && ((SingleNodeContainer)m_nc).getNodeModel() instanceof InteractiveNode) {
+            if (InternalNodeContainerState.EXECUTED_QUEUED.equals(m_nc.getInternalState())) {
                 m_reExecution = true;
             }
         }
