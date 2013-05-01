@@ -159,7 +159,7 @@ public final class PMMLPortObject implements PortObject {
 
     /** Static initialization of all expressions needed for XPath.*/
     private static final String NAMESPACE_DECLARATION =
-            "declare namespace pmml='http://www.dmg.org/PMML-4_0'; ";
+            "declare namespace pmml='http://www.dmg.org/PMML-4_1'; ";
     private static final String PATH_END = "']";
     private static final String FIELD = "field";
     private static final String NAME = "name";
