@@ -48,8 +48,6 @@
  */
 package org.knime.workbench.editor2.actions;
 
-import javax.swing.SwingUtilities;
-
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
@@ -58,7 +56,6 @@ import org.eclipse.swt.widgets.MessageBox;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContainer;
-import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.workbench.editor2.ImageRepository;
 
 /**
@@ -114,42 +111,14 @@ public class OpenInteractiveViewAction extends Action {
         LOGGER.debug("Open Interactive Node View " + m_nodeContainer.getName());
         try {
             final String title = m_nodeContainer.getInteractiveViewName();
-            Runnable runner = new Runnable() {
-                @Override
-                public void run() {
-                    Node.invokeOpenView(m_nodeContainer.getInteractiveView(), title);
-                }
-            };
-            // workaround for bug 2136: Schrodinger views must be opened
-            // in non-AWT thread (unchecked call to SU.invokeAndWait)
-            // This fix is to be reverted in future versions,
-            // see bug 2137 for details
-            boolean isSchrodinger = false;
-            if (m_nodeContainer instanceof SingleNodeContainer) {
-                SingleNodeContainer snc = (SingleNodeContainer)m_nodeContainer;
-                String clName = snc.getNodeReferenceBug2136().
-                    getFactory().getClass().getName();
-                isSchrodinger = clName.startsWith(
-                        "com.schrodinger.knime.node.");
-            }
-            if (isSchrodinger) {
-                Display.getDefault().asyncExec(runner);
-            } else {
-                SwingUtilities.invokeLater(runner);
-            }
+            Node.invokeOpenView(m_nodeContainer.getInteractiveView(), title);
         } catch (Throwable t) {
-            MessageBox mb = new MessageBox(
-                    Display.getDefault().getActiveShell(),
-                    SWT.ICON_ERROR | SWT.OK);
+            final MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(), SWT.ICON_ERROR | SWT.OK);
             mb.setText("Interactive View cannot be opened");
-            mb.setMessage("The interactive view cannot be opened for the "
-                    + "following reason:\n" + t.getMessage());
+            mb.setMessage("The interactive view cannot be opened for the following reason:\n" + t.getMessage());
             mb.open();
-            LOGGER.error("The interactive view for node '"
-                    + m_nodeContainer.getNameWithID() + "' has thrown a '"
-                    + t.getClass().getSimpleName()
-                    + "'. That is most likely an "
-                    + "implementation error.", t);
+            LOGGER.error("The interactive view for node '" + m_nodeContainer.getNameWithID() + "' has thrown a '"
+                    + t.getClass().getSimpleName() + "'. That is most likely an implementation error.", t);
         }
     }
 
