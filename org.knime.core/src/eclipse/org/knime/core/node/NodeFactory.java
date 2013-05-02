@@ -162,6 +162,8 @@ public abstract class NodeFactory<T extends NodeModel> {
 
     private Element m_knimeNode;
 
+    private Element m_interactiveView;
+
     private static DocumentBuilder parser;
 
     private static URL defaultIcon = null;
@@ -547,6 +549,12 @@ public abstract class NodeFactory<T extends NodeModel> {
                 m_logger.coding("Duplicate view description in " + "XML for index " + index + ".");
             }
             m_views.set(index, view);
+        }
+
+        NodeList iaViews = knimeNode.getElementsByTagName("interactiveView");
+        if (iaViews.getLength() > 0) {
+            // note that there is at most one interactive view
+            m_interactiveView = (Element)iaViews.item(0);
         }
     }
 
@@ -939,12 +947,16 @@ public abstract class NodeFactory<T extends NodeModel> {
     /////////////////////////////////////////////////////////////
 
     /**
-     * @return name of the interactive view.
+     * Returns the name of the interactive view if such a view exists. Otherwise <code>null</code> is returned.
+     *
+     * @return name of the interactive view or <code>null</code>
      * @since 2.8
      */
     public String getInteractiveViewName() {
-        // TODO: needs to retrieve interactive view name from Node XML.
-        return "n/a";
+        if (m_interactiveView != null) {
+            return m_interactiveView.getAttribute("name");
+        } else {
+            return null;
+        }
     }
-
 }

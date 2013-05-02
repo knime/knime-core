@@ -20,7 +20,7 @@
  * email: contact@knime.org
 ===============================================================================
 -->
-<!ELEMENT knimeNode ( name, shortDescription, fullDescription, ports, views? ) >
+<!ELEMENT knimeNode ( name, shortDescription, fullDescription, interactiveView?, ports, views? ) >
 <!ATTLIST knimeNode icon CDATA #IMPLIED>
 <!ATTLIST knimeNode type (Source|Sink|Learner|Predictor|Manipulator|Visualizer|Meta|LoopStart|LoopEnd|ScopeStart|ScopeEnd|QuickForm|Other|Unknown) "Unknown">
 <!ATTLIST knimeNode deprecated (true|false) "false">
@@ -76,6 +76,9 @@
 <!ATTLIST outPort name CDATA #REQUIRED>
 
 <!ELEMENT views (view+) >
-<!ELEMENT view (#PCDATA | p | h | br | b | i | u | tt | a | ul | ol | pre | sub | sup)* >
+<!ELEMENT view (#PCDATA | p | h | br | b| i | u | tt | a | ul | ol | pre | sub | sup)* >
 <!ATTLIST view index CDATA #REQUIRED>
 <!ATTLIST view name CDATA #REQUIRED>
+
+<!ELEMENT interactiveView (#PCDATA | p | h | br | b| i | u | tt | a | ul | ol | pre | sub | sup)* >
+<!ATTLIST interactiveView name CDATA #REQUIRED>

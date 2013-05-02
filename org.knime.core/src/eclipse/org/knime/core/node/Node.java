@@ -1797,9 +1797,9 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /**
-     * Returns the name for the interactive node's view.
+     * Returns the name of the interactive view if such a view exists. Otherwise <code>null</code> is returned.
      *
-     * @return The view's name.
+     * @return name of the interactive view or <code>null</code>
      * @since 2.8
      */
     public String getInteractiveViewName() {

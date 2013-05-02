@@ -128,20 +128,77 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/xmlbeans/org/knime/node2012/KnimeNodeDocument.java" type="org.knime.node2012.KnimeNodeDocument$KnimeNode">
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.KnimeNodeDocument.KnimeNode"/>
+                <message_argument value="addNewInteractiveView()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.KnimeNodeDocument.KnimeNode"/>
+                <message_argument value="getInteractiveView()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.KnimeNodeDocument.KnimeNode"/>
+                <message_argument value="isSetInteractiveView()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.KnimeNodeDocument.KnimeNode"/>
+                <message_argument value="setInteractiveView(AbstractView)"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.KnimeNodeDocument.KnimeNode"/>
+                <message_argument value="unsetInteractiveView()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="addNewInteractiveView()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="getInteractiveView()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="isSetInteractiveView()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="setInteractiveView(AbstractView)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1211105284">
+            <message_arguments>
+                <message_argument value="unsetInteractiveView()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/xmlbeans/org/knime/node2012/KnimeNodeDocument.java" type="org.knime.node2012.KnimeNodeDocument$KnimeNode$Type">
-        <filter comment="changes in node.dtd/node.xsd - not API protected" id="403767336">
+        <filter id="403767336">
             <message_arguments>
                 <message_argument value="org.knime.node2012.KnimeNodeDocument.KnimeNode.Type"/>
                 <message_argument value="INT_SCOPE_END"/>
             </message_arguments>
         </filter>
-        <filter comment="changes in node.dtd/node.xsd - not API protected" id="403767336">
+        <filter id="403767336">
             <message_arguments>
                 <message_argument value="org.knime.node2012.KnimeNodeDocument.KnimeNode.Type"/>
                 <message_argument value="INT_SCOPE_START"/>
             </message_arguments>
         </filter>
-        <filter comment="changes in node.dtd/node.xsd - not API protected" id="403767336">
+        <filter id="403767336">
             <message_arguments>
                 <message_argument value="org.knime.node2012.KnimeNodeDocument.KnimeNode.Type"/>
                 <message_argument value="SCOPE_END"/>
@@ -153,7 +210,7 @@
                 <message_argument value="SCOPE_START"/>
             </message_arguments>
         </filter>
-        <filter comment="changes in node.dtd/node.xsd - not API protected" id="1211105284">
+        <filter id="1211105284">
             <message_arguments>
                 <message_argument value="INT_SCOPE_END"/>
             </message_arguments>
@@ -163,7 +220,7 @@
                 <message_argument value="INT_SCOPE_START"/>
             </message_arguments>
         </filter>
-        <filter comment="changes in node.dtd/node.xsd - not API protected" id="1211105284">
+        <filter id="1211105284">
             <message_arguments>
                 <message_argument value="SCOPE_END"/>
             </message_arguments>
@@ -529,6 +586,33 @@
         <filter id="1211105284">
             <message_arguments>
                 <message_argument value="setLiArray(int, LiDocument.Li)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node2012/impl/KnimeNodeDocumentImpl.java" type="org.knime.node2012.impl.KnimeNodeDocumentImpl$KnimeNodeImpl">
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="addNewInteractiveView()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="getInteractiveView()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="isSetInteractiveView()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="setInteractiveView(AbstractView)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="unsetInteractiveView()"/>
             </message_arguments>
         </filter>
     </resource>

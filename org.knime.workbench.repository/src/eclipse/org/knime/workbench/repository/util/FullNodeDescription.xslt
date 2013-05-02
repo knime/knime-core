@@ -38,6 +38,7 @@
                 </xsl:if>
 
 
+                <xsl:apply-templates select="interactiveView" />
                 <xsl:apply-templates select="ports" />
                 <xsl:apply-templates select="views" />
 
@@ -70,6 +71,13 @@
         <dd>
             <xsl:apply-templates select="node()" />
         </dd>
+    </xsl:template>
+
+    <xsl:template match="interactiveView">
+        <h2><xsl:value-of select="@name" /></h2>
+        <div>
+            <xsl:apply-templates />
+        </div>
     </xsl:template>
 
     <xsl:template match="views[view]">

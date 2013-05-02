@@ -1123,7 +1123,9 @@ public abstract class NodeContainer implements NodeProgressListener {
     public abstract boolean hasInteractiveView();
 
     /**
-     * @return name of interactive view.
+     * Returns the name of the interactive view if such a view exists. Otherwise <code>null</code> is returned.
+     *
+     * @return name of the interactive view or <code>null</code>
      * @since 2.8
      */
     public abstract String getInteractiveViewName();

@@ -29,6 +29,7 @@
         <xs:element ref="name"/>
         <xs:element ref="shortDescription"/>
         <xs:element ref="fullDescription"/>
+        <xs:element name="interactiveView" minOccurs="0" maxOccurs="1" type="AbstractView"/>
         <xs:element ref="ports"/>
         <xs:element minOccurs="0" ref="views"/>
       </xs:sequence>
@@ -297,4 +298,23 @@
       <xs:attribute name="name" type="xs:string" use="required"/>
     </xs:complexType>
   </xs:element>
+
+    <xs:complexType name="AbstractView">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="p"/>
+        <xs:element ref="h"/>
+        <xs:element ref="br"/>
+        <xs:element ref="b"/>
+        <xs:element ref="i"/>
+        <xs:element ref="u"/>
+        <xs:element ref="tt"/>
+        <xs:element ref="a"/>
+        <xs:element ref="ul"/>
+        <xs:element ref="ol"/>
+        <xs:element ref="pre"/>
+        <xs:element ref="sub"/>
+        <xs:element ref="sup"/>
+      </xs:choice>
+      <xs:attribute name="name" type="xs:string" use="required"/>
+    </xs:complexType>
 </xs:schema>

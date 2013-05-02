@@ -332,7 +332,11 @@ public final class SingleNodeContainer extends NodeContainer {
     public AbstractInteractiveNodeView<?> getInteractiveView() {
         AbstractInteractiveNodeView<?> ainv = m_node.getNodeModel().getInteractiveNodeView();
         if (ainv == null) {
-            String title = getNameWithID() + " (" + getInteractiveViewName() + ")";
+            String name = getInteractiveViewName();
+            if (name == null) {
+                name = "TITLE MISSING";
+            }
+            String title = getNameWithID() + " (" + name + ")";
             String customName = getDisplayCustomLine();
             if (!customName.isEmpty()) {
                 title += " - " + customName;
