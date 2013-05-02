@@ -521,6 +521,12 @@ public abstract class NodeFactory<T extends NodeModel> {
      * problem is reported to the node logger.
      */
     private void readViewsFromXML(final Element knimeNode) {
+        NodeList iaViews = knimeNode.getElementsByTagName("interactiveView");
+        if (iaViews.getLength() > 0) {
+            // note that there is at most one interactive view
+            m_interactiveView = (Element)iaViews.item(0);
+        }
+
         Node w3cNode = knimeNode.getElementsByTagName("views").item(0);
         if (w3cNode == null) {
             return;
@@ -549,12 +555,6 @@ public abstract class NodeFactory<T extends NodeModel> {
                 m_logger.coding("Duplicate view description in " + "XML for index " + index + ".");
             }
             m_views.set(index, view);
-        }
-
-        NodeList iaViews = knimeNode.getElementsByTagName("interactiveView");
-        if (iaViews.getLength() > 0) {
-            // note that there is at most one interactive view
-            m_interactiveView = (Element)iaViews.item(0);
         }
     }
 
