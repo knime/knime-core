@@ -128,6 +128,13 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/xmlbeans/org/knime/node2012/AbstractView.java" type="org.knime.node2012.AbstractView">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.AbstractView"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/xmlbeans/org/knime/node2012/KnimeNodeDocument.java" type="org.knime.node2012.KnimeNodeDocument$KnimeNode">
         <filter id="403804204">
             <message_arguments>
@@ -586,6 +593,13 @@
         <filter id="1211105284">
             <message_arguments>
                 <message_argument value="setLiArray(int, LiDocument.Li)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node2012/impl/AbstractViewImpl.java" type="org.knime.node2012.impl.AbstractViewImpl">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node2012.impl.AbstractViewImpl"/>
             </message_arguments>
         </filter>
     </resource>
