@@ -301,13 +301,8 @@ public abstract class WorkflowTestCase extends TestCase {
         if (parent != null) {
             parent.executeUpToHere(ids);
         }
-        m_lock.lock();
-        try {
-            for (NodeID id : ids) {
-                waitWhileNodeInExecution(id);
-            }
-        } finally {
-            m_lock.unlock();
+        for (NodeID id : ids) {
+            waitWhileNodeInExecution(id);
         }
     }
 
@@ -382,6 +377,8 @@ public abstract class WorkflowTestCase extends TestCase {
             m_lock.unlock();
             nc.removeNodeStateChangeListener(l);
         }
+        assertFalse("Lock not to be held by current thread as workflow mutex will be aquired", 
+                m_lock.isHeldByCurrentThread()) ;
         // ugly workaround: The state changes happen in the wfm which does it synchronized on
         // m_workflowMutex. The conditions above only check for "executionInProgress", it does
         // not wait until the WFM has released the mutex (state change events from idle -> configured
