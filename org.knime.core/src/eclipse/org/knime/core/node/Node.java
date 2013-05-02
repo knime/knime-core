@@ -883,7 +883,7 @@ public final class Node implements NodeModelWarningListener {
             // just a normal node: skip execution and fill output ports with inactive markers
             PortObject[] outs = new PortObject[getNrOutPorts()];
             Arrays.fill(outs, InactiveBranchPortObject.INSTANCE);
-            setOutPortObjects(outs, false);
+            setOutPortObjects(outs, false, false);
             assert !m_model.hasContent();
             return true;
         }
@@ -898,8 +898,7 @@ public final class Node implements NodeModelWarningListener {
                 m_logger.error("execute failed, input contains null");
                 // TODO NEWWFM state event
                 // TODO: also notify message/progress listeners
-                createErrorMessageAndNotify(
-                        "Couldn't get data from predecessor (Port No." + i + ").");
+                createErrorMessageAndNotify("Couldn't get data from predecessor (Port No." + i + ").");
                 // notifyStateListeners(new NodeStateChangedEvent.EndExecute());
                 return false;
             }
@@ -916,8 +915,7 @@ public final class Node implements NodeModelWarningListener {
                     createWarningMessageAndNotify("Execution canceled");
                     return false;
                 } catch (Throwable e) {
-                    createErrorMessageAndNotify("Unable to clone input data "
-                            + "at port " + i + ": " + e.getMessage(), e);
+                    createErrorMessageAndNotify("Unable to clone input data at port " + i + ": " + e.getMessage(), e);
                     return false;
                 }
             }
@@ -955,7 +953,7 @@ public final class Node implements NodeModelWarningListener {
                     reset();
                     PortObject[] outs = new PortObject[getNrOutPorts()];
                     Arrays.fill(outs, InactiveBranchPortObject.INSTANCE);
-                    setOutPortObjects(outs, false);
+                    setOutPortObjects(outs, false, false);
                     createErrorMessageAndNotify("Execution failed in Try-Catch block: " + th.getMessage());
                     // and push information onto stack so catch-node can report it:
                     FlowObjectStack fos = getNodeModel().getOutgoingFlowObjectStack();
@@ -987,7 +985,7 @@ public final class Node implements NodeModelWarningListener {
         // check if we see a loop status in the NodeModel
         FlowLoopContext slc = m_model.getLoopContext();
         boolean continuesLoop = (slc != null);
-        if (!setOutPortObjects(newOutData, continuesLoop)) {
+        if (!setOutPortObjects(newOutData, continuesLoop, reExecute)) {
             return false;
         }
         for (int p = 1; p < getNrOutPorts(); p++) {
@@ -1077,13 +1075,12 @@ public final class Node implements NodeModelWarningListener {
      * outports. It will do a sequence of sanity checks whether the argument
      * is valid (non-null, correct type, etc.)
      * @param newOutData The computed output data
-     * @param continuesLoop Whether the loop continue mask is set (permits
-     *        null values)
-     * @return Whether that is successful (false in case of incompatible port
-     *         objects)
+     * @param tolerateNullOutports used e.g. when loop is continued (outports may not yet be available)
+     * @param tolerateDifferentSpecs used e.g. when re-executing a node (table may be different from configure)
+     * @return Whether that is successful (false in case of incompatible port objects)
      */
     private boolean setOutPortObjects(final PortObject[] newOutData,
-            final boolean continuesLoop) {
+            final boolean tolerateNullOutports, final boolean tolerateDifferentSpecs) {
         if (newOutData == null) {
             throw new NullPointerException("Port object array is null");
         }
@@ -1094,7 +1091,7 @@ public final class Node implements NodeModelWarningListener {
         // check for compatible output PortObjects
         for (int i = 0; i < newOutData.length; i++) {
             PortType thisType = m_outputs[i].type;
-            if (newOutData[i] == null && !continuesLoop) {
+            if (newOutData[i] == null && !tolerateNullOutports) {
                 createErrorMessageAndNotify("Output at port " + i + " is null");
                 return false;
             }
@@ -1103,27 +1100,21 @@ public final class Node implements NodeModelWarningListener {
                     // allow PO coming from inactive branch
                     // TODO ensure model was skipped during configure?
                 } else if (!thisType.getPortObjectClass().isInstance(newOutData[i])) {
-                    createErrorMessageAndNotify("Invalid output port object "
-                            + "at port " + i);
-                    m_logger.error("  (Wanted: "
-                            + thisType.getPortObjectClass().getName()
-                            + ", " + "actual: "
-                            + newOutData[i].getClass().getName() + ")");
+                    createErrorMessageAndNotify("Invalid output port object at port " + i);
+                    m_logger.error("  (Wanted: " + thisType.getPortObjectClass().getName() + ", "
+                    + "actual: " + newOutData[i].getClass().getName() + ")");
                     return false;
                 }
                 PortObjectSpec spec;
                 try {
                     spec = newOutData[i].getSpec();
                 } catch (Throwable t) {
-                    createErrorMessageAndNotify("PortObject \""
-                            + newOutData[i].getClass().getName()
-                            + "\" threw " + t.getClass().getSimpleName()
-                            + " on #getSpec() ", t);
+                    createErrorMessageAndNotify("PortObject \"" + newOutData[i].getClass().getName()
+                            + "\" threw " + t.getClass().getSimpleName() + " on #getSpec() ", t);
                     return false;
                 }
                 if (spec == null) {
-                    createErrorMessageAndNotify("Implementation Error: "
-                            + "PortObject \""
+                    createErrorMessageAndNotify("Implementation Error: PortObject \""
                             + newOutData[i].getClass().getName() + "\" must not"
                             + " have null spec (output port " + i + ").");
                     return false;
@@ -1135,10 +1126,9 @@ public final class Node implements NodeModelWarningListener {
                 BufferedDataTable thisTable = (BufferedDataTable)newOutData[p];
                 DataTableSpec portSpec = (DataTableSpec)(m_outputs[p].spec);
                 DataTableSpec newPortSpec = thisTable.getDataTableSpec();
-                if (portSpec != null) {
+                if ((portSpec != null) && !tolerateDifferentSpecs) {
                     if (!portSpec.equalStructure(newPortSpec)) {
-                        String errorMsg = "DataSpec generated by configure does"
-                            + " not match spec after execution.";
+                        String errorMsg = "DataSpec generated by configure does not match spec after execution.";
                         m_logger.coding(errorMsg);
                         createErrorMessageAndNotify(errorMsg);
                     }
