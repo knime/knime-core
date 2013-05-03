@@ -45,9 +45,6 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
- * History
- *   16.11.2005 (mb): created
- *   2006-05-26 (tm): reviewed
  */
 package org.knime.core.node.defaultnodesettings;
 
@@ -209,12 +206,14 @@ public class DialogComponentColumnFilter extends DialogComponent {
 
         // when the user input changes we need to update the model.
         m_columnFilter.addChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 updateModel();
             }
         });
         // update the components, when the value in the model changes
         getModel().prependChangeListener(new ChangeListener() {
+            @Override
             public void stateChanged(final ChangeEvent e) {
                 updateComponent();
             }
@@ -223,6 +222,43 @@ public class DialogComponentColumnFilter extends DialogComponent {
         updateModel();
     }
 
+    /**
+     * @param show set to <code>true</code> to show invalid exclude columns
+     * @since 2.8
+     */
+    public void setShowInvalidExcludeColmns(final boolean show) {
+        m_columnFilter.setShowInvalidExcludeColumns(show);
+    }
+
+    /**
+     * @param show set to <code>true</code> to show invalid include columns
+     * @since 2.8
+     */
+    public void setShowInvalidIncludeColumns(final boolean show) {
+        m_columnFilter.setShowInvalidIncludeColumns(show);
+    }
+
+
+    /**
+     * Returns all invalid columns from the exclude list.
+     *
+     * @return a set of all invalid columns from the exclude list
+     * @since 2.8
+     */
+    public Set<String> getInvalidExcludeColumns() {
+        return m_columnFilter.getInvalidExcludeColumnSet();
+    }
+
+    /**
+     * Returns all invalid columns from the include list.
+     *
+     * @return a list of all invalid columns from the include list
+     * @since 2.8
+     */
+    public Set<String> getInvalidIncludeColumns() {
+        return m_columnFilter.getInvalidIncludedColumnSet();
+    }
+    
     /**
      * {@inheritDoc}
      */
@@ -274,8 +310,7 @@ public class DialogComponentColumnFilter extends DialogComponent {
                 // the component doesn't take a null spec. Create an empty one
                 m_specInFilter = new DataTableSpec();
             }
-            m_columnFilter.update(m_specInFilter, true, filterModel
-                    .getExcludeList());
+            m_columnFilter.update(m_specInFilter, filterModel.getIncludeList(), filterModel.getExcludeList());
             m_columnFilter.setKeepAllSelected(modelKeepAll);
         }
 

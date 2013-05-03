@@ -48,6 +48,25 @@
  */
 package org.knime.base.node.preproc.groupby;
 
+import java.awt.Component;
+import java.awt.Dimension;
+import java.awt.GridLayout;
+import java.util.List;
+import java.util.Set;
+
+import javax.swing.BorderFactory;
+import javax.swing.Box;
+import javax.swing.BoxLayout;
+import javax.swing.JComponent;
+import javax.swing.JPanel;
+import javax.swing.JTabbedPane;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+
+import org.knime.base.data.aggregation.AggregationMethods;
+import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.GlobalSettings;
+import org.knime.base.data.aggregation.dialogutil.AggregationColumnPanel;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeDialogPane;
@@ -65,26 +84,6 @@ import org.knime.core.node.defaultnodesettings.SettingsModelFilterString;
 import org.knime.core.node.defaultnodesettings.SettingsModelIntegerBounded;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 import org.knime.core.node.port.PortObjectSpec;
-
-import org.knime.base.data.aggregation.AggregationMethods;
-import org.knime.base.data.aggregation.ColumnAggregator;
-import org.knime.base.data.aggregation.GlobalSettings;
-import org.knime.base.data.aggregation.dialogutil.AggregationColumnPanel;
-
-import java.awt.Component;
-import java.awt.Dimension;
-import java.awt.GridLayout;
-import java.util.List;
-
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JComponent;
-import javax.swing.JPanel;
-import javax.swing.JTabbedPane;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-
 
 /**
  * The node dialog of the group by node.
@@ -116,7 +115,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
         new SettingsModelString(GroupByNodeModel.CFG_VALUE_DELIMITER,
             GlobalSettings.STANDARD_DELIMITER);
 
-    /** This setting was used prior KNIME 2.6. 
+    /** This setting was used prior KNIME 2.6.
      * @deprecated */
     @Deprecated
     private final SettingsModelBoolean m_sortInMemory =
@@ -149,6 +148,8 @@ public class GroupByNodeDialog extends NodeDialogPane {
             new DialogComponentColumnFilter(m_groupByCols, 0, false);
         m_groupCol.setIncludeTitle(" Group column(s) ");
         m_groupCol.setExcludeTitle(" Available column(s) ");
+        //we are only interested in showing the invalid include columns
+        m_groupCol.setShowInvalidIncludeColumns(true);
         m_groupByCols.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(final ChangeEvent e) {
@@ -326,7 +327,7 @@ public class GroupByNodeDialog extends NodeDialogPane {
         } catch (final InvalidSettingsException e) {
             m_inMemory.setBooleanValue(false);
         }
-     // this option was introduced in Knime 2.4+
+        // this option was introduced in Knime 2.4+
         try {
             m_valueDelimiter.loadSettingsFrom(settings);
         } catch (final InvalidSettingsException e) {
@@ -342,6 +343,11 @@ public class GroupByNodeDialog extends NodeDialogPane {
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
+        //check if the dialog contains invalid group columns
+        final Set<String> invalidInclCols = m_groupCol.getInvalidIncludeColumns();
+        if (invalidInclCols != null && !invalidInclCols.isEmpty()) {
+            throw new InvalidSettingsException(invalidInclCols.size()  + " invalid group columns found.");
+        }
         m_groupCol.saveSettingsTo(settings);
         m_maxUniqueValues.saveSettingsTo(settings);
         m_enableHilite.saveSettingsTo(settings);

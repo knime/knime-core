@@ -50,6 +50,7 @@ package org.knime.base.node.preproc.pivot;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -126,26 +127,30 @@ public class Pivot2NodeModel extends GroupByNodeModel {
 
     /** {@inheritDoc} */
     @Override
-    protected DataTableSpec[] configure(final PortObjectSpec[] inSpecs)
-            throws InvalidSettingsException {
+    protected DataTableSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        // we have to explicitly set all not pivot columns in the exclude list of the SettingsModelFilterString. The
+        // DialogComponentColumnFilter component always uses the exclude/ list to update the component if we don't set
+        // the exclude list all columns are added as group by columns.
+        final DataTableSpec origSpec = (DataTableSpec) inSpecs[0];
+        final Collection<String> exclList = getExcludeList(origSpec, m_pivotCols.getIncludeList());
+        m_pivotCols.setExcludeList(exclList);
         final List<String> pivotCols = m_pivotCols.getIncludeList();
         if (pivotCols.isEmpty()) {
             throw new InvalidSettingsException("No pivot columns selected.");
         }
+        // call super configure do have everything applied as in the super class
+        super.configure(inSpecs);
         final List<String> groupCols = getGroupByColumns();
         for (final String piv : pivotCols) {
             if (groupCols.contains(piv)) {
-                throw new InvalidSettingsException(
-                        "Ambigious group/pivot column selection.");
+                throw new InvalidSettingsException("Ambigious group/pivot column selection.");
             }
         }
+
         final List<String> groupAndPivotCols = createAllColumns();
-        final DataTableSpec origSpec = (DataTableSpec) inSpecs[0];
-        final DataTableSpec groupSpec = createGroupBySpec(origSpec,
-                groupAndPivotCols);
+        final DataTableSpec groupSpec = createGroupBySpec(origSpec, groupAndPivotCols);
         if (groupSpec.getNumColumns() == groupAndPivotCols.size()) {
-            throw new InvalidSettingsException(
-                    "No aggregation columns selected.");
+            throw new InvalidSettingsException("No aggregation columns selected.");
         }
 
         final DataTableSpec groupRowsSpec =
@@ -229,7 +234,7 @@ public class Pivot2NodeModel extends GroupByNodeModel {
         final BufferedDataTable groupTable;
         final String orderPivotColumnName;
 
-        ExecutionContext groupAndPivotExec = 
+        ExecutionContext groupAndPivotExec =
             exec.createSubExecutionContext(0.5);
         ExecutionContext groupExec = exec.createSubExecutionContext(0.25);
         ExecutionContext pivotExec = exec.createSubExecutionContext(0.25);
@@ -285,12 +290,12 @@ public class Pivot2NodeModel extends GroupByNodeModel {
             final GroupByTable groupByTable = createGroupByTable(
                     groupAndPivotExec.createSubExecutionContext(
                             progMainTableGroup / progMainTotal),
-                    appTable, groupAndPivotCols, isProcessInMemory(), 
-                    false /* retain order always false; handled by pivoting */, 
+                    appTable, groupAndPivotCols, isProcessInMemory(),
+                    false /* retain order always false; handled by pivoting */,
                     Arrays.asList(aggrs));
             // table is not sorted by group&pivot columns; if process in memory
             // true then sort table by group&pivot columns
-            if (isProcessInMemory()) { 
+            if (isProcessInMemory()) {
                 exec.setMessage("Sorting group table");
                 final SortedTable sortedGroupByTable = new SortedTable(
                         groupByTable.getBufferedTable(), groupAndPivotCols,
@@ -353,7 +358,7 @@ public class Pivot2NodeModel extends GroupByNodeModel {
         BufferedDataTable pivotTable = fillPivotTable(
                 groupTable, outSpec, pivotStarts,
                 groupAndPivotExec.createSubExecutionContext(
-                        progMainTableFillPivots / progMainTotal), 
+                        progMainTableFillPivots / progMainTotal),
                         orderPivotColumnName);
 
         if (orderPivotColumnName != null) {
@@ -372,7 +377,7 @@ public class Pivot2NodeModel extends GroupByNodeModel {
         // temp fix for bug 3286
         if (isProcessInMemory()) {
             // if process in memory is true, RowKey's needs to be re-computed
-            final BufferedDataContainer rowkeyBuf = 
+            final BufferedDataContainer rowkeyBuf =
                 groupAndPivotExec.createSubExecutionContext(
                         progMainTableReplaceRowKey / progMainTotal).
                         createDataContainer(pivotTable.getSpec());
@@ -471,7 +476,7 @@ public class Pivot2NodeModel extends GroupByNodeModel {
             pivotRowsTable = buf.getTable();
         }
         pivotExec.setProgress(1.0);
-        
+
         /* Fill the 2nd port: important to create this last since it will create
          * the final hilite handler (mapping) for port #1 AND #2 (bug 3270) */
         exec.setMessage("Creating group totals");

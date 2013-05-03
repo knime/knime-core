@@ -45,10 +45,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
- * History
- *    27.08.2008 (Tobias Koetter): created
  */
-
 package org.knime.base.data.aggregation.dialogutil;
 
 import java.util.ArrayList;
@@ -246,11 +243,16 @@ public abstract class AbstractAggregationTableModel
      */
     @Override
     public boolean isCellEditable(final int row, final int columnIdx) {
+        final O operator = getOperator(row);
+        if (!operator.isValid()) {
+            //the row is not editable if the operator is invalid
+            return false;
+        }
         if (columnIdx == m_missingColIdx) {
-            return getOperator(row).supportsMissingValueOption();
+            return operator.supportsMissingValueOption();
         }
         if (columnIdx == m_settingsColIdx) {
-            return getOperator(row).hasOptionalSettings();
+            return operator.hasOptionalSettings();
         }
         return isEditable(row, columnIdx);
     }

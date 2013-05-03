@@ -53,6 +53,7 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javax.swing.BorderFactory;
 import javax.swing.JPanel;
@@ -60,7 +61,6 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import org.knime.base.node.preproc.groupby.GroupByNodeDialog;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeSettingsRO;
@@ -93,8 +93,9 @@ public class Pivot2NodeDialog extends GroupByNodeDialog {
     /** Constructor for class Pivot2NodeDialog. */
     public Pivot2NodeDialog() {
 //pivot column box
-        m_pivotCol =
-            new DialogComponentColumnFilter(m_pivotCols, 0, false);
+        m_pivotCol = new DialogComponentColumnFilter(m_pivotCols, 0, false);
+        //we are only interested in showing the invalid include columns
+        m_pivotCol.setShowInvalidIncludeColumns(true);
         m_pivotCol.setIncludeTitle(" Pivot column(s) ");
         m_pivotCol.setExcludeTitle(" Available column(s) ");
         m_pivotCols.addChangeListener(new ChangeListener() {
@@ -168,18 +169,10 @@ public class Pivot2NodeDialog extends GroupByNodeDialog {
             final PortObjectSpec[] specs) throws NotConfigurableException {
         final DataTableSpec spec = (DataTableSpec)specs[0];
         m_pivotCol.loadSettingsFrom(settings, new DataTableSpec[] {spec});
-        super.loadSettingsFrom(settings, specs);
-        if (m_pivotCols.getIncludeList().isEmpty()
-                && m_pivotCols.getExcludeList().isEmpty()) {
-            List<String> list = new ArrayList<String>();
-            for (DataColumnSpec cspec : spec) {
-                list.add(cspec.getName());
-            }
-            m_pivotCols.setExcludeList(list);
-        }
         m_missComponent.loadSettingsFrom(settings, specs);
         m_totalComponent.loadSettingsFrom(settings, specs);
         m_domainComponent.loadSettingsFrom(settings, specs);
+        super.loadSettingsFrom(settings, specs);
     }
 
     /** {@inheritDoc} */
@@ -187,6 +180,11 @@ public class Pivot2NodeDialog extends GroupByNodeDialog {
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         super.saveSettingsTo(settings);
+        //check if the dialog contains invalid pivot columns
+        final Set<String> invalidInclCols = m_pivotCol.getInvalidIncludeColumns();
+        if (invalidInclCols != null && !invalidInclCols.isEmpty()) {
+            throw new InvalidSettingsException(invalidInclCols.size() + " invalid pivot columns found.");
+        }
         m_pivotCol.saveSettingsTo(settings);
         m_missComponent.saveSettingsTo(settings);
         m_totalComponent.saveSettingsTo(settings);

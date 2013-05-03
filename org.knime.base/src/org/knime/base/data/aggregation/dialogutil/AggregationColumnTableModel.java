@@ -45,8 +45,6 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
- * History
- *    27.08.2008 (Tobias Koetter): created
  */
 
 package org.knime.base.data.aggregation.dialogutil;
@@ -81,7 +79,7 @@ public class AggregationColumnTableModel
      */
     public AggregationColumnTableModel() {
         super(new String[] {"Column", "Aggregation (click to change)"},
-                new Class<?>[] {DataColumnSpec.class, AggregationMethod.class},
+                new Class<?>[] {ColumnAggregator.class, ColumnAggregator.class},
                 true);
     }
     private static final long serialVersionUID = 7331177164907480373L;
@@ -197,9 +195,9 @@ public class AggregationColumnTableModel
         final ColumnAggregator columnAggregator = getRow(row);
         switch (columnIndex) {
         case 0:
-            return columnAggregator.getOriginalColSpec();
+            return columnAggregator;
         case 1:
-            return columnAggregator.getMethodTemplate();
+            return columnAggregator;
 
         default:
             break;

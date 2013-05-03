@@ -45,14 +45,12 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
- * History
- *    27.08.2008 (Tobias Koetter): created
  */
-
 package org.knime.base.data.aggregation.dialogutil;
 
 import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Rectangle;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -75,6 +73,7 @@ import javax.swing.JPopupMenu;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.ListCellRenderer;
+import javax.swing.ListSelectionModel;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.TableColumnModel;
@@ -463,13 +462,12 @@ public abstract class AbstractAggregationPanel
      * Adds all selected columns to the aggregation column table.
      */
     protected void onAddIt() {
-        @SuppressWarnings("unchecked")
         final L[] values = (L[])getList().getSelectedValues();
         if (values == null || values.length < 1) {
             return;
         }
         final List<O> methods = getOperators(values);
-        getTableModel().add(methods);
+        addMethods(methods);
     }
 
     /**
@@ -477,8 +475,27 @@ public abstract class AbstractAggregationPanel
      */
     protected void onAddAll() {
         final List<O> methods = getOperators(getListModel());
-        getTableModel().add(methods);
+        addMethods(methods);
     }
+
+    /**
+     * @param methods
+     */
+    private void addMethods(final List<O> methods) {
+        final T tableModel = getTableModel();
+        final int rowCountBefore = tableModel.getRowCount();
+        tableModel.add(methods);
+        final int rowCountAfter = tableModel.getRowCount();
+        final JTable table = getTable();
+        final ListSelectionModel selectionModel = table.getSelectionModel();
+        if (selectionModel != null) {
+            //select the fresh added rows
+            selectionModel.setSelectionInterval(rowCountBefore, rowCountAfter - 1);
+            //scroll first selected row into view
+            table.scrollRectToVisible(new Rectangle(table.getCellRect(rowCountBefore, 0, true)));
+        }
+    }
+
 
     /**
      * Removes the selected columns from the aggregation column table.
@@ -498,7 +515,6 @@ public abstract class AbstractAggregationPanel
             final DefaultListModel listModel) {
       final List<O> methods = new ArrayList<O>(listModel.size());
       for (int i = 0, size = listModel.getSize(); i < size; i++) {
-          @SuppressWarnings("unchecked")
           final L listEntry = (L)listModel.get(i);
           final O operator = getOperator(listEntry);
           methods.add(operator);
@@ -592,7 +608,6 @@ public abstract class AbstractAggregationPanel
         final LinkedList<L> elements = new LinkedList<L>();
         final Enumeration<?> listElements = getListModel().elements();
         while (listElements.hasMoreElements()) {
-            @SuppressWarnings("unchecked")
             final L listElement = (L)listElements.nextElement();
             elements.add(listElement);
         }

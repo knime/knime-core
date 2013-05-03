@@ -45,8 +45,6 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
- * History
- *    28.06.2007 (Tobias Koetter): created
  */
 package org.knime.base.node.preproc.groupby;
 
@@ -483,13 +481,10 @@ public class GroupByNodeModel extends NodeModel {
         // be compatible to versions prior KNIME 2.0
         compCheckColumnAggregators(groupByCols, origSpec);
 
-        // we have to explicitly set all not group columns in the
-        // exclude list of the SettingsModelFilterString.
-        // The DialogComponentColumnFilter component always uses the exclude
-        // list to update the component if we don't set the exclude list
-        // all columns are added as group by columns.
-        final Collection<String> exclList = getExcludeList(origSpec,
-                groupByCols);
+        // we have to explicitly set all not group columns in the exclude list of the SettingsModelFilterString. The
+        // DialogComponentColumnFilter component always uses the exclude/ list to update the component if we don't set
+        // the exclude list all columns are added as group by columns.
+        final Collection<String> exclList = getExcludeList(origSpec, groupByCols);
         m_groupByCols.setExcludeList(exclList);
 
         // generate group-by spec given the original spec and selected columns
@@ -527,11 +522,11 @@ public class GroupByNodeModel extends NodeModel {
                 invalidColAggrs.add(colAggr);
             }
         }
-        if (!invalidColAggrs.isEmpty()) {
-            setWarningMessage("Invalid aggregation columns removed.");
-        }
         if (m_columnAggregators2Use.isEmpty()) {
             setWarningMessage("No aggregation column defined");
+        }
+        if (!invalidColAggrs.isEmpty()) {
+            setWarningMessage(invalidColAggrs.size() + " invalid aggregation column(s) found.");
         }
         // check for invalid group columns
         try {
@@ -559,12 +554,17 @@ public class GroupByNodeModel extends NodeModel {
                 colNamePolicy);
     }
 
-    private static Collection<String> getExcludeList(
-            final DataTableSpec origSpec, final List<String> groupByCols) {
+    /**
+     * Determine list of column not present in the original spec.
+     * @param origSpec original spec given at the in-port of this node
+     * @param columns to check against input spec
+     * @return a list of columns not present in input spec
+     * @since 2.8
+     */
+    protected static Collection<String> getExcludeList(final DataTableSpec origSpec, final List<String> columns) {
         final Collection<String> exlList = new LinkedList<String>();
         for (final DataColumnSpec spec : origSpec) {
-            if (groupByCols == null || groupByCols.isEmpty()
-                    || !groupByCols.contains(spec.getName())) {
+            if (columns == null || columns.isEmpty() || !columns.contains(spec.getName())) {
                 exlList.add(spec.getName());
             }
         }

@@ -45,17 +45,23 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
- * History
- *   02.08.2005 (bernd): created
  */
 package org.knime.core.node.util;
 
+import java.awt.Color;
 import java.awt.Component;
+import java.util.HashMap;
+import java.util.Map;
 
+import javax.swing.BorderFactory;
 import javax.swing.DefaultListCellRenderer;
 import javax.swing.JList;
 
+import org.knime.core.data.DataCell;
+import org.knime.core.data.DataColumnProperties;
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.DataType;
 
 
 /**
@@ -67,6 +73,69 @@ import org.knime.core.data.DataColumnSpec;
  */
 public class DataColumnSpecListCellRenderer extends DefaultListCellRenderer {
     private static final long serialVersionUID = 1156595670217009312L;
+
+    /**
+     * All {@link DataColumnSpec}s that contain a property whit this name {@value} in their
+     * {@link DataColumnProperties} are considered as invalid and special rendered.
+     * @since 2.8
+     */
+    public static final String INVALID_PROPERTY_NAME = "KNIME_invallid_property_flag";
+
+    /**
+     * @param spec the {@link DataColumnSpec} to check
+     * @return <code>true</code> if the {@link DataColumnSpec} s invalid e.g. its contains
+     * {@link DataColumnProperties} contain a property with the name {@value #INVALID_PROPERTY_NAME}.
+     * @since 2.8
+     */
+    public static boolean isInvalid(final DataColumnSpec spec) {
+        if (spec == null) {
+            throw new NullPointerException("spec must not be null");
+        }
+        final DataColumnProperties props = spec.getProperties();
+        return props != null && props.containsProperty(INVALID_PROPERTY_NAME);
+    }
+
+    /**
+     * @param colName the name of the invalid column
+     * @return the invalid {@link DataColumnSpec} for the given name
+     * @since 2.8
+     */
+    public static DataColumnSpec createInvalidSpec(final String colName) {
+        DataColumnSpecCreator creator = new DataColumnSpecCreator(colName, DataType.getType(DataCell.class));
+        creator.setProperties(new DataColumnProperties(creaeteInvalidPropertiesMap()));
+        return creator.createSpec();
+    }
+
+    /**
+     * @param originalSpec the original {@link DataColumnSpec} to be marked as invalid
+     * @return the given {@link DataColumnSpec} with the added invalid flag
+     * @since 2.8
+     * @see #INVALID_PROPERTY_NAME
+     */
+    public static final DataColumnSpec createInvalidSpec(final DataColumnSpec originalSpec) {
+        DataColumnSpecCreator creator =
+                new DataColumnSpecCreator(originalSpec);
+        final DataColumnProperties origProps = originalSpec.getProperties();
+        final Map<String, String> map = creaeteInvalidPropertiesMap();
+        final DataColumnProperties props;
+        if (origProps != null) {
+            props = origProps.cloneAndOverwrite(map);
+        } else {
+            props = new DataColumnProperties(map);
+        }
+        creator.setProperties(props);
+        final DataColumnSpec invalidSpec = creator.createSpec();
+        return invalidSpec;
+    }
+
+    /**
+     * @return
+     */
+    private static Map<String, String> creaeteInvalidPropertiesMap() {
+        final Map<String, String> map = new HashMap<String, String>(1);
+        map.put(INVALID_PROPERTY_NAME, INVALID_PROPERTY_NAME);
+        return map;
+    }
 
     /**
      * {@inheritDoc}
@@ -83,9 +152,16 @@ public class DataColumnSpecListCellRenderer extends DefaultListCellRenderer {
         assert (c == this);
         String text = null;
         if (value instanceof DataColumnSpec) {
-            text = ((DataColumnSpec)value).getName().toString();
+            final DataColumnSpec spec = (DataColumnSpec)value;
+            text = spec.getName().toString();
             setText(text);
-            setIcon(((DataColumnSpec)value).getType().getIcon());
+            setIcon(spec.getType().getIcon());
+            if (isInvalid(spec)) {
+                //this is an invalid data column
+                setBorder(BorderFactory.createLineBorder(Color.red));
+            } else {
+                setBorder(null);
+            }
         }
         list.setToolTipText(text);
         return this;

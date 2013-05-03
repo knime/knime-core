@@ -45,7 +45,6 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  */
-
 package org.knime.base.node.preproc.groupby;
 
 import java.util.ArrayList;
@@ -649,20 +648,17 @@ public abstract class GroupByTable {
             final List<String> groupCols)
             throws IllegalArgumentException {
         if (groupCols == null) {
-            throw new IllegalArgumentException(
-                    "Group columns must not be null");
+            throw new IllegalArgumentException("Group columns must not be null");
         }
         // check if all group by columns exist in the DataTableSpec
 
         for (final String ic : groupCols) {
             if (ic == null) {
-                throw new IllegalArgumentException(
-                        "Column name must not be null");
+                throw new IllegalArgumentException("Group column name must not be null");
             }
             if (!ic.equals(SorterNodeDialogPanel2.NOSORT.getName())) {
                 if ((spec.findColumnIndex(ic) == -1)) {
-                    throw new IllegalArgumentException("Column " + ic
-                            + " not in spec.");
+                    throw new IllegalArgumentException("Group column '" + ic + "' not in spec.");
                 }
             }
         }

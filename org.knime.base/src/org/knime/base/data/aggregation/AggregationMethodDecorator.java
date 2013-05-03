@@ -32,7 +32,6 @@
  * propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  */
-
 package org.knime.base.data.aggregation;
 
 import java.awt.Component;
@@ -62,12 +61,14 @@ public abstract class AggregationMethodDecorator
     /**Config key for the aggregation method.*/
     protected static final String CNFG_AGGR_METHODS = "aggregationMethod";
 
-    /**COnfig key for the include missing value flag.*/
+    /**Config key for the include missing value flag.*/
     protected static final String CNFG_INCL_MISSING_VALS = "inclMissingVals";
 
     private final AggregationMethod m_operatorTemplate;
 
     private boolean m_inclMissingCells;
+
+    private boolean m_valid = true;
 
     /**Constructor for class AggregationOperatorDecorator.
      * @param method the {@link AggregationMethod} to use
@@ -169,6 +170,22 @@ public abstract class AggregationMethodDecorator
     @Override
     public String getColumnLabel() {
         return m_operatorTemplate.getColumnLabel();
+    }
+
+    /**
+     * @return <code>true</code> if the operator is valid otherwise <code>false</code>
+     * @since 2.8
+     */
+    public boolean isValid() {
+        return m_valid;
+    }
+
+    /**
+     * @param valid <code>true</code> if the {@link ColumnAggregator} is valid
+     * @since 2.8
+     */
+    public void setValid(final boolean valid) {
+        m_valid = valid;
     }
 
     /**

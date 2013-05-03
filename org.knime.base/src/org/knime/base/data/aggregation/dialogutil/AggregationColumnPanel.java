@@ -45,10 +45,7 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
  *
- * History
- *    27.08.2008 (Tobias Koetter): created
  */
-
 package org.knime.base.data.aggregation.dialogutil;
 
 import java.awt.event.ActionEvent;
@@ -64,11 +61,14 @@ import java.util.Set;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
 import javax.swing.JPopupMenu;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumnModel;
 
 import org.knime.base.data.aggregation.AggregationMethod;
+import org.knime.base.data.aggregation.AggregationMethodDecorator;
 import org.knime.base.data.aggregation.AggregationMethods;
 import org.knime.base.data.aggregation.ColumnAggregator;
+import org.knime.base.data.aggregation.dialogutil.AggregationMethodDecoratorTableCellRenderer.ValueRenderer;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
@@ -328,11 +328,27 @@ ColumnAggregator, DataColumnSpec> {
     @Override
     protected void adaptTableColumnModel(final TableColumnModel columnModel) {
         columnModel.getColumn(0).setCellRenderer(
-                new DataColumnSpecTableCellRenderer());
-        columnModel.getColumn(1).setCellEditor(
-                new AggregationMethodTableCellEditor(getTableModel()));
+                new AggregationMethodDecoratorTableCellRenderer(new ValueRenderer() {
+                    @Override
+                    public void renderComponent(final DefaultTableCellRenderer c,
+                                                final AggregationMethodDecorator method) {
+                        if (method instanceof ColumnAggregator) {
+                            final ColumnAggregator aggregator = (ColumnAggregator)method;
+                            final DataColumnSpec spec = aggregator.getOriginalColSpec();
+                            c.setText(spec.getName());
+                            c.setIcon(spec.getType().getIcon());
+                        }
+                    }
+                }, true));
+        columnModel.getColumn(1).setCellEditor(new ColumnAggregatorTableCellEditor());
         columnModel.getColumn(1).setCellRenderer(
-                new AggregationMethodTableCellRenderer());
+                new AggregationMethodDecoratorTableCellRenderer(new ValueRenderer() {
+                    @Override
+                    public void renderComponent(final DefaultTableCellRenderer c,
+                                                final AggregationMethodDecorator method) {
+                        c.setText(method.getLabel());
+                    }
+                }, false));
         columnModel.getColumn(0).setPreferredWidth(170);
         columnModel.getColumn(1).setPreferredWidth(150);
     }
@@ -476,16 +492,17 @@ ColumnAggregator, DataColumnSpec> {
             listElements.add(colSpec);
         }
       //remove all invalid column aggregator
-        final List<ColumnAggregator> colAggrs2Use =
-            new ArrayList<ColumnAggregator>(colAggrs.size());
+        final List<ColumnAggregator> colAggrs2Use = new ArrayList<ColumnAggregator>(colAggrs.size());
         for (final ColumnAggregator colAggr : colAggrs) {
-            final DataColumnSpec colSpec =
-                spec.getColumnSpec(colAggr.getOriginalColName());
-            if (colSpec != null
-                    && colSpec.getType().equals(
-                            colAggr.getOriginalDataType())) {
-                colAggrs2Use.add(colAggr);
+            final DataColumnSpec colSpec = spec.getColumnSpec(colAggr.getOriginalColName());
+            final boolean valid;
+            if (colSpec != null && colSpec.getType().equals(colAggr.getOriginalDataType())) {
+                valid = true;
+            } else {
+                valid = false;
             }
+            colAggr.setValid(valid);
+            colAggrs2Use.add(colAggr);
         }
         initialize(listElements, colAggrs2Use, spec);
     }

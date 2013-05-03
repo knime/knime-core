@@ -64,6 +64,7 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -101,6 +102,7 @@ import org.knime.core.data.util.ListModelFilterUtils;
  *
  * @author Thomas Gabriel, University of Konstanz
  */
+@SuppressWarnings("serial")
 public class ColumnFilterPanel extends JPanel {
 
     /** Settings key for the excluded columns. */
@@ -164,6 +166,10 @@ public class ColumnFilterPanel extends JPanel {
     /** Border of the include panel, keep it so we can change the title. */
     private final TitledBorder m_excludeBorder;
 
+    private boolean m_showInvalidInclCols = false;
+
+    private boolean m_showInvalidExclCols = false;
+
     /**
      * Class that filters all columns based on a given set of compatible
      * <code>DataValue</code> classes.
@@ -198,6 +204,7 @@ public class ColumnFilterPanel extends JPanel {
          * @param cspec {@link ColumnFilterPanel} checked
          * @return true, if given column should be visible in column filter
          */
+        @Override
         public final boolean includeColumn(final DataColumnSpec cspec) {
             for (final Class<? extends DataValue> cl : m_filterClasses) {
                 if (cspec.getType().isCompatible(cl)) {
@@ -353,6 +360,7 @@ public class ColumnFilterPanel extends JPanel {
         m_addButton.setMaximumSize(new Dimension(125, 25));
         buttonPan.add(m_addButton);
         m_addButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent ae) {
                 onAddIt();
             }
@@ -363,8 +371,9 @@ public class ColumnFilterPanel extends JPanel {
         m_addAllButton.setMaximumSize(new Dimension(125, 25));
         buttonPan.add(m_addAllButton);
         m_addAllButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent ae) {
-                onAddAll();
+                onAddAll(true);
             }
         });
         buttonPan.add(Box.createVerticalStrut(25));
@@ -373,6 +382,7 @@ public class ColumnFilterPanel extends JPanel {
         m_remButton.setMaximumSize(new Dimension(125, 25));
         buttonPan.add(m_remButton);
         m_remButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent ae) {
                 onRemIt();
             }
@@ -383,6 +393,7 @@ public class ColumnFilterPanel extends JPanel {
         m_remAllButton.setMaximumSize(new Dimension(125, 25));
         buttonPan.add(m_remAllButton);
         m_remAllButton.addActionListener(new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent ae) {
                 onRemAll();
             }
@@ -410,9 +421,10 @@ public class ColumnFilterPanel extends JPanel {
         m_searchFieldIncl = new JTextField(8);
         m_searchButtonIncl = new JButton("Search");
         final ActionListener actionListenerIncl = new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
-                ListModelFilterUtils.onSearch(m_inclList, m_inclMdl, 
-                        m_searchFieldIncl.getText(), 
+                ListModelFilterUtils.onSearch(m_inclList, m_inclMdl,
+                        m_searchFieldIncl.getText(),
                         m_markAllHitsIncl.isSelected());
             }
         };
@@ -420,16 +432,16 @@ public class ColumnFilterPanel extends JPanel {
         m_searchButtonIncl.addActionListener(actionListenerIncl);
         final JPanel inclSearchPanel = new JPanel(new BorderLayout());
         inclSearchPanel.add(new JLabel("Column(s): "), BorderLayout.WEST);
-        inclSearchPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15,
-                15));
+        inclSearchPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         inclSearchPanel.add(m_searchFieldIncl, BorderLayout.CENTER);
         inclSearchPanel.add(m_searchButtonIncl, BorderLayout.EAST);
         m_markAllHitsIncl = new JCheckBox("Select all search hits");
         final ActionListener actionListenerAllIncl = new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 m_inclList.clearSelection();
                 ListModelFilterUtils.onSearch(m_inclList, m_inclMdl,
-                        m_searchFieldIncl.getText(), 
+                        m_searchFieldIncl.getText(),
                         m_markAllHitsIncl.isSelected());
             }
         };
@@ -463,9 +475,10 @@ public class ColumnFilterPanel extends JPanel {
         m_searchFieldExcl = new JTextField(8);
         m_searchButtonExcl = new JButton("Search");
         final ActionListener actionListenerExcl = new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
-                ListModelFilterUtils.onSearch(m_exclList, m_exclMdl, 
-                        m_searchFieldExcl.getText(), 
+                ListModelFilterUtils.onSearch(m_exclList, m_exclMdl,
+                        m_searchFieldExcl.getText(),
                         m_markAllHitsExcl.isSelected());
             }
         };
@@ -479,10 +492,11 @@ public class ColumnFilterPanel extends JPanel {
         exclSearchPanel.add(m_searchButtonExcl, BorderLayout.EAST);
         m_markAllHitsExcl = new JCheckBox("Select all search hits");
         final ActionListener actionListenerAllExcl = new ActionListener() {
+            @Override
             public void actionPerformed(final ActionEvent e) {
                 m_exclList.clearSelection();
-                ListModelFilterUtils.onSearch(m_exclList, m_exclMdl, 
-                        m_searchFieldExcl.getText(), 
+                ListModelFilterUtils.onSearch(m_exclList, m_exclMdl,
+                        m_searchFieldExcl.getText(),
                         m_markAllHitsExcl.isSelected());
             }
         };
@@ -511,7 +525,7 @@ public class ColumnFilterPanel extends JPanel {
                 public void itemStateChanged(final ItemEvent ie) {
                     final boolean keepAll = m_keepAllBox.isSelected();
                     if (keepAll) {
-                        onAddAll();
+                        onAddAll(false);
                     }
                     enabledComponents(!keepAll);
                 }
@@ -566,6 +580,23 @@ public class ColumnFilterPanel extends JPanel {
         m_remButton.setEnabled(newEnabled);
         m_addAllButton.setEnabled(newEnabled);
         m_addButton.setEnabled(newEnabled);
+    }
+
+
+    /**
+     * @param show set to <code>true</code> to show invalid exclude columns
+     * @since 2.8
+     */
+    public void setShowInvalidExcludeColumns(final boolean show) {
+        m_showInvalidExclCols = show;
+    }
+
+    /**
+     * @param show set to <code>true</code> to show invalid include columns
+     * @since 2.8
+     */
+    public void setShowInvalidIncludeColumns(final boolean show) {
+        m_showInvalidInclCols = show;
     }
 
     /**
@@ -635,8 +666,13 @@ public class ColumnFilterPanel extends JPanel {
         final Object[] o = m_inclList.getSelectedValues();
         final HashSet<Object> hash = new HashSet<Object>();
         hash.addAll(Arrays.asList(o));
+        List<DataColumnSpec> invalidSpecs = new LinkedList<DataColumnSpec>();
         for (final Enumeration<?> e = m_exclMdl.elements(); e.hasMoreElements();) {
-            hash.add(e.nextElement());
+            DataColumnSpec spec = (DataColumnSpec) e.nextElement();
+            if (m_showInvalidInclCols && DataColumnSpecListCellRenderer.isInvalid(spec)) {
+                invalidSpecs.add(spec);
+            }
+            hash.add(spec);
         }
         boolean changed = false;
         for (int i = 0; i < o.length; i++) {
@@ -646,6 +682,12 @@ public class ColumnFilterPanel extends JPanel {
         for (final DataColumnSpec c : m_order) {
             if (hash.contains(c)) {
                 m_exclMdl.addElement(c);
+            }
+        }
+        if (!invalidSpecs.isEmpty()) {
+            //add all remaining invalid specs at the end of the list
+            for (DataColumnSpec invalidSpec : invalidSpecs) {
+                m_exclMdl.addElement(invalidSpec);
             }
         }
         setKeepAllSelected(false);
@@ -661,16 +703,31 @@ public class ColumnFilterPanel extends JPanel {
      * list.
      */
     private void onRemAll() {
-        final boolean changed = m_inclMdl.elements().hasMoreElements();
-        m_inclMdl.removeAllElements();
-        m_exclMdl.removeAllElements();
-        for (final DataColumnSpec c : m_order) {
-            if (!m_hideColumns.contains(c)) {
-                m_exclMdl.addElement(c);
+        if (m_inclMdl.elements().hasMoreElements()) {
+            //perform the operation only if the exclude model contains at least one column to add
+            final List<DataColumnSpec> invalidSpecs = new LinkedList<DataColumnSpec>();
+            if (m_showInvalidExclCols) {
+                for (final Enumeration<?> e = m_exclMdl.elements(); e.hasMoreElements();) {
+                    final DataColumnSpec spec = (DataColumnSpec)e.nextElement();
+                    if (DataColumnSpecListCellRenderer.isInvalid(spec)) {
+                        invalidSpecs.add(spec);
+                    }
+                }
             }
-        }
-        setKeepAllSelected(false);
-        if (changed) {
+            m_inclMdl.removeAllElements();
+            m_exclMdl.removeAllElements();
+            for (final DataColumnSpec c : m_order) {
+                if (!m_hideColumns.contains(c)) {
+                    m_exclMdl.addElement(c);
+                }
+            }
+            if (!invalidSpecs.isEmpty()) {
+                //add all invalid specs at the end of the list
+                for (DataColumnSpec invalidSpec : invalidSpecs) {
+                    m_exclMdl.addElement(invalidSpec);
+                }
+            }
+            setKeepAllSelected(false);
             fireFilteringChangedEvent();
         }
     }
@@ -684,8 +741,13 @@ public class ColumnFilterPanel extends JPanel {
         final Object[] o = m_exclList.getSelectedValues();
         final HashSet<Object> hash = new HashSet<Object>();
         hash.addAll(Arrays.asList(o));
+        List<DataColumnSpec> invalidSpecs = new LinkedList<DataColumnSpec>();
         for (final Enumeration<?> e = m_inclMdl.elements(); e.hasMoreElements();) {
-            hash.add(e.nextElement());
+            final DataColumnSpec spec = (DataColumnSpec)e.nextElement();
+            if (m_showInvalidInclCols && DataColumnSpecListCellRenderer.isInvalid(spec)) {
+                invalidSpecs.add(spec);
+            }
+            hash.add(spec);
         }
         boolean changed = false;
         for (int i = 0; i < o.length; i++) {
@@ -697,6 +759,12 @@ public class ColumnFilterPanel extends JPanel {
                 m_inclMdl.addElement(c);
             }
         }
+        if (!invalidSpecs.isEmpty()) {
+            //add all remaining invalid specs at the end of the list
+            for (DataColumnSpec invalidSpec : invalidSpecs) {
+                m_inclMdl.addElement(invalidSpec);
+            }
+        }
         if (changed) {
             fireFilteringChangedEvent();
         }
@@ -705,17 +773,33 @@ public class ColumnFilterPanel extends JPanel {
     /**
      * Called by the '<< add all' button to include all elements from the
      * exclude list.
+     * @param showInvalid <code>true</code> if the invalid columns should still be shown
      */
-    private void onAddAll() {
-        final boolean changed = m_exclMdl.elements().hasMoreElements();
-        m_inclMdl.removeAllElements();
-        m_exclMdl.removeAllElements();
-        for (final DataColumnSpec c : m_order) {
-            if (!m_hideColumns.contains(c)) {
-                m_inclMdl.addElement(c);
+    private void onAddAll(final boolean showInvalid) {
+        if (m_exclMdl.elements().hasMoreElements() || !showInvalid) {
+            //perform the operation only if the exclude model contains at least one column to add
+            final List<DataColumnSpec> invalidSpecs = new LinkedList<DataColumnSpec>();
+            if (showInvalid && m_showInvalidInclCols) {
+                for (final Enumeration<?> e = m_inclMdl.elements(); e.hasMoreElements();) {
+                    final DataColumnSpec spec = (DataColumnSpec)e.nextElement();
+                    if (DataColumnSpecListCellRenderer.isInvalid(spec)) {
+                        invalidSpecs.add(spec);
+                    }
+                }
             }
-        }
-        if (changed) {
+            m_inclMdl.removeAllElements();
+            m_exclMdl.removeAllElements();
+            for (final DataColumnSpec c : m_order) {
+                if (!m_hideColumns.contains(c)) {
+                    m_inclMdl.addElement(c);
+                }
+            }
+            if (!invalidSpecs.isEmpty()) {
+                //add all invalid specs at the end of the list
+                for (DataColumnSpec invalidSpec : invalidSpecs) {
+                    m_inclMdl.addElement(invalidSpec);
+                }
+            }
             fireFilteringChangedEvent();
         }
     }
@@ -745,10 +829,9 @@ public class ColumnFilterPanel extends JPanel {
      *            exclude otherwise include
      * @param list the list of columns to exclude or include
      */
-    public void update(final DataTableSpec spec, final boolean exclude,
-            final Collection<String> list) {
-        m_spec = spec;
+    public void update(final DataTableSpec spec, final boolean exclude, final Collection<String> list) {
         assert (spec != null && list != null);
+        m_spec = spec;
         m_order.clear();
         m_inclMdl.removeAllElements();
         m_exclMdl.removeAllElements();
@@ -782,6 +865,60 @@ public class ColumnFilterPanel extends JPanel {
     }
 
     /**
+     * Updates this filter panel by removing all current selections from the
+     * include and exclude list. The include list will contains all column names
+     * from the spec afterwards.
+     *
+     * @param spec the spec to retrieve the column names from
+     * @param inclList the list of columns to include
+     * @param exclList the list of columns to exclude
+     * @since 2.8
+     */
+    public void update(final DataTableSpec spec, final Collection<String> inclList,
+                       final Collection<String> exclList) {
+        assert (spec != null && inclList != null && exclList != null);
+        m_spec = spec;
+        m_order.clear();
+        final Set<String> exclCols = new HashSet<String>(exclList);
+        final Set<String> inclCols = new HashSet<String>(inclList);
+        m_inclMdl.removeAllElements();
+        m_exclMdl.removeAllElements();
+        m_hideColumns.clear();
+        for (int i = 0; i < spec.getNumColumns(); i++) {
+            final DataColumnSpec cSpec = spec.getColumnSpec(i);
+            if (!m_filter.includeColumn(cSpec)) {
+                continue;
+            }
+            final String c = cSpec.getName();
+            m_order.add(cSpec);
+            if (isKeepAllSelected()) {
+                m_inclMdl.addElement(cSpec);
+                inclCols.remove(c);
+            } else {
+                if (exclCols.remove(c)) {
+                    m_exclMdl.addElement(cSpec);
+                } else {
+                    m_inclMdl.addElement(cSpec);
+                    inclCols.remove(c);
+                }
+            }
+        }
+        addInvalidSpecs(m_showInvalidExclCols, spec, exclCols, m_exclMdl);
+        addInvalidSpecs(m_showInvalidInclCols, spec, inclCols, m_inclMdl);
+        repaint();
+    }
+
+    private static void addInvalidSpecs(final boolean showInvalidCols, final DataTableSpec spec,
+                                        final Set<String> colNames, final DefaultListModel model) {
+        if (showInvalidCols && !colNames.isEmpty()) {
+            for (String colName : colNames) {
+                final DataColumnSpec invalidSpec = DataColumnSpecListCellRenderer.createInvalidSpec(colName);
+                model.addElement(invalidSpec);
+            }
+        }
+    }
+
+    /**
      * Returns all columns from the exclude list.
      *
      * @return a set of all columns from the exclude list
@@ -801,6 +938,15 @@ public class ColumnFilterPanel extends JPanel {
         return ListModelFilterUtils.getColumnList(m_exclMdl);
     }
 
+    /**
+     * Returns all invalid columns from the exclude list.
+     *
+     * @return a set of all invalid columns from the exclude list
+     * @since 2.8
+     */
+    public Set<String> getInvalidExcludeColumnSet() {
+        return ListModelFilterUtils.getInvalidColumnList(m_exclMdl);
+    }
 
     /**
      * Returns all columns from the include list.
@@ -820,6 +966,16 @@ public class ColumnFilterPanel extends JPanel {
      */
     public Set<String> getIncludedColumnSet() {
         return ListModelFilterUtils.getColumnList(m_inclMdl);
+    }
+
+    /**
+     * Returns all invalid columns from the include list.
+     *
+     * @return a list of all invalid columns from the include list
+     * @since 2.8
+     */
+    public Set<String> getInvalidIncludedColumnSet() {
+        return ListModelFilterUtils.getInvalidColumnList(m_inclMdl);
     }
 
     /**

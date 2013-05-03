@@ -58,6 +58,7 @@ import javax.swing.JTextField;
 import javax.swing.ListModel;
 
 import org.knime.core.data.DataColumnSpec;
+import org.knime.core.node.util.DataColumnSpecListCellRenderer;
 
 /**
  * Utility class providing filter methods on <code>JList</code> and
@@ -160,10 +161,9 @@ public final class ListModelFilterUtils {
     }
 
     /**
-     * Uses the {@link #searchInList(JList, String, int)} method to get all
+     * Uses the <code>searchInList(JList, String, int)</code> method to get all
      * occurrences of the given string in the given list and returns the index
      * off all occurrences as a <code>int[]</code>.
-     * @see #searchInList(JList, String, int)
      * @param list the list to search in
      * @param str the string to search for
      * @return <code>int[]</code> with the indices off all objects from the
@@ -201,16 +201,39 @@ public final class ListModelFilterUtils {
     }
 
     /**
-     * Returns a set of columns as String.
+     * Returns a set of all valid columns as String.
      * @param model The list from which to retrieve the elements
-     * @return a set of columns
+     * @return a set of valid columns
      */
     public static Set<String> getColumnList(final ListModel model) {
+        return getColumnList(model, false);
+    }
+
+    /**
+     * Returns a set of all invalid columns as String.
+     * @param model The list from which to retrieve the elements
+     * @return a set of invalid columns
+     * @since 2.8
+     */
+    public static Set<String> getInvalidColumnList(final ListModel model) {
+        return getColumnList(model, true);
+    }
+
+    /**
+     * @param model The list from which to retrieve the elements
+     * @param invalid if set to <code>true</code> only the invalid columns are retrieved if set
+     * to <code>false</code> only the valid columns are retrieved
+     * @return a list of valid columns
+     */
+    private static Set<String> getColumnList(final ListModel model, final boolean invalid) {
         final Set<String> list = new LinkedHashSet<String>();
         for (int i = 0; i < model.getSize(); i++) {
             Object o = model.getElementAt(i);
-            String cell = ((DataColumnSpec)o).getName();
-            list.add(cell);
+            final DataColumnSpec spec = (DataColumnSpec)o;
+            if (invalid == DataColumnSpecListCellRenderer.isInvalid(spec)) {
+                String cell = spec.getName();
+                list.add(cell);
+            }
         }
         return list;
     }
