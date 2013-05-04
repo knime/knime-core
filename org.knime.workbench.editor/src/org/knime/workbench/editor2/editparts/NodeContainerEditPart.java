@@ -398,22 +398,24 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                     // this update - they will now need to start their own job.
                     NodeContainerFigure fig = (NodeContainerFigure)getFigure();
                     m_updateInProgress.set(false);
-                    NodeContainer nc = getNodeContainer();
-                    fig.setStateFromNC(nc);
-                    updateNodeMessage();
-                    // reset the tooltip text of the outports
-                    for (Object part : getChildren()) {
-                        if (part instanceof NodeOutPortEditPart
-                                || part instanceof WorkflowInPortEditPart
-                                || part instanceof MetaNodeOutPortEditPart) {
-                            AbstractPortEditPart outPortPart =
-                                (AbstractPortEditPart)part;
-                            outPortPart.rebuildTooltip();
+                    if (isActive()) {
+                        NodeContainer nc = getNodeContainer();
+                        fig.setStateFromNC(nc);
+                        updateNodeMessage();
+                        // reset the tooltip text of the outports
+                        for (Object part : getChildren()) {
+                            if (part instanceof NodeOutPortEditPart
+                                    || part instanceof WorkflowInPortEditPart
+                                    || part instanceof MetaNodeOutPortEditPart) {
+                                AbstractPortEditPart outPortPart =
+                                    (AbstractPortEditPart)part;
+                                outPortPart.rebuildTooltip();
+                            }
                         }
+                        // always refresh visuals (does not seem to do anything
+                        // by default though: call repaints on updated figures).
+                        refreshVisuals();
                     }
-                    // always refresh visuals (does not seem to do anything
-                    // by default though: call repaints on updated figures).
-                    refreshVisuals();
                 }
             });
         }
