@@ -25,12 +25,10 @@
 package org.knime.testing.node.differNode;
 
 import org.knime.core.data.DataTable;
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.RowIterator;
 
 /**
- * Fails if one of the input tables is not empty or the {@link DataTableSpec}s
- * are different.
+ * Fails if one of the input tables is not empty.
  *
  * @author Tobias Koetter, University of Konstanz
  */
