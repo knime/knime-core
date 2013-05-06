@@ -31,10 +31,6 @@
             All missing values will be skipped during computation thus the
             result set contains none missing value elements.
         </option>
-        <option name="Sort in memory">
-            Performs necessary sorting in the memory. Speeds up the process
-            but consumes much more memory.
-        </option>
         <option name="Enable hiliting">
             If enabled, the hiliting of a set entry row will hilite all rows of this
             set entry in other views. Depending of the number of rows, enabling this 

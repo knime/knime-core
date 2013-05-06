@@ -51,6 +51,11 @@
 
 package org.knime.base.node.preproc.setoperator;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
@@ -68,11 +73,6 @@ import org.knime.core.node.property.hilite.DefaultHiLiteMapper;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteTranslator;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
 
 /**
  * This class is the node implementation of the set operation node.
@@ -86,7 +86,9 @@ public class SetOperatorNodeModel extends NodeModel {
     protected static final String CFG_COL2 = "col2";
     /**Config key of the set operation.*/
     protected static final String CFG_OP = "operation";
-    /**Config key for sort in memory.*/
+    /**Config key for sort in memory.
+     * @deprecated is no longer used*/
+    @Deprecated
     protected static final String CFG_SORT_IN_MEMORY = "sortInMemory";
     /**Config key for ignore missing option.*/
     protected static final String CFG_SKIP_MISSING = "skipMissing";
@@ -102,8 +104,6 @@ public class SetOperatorNodeModel extends NodeModel {
 
     private final SettingsModelBoolean m_enableHilite =
         new SettingsModelBoolean(CFG_ENABLE_HILITE, false);
-
-    private final SettingsModelBoolean m_sortInMemory;
 
     private final SettingsModelBoolean m_skipMissing;
 
@@ -122,7 +122,6 @@ public class SetOperatorNodeModel extends NodeModel {
         super(2, 1);
         m_setOp = new SettingsModelString(CFG_OP,
                 SetOperation.getDefault().getName());
-        m_sortInMemory = new SettingsModelBoolean(CFG_SORT_IN_MEMORY, false);
         m_skipMissing = new SettingsModelBoolean(CFG_SKIP_MISSING, true);
     }
 
@@ -158,7 +157,6 @@ public class SetOperatorNodeModel extends NodeModel {
         m_col1.loadSettingsFrom(settings);
         m_col2.loadSettingsFrom(settings);
         m_setOp.loadSettingsFrom(settings);
-        m_sortInMemory.loadSettingsFrom(settings);
         m_skipMissing.loadSettingsFrom(settings);
         m_enableHilite.loadSettingsFrom(settings);
     }
@@ -171,7 +169,6 @@ public class SetOperatorNodeModel extends NodeModel {
         m_col1.saveSettingsTo(settings);
         m_col2.saveSettingsTo(settings);
         m_setOp.saveSettingsTo(settings);
-        m_sortInMemory.saveSettingsTo(settings);
         m_skipMissing.saveSettingsTo(settings);
         m_enableHilite.saveSettingsTo(settings);
     }
@@ -257,9 +254,7 @@ public class SetOperatorNodeModel extends NodeModel {
         final SetOperationTable table = new SetOperationTable(exec,
                 m_col1.useRowID(), m_col1.getColumnName(), inData[0],
                 m_col2.useRowID(), m_col2.getColumnName(), inData[1],
-                op, m_enableHilite.getBooleanValue(),
-                m_skipMissing.getBooleanValue(),
-                m_sortInMemory.getBooleanValue());
+                op, m_enableHilite.getBooleanValue(), m_skipMissing.getBooleanValue());
         if (m_enableHilite.getBooleanValue()) {
             m_trans0.setMapper(
                     new DefaultHiLiteMapper(table.getHiliteMapping0()));

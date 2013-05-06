@@ -189,11 +189,42 @@ public class SetOperationTable {
      * @param enableHilite <code>true</code> if hilite translation should
      * be performed
      * @param skipMissing <code>true</code> if missing cells should be skipped
+     * @throws CanceledExecutionException if the operation was canceled
+     * @throws Exception if the sorting failed
+     * @since 2.8
+     */
+    public SetOperationTable(final ExecutionContext exec,
+            final boolean useRowID1, final String col1,
+            final BufferedDataTable table1, final boolean useRowID2,
+            final String col2, final BufferedDataTable table2,
+            final SetOperation op, final boolean enableHilite,
+            final boolean skipMissing)
+    throws CanceledExecutionException, Exception {
+        this(exec, useRowID1, col1, table1, useRowID2, col2, table2, op, enableHilite, skipMissing, false);
+    }
+    /**Constructor for class SetOperationTable.
+     * @param exec the {@link ExecutionContext}
+     * @param useRowID1 <code>true</code> if the row id should be used instead
+     * of a column
+     * @param col1 the column name of the first set
+     * @param table1 the table of the first set
+     * @param useRowID2 <code>true</code> if the row id should be used instead
+     * of a column
+     * @param col2 the column name of the second set
+     * @param table2 the table of the second set
+     * @param op the {@link SetOperation} to perform
+     * @param enableHilite <code>true</code> if hilite translation should
+     * be performed
+     * @param skipMissing <code>true</code> if missing cells should be skipped
      * @param sortInMemory <code>true</code> if the sorting should be
      * performed in memory
      * @throws CanceledExecutionException if the operation was canceled
      * @throws Exception if the sorting failed
+     * @deprecated sortInMemory option no longer required
+     * @see #SetOperationTable(ExecutionContext, boolean, String, BufferedDataTable, boolean, String,
+     *          BufferedDataTable, SetOperation, boolean, boolean)
      */
+    @Deprecated
     public SetOperationTable(final ExecutionContext exec,
             final boolean useRowID1, final String col1,
             final BufferedDataTable table1, final boolean useRowID2,

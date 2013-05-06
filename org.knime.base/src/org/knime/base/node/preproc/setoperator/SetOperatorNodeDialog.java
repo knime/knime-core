@@ -79,8 +79,6 @@ public class SetOperatorNodeDialog extends DefaultNodeSettingsPane {
     private final SettingsModelBoolean m_enableHilite =
         new SettingsModelBoolean(SetOperatorNodeModel.CFG_ENABLE_HILITE, false);
 
-    private final SettingsModelBoolean m_sortInMemory;
-
     private final SettingsModelBoolean m_skipMissing;
 
 
@@ -91,8 +89,6 @@ public class SetOperatorNodeDialog extends DefaultNodeSettingsPane {
     public SetOperatorNodeDialog() {
         m_setOp = new SettingsModelString(SetOperatorNodeModel.CFG_OP,
                 SetOperation.getDefault().getName());
-        m_sortInMemory = new SettingsModelBoolean(
-                SetOperatorNodeModel.CFG_SORT_IN_MEMORY, false);
         m_skipMissing = new SettingsModelBoolean(
                 SetOperatorNodeModel.CFG_SKIP_MISSING, true);
         final DialogComponent col1 =
@@ -106,8 +102,6 @@ public class SetOperatorNodeDialog extends DefaultNodeSettingsPane {
                         SetOperation.values());
         final DialogComponent enableHilite = new DialogComponentBoolean(
                 m_enableHilite, "Enable hiliting");
-        final DialogComponent sortInMemory = new DialogComponentBoolean(
-                m_sortInMemory, "Sort in memory");
         final DialogComponent skipMissing = new DialogComponentBoolean(
                 m_skipMissing, "Skip missing values");
         addDialogComponent(col1);
@@ -116,6 +110,5 @@ public class SetOperatorNodeDialog extends DefaultNodeSettingsPane {
         setHorizontalPlacement(true);
         addDialogComponent(enableHilite);
         addDialogComponent(skipMissing);
-        addDialogComponent(sortInMemory);
     }
 }
