@@ -23,16 +23,9 @@
  */
 package org.knime.core.node.workflow;
 
-import java.awt.Window.Type;
 import java.util.NoSuchElementException;
 
 import junit.framework.Assert;
-
-import org.knime.core.node.workflow.ConnectionContainer;
-import org.knime.core.node.workflow.FlowVariable;
-import org.knime.core.node.workflow.NodeID;
-import org.knime.core.node.workflow.SingleNodeContainer;
-import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  *
