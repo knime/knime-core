@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Apr 28, 2008 (wiswedel): created
  */
@@ -81,14 +81,14 @@ import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
 
 /**
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class TableToVariableNodeModel extends NodeModel {
 
     /** One in, one output. */
     protected TableToVariableNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE}, 
+        super(new PortType[]{BufferedDataTable.TYPE},
                 new PortType[]{FlowVariablePortObject.TYPE});
     }
 
@@ -99,13 +99,17 @@ public class TableToVariableNodeModel extends NodeModel {
         pushVariables((DataTableSpec)inSpecs[0], null);
         return new PortObjectSpec[]{FlowVariablePortObjectSpec.INSTANCE};
     }
-    
-    /** Pushes the variable as given by the row argument onto the stack. 
+
+    /** Pushes the variable as given by the row argument onto the stack.
      * @param variablesSpec The spec (for names and types)
      * @param currentVariables The values of the variables.
      */
     protected void pushVariables(final DataTableSpec variablesSpec,
             final DataRow currentVariables) {
+        //push also the rowID onto the stack
+        final String rowIDVarName = "RowID";
+        pushFlowVariableString(rowIDVarName,
+                               currentVariables == null ? "" : currentVariables.getKey().getString());
         int colCount = variablesSpec.getNumColumns();
         DataCell[] cells = new DataCell[variablesSpec.getNumColumns()];
         for (int i = 0; i < cells.length; i++) {
@@ -120,8 +124,9 @@ public class TableToVariableNodeModel extends NodeModel {
         }
         DataRow defaultRow = new DefaultRow("Default Vars", cells);
         // column names starting with "knime." are uniquified as they represent
-        // global constants. 
+        // global constants.
         HashSet<String> variableNames = new HashSet<String>();
+        variableNames.add(rowIDVarName);
         for (int i = 0; i < colCount; i++) {
             DataColumnSpec spec = variablesSpec.getColumnSpec(i);
             DataType type = spec.getType();
@@ -136,7 +141,7 @@ public class TableToVariableNodeModel extends NodeModel {
             while (!variableNames.add(name)) {
                 name = basename + "(#" + (uniquifier++) + ")";
             }
-            DataCell cell = currentVariables == null 
+            DataCell cell = currentVariables == null
                 ? defaultRow.getCell(i) : currentVariables.getCell(i);
             if (cell.isMissing()) {
                 throw new IllegalArgumentException("Missing Values not"
@@ -153,7 +158,7 @@ public class TableToVariableNodeModel extends NodeModel {
             }
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected PortObject[] execute(final PortObject[] inData,
@@ -169,13 +174,13 @@ public class TableToVariableNodeModel extends NodeModel {
         }
         int rowCount = variables.getRowCount();
         if (rowCount > 1) {
-            setWarningMessage("Table has " + rowCount + " rows, ignored all " 
+            setWarningMessage("Table has " + rowCount + " rows, ignored all "
                     + "rows except the first one");
         }
         pushVariables(variables.getDataTableSpec(), row);
         return new PortObject[]{new FlowVariablePortObject()};
     }
-    
+
     /** {@inheritDoc} */
     @Override
     protected void reset() {
