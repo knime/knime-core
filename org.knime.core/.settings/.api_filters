@@ -1,4 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?><component id="org.knime.core" version="2">
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<component id="org.knime.core" version="2">
     <resource path="META-INF/MANIFEST.MF" type="org.dmg.pmml40.ACTIVATIONFUNCTION">
         <filter id="305426566">
             <message_arguments>
@@ -3877,6 +3878,13 @@
                 <message_argument value="IFileStoreHandler"/>
                 <message_argument value="CopyNodePersistor"/>
                 <message_argument value="getFileStoreHandler()"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/KNIMEConstants.java" type="org.knime.core.node.KNIMEConstants">
+        <filter comment="database property was added in 2.7, not intended to be used in 2.6 clients" id="1143996420">
+            <message_arguments>
+                <message_argument value="PROPERTY_DATABASE_CONCURRENCY"/>
             </message_arguments>
         </filter>
     </resource>

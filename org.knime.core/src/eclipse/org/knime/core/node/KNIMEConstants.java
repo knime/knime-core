@@ -216,6 +216,10 @@ public final class KNIMEConstants {
     /** Java property used to adjust the fetch size for retrieving data from a database. */
     public static final String PROPERTY_DATABASE_FETCHSIZE = "knime.database.fetchsize";
 
+    /** Java property used to switch off database access to same database connection, default is on.
+     * @noreference added with KNIME 2.7, not intended to be used */
+    public static final String PROPERTY_DATABASE_CONCURRENCY = "knime.database.enable.concurrency";
+
     /** Java property used to adjust the batch write size for writing data into a database.
      * @since 2.6 */
     public static final String PROPERTY_DATABASE_BATCH_WRITE_SIZE = "knime.database.batch_write_size";

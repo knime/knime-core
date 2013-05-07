@@ -61,7 +61,6 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.Date;
 import java.sql.NClob;
-import java.sql.PreparedStatement;
 import java.sql.Ref;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
@@ -70,7 +69,6 @@ import java.sql.Statement;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.sql.Types;
-import java.util.Arrays;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -114,8 +112,6 @@ public final class DatabaseReaderConnection {
 
     private DatabaseQueryConnectionSettings m_conn;
 
-    private Statement m_stmt;
-
     /**
      * Creates a empty handle for a new connection.
      * @param conn a database connection object
@@ -129,19 +125,9 @@ public final class DatabaseReaderConnection {
      * Sets a new connection object.
      * @param conn the connection
      */
-    public void setDBQueryConnection(
-            final DatabaseQueryConnectionSettings conn) {
+    public void setDBQueryConnection(final DatabaseQueryConnectionSettings conn) {
         m_conn = conn;
         m_spec = null;
-        if (m_stmt != null) {
-            try {
-                m_stmt.close();
-            } catch (SQLException sqle) {
-                LOGGER.debug("Error while closing SQL statement, reason "
-                        + sqle.getMessage());
-            }
-        }
-        m_stmt = null;
     }
 
     /**
@@ -174,31 +160,19 @@ public final class DatabaseReaderConnection {
 
     /**
      * Inits the statement and - if necessary - the database connection.
-     * @throws SQLException if the connection to the database or the statement
-     *         could not be created
+     * @throws SQLException if the connection to the database or the statement could not be created
      */
-    private void initStatement(final CredentialsProvider cp)
-            throws SQLException {
-        if (m_stmt == null) {
-            final Connection conn;
-            try {
-                conn = m_conn.createConnection(cp);
-            } catch (SQLException sql) {
-                if (m_stmt != null) {
-                    try {
-                        m_stmt.close();
-                    } catch (SQLException e) {
-                        LOGGER.debug(e);
-                    }
-                    m_stmt = null;
-                }
-                throw sql;
-            } catch (Throwable t) {
-                throw new SQLException(t);
-            }
-            synchronized (m_conn.syncConnection(conn)) {
-                m_stmt = conn.createStatement();
-            }
+    private Statement initStatement(final CredentialsProvider cp, final Connection conn) throws SQLException {
+        synchronized (m_conn.syncConnection(conn)) {
+            return conn.createStatement();
+        }
+    }
+
+    private Connection initConnection(final CredentialsProvider cp) throws SQLException {
+        try {
+            return m_conn.createConnection(cp);
+        } catch (Exception e) {
+            throw new SQLException(e);
         }
     }
 
@@ -212,86 +186,48 @@ public final class DatabaseReaderConnection {
      */
     public DataTableSpec getDataTableSpec(final CredentialsProvider cp)
             throws SQLException {
-        if (m_spec == null || m_stmt == null) {
-            final Connection conn;
-            try {
-                conn = m_conn.createConnection(cp);
-            } catch (SQLException sql) {
-                if (m_stmt != null) {
-                    try {
-                        m_stmt.close();
-                    } catch (SQLException e) {
-                        LOGGER.debug(e);
-                    }
-                    m_stmt = null;
-                }
-                throw sql;
-            } catch (Throwable t) {
-                throw new SQLException(t);
-            }
-            synchronized (m_conn.syncConnection(conn)) {
-                final String[] oQueries =  m_conn.getQuery().split(
-                        SQL_QUERY_SEPARATOR);
-                final int selectIndex = oQueries.length - 1;
-                final int hashAlias = System.identityHashCode(this);
-                // replace SELECT (last) query with wrapped statement
-                /* Fixed Bug 2874. For sqlite the data must always be
-                 * fetched as the column type string is returned
-                 * for all columns when fetching only meta data. */
-                if (!m_conn.getDriver().startsWith("org.sqlite")) {
-                    oQueries[selectIndex] = "SELECT * FROM ("
-                        + oQueries[selectIndex] + ") "
+        if (m_spec != null) {
+            return m_spec;
+        }
+        // retrieve connection
+        final Connection conn = initConnection(cp);
+        synchronized (m_conn.syncConnection(conn)) {
+            final String[] oQueries =  m_conn.getQuery().split(SQL_QUERY_SEPARATOR);
+            final int selectIndex = oQueries.length - 1;
+            // replace SELECT (last) query with wrapped statement
+            /* Fixed Bug 2874. For sqlite the data must always be
+             * fetched as the column type string is returned
+             * for all columns when fetching only meta data. */
+            if (!m_conn.getDriver().startsWith("org.sqlite")) {
+                // Bug 2041: to limit the number of row during configure, mysql
+                // does not optimize 'WHERE 1 = 0', better use 'LIMIT 0'
+                if (m_conn.getDriver().startsWith("com.mysql")) {
+                    oQueries[selectIndex] += " LIMIT 0";
+                } else {
+                    final int hashAlias = System.identityHashCode(this);
+                    oQueries[selectIndex] = "SELECT * FROM (" + oQueries[selectIndex] + ") "
                         + "table_" + hashAlias + " WHERE 1 = 0";
                 }
-                ResultSet result = null;
-                try {
-                    // if only one SQL statement is being executed
-                    if (oQueries.length == 1) {
-                        // try to see if prepared statements are supported
-                        LOGGER.debug("Executing SQL statement \""
-                                + oQueries[selectIndex] + "\"");
-                        m_stmt = conn.prepareStatement(oQueries[selectIndex]);
-                        ((PreparedStatement) m_stmt).execute();
-                        m_spec = createTableSpec(
-                                ((PreparedStatement) m_stmt).getMetaData());
-                    } else {
-                        // otherwise use standard statement
-                        m_stmt = conn.createStatement();
-                        LOGGER.debug("Executing SQL statement(s) \""
-                                + Arrays.toString(oQueries) + "\"");
-                        for (int i = 0; i < oQueries.length - 1; i++) {
-                            m_stmt.execute(oQueries[i]);
-                        }
-                        result = m_stmt.executeQuery(oQueries[selectIndex]);
-                        m_spec = createTableSpec(result.getMetaData());
-                    }
-                } catch (Exception e) {
-                    // otherwise use standard statement
-                    LOGGER.info("PreparedStatment not support by database "
-                            + "(using java.sql.Statement instead): " + e.getMessage(), e);
-                    m_stmt = conn.createStatement();
-                    // if more than one SQL statement is being executed
-                    if (oQueries.length > 1) {
-                        LOGGER.debug("Executing SQL statement(s) \""
-                                + Arrays.toString(oQueries) + "\"");
-                        for (int i = 0; i < oQueries.length - 1; i++) {
-                            m_stmt.execute(oQueries[i]);
-                        }
-                    } else {
-                        LOGGER.debug("Executing SQL statement \""
-                                + oQueries[selectIndex] + "\"");
-                    }
-                    result = m_stmt.executeQuery(oQueries[selectIndex]);
-                    m_spec = createTableSpec(result.getMetaData());
-                } finally {
-                    if (result != null) {
-                        result.close();
-                    }
-                    // ensure we have a non-prepared statement to access data
-                    if (m_stmt != null && m_stmt instanceof PreparedStatement) {
-                        m_stmt.close();
-                        m_stmt = conn.createStatement();
-                    }
+            }
+            ResultSet result = null;
+            final Statement stmt = initStatement(cp, conn);
+            try {
+                // execute all except the last query
+                for (int i = 0; i < oQueries.length - 1; i++) {
+                    LOGGER.debug("Executing SQL statement as execute: " + oQueries[i]);
+                    stmt.execute(oQueries[i]);
+                }
+                LOGGER.debug("Executing SQL statement as executeQuery: " + oQueries[selectIndex]);
+                result = stmt.executeQuery(oQueries[selectIndex]);
+                LOGGER.debug("Reading meta data from database ResultSet...");
+                m_spec = createTableSpec(result.getMetaData());
+            } finally {
+                if (result != null) {
+                    result.close();
+                }
+                if (stmt != null) {
+                    // Bug 4071: statement(s) not closed when fetching meta data
+                    stmt.close();
                 }
             }
         }
@@ -309,40 +245,42 @@ public final class DatabaseReaderConnection {
     public BufferedDataTable createTable(final ExecutionContext exec,
             final CredentialsProvider cp)
             throws CanceledExecutionException, SQLException {
-        initStatement(cp);
-        Object sync = m_conn.syncConnection(m_stmt.getConnection());
-        synchronized (sync) {
+        // retrieve connection
+        final Connection conn = initConnection(cp);
+        synchronized (m_conn.syncConnection(conn)) {
+            // remember auto-commit flag
+            final boolean autoCommit = conn.getAutoCommit();
+            final Statement stmt = initStatement(cp, conn);
             try {
                 if (DatabaseConnectionSettings.FETCH_SIZE != null) {
                     // fix 2741: postgresql databases ignore fetchsize when
                     // AUTOCOMMIT on; setting it to false
-                    if (m_stmt.getClass().getCanonicalName().startsWith(
-                            "org.postgresql")) {
-                        m_stmt.getConnection().setAutoCommit(false);
+                    if (stmt.getClass().getCanonicalName().startsWith("org.postgresql")) {
+                        DatabaseConnectionSettings.setAutoCommit(conn, false);
                     }
-                    m_stmt.setFetchSize(DatabaseConnectionSettings.FETCH_SIZE);
+                    stmt.setFetchSize(DatabaseConnectionSettings.FETCH_SIZE);
                 } else {
                     // fix 2040: mySQL databases read everything into one, big
                     // ResultSet leading to an heap space error
                     // Integer.MIN_VALUE is an indicator in order to enable
                     // streaming results
-                    if (m_stmt.getClass().getCanonicalName().startsWith(
-                            "com.mysql")) {
-                        m_stmt.setFetchSize(Integer.MIN_VALUE);
-                        LOGGER.info("Database fetchsize for mySQL database set"
-                                + " to \"" + Integer.MIN_VALUE + "\".");
+                    if (stmt.getClass().getCanonicalName().startsWith("com.mysql")) {
+                        stmt.setFetchSize(Integer.MIN_VALUE);
+                        LOGGER.info("Database fetchsize for mySQL database set to \"" + Integer.MIN_VALUE + "\".");
                     }
                 }
-                final String[] oQueries = m_conn.getQuery().split(
-                        SQL_QUERY_SEPARATOR);
-                LOGGER.debug("Executing SQL statement(s) \""
-                        + Arrays.toString(oQueries) + "\"");
+                final String[] oQueries = m_conn.getQuery().split(SQL_QUERY_SEPARATOR);
+                // execute all except the last query
                 for (int i = 0; i < oQueries.length - 1; i++) {
-                    m_stmt.execute(oQueries[i]);
+                    LOGGER.debug("Executing SQL statement as execute: " + oQueries[i]);
+                    stmt.execute(oQueries[i]);
                 }
                 final String selectQuery = oQueries[oQueries.length - 1];
-                final ResultSet result = m_stmt.executeQuery(selectQuery);
+                LOGGER.debug("Executing SQL statement as executeQuery: " + selectQuery);
+                final ResultSet result = stmt.executeQuery(selectQuery);
+                LOGGER.debug("Reading meta data from database ResultSet...");
                 m_spec = createTableSpec(result.getMetaData());
+                LOGGER.debug("Parsing database ResultSet...");
                 return exec.createBufferedDataTable(new DataTable() {
                     /** {@inheritDoc} */
                     @Override
@@ -357,9 +295,12 @@ public final class DatabaseReaderConnection {
 
                 }, exec);
             } finally {
-                if (m_stmt != null) {
-                    m_stmt.close();
-                    m_stmt = null;
+                if (stmt != null) {
+                    if (!conn.getAutoCommit()) {
+                        conn.commit();
+                    }
+                    DatabaseConnectionSettings.setAutoCommit(conn, autoCommit);
+                    stmt.close();
                 }
             }
         }
@@ -371,58 +312,56 @@ public final class DatabaseReaderConnection {
      * @return buffered data table read from database
      * @throws SQLException if the connection could not be opened
      */
-    DataTable createTable(final int cachedNoRows, final CredentialsProvider cp)
-            throws SQLException {
-        initStatement(cp);
-        synchronized (m_conn.syncConnection(m_stmt.getConnection())) {
+    DataTable createTable(final int cachedNoRows, final CredentialsProvider cp) throws SQLException {
+        // retrieve connection
+        final Connection conn = initConnection(cp);
+        synchronized (m_conn.syncConnection(conn)) {
+            // remember auto-commit flag
+            final boolean autoCommit = conn.getAutoCommit();
+            final Statement stmt = initStatement(cp, conn);
             try {
-                final String[] oQueries = m_conn.getQuery().split(
-                        SQL_QUERY_SEPARATOR);
+                final String[] oQueries = m_conn.getQuery().split(SQL_QUERY_SEPARATOR);
                 if (cachedNoRows < 0) {
                     if (DatabaseConnectionSettings.FETCH_SIZE != null) {
                         // fix 2741: postgresql databases ignore fetchsize when
                         // AUTOCOMMIT on; setting it to false
-                        if (m_stmt.getClass().getCanonicalName().startsWith(
-                                "org.postgresql")) {
-                            m_stmt.getConnection().setAutoCommit(false);
+                        if (stmt.getClass().getCanonicalName().startsWith("org.postgresql")) {
+                            DatabaseConnectionSettings.setAutoCommit(conn, false);
                         }
-                        m_stmt.setFetchSize(
-                                DatabaseConnectionSettings.FETCH_SIZE);
+                        stmt.setFetchSize(DatabaseConnectionSettings.FETCH_SIZE);
                     } else {
                         // fix 2040: mySQL databases read everything into one
                         // big ResultSet leading to an heap space error
                         // Integer.MIN_VALUE is an indicator in order to enable
                         // streaming results
-                        if (m_stmt.getClass().getCanonicalName().startsWith(
-                                "com.mysql")) {
-                            m_stmt.setFetchSize(Integer.MIN_VALUE);
-                            LOGGER.info("Database fetchsize for mySQL database "
-                                    + "set to \"" + Integer.MIN_VALUE + "\".");
+                        if (stmt.getClass().getCanonicalName().startsWith("com.mysql")) {
+                            stmt.setFetchSize(Integer.MIN_VALUE);
+                            LOGGER.info("Database fetchsize for mySQL database set to \"" + Integer.MIN_VALUE + "\".");
                         }
                     }
                 } else {
                     final int hashAlias = System.identityHashCode(this);
                     final int selectIdx = oQueries.length - 1;
                     // replace last element in statement(s) with wrapped SQL
-                    oQueries[selectIdx] = "SELECT * FROM "
-                            + "(" + oQueries[selectIdx] + ") "
-                            + "table_" + hashAlias;
+                    oQueries[selectIdx] = "SELECT * FROM (" + oQueries[selectIdx] + ") table_" + hashAlias;
                     try {
                         // bugfix 2925: may fail, e.g. on sqlite
-                        m_stmt.setMaxRows(cachedNoRows);
+                        stmt.setMaxRows(cachedNoRows);
                     } catch (SQLException sqle) {
-                        LOGGER.warn("Can't set max rows on statement, reason: "
-                                + sqle.getMessage());
+                        LOGGER.warn("Can't set max rows on statement, reason: " + sqle.getMessage());
                     }
                 }
-                LOGGER.debug("Executing SQL statement(s) \""
-                        + Arrays.toString(oQueries) + "\"");
-                // note: execute last, SELECT statement using Statement#execute
-                for (int i = 0; i < oQueries.length; i++) {
-                    m_stmt.execute(oQueries[i]);
+                // execute all except the last query
+                for (int i = 0; i < oQueries.length - 1; i++) {
+                    LOGGER.debug("Executing SQL statement as execute: " + oQueries[i]);
+                    stmt.execute(oQueries[i]);
                 }
-                final ResultSet result = m_stmt.getResultSet();
+                final String lastQuery = oQueries[oQueries.length - 1];
+                LOGGER.debug("Executing SQL statement as executeQuery: " + lastQuery);
+                final ResultSet result = stmt.executeQuery(lastQuery);
+                LOGGER.debug("Reading meta data from database ResultSet...");
                 m_spec = createTableSpec(result.getMetaData());
+                LOGGER.debug("Parsing database ResultSet...");
                 DBRowIterator it = new DBRowIterator(result);
                 DataContainer buf = new DataContainer(m_spec);
                 while (it.hasNext()) {
@@ -431,9 +370,12 @@ public final class DatabaseReaderConnection {
                 buf.close();
                 return buf.getTable();
             } finally {
-                if (m_stmt != null) {
-                    m_stmt.close();
-                    m_stmt = null;
+                if (stmt != null) {
+                    if (!conn.getAutoCommit()) {
+                        conn.commit();
+                    }
+                    DatabaseConnectionSettings.setAutoCommit(conn, autoCommit);
+                    stmt.close();
                 }
             }
         }

@@ -58,7 +58,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -131,6 +133,22 @@ public class DatabaseConnectionSettings {
         LOGGER.info("Database login timeout: " + timeout + " sec.");
         DriverManager.setLoginTimeout(timeout);
         return timeout;
+    }
+
+
+    /**
+     * Used to control access to database driver. If <code>true</code> (default) the access to database driver
+     * is synchronized based on the database connection, otherwise false.
+     */
+    private static final boolean SQL_CONCURRENCY = initSQLConcurrency();
+    private static boolean initSQLConcurrency() {
+        String sconcurrency = System.getProperty(KNIMEConstants.PROPERTY_DATABASE_CONCURRENCY);
+        boolean concurrency = true; // default
+        if (sconcurrency != null) {
+            concurrency = Boolean.parseBoolean(sconcurrency);
+        }
+        LOGGER.debug("Database concurrency (sync via database connection) is " + concurrency + ".");
+        return concurrency;
     }
 
     /** {@link DriverManager} fetch size to chunk specified number of rows while reading from database. */
@@ -381,16 +399,13 @@ public class DatabaseConnectionSettings {
     }
 
     /**
-     * Used to sync access to mySQL databases.
-     * @param connection (not null) used to sync mySQL database access
-     * @return sync object which is either the given connection inherit from
-     *         "com.mysql" or an new object (no sync necessary)
-     * @throws NullPointerException if the given connection is null
+     * Used to sync access to all databases depending if <code>SQL_CONCURRENCY</code> is true.
+     * @param conn connection used to sync access to all databases
+     * @return sync object which is either the given connection or an new object (no sync necessary)
      */
-    // FIX 2642: parallel database reader execution fails for mySQL
-    final Object syncConnection(final Connection connection) {
-        if (connection.getClass().getCanonicalName().startsWith("com.mysql")) {
-            return connection;
+    final Object syncConnection(final Connection conn) {
+        if (SQL_CONCURRENCY && conn != null) {
+            return conn;
         } else {
             return new Object();
         }
@@ -557,6 +572,25 @@ public class DatabaseConnectionSettings {
             }
             if (conn != null) {
                 conn = null;
+            }
+        }
+    }
+
+    private static final Set<Class<? extends Connection>> AUTOCOMMIT_EXCEPTIONS =
+            new HashSet<Class<? extends Connection>>();
+    /**
+     * Calls {@link java.sql.Connection#setAutoCommit(boolean)} on the connection given the commit flag and catches
+     * all <code>Exception</code>s, which is reported only once.
+     * @param conn the Connection to call auto commit on.
+     * @param commit the commit flag.
+     */
+    static synchronized void setAutoCommit(final Connection conn, final boolean commit) {
+        try {
+            conn.setAutoCommit(commit);
+        } catch (Exception e) {
+            if (!AUTOCOMMIT_EXCEPTIONS.contains(conn.getClass())) {
+                AUTOCOMMIT_EXCEPTIONS.add(conn.getClass());
+                LOGGER.debug(conn.getClass() + "#setAutoCommit(" + commit + ") error, reason: ", e);
             }
         }
     }
