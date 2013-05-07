@@ -341,9 +341,9 @@ public class KNIMESplashHandler extends BasicSplashHandler {
          * On Mac OS X the origin of the coordinate system is in the bottom left
          * corner. Therefore we need other y coordinates here.
          */
-        int y = 225;
+        int y = 215;
         if (Platform.OS_MACOSX.equals(Platform.getOS())) {
-            y = 65;
+            y = 75;
         }
         m_iconPanel.setBounds(SPLASH_SCREEN_BEVEL, y, xWidth, yWidth);
     }
