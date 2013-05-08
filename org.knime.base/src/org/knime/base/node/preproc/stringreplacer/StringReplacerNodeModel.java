@@ -126,7 +126,13 @@ public class StringReplacerNodeModel extends NodeModel {
                 if (m_settings.replaceAllOccurrences()) {
                     return new StringCell(m.replaceAll(replacement));
                 } else if (m.matches()) {
-                    return new StringCell(m.replaceAll(replacement));
+                    if (".*".equals(p.pattern())) {
+                        // .* matches twice, first for the empty string and then for the whole string
+                        // therefore the replacement value is doubled
+                        return new StringCell(replacement);
+                    } else {
+                        return new StringCell(m.replaceAll(replacement));
+                    }
                 } else {
                     return new StringCell(stringValue);
                 }
