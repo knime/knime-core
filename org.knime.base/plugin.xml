@@ -1158,6 +1158,11 @@
             id="org.knime.base.node.preproc.filter.hilite.collector.HiLiteCollectorNodeFactory">
       </node>
       <node
+            category-path="/manipulation/column"
+            factory-class="org.knime.base.node.preproc.filter.hilite.collector.InteractiveHiLiteCollectorNodeFactory"
+            id="org.knime.base.node.preproc.filter.hilite.collector.InteractiveHiLiteCollectorNodeFactory">
+      </node>
+      <node
             category-path="/flowcontrol/loopsupport"
             factory-class="org.knime.base.node.meta.looper.LoopEnd2NodeFactory"
             id="org.knime.exp.node.meta.looper.LoopEnd2NodeFactory">
@@ -1429,6 +1434,11 @@
             expert-flag="false"
             factory-class="org.knime.base.node.flowcontrol.trycatch.genericcatch.GenericPortCatchNodeFactory"
             id="org.knime.base.node.flowcontrol.trycatch.genericcatch.GenericPortCatchNodeFactory">
+      </node>
+      <node
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.select.value.InteractiveValueSelectNodeFactory"
+            id="org.knime.base.node.preproc.select.value.InteractiveValueSelectNodeFactory">
       </node>
       <!-- new ones -->
       
