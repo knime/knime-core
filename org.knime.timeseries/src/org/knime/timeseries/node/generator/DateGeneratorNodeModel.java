@@ -105,14 +105,15 @@ public class DateGeneratorNodeModel extends NodeModel {
         final Calendar from;
         if (m_useExecution.getBooleanValue()) {
             from = Calendar.getInstance(TimeZone.getDefault());
-            from.setTimeInMillis(System.currentTimeMillis() + TimeZone.getDefault().getRawOffset());
+            from.setTimeInMillis(System.currentTimeMillis()
+                                 + TimeZone.getDefault().getOffset(System.currentTimeMillis()));
             // no validation of from date necessary
         } else {
             from = m_from.getCalendar();
             validateDates(m_from);
         }
         int noRows = m_noOfRows.getIntValue();
-        long offset = calculateOffset(from, m_to.getCalendar(), noRows);
+        long offset = (long)calculateOffset(from, m_to.getCalendar(), noRows);
         // if no of row = 1 we simply return the start date
         if (Math.abs(offset) <= 0 && noRows > 1) {
            setWarningMessage(
@@ -128,14 +129,16 @@ public class DateGeneratorNodeModel extends NodeModel {
         return new DataTableSpec(creator.createSpec());
     }
 
-    private static long calculateOffset(final Calendar from, final Calendar to,
+    private static double calculateOffset(final Calendar from, final Calendar to,
             final int noOfRows) {
         if (noOfRows <= 1) {
             return 0;
         }
+        double toD = 1.0 * to.getTimeInMillis();
+        double fromD = 1.0 * from.getTimeInMillis();
         // if offset is smaller than a second milliseconds
         // might be of interest
-        return (to.getTimeInMillis() - from.getTimeInMillis()) / (noOfRows - 1);
+        return (toD - fromD) / (noOfRows - 1.0);
     }
 
     /**
@@ -150,7 +153,8 @@ public class DateGeneratorNodeModel extends NodeModel {
         // new since 2.8. the start time is the current time.
         if (m_useExecution.getBooleanValue()) {
             from = Calendar.getInstance(TimeZone.getDefault());
-            from.setTimeInMillis(System.currentTimeMillis() + TimeZone.getDefault().getRawOffset());
+            from.setTimeInMillis(System.currentTimeMillis()
+                                 + TimeZone.getDefault().getOffset(System.currentTimeMillis()));
         }
         Calendar to = m_to.getCalendar();
 
@@ -173,12 +177,13 @@ public class DateGeneratorNodeModel extends NodeModel {
 
         BufferedDataContainer container = exec.createDataContainer(createOutSpec());
         int nrRows = m_noOfRows.getIntValue();
-        long offset = calculateOffset(from, to, nrRows);
-        long currentTime = from.getTimeInMillis();
+        double offset = calculateOffset(from, to, nrRows);
+
+        double currentTime = from.getTimeInMillis();
         for (int i = 0; i < nrRows; i++) {
             // zero based row key as FileReader
             RowKey key = new RowKey("Row" + i);
-            DateAndTimeCell cell = new DateAndTimeCell(currentTime, useDate, useTime, useMillis);
+            DateAndTimeCell cell = new DateAndTimeCell((long)Math.ceil(currentTime), useDate, useTime, useMillis);
             container.addRowToTable(new DefaultRow(key, cell));
             currentTime += offset;
             exec.setProgress((i + 1) / (double)nrRows, "Generating row #" + (i + 1));
