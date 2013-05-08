@@ -84,7 +84,7 @@ public class OpenInteractiveViewAction extends Action {
      */
     @Override
     public ImageDescriptor getImageDescriptor() {
-        return ImageRepository.getImageDescriptor("icons/openInteractiveView.gif");
+        return ImageRepository.getImageDescriptor("icons/openInteractiveView.png");
     }
 
     /**
