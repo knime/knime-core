@@ -66,7 +66,6 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettings;
-import org.knime.core.node.interactive.AbstractInteractiveNodeView;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainerState;
@@ -1311,7 +1310,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
 
         final Set<AbstractNodeView<? extends NodeModel>> allViews =
                 new HashSet<AbstractNodeView<? extends NodeModel>>();
-        AbstractInteractiveNodeView<?> inv = null;
+        AbstractNodeView<?> inv = null;
 
         /*
          * Opening views can be problematic, see
@@ -1344,7 +1343,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                 // test InteractiveNodeViews
                 if (nodeCont.hasInteractiveView()) {
                     logger.debug("opening interactive view for node " + nodeCont.getName());
-                    final AbstractInteractiveNodeView<?> finalInv = inv = nodeCont.getInteractiveView();
+                    final  AbstractNodeView<?> finalInv = inv = nodeCont.getInteractiveView();
                     // open it now.
                     ViewUtils.invokeAndWaitInEDT(new Runnable() {
                         /** {@inheritDoc} */
