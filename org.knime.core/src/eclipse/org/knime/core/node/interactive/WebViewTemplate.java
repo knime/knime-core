@@ -50,18 +50,40 @@
 package org.knime.core.node.interactive;
 
 /**
- *
+ * Use {@link DefaultWebViewTemplate}.
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  * @since 2.8
  */
 public interface WebViewTemplate {
 
+    /**
+     * @return An array of {@link WebResourceLocator}, which is the actual
+     * implementation of the view. These can be Javascript, CSS or other files.
+     */
     public WebResourceLocator[] getWebResources();
 
+    /**
+     * @return An array of {@link WebDependency}, which are the Javascript dependencies
+     * the view uses.
+     */
     public WebDependency[] getDependencies();
 
+    /**
+     * @return An optional namespace, which is prepended to all method calls of the
+     * view implementation.
+     */
     public String getNamespace();
 
+    /**
+     * @return The init-method's name.
+     */
     public String getInitMethodName();
+
+    /**
+     * @return The pullViewContent-method's name.
+     */
+    public String getPullViewContentMethodName();
 
 }

@@ -49,12 +49,27 @@
  */
 package org.knime.core.node.interactive;
 
-/** Container for all of the information transported inbetween a {@link QuickFormNode}
+import java.io.InputStream;
+import java.io.OutputStream;
+
+/** Container for all of the information transported inbetween a {@link InteractiveWebNode}
  * and an interactive view running in the wizard or WebPortal.
  *
- * @author B. Wiswedel, Th. Gabriel, M. Berthold
+ * @author B. Wiswedel, Th. Gabriel, M. Berthold, C. Albrecht
  * @since 2.8
  */
 public abstract class ViewContent {
+
+    /**
+     * @param viewContentStream an input stream, that is used to create the instance of a view content.
+     * @throws Exception Exception that can occur while creating an instance.
+     */
+    public abstract void createFrom(InputStream viewContentStream) throws Exception;
+
+    /**
+     * @return An output stream with the serialized view content.
+     * @throws Exception Exception that can occur while serializing object.
+     */
+    public abstract OutputStream saveTo() throws Exception;
 
 }

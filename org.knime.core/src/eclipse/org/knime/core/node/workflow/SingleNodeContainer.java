@@ -93,7 +93,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
-import org.knime.core.node.interactive.AbstractInteractiveNodeView;
+import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -329,8 +329,8 @@ public final class SingleNodeContainer extends NodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    public AbstractInteractiveNodeView<?> getInteractiveView() {
-        AbstractInteractiveNodeView<?> ainv = m_node.getNodeModel().getInteractiveNodeView();
+    public <V extends AbstractNodeView<?> & InteractiveView<?>> V getInteractiveView() {
+        V ainv = m_node.getNodeModel().getInteractiveNodeView();
         if (ainv == null) {
             String name = getInteractiveViewName();
             if (name == null) {
@@ -979,8 +979,8 @@ public final class SingleNodeContainer extends NodeContainer {
             // node is not a start node and not contained in a loop
             if (oldFSHandler instanceof IWriteFileStoreHandler) {
                 clearFileStoreHandler();
-                assert false : "Node " + getNameWithID() + " must not have file store handler at this point (not a "
-                    + "loop start and not contained in loop), disposing old handler";
+                /*assert false : "Node " + getNameWithID() + " must not have file store handler at this point (not a "
+                    + "loop start and not contained in loop), disposing old handler";*/
             }
             newFSHandler = new WriteFileStoreHandler(getNameWithID(), UUID.randomUUID());
             newFSHandler.addToRepository(fileStoreHandlerRepository);

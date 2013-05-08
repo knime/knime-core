@@ -78,7 +78,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
-import org.knime.core.node.interactive.AbstractInteractiveNodeView;
+import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ConvenienceMethods;
@@ -1134,7 +1134,7 @@ public abstract class NodeContainer implements NodeProgressListener {
      * @return interactive view.
      * @since 2.8
      */
-    public abstract AbstractInteractiveNodeView<?> getInteractiveView();
+    public abstract <V extends AbstractNodeView<?> & InteractiveView<?>> V getInteractiveView();
 
     /* ------------- Misc node info -------------- */
 

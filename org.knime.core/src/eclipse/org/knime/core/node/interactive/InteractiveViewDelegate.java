@@ -45,30 +45,51 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 16, 2013 by Berthold
+ * Created on Apr 22, 2013 by Berthold
  */
 package org.knime.core.node.interactive;
 
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.port.PortObject;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.WorkflowManager;
 
-/** Interface for NodeModels that support interactive views and repeated
- * execution when the view has been modified by the user.
+/**
+ * Delegate class that can be used in an {@link InteractiveView} implementation.
  *
- * @author B. Wiswedel, Th. Gabriel, M. Berthold
+ * @author B. Wiswedel, M. Berthold, Th. Gabriel, C. Albrecht
  * @since 2.8
  */
-public interface InteractiveNode {
+final class InteractiveViewDelegate {
 
-    /** Execute an executed node again - usually this will be called after
-     * a modified content from the interactive view was loaded into the
-     * NodeModel.
-     *
-     * @param data the input data (should be the same as during initial execute call)
-     * @param ec the execution context to create tables and monitor cancelation
-     * @return updated output objects.
-     * @throws CanceledExecutionException when interrupted by user
-     */
-    abstract PortObject[] reExecute(PortObject[] data, ExecutionContext ec) throws CanceledExecutionException;
+    private WorkflowManager m_wfm;
+    private NodeID m_nodeID;
+
+    void setWorkflowManagerAndNodeID(final WorkflowManager wfm, final NodeID id) {
+        m_wfm = wfm;
+        m_nodeID = id;
+        NodeContainer nc = m_wfm.getNodeContainer(m_nodeID);
+        assert m_wfm.getNodeContainer(m_nodeID) == nc;  // !! constructor argument matches this info...
+        if (!(nc instanceof SingleNodeContainer)) {
+            throw new RuntimeException("Internal Error: Wrong type of node in " + this.getClass().getName());
+        }
+        NodeModel nm = ((SingleNodeContainer)nc).getNodeModel();
+        if (!(nm instanceof InteractiveNode)) {
+            throw new RuntimeException("Internal Error: Wrong type of node in " + this.getClass().getName());
+        }
+    }
+
+    boolean canReExecute() {
+        return m_wfm.canReExecuteNode(m_nodeID);
+    }
+
+    void triggerReExecution(final ReexecutionCallback rec) {
+        m_wfm.reExecuteNode(m_nodeID, rec);
+    }
+
+    void setNewDefaultConfiguration(final ConfigureCallback ccb) {
+        //TODO: implement
+        // m_wfm.saveNodeSettingsToDefault(m_nodeID);
+     }
 }

@@ -45,65 +45,31 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 22, 2013 by Berthold
+ * Created on 07.05.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
 package org.knime.core.node.interactive;
 
-import org.knime.core.node.NodeModel;
-
-
-/** Abstract base class for interactive views which are launched on the client side and
- * have direct access to the NodeModel itself. A default implementation is InteractiveClientSWTView
- * which brings along standard buttons for reexecution etc.
+/**
+ * Interface for NodeModels that support interactive web-enabled views and repeated
+ * execution when the view has been modified by the user. All communication between
+ * the node model and the view is realized via a {@link ViewContent} object.
  *
- * @author B. Wiswedel, M. Berthold, Th. Gabriel
- * @param <T>
+ * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * @param <V> The concrete class of the {@link ViewContent}
  * @since 2.8
  */
-public class InteractiveClientView<T extends NodeModel & InteractiveNode> extends AbstractInteractiveNodeView<T> {
+public interface InteractiveWebNode<V extends ViewContent> extends InteractiveNode {
 
-    /**
-     * @param nodeModel the appropriate model.
-     */
-    InteractiveClientView(final T nodeModel) {
-        super(nodeModel);
-        // TODO Auto-generated constructor stub
-    }
+    /** Load content potentially modified from an interactive view.
+    *
+    * @param content The new content to be copied into the model.
+    */
+   abstract void loadViewContent(final V content);
 
-    /**
-     * @return underlying InteractiveNode/Model
-     */
-    @SuppressWarnings("unchecked")
-    protected T getInteractiveNodeModel() {
-        NodeModel m = super.getNodeModel();
-        return (T)m;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void modelChanged() {
-        // TODO Auto-generated method stub
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void callOpenView(final String title) {
-        // TODO Auto-generated method stub
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void callCloseView() {
-        // TODO Auto-generated method stub
-
-    }
+   /**
+    * Create content which can be used by the interactive view implementation.
+    * @return Content required for the interactive view.
+    */
+   abstract V createViewContent();
 
 }

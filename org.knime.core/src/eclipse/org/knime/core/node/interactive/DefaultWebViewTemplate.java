@@ -45,77 +45,77 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 22, 2013 by Berthold
+ * Created on 06.05.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
 package org.knime.core.node.interactive;
 
-import org.knime.core.node.NodeModel;
-
-/** Abstract base class for interactive views which are launched on the client side via
- * an integrated browser. They only have indirect access to the NodeModel via get and
- * setViewContent methods and therefore simulate the behaviour of the same view in the
- * WebPortal.
- *
- * @author B. Wiswedel, M. Berthold, Th. Gabriel
- * @param <T> requires a NodeModel implementing InteractiveNode as well
+/**
+ * Default {@lin WebViewTemplate} implementation.
+ * 
+ * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  * @since 2.8
  */
-public final class InteractiveWebView<T extends NodeModel & InteractiveNode> extends AbstractInteractiveNodeView<T> {
+public final class DefaultWebViewTemplate implements WebViewTemplate {
+
+    private final WebResourceLocator[] m_webResources;
+    private final WebDependency[] m_dependencies;
+    private final String m_namespace;
 
     /**
-     * @param nodeModel the underlying model
-     * @param wvt the template to be used for the web view
-     */
-    protected InteractiveWebView(final T nodeModel, final WebViewTemplate wvt) {
-        super(nodeModel);
-    }
-
-    /**
-     * Load a new ViewContent into the underlying NodeModel.
+     * @param webResources An array of {@link WebResourceLocator}, which is the actual implementation of the view.
+     * These can be Javascript, CSS or other files.
+     * @param dependencies An array of {@link WebDependency}, which are the Javascript dependencies the view uses.
+     * @param namespace An optional namespace, which is prepended to all method calls of the view implementation.
      *
-     * @param vc the new content of the view.
      */
-    protected final void loadViewContentIntoNode(final ViewContent vc) {
-        getNodeModel().loadViewContent(vc);
-    }
+    public DefaultWebViewTemplate(final WebResourceLocator[] webResources,
+                                  final WebDependency[] dependencies, final String namespace) {
+        this.m_webResources = webResources;
+        this.m_dependencies = dependencies;
+        this.m_namespace = namespace;
 
-    /**
-     * @return ViewContent of the underlying NodeModel.
-     */
-    protected final ViewContent getViewContentFromNode() {
-        return getNodeModel().createViewContent();
-    }
-
-    /** Set current ViewContent as new default settings of the underlying NodeModel.
-     */
-    protected final void makeViewContentNewDefault() {
-        // TODO
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void modelChanged() {
-        // TODO Auto-generated method stub
-    }
-
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected final void callOpenView(final String title) {
-        // TODO Auto-generated method stub
+    public WebResourceLocator[] getWebResources() {
+        return m_webResources;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected final void callCloseView() {
-        // TODO Auto-generated method stub
+    public WebDependency[] getDependencies() {
+        return m_dependencies;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String getNamespace() {
+        return m_namespace;
+    }
+
+    /**
+     * @noreference This method is not intended to be referenced by clients.
+     * {@inheritDoc}
+     */
+    @Override
+    public String getInitMethodName() {
+        return "init";
+    }
+
+    /**
+     * @noreference This method is not intended to be referenced by clients.
+     * {@inheritDoc}
+     */
+    @Override
+    public String getPullViewContentMethodName() {
+        return "pullViewContent";
     }
 
 }

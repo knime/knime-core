@@ -90,6 +90,7 @@ import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
+import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
@@ -108,8 +109,8 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
-import org.knime.core.node.interactive.AbstractInteractiveNodeView;
 import org.knime.core.node.interactive.InteractiveNode;
+import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ReexecutionCallback;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortObject;
@@ -7305,7 +7306,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** {@inheritDoc} */
     @Override
-    public AbstractInteractiveNodeView<?> getInteractiveView() {
+    public <V extends AbstractNodeView<?> & InteractiveView<?>> V getInteractiveView() {
         return null;
     }
 

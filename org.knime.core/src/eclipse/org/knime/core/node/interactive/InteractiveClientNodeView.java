@@ -45,30 +45,65 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 16, 2013 by Berthold
+ * Created on 07.05.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
 package org.knime.core.node.interactive;
 
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.port.PortObject;
+import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeView;
+import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowManager;
 
-/** Interface for NodeModels that support interactive views and repeated
- * execution when the view has been modified by the user.
+/**
+ * Abstract base class for interactive views which are launched on the client side and
+ * have direct access to the NodeModel itself. Uses Swing to display content.
  *
- * @author B. Wiswedel, Th. Gabriel, M. Berthold
+ * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * @param <T> the underlying node model
  * @since 2.8
  */
-public interface InteractiveNode {
+public abstract class InteractiveClientNodeView<T extends NodeModel & InteractiveNode> extends NodeView<T> implements
+        InteractiveView<T> {
 
-    /** Execute an executed node again - usually this will be called after
-     * a modified content from the interactive view was loaded into the
-     * NodeModel.
-     *
-     * @param data the input data (should be the same as during initial execute call)
-     * @param ec the execution context to create tables and monitor cancelation
-     * @return updated output objects.
-     * @throws CanceledExecutionException when interrupted by user
+    private final InteractiveViewDelegate m_delegate;
+
+    /**
+     * @param nodeModel The underlying node model.
      */
-    abstract PortObject[] reExecute(PortObject[] data, ExecutionContext ec) throws CanceledExecutionException;
+    protected InteractiveClientNodeView(final T nodeModel) {
+        super(nodeModel);
+        m_delegate = new InteractiveViewDelegate();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setWorkflowManagerAndNodeID(final WorkflowManager wfm, final NodeID id) {
+        m_delegate.setWorkflowManagerAndNodeID(wfm, id);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean canReExecute() {
+        return m_delegate.canReExecute();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void triggerReExecution(final ReexecutionCallback callback) {
+        m_delegate.triggerReExecution(callback);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setNewDefaultConfiguration(final ConfigureCallback callback) {
+        m_delegate.setNewDefaultConfiguration(callback);
+    }
 }

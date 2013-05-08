@@ -62,17 +62,41 @@ import org.eclipse.core.runtime.FileLocator;
  */
 public final class WebResourceLocator {
 
+    /**
+     *
+     * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+     */
+    public enum WebResourceType {
+
+        /**
+         * Javascript file.
+         */
+        JAVASCRIPT,
+
+        /**
+         * CSS file.
+         */
+        CSS,
+
+        /**
+         * General file or folder to be available.
+         */
+        FILE
+    }
+
     private final String m_pluginName;
     private final String m_relativePath;
+    private final WebResourceType m_type;
 
     /**
      * @param pluginName
      * @param relativePath
      *
      */
-    public WebResourceLocator(final String pluginName, final String relativePath) {
+    public WebResourceLocator(final String pluginName, final String relativePath, final WebResourceType type) {
         m_pluginName = pluginName;
         m_relativePath = relativePath.startsWith("/") ? relativePath : "/" + relativePath;
+        m_type = type;
     }
 
     /**
@@ -90,8 +114,16 @@ public final class WebResourceLocator {
     }
 
     /**
+     * @return the m_type
+     */
+    public WebResourceType getType() {
+        return m_type;
+    }
+
+    /**
+     * @noreference This method is not intended to be referenced by clients.
      * @return the {@link File} that is denoted through this locator.
-     * @throws IOException
+     * @throws IOException if resource cannot be resolved.
      */
     public File getResource() throws IOException {
         URL url = new URL("platform:/plugin/" + m_pluginName);

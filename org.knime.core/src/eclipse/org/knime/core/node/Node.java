@@ -83,9 +83,9 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
 import org.knime.core.node.config.ConfigEditTreeModel;
-import org.knime.core.node.interactive.AbstractInteractiveNodeView;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveNodeFactoryExtension;
+import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interrupt.InterruptibleNodeModel;
 import org.knime.core.node.missing.MissingNodeModel;
 import org.knime.core.node.port.PortObject;
@@ -1810,17 +1810,19 @@ public final class Node implements NodeModelWarningListener {
      * Return a new instance of the interactive node's view (without opening it).
      *
      * @param title the displayed view title.
+     * @param <V> the interactive view type.
      * @return The node view with the specified index.
      * @since 2.8
      */
-    public AbstractInteractiveNodeView<?> getInteractiveView(final String title) {
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    public <V extends AbstractNodeView<?> & InteractiveView<?>> V getInteractiveView(final String title) {
         if (!(m_factory instanceof InteractiveNodeFactoryExtension)) {
             String errorMsg = "Interactive View instantiation failed: wrong factory!";
             m_logger.error(errorMsg);
             throw new RuntimeException(errorMsg);
         }
         try {
-            return ((InteractiveNodeFactoryExtension)m_factory).createInteractiveView(m_model);
+            return (V)((InteractiveNodeFactoryExtension)m_factory).createInteractiveView(m_model);
         } catch (Throwable e) {
             String errorMsg = "Interactive View instantiation failed: " + e.getMessage();
             m_logger.error(errorMsg, e);

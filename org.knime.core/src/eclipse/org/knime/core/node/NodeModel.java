@@ -59,8 +59,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.interactive.AbstractInteractiveNodeView;
 import org.knime.core.node.interactive.InteractiveNode;
+import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -352,13 +352,15 @@ public abstract class NodeModel {
     }
 
     /**
+     * @param <V> the concrete interactive view type
      * @return interactive node view or null if it does not (yet) exist.
      * @since 2.8
      */
-    public final AbstractInteractiveNodeView<?> getInteractiveNodeView() {
+    @SuppressWarnings("unchecked")
+    public final <V extends AbstractNodeView<?> & InteractiveView<?>> V getInteractiveNodeView() {
         for (AbstractNodeView<?> abv : m_views) {
-            if (abv instanceof AbstractInteractiveNodeView) {
-                return (AbstractInteractiveNodeView<?>)abv;
+            if (abv instanceof InteractiveView) {
+                return (V)abv;
             }
         }
         return null;

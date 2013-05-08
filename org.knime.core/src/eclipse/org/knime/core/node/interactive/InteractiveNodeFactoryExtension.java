@@ -49,6 +49,7 @@
  */
 package org.knime.core.node.interactive;
 
+import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.NodeModel;
 
 /** Interface for NodeFactories of InteractiveNodeModels.
@@ -64,6 +65,13 @@ public interface InteractiveNodeFactoryExtension<T extends NodeModel & Interacti
     ////////////////////////////////////////////////////
 
     /**
+     * Creates and returns a new instance of the node's corresponding model.
+     *
+     * @return A new NodeModel for this node. Never <code>null</code>!
+     */
+    public T createNodeModel();
+
+    /**
      * @return true of the factory can create an interactive view object.
      * @since 2.8
      */
@@ -77,10 +85,11 @@ public interface InteractiveNodeFactoryExtension<T extends NodeModel & Interacti
 
     /**
      * @param model the view operates on
+     * @param <V> the interactive view type.
      * @return interactive view.
      * @since 2.8
      */
-    public AbstractInteractiveNodeView<T> createInteractiveView(final T model);
+    public <V extends AbstractNodeView<T> & InteractiveView<T>> V createInteractiveView(final T model);
 
     ////////////////////////////////////////////
     // Factory methods for WebNodeView providers
@@ -93,9 +102,9 @@ public interface InteractiveNodeFactoryExtension<T extends NodeModel & Interacti
     public boolean hasInteractiveWebView();
 
     /**
-     * @return view object which can be used with the underlying models @see ViewContent.
+     * @return view template which can be used with the underlying models {@link ViewContent}.
      * @since 2.8
      */
-    public Object getInteractiveWebView();
+    public WebViewTemplate getInteractiveWebView();
 
 }

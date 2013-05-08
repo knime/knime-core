@@ -45,30 +45,58 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Apr 16, 2013 by Berthold
+ * Created on 08.05.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
 package org.knime.core.node.interactive;
 
-import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.ExecutionContext;
-import org.knime.core.node.port.PortObject;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.charset.Charset;
 
-/** Interface for NodeModels that support interactive views and repeated
- * execution when the view has been modified by the user.
+import org.codehaus.jackson.JsonGenerationException;
+import org.codehaus.jackson.JsonProcessingException;
+import org.codehaus.jackson.map.JsonMappingException;
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.ObjectReader;
+
+/**
+ * ViewContent that creates and reads from a JSON string.
  *
- * @author B. Wiswedel, Th. Gabriel, M. Berthold
+ * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  * @since 2.8
  */
-public interface InteractiveNode {
+public abstract class JSONViewContent extends ViewContent {
 
-    /** Execute an executed node again - usually this will be called after
-     * a modified content from the interactive view was loaded into the
-     * NodeModel.
-     *
-     * @param data the input data (should be the same as during initial execute call)
-     * @param ec the execution context to create tables and monitor cancelation
-     * @return updated output objects.
-     * @throws CanceledExecutionException when interrupted by user
+    /**
+     * {@inheritDoc}
+     * @throws IOException
+     * @throws JsonProcessingException
      */
-    abstract PortObject[] reExecute(PortObject[] data, ExecutionContext ec) throws CanceledExecutionException;
+    @Override
+    public void createFrom(final InputStream viewContentStream) throws JsonProcessingException, IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        ObjectReader reader = mapper.updatingReader(this);
+        reader.readValue(viewContentStream);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @return An {@link OutputStream} containing the JSON string in UTF-8 format.
+     * @throws IOException
+     * @throws JsonMappingException
+     * @throws JsonGenerationException
+     */
+    @Override
+    public OutputStream saveTo() throws JsonGenerationException, JsonMappingException, IOException {
+        ObjectMapper mapper = new ObjectMapper();
+        String viewContentString = mapper.writeValueAsString(this);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        out.write(viewContentString.getBytes(Charset.forName("UTF-8")));
+        out.flush();
+        return out;
+    }
+
 }

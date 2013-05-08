@@ -49,6 +49,8 @@
  */
 package org.knime.core.node.interactive;
 
+import org.knime.core.node.interactive.WebResourceLocator.WebResourceType;
+
 /**
  *
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
@@ -59,17 +61,17 @@ public enum WebDependency {
     /**
      *
      */
-    JQUERY_1_9_1("bla");
+    JQUERY_1_9_1(new WebResourceLocator[]{new WebResourceLocator("org.knime.core", "jqueryDoesNotExist.js", WebResourceType.JAVASCRIPT)});
 
-    private String m_path;
+    private WebResourceLocator[] m_locators;
 
     /**  */
-    private WebDependency(final String path) {
-        m_path = path;
+    private WebDependency(final WebResourceLocator[] locators) {
+        m_locators = locators;
     }
 
-    public String getPath() {
-        return m_path;
+    public WebResourceLocator[] getResourceLocators() {
+        return m_locators;
     }
 
 }
