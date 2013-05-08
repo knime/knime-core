@@ -87,8 +87,8 @@ public class DataTableDiffer implements TestEvaluator {
             DataTableSpec spec1 = table1.getDataTableSpec();
             DataTableSpec spec2 = table2.getDataTableSpec();
             if (spec1.getNumColumns() != spec2.getNumColumns()) {
-                throw new TestEvaluationException("Tables have different"
-                        + " number of columns");
+                throw new TestEvaluationException("Tables have different number of columns: expected "
+                        + spec2.getNumColumns() + ", got " + spec1.getNumColumns());
             }
             boolean colsDiff = false;
             String msg =
@@ -106,7 +106,7 @@ public class DataTableDiffer implements TestEvaluator {
             }
 
             throw new TestEvaluationException("DataTableSpecs are different"
-                    + " (eventhough DataColumnSpecs are all equal).");
+                    + " (even though DataColumnSpecs are all equal).");
         }
 
         // Compare the table content
@@ -124,9 +124,8 @@ public class DataTableDiffer implements TestEvaluator {
 
             // check the row key
             if (!row1.getKey().equals(row2.getKey())) {
-                throw new TestEvaluationException("Row keys in row #" + rowNum
-                        + " differ ('" + row1.getKey() + "' vs. '"
-                        + row2.getKey() + "')");
+                throw new TestEvaluationException("Row keys in row #" + rowNum + " differ: expected '" + row2.getKey()
+                        + "',  got '" + row1.getKey() + "'");
             }
             // and all data cells
             for (int c = 0; c < row1.getNumCells(); c++) {
@@ -142,32 +141,16 @@ public class DataTableDiffer implements TestEvaluator {
                         diff = 1 / diff;
                     }
                     if ((diff - 1) > m_epsilon) {
-                        throw new TestEvaluationException("Cell content differs more than " + m_epsilon
-                                + " in row #"
-                                + rowNum
-                                + "('"
-                                + row1.getKey()
-                                + "')"
-                                + " column #"
-                                + c
-                                + "('"
-                                + table1.getDataTableSpec().getColumnSpec(c)
-                                        .getName() + "'): CellPort0='" + c1
-                                + "' vs. CellPort1='" + c2 + "'");
+                        throw new TestEvaluationException("Cell content differs more than " + m_epsilon + " in row #"
+                                + rowNum + "('" + row1.getKey() + "')" + " column #" + c + "('"
+                                + table1.getDataTableSpec().getColumnSpec(c).getName() + "'): expected '" + c2
+                                + "', got '" + c1 + "'");
                     }
                 } else if (!c1.equals(c2)) {
-                    throw new TestEvaluationException("Cell content differs"
-                            + " in row #"
-                            + rowNum
-                            + "('"
-                            + row1.getKey()
-                            + "')"
-                            + " column #"
-                            + c
-                            + "('"
-                            + table1.getDataTableSpec().getColumnSpec(c)
-                                    .getName() + "'): CellPort0='" + c1
-                            + "' vs. CellPort1='" + c2 + "'");
+                    throw new TestEvaluationException("Cell content differs" + " in row #" + rowNum + "('"
+                            + row1.getKey() + "')" + " column #" + c + "('"
+                            + table1.getDataTableSpec().getColumnSpec(c).getName() + "'): expected '" + c2 + "' got '"
+                            + c1 + "'");
                 }
             }
 
