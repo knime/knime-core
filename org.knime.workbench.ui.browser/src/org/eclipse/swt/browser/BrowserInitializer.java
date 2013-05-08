@@ -60,11 +60,11 @@ import java.net.URL;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.log4j.Logger;
 import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Platform;
 import org.eclipse.core.runtime.Status;
-import org.knime.core.node.NodeLogger;
 import org.osgi.framework.Bundle;
 import org.osgi.framework.FrameworkUtil;
 
@@ -77,7 +77,7 @@ public class BrowserInitializer {
 
     private static final String XUL = "org.eclipse.swt.browser.XULRunnerPath";
 
-    private static final NodeLogger logger = NodeLogger.getLogger(BrowserInitializer.class);
+    private static final Logger logger = Logger.getLogger(BrowserInitializer.class);
 
     private static final Pattern VERSION_PATTERN = Pattern.compile("Milestone=(\\d+)\\.(\\d+)");
 
