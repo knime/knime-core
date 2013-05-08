@@ -786,11 +786,9 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                     // make sure the error message is as expected.
                     if (!expMsg.matches(status.getMessage())) {
                         String msg =
-                                "Node '" + node.getNameWithID()
-                                        + "' has the expected status - but "
-                                        + "the message is not the "
-                                        + "expected one (node status msg: "
-                                        + status.getMessage() + ")";
+                                "Node '" + node.getNameWithID() + "' has the expected status, but the message is "
+                                        + "not the expected one: expected '" + expMsg + "', got '"
+                                        + status.getMessage();
                         // make sure to log an error
                         // during wrapUp the test fails then
                         logger.error(msg);
@@ -806,7 +804,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
 
                         logger.debug("Node '" + node.getNameWithID()
                                 + "' finished"
-                                + " with an error status - which is good.");
+                                + " with an expected error status - which is good.");
                     }
                 }
 
