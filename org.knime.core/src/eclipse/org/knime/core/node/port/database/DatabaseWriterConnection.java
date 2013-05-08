@@ -113,7 +113,9 @@ public final class DatabaseWriterConnection {
             final CredentialsProvider cp,
             final int batchSize) throws Exception {
         final Connection conn = dbConn.createConnection(cp);
+        exec.setMessage("Waiting for free database connection...");
         synchronized (dbConn.syncConnection(conn)) {
+            exec.setMessage("Start writing rows in database...");
             DataTableSpec spec = data.getDataTableSpec();
             // mapping from spec columns to database columns
             final int[] mapping;
@@ -412,7 +414,9 @@ public final class DatabaseWriterConnection {
             final CredentialsProvider cp,
             final int batchSize) throws Exception {
         final Connection conn = dbConn.createConnection(cp);
+        exec.setMessage("Waiting for free database connection...");
         synchronized (dbConn.syncConnection(conn)) {
+            exec.setMessage("Start updating rows in database...");
             final DataTableSpec spec = data.getDataTableSpec();
 
             // create query connection object
@@ -557,7 +561,9 @@ public final class DatabaseWriterConnection {
             final CredentialsProvider cp,
             final int batchSize) throws Exception {
         final Connection conn = dbConn.createConnection(cp);
+        exec.setMessage("Waiting for free database connection...");
         synchronized (dbConn.syncConnection(conn)) {
+            exec.setMessage("Start deleting rows from database...");
             final DataTableSpec spec = data.getDataTableSpec();
 
             // create query connection object

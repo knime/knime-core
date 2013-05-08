@@ -255,6 +255,7 @@ public final class DatabaseReaderConnection {
         m_blobFactory = new BinaryObjectCellFactory(exec);
         // retrieve connection
         final Connection conn = initConnection(cp);
+        exec.setMessage("Waiting for free database connection...");
         synchronized (m_conn.syncConnection(conn)) {
             // remember auto-commit flag
             final boolean autoCommit = conn.getAutoCommit();
