@@ -61,7 +61,7 @@ import org.knime.core.node.workflow.WorkflowManager;
  * @author B. Wiswedel, M. Berthold, Th. Gabriel, C. Albrecht
  * @since 2.8
  */
-final class InteractiveViewDelegate {
+final class InteractiveViewDelegate<V extends ViewContent> {
 
     private WorkflowManager m_wfm;
     private NodeID m_nodeID;
@@ -84,8 +84,8 @@ final class InteractiveViewDelegate {
         return m_wfm.canReExecuteNode(m_nodeID);
     }
 
-    void triggerReExecution(final ReexecutionCallback rec) {
-        m_wfm.reExecuteNode(m_nodeID, rec);
+    void triggerReExecution(final V vc, final ReexecutionCallback rec) {
+        m_wfm.reExecuteNode(m_nodeID, vc, rec);
     }
 
     void setNewDefaultConfiguration(final ConfigureCallback ccb) {

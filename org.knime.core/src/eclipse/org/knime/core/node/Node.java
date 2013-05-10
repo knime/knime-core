@@ -86,6 +86,7 @@ import org.knime.core.node.config.ConfigEditTreeModel;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveNodeFactoryExtension;
 import org.knime.core.node.interactive.InteractiveView;
+import org.knime.core.node.interactive.ViewContent;
 import org.knime.core.node.interrupt.InterruptibleNodeModel;
 import org.knime.core.node.missing.MissingNodeModel;
 import org.knime.core.node.port.PortObject;
@@ -1793,7 +1794,7 @@ public final class Node implements NodeModelWarningListener {
         if (!(m_model instanceof InteractiveNode)) {
             return false;
         }
-        return ((InteractiveNodeFactoryExtension)m_factory).hasInteractiveView();
+        return true;
     }
 
     /**
@@ -1815,7 +1816,7 @@ public final class Node implements NodeModelWarningListener {
      * @since 2.8
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    public <V extends AbstractNodeView<?> & InteractiveView<?>> V getInteractiveView(final String title) {
+    public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent>> V getInteractiveView(final String title) {
         if (!(m_factory instanceof InteractiveNodeFactoryExtension)) {
             String errorMsg = "Interactive View instantiation failed: wrong factory!";
             m_logger.error(errorMsg);

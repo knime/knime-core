@@ -53,7 +53,6 @@ import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.interactive.InteractiveNodeFactoryExtension;
-import org.knime.core.node.interactive.WebViewTemplate;
 
 /**
  *
@@ -61,15 +60,7 @@ import org.knime.core.node.interactive.WebViewTemplate;
  * @since 2.8
  */
 public class InteractiveHiLiteCollectorNodeFactory extends NodeFactory<InteractiveHiLiteCollectorNodeModel> implements
-        InteractiveNodeFactoryExtension<InteractiveHiLiteCollectorNodeModel> {
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasInteractiveView() {
-        return true;
-    }
+        InteractiveNodeFactoryExtension<InteractiveHiLiteCollectorNodeModel, InteractiveHiLiteCollectorViewContent> {
 
     /**
      * {@inheritDoc}
@@ -78,22 +69,6 @@ public class InteractiveHiLiteCollectorNodeFactory extends NodeFactory<Interacti
     @Override
     public InteractiveHiLiteCollectorNodeView createInteractiveView(final InteractiveHiLiteCollectorNodeModel model) {
         return new InteractiveHiLiteCollectorNodeView(model);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean hasInteractiveWebView() {
-        return false;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WebViewTemplate getInteractiveWebView() {
-        return null;
     }
 
     /**

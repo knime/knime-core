@@ -60,19 +60,20 @@ import org.knime.core.node.workflow.WorkflowManager;
  *
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  * @param <T> the underlying node model
+ * @param <V>
  * @since 2.8
  */
-public abstract class InteractiveClientNodeView<T extends NodeModel & InteractiveNode> extends NodeView<T> implements
-        InteractiveView<T> {
+public abstract class InteractiveClientNodeView<T extends NodeModel & InteractiveNode<V>, V extends ViewContent>
+extends NodeView<T> implements InteractiveView<T, V> {
 
-    private final InteractiveViewDelegate m_delegate;
+    private final InteractiveViewDelegate<V> m_delegate;
 
     /**
      * @param nodeModel The underlying node model.
      */
     protected InteractiveClientNodeView(final T nodeModel) {
         super(nodeModel);
-        m_delegate = new InteractiveViewDelegate();
+        m_delegate = new InteractiveViewDelegate<V>();
     }
 
     /**
@@ -95,8 +96,8 @@ public abstract class InteractiveClientNodeView<T extends NodeModel & Interactiv
      * {@inheritDoc}
      */
     @Override
-    public void triggerReExecution(final ReexecutionCallback callback) {
-        m_delegate.triggerReExecution(callback);
+    public void triggerReExecution(final V vc, final ReexecutionCallback callback) {
+        m_delegate.triggerReExecution(vc, callback);
     }
 
     /**

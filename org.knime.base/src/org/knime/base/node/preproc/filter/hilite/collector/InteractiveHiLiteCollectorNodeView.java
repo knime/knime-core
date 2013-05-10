@@ -75,7 +75,7 @@ import org.knime.core.node.tableview.TableView;
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  * @since 2.8
  */
-public class InteractiveHiLiteCollectorNodeView extends InteractiveClientNodeView<InteractiveHiLiteCollectorNodeModel> {
+public class InteractiveHiLiteCollectorNodeView extends InteractiveClientNodeView<InteractiveHiLiteCollectorNodeModel, InteractiveHiLiteCollectorViewContent> {
 
     private final TableView m_table;
 
@@ -158,7 +158,8 @@ public class InteractiveHiLiteCollectorNodeView extends InteractiveClientNodeVie
     private void appendAnnotation(final String anno, final boolean newColumn) {
         if (anno != null && !anno.isEmpty()) {
             getNodeModel().appendAnnotation(anno, newColumn);
-            triggerReExecution(new DefaultReexecutionCallback());
+            //FIXME: Put annotation map in view content
+            triggerReExecution(new InteractiveHiLiteCollectorViewContent(), new DefaultReexecutionCallback());
         }
     }
 

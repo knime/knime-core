@@ -112,6 +112,7 @@ import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ReexecutionCallback;
+import org.knime.core.node.interactive.ViewContent;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -2003,7 +2004,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param rec
      * @since 2.8
      */
-    public void reExecuteNode(final NodeID id, final ReexecutionCallback rec) {
+    public void reExecuteNode(final NodeID id, final ViewContent vc, final ReexecutionCallback rec) {
         synchronized (m_workflowMutex) {
             if (!canReExecuteNode(id)) {
                 throw new IllegalArgumentException("Can't reexecute executing nodes.");
@@ -2011,6 +2012,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             SingleNodeContainer snc = (SingleNodeContainer)getNodeContainer(id);
             resetSuccessors(id);
             configureNodeAndPortSuccessors(id, null, false, true);
+            //((InteractiveNode)(snc.getNodeModel())).
             snc.markForReExecution();
             assert snc.getInternalState().equals(InternalNodeContainerState.EXECUTED_MARKEDFOREXEC);
             queueIfQueuable(snc);
@@ -7306,7 +7308,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** {@inheritDoc} */
     @Override
-    public <V extends AbstractNodeView<?> & InteractiveView<?>> V getInteractiveView() {
+    public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent>> V getInteractiveView() {
         return null;
     }
 

@@ -120,14 +120,6 @@ public class InteractiveValueSelectNodeModel extends NodeModel implements Intera
      * {@inheritDoc}
      */
     @Override
-    public void loadViewContent(final InteractiveValueSelectViewContent viewContent) {
-        selectedValues.setStringArrayValue(viewContent.getSelectedValues());
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public InteractiveValueSelectViewContent createViewContent() {
         return new InteractiveValueSelectViewContent(possibleValues.getStringArrayValue(), selectedValues.getStringArrayValue());
     }
@@ -153,8 +145,9 @@ public class InteractiveValueSelectNodeModel extends NodeModel implements Intera
      * {@inheritDoc}
      */
     @Override
-    public PortObject[] reExecute(final PortObject[] data, final ExecutionContext ec)
+    public PortObject[] reExecute(final InteractiveValueSelectViewContent viewContent, final PortObject[] data, final ExecutionContext ec)
             throws CanceledExecutionException {
+        selectedValues.setStringArrayValue(viewContent.getSelectedValues());
         return new PortObject[] {createResult(selectedValues.getStringArrayValue(), ec)};
     }
 

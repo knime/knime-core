@@ -57,18 +57,26 @@ import org.knime.core.node.port.PortObject;
  * execution when the view has been modified by the user.
  *
  * @author B. Wiswedel, Th. Gabriel, M. Berthold
+ * @param <V> The concrete class of the {@link ViewContent}
  * @since 2.8
  */
-public interface InteractiveNode {
+public interface InteractiveNode<V extends ViewContent> {
 
-    /** Execute an executed node again - usually this will be called after
-     * a modified content from the interactive view was loaded into the
-     * NodeModel.
+    /** Execute an executed node again. Called with a modified content from
+     * the interactive view.
      *
+     * @param content information from view to be used during re-execution
      * @param data the input data (should be the same as during initial execute call)
      * @param ec the execution context to create tables and monitor cancelation
      * @return updated output objects.
      * @throws CanceledExecutionException when interrupted by user
      */
-    abstract PortObject[] reExecute(PortObject[] data, ExecutionContext ec) throws CanceledExecutionException;
+    PortObject[] reExecute(V content, PortObject[] data, ExecutionContext ec)
+            throws CanceledExecutionException;
+
+    /**
+     * Create content which can be used by the interactive view implementation.
+     * @return Content required for the interactive view.
+     */
+    abstract V createViewContent();
 }

@@ -61,6 +61,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveView;
+import org.knime.core.node.interactive.ViewContent;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
@@ -357,7 +358,7 @@ public abstract class NodeModel {
      * @since 2.8
      */
     @SuppressWarnings("unchecked")
-    public final <V extends AbstractNodeView<?> & InteractiveView<?>> V getInteractiveNodeView() {
+    public final <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent>> V getInteractiveNodeView() {
         for (AbstractNodeView<?> abv : m_views) {
             if (abv instanceof InteractiveView) {
                 return (V)abv;
@@ -550,7 +551,8 @@ public abstract class NodeModel {
             outData = execute(data, exec);
         } else {
             if (this instanceof InteractiveNode) {
-                outData = ((InteractiveNode)this).reExecute(data, exec);
+                //FIXME: forward view content at this point
+                outData = ((InteractiveNode)this).reExecute(null, data, exec);
             } else {
                 m_logger.coding("Can not re-execute non interactive node. Using normal execute instead.");
                 outData = execute(data, exec);

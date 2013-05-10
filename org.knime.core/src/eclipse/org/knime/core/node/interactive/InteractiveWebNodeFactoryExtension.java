@@ -45,58 +45,39 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on 08.05.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * Created on Apr 27, 2013 by Berthold
  */
 package org.knime.core.node.interactive;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.nio.charset.Charset;
+import org.knime.core.node.NodeModel;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonProcessingException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.ObjectReader;
-
-/**
- * ViewContent that creates and reads from a JSON string.
+/** Interface for NodeFactories of InteractiveWebNodeModels.
  *
- * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * @author B. Wiswedel, Th. Gabriel, M. Berthold
+ * @param <T> requires {@link NodeModel} implementing {@link InteractiveWebNode}
+ * @param <VC>
  * @since 2.8
  */
-public abstract class JSONViewContent extends WebViewContent {
+public interface InteractiveWebNodeFactoryExtension
+    <T extends NodeModel & InteractiveWebNode<VC>, VC extends WebViewContent> {
 
     /**
-     * {@inheritDoc}
-     * @throws IOException
-     * @throws JsonProcessingException
-     */
-    @Override
-    public void loadFrom(final InputStream viewContentStream) throws JsonProcessingException, IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectReader reader = mapper.updatingReader(this);
-        reader.readValue(viewContentStream);
-    }
-
-    /**
-     * {@inheritDoc}
+     * Creates and returns a new instance of the node's corresponding model.
      *
-     * @return An {@link OutputStream} containing the JSON string in UTF-8 format.
-     * @throws IOException
-     * @throws JsonMappingException
-     * @throws JsonGenerationException
+     * @return A new NodeModel for this node. Never <code>null</code>!
      */
-    @Override
-    public OutputStream saveTo() throws JsonGenerationException, JsonMappingException, IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        String viewContentString = mapper.writeValueAsString(this);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        out.write(viewContentString.getBytes(Charset.forName("UTF-8")));
-        out.flush();
-        return out;
-    }
+    public T createNodeModel();
+
+    /**
+     * @return name of the interactive web view.
+     * @since 2.8
+     */
+    public String getInteractiveViewName();
+
+    /**
+     * @return view template which can be used with the underlying models {@link WebViewContent}.
+     * @since 2.8
+     */
+    public WebViewTemplate getInteractiveWebViewTemplate();
 
 }

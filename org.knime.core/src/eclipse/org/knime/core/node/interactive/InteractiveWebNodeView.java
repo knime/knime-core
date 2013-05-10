@@ -86,31 +86,31 @@ import org.knime.core.node.workflow.WorkflowManager;
  *
  * @author B. Wiswedel, M. Berthold, Th. Gabriel, C. Albrecht
  * @param <T> requires a {@link NodeModel} implementing {@link InteractiveWebNode} as well
- * @param <VC> the {@link ViewContent} implementation used
+ * @param <VC> the {@link WebViewContent} implementation used
  * @since 2.8
  */
-public final class InteractiveWebNodeView<T extends NodeModel & InteractiveWebNode<VC>, VC extends ViewContent>
-                extends AbstractNodeView<T> implements InteractiveView<T> {
+public final class InteractiveWebNodeView<T extends NodeModel & InteractiveWebNode<V>, V extends WebViewContent>
+                extends AbstractNodeView<T> implements InteractiveView<T, V> {
 
     private static final String CONTAINER_ID = "view";
-    private final InteractiveViewDelegate m_delegate;
+    private final InteractiveViewDelegate<V> m_delegate;
     private final WebViewTemplate m_template;
     private File m_tempFolder;
-    private Class<VC> m_viewContentClass;
+    private Class<V> m_viewContentClass;
 
     /**
      * @param nodeModel the underlying model
      * @param wvt the template to be used for the web view
      * @param viewContentClass the class of the view content
      */
-    public InteractiveWebNodeView(final T nodeModel, final WebViewTemplate wvt, final Class<VC> viewContentClass) {
+    public InteractiveWebNodeView(final T nodeModel, final WebViewTemplate wvt, final Class<V> viewContentClass) {
         super(nodeModel);
         m_template = wvt;
         if (viewContentClass == null) {
             throw new NullPointerException("ViewContent class can not be null!");
         }
         m_viewContentClass = viewContentClass;
-        m_delegate = new InteractiveViewDelegate();
+        m_delegate = new InteractiveViewDelegate<V>();
     }
 
     @Override
@@ -124,8 +124,8 @@ public final class InteractiveWebNodeView<T extends NodeModel & InteractiveWebNo
     }
 
     @Override
-    public void triggerReExecution(final ReexecutionCallback callback) {
-        m_delegate.triggerReExecution(callback);
+    public void triggerReExecution(final V vc, final ReexecutionCallback callback) {
+        m_delegate.triggerReExecution(vc, callback);
     }
 
     @Override
@@ -138,15 +138,14 @@ public final class InteractiveWebNodeView<T extends NodeModel & InteractiveWebNo
      *
      * @param vc the new content of the view.
      */
-    protected final void loadViewContentIntoNode(final VC vc) {
-        getNodeModel().loadViewContent(vc);
-        triggerReExecution(new DefaultReexecutionCallback());
+    protected final void loadViewContentIntoNode(final V vc) {
+        triggerReExecution(vc, new DefaultReexecutionCallback());
     }
 
     /**
      * @return ViewContent of the underlying NodeModel.
      */
-    protected final VC getViewContentFromNode() {
+    protected final V getViewContentFromNode() {
         return getNodeModel().createViewContent();
     }
 
@@ -171,7 +170,7 @@ public final class InteractiveWebNodeView<T extends NodeModel & InteractiveWebNo
     public final void callOpenView(final String title) {
         final String jsonViewContent;
         try {
-            VC vc = getViewContentFromNode();
+            V vc = getViewContentFromNode();
             jsonViewContent = ((ByteArrayOutputStream)vc.saveTo()).toString("UTF-8");
         } catch (Exception e) {
             throw new IllegalArgumentException("No view content available!");
@@ -425,8 +424,8 @@ public final class InteractiveWebNodeView<T extends NodeModel & InteractiveWebNo
         String evalCode = wrapInTryCatch("return " + getJSMethodName(pullMethod, CONTAINER_ID));
         String jsonString = (String)browser.evaluate(evalCode);
         try {
-            VC viewContent = m_viewContentClass.newInstance();
-            viewContent.createFrom(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
+            V viewContent = m_viewContentClass.newInstance();
+            viewContent.loadFrom(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
             loadViewContentIntoNode(viewContent);
         } catch (Exception e) {
             //TODO error message

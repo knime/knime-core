@@ -45,58 +45,31 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on 08.05.2013 by Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * Created on Apr 16, 2013 by Berthold
  */
 package org.knime.core.node.interactive;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.charset.Charset;
 
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonProcessingException;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
-import org.codehaus.jackson.map.ObjectReader;
-
-/**
- * ViewContent that creates and reads from a JSON string.
+/** Container for all of the information transported inbetween a {@link InteractiveWebNode}
+ * and an interactive view running in the wizard or WebPortal.
  *
- * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
+ * @author B. Wiswedel, Th. Gabriel, M. Berthold, C. Albrecht
  * @since 2.8
  */
-public abstract class JSONViewContent extends WebViewContent {
+public abstract class WebViewContent extends ViewContent {
 
     /**
-     * {@inheritDoc}
-     * @throws IOException
-     * @throws JsonProcessingException
+     * @param viewContentStream an input stream, that is used to create the instance of a view content.
+     * @throws Exception Exception that can occur while creating an instance.
      */
-    @Override
-    public void loadFrom(final InputStream viewContentStream) throws JsonProcessingException, IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        ObjectReader reader = mapper.updatingReader(this);
-        reader.readValue(viewContentStream);
-    }
+    public abstract void loadFrom(InputStream viewContentStream) throws Exception;
 
     /**
-     * {@inheritDoc}
-     *
-     * @return An {@link OutputStream} containing the JSON string in UTF-8 format.
-     * @throws IOException
-     * @throws JsonMappingException
-     * @throws JsonGenerationException
+     * @return An output stream with the serialized view content.
+     * @throws Exception Exception that can occur while serializing object.
      */
-    @Override
-    public OutputStream saveTo() throws JsonGenerationException, JsonMappingException, IOException {
-        ObjectMapper mapper = new ObjectMapper();
-        String viewContentString = mapper.writeValueAsString(this);
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        out.write(viewContentString.getBytes(Charset.forName("UTF-8")));
-        out.flush();
-        return out;
-    }
+    public abstract OutputStream saveTo() throws Exception;
 
 }

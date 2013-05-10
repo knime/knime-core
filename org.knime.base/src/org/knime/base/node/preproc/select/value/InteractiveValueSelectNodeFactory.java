@@ -52,8 +52,7 @@ package org.knime.base.node.preproc.select.value;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
-import org.knime.core.node.interactive.InteractiveNodeFactoryExtension;
-import org.knime.core.node.interactive.InteractiveWebNodeView;
+import org.knime.core.node.interactive.InteractiveWebNodeFactoryExtension;
 import org.knime.core.node.interactive.WebViewTemplate;
 
 /**
@@ -61,7 +60,8 @@ import org.knime.core.node.interactive.WebViewTemplate;
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  */
 public class InteractiveValueSelectNodeFactory extends NodeFactory<InteractiveValueSelectNodeModel>
-                implements InteractiveNodeFactoryExtension<InteractiveValueSelectNodeModel> {
+                implements InteractiveWebNodeFactoryExtension<InteractiveValueSelectNodeModel,
+                InteractiveValueSelectViewContent> {
 
     /**
      * {@inheritDoc}
@@ -107,35 +107,20 @@ public class InteractiveValueSelectNodeFactory extends NodeFactory<InteractiveVa
     /**
      * {@inheritDoc}
      */
-    @Override
-    public boolean hasInteractiveView() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @SuppressWarnings("unchecked")
+    /*@SuppressWarnings("unchecked")
     @Override
     public InteractiveWebNodeView<InteractiveValueSelectNodeModel, InteractiveValueSelectViewContent>
             createInteractiveView(final InteractiveValueSelectNodeModel model) {
         return new InteractiveWebNodeView<InteractiveValueSelectNodeModel, InteractiveValueSelectViewContent>(
-                model, getInteractiveWebView(), InteractiveValueSelectViewContent.class);
-    }
+                model, getInteractiveWebViewTemplate(), InteractiveValueSelectViewContent.class);
+    }*/
+
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public boolean hasInteractiveWebView() {
-        return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public WebViewTemplate getInteractiveWebView() {
+    public WebViewTemplate getInteractiveWebViewTemplate() {
         return new InteractiveValueSelectWebViewTemplate();
     }
 

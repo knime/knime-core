@@ -59,9 +59,10 @@ import org.knime.core.node.workflow.WorkflowManager;
  * @noimplement This interface is not intended to be implemented by clients.
  * @author B. Wiswedel, M. Berthold, Th. Gabriel, C. Albrecht
  * @param <T> underlying NodeModel
+ * @param <V>
  * @since 2.8
  */
-public interface InteractiveView<T extends NodeModel & InteractiveNode> {
+public interface InteractiveView<T extends NodeModel & InteractiveNode<V>, V extends ViewContent> {
 
     /**
      * Set access to workflowmanager and node so the view can trigger re-execution. Note
@@ -83,9 +84,10 @@ public interface InteractiveView<T extends NodeModel & InteractiveNode> {
      * - configure node and successors<br>
      * - execute node but not successors (can be canceled by user of fail during execution!)
      *
+     * @param vc
      * @param callback Callback for confirm messages and progress information.
      */
-    public void triggerReExecution(final ReexecutionCallback callback);
+    public void triggerReExecution(final V vc, final ReexecutionCallback callback);
 
     /**
      * Make sure current node internals are used as new default NodeSettings.<br>

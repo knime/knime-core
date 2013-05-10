@@ -94,6 +94,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.interactive.InteractiveView;
+import org.knime.core.node.interactive.ViewContent;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -329,7 +330,7 @@ public final class SingleNodeContainer extends NodeContainer {
 
     /** {@inheritDoc} */
     @Override
-    public <V extends AbstractNodeView<?> & InteractiveView<?>> V getInteractiveView() {
+    public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent>> V getInteractiveView() {
         V ainv = m_node.getNodeModel().getInteractiveNodeView();
         if (ainv == null) {
             String name = getInteractiveViewName();

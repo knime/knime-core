@@ -88,7 +88,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
  * @since 2.8
  */
-public class InteractiveHiLiteCollectorNodeModel extends NodeModel implements InteractiveNode {
+public class InteractiveHiLiteCollectorNodeModel extends NodeModel implements InteractiveNode<InteractiveHiLiteCollectorViewContent> {
 
     private final Map<RowKey, Map<Integer, String>> m_annotationMap =
             new LinkedHashMap<RowKey, Map<Integer, String>>();
@@ -127,7 +127,7 @@ public class InteractiveHiLiteCollectorNodeModel extends NodeModel implements In
      * {@inheritDoc}
      */
     @Override
-    public PortObject[] reExecute(final PortObject[] data, final ExecutionContext exec)
+    public PortObject[] reExecute(final InteractiveHiLiteCollectorViewContent viewContent, final PortObject[] data, final ExecutionContext exec)
                                                     throws CanceledExecutionException {
         if (m_annotationMap.isEmpty()) {
             return new PortObject[]{m_data};
@@ -372,6 +372,15 @@ public class InteractiveHiLiteCollectorNodeModel extends NodeModel implements In
     protected void reset() {
         m_annotationMap.clear();
         m_lastIndex = null;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InteractiveHiLiteCollectorViewContent createViewContent() {
+        // TODO Auto-generated method stub
+        return null;
     }
 
 }

@@ -49,27 +49,16 @@
  */
 package org.knime.core.node.interactive;
 
+
 /**
  * Interface for NodeModels that support interactive web-enabled views and repeated
  * execution when the view has been modified by the user. All communication between
- * the node model and the view is realized via a {@link ViewContent} object.
+ * the node model and the view is realized via a {@link WebViewContent} object.
  *
  * @author Christian Albrecht, KNIME.com AG, Zurich, Switzerland
- * @param <V> The concrete class of the {@link ViewContent}
+ * @param <V> The concrete class of the {@link WebViewContent}
  * @since 2.8
  */
-public interface InteractiveWebNode<V extends ViewContent> extends InteractiveNode {
-
-    /** Load content potentially modified from an interactive view.
-    *
-    * @param content The new content to be copied into the model.
-    */
-   abstract void loadViewContent(final V content);
-
-   /**
-    * Create content which can be used by the interactive view implementation.
-    * @return Content required for the interactive view.
-    */
-   abstract V createViewContent();
+public interface InteractiveWebNode<V extends WebViewContent> extends InteractiveNode<V> {
 
 }
