@@ -86,7 +86,10 @@ import org.knime.core.node.config.ConfigEditTreeModel;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveNodeFactoryExtension;
 import org.knime.core.node.interactive.InteractiveView;
+import org.knime.core.node.interactive.InteractiveWebNode;
+import org.knime.core.node.interactive.InteractiveWebNodeFactoryExtension;
 import org.knime.core.node.interactive.ViewContent;
+import org.knime.core.node.interactive.WebViewTemplate;
 import org.knime.core.node.interrupt.InterruptibleNodeModel;
 import org.knime.core.node.missing.MissingNodeModel;
 import org.knime.core.node.port.PortObject;
@@ -1798,6 +1801,21 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /**
+     * Returns true if this node can provide the content for an interactive web view.
+     * @return <code>true</code> if {@link WebViewTemplate} is available.
+     * @since 2.8
+     */
+    public boolean hasInteractiveWebView() {
+        if (!(m_factory instanceof InteractiveWebNodeFactoryExtension)) {
+            return false;
+        }
+        if (!(m_model instanceof InteractiveWebNode)) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
      * Returns the name of the interactive view if such a view exists. Otherwise <code>null</code> is returned.
      *
      * @return name of the interactive view or <code>null</code>
@@ -1829,6 +1847,19 @@ public final class Node implements NodeModelWarningListener {
             m_logger.error(errorMsg, e);
             throw new RuntimeException(errorMsg, e);
         }
+    }
+
+    /**
+     * @return the template for an interactive web view.
+     * @since 2.8
+     */
+    public WebViewTemplate getInteractiveWebViewTemplate() {
+        if (!(m_factory instanceof InteractiveWebNodeFactoryExtension)) {
+            String errorMsg = "Interactive WebView instantiation failed: wrong factory!";
+            m_logger.error(errorMsg);
+            throw new RuntimeException(errorMsg);
+        }
+        return ((InteractiveWebNodeFactoryExtension<?, ?>)m_factory).getInteractiveWebViewTemplate();
     }
 
     /**

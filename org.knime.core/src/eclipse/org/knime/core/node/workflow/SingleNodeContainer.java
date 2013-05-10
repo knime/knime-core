@@ -95,6 +95,7 @@ import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
+import org.knime.core.node.interactive.WebViewTemplate;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.property.hilite.HiLiteHandler;
@@ -324,6 +325,12 @@ public final class SingleNodeContainer extends NodeContainer {
 
     /** {@inheritDoc} */
     @Override
+    public boolean hasInteractiveWebView() {
+        return m_node.hasInteractiveWebView();
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public String getInteractiveViewName() {
         return m_node.getInteractiveViewName();
     }
@@ -347,6 +354,13 @@ public final class SingleNodeContainer extends NodeContainer {
         }
         return ainv;
     }
+
+    /** {@inheritDoc} */
+    @Override
+    public WebViewTemplate getInteractiveWebViewTemplate() {
+        return m_node.getInteractiveWebViewTemplate();
+    }
+
 
     /** {@inheritDoc} */
     @Override

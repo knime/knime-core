@@ -113,6 +113,7 @@ import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ReexecutionCallback;
 import org.knime.core.node.interactive.ViewContent;
+import org.knime.core.node.interactive.WebViewTemplate;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
@@ -7302,6 +7303,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** {@inheritDoc} */
     @Override
+    public boolean hasInteractiveWebView() {
+        return false;
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public String getInteractiveViewName() {
         return "no view available";
     }
@@ -7309,6 +7316,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /** {@inheritDoc} */
     @Override
     public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent>> V getInteractiveView() {
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public WebViewTemplate getInteractiveWebViewTemplate() {
         return null;
     }
 

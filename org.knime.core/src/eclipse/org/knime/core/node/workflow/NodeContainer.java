@@ -80,6 +80,7 @@ import org.knime.core.node.NodeView;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
+import org.knime.core.node.interactive.WebViewTemplate;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ConvenienceMethods;
@@ -1124,6 +1125,12 @@ public abstract class NodeContainer implements NodeProgressListener {
     public abstract boolean hasInteractiveView();
 
     /**
+     * @return true if node provides {@link WebViewTemplate} for an interactive web view.
+     * @since 2.8
+     */
+    public abstract boolean hasInteractiveWebView();
+
+    /**
      * Returns the name of the interactive view if such a view exists. Otherwise <code>null</code> is returned.
      *
      * @return name of the interactive view or <code>null</code>
@@ -1136,6 +1143,12 @@ public abstract class NodeContainer implements NodeProgressListener {
      * @since 2.8
      */
     public abstract <V extends AbstractNodeView<?> & InteractiveView<?,? extends ViewContent>> V getInteractiveView();
+
+    /**
+     * @return interactive web view template.
+     * @since 2.8
+     */
+    public abstract WebViewTemplate getInteractiveWebViewTemplate();
 
     /* ------------- Misc node info -------------- */
 
