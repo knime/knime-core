@@ -158,8 +158,7 @@ public abstract class NodeContainer implements NodeProgressListener {
      * be executed before this one is not done - usually these are loops
      * with "dangling" branches, e.g. a chain of nodes leaving the loop.
      */
-    private final ArrayList<FlowLoopContext> m_listOfWaitingLoops
-                                        = new ArrayList<FlowLoopContext>();
+    private final ArrayList<FlowLoopContext> m_listOfWaitingLoops = new ArrayList<FlowLoopContext>();
 
     private String m_customDescription;
 
@@ -177,7 +176,6 @@ public abstract class NodeContainer implements NodeProgressListener {
     protected final Object m_nodeMutex = new Object();
 
     /*--------- listener administration------------*/
-
 
     private final CopyOnWriteArraySet<NodeStateChangeListener>
         m_stateChangeListeners =

@@ -5024,8 +5024,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 if (isSourceNode(sncID)) {
                     // no input ports - create new stack, prefilled with
                     // Workflow variables:
-                    scsc = new FlowObjectStack(sncID,
-                            getWorkflowVariableStack());
+                    scsc = new FlowObjectStack(sncID, getWorkflowVariableStack());
                 } else {
                     try {
                         scsc = new FlowObjectStack(sncID, sos);
@@ -5069,8 +5068,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     snc.setInHiLiteHandler(i, hiliteHdls[i]);
                 }
                 // remember HiLiteHandler on OUTPORTS of all nodes!
-                HiLiteHandler[] oldHdl =
-                    new HiLiteHandler[snc.getNrOutPorts()];
+                HiLiteHandler[] oldHdl = new HiLiteHandler[snc.getNrOutPorts()];
                 for (int i = 0; i < oldHdl.length; i++) {
                     oldHdl[i] = snc.getOutPort(i).getHiLiteHandler();
                 }
@@ -5226,12 +5224,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         if (ports != null) {
             assert !configureMyself;
             // only consider nodes attached to port:
-            nodes = m_workflow.getBreadthFirstListOfPortSuccessors(
-                    nodeId, ports, false);
+            nodes = m_workflow.getBreadthFirstListOfPortSuccessors(nodeId, ports, false);
         } else {
             // take all nodes
-            nodes = m_workflow.getBreadthFirstListOfNodeAndSuccessors(
-                    nodeId, false);
+            nodes = m_workflow.getBreadthFirstListOfNodeAndSuccessors(nodeId, false);
         }
         // remember which ones we did configure to avoid useless configurations
         // (this list does not contain nodes where configure() didn't change
@@ -5253,8 +5249,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // now iterate over the remaining nodes
         for (NodeID currNode : nodes.keySet()) {
             boolean needsConfiguration = currNode.equals(nodeId);
-            for (ConnectionContainer cc
-                             : m_workflow.getConnectionsByDest(currNode)) {
+            for (ConnectionContainer cc : m_workflow.getConnectionsByDest(currNode)) {
                 if (freshlyConfiguredNodes.contains(cc.getSource())) {
                     needsConfiguration = true;
                 }
@@ -5265,8 +5260,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             final NodeContainer nc = getNodeContainer(currNode);
             synchronized (m_workflowMutex) {
                 if (nc instanceof SingleNodeContainer) {
-                    if (configureSingleNodeContainer((SingleNodeContainer)nc,
-                            /*keepNodeMessage=*/false)) {
+                    if (configureSingleNodeContainer((SingleNodeContainer)nc, /*keepNodeMessage=*/false)) {
                         freshlyConfiguredNodes.add(nc.getID());
                     }
                 } else {
@@ -7352,8 +7346,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         throws InvalidSettingsException {
         super.loadSettings(settings);
         NodeSettingsRO modelSettings = settings.getNodeSettings("model");
-        Map<NodeID, QuickFormInputNode> nodes =
-            findNodes(QuickFormInputNode.class, false);
+        Map<NodeID, QuickFormInputNode> nodes = findNodes(QuickFormInputNode.class, false);
         for (NodeID id : nodes.keySet()) {
             String nodeID = Integer.toString(id.getIndex());
             if (modelSettings.containsKey(nodeID)) {
