@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="collumnappend.png" type="Manipulator">
+    <name>Column Appender</name>
+    
+    <shortDescription>
+        A fast way to reverse the operation of a splitter node.
+    </shortDescription>
+    
+    <fullDescription>
+        <intro>Column Appender takes two previously sorted tables with the same number of rows 
+        and quickly combines them. It performs a similar function to the Joiner but can be 
+        faster for large tables. The drawback is that the tables must have the same number 
+        of rows and these rows must already be in the correct order for appending. 
+        <br></br>
+        <br></br>
+        If the input tables share some column names, the offending column names from the bottom table will be appended with "(#1)".
+        <br></br>
+        <br></br>
+        Hint: When in doubt, use the Joiner.
+       </intro>
+    </fullDescription>
+    
+    <ports>
+        <inPort index="0" name="Table 1">A sorted table with n rows.</inPort>
+        <inPort index="1" name="Table 2">Another sorted table with n rows.</inPort>
+        <outPort index="0" name="Appended table">A table with the columns from both Table 1 and Table 2</outPort>
+    </ports>    
+</knimeNode>
+

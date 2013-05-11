@@ -449,6 +449,11 @@
             factory-class="org.knime.base.node.preproc.split2.SplitNodeFactory2"
             id="org.knime.base.node.preproc.split2.SplitNodeFactory2"/>
       <node
+            category-path="/manipulation/column/column-split+combine"
+            factory-class="org.knime.base.node.preproc.columnappend.ColumnAppenderNodeFactory"
+            id="org.knime.base.node.preproc.columnappend.ColumnAppenderNodeFactory"
+            after="org.knime.base.node.preproc.split2.SplitNodeFactory2"/>
+      <node
             after="org.knime.base.node.io.csvwriter.CSVWriterNodeFactory"
             factory-class="org.knime.base.node.io.arffwriter.ARFFWriterNodeFactory"
             category-path="/io/write"
