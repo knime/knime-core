@@ -56,6 +56,8 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 import org.junit.Test;
+import org.knime.core.data.DataColumnSpecCreator;
+import org.knime.core.data.def.StringCell;
 
 /**
  *
@@ -89,6 +91,17 @@ public class UniqueNameGeneratorTest {
         assertEquals(" (#1)", ng.newName("")); // already present
         assertEquals("Parenthesis (#2)", ng.newName("Parenthesis"));
         assertEquals("Parenthesis (#4)", ng.newName("Parenthesis"));
+    }
+
+    @Test
+    public void testNewCreatorFromColumn() {
+        UniqueNameGenerator ng = new UniqueNameGenerator(USED_NAMES);
+        DataColumnSpecCreator c1 = ng.newCreator(new DataColumnSpecCreator("NewName", StringCell.TYPE).createSpec());
+        assertEquals("NewName", c1.createSpec().getName());
+        DataColumnSpecCreator c2 = ng.newCreator(new DataColumnSpecCreator("NewName", StringCell.TYPE).createSpec());
+        assertEquals("NewName (#1)", c2.createSpec().getName());
+        DataColumnSpecCreator c3 = ng.newCreator(new DataColumnSpecCreator("Parenthesis (#1)", StringCell.TYPE).createSpec());
+        assertEquals("Parenthesis (#2)", c3.createSpec().getName());
     }
 
 }

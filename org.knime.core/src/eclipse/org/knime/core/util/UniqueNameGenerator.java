@@ -138,6 +138,17 @@ public final class UniqueNameGenerator {
         return new DataColumnSpecCreator(name, type);
     }
 
+    /** Convenience method to create a new column spec creator based on a reference
+     * column spec. If the name of the column is already in use it's name will be made unique.
+     * @param column The reference column
+     * @return A column spec creator with the name 'uniquified'.
+     * @since 2.8 */
+    public DataColumnSpecCreator newCreator(final DataColumnSpec column) {
+        DataColumnSpecCreator creator = new DataColumnSpecCreator(column);
+        creator.setName(newName(column.getName()));
+        return creator;
+    }
+
     /** Call {@link #newCreator(String, DataType)} and returns the spec created
      * from it.
      * @param suggested The base name
