@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   16.04.2008 (gabriel): created
  */
@@ -71,14 +71,15 @@ import org.knime.core.node.tableview.TableContentModel;
 import org.knime.core.node.tableview.TableView;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
+@Deprecated
 public class HiLiteCollectorNodeView
         extends NodeView<HiLiteCollectorNodeModel> {
-    
+
     private final TableView m_table;
-    
+
     /**
      * Creates a new view on a hilite collector model.
      * @param model the underlying hilite collector model
@@ -88,11 +89,11 @@ public class HiLiteCollectorNodeView
         super.setShowNODATALabel(false);
         JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 10));
         p.setBorder(BorderFactory.createTitledBorder(" Append Annotation "));
-        
+
         final JCheckBox checkBox = new JCheckBox("New Column");
-        
+
         final JTextField textField = new JTextField();
-        textField.setPreferredSize(new Dimension(150, 
+        textField.setPreferredSize(new Dimension(150,
                 Math.max(20, textField.getHeight())));
         textField.addKeyListener(new KeyAdapter() {
             @Override
@@ -109,7 +110,7 @@ public class HiLiteCollectorNodeView
         p.add(textField);
 
         JButton button = new JButton("Apply");
-        button.setPreferredSize(new Dimension(100, 
+        button.setPreferredSize(new Dimension(100,
                 Math.max(25, button.getHeight())));
         button.addActionListener(new ActionListener() {
             @Override
@@ -122,7 +123,7 @@ public class HiLiteCollectorNodeView
         });
         p.add(button);
         p.add(checkBox);
-        
+
         JPanel panel = new JPanel(new BorderLayout());
         panel.add(p, BorderLayout.NORTH);
         TableContentModel cview = new TableContentModel() {
@@ -155,7 +156,7 @@ public class HiLiteCollectorNodeView
         panel.add(m_table, BorderLayout.CENTER);
         super.setComponent(panel);
     }
-    
+
     private void appendAnnotation(final String anno, final boolean newColumn) {
         if (anno != null && !anno.isEmpty()) {
             getNodeModel().appendAnnotation(anno, newColumn);
@@ -173,7 +174,7 @@ public class HiLiteCollectorNodeView
         m_table.setHiLiteHandler(hdl);
         m_table.setColumnWidth(50);
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -181,7 +182,7 @@ public class HiLiteCollectorNodeView
     protected void updateModel(final Object arg) {
         modelChanged();
     }
-    
+
 
     /**
      * {@inheritDoc}

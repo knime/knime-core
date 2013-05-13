@@ -4,40 +4,39 @@
     <name>Interactive HiLite Collector</name>
     
     <shortDescription>
-        Node allows to apply annotations to sets of hilit rows within a view.
+        Node allows to apply annotations to sets of hilit rows within an Interactive View.
     </shortDescription>
     
     <fullDescription>
         <intro>
-        Node allows to apply annotations to sets of hilit rows within the view
-        of the non-executed node.
-        (1) Within the view, an annotation string can be entered which is then 
-        appended to all hilit rows. (2) During execution of this node, all
-        annotations are appended as extra columns, 'Anno #X', to the end of 
-        the input table. (3) If the node is reset, all annotations are 
-        internally removed; also all annotations added while the node is 
-        executed, don't affect the output table. 
+        Node allows to apply annotations to sets of hilit rows within an Interactive View:
+        Within the interactive view, an annotation string can be entered which is then 
+        appended to all hilit rows. During the re-execution (press Apply button) of this node, the annotation
+        is appended as a new column, 'Anno #X', to the end of the input table. When the node is reset, 
+        all annotations are discarded.
         </intro>
         <option name="Append Annotation">
             Enter a new, non-empty annotation string which is then applied to 
-            the current set of hilit rows. All sub-sequent annotations to the 
+            the current set of hilit rows. All subsequent annotations to the 
             same row, will be appended to the current string and separated by 
             comma. If selected, a new column with the current annotation is
             appended to the table.
         </option>
+        <option name="Apply">
+            If pressed, the new annotation is appended as either a new column to all currently hilit rows or to the last
+            annotation column. This call will re-execute the node and immediately provide the new output table with the 
+            (additional) annotation column.
+        </option>
     </fullDescription>
     
-    <interactiveView name="Apply Annotations View">
-    	Applies annotations to the current set of hilit rows shown in this
-        view, together with all rows to which annotation(s)
-        have been applied.
+    <interactiveView name="Annotation View">
+    	Appends annotations to the current set of hilit rows shown in this
+        view, together with all rows to which annotation(s) have been appended.
     </interactiveView>
     
     <ports>
         <inPort index="0" name="Data Table">Data Table</inPort>
-        <outPort index="0" name="Data Table with Annotations">
-            Data Table with Annotations applied.
-        </outPort>
+        <outPort index="0" name="Data Table with Annotations">Input rows with appended annotations.</outPort>
     </ports>
     
 </knimeNode>

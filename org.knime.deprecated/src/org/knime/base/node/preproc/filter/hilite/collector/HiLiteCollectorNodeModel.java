@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   16.04.2008 (gabriel): created
  */
@@ -85,24 +85,25 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
+@Deprecated
 public class HiLiteCollectorNodeModel extends NodeModel {
-    
-    private final Map<RowKey, Map<Integer, String>> m_annotationMap = 
+
+    private final Map<RowKey, Map<Integer, String>> m_annotationMap =
         new LinkedHashMap<RowKey, Map<Integer, String>>();
-    
+
     private Integer m_lastIndex = null;
-        
+
     private static final String KEY_ANNOTATIONS = "annotations.xml.gz";
-    
+
     /**
-     * Create new hilite collector model with one data in- and one data 
+     * Create new hilite collector model with one data in- and one data
      * out-port.
      */
     HiLiteCollectorNodeModel() {
-        super(new PortType[]{BufferedDataTable.TYPE}, 
+        super(new PortType[]{BufferedDataTable.TYPE},
                 new PortType[]{BufferedDataTable.TYPE});
     }
 
@@ -119,7 +120,7 @@ public class HiLiteCollectorNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir, 
+    protected void loadInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         this.reset();
@@ -131,12 +132,12 @@ public class HiLiteCollectorNodeModel extends NodeModel {
                 try {
                     NodeSettingsRO subSett = sett.getNodeSettings(
                             key.toString());
-                    Map<Integer, String> map = 
+                    Map<Integer, String> map =
                         new LinkedHashMap<Integer, String>();
                     for (String i : subSett.keySet()) {
                         try {
                             int idx = Integer.parseInt(i);
-                            m_lastIndex = (m_lastIndex == null 
+                            m_lastIndex = (m_lastIndex == null
                                     ? idx : Math.max(m_lastIndex, idx));
                             map.put(idx, subSett.getString(i));
                         } catch (InvalidSettingsException ise) {
@@ -186,7 +187,7 @@ public class HiLiteCollectorNodeModel extends NodeModel {
             m_lastIndex++;
         }
         for (RowKey key : hdl.getHiLitKeys()) {
-            Map<Integer, String> list = m_annotationMap.get(key); 
+            Map<Integer, String> list = m_annotationMap.get(key);
             if (list == null) {
                 list = new LinkedHashMap<Integer, String>();
                 list.put(m_lastIndex, anno);
@@ -202,12 +203,12 @@ public class HiLiteCollectorNodeModel extends NodeModel {
         }
         notifyViews(null);
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inData, 
+    protected PortObject[] execute(final PortObject[] inData,
             final ExecutionContext exec) throws Exception {
         if (m_annotationMap.isEmpty()) {
             return inData;
@@ -226,11 +227,11 @@ public class HiLiteCollectorNodeModel extends NodeModel {
                 }
                 DataCell[] cells = new DataCell[m_lastIndex + 1];
                 for (int i = 0; i < cells.length; i++) {
-                    Map<Integer, String> map = 
+                    Map<Integer, String> map =
                         m_annotationMap.get(row.getKey());
                     if (map == null) {
                         cells[i] = DataType.getMissingCell();
-                    } else { 
+                    } else {
                         String str = map.get(i);
                         if (str == null) {
                             cells[i] = DataType.getMissingCell();
@@ -249,16 +250,16 @@ public class HiLiteCollectorNodeModel extends NodeModel {
              * {@inheritDoc}
              */
             @Override
-            public void setProgress(final int curRowNr, final int rowCount, 
+            public void setProgress(final int curRowNr, final int rowCount,
                     final RowKey lastKey, final ExecutionMonitor em) {
                 em.setProgress((double) curRowNr / rowCount);
             }
-            
+
         });
         return new BufferedDataTable[]{exec.createColumnRearrangeTable(
                 (BufferedDataTable) inData[0], cr, exec)};
     }
-    
+
     private DataColumnSpec[] createSpecs(final DataTableSpec spec) {
         final DataColumnSpec[] cspecs = new DataColumnSpec[m_lastIndex + 1];
         int index = 0;
@@ -273,13 +274,13 @@ public class HiLiteCollectorNodeModel extends NodeModel {
         }
         return cspecs;
     }
-        
-    
+
+
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir, 
+    protected void saveInternals(final File nodeInternDir,
             final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         NodeSettings sett = new NodeSettings(KEY_ANNOTATIONS);
@@ -313,16 +314,16 @@ public class HiLiteCollectorNodeModel extends NodeModel {
             throws InvalidSettingsException {
 
     }
-    
+
     /**
-     * @return table with hilit rows first and then all rows with annotations 
+     * @return table with hilit rows first and then all rows with annotations
      */
     DataTable getHiLiteAnnotationsTable() {
         DataContainer buf;
         if (m_annotationMap.isEmpty()) {
             buf = new DataContainer(new DataTableSpec());
         } else {
-            buf = new DataContainer(new DataTableSpec(createSpecs(null)));   
+            buf = new DataContainer(new DataTableSpec(createSpecs(null)));
         }
         HiLiteHandler hdl = getInHiLiteHandler(0);
         if (hdl != null) {

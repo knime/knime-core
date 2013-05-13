@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   16.04.2008 (gabriel): created
  */
@@ -55,10 +55,11 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
-public class HiLiteCollectorNodeFactory 
+@Deprecated
+public class HiLiteCollectorNodeFactory
         extends NodeFactory<HiLiteCollectorNodeModel> {
 
     /**
