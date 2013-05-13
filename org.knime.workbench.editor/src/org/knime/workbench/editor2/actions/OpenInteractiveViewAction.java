@@ -48,14 +48,19 @@
  */
 package org.knime.workbench.editor2.actions;
 
+import org.eclipse.core.runtime.Assert;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
+import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.interactive.InteractiveWebNodeView;
+import org.knime.core.node.interactive.WebViewTemplate;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.workbench.editor2.ImageRepository;
 
 /**
@@ -110,8 +115,19 @@ public class OpenInteractiveViewAction extends Action {
     public void run() {
         LOGGER.debug("Open Interactive Node View " + m_nodeContainer.getName());
         try {
+            AbstractNodeView<?> view = null;
+            if (m_nodeContainer.hasInteractiveView()) {
+                view = m_nodeContainer.getInteractiveView();
+            } else if (m_nodeContainer.hasInteractiveWebView()) {
+                WebViewTemplate template = m_nodeContainer.getInteractiveWebViewTemplate();
+                view = new InteractiveWebNodeView(((SingleNodeContainer)m_nodeContainer).getNodeModel(), template);
+                ((InteractiveWebNodeView)view).setWorkflowManagerAndNodeID(m_nodeContainer.getParent(),
+                                                                           m_nodeContainer.getID());
+            } else {
+                Assert.isNotNull(view, "Interactive view could not be instantiated. Probably a coding error.");
+            }
             final String title = m_nodeContainer.getInteractiveViewName();
-            Node.invokeOpenView(m_nodeContainer.getInteractiveView(), title);
+            Node.invokeOpenView(view, title);
         } catch (Throwable t) {
             final MessageBox mb = new MessageBox(Display.getDefault().getActiveShell(), SWT.ICON_ERROR | SWT.OK);
             mb.setText("Interactive View cannot be opened");
