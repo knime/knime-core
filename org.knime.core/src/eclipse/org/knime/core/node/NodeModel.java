@@ -82,6 +82,7 @@ import org.knime.core.node.streamable.RowOutput;
 import org.knime.core.node.streamable.StreamableOperator;
 import org.knime.core.node.streamable.StreamableOperatorInternals;
 import org.knime.core.node.workflow.CredentialsProvider;
+import org.knime.core.node.workflow.ExecutionEnvironment;
 import org.knime.core.node.workflow.FlowLoopContext;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowScopeContext;
@@ -491,8 +492,7 @@ public abstract class NodeModel {
      * @see #saveSettingsTo(NodeSettingsWO)
      * @see #validateSettings(NodeSettingsRO)
      */
-    protected abstract void loadValidatedSettingsFrom(
-            final NodeSettingsRO settings) throws InvalidSettingsException;
+    protected abstract void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException;
 
     /**
      * Invokes the abstract <code>#execute()</code> method of this model. In
@@ -501,6 +501,7 @@ public abstract class NodeModel {
      *
      * @param data An array of <code>DataTable</code> objects holding the data
      *            from the inputs.
+     * @param exEnv The execution environment used for execution of this model.
      * @param exec The execution monitor which is passed to the execute method
      *            of this model.
      * @return The result of the execution in form of an array with
@@ -520,7 +521,7 @@ public abstract class NodeModel {
      * @noreference This method is not intended to be referenced by clients
      *              (use Node class instead)
      */
-    protected final PortObject[] executeModel(final PortObject[] data, final boolean reExecute,
+    final PortObject[] executeModel(final PortObject[] data, final ExecutionEnvironment exEnv,
             final ExecutionContext exec) throws Exception {
         assert (data != null && data.length == getNrInPorts());
         assert (exec != null);
@@ -547,12 +548,13 @@ public abstract class NodeModel {
         // temporary storage for result of derived model.
         // EXECUTE DERIVED MODEL
         PortObject[] outData;
-        if (!reExecute) {
+        if (!exEnv.reExecute()) {
             outData = execute(data, exec);
         } else {
             if (this instanceof InteractiveNode) {
-                //FIXME: forward view content at this point
-                outData = ((InteractiveNode)this).reExecute(null, data, exec);
+                outData = ((InteractiveNode)this).reExecute(exEnv.getPreExecuteViewContent(), data, exec);
+            } else if (this instanceof LoopStartNode) {
+                outData = execute(data, exec);
             } else {
                 m_logger.coding("Can not re-execute non interactive node. Using normal execute instead.");
                 outData = execute(data, exec);
@@ -561,8 +563,7 @@ public abstract class NodeModel {
 
         // if execution was canceled without exception flying return false
         if (exec.isCanceled()) {
-            throw new CanceledExecutionException(
-                    "Result discarded due to user cancel");
+            throw new CanceledExecutionException("Result discarded due to user cancel");
         }
 
         if (outData == null) {
@@ -576,8 +577,7 @@ public abstract class NodeModel {
             if (outData[i] instanceof BufferedDataTable) {
                 for (int j = 0; j < data.length; j++) {
                     if (outData[i] == data[j]) {
-                        outData[i] = exec.createWrappedTable(
-                                (BufferedDataTable)data[j]);
+                        outData[i] = exec.createWrappedTable((BufferedDataTable)data[j]);
                     }
                 }
             }
@@ -1698,7 +1698,7 @@ public abstract class NodeModel {
                 for (int i = 0; i < inputs.length; i++) {
                     inObjects[i] = ((PortObjectInput)inputs[i]).getPortObject();
                 }
-                PortObject[] outObjects = executeModel(inObjects, false, ctx);
+                PortObject[] outObjects = executeModel(inObjects, null, ctx);
                 for (int i = 0; i < outputs.length; i++) {
                     ((PortObjectOutput)outputs[i]).setPortObject(outObjects[i]);
                 }

@@ -147,8 +147,10 @@ public abstract class NodeContainer implements NodeProgressListener {
     private NodeExecutionJob m_executionJob;
 
     /** progress monitor. */
-    private final NodeProgressMonitor m_progressMonitor =
-            new DefaultNodeProgressMonitor(this);
+    private final NodeProgressMonitor m_progressMonitor = new DefaultNodeProgressMonitor(this);
+
+    /** execution environment. */
+    private ExecutionEnvironment m_executionEnv = null;
 
     private NodeMessage m_nodeMessage = NodeMessage.NONE;
 
@@ -353,13 +355,6 @@ public abstract class NodeContainer implements NodeProgressListener {
      * @param inData the incoming data for the execution
      * @throws IllegalStateException in case of illegal entry state.
      */
-    /**
-     * Change state of marked (for execution) node to queued once it has been
-     * assigned to a NodeExecutionJobManager.
-     *
-     * @param inData the incoming data for the execution
-     * @throws IllegalStateException in case of illegal entry state.
-     */
     void queue(final PortObject[] inData) {
         synchronized (m_nodeMutex) {
             // switch state from marked to queued
@@ -429,16 +424,14 @@ public abstract class NodeContainer implements NodeProgressListener {
      * @throws InvalidSettingsException If the settings are invalid
      * @throws NodeExecutionJobReconnectException If that fails for any reason.
      */
-    void continueExecutionOnLoad(final PortObject[] inData,
-            final NodeSettingsRO settings)
+    void continueExecutionOnLoad(final PortObject[] inData, final NodeSettingsRO settings)
         throws InvalidSettingsException, NodeExecutionJobReconnectException {
         synchronized (m_nodeMutex) {
             switch (getInternalState()) {
             case EXECUTINGREMOTELY:
                 NodeExecutionJobManager jobManager = findJobManager();
                 try {
-                    NodeExecutionJob job = jobManager.loadFromReconnectSettings(
-                            settings, inData, this);
+                    NodeExecutionJob job = jobManager.loadFromReconnectSettings(settings, inData, this);
                     setExecutionJob(job);
 //                    setState(State.EXECUTINGREMOTELY, false);
                 } catch (NodeExecutionJobReconnectException t) {
@@ -446,9 +439,8 @@ public abstract class NodeContainer implements NodeProgressListener {
                 } catch (InvalidSettingsException t) {
                     throw t;
                 } catch (Throwable t) {
-                    throw new InvalidSettingsException(
-                            "Failed to continue job on job manager \""
-                            + jobManager + "\": " + t.getMessage(), t);
+                    throw new InvalidSettingsException("Failed to continue job on job manager \""
+                                                        + jobManager + "\": " + t.getMessage(), t);
                 }
                 return;
             default:
@@ -476,12 +468,10 @@ public abstract class NodeContainer implements NodeProgressListener {
 
     void saveNodeExecutionJobReconnectInfo(final NodeSettingsWO settings) {
         assert getInternalState().equals(InternalNodeContainerState.EXECUTINGREMOTELY)
-        : "Can't save node execution job, node is not executing "
-            + "remotely but " + getInternalState();
+            : "Can't save node execution job, node is not executing remotely but " + getInternalState();
         NodeExecutionJobManager jobManager = findJobManager();
         NodeExecutionJob job = getExecutionJob();
-        assert jobManager.canDisconnect(job)
-        : "Execution job can be saved/disconnected";
+        assert jobManager.canDisconnect(job) : "Execution job can be saved/disconnected";
         jobManager.saveReconnectSettings(job, settings);
         job.setSavedForDisconnect(true);
     }
@@ -514,8 +504,7 @@ public abstract class NodeContainer implements NodeProgressListener {
             getParent().doBeforeExecution(this);
         } catch (IllegalFlowObjectStackException e) {
             LOGGER.warn(e.getMessage(), e);
-            setNodeMessage(new NodeMessage(
-                    NodeMessage.Type.ERROR, e.getMessage()));
+            setNodeMessage(new NodeMessage(NodeMessage.Type.ERROR, e.getMessage()));
             throw e;
         }
     }
@@ -573,8 +562,7 @@ public abstract class NodeContainer implements NodeProgressListener {
      *
      * @param status indicates if execution was successful
      */
-    abstract void performStateTransitionEXECUTED(
-            final NodeContainerExecutionStatus status);
+    abstract void performStateTransitionEXECUTED(final NodeContainerExecutionStatus status);
 
     /////////////////////////////////////////////////
     // List Management of Waiting Loop Head Nodes
@@ -633,8 +621,7 @@ public abstract class NodeContainer implements NodeProgressListener {
     @Override
     public void progressChanged(final NodeProgressEvent pe) {
         // set our ID as source ID
-        NodeProgressEvent event =
-                new NodeProgressEvent(getID(), pe.getNodeProgress());
+        NodeProgressEvent event = new NodeProgressEvent(getID(), pe.getNodeProgress());
         // forward the event
         notifyProgressListeners(event);
     }
@@ -647,8 +634,7 @@ public abstract class NodeContainer implements NodeProgressListener {
     */
    public boolean addProgressListener(final NodeProgressListener listener) {
        if (listener == null) {
-           throw new NullPointerException(
-                   "Node progress listener must not be null");
+           throw new NullPointerException("Node progress listener must not be null");
        }
        return m_progressListeners.add(listener);
    }
@@ -660,8 +646,7 @@ public abstract class NodeContainer implements NodeProgressListener {
     * @return true if the listener was successfully removed, false if it was
     *         not registered
     */
-   public boolean removeNodeProgressListener(
-           final NodeProgressListener listener) {
+   public boolean removeNodeProgressListener(final NodeProgressListener listener) {
        return m_progressListeners.remove(listener);
    }
 
@@ -687,8 +672,7 @@ public abstract class NodeContainer implements NodeProgressListener {
     */
    public boolean addNodeMessageListener(final NodeMessageListener listener) {
        if (listener == null) {
-           throw new NullPointerException(
-                   "Node message listner must not be null!");
+           throw new NullPointerException("Node message listner must not be null!");
        }
        return m_messageListeners.add(listener);
    }
@@ -699,8 +683,7 @@ public abstract class NodeContainer implements NodeProgressListener {
     * @return true if the listener was successfully removed, false if it was not
     *         registered
     */
-   public boolean removeNodeMessageListener(
-           final NodeMessageListener listener) {
+   public boolean removeNodeMessageListener(final NodeMessageListener listener) {
        return m_messageListeners.remove(listener);
    }
 
@@ -737,8 +720,7 @@ public abstract class NodeContainer implements NodeProgressListener {
 
    public void addUIInformationListener(final NodeUIInformationListener l) {
        if (l == null) {
-           throw new NullPointerException(
-                   "NodeUIInformationListener must not be null!");
+           throw new NullPointerException("NodeUIInformationListener must not be null!");
        }
        m_uiListeners.add(l);
    }
@@ -759,7 +741,7 @@ public abstract class NodeContainer implements NodeProgressListener {
     * @return a the node information
     */
    public NodeUIInformation getUIInformation() {
-           return m_uiInformation;
+       return m_uiInformation;
    }
 
    /**
@@ -772,8 +754,7 @@ public abstract class NodeContainer implements NodeProgressListener {
        // to be a field member of this class)
        // there is no reason on settings the dirty flag when changed.
        m_uiInformation = uiInformation;
-       notifyUIListeners(new NodeUIInformationEvent(m_id,
-               m_uiInformation, m_customDescription));
+       notifyUIListeners(new NodeUIInformationEvent(m_id, m_uiInformation, m_customDescription));
    }
 
 
@@ -796,11 +777,9 @@ public abstract class NodeContainer implements NodeProgressListener {
     * @param listener listener to the node's state
     * @return true if the listener was not already registered, false otherwise
     */
-   public boolean addNodeStateChangeListener(
-           final NodeStateChangeListener listener) {
+   public boolean addNodeStateChangeListener(final NodeStateChangeListener listener) {
        if (listener == null) {
-           throw new NullPointerException(
-                   "Node state change listener must not be null!");
+           throw new NullPointerException("Node state change listener must not be null!");
        }
        return m_stateChangeListeners.add(listener);
    }
@@ -811,8 +790,7 @@ public abstract class NodeContainer implements NodeProgressListener {
     * @return true if the listener was successfully removed, false if the
     *         listener was not registered
     */
-   public boolean removeNodeStateChangeListener(
-           final NodeStateChangeListener listener) {
+   public boolean removeNodeStateChangeListener(final NodeStateChangeListener listener) {
        return m_stateChangeListeners.remove(listener);
    }
 
@@ -1425,6 +1403,23 @@ public abstract class NodeContainer implements NodeProgressListener {
             final NodeContainerExecutionResult result) {
         result.setSuccess(getInternalState().equals(InternalNodeContainerState.EXECUTED));
         result.setMessage(m_nodeMessage);
+    }
+
+    /**
+     * @return ExecutionEnvironment of this node.
+     * @since 2.8
+     */
+    protected ExecutionEnvironment getExecutionEnvironment() {
+        return m_executionEnv;
+    }
+
+    /**
+     * @param exEnv new ExecutionEnvironment of this node.
+     * @since 2.8
+     */
+    protected void setExecutionEnvironment(final ExecutionEnvironment exEnv) {
+        assert (m_executionEnv == null) && (exEnv != null) : "Execution Environment set on unclean Env. " + toString();
+        m_executionEnv = exEnv;
     }
 
     /** Helper class that defines load/save routines for general NodeContainer

@@ -53,7 +53,6 @@ import java.util.Arrays;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
-import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.util.StringFormat;
@@ -75,11 +74,6 @@ public abstract class NodeExecutionJob implements Runnable {
      * method in the corresponding {@link NodeExecutionJobManager}. This flag
      * can never be true if the job manager does not allow a disconnect. */
     private boolean m_isSavedForDisconnect = false;
-
-    /** Flag indicating if this node is to be re-executed (true) or executed
-     * for the first time.
-     */
-    private boolean m_reExecution;
 
     private final NodeContainer m_nc;
     private final PortObject[] m_data;
@@ -103,14 +97,6 @@ public abstract class NodeExecutionJob implements Runnable {
         }
         m_nc = nc;
         m_data = data;
-        m_reExecution = false;
-        // also check if this is a re-execution request
-        if ((m_nc instanceof SingleNodeContainer)
-                && ((SingleNodeContainer)m_nc).getNodeModel() instanceof InteractiveNode) {
-            if (InternalNodeContainerState.EXECUTED_QUEUED.equals(m_nc.getInternalState())) {
-                m_reExecution = true;
-            }
-        }
     }
 
     /** {@inheritDoc} */
@@ -283,14 +269,6 @@ public abstract class NodeExecutionJob implements Runnable {
      */
     boolean isSavedForDisconnect() {
         return m_isSavedForDisconnect;
-    }
-
-    /**
-     * @return true if the node is to be re-executed.
-     * @since 2.8
-     */
-    protected boolean isSetForReExecution() {
-        return m_reExecution;
     }
 
 }

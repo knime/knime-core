@@ -45,65 +45,53 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   Oct 17, 2008 (wiswedel): created
+ * Created on May 13, 2013 by Berthold
  */
-package org.knime.core.node.exec;
+package org.knime.core.node.workflow;
 
-import java.util.concurrent.Future;
+import org.knime.core.node.interactive.ViewContent;
 
-import org.knime.core.node.port.PortObject;
-import org.knime.core.node.workflow.NodeExecutionJob;
-import org.knime.core.node.workflow.SingleNodeContainer;
-import org.knime.core.node.workflow.execresult.NodeContainerExecutionStatus;
-
-/**
- * A locally executed node job. It can only execute {@link SingleNodeContainer}.
- * @author Bernd Wiswedel, University of Konstanz
+/** Interface for objects defining the environment nodes will be executed in.
+ * Provides information about re-execution, ViewContents to be loaded (and
+ * in the future also FileStoreHandlers and other environment information.)
+ *
+ * @author M. Berthold
+ * @since 2.8
  */
-public class LocalNodeExecutionJob extends NodeExecutionJob {
+public class ExecutionEnvironment {
 
-    private Future<?> m_future;
+    private boolean m_reExecute;
+    private ViewContent m_viewContent;
 
-    /** Creates new local job.
-     * @param snc The node container to execute.
-     * @param data Its input port object.
+    /** Default constructor: no re-execution, don't preload ViewContent.
      */
-    public LocalNodeExecutionJob(final SingleNodeContainer snc, final PortObject[] data) {
-        super(snc, data);
+    public ExecutionEnvironment() {
+        m_reExecute = false;
+        m_viewContent = null;
     }
 
-
-    /** {@inheritDoc} */
-    @Override
-    public boolean cancel() {
-        if (m_future == null) {
-            throw new IllegalStateException("Future that represents the execution has not been set.");
-        }
-        return m_future.cancel(true);
+    /** Setup default environment with new parameters.
+     *
+     * @param reExecute flag indicating if nodes is to be re-executed.
+     * @param preExecVC view content to be loaded into node before execution
+     */
+    public ExecutionEnvironment(final boolean reExecute, final ViewContent preExecVC) {
+        m_reExecute = reExecute;
+        m_viewContent = preExecVC;
     }
 
     /**
-     * Set the future that represents the pending execution.
-     * @param future the future to set
+     * @return true if this is a re-execution.
      */
-    void setFuture(final Future<?> future) {
-        m_future = future;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public NodeContainerExecutionStatus mainExecute() {
-        SingleNodeContainer snc = (SingleNodeContainer)getNodeContainer();
-        return snc.performExecuteNode(getPortObjects());
+    public boolean reExecute() {
+        return m_reExecute;
     }
 
     /**
-     * {@inheritDoc}
+     * @return {@link ViewContent} to be loaded before (re)execution.
      */
-    @Override
-    public boolean isReConnecting() {
-        return false;
+    public ViewContent getPreExecuteViewContent() {
+        return m_viewContent;
     }
 
 }

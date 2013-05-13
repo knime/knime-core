@@ -109,6 +109,7 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.util.NodeExecutionJobManagerPool;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.CredentialsProvider;
+import org.knime.core.node.workflow.ExecutionEnvironment;
 import org.knime.core.node.workflow.FlowLoopContext;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowScopeContext;
@@ -806,7 +807,7 @@ public final class Node implements NodeModelWarningListener {
     */
     @Deprecated
     public boolean execute(final PortObject[] rawData, final ExecutionContext exec) {
-        return execute(rawData, false, exec);
+        return execute(rawData, new ExecutionEnvironment(), exec);
     }
 
     /**
@@ -824,7 +825,7 @@ public final class Node implements NodeModelWarningListener {
      * connected node.
      *
      * @param rawData the data from the predecessor.
-     * @param reExecute is true when node is reExecuted
+     * @param exEnv the environment for the execution.
      * @param exec The execution monitor.
      * @return <code>true</code> if execution was successful otherwise
      *         <code>false</code>.
@@ -832,7 +833,7 @@ public final class Node implements NodeModelWarningListener {
      * @noreference This method is not intended to be referenced by clients.
      * @since 2.8
      */
-    public boolean execute(final PortObject[] rawData, final boolean reExecute, final ExecutionContext exec) {
+    public boolean execute(final PortObject[] rawData, final ExecutionEnvironment exEnv, final ExecutionContext exec) {
         // clear the message object
         clearNodeMessageAndNotify();
 
@@ -929,7 +930,7 @@ public final class Node implements NodeModelWarningListener {
         try {
             // INVOKE MODEL'S EXECUTE
             // (warnings will now be processed "automatically" - we listen)
-            rawOutData = invokeNodeModelExecute(exec, inData, reExecute);
+            rawOutData = invokeNodeModelExecute(exec, exEnv, inData);
         } catch (Throwable th) {
             boolean isCanceled = th instanceof CanceledExecutionException;
             isCanceled = isCanceled || th instanceof InterruptedException;
@@ -937,7 +938,7 @@ public final class Node implements NodeModelWarningListener {
             // is interrupted while waiting for the IO thread to flush we take
             // it as a graceful exit
             isCanceled = isCanceled || (th instanceof DataContainerException
-                    && th.getCause() instanceof InterruptedException);
+                                && th.getCause() instanceof InterruptedException);
             if (isCanceled) {
                 // clear the flag so that the ThreadPool does not kill the
                 // thread
@@ -989,7 +990,8 @@ public final class Node implements NodeModelWarningListener {
         // check if we see a loop status in the NodeModel
         FlowLoopContext slc = m_model.getLoopContext();
         boolean continuesLoop = (slc != null);
-        if (!setOutPortObjects(newOutData, continuesLoop, reExecute)) {
+        boolean tolerateOutSpecDiff = (exEnv != null) && (exEnv.reExecute());
+        if (!setOutPortObjects(newOutData, continuesLoop, tolerateOutSpecDiff)) {
             return false;
         }
         for (int p = 1; p < getNrOutPorts(); p++) {
@@ -1058,21 +1060,22 @@ public final class Node implements NodeModelWarningListener {
     @Deprecated
     public PortObject[] invokeNodeModelExecute(final ExecutionContext exec,
               final PortObject[] inData) throws Exception {
-        return invokeNodeModelExecute(exec, inData, false);
+        return invokeNodeModelExecute(exec, new ExecutionEnvironment(), inData);
     }
 
     /** Invokes protected method {@link NodeModel#executeModel(
-     * PortObject[], ExecutionContext)}. Isolated in a separate method call
+     * PortObject[], ExecutionEnvironment, ExecutionContext)}. Isolated in a separate method call
      * as it may be (ab)used by other executors.
      * @param exec The execution context.
+     * @param exEnv The execution environment.
      * @param inData The input data to the node (excluding flow var port)
      * @return The output of node
      * @throws Exception An exception thrown by the client.
      * @since 2.8
      */
-    public PortObject[] invokeNodeModelExecute(final ExecutionContext exec,
-            final PortObject[] inData, final boolean reExecute) throws Exception {
-        return m_model.executeModel(inData, reExecute, exec);
+    public PortObject[] invokeNodeModelExecute(final ExecutionContext exec, final ExecutionEnvironment exEnv,
+            final PortObject[] inData) throws Exception {
+        return m_model.executeModel(inData, exEnv, exec);
     }
 
     /** Called after execute in order to put the computed result into the

@@ -613,24 +613,26 @@ public final class SingleNodeContainer extends NodeContainer {
                 switch (getInternalState()) {
                 case CONFIGURED:
                     setInternalState(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
-                    return;
+                    break;
                 case IDLE:
                     setInternalState(InternalNodeContainerState.UNCONFIGURED_MARKEDFOREXEC);
-                    return;
+                    break;
                 default:
                     throwIllegalStateException();
                 }
+                setExecutionEnvironment(new ExecutionEnvironment());
             } else {  // we want to remove the mark for execution
                 switch (getInternalState()) {
                 case CONFIGURED_MARKEDFOREXEC:
                     setInternalState(InternalNodeContainerState.CONFIGURED);
-                    return;
+                    break;
                 case UNCONFIGURED_MARKEDFOREXEC:
                     setInternalState(InternalNodeContainerState.IDLE);
-                    return;
+                    break;
                 default:
                     throwIllegalStateException();
                 }
+                setExecutionEnvironment(null);
             }
         }
     }
@@ -640,17 +642,20 @@ public final class SingleNodeContainer extends NodeContainer {
      * - Used in loops to execute start more than once and when reset/configure is skipped in loop body.
      * - Used for re-execution of interactive nodes.
      *
+     * @param exEnv the execution environment
      * @throws IllegalStateException in case of illegal entry state.
      */
-    void markForReExecution() {
+    void markForReExecution(final ExecutionEnvironment exEnv) {
+        assert exEnv.reExecute();
         synchronized (m_nodeMutex) {
             switch (getInternalState()) {
             case EXECUTED:
                 setInternalState(InternalNodeContainerState.EXECUTED_MARKEDFOREXEC);
-                return;
+                break;
             default:
                 throwIllegalStateException();
             }
+            setExecutionEnvironment(exEnv);
         }
     }
 
@@ -711,12 +716,15 @@ public final class SingleNodeContainer extends NodeContainer {
                 }
                 break;
             case EXECUTED:
-                // Too late - do nothing.
-                break;
+                // Too late - do nothing and bail.
+                return;
             default:
-                LOGGER.warn("Strange state " + getInternalState()
-                        + " encountered in cancelExecution().");
+                // warn, ignore, and bail.
+                LOGGER.warn("Strange state " + getInternalState() + " encountered in cancelExecution().");
+                return;
             }
+            // clean up execution environment.
+            setExecutionEnvironment(null);
         }
     }
 
@@ -898,6 +906,7 @@ public final class SingleNodeContainer extends NodeContainer {
                 if (status.isSuccess()) {
                     if (m_node.getLoopContext() == null) {
                         setInternalState(InternalNodeContainerState.EXECUTED);
+                        setExecutionEnvironment(null);
                     } else {
                         // loop not yet done - "stay" configured until done.
                         assert getLoopStatus().equals(LoopStatus.RUNNING);
@@ -912,6 +921,7 @@ public final class SingleNodeContainer extends NodeContainer {
                     clearFileStoreHandler();
                     setNodeMessage(oldMessage);
                     setInternalState(InternalNodeContainerState.IDLE);
+                    setExecutionEnvironment(null);
                 }
                 setExecutionJob(null);
                 break;
@@ -922,35 +932,22 @@ public final class SingleNodeContainer extends NodeContainer {
     }
 
     /**
-     * See below.
-     *
-     * @param inObjects input data
-     * @return whether execution was successful.
-     * @throws IllegalStateException in case of illegal entry state.
-     */
-    @Deprecated
-    public NodeContainerExecutionStatus performExecuteNode(final PortObject[] inObjects) {
-        return performExecuteNode(inObjects, false);
-    }
-
-    /**
      * Execute underlying Node asynchronously. Make sure to give Workflow-
      * Manager a chance to call pre- and postExecuteNode() appropriately and
      * synchronize those parts (since they changes states!).
      *
      * @param inObjects input data
-     * @param reExecute indicating of node is executed again
      * @return whether execution was successful.
      * @throws IllegalStateException in case of illegal entry state.
-     * @since 2.8
      */
-    public NodeContainerExecutionStatus performExecuteNode(final PortObject[] inObjects, final boolean reExecute) {
+    public NodeContainerExecutionStatus performExecuteNode(final PortObject[] inObjects) {
         IWriteFileStoreHandler fsh = initFileStore(getParent().getFileStoreHandlerRepository());
         m_node.setFileStoreHandler(fsh);
         // this call requires the FSH to be set on the node (ideally would take
         // it as an argument but createExecutionContext became API unfortunately)
         ExecutionContext ec = createExecutionContext();
         fsh.open(ec);
+        ExecutionEnvironment ev = getExecutionEnvironment();
 
         boolean success;
         try {
@@ -963,7 +960,7 @@ public final class SingleNodeContainer extends NodeContainer {
             success = false;
         }
         // execute node outside any synchronization!
-        success = success && m_node.execute(inObjects, reExecute, ec);
+        success = success && m_node.execute(inObjects, ev, ec);
         if (success) {
             // output tables are made publicly available (for blobs)
             putOutputTablesIntoGlobalRepository(ec);

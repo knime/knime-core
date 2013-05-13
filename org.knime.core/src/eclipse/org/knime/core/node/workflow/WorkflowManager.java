@@ -1573,7 +1573,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         if (markExecutedNodes) {
                             // in case of loop bodies that asked not to be reset.
                             changed = true;
-                            snc.markForReExecution();
+                            snc.markForReExecution(new ExecutionEnvironment(true, null));
                             break;
                         }
                     default:
@@ -2001,8 +2001,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * Side effects:
      *  - a reset/configure of executed successors.
      *
-     * @param id
-     * @param rec
+     * @param id the node
+     * @param vc the view content to be loaded into the node before re-execution
+     * @param rec callback object for user interaction (do you really want to reset...)
      * @since 2.8
      */
     public void reExecuteNode(final NodeID id, final ViewContent vc, final ReexecutionCallback rec) {
@@ -2013,8 +2014,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             SingleNodeContainer snc = (SingleNodeContainer)getNodeContainer(id);
             resetSuccessors(id);
             configureNodeAndPortSuccessors(id, null, false, true);
-            //((InteractiveNode)(snc.getNodeModel())).
-            snc.markForReExecution();
+            snc.markForReExecution(new ExecutionEnvironment(true, vc));
             assert snc.getInternalState().equals(InternalNodeContainerState.EXECUTED_MARKEDFOREXEC);
             queueIfQueuable(snc);
         }
@@ -2693,7 +2693,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // NOTE: if we ever queue nodes asynchronosly this might cause problems.
         SingleNodeContainer headSNC = ((SingleNodeContainer)headNode);
         assert headSNC.isModelCompatibleTo(LoopStartNode.class);
-        headSNC.markForReExecution();
+        headSNC.markForReExecution(new ExecutionEnvironment(true, null));
         // clean up all newly added objects on FlowVariable Stack
         // (otherwise we will push the same variables many times...
         // push ISLC back onto the stack is done in doBeforeExecute()!
@@ -2795,7 +2795,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 if (nc instanceof SingleNodeContainer) {
                     // make sure it's not already done...
                     if (nc.getInternalState().equals(InternalNodeContainerState.EXECUTED)) {
-                        ((SingleNodeContainer)nc).markForReExecution();
+                        ((SingleNodeContainer)nc).markForReExecution(new ExecutionEnvironment(false, null));
                     }
                 } else {
                     // Mark executed nodes for re-execution (will also mark
@@ -2810,8 +2810,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             assert tailNode.getInternalState().equals(InternalNodeContainerState.CONFIGURED_MARKEDFOREXEC);
         }
         // (8) allow access to tail node
-        ((SingleNodeContainer)headNode).getNode().setLoopEndNode(
-                ((SingleNodeContainer)tailNode).getNode());
+        ((SingleNodeContainer)headNode).getNode().setLoopEndNode(((SingleNodeContainer)tailNode).getNode());
         // (9) and finally try to queue the head of this loop!
         assert headNode.getInternalState().equals(InternalNodeContainerState.EXECUTED_MARKEDFOREXEC);
         queueIfQueuable(headNode);
@@ -3811,10 +3810,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** {@inheritDoc} */
     @Override
-    void performStateTransitionEXECUTED(
-            final NodeContainerExecutionStatus status) {
-        assert !isLocalWFM() : "Execution of meta node not allowed"
-            + " for locally executing (sub-)flows";
+    void performStateTransitionEXECUTED(final NodeContainerExecutionStatus status) {
+        assert !isLocalWFM() : "Execution of meta node not allowed for locally executing (sub-)flows";
         synchronized (m_workflowMutex) {
             mimicRemoteExecuted(status);
             String stateList = printNodeSummary(getID(), 0);
