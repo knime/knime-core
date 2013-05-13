@@ -17,7 +17,7 @@
  * If you have any questions please contact the copyright holder:
  * website: www.knime.org
  * email: contact@knime.org
- * ------------------------------------------------------------------- * 
+ * ------------------------------------------------------------------- *
  */
 package org.knime.testing.node.disturber;
 
@@ -41,7 +41,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- * 
+ *
  * @author Thorsten Meinl, University of Konstanz
  */
 public class DisturberNodeModel extends NodeModel {
@@ -56,7 +56,7 @@ public class DisturberNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected DataTableSpec[] configure(DataTableSpec[] inSpecs)
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         return new DataTableSpec[]{inSpecs[0], inSpecs[0], inSpecs[0]};
     }
@@ -65,8 +65,8 @@ public class DisturberNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected BufferedDataTable[] execute(BufferedDataTable[] inData,
-            ExecutionContext exec) throws Exception {
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+            final ExecutionContext exec) throws Exception {
         BufferedDataTable origTable = inData[0];
         BufferedDataContainer emptyTable = exec.createDataContainer(
                 inData[0].getDataTableSpec());
@@ -76,12 +76,15 @@ public class DisturberNodeModel extends NodeModel {
 
         int count = 0;
         Random r = new Random(12345678);
+        double sum = 7 * r.nextDouble();
         for (DataRow row : inData[0]) {
             exec.setProgress(count++ / (double) inData[0].getRowCount());
             DataCell[] cells = new DataCell[row.getNumCells()];
             for (int i = 0; i < cells.length; i++) {
-                if (r.nextDouble() < 0.1) {
+                sum += r.nextDouble();
+                if (sum >= 5) {
                     cells[i] = DataType.getMissingCell();
+                    sum = 0;
                 } else {
                     cells[i] = row.getCell(i);
                 }
@@ -99,7 +102,7 @@ public class DisturberNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(File nodeInternDir, ExecutionMonitor exec)
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         // nothing to do
     }
@@ -108,7 +111,7 @@ public class DisturberNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadValidatedSettingsFrom(NodeSettingsRO settings)
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // nothing to do
     }
@@ -125,7 +128,7 @@ public class DisturberNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(File nodeInternDir, ExecutionMonitor exec)
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
         // nothing to do
     }
@@ -134,7 +137,7 @@ public class DisturberNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveSettingsTo(NodeSettingsWO settings) {
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
         // nothing to do
     }
 
@@ -142,7 +145,7 @@ public class DisturberNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettings(NodeSettingsRO settings)
+    protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         // nothing to do
     }
