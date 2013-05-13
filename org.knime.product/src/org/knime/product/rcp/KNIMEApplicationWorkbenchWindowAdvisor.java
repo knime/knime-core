@@ -50,47 +50,45 @@
  */
 package org.knime.product.rcp;
 
+import org.eclipse.core.runtime.IProduct;
+import org.eclipse.core.runtime.Platform;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
 import org.eclipse.ui.application.IWorkbenchWindowConfigurer;
 import org.eclipse.ui.application.WorkbenchWindowAdvisor;
+import org.eclipse.ui.internal.ide.IDEInternalPreferences;
+import org.eclipse.ui.internal.ide.IDEWorkbenchPlugin;
 
 /**
- * This advisor is used for configuring the workbench window and creating the
- * action bar advisor.
+ * This advisor is used for configuring the workbench window and creating the action bar advisor.
  *
  * @author Florian Georg, University of Konstanz
  */
-public class KNIMEApplicationWorkbenchWindowAdvisor extends
-        WorkbenchWindowAdvisor {
+public class KNIMEApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 
     /**
-     * Creates a new workbench window advisor for configuring a workbench window
-     * via the given workbench window configurer.
+     * Creates a new workbench window advisor for configuring a workbench window via the given workbench window
+     * configurer.
      *
      * @param configurer an object for configuring the workbench window
      */
-    public KNIMEApplicationWorkbenchWindowAdvisor(
-            final IWorkbenchWindowConfigurer configurer) {
+    public KNIMEApplicationWorkbenchWindowAdvisor(final IWorkbenchWindowConfigurer configurer) {
         super(configurer);
 
     }
 
     /**
-     * Creates our <code>KNIMEActionBarAdvisor</code> that form the action
-     * bars.
+     * Creates our <code>KNIMEActionBarAdvisor</code> that form the action bars.
      *
      * @param configurer the action bar configurer for the window
      * @return the action bar advisor for the window
      *
      * @see KNIMEApplicationActionBarAdvisor
-     * @see org.eclipse.ui.application.WorkbenchWindowAdvisor
-     *      #createActionBarAdvisor
+     * @see org.eclipse.ui.application.WorkbenchWindowAdvisor #createActionBarAdvisor
      *      (org.eclipse.ui.application.IActionBarConfigurer)
      */
     @Override
-    public ActionBarAdvisor createActionBarAdvisor(
-            final IActionBarConfigurer configurer) {
+    public ActionBarAdvisor createActionBarAdvisor(final IActionBarConfigurer configurer) {
         return new KNIMEApplicationActionBarAdvisor(configurer);
     }
 
@@ -106,11 +104,47 @@ public class KNIMEApplicationWorkbenchWindowAdvisor extends
         configurer.setShowCoolBar(true);
         configurer.setShowStatusLine(true);
         configurer.setShowProgressIndicator(true);
+        configurer.setTitle(computeTitle());
 
         // see https://bugs.eclipse.org/bugs/show_bug.cgi?id=36961
         // We want to use ResourceNavigator, so we have to introduce this
         // dependency to org.eclipse.ui.ide (otherwise we don't see our
         // Resources)
         org.eclipse.ui.ide.IDE.registerAdapters();
+    }
+
+    @SuppressWarnings("restriction")
+    private String computeTitle() {
+        String title = null;
+        IProduct product = Platform.getProduct();
+        if (product != null) {
+            title = product.getName();
+        }
+        if (title == null) {
+            title = "KNIME";
+        }
+
+        String[] cmdLineArgs = Platform.getCommandLineArgs();
+        String customName = null;
+        String workspaceLocation = null;
+        for (int i = 0; i < cmdLineArgs.length; i++) {
+            if ("-showlocation".equalsIgnoreCase(cmdLineArgs[i])) {
+                if (cmdLineArgs.length > i + 1) {
+                    customName = cmdLineArgs[i + 1];
+                }
+
+                workspaceLocation = Platform.getLocation().toOSString();
+                break;
+            }
+        }
+
+        String workspaceName =
+                IDEWorkbenchPlugin.getDefault().getPreferenceStore().getString(IDEInternalPreferences.WORKSPACE_NAME);
+        if ((customName == null) && (workspaceName != null) && (workspaceName.length() > 0)) {
+            customName = workspaceName;
+        }
+
+        return (customName != null ? customName : title)
+                + (workspaceLocation != null ? " - " + workspaceLocation : "");
     }
 }
