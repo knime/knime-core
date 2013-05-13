@@ -73,6 +73,7 @@ import org.knime.base.node.preproc.filter.row.rowfilter.RowFilter;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.internal.CorePlugin;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionMonitor;
@@ -114,7 +115,7 @@ public class TableNodeView extends NodeView {
         TableContentModel cntModel = nodeModel.getContentModel();
         assert (cntModel != null);
         m_tableView = new TableView(cntModel);
-        m_tableView.setWrapColumnHeader(true);
+        m_tableView.setWrapColumnHeader(CorePlugin.getInstance().isWrapColumnHeaderInTableViews());
         m_tableView.setPreferredSizeDataDependent(true);
         cntModel.addTableModelListener(new TableModelListener() {
             @Override

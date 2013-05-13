@@ -183,6 +183,10 @@ public class MainPreferencePage extends FieldEditorPreferencePage
         addField(new LabelField(parent, "To change the grid settings of a workflow, use the 'Editor Grid Settings' "
                 + "toolbar button."));
         addField(new HorizontalLineField(parent));
+        addField(new BooleanFieldEditor(PreferenceConstants.P_WRAP_TABLE_HEADER,
+                                        "Wrap Column Header in Table Views", parent));
+        addField(new HorizontalLineField(parent));
+
         ComboFieldEditor updateMetaNodeLinkOnLoadEditor = new ComboFieldEditor(
                 PreferenceConstants.P_META_NODE_LINK_UPDATE_ON_LOAD,
                 "Update meta node links when workflow loads",

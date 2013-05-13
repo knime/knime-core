@@ -65,6 +65,7 @@ import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
+import org.knime.core.internal.CorePlugin;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.KnimeEncryption;
 import org.knime.workbench.repository.NodeUsageRegistry;
@@ -135,6 +136,8 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
                 PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE);
         int usedHistorySize = prefStore.getInt(
                 PreferenceConstants.P_FAV_LAST_USED_SIZE);
+        boolean wrapColumnHeaderInTable = prefStore.getBoolean(PreferenceConstants.P_WRAP_TABLE_HEADER);
+
 
         prefStore.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
@@ -170,8 +173,12 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
                         LOGGER.error("Unable to set maximum number of "
                                 + "last used nodes", e);
                     }
-                }
+                } else if (PreferenceConstants.P_WRAP_TABLE_HEADER.equals(prop)) {
+                    if (event.getNewValue() instanceof Boolean) {
+                        CorePlugin.getInstance().setWrapColumnHeaderInTableViews((Boolean)event.getNewValue());
+                    }
 
+                }
             }
         });
 
@@ -181,6 +188,7 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
         } catch (Exception e) {
             LOGGER.error("Error during loading of node usage history: ", e);
         }
+        CorePlugin.getInstance().setWrapColumnHeaderInTableViews(wrapColumnHeaderInTable);
 
         // hide already installed IU by default in install wizard
         // its a bit dirty but there is no API to set the option

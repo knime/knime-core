@@ -96,10 +96,31 @@ public class CorePlugin implements BundleActivator {
             }
 
         }
-
     }
 
-    /**
+    /** see {@link #setWrapColumnHeaderInTableViews(boolean)}. */
+    private boolean m_isWrapColumnHeaderInTableViews = false;
+
+    /** A property controlled by the UI preference page. We need a field in the core plugin as it does not access
+     * to any UI plugin. We rely on the UI plugin to init/update this field.
+     * @param value the isWrapColumnHeaderInTableViews to set
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 2.8
+     */
+    public final void setWrapColumnHeaderInTableViews(final boolean value) {
+        m_isWrapColumnHeaderInTableViews = value;
+    }
+
+    /** see {@link #setWrapColumnHeaderInTableViews(boolean)}.
+     * @return the isWrapColumnHeaderInTableViews
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 2.8
+     */
+    public final boolean isWrapColumnHeaderInTableViews() {
+        return m_isWrapColumnHeaderInTableViews;
+    }
+
+        /**
      * {@inheritDoc}
      */
     @Override

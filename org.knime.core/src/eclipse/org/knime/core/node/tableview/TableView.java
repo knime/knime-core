@@ -122,7 +122,6 @@ public class TableView extends JScrollPane {
     private static final Cursor RESIZE_CURSOR =
         Cursor.getPredefinedCursor(Cursor.S_RESIZE_CURSOR);
 
-
     /** The popup menu which allows to trigger hilite events. */
     private JPopupMenu m_popup;
 
@@ -628,6 +627,7 @@ public class TableView extends JScrollPane {
         if (value) {
             setColumnHeaderResizingAllowed(true);
         }
+        setColumnHeaderViewHeight(-1);
     }
 
     /** Get the {@link #setWrapColumnHeader(boolean)} property.
@@ -1112,6 +1112,18 @@ public class TableView extends JScrollPane {
                                 + in, "Error", JOptionPane.ERROR_MESSAGE);
                     }
                 }
+            }
+        });
+        item.addPropertyChangeListener(new EnableListener(this, true, false));
+        item.setEnabled(hasData());
+        result.add(item);
+
+        item = new JCheckBoxMenuItem("Wrap Column Header", isWrapColumnHeader());
+        item.setMnemonic('r');
+        item.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(final ActionEvent e) {
+                setWrapColumnHeader(!isWrapColumnHeader());
             }
         });
         item.addPropertyChangeListener(new EnableListener(this, true, false));

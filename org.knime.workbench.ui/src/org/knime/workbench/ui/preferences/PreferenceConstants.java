@@ -123,9 +123,15 @@ public interface PreferenceConstants {
     public static final String P_GRID_SIZE_X = "knime.gridsize.x";
     /** Pref constant for grid size (number of pixels). */
     public static final String P_GRID_SIZE_Y = "knime.gridsize.y";
-    /** default grid distance */
+    /** Default grid distance. */
     public static final int P_GRID_DEFAULT_SIZE_X = 90;
-    /** default grid distance */
+    /** Default grid distance. */
     public static final int P_GRID_DEFAULT_SIZE_Y = 120;
+
+    /** Pref constant to wrap column headers in table views (interactive table view & outport view). */
+    public static final String P_WRAP_TABLE_HEADER = "knime.table.header.wrap";
+    /** Default to {@link #P_WRAP_TABLE_HEADER} ({@value #P_WRAP_TABLE_HEADER_DEFAULT}). */
+    public static final boolean P_WRAP_TABLE_HEADER_DEFAULT = false;
+
 
 }
