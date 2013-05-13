@@ -219,4 +219,16 @@ public class InteractiveValueSelectNodeModel extends NodeModel implements Intera
         selectedValues = createSelectedValuesArray();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public InteractiveValueSelectViewContent createEmptyInstance() {
+        try {
+            return InteractiveValueSelectViewContent.class.newInstance();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
 }
