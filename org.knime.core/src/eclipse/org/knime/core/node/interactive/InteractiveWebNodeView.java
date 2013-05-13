@@ -89,28 +89,22 @@ import org.knime.core.node.workflow.WorkflowManager;
  * @param <VC> the {@link WebViewContent} implementation used
  * @since 2.8
  */
-public final class InteractiveWebNodeView<T extends NodeModel & InteractiveWebNode<V>, V extends WebViewContent>
-                extends AbstractNodeView<T> implements InteractiveView<T, V> {
+public final class InteractiveWebNodeView<T extends NodeModel & InteractiveWebNode<VC>, VC extends WebViewContent>
+                extends AbstractNodeView<T> implements InteractiveView<T, VC> {
 
     private static final String CONTAINER_ID = "view";
-    private final InteractiveViewDelegate<V> m_delegate;
+    private final InteractiveViewDelegate<VC> m_delegate;
     private final WebViewTemplate m_template;
     private File m_tempFolder;
-    private Class<V> m_viewContentClass;
 
     /**
      * @param nodeModel the underlying model
      * @param wvt the template to be used for the web view
-     * @param viewContentClass the class of the view content
      */
-    public InteractiveWebNodeView(final T nodeModel, final WebViewTemplate wvt, final Class<V> viewContentClass) {
+    public InteractiveWebNodeView(final T nodeModel, final WebViewTemplate wvt) {
         super(nodeModel);
         m_template = wvt;
-        if (viewContentClass == null) {
-            throw new NullPointerException("ViewContent class can not be null!");
-        }
-        m_viewContentClass = viewContentClass;
-        m_delegate = new InteractiveViewDelegate<V>();
+        m_delegate = new InteractiveViewDelegate<VC>();
     }
 
     @Override
@@ -124,7 +118,7 @@ public final class InteractiveWebNodeView<T extends NodeModel & InteractiveWebNo
     }
 
     @Override
-    public void triggerReExecution(final V vc, final ReexecutionCallback callback) {
+    public void triggerReExecution(final VC vc, final ReexecutionCallback callback) {
         m_delegate.triggerReExecution(vc, callback);
     }
 
@@ -138,14 +132,14 @@ public final class InteractiveWebNodeView<T extends NodeModel & InteractiveWebNo
      *
      * @param vc the new content of the view.
      */
-    protected final void loadViewContentIntoNode(final V vc) {
+    protected final void loadViewContentIntoNode(final VC vc) {
         triggerReExecution(vc, new DefaultReexecutionCallback());
     }
 
     /**
      * @return ViewContent of the underlying NodeModel.
      */
-    protected final V getViewContentFromNode() {
+    protected final VC getViewContentFromNode() {
         return getNodeModel().createViewContent();
     }
 
@@ -170,7 +164,7 @@ public final class InteractiveWebNodeView<T extends NodeModel & InteractiveWebNo
     public final void callOpenView(final String title) {
         final String jsonViewContent;
         try {
-            V vc = getViewContentFromNode();
+            VC vc = getViewContentFromNode();
             jsonViewContent = ((ByteArrayOutputStream)vc.saveTo()).toString("UTF-8");
         } catch (Exception e) {
             throw new IllegalArgumentException("No view content available!");
@@ -424,7 +418,7 @@ public final class InteractiveWebNodeView<T extends NodeModel & InteractiveWebNo
         String evalCode = wrapInTryCatch("return " + getJSMethodName(pullMethod, CONTAINER_ID));
         String jsonString = (String)browser.evaluate(evalCode);
         try {
-            V viewContent = m_viewContentClass.newInstance();
+            VC viewContent = getNodeModel().createEmptyInstance();
             viewContent.loadFrom(new ByteArrayInputStream(jsonString.getBytes(Charset.forName("UTF-8"))));
             loadViewContentIntoNode(viewContent);
         } catch (Exception e) {

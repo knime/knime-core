@@ -61,4 +61,9 @@ package org.knime.core.node.interactive;
  */
 public interface InteractiveWebNode<V extends WebViewContent> extends InteractiveNode<V> {
 
+    /**
+     * @return an empty instance of the concrete {@link WebViewContent} implementation
+     */
+    public V createEmptyInstance();
+
 }
