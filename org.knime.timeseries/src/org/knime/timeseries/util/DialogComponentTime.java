@@ -335,7 +335,7 @@ public class DialogComponentTime extends DialogComponent {
      *
      * @throws InvalidSettingsException if entered value is not an int
      */
-    protected final void updateHour() throws InvalidSettingsException {
+    protected void updateHour() throws InvalidSettingsException {
         SettingsModelCalendar model = (SettingsModelCalendar)getModel();
         if (!model.useTime()) {
             return;
@@ -359,7 +359,7 @@ public class DialogComponentTime extends DialogComponent {
      * @throws InvalidSettingsException if the entered value is not an int in
      * the range of 0,59
      */
-    protected final void updateMinute() throws InvalidSettingsException {
+    protected void updateMinute() throws InvalidSettingsException {
         SettingsModelCalendar model = (SettingsModelCalendar)getModel();
         if (!model.useTime()) {
             // do not validate if time is not used by the model
@@ -384,7 +384,7 @@ public class DialogComponentTime extends DialogComponent {
      * @throws InvalidSettingsException if the entered value is not an int in
      * the range of 0-59
      */
-    protected final void updateSecond() throws InvalidSettingsException {
+    protected void updateSecond() throws InvalidSettingsException {
         SettingsModelCalendar model = (SettingsModelCalendar)getModel();
         if (!model.useTime()) {
             // do not validate if time is not used by the model
@@ -409,7 +409,7 @@ public class DialogComponentTime extends DialogComponent {
      * @throws InvalidSettingsException if the entered value is not an int in
      * the range of 0-999
      */
-    protected final void updateMillisecond() throws InvalidSettingsException {
+    protected void updateMillisecond() throws InvalidSettingsException {
         SettingsModelCalendar model = (SettingsModelCalendar)getModel();
         if (!model.useMilliseconds()) {
             // do not validate if milliseconds are not used by the model

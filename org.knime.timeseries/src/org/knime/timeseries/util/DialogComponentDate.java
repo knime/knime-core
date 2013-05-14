@@ -239,7 +239,7 @@ public class DialogComponentDate extends DialogComponent {
      *
      * @throws InvalidSettingsException if the year is not an integer
      */
-    protected final void updateModel() throws InvalidSettingsException {
+    protected void updateModel() throws InvalidSettingsException {
         SettingsModelCalendar model = (SettingsModelCalendar)getModel();
         if (!model.useDate()) {
             // do not update/validate if date is not used by the model
