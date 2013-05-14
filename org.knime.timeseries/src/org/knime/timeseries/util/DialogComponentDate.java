@@ -142,7 +142,7 @@ public class DialogComponentDate extends DialogComponent {
         // select boxes month
         Integer[] months = new Integer[12];
         for (int i = 0; i < 12; i++) {
-            months[i] = new Integer(i + 1);
+            months[i] = Integer.valueOf(i + 1);
         }
         m_monthUI = new JComboBox(months);
         m_monthUI.addItemListener(new ItemListener() {
@@ -162,7 +162,7 @@ public class DialogComponentDate extends DialogComponent {
         // select box day
         Integer[] days = new Integer[31];
         for (int i = 0; i < 31; i++) {
-            days[i] = new Integer(i + 1);
+            days[i] = Integer.valueOf(i + 1);
         }
         m_dayUI = new JComboBox(days);
         m_dayUI.addItemListener(new ItemListener() {
