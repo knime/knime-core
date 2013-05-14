@@ -288,7 +288,7 @@ public class SingleNodeContainerPersistorVersion1xx
         NodeSettingsRO additionalFactorySettings;
         try {
             additionalFactorySettings = loadAdditionalFactorySettings(settings);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             error =  "Unable to load additional factory settings for \"" + nodeInfo + "\"";
             setDirtyAfterLoad();
             throw new InvalidSettingsException(error, e);
@@ -296,7 +296,7 @@ public class SingleNodeContainerPersistorVersion1xx
         NodeFactory<NodeModel> nodeFactory;
         try {
             nodeFactory = loadNodeFactory(nodeInfo.getFactoryClass());
-        } catch (Throwable e) {
+        } catch (Exception e) {
             // setDirtyAfterLoad(); // don't set dirty, missing node placeholder will be used instead
             throw new NodeFactoryUnknownException(nodeInfo, additionalFactorySettings, e);
         }
@@ -305,7 +305,7 @@ public class SingleNodeContainerPersistorVersion1xx
             if (additionalFactorySettings != null) {
                 nodeFactory.loadAdditionalFactorySettings(additionalFactorySettings);
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             error =  "Unable to load additional factory settings into node factory (node \"" + nodeInfo + "\")";
             setDirtyAfterLoad();
             throw new InvalidSettingsException(error, e);
