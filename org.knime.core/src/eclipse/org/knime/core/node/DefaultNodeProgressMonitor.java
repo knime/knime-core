@@ -317,7 +317,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      *         set.
      */
     @Override
-    public Double getProgress() {
+    public synchronized Double getProgress() {
         return m_progress;
     }
 
@@ -325,7 +325,7 @@ public class DefaultNodeProgressMonitor implements NodeProgressMonitor {
      * @return The current progress message.
      */
     @Override
-    public String getMessage() {
+    public synchronized String getMessage() {
         return m_message;
     }
 

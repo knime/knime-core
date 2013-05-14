@@ -131,13 +131,13 @@ public final class ReferenceWriteFileStoreHandler implements IWriteFileStoreHand
 
     /** {@inheritDoc} */
     @Override
-    public void open(final ExecutionContext exec) {
+    public synchronized void open(final ExecutionContext exec) {
         m_duplicateChecker = new InternalDuplicateChecker();
     }
 
     /** {@inheritDoc} */
     @Override
-    public void close() {
+    public synchronized void close() {
         if (m_duplicateChecker != null) {
             m_duplicateChecker.close();
             m_duplicateChecker = null;

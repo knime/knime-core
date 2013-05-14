@@ -183,8 +183,8 @@ public abstract class NodeExecutionJob implements Runnable {
         try {
             // sets state EXECUTED
             m_nc.notifyParentExecuteFinished(status);
-        } catch (Throwable throwable) {
-            logError(throwable);
+        } catch (Exception e) {
+            logError(e);
         }
     }
 

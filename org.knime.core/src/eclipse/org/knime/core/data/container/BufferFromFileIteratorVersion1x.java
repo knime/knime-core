@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Aug 8, 2008 (wiswedel): created
  */
@@ -72,20 +72,20 @@ import org.knime.core.node.NodeLogger;
  * (Obsolete) File iterator to read files written by a {@link Buffer}. This
  * class is used for backward compatibility, it reads all stream written with
  * KNIME 1.x or the TechPreview of 2.0.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
-    
-    private static final NodeLogger LOGGER = 
+
+    private static final NodeLogger LOGGER =
         NodeLogger.getLogger(BufferFromFileIteratorVersion1x.class);
-    
+
     /** Associated buffer. */
     private final Buffer m_buffer;
-    
+
     /** Row pointer. */
     private int m_pointer;
-    
+
     /** If an exception has been thrown while reading from this buffer (only
      * if it has been written to disc). If so, further error messages are
      * only written to debug output in order to reduce message spam on the
@@ -121,7 +121,7 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
 
     /** {@inheritDoc} */
     @Override
-    public boolean hasNext() {
+    public synchronized boolean hasNext() {
         boolean hasNext = m_pointer < m_buffer.size();
         if (!hasNext && (m_inStream != null)) {
             close();
@@ -179,14 +179,14 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
         }
         return new BlobSupportDataRow(key, cells);
     }
-    
+
     /** Reads a row key from the stream. If the buffer is set to not persist
      * row keys (the {@link NoKeyBuffer}, it will a static row key.
      * @param inStream To read from
      * @return The row key as read right from the stream.
      * @throws IOException If reading fails for IO problems.
      */
-    private RowKey readRowKey(final DCObjectInputStream inStream) 
+    private RowKey readRowKey(final DCObjectInputStream inStream)
         throws IOException {
         if (m_buffer.shouldSkipRowKey()) {
             return DUMMY_ROW_KEY;
@@ -218,7 +218,7 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
         }
         CellClassInfo type = m_buffer.getTypeForChar(identifier);
         Class<? extends DataCell> cellClass = type.getCellClass();
-        boolean isBlob = 
+        boolean isBlob =
             BlobDataCell.class.isAssignableFrom(cellClass);
         if (isBlob) {
             BlobAddress address = inStream.readBlobAddress();
@@ -288,8 +288,8 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
     } // readDataCellVersion1(DCObjectInputStream)
 
     private void handleReadThrowable(final Throwable throwable) {
-        String warnMessage = "Errors while reading row " + (m_pointer + 1) 
-            + " from file \"" + m_buffer.getBinFile().getName() + "\": " 
+        String warnMessage = "Errors while reading row " + (m_pointer + 1)
+            + " from file \"" + m_buffer.getBinFile().getName() + "\": "
             + throwable.getMessage();
         if (!m_hasThrownReadException) {
             warnMessage = warnMessage.concat(
@@ -309,7 +309,7 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
         }
         m_hasThrownReadException = true;
     }
-    
+
     /** {@inheritDoc} */
     @Override
     boolean performClose() throws IOException {
@@ -338,7 +338,7 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
          * when the VM closes. */
         close();
     }
-    
+
     /** Reads the blob from the given blob address.
      * @param buffer The owning buffer.
      * @param blobAddress The address to read from.
@@ -346,11 +346,11 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
      * @return The blob cell being read.
      * @throws IOException If that fails.
      */
-    static BlobDataCell readBlobDataCell(final Buffer buffer, 
+    static BlobDataCell readBlobDataCell(final Buffer buffer,
             final BlobAddress blobAddress,
             final CellClassInfo cl) throws IOException {
-        assert buffer.getBufferID() == blobAddress.getBufferID() 
-            : "Buffer IDs don't match: " + buffer.getBufferID() + " vs. " 
+        assert buffer.getBufferID() == blobAddress.getBufferID()
+            : "Buffer IDs don't match: " + buffer.getBufferID() + " vs. "
             + blobAddress.getBufferID();
         int column = blobAddress.getColumn();
         int indexInColumn = blobAddress.getIndexOfBlobInColumn();
@@ -369,9 +369,9 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
         try {
             if (ser != null) {
                 inStream = new DataInputStream(in);
-                ObsoleteDCDataInputStream input = 
+                ObsoleteDCDataInputStream input =
                     new ObsoleteDCDataInputStream((DataInputStream)inStream);
-                // the DataType class will reject Serializer that do not 
+                // the DataType class will reject Serializer that do not
                 // have the appropriate return type
                 result = (BlobDataCell)ser.deserialize(input);
                 result.setBlobAddress(blobAddress);
@@ -398,8 +398,8 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
             }
         }
     }
-    
-    private static final class ObsoleteDCDataInputStream 
+
+    private static final class ObsoleteDCDataInputStream
         extends LongUTFDataInputStream implements DataCellDataInput {
 
         /** Inherited constructor.
@@ -414,9 +414,9 @@ final class BufferFromFileIteratorVersion1x extends Buffer.FromFileIterator {
         @Override
         public DataCell readDataCell() throws IOException {
             throw new IOException("The stream was written with a version that "
-                    + "does not support reading/writing of encapsulated " 
+                    + "does not support reading/writing of encapsulated "
                     + "DataCells");
         }
-        
+
     }
 }

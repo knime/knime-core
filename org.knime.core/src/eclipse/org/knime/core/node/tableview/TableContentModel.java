@@ -386,7 +386,7 @@ public class TableContentModel extends AbstractTableModel
         m_rowCountOfInterestInIterator = 0;
         m_rowCountOfInterest = 0;
         m_maxRowCount = 0;
-        m_rowCounterThread = null;
+        cancelRowCountingInBackground();
         m_isMaxRowCountFinal = true;
         m_isRowCountOfInterestFinal = true;
         boolean structureChanged = oldColCount != newColCount;

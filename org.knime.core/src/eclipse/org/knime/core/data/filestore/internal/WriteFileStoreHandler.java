@@ -78,7 +78,7 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
     /** See {@link #FILES_PER_FOLDER}. */
     public static final int FOLDER_LEVEL = 2;
 
-    private static int MAX_NR_FILES = (int)Math.pow(FILES_PER_FOLDER, FOLDER_LEVEL + 1);
+    private static final int MAX_NR_FILES = (int)Math.pow(FILES_PER_FOLDER, FOLDER_LEVEL + 1);
 
     private final String m_name;
     private final UUID m_storeUUID;

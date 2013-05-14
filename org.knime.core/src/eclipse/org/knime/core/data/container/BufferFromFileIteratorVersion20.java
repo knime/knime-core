@@ -132,7 +132,7 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
 
     /** {@inheritDoc} */
     @Override
-    public boolean hasNext() {
+    public synchronized boolean hasNext() {
         boolean hasNext = m_pointer < m_buffer.size();
         if (!hasNext && (m_inStream != null)) {
             close();
@@ -268,6 +268,7 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
         /* This all relates much to bug #63: The temp files are not
          * deleted under windows. It seems that there are open streams
          * when the VM closes. */
+        super.finalize();
         close();
     }
 

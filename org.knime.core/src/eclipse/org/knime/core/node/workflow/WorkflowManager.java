@@ -1616,7 +1616,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             LinkedHashMap<NodeID, Set<Integer>> sortedNodes =
                 m_workflow.createBackwardsBreadthFirstSortedList(p);
-            for (NodeID thisID : sortedNodes.keySet()) {
+            for (Map.Entry<NodeID, Set<Integer>> entry : sortedNodes.entrySet()) {
+                final NodeID thisID = entry.getKey();
                 if (thisID.equals(getID())) {
                     continue; // skip WFM
                 }
@@ -1640,7 +1641,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     }
                 } else {
                     assert thisNode instanceof WorkflowManager;
-                    Set<Integer> outPortIndicces = sortedNodes.get(thisID);
+                    Set<Integer> outPortIndicces = entry.getValue();
                     for (Integer i : outPortIndicces) {
                         if (!((WorkflowManager)thisNode).
                                 markForExecutionAllAffectedNodes(i)) {
@@ -2869,8 +2870,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 subwfm.setUIInformation(startUI);
             }
             // connect outside(!) nodes to new sub metanote
-            for (Pair<NodeID, Integer>npi : extInConnections.keySet()) {
-                int metanodeindex = extInConnections.get(npi);
+            for (Map.Entry<Pair<NodeID, Integer>, Integer> entry : extInConnections.entrySet()) {
+                final Pair<NodeID, Integer> npi = entry.getKey();
+                int metanodeindex = entry.getValue();
                 if (metanodeindex >= 0) {  // ignore variable port!
                     // we need to find the source again (since our list
                     // only holds the destination...)
@@ -2880,20 +2882,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                             subwfm.getID(), metanodeindex);
                 }
             }
-    		ParallelizedChunkContentMaster pccm
-    		    = new ParallelizedChunkContentMaster(subwfm, endNode,
-    		                startNode.getNrRemoteChunks());
-    		for (int i = 0; i < startNode.getNrRemoteChunks(); i++) {
-    			ParallelizedChunkContent copiedNodes =
-    			    duplicateLoopBodyInSubWFMandAttach(
-    			            subwfm, extInConnections,
-    			    		startID, endID, loopNodes, i);
+            ParallelizedChunkContentMaster pccm = new ParallelizedChunkContentMaster(subwfm, endNode,
+                                                 startNode.getNrRemoteChunks());
+            for (int i = 0; i < startNode.getNrRemoteChunks(); i++) {
+                ParallelizedChunkContent copiedNodes = duplicateLoopBodyInSubWFMandAttach(
+                          subwfm, extInConnections, startID, endID, loopNodes, i);
                 copiedNodes.executeChunk();
-    			pccm.addParallelChunk(i, copiedNodes);
-    		}
+                pccm.addParallelChunk(i, copiedNodes);
+            }
             // make sure head knows his chunk master (for potential cleanup)
             startNode.setChunkMaster(pccm);
-		}
+        }
     }
 
     /*
@@ -3402,7 +3401,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                                     // to make sure ports of the same node are sorted
                                     // correctly!
                                     if (uii != null) {
-                                        int x[] = uii.getBounds();
+                                        int[] x = uii.getBounds();
                                         if ((x != null) && (x.length >= 2)) {
                                             // add node y position to port index
                                             yPos += x[1];
@@ -3477,8 +3476,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             //  port.)
             PortType[] exposedIncomingPortTypes
                                     = new PortType[exposedIncomingPorts.size()];
-            for (Pair<NodeID, Integer> npi : exposedIncomingPorts.keySet()) {
-                int index = exposedIncomingPorts.get(npi).getIndex();
+            for (Map.Entry<Pair<NodeID, Integer>, VerticalPortIndex> entry : exposedIncomingPorts.entrySet()) {
+                Pair<NodeID, Integer> npi = entry.getKey();
+                int index = entry.getValue().getIndex();
                 NodeID nID = npi.getFirst();
                 int portIndex = npi.getSecond();
                 if (nID.equals(this.getID())) {
@@ -7344,29 +7344,29 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         super.loadSettings(settings);
         NodeSettingsRO modelSettings = settings.getNodeSettings("model");
         Map<NodeID, QuickFormInputNode> nodes = findNodes(QuickFormInputNode.class, false);
-        for (NodeID id : nodes.keySet()) {
+        for (Entry<NodeID, QuickFormInputNode> entry : nodes.entrySet()) {
+            NodeID id = entry.getKey();
             String nodeID = Integer.toString(id.getIndex());
             if (modelSettings.containsKey(nodeID)) {
-            NodeSettingsRO conf = modelSettings.getNodeSettings(nodeID);
-            QuickFormInputNode qfin = nodes.get(id);
-            NodeSettingsWO oldSettings = new NodeSettings(nodeID);
-            qfin.getConfiguration().getValueConfiguration().saveValue(oldSettings);
-            if (!conf.equals(oldSettings)) {
-            // FIXME: likely not here but in the WFM...
-            // not needed (actually nodes not work) because WFM itself
-            // was reset completely if any one of the settings change.
-//                SingleNodeContainer snc =
-//                    (SingleNodeContainer)this.getNodeContainer(id);
-//                 snc.reset();
+                NodeSettingsRO conf = modelSettings.getNodeSettings(nodeID);
+                QuickFormInputNode qfin = entry.getValue();
+                NodeSettingsWO oldSettings = new NodeSettings(nodeID);
+                qfin.getConfiguration().getValueConfiguration().saveValue(oldSettings);
+                if (!conf.equals(oldSettings)) {
+                    // FIXME: likely not here but in the WFM...
+                    // not needed (actually nodes not work) because WFM itself
+                    // was reset completely if any one of the settings change.
+                    // SingleNodeContainer snc = (SingleNodeContainer)this.getNodeContainer(id);
+                    // snc.reset();
                     AbstractQuickFormConfiguration<AbstractQuickFormValueInConfiguration> config =
-                        (AbstractQuickFormConfiguration<AbstractQuickFormValueInConfiguration>)qfin.getConfiguration();
+                            (AbstractQuickFormConfiguration<AbstractQuickFormValueInConfiguration>)qfin.getConfiguration();
                     if (config != null) {
                         config.getValueConfiguration().loadValueInModel(conf);
                     }
-             // see above: not needed
-//             this.configureNodeAndSuccessors(id, true);
+                    // see above: not needed
+                    // this.configureNodeAndSuccessors(id, true);
+                }
             }
-        }
     }
     }
 

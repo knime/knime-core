@@ -604,7 +604,7 @@ class Buffer implements KNIMEStreamConstants {
                 m_memoryReleasable = new BufferMemoryReleasable();
                 MemoryObjectTracker.getInstance().addMemoryReleaseable(m_memoryReleasable);
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             if (!(e instanceof IOException)) {
                 LOGGER.coding("Writing cells to temporary buffer must not throw " + e.getClass().getSimpleName(), e);
             }
@@ -1180,7 +1180,7 @@ class Buffer implements KNIMEStreamConstants {
      * Restore content of this buffer into main memory (using a collection implementation). The restoring will be
      * performed with the next iteration.
      */
-    final void restoreIntoMemory() {
+    final synchronized void restoreIntoMemory() {
         m_useBackIntoMemoryIterator = true;
     }
 
@@ -1658,7 +1658,7 @@ class Buffer implements KNIMEStreamConstants {
      * @throws CanceledExecutionException If canceled.
      * @see org.knime.core.node.BufferedDataTable.KnowsRowCountTable #saveToFile(File, NodeSettingsWO, ExecutionMonitor)
      */
-    void addToZipFile(final ZipOutputStream zipOut, final ExecutionMonitor exec) throws IOException,
+    synchronized void addToZipFile(final ZipOutputStream zipOut, final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         if (m_spec == null) {
             throw new IOException("Can't save an open Buffer.");
@@ -1751,7 +1751,8 @@ class Buffer implements KNIMEStreamConstants {
      * @see Object#finalize()
      */
     @Override
-    protected void finalize() {
+    protected void finalize() throws Throwable {
+        super.finalize();
         clear();
     }
 
