@@ -85,26 +85,23 @@ import org.knime.core.util.FileUtil;
  * @noinstantiate This class is not intended to be instantiated by clients.
  * @noextend This class is not intended to be subclassed by clients.
  */
-public class SingleNodeContainerPersistorVersion200 extends
-        SingleNodeContainerPersistorVersion1xx {
+public class SingleNodeContainerPersistorVersion200 extends SingleNodeContainerPersistorVersion1xx {
 
-    private static final NodeLogger SAVE_LOGGER =
-        NodeLogger.getLogger(SingleNodeContainerPersistorVersion200.class);
+    private static final NodeLogger SAVE_LOGGER = NodeLogger.getLogger(SingleNodeContainerPersistorVersion200.class);
 
     public static final String NODE_FILE = "node.xml";
 
-    /** Load persistor.
+    /**
+     * Load persistor.
+     *
      * @param workflowPersistor
      * @param nodeSettingsFile
      * @param version
      */
-    public SingleNodeContainerPersistorVersion200(
-            final WorkflowPersistorVersion1xx workflowPersistor,
-            final ReferencedFile nodeSettingsFile,
-            final WorkflowLoadHelper loadHelper,
-            final LoadVersion version) {
-        super(workflowPersistor, new NodeContainerMetaPersistorVersion200(
-                nodeSettingsFile, loadHelper, version), version);
+    public SingleNodeContainerPersistorVersion200(final WorkflowPersistorVersion1xx workflowPersistor,
+        final ReferencedFile nodeSettingsFile, final WorkflowLoadHelper loadHelper, final LoadVersion version) {
+        super(workflowPersistor, new NodeContainerMetaPersistorVersion200(nodeSettingsFile, loadHelper, version),
+            version);
     }
 
     /**
@@ -117,8 +114,8 @@ public class SingleNodeContainerPersistorVersion200 extends
 
     /** {@inheritDoc} */
     @Override
-    NodeAndBundleInformation loadNodeFactoryInfo(final NodeSettingsRO parentSettings,
-            final NodeSettingsRO settings) throws InvalidSettingsException {
+    NodeAndBundleInformation loadNodeFactoryInfo(final NodeSettingsRO parentSettings, final NodeSettingsRO settings)
+        throws InvalidSettingsException {
         return NodeAndBundleInformation.load(settings, getLoadVersion());
     }
 
@@ -142,32 +139,25 @@ public class SingleNodeContainerPersistorVersion200 extends
 
     /** {@inheritDoc} */
     @Override
-    SingleNodeContainerSettings loadSNCSettings(
-            final NodeSettingsRO settings,
-            final NodePersistorVersion1xx nodePersistor)
-    throws InvalidSettingsException {
+    SingleNodeContainerSettings loadSNCSettings(final NodeSettingsRO settings,
+        final NodePersistorVersion1xx nodePersistor) throws InvalidSettingsException {
         if (LoadVersion.V200.equals(getLoadVersion())) {
             return super.loadSNCSettings(settings, nodePersistor);
         } else {
             // any version after 2.0 saves the snc settings in the settings.xml
             // (previously these settings were saves as part of the node.xml)
-            SingleNodeContainerSettings sncs =
-                new SingleNodeContainerSettings();
+            SingleNodeContainerSettings sncs = new SingleNodeContainerSettings();
             MemoryPolicy p;
-            NodeSettingsRO sub =
-                    settings.getNodeSettings(Node.CFG_MISC_SETTINGS);
+            NodeSettingsRO sub = settings.getNodeSettings(Node.CFG_MISC_SETTINGS);
             String memoryPolicy =
-                    sub.getString(SingleNodeContainer.CFG_MEMORY_POLICY,
-                            MemoryPolicy.CacheSmallInMemory.toString());
+                sub.getString(SingleNodeContainer.CFG_MEMORY_POLICY, MemoryPolicy.CacheSmallInMemory.toString());
             if (memoryPolicy == null) {
-                throw new InvalidSettingsException(
-                        "Can't use null memory policy.");
+                throw new InvalidSettingsException("Can't use null memory policy.");
             }
             try {
                 p = MemoryPolicy.valueOf(memoryPolicy);
             } catch (IllegalArgumentException iae) {
-                throw new InvalidSettingsException(
-                        "Invalid memory policy: " + memoryPolicy);
+                throw new InvalidSettingsException("Invalid memory policy: " + memoryPolicy);
             }
             sncs.setMemoryPolicy(p);
             return sncs;
@@ -177,9 +167,7 @@ public class SingleNodeContainerPersistorVersion200 extends
 
     /** {@inheritDoc} */
     @Override
-    List<FlowObject> loadFlowObjects(
-            final NodeSettingsRO settings)
-        throws InvalidSettingsException {
+    List<FlowObject> loadFlowObjects(final NodeSettingsRO settings) throws InvalidSettingsException {
         List<FlowObject> result = new ArrayList<FlowObject>();
         LoadVersion loadVersion = getLoadVersion();
         NodeSettingsRO stackSet;
@@ -196,7 +184,7 @@ public class SingleNodeContainerPersistorVersion200 extends
                 result.add(v);
             } else if ("loopcontext".equals(type)) {
                 result.add(new RestoredFlowLoopContext());
-//                int tailID = sub.getInt("tailID");
+                //                int tailID = sub.getInt("tailID");
             } else if ("loopcontext_execute".equals(type)) {
                 result.add(new InnerFlowLoopContext());
             } else if ("loopcontext_inactive".equals(type)) {
@@ -210,8 +198,7 @@ public class SingleNodeContainerPersistorVersion200 extends
                 slc.inactiveScope(true);
                 result.add(slc);
             } else {
-                throw new InvalidSettingsException(
-                        "Unknown flow object type: " + type);
+                throw new InvalidSettingsException("Unknown flow object type: " + type);
             }
         }
         return result;
@@ -223,10 +210,8 @@ public class SingleNodeContainerPersistorVersion200 extends
         return false;
     }
 
-    protected static String save(final SingleNodeContainer snc,
-            final ReferencedFile nodeDirRef, final ExecutionMonitor exec,
-            final boolean isSaveData) throws CanceledExecutionException,
-            IOException {
+    protected static String save(final SingleNodeContainer snc, final ReferencedFile nodeDirRef,
+        final ExecutionMonitor exec, final boolean isSaveData) throws CanceledExecutionException, IOException {
         String settingsDotXML = snc.getParent().getCipherFileName(SETTINGS_FILE_NAME);
         ReferencedFile sncWorkingDirRef = snc.getNodeContainerDirectory();
         if (nodeDirRef.equals(sncWorkingDirRef) && !snc.isDirty()) {
@@ -234,20 +219,17 @@ public class SingleNodeContainerPersistorVersion200 extends
         }
         File nodeDir = nodeDirRef.getFile();
         boolean nodeDirExists = nodeDir.exists();
-        boolean nodeDirDeleted =
-            deleteChildren(nodeDir, SingleNodeContainer.DROP_DIR_NAME);
+        boolean nodeDirDeleted = deleteChildren(nodeDir, SingleNodeContainer.DROP_DIR_NAME);
         nodeDir.mkdirs();
         if (!nodeDir.isDirectory() || !nodeDir.canWrite()) {
-                throw new IOException("Unable to write or create directory \""
-                        + nodeDirRef + "\"");
+            throw new IOException("Unable to write or create directory \"" + nodeDirRef + "\"");
         }
         String debug;
         if (nodeDirExists) {
             if (nodeDirDeleted) {
                 debug = "Replaced node directory \"" + nodeDirRef + "\"";
             } else {
-                debug = "Failed to replace node directory \"" + nodeDirRef
-                    + "\" -- writing into existing directory";
+                debug = "Failed to replace node directory \"" + nodeDirRef + "\" -- writing into existing directory";
             }
         } else {
             debug = "Created node directory \"" + nodeDirRef + "\"";
@@ -255,16 +237,13 @@ public class SingleNodeContainerPersistorVersion200 extends
         SAVE_LOGGER.debug(debug);
 
         // get drop directory in "home" (the designated working dir)
-        ReferencedFile nodeDropDirInWDRef = sncWorkingDirRef == null ? null
-                : new ReferencedFile(
-                        sncWorkingDirRef, SingleNodeContainer.DROP_DIR_NAME);
+        ReferencedFile nodeDropDirInWDRef =
+            sncWorkingDirRef == null ? null : new ReferencedFile(sncWorkingDirRef, SingleNodeContainer.DROP_DIR_NAME);
 
-        ReferencedFile nodeDropDirRef = new ReferencedFile(
-                nodeDirRef, SingleNodeContainer.DROP_DIR_NAME);
+        ReferencedFile nodeDropDirRef = new ReferencedFile(nodeDirRef, SingleNodeContainer.DROP_DIR_NAME);
 
         // if node container directory is set and we write into a new location
-        if (nodeDropDirInWDRef != null
-                && !nodeDropDirRef.equals(nodeDropDirInWDRef)) {
+        if (nodeDropDirInWDRef != null && !nodeDropDirRef.equals(nodeDropDirInWDRef)) {
 
             // this code is executed in either of the two cases:
             // - Node was copy&paste from node with drop folder
@@ -272,21 +251,19 @@ public class SingleNodeContainerPersistorVersion200 extends
             // - Node is saved into new location (saveAs) -- need to copy
             //   the drop folder there (either from /tmp or from working dir)
             File dropInSource = nodeDropDirRef.getFile();
-            File dropInTarget = new File(
-                    nodeDir, SingleNodeContainer.DROP_DIR_NAME);
+            File dropInTarget = new File(nodeDir, SingleNodeContainer.DROP_DIR_NAME);
             if (dropInSource.exists()) {
                 FileUtil.copyDir(dropInSource, dropInTarget);
             }
         }
         NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
         saveNodeFactory(settings, snc);
-        ReferencedFile nodeXMLFileRef =
-            saveNodeFileName(snc, settings, nodeDirRef);
+        ReferencedFile nodeXMLFileRef = saveNodeFileName(snc, settings, nodeDirRef);
         saveFlowObjectStack(settings, snc);
         saveSNCSettings(settings, snc);
         NodeContainerMetaPersistorVersion200.save(settings, snc, nodeDirRef);
-        NodePersistorVersion200.save(snc, nodeXMLFileRef, exec, isSaveData
-                && snc.getInternalState().equals(InternalNodeContainerState.EXECUTED));
+        NodePersistorVersion200.save(snc, nodeXMLFileRef, exec,
+            isSaveData && snc.getInternalState().equals(InternalNodeContainerState.EXECUTED));
         File nodeSettingsXMLFile = new File(nodeDir, settingsDotXML);
         OutputStream os = new FileOutputStream(nodeSettingsXMLFile);
         os = snc.getParent().cipherOutput(os);
@@ -306,8 +283,7 @@ public class SingleNodeContainerPersistorVersion200 extends
     /**
      * @noreference This method is not intended to be referenced by clients.
      */
-    protected static void saveNodeFactory(final NodeSettingsWO settings,
-            final SingleNodeContainer nc) {
+    protected static void saveNodeFactory(final NodeSettingsWO settings, final SingleNodeContainer nc) {
         final Node node = nc.getNode();
         // node info to missing node is the info to the actual instance, not MissingNodeFactory
         NodeAndBundleInformation nodeInfo = node.getNodeAndBundleInformation();
@@ -317,28 +293,24 @@ public class SingleNodeContainerPersistorVersion200 extends
         node.getFactory().saveAdditionalFactorySettings(subSets);
     }
 
-    protected static ReferencedFile saveNodeFileName(
-            final SingleNodeContainer snc, final NodeSettingsWO settings,
-            final ReferencedFile nodeDirectoryRef) {
+    protected static ReferencedFile saveNodeFileName(final SingleNodeContainer snc, final NodeSettingsWO settings,
+        final ReferencedFile nodeDirectoryRef) {
         String fileName = NODE_FILE;
         fileName = snc.getParent().getCipherFileName(fileName);
         settings.addString("node_file", fileName);
         return new ReferencedFile(nodeDirectoryRef, fileName);
     }
 
-    protected static void saveSNCSettings(final NodeSettingsWO settings,
-            final SingleNodeContainer snc) {
+    protected static void saveSNCSettings(final NodeSettingsWO settings, final SingleNodeContainer snc) {
         snc.saveSNCSettings(settings);
     }
 
-    protected static void saveFlowObjectStack(final NodeSettingsWO settings,
-            final SingleNodeContainer nc) {
+    protected static void saveFlowObjectStack(final NodeSettingsWO settings, final SingleNodeContainer nc) {
         NodeSettingsWO stackSet = settings.addNodeSettings("flow_stack");
         FlowObjectStack stack = nc.getOutgoingFlowObjectStack();
         @SuppressWarnings("unchecked")
-        Iterable<FlowObject> myObjs = stack == null ? Collections.EMPTY_LIST
-                : stack.getFlowObjectsOwnedBy(
-                        nc.getID(), /*exclude*/Scope.Local);
+        Iterable<FlowObject> myObjs = stack == null ? Collections.EMPTY_LIST : stack.getFlowObjectsOwnedBy(nc.getID(), /*exclude*/
+            Scope.Local);
         int c = 0;
         for (FlowObject s : myObjs) {
             if (s instanceof FlowVariable) {
@@ -355,8 +327,7 @@ public class SingleNodeContainerPersistorVersion200 extends
                     sub.addString("type", "loopcontext_inactive");
                 }
             } else if (s instanceof InnerFlowLoopContext) {
-                NodeSettingsWO sub =
-                    stackSet.addNodeSettings("Loop_Execute_" + c);
+                NodeSettingsWO sub = stackSet.addNodeSettings("Loop_Execute_" + c);
                 sub.addString("type", "loopcontext_execute");
             } else if (s instanceof FlowScopeContext) {
                 if (!((FlowScopeContext)s).isInactiveScope()) {
@@ -367,28 +338,26 @@ public class SingleNodeContainerPersistorVersion200 extends
                     sub.addString("type", "scopecontext_inactive");
                 }
             } else {
-                SAVE_LOGGER.error("Saving of flow objects of type \""
-                        + s.getClass().getSimpleName() +  "\" not implemented");
+                SAVE_LOGGER.error("Saving of flow objects of type \"" + s.getClass().getSimpleName()
+                    + "\" not implemented");
             }
             c += 1;
         }
     }
 
-    /** Delete content of directory, skipping (direct) childs as given in
-     * 2nd argument. Use case is: to delete a node directory but skip its
-     * drop folder.
+    /**
+     * Delete content of directory, skipping (direct) childs as given in 2nd argument. Use case is: to delete a node
+     * directory but skip its drop folder.
+     *
      * @param directory The directory whose content is to be deleted
      * @param exclude A list of direct child names that are to be skipped
-     * @return false if directory does not exist, true if non-listed children
-     *         are deleted
+     * @return false if directory does not exist, true if non-listed children are deleted
      */
-    private static boolean deleteChildren(
-            final File directory, final String... exclude) {
+    private static boolean deleteChildren(final File directory, final String... exclude) {
         if (!directory.isDirectory()) {
             return false;
         }
-        HashSet<String> excludeSet =
-            new HashSet<String>(Arrays.asList(exclude));
+        HashSet<String> excludeSet = new HashSet<String>(Arrays.asList(exclude));
         File[] children = directory.listFiles();
         if (children == null) {
             return true;

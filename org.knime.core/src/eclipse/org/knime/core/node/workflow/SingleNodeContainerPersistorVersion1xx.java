@@ -97,8 +97,8 @@ import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
  * @noextend This class is not intended to be subclassed by clients.
  * @noinstantiate This class is not intended to be instantiated by clients.
  */
-public class SingleNodeContainerPersistorVersion1xx
-    implements SingleNodeContainerPersistor, FromFileNodeContainerPersistor {
+public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContainerPersistor,
+    FromFileNodeContainerPersistor {
 
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
@@ -108,25 +108,32 @@ public class SingleNodeContainerPersistorVersion1xx
 
     /** Meta persistor, only set when used to load a workflow. */
     private final NodeContainerMetaPersistorVersion1xx m_metaPersistor;
+
     /** WFM persistor, only set when used to load a workflow. */
     private final WorkflowPersistorVersion1xx m_wfmPersistor;
 
     private WorkflowPersistor m_parentPersistor;
+
     private NodeSettingsRO m_nodeSettings;
+
     private SingleNodeContainerSettings m_sncSettings;
+
     private boolean m_needsResetAfterLoad;
+
     private boolean m_isDirtyAfterLoad;
+
     private List<FlowObject> m_flowObjects;
+
     private LoadNodeModelSettingsFailPolicy m_settingsFailPolicy;
 
     private static final Method REPOS_LOAD_METHOD;
+
     private static final Object REPOS_MANAGER;
 
     static {
         Class<?> repManClass;
         try {
-            repManClass = Class.forName(
-                "org.knime.workbench.repository.RepositoryManager");
+            repManClass = Class.forName("org.knime.workbench.repository.RepositoryManager");
             Field instanceField = repManClass.getField("INSTANCE");
             REPOS_MANAGER = instanceField.get(null);
             REPOS_LOAD_METHOD = repManClass.getMethod("getRoot");
@@ -136,25 +143,21 @@ public class SingleNodeContainerPersistorVersion1xx
     }
 
     /** Load persistor. */
-    SingleNodeContainerPersistorVersion1xx(
-            final WorkflowPersistorVersion1xx workflowPersistor,
-            final ReferencedFile nodeSettingsFile,
-            final WorkflowLoadHelper loadHelper,
-            final LoadVersion version) {
-        this(workflowPersistor, new NodeContainerMetaPersistorVersion1xx(
-                nodeSettingsFile, loadHelper, version), version);
+    SingleNodeContainerPersistorVersion1xx(final WorkflowPersistorVersion1xx workflowPersistor,
+        final ReferencedFile nodeSettingsFile, final WorkflowLoadHelper loadHelper, final LoadVersion version) {
+        this(workflowPersistor, new NodeContainerMetaPersistorVersion1xx(nodeSettingsFile, loadHelper, version),
+            version);
     }
 
-    /** Constructor used internally, not used outside this class or its
-     * derivates.
+    /**
+     * Constructor used internally, not used outside this class or its derivates.
+     *
      * @param version
      * @param metaPersistor
      * @param wfmPersistor
      */
-    SingleNodeContainerPersistorVersion1xx(
-            final WorkflowPersistorVersion1xx wfmPersistor,
-            final NodeContainerMetaPersistorVersion1xx metaPersistor,
-            final LoadVersion version) {
+    SingleNodeContainerPersistorVersion1xx(final WorkflowPersistorVersion1xx wfmPersistor,
+        final NodeContainerMetaPersistorVersion1xx metaPersistor, final LoadVersion version) {
         if (version == null || wfmPersistor == null) {
             throw new NullPointerException();
         }
@@ -228,8 +231,7 @@ public class SingleNodeContainerPersistorVersion1xx
 
     /** {@inheritDoc} */
     @Override
-    public SingleNodeContainer getNodeContainer(
-            final WorkflowManager wm, final NodeID id) {
+    public SingleNodeContainer getNodeContainer(final WorkflowManager wm, final NodeID id) {
         return new SingleNodeContainer(wm, id, this);
     }
 
@@ -239,9 +241,8 @@ public class SingleNodeContainerPersistorVersion1xx
 
     /** {@inheritDoc} */
     @Override
-    public void preLoadNodeContainer(final WorkflowPersistor parentPersistor,
-            final NodeSettingsRO parentSettings, final LoadResult result)
-    throws InvalidSettingsException, IOException {
+    public void preLoadNodeContainer(final WorkflowPersistor parentPersistor, final NodeSettingsRO parentSettings,
+        final LoadResult result) throws InvalidSettingsException, IOException {
         m_parentPersistor = parentPersistor;
         NodeContainerMetaPersistorVersion1xx meta = getMetaPersistor();
         final ReferencedFile settingsFileRef = meta.getNodeSettingsFile();
@@ -249,8 +250,7 @@ public class SingleNodeContainerPersistorVersion1xx
         String error;
         if (!settingsFile.isFile()) {
             setDirtyAfterLoad();
-            throw new IOException("Can't read node file \""
-                    + settingsFile.getAbsolutePath() + "\"");
+            throw new IOException("Can't read node file \"" + settingsFile.getAbsolutePath() + "\"");
         }
         NodeSettingsRO settings;
         try {
@@ -276,8 +276,7 @@ public class SingleNodeContainerPersistorVersion1xx
         try {
             nodeInfo = loadNodeFactoryInfo(parentSettings, settings);
         } catch (InvalidSettingsException e) {
-            if (settingsFile.getName().equals(
-                    WorkflowPersistor.WORKFLOW_FILE)) {
+            if (settingsFile.getName().equals(WorkflowPersistor.WORKFLOW_FILE)) {
                 error = "Can't load meta flows in this version";
             } else {
                 error = "Can't load node factory class name";
@@ -289,7 +288,7 @@ public class SingleNodeContainerPersistorVersion1xx
         try {
             additionalFactorySettings = loadAdditionalFactorySettings(settings);
         } catch (Exception e) {
-            error =  "Unable to load additional factory settings for \"" + nodeInfo + "\"";
+            error = "Unable to load additional factory settings for \"" + nodeInfo + "\"";
             setDirtyAfterLoad();
             throw new InvalidSettingsException(error, e);
         }
@@ -306,7 +305,7 @@ public class SingleNodeContainerPersistorVersion1xx
                 nodeFactory.loadAdditionalFactorySettings(additionalFactorySettings);
             }
         } catch (Exception e) {
-            error =  "Unable to load additional factory settings into node factory (node \"" + nodeInfo + "\")";
+            error = "Unable to load additional factory settings into node factory (node \"" + nodeInfo + "\")";
             setDirtyAfterLoad();
             throw new InvalidSettingsException(error, e);
         }
@@ -315,15 +314,15 @@ public class SingleNodeContainerPersistorVersion1xx
 
     /** {@inheritDoc} */
     @Override
-    public void loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep,
-            final ExecutionMonitor exec, final LoadResult result)
-    throws InvalidSettingsException, CanceledExecutionException, IOException {
+    public void loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec,
+        final LoadResult result) throws InvalidSettingsException, CanceledExecutionException, IOException {
         ReferencedFile nodeFile;
         try {
             nodeFile = loadNodeFile(m_nodeSettings);
         } catch (InvalidSettingsException e) {
-            String error = "Unable to load node settings file for node with ID suffix "
-                    + m_metaPersistor.getNodeIDSuffix() + " (node \"" + m_node.getName() + "\"): " + e.getMessage();
+            String error =
+                "Unable to load node settings file for node with ID suffix " + m_metaPersistor.getNodeIDSuffix()
+                    + " (node \"" + m_node.getName() + "\"): " + e.getMessage();
             result.addError(error);
             getLogger().debug(error, e);
             setDirtyAfterLoad();
@@ -335,9 +334,9 @@ public class SingleNodeContainerPersistorVersion1xx
             WorkflowPersistorVersion1xx wfmPersistor = getWorkflowManagerPersistor();
             HashMap<Integer, ContainerTable> globalTableRepository = wfmPersistor.getGlobalTableRepository();
             WorkflowFileStoreHandlerRepository fileStoreHandlerRepository =
-                    wfmPersistor.getFileStoreHandlerRepository();
+                wfmPersistor.getFileStoreHandlerRepository();
             nodePersistor.load(m_node, m_parentPersistor, exec, tblRep, globalTableRepository,
-                               fileStoreHandlerRepository, result);
+                fileStoreHandlerRepository, result);
         } catch (final Exception e) {
             String error = "Error loading node content: " + e.getMessage();
             getLogger().warn(error, e);
@@ -348,8 +347,7 @@ public class SingleNodeContainerPersistorVersion1xx
             m_flowObjects = loadFlowObjects(m_nodeSettings);
         } catch (Exception e) {
             m_flowObjects = Collections.emptyList();
-            String error = "Error loading flow variables: "
-                + e.getMessage();
+            String error = "Error loading flow variables: " + e.getMessage();
             getLogger().warn(error, e);
             result.addError(error);
             setDirtyAfterLoad();
@@ -374,35 +372,33 @@ public class SingleNodeContainerPersistorVersion1xx
         exec.setProgress(1.0);
     }
 
-    /** Load factory name.
-     * @param parentSettings settings of outer workflow (old style workflows
-     *        have it in there)
+    /**
+     * Load factory name.
+     *
+     * @param parentSettings settings of outer workflow (old style workflows have it in there)
      * @param settings settings of this node, ignored in this implementation
      * @return Factory information.
      * @throws InvalidSettingsException If that fails for any reason.
      */
-    NodeAndBundleInformation loadNodeFactoryInfo(
-            final NodeSettingsRO parentSettings, final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    NodeAndBundleInformation loadNodeFactoryInfo(final NodeSettingsRO parentSettings, final NodeSettingsRO settings)
+        throws InvalidSettingsException {
         String factoryName = parentSettings.getString("factory");
 
         // This is a hack to load old J48 Nodes Model from pre-2.0 workflows
         if ("org.knime.ext.weka.j48_2.WEKAJ48NodeFactory2".equals(factoryName)
-                || "org.knime.ext.weka.j48.WEKAJ48NodeFactory".equals(factoryName)) {
+            || "org.knime.ext.weka.j48.WEKAJ48NodeFactory".equals(factoryName)) {
             factoryName = "org.knime.ext.weka.knimeJ48.KnimeJ48NodeFactory";
         }
         return new NodeAndBundleInformation(factoryName, null, null, null, null);
     }
 
     @SuppressWarnings("unchecked")
-    final NodeFactory<NodeModel> loadNodeFactory(
-            final String factoryClassName) throws InvalidSettingsException,
-            InstantiationException, IllegalAccessException,
-            ClassNotFoundException {
+    final NodeFactory<NodeModel> loadNodeFactory(final String factoryClassName) throws InvalidSettingsException,
+        InstantiationException, IllegalAccessException, ClassNotFoundException {
         // use global Class Creator utility for Eclipse "compatibility"
         try {
-            NodeFactory<NodeModel> f = (NodeFactory<NodeModel>)((GlobalClassCreator
-                    .createClass(factoryClassName)).newInstance());
+            NodeFactory<NodeModel> f =
+                (NodeFactory<NodeModel>)((GlobalClassCreator.createClass(factoryClassName)).newInstance());
             return f;
         } catch (ClassNotFoundException ex) {
             try {
@@ -420,11 +416,10 @@ public class SingleNodeContainerPersistorVersion1xx
 
             for (String s : NodeFactory.getLoadedNodeFactories()) {
                 if (s.endsWith("." + simpleClassName)) {
-                    NodeFactory<NodeModel> f = (NodeFactory<NodeModel>)((GlobalClassCreator
-                            .createClass(s)).newInstance());
-                    getLogger().warn("Substituted '" + f.getClass().getName()
-                            + "' for unknown factory '" + factoryClassName
-                            + "'");
+                    NodeFactory<NodeModel> f =
+                        (NodeFactory<NodeModel>)((GlobalClassCreator.createClass(s)).newInstance());
+                    getLogger().warn(
+                        "Substituted '" + f.getClass().getName() + "' for unknown factory '" + factoryClassName + "'");
                     return f;
                 }
             }
@@ -432,8 +427,10 @@ public class SingleNodeContainerPersistorVersion1xx
         }
     }
 
-    /** Called during load by the Node instance to determine whether or not the flow variable output port is
-     * to be populated with the FlowVariablePortObjectSpec singleton.
+    /**
+     * Called during load by the Node instance to determine whether or not the flow variable output port is to be
+     * populated with the FlowVariablePortObjectSpec singleton.
+     *
      * @return true if node's state is not idle
      * @since 2.7
      */
@@ -450,7 +447,9 @@ public class SingleNodeContainerPersistorVersion1xx
         }
     }
 
-    /** Reads sub settings object.
+    /**
+     * Reads sub settings object.
+     *
      * @param settings ...
      * @return child settings (here: null)
      * @throws InvalidSettingsException ...
@@ -459,28 +458,28 @@ public class SingleNodeContainerPersistorVersion1xx
         return null;
     }
 
-    /** Load file containing node settings.
+    /**
+     * Load file containing node settings.
+     *
      * @param settings to load from, used in sub-classes, ignored here.
      * @return pointer to "settings.xml"
      * @throws InvalidSettingsException If that fails for any reason.
      */
-    ReferencedFile loadNodeFile(final NodeSettingsRO settings)
-        throws InvalidSettingsException {
+    ReferencedFile loadNodeFile(final NodeSettingsRO settings) throws InvalidSettingsException {
         ReferencedFile nodeDir = getMetaPersistor().getNodeContainerDirectory();
         return new ReferencedFile(nodeDir, SETTINGS_FILE_NAME);
     }
 
-    /** Load configuration of node.
+    /**
+     * Load configuration of node.
+     *
      * @param settings to load from (used in sub-classes)
-     * @param nodePersistor persistor to allow this implementation to load
-     *        old-style
+     * @param nodePersistor persistor to allow this implementation to load old-style
      * @return node config
      * @throws InvalidSettingsException if that fails for any reason.
      */
-    SingleNodeContainerSettings loadSNCSettings(
-            final NodeSettingsRO settings,
-            final NodePersistorVersion1xx nodePersistor)
-        throws InvalidSettingsException {
+    SingleNodeContainerSettings loadSNCSettings(final NodeSettingsRO settings,
+        final NodePersistorVersion1xx nodePersistor) throws InvalidSettingsException {
         NodeSettingsRO s = nodePersistor.getSettings();
         SingleNodeContainerSettings sncs = new SingleNodeContainerSettings();
         // in versions before KNIME 1.2.0, there were no misc settings
@@ -488,22 +487,17 @@ public class SingleNodeContainerPersistorVersion1xx
         // we use the default, i.e. small data are kept in memory
         MemoryPolicy p;
         if (s.containsKey(Node.CFG_MISC_SETTINGS)
-                && s.getNodeSettings(Node.CFG_MISC_SETTINGS).containsKey(
-                        SingleNodeContainer.CFG_MEMORY_POLICY)) {
-            NodeSettingsRO sub =
-                    s.getNodeSettings(Node.CFG_MISC_SETTINGS);
+            && s.getNodeSettings(Node.CFG_MISC_SETTINGS).containsKey(SingleNodeContainer.CFG_MEMORY_POLICY)) {
+            NodeSettingsRO sub = s.getNodeSettings(Node.CFG_MISC_SETTINGS);
             String memoryPolicy =
-                    sub.getString(SingleNodeContainer.CFG_MEMORY_POLICY,
-                            MemoryPolicy.CacheSmallInMemory.toString());
+                sub.getString(SingleNodeContainer.CFG_MEMORY_POLICY, MemoryPolicy.CacheSmallInMemory.toString());
             if (memoryPolicy == null) {
-                throw new InvalidSettingsException(
-                        "Can't use null memory policy.");
+                throw new InvalidSettingsException("Can't use null memory policy.");
             }
             try {
                 p = MemoryPolicy.valueOf(memoryPolicy);
             } catch (IllegalArgumentException iae) {
-                throw new InvalidSettingsException(
-                        "Invalid memory policy: " + memoryPolicy);
+                throw new InvalidSettingsException("Invalid memory policy: " + memoryPolicy);
             }
         } else {
             p = MemoryPolicy.CacheSmallInMemory;
@@ -512,14 +506,14 @@ public class SingleNodeContainerPersistorVersion1xx
         return sncs;
     }
 
-    /** Load from variables.
-     * @param settings to load from, ignored in this implementation
-     *        (flow variables added in later versions)
+    /**
+     * Load from variables.
+     *
+     * @param settings to load from, ignored in this implementation (flow variables added in later versions)
      * @return an empty list.
      * @throws InvalidSettingsException if that fails for any reason.
      */
-    List<FlowObject> loadFlowObjects(
-            final NodeSettingsRO settings) throws InvalidSettingsException {
+    List<FlowObject> loadFlowObjects(final NodeSettingsRO settings) throws InvalidSettingsException {
         return Collections.emptyList();
     }
 
@@ -544,22 +538,24 @@ public class SingleNodeContainerPersistorVersion1xx
 
     static final LoadNodeModelSettingsFailPolicy translateToFailPolicy(final InternalNodeContainerState nodeState) {
         switch (nodeState) {
-        case IDLE:
-            return LoadNodeModelSettingsFailPolicy.IGNORE;
-        case EXECUTED:
-            return LoadNodeModelSettingsFailPolicy.WARN;
-        default:
-            return LoadNodeModelSettingsFailPolicy.FAIL;
+            case IDLE:
+                return LoadNodeModelSettingsFailPolicy.IGNORE;
+            case EXECUTED:
+                return LoadNodeModelSettingsFailPolicy.WARN;
+            default:
+                return LoadNodeModelSettingsFailPolicy.FAIL;
         }
     }
 
-    /** {@inheritDoc}
-     * @since 2.7 */
+    /**
+     * {@inheritDoc}
+     *
+     * @since 2.7
+     */
     @Override
     public void guessPortTypesFromConnectedNodes(final NodeAndBundleInformation nodeInfo,
-             final NodeSettingsRO additionalFactorySettings,
-             final ArrayList<PersistorWithPortIndex> upstreamNodes,
-             final ArrayList<List<PersistorWithPortIndex>> downstreamNodes) {
+        final NodeSettingsRO additionalFactorySettings, final ArrayList<PersistorWithPortIndex> upstreamNodes,
+        final ArrayList<List<PersistorWithPortIndex>> downstreamNodes) {
         if (m_node == null) {
             /* Input ports from the connection table. */
             // first is flow var port
@@ -583,8 +579,9 @@ public class SingleNodeContainerPersistorVersion1xx
                 LoadResult guessLoadResult = new LoadResult("Port type guessing for missing node \"" + nodeName + "\"");
                 outPortTypes = nodePersistor.guessOutputPortTypes(m_parentPersistor, guessLoadResult, nodeName);
                 if (guessLoadResult.hasErrors()) {
-                    getLogger().debug("Errors guessing port types for missing node \"" + nodeName + "\": "
-                          + guessLoadResult.getFilteredError("", LoadResultEntryType.Error));
+                    getLogger().debug(
+                        "Errors guessing port types for missing node \"" + nodeName + "\": "
+                            + guessLoadResult.getFilteredError("", LoadResultEntryType.Error));
                 }
             } catch (Exception e) {
                 getLogger().debug("Unable to guess port types for missing node \"" + nodeName + "\"", e);
@@ -620,8 +617,8 @@ public class SingleNodeContainerPersistorVersion1xx
                     outPortTypes[i] = BufferedDataTable.TYPE;
                 }
             }
-            MissingNodeFactory nodefactory = new MissingNodeFactory(
-                    nodeInfo, additionalFactorySettings, inPortTypes, outPortTypes);
+            MissingNodeFactory nodefactory =
+                new MissingNodeFactory(nodeInfo, additionalFactorySettings, inPortTypes, outPortTypes);
             if (getLoadVersion().ordinal() < WorkflowPersistorVersion200.VERSION_LATEST.ordinal()) {
                 nodefactory.setCopyInternDirForWorkflowVersionChange(true);
             }
@@ -630,8 +627,11 @@ public class SingleNodeContainerPersistorVersion1xx
         }
     }
 
-    /** {@inheritDoc}
-     * @since 2.7 */
+    /**
+     * {@inheritDoc}
+     *
+     * @since 2.7
+     */
     @Override
     public PortType getDownstreamPortType(final int index) {
         if (m_node != null && index < m_node.getNrInPorts()) {
@@ -640,8 +640,11 @@ public class SingleNodeContainerPersistorVersion1xx
         return null;
     }
 
-    /** {@inheritDoc}
-     * @since 2.7 */
+    /**
+     * {@inheritDoc}
+     *
+     * @since 2.7
+     */
     @Override
     public PortType getUpstreamPortType(final int index) {
         if (m_node != null && index < m_node.getNrOutPorts()) {

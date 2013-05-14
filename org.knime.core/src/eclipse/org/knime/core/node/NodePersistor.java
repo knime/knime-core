@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,16 +44,14 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   Sep 11, 2007 (wiswedel): created
  */
 package org.knime.core.node;
 
-
-
 public interface NodePersistor extends NodeContentPersistor {
-    
+
     /** Node settings XML file name. */
     static final String SETTINGS_FILE_NAME = "settings.xml";
 
@@ -68,9 +66,9 @@ public interface NodePersistor extends NodeContentPersistor {
     static final String CFG_ISCONFIGURED = "isConfigured";
 
     static final String CFG_ISEXECUTED = "isExecuted";
-    
+
     static final String CFG_NODE_MESSAGE = "node_message";
-    
+
     static final String CFG_SPEC_FILES = "spec_files";
 
     static final String CFG_HAS_SPEC_FILE = "has_output_spec";
@@ -99,22 +97,27 @@ public interface NodePersistor extends NodeContentPersistor {
         /** ignore (used when node state is idle, e.g. node not connected). */
         IGNORE
     }
-    
+
     boolean isConfigured();
+
     boolean isExecuted();
-    
-    /** Whether this node should be marked as dirty after load. This is true
-     * if either the {@link #setDirtyAfterLoad()} has been set to true or
-     * {@link NodeContentPersistor#needsResetAfterLoad()} returns true. 
+
+    /**
+     * Whether this node should be marked as dirty after load. This is true if either the {@link #setDirtyAfterLoad()}
+     * has been set to true or {@link NodeContentPersistor#needsResetAfterLoad()} returns true.
+     *
      * @return This property.
      */
     boolean isDirtyAfterLoad();
-    
-    /** Sets the dirty flag on this node. The node will also be dirty if
-     * the {@link NodeContentPersistor#setNeedsResetAfterLoad()} is called. */
+
+    /**
+     * Sets the dirty flag on this node. The node will also be dirty if the
+     * {@link NodeContentPersistor#setNeedsResetAfterLoad()} is called.
+     */
     void setDirtyAfterLoad();
-    
+
     // may return null in which case the node decides what to do.
     LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy();
+
     NodeSettingsRO getSettings();
 }

@@ -55,7 +55,6 @@ import java.util.List;
 import org.knime.core.node.Node;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 
-
 /**
  *
  * @author wiswedel, University of Konstanz

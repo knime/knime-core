@@ -100,21 +100,25 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
     /** @noreference Not public API. */
     public static final String FILESTORE_FOLDER_PREFIX = "filestore";
 
-    /** Prefix of associated port folders.
-     * (Also used in export wizard, public declaration here.) */
+    /**
+     * Prefix of associated port folders. (Also used in export wizard, public declaration here.)
+     */
     public static final String PORT_FOLDER_PREFIX = "port_";
 
-    /** Prefix of associated port folders.
-     * (Also used in export wizard, public declaration here.) */
+    /**
+     * Prefix of associated port folders. (Also used in export wizard, public declaration here.)
+     */
     public static final String INTERNAL_TABLE_FOLDER_PREFIX = "internalTables";
 
-    /** Invokes super constructor.
+    /**
+     * Invokes super constructor.
+     *
      * @param sncPersistor Forwarded.
      * @param loadVersion Version, must not be null.
-     * @param configFileRef node.xml */
-    public NodePersistorVersion200(
-            final SingleNodeContainerPersistorVersion200 sncPersistor,
-            final LoadVersion loadVersion, final ReferencedFile configFileRef) {
+     * @param configFileRef node.xml
+     */
+    public NodePersistorVersion200(final SingleNodeContainerPersistorVersion200 sncPersistor,
+        final LoadVersion loadVersion, final ReferencedFile configFileRef) {
         super(sncPersistor, loadVersion, configFileRef);
         if (loadVersion == null) {
             throw new NullPointerException("Version arg must not be null.");
@@ -128,44 +132,33 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
     private static final Set<String> PMML_PORTOBJECT_CLASSES;
     static {
         PMML_PORTOBJECT_CLASSES = new HashSet<String>();
-        PMML_PORTOBJECT_CLASSES.add(
-            "org.knime.base.node.mine.cluster.PMMLClusterPortObject");
-        PMML_PORTOBJECT_CLASSES.add("org.knime.base.node.mine.decisiontree2"
-                + ".PMMLDecisionTreePortObject");
-        PMML_PORTOBJECT_CLASSES.add(
-            "org.knime.base.node.mine.neural.mlp.PMMLNeuralNetworkPortObject");
-        PMML_PORTOBJECT_CLASSES.add(
-            "org.knime.base.node.mine.regression.PMMLRegressionPortObject");
-        PMML_PORTOBJECT_CLASSES.add(
-            "org.knime.base.node.mine.regression.pmmlgreg"
-                + ".PMMLGeneralRegressionPortObject");
-        PMML_PORTOBJECT_CLASSES.add(
-            "org.knime.base.node.mine.subgroupminer"
-                + ".PMMLAssociationRulePortObject");
-        PMML_PORTOBJECT_CLASSES.add(
-            "org.knime.base.node.mine.svm.PMMLSVMPortObject");
+        PMML_PORTOBJECT_CLASSES.add("org.knime.base.node.mine.cluster.PMMLClusterPortObject");
+        PMML_PORTOBJECT_CLASSES.add("org.knime.base.node.mine.decisiontree2" + ".PMMLDecisionTreePortObject");
+        PMML_PORTOBJECT_CLASSES.add("org.knime.base.node.mine.neural.mlp.PMMLNeuralNetworkPortObject");
+        PMML_PORTOBJECT_CLASSES.add("org.knime.base.node.mine.regression.PMMLRegressionPortObject");
+        PMML_PORTOBJECT_CLASSES
+            .add("org.knime.base.node.mine.regression.pmmlgreg" + ".PMMLGeneralRegressionPortObject");
+        PMML_PORTOBJECT_CLASSES.add("org.knime.base.node.mine.subgroupminer" + ".PMMLAssociationRulePortObject");
+        PMML_PORTOBJECT_CLASSES.add("org.knime.base.node.mine.svm.PMMLSVMPortObject");
     }
 
     /**
-     * Saves the node, node settings, and all internal structures, spec, data,
-     * and models, to the given node directory (located at the node file).
+     * Saves the node, node settings, and all internal structures, spec, data, and models, to the given node directory
+     * (located at the node file).
      *
      * @param nodeFile To write node settings to.
      * @param execMon Used to report progress during saving.
      * @throws IOException If the node file can't be found or read.
      * @throws CanceledExecutionException If the saving has been canceled.
      */
-    public static void save(final SingleNodeContainer snc,
-            final ReferencedFile nodeFile, final ExecutionMonitor execMon,
-            final boolean isSaveData)
-    throws IOException, CanceledExecutionException {
+    public static void save(final SingleNodeContainer snc, final ReferencedFile nodeFile,
+        final ExecutionMonitor execMon, final boolean isSaveData) throws IOException, CanceledExecutionException {
         final Node node = snc.getNode();
         NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
         final ReferencedFile nodeDirRef = nodeFile.getParent();
         if (nodeDirRef == null) {
-            throw new IOException("parent file of file \"" + nodeFile
-                    + "\" is not represented as object of class "
-                    + ReferencedFile.class.getSimpleName());
+            throw new IOException("parent file of file \"" + nodeFile + "\" is not represented as object of class "
+                + ReferencedFile.class.getSimpleName());
         }
         saveCustomName(node, settings);
         node.saveSettingsTo(settings);
@@ -185,8 +178,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         boolean isSaveInternals = isSaveData;
         if (isSaveInternals) {
             // do not save data for inactive nodes
-            isSaveInternals =
-                node.isInactiveBranchConsumer() || !node.isInactive();
+            isSaveInternals = node.isInactiveBranchConsumer() || !node.isInactive();
         }
         if (isSaveInternals) {
             saveNodeInternDirectory(node, nodeInternDir, settings, internalMon);
@@ -216,10 +208,9 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         execMon.setProgress(1.0);
     }
 
-    private static void savePorts(final Node node, final ReferencedFile nodeDirRef,
-            final NodeSettingsWO settings, final Set<Integer> savedTableIDs,
-            final ExecutionMonitor exec, final boolean saveData) throws IOException,
-            CanceledExecutionException {
+    private static void savePorts(final Node node, final ReferencedFile nodeDirRef, final NodeSettingsWO settings,
+        final Set<Integer> savedTableIDs, final ExecutionMonitor exec, final boolean saveData) throws IOException,
+        CanceledExecutionException {
         if (node.getNrOutPorts() == 0) {
             return;
         }
@@ -229,28 +220,22 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         // starting at port 1 (ignore default flow variable output)
         for (int i = 1; i < portCount; i++) {
             String portName = PORT_FOLDER_PREFIX + i;
-            ExecutionMonitor subProgress =
-                    exec.createSubProgress(1.0 / portCount);
-            NodeSettingsWO singlePortSetting =
-                    portSettings.addNodeSettings(portName);
+            ExecutionMonitor subProgress = exec.createSubProgress(1.0 / portCount);
+            NodeSettingsWO singlePortSetting = portSettings.addNodeSettings(portName);
             singlePortSetting.addInt("index", i);
             PortObject object = node.getOutputObject(i);
             String portDirName;
             if (object != null && saveData) {
                 portDirName = portName;
-                ReferencedFile portDirRef =
-                        new ReferencedFile(nodeDirRef, portDirName);
+                ReferencedFile portDirRef = new ReferencedFile(nodeDirRef, portDirName);
                 File portDir = portDirRef.getFile();
-                subProgress.setMessage("Cleaning directory "
-                        + portDir.getAbsolutePath());
+                subProgress.setMessage("Cleaning directory " + portDir.getAbsolutePath());
                 FileUtil.deleteRecursively(portDir);
                 portDir.mkdir();
                 if (!portDir.isDirectory() || !portDir.canWrite()) {
-                    throw new IOException("Can not write port directory "
-                            + portDir.getAbsolutePath());
+                    throw new IOException("Can not write port directory " + portDir.getAbsolutePath());
                 }
-                savePort(node, portDir, singlePortSetting, savedTableIDs,
-                        subProgress, i, saveData);
+                savePort(node, portDir, singlePortSetting, savedTableIDs, subProgress, i, saveData);
             } else {
                 portDirName = null;
             }
@@ -259,11 +244,9 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         }
     }
 
-    private static void saveInternalHeldTables(final Node node,
-            final ReferencedFile nodeDirRef, final NodeSettingsWO settings,
-            final Set<Integer> savedTableIDs, final ExecutionMonitor exec,
-            final boolean saveData)
-            throws IOException, CanceledExecutionException {
+    private static void saveInternalHeldTables(final Node node, final ReferencedFile nodeDirRef,
+        final NodeSettingsWO settings, final Set<Integer> savedTableIDs, final ExecutionMonitor exec,
+        final boolean saveData) throws IOException, CanceledExecutionException {
         BufferedDataTable[] internalTbls = node.getInternalHeldTables();
         if (internalTbls == null || !saveData) {
             return;
@@ -281,21 +264,17 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         for (int i = 0; i < internalTblsCount; i++) {
             BufferedDataTable t = internalTbls[i];
             String tblName = "table_" + i;
-            ExecutionMonitor subProgress =
-                    exec.createSubProgress(1.0 / internalTblsCount);
-            NodeSettingsWO singlePortSetting =
-                    portSettings.addNodeSettings(tblName);
+            ExecutionMonitor subProgress = exec.createSubProgress(1.0 / internalTblsCount);
+            NodeSettingsWO singlePortSetting = portSettings.addNodeSettings(tblName);
             singlePortSetting.addInt("index", i);
             String tblDirName;
             if (t != null) {
                 tblDirName = tblName;
-                ReferencedFile portDirRef =
-                        new ReferencedFile(subDirFile, tblDirName);
+                ReferencedFile portDirRef = new ReferencedFile(subDirFile, tblDirName);
                 File portDir = portDirRef.getFile();
                 portDir.mkdir();
                 if (!portDir.isDirectory() || !portDir.canWrite()) {
-                    throw new IOException("Can not write table directory "
-                            + portDir.getAbsolutePath());
+                    throw new IOException("Can not write table directory " + portDir.getAbsolutePath());
                 }
                 saveBufferedDataTable(t, savedTableIDs, portDir, exec);
             } else {
@@ -306,39 +285,33 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         }
     }
 
-    private static void savePort(final Node node, final File portDir,
-            final NodeSettingsWO settings, final Set<Integer> savedTableIDs,
-            final ExecutionMonitor exec, final int portIdx,
-            final boolean saveData) throws IOException, CanceledExecutionException {
+    private static void savePort(final Node node, final File portDir, final NodeSettingsWO settings,
+        final Set<Integer> savedTableIDs, final ExecutionMonitor exec, final int portIdx, final boolean saveData)
+        throws IOException, CanceledExecutionException {
         PortObjectSpec spec = node.getOutputSpec(portIdx);
-        settings.addString("port_spec_class", spec != null ? spec.getClass()
-                .getName() : null);
+        settings.addString("port_spec_class", spec != null ? spec.getClass().getName() : null);
         PortObject object = node.getOutputObject(portIdx);
         String summary = node.getOutputObjectSummary(portIdx);
         boolean isSaveObject = saveData && object != null;
-        settings.addString("port_object_class", isSaveObject ? object
-                .getClass().getName() : null);
+        settings.addString("port_object_class", isSaveObject ? object.getClass().getName() : null);
         if (saveData && object != null) {
             settings.addString("port_object_summary", summary);
         }
-        boolean isBDT = object instanceof BufferedDataTable
-            || node.getOutputType(portIdx).equals(BufferedDataTable.TYPE);
+        boolean isBDT =
+            object instanceof BufferedDataTable || node.getOutputType(portIdx).equals(BufferedDataTable.TYPE);
         boolean isInactive = spec instanceof InactiveBranchPortObjectSpec;
         if (isBDT && !isInactive) {
-            assert object == null || object instanceof BufferedDataTable
-                : "Expected BufferedDataTable, got "
-                    + object.getClass().getSimpleName();
+            assert object == null || object instanceof BufferedDataTable : "Expected BufferedDataTable, got "
+                + object.getClass().getSimpleName();
             // executed and instructed to save data
             if (saveData && object != null) {
-                saveBufferedDataTable((BufferedDataTable)object,
-                        savedTableIDs, portDir, exec);
+                saveBufferedDataTable((BufferedDataTable)object, savedTableIDs, portDir, exec);
             }
         } else {
             exec.setMessage("Saving specification");
             if (isSaveObject) {
-                assert spec != null
-                : "Spec is null but port object is non-null (port "
-                    + portIdx + " of node " + node.getName() + ")";
+                assert spec != null : "Spec is null but port object is non-null (port " + portIdx + " of node "
+                    + node.getName() + ")";
                 if (!(object instanceof BufferedDataTable)) {
                     String specDirName = "spec";
                     String specFileName = "spec.zip";
@@ -346,18 +319,15 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                     File specDir = new File(portDir, specDirName);
                     specDir.mkdir();
                     if (!specDir.isDirectory() || !specDir.canWrite()) {
-                        throw new IOException("Can't create directory "
-                                + specDir.getAbsolutePath());
+                        throw new IOException("Can't create directory " + specDir.getAbsolutePath());
                     }
 
                     File specFile = new File(specDir, specFileName);
                     PortObjectSpecZipOutputStream out =
-                        PortUtil.getPortObjectSpecZipOutputStream(
-                                new BufferedOutputStream(
-                                        new FileOutputStream(specFile)));
+                        PortUtil.getPortObjectSpecZipOutputStream(new BufferedOutputStream(new FileOutputStream(
+                            specFile)));
                     settings.addString("port_spec_location", specPath);
-                    PortObjectSpecSerializer serializer =
-                        PortUtil.getPortObjectSpecSerializer(spec.getClass());
+                    PortObjectSpecSerializer serializer = PortUtil.getPortObjectSpecSerializer(spec.getClass());
                     serializer.savePortObjectSpec(spec, out);
                     out.close();
                 }
@@ -366,25 +336,20 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                 File objectDir = new File(portDir, objectDirName);
                 objectDir.mkdir();
                 if (!objectDir.isDirectory() || !objectDir.canWrite()) {
-                    throw new IOException("Can't create directory "
-                            + objectDir.getAbsolutePath());
+                    throw new IOException("Can't create directory " + objectDir.getAbsolutePath());
                 }
                 String objectPath;
                 // object is BDT, but port type is not BDT.TYPE - still though..
                 if (object instanceof BufferedDataTable) {
                     objectPath = objectDirName;
-                    saveBufferedDataTable((BufferedDataTable)object,
-                            savedTableIDs, objectDir, exec);
+                    saveBufferedDataTable((BufferedDataTable)object, savedTableIDs, objectDir, exec);
                 } else {
                     String objectFileName = "portobject.zip";
                     objectPath = objectDirName + "/" + objectFileName;
                     File file = new File(objectDir, objectFileName);
                     PortObjectZipOutputStream out =
-                        PortUtil.getPortObjectZipOutputStream(
-                                new BufferedOutputStream(
-                                        new FileOutputStream(file)));
-                    PortObjectSerializer serializer =
-                            PortUtil.getPortObjectSerializer(object.getClass());
+                        PortUtil.getPortObjectZipOutputStream(new BufferedOutputStream(new FileOutputStream(file)));
+                    PortObjectSerializer serializer = PortUtil.getPortObjectSerializer(object.getClass());
                     serializer.savePortObject(object, out, exec);
                     out.close();
                 }
@@ -399,23 +364,20 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
      * @param settings
      * @param fileStoreMon
      * @param isSaveData
-     * @throws IOException */
-    private static void saveFileStoreObjects(final Node node,
-            final ReferencedFile nodeDirRef, final NodeSettings settings,
-            final ExecutionMonitor fileStoreMon, final boolean isSaveData)
-        throws IOException {
+     * @throws IOException
+     */
+    private static void saveFileStoreObjects(final Node node, final ReferencedFile nodeDirRef,
+        final NodeSettings settings, final ExecutionMonitor fileStoreMon, final boolean isSaveData) throws IOException {
         NodeSettingsWO fsSettings = settings.addNodeSettings("filestores");
         IFileStoreHandler fileStoreHandler = node.getFileStoreHandler();
         String uuidS;
         String dirNameInFlow;
         if (isSaveData && fileStoreHandler instanceof WriteFileStoreHandler) {
-            final WriteFileStoreHandler defFileStoreHandler =
-                (WriteFileStoreHandler)fileStoreHandler;
+            final WriteFileStoreHandler defFileStoreHandler = (WriteFileStoreHandler)fileStoreHandler;
             File baseDir = defFileStoreHandler.getBaseDir();
             dirNameInFlow = baseDir == null ? null : FILESTORE_FOLDER_PREFIX;
             if (dirNameInFlow != null) {
-                File saveLocation = new File(
-                        nodeDirRef.getFile(), dirNameInFlow);
+                File saveLocation = new File(nodeDirRef.getFile(), dirNameInFlow);
                 FileUtil.copyDir(baseDir, saveLocation);
             }
             uuidS = defFileStoreHandler.getStoreUUID().toString();
@@ -427,9 +389,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         fsSettings.addString("file_store_id", uuidS);
     }
 
-    private static void saveBufferedDataTable(final BufferedDataTable table,
-            final Set<Integer> savedTableIDs, final File directory,
-            final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
+    private static void saveBufferedDataTable(final BufferedDataTable table, final Set<Integer> savedTableIDs,
+        final File directory, final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
         table.save(directory, savedTableIDs, exec);
     }
 
@@ -443,24 +404,24 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         settings.addBoolean("isInactive", isInactive);
     }
 
-    private static void saveWarningMessage(
-            final Node node, final NodeSettingsWO settings) {
+    private static void saveWarningMessage(final Node node, final NodeSettingsWO settings) {
         String warnMessage = node.getWarningMessageFromModel();
         if (warnMessage != null) {
             settings.addString(CFG_NODE_MESSAGE, warnMessage);
         }
     }
 
-    /** Sub-class hook to save location of internal directory.
+    /**
+     * Sub-class hook to save location of internal directory.
+     *
      * @param node Node
      * @param nodeInternDir Directory
      * @param settings Ignored (possibly not in sub-classes)
      * @param exec exec mon.
      * @throws CanceledExecutionException If canceled.
      */
-    static void saveNodeInternDirectory(final Node node,
-            final File nodeInternDir, final NodeSettingsWO settings,
-            final ExecutionMonitor exec) throws CanceledExecutionException {
+    static void saveNodeInternDirectory(final Node node, final File nodeInternDir, final NodeSettingsWO settings,
+        final ExecutionMonitor exec) throws CanceledExecutionException {
         node.saveInternals(nodeInternDir, exec);
     }
 
@@ -470,23 +431,20 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
 
     /** {@inheritDoc} */
     @Override
-    protected boolean loadIsExecuted(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected boolean loadIsExecuted(final NodeSettingsRO settings) throws InvalidSettingsException {
         return false;
     }
 
     /** {@inheritDoc} */
     @Override
-    protected String loadWarningMessage(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected String loadWarningMessage(final NodeSettingsRO settings) throws InvalidSettingsException {
         return settings.getString(CFG_NODE_MESSAGE, null);
     }
 
     /** {@inheritDoc} */
     @Override
     public LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy() {
-        LoadNodeModelSettingsFailPolicy result =
-            getSingleNodeContainerPersistor().getModelSettingsFailPolicy();
+        LoadNodeModelSettingsFailPolicy result = getSingleNodeContainerPersistor().getModelSettingsFailPolicy();
         if (isInactive()) {
             // silently ignore invalid settings for dead branches
             // (nodes may be saved as EXECUTED but they were never actually
@@ -499,8 +457,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
 
     /** {@inheritDoc} */
     @Override
-    public PortType[] guessOutputPortTypes(final WorkflowPersistor parentPersistor,
-               final LoadResult loadResult, final String nodeName) throws IOException, InvalidSettingsException {
+    public PortType[] guessOutputPortTypes(final WorkflowPersistor parentPersistor, final LoadResult loadResult,
+        final String nodeName) throws IOException, InvalidSettingsException {
         NodeSettingsRO settings = loadSettingsFromConfigFile(parentPersistor, loadResult, nodeName);
         if (!loadHasContent(settings)) {
             return null;
@@ -526,8 +484,9 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                     cl = PortObject.class;
                 }
                 if (!PortObject.class.isAssignableFrom(cl)) {
-                    String msg = "Class \"" + cl.getSimpleName() + "\" is not a sub-class \""
-                            + PortObject.class.getSimpleName() + "\"";
+                    String msg =
+                        "Class \"" + cl.getSimpleName() + "\" is not a sub-class \"" + PortObject.class.getSimpleName()
+                            + "\"";
                     loadResult.addError(msg);
                     cl = PortObject.class;
                 }
@@ -537,18 +496,15 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         return outTypes;
     }
 
-
     /** {@inheritDoc} */
     @Override
-    boolean loadHasContent(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    boolean loadHasContent(final NodeSettingsRO settings) throws InvalidSettingsException {
         return settings.getBoolean("hasContent");
     }
 
     /** {@inheritDoc} */
     @Override
-    boolean loadIsInactive(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    boolean loadIsInactive(final NodeSettingsRO settings) throws InvalidSettingsException {
         if (getLoadVersion().ordinal() >= LoadVersion.V230.ordinal()) {
             return settings.getBoolean("isInactive", false);
         } else {
@@ -558,19 +514,16 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
 
     /** {@inheritDoc} */
     @Override
-    boolean loadIsConfigured(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    boolean loadIsConfigured(final NodeSettingsRO settings) throws InvalidSettingsException {
         return false;
     }
 
     /** {@inheritDoc} */
     @Override
-    void loadInternalHeldTables(final Node node, final ExecutionMonitor execMon,
-            final NodeSettingsRO settings,
-            final Map<Integer, BufferedDataTable> loadTblRep,
-            final HashMap<Integer, ContainerTable> tblRep,
-            final FileStoreHandlerRepository fileStoreHandlerRepository)
-    throws IOException, InvalidSettingsException, CanceledExecutionException {
+    void loadInternalHeldTables(final Node node, final ExecutionMonitor execMon, final NodeSettingsRO settings,
+        final Map<Integer, BufferedDataTable> loadTblRep, final HashMap<Integer, ContainerTable> tblRep,
+        final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException, InvalidSettingsException,
+        CanceledExecutionException {
         if (!settings.containsKey("internalTables")) {
             return;
         }
@@ -581,10 +534,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         Set<String> keySet = portSettings.keySet();
         BufferedDataTable[] result = new BufferedDataTable[keySet.size()];
         for (String s : keySet) {
-            ExecutionMonitor subProgress =
-                execMon.createSubProgress(1.0 / result.length);
-            NodeSettingsRO singlePortSetting =
-                portSettings.getNodeSettings(s);
+            ExecutionMonitor subProgress = execMon.createSubProgress(1.0 / result.length);
+            NodeSettingsRO singlePortSetting = portSettings.getNodeSettings(s);
             int index = singlePortSetting.getInt("index");
             if (index < 0 || index >= result.length) {
                 throw new InvalidSettingsException("Invalid index: " + index);
@@ -593,16 +544,13 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             if (location == null) {
                 result[index] = null;
             } else {
-                ReferencedFile portDirRef =
-                    new ReferencedFile(subDirFile, location);
+                ReferencedFile portDirRef = new ReferencedFile(subDirFile, location);
                 File portDir = portDirRef.getFile();
                 if (!portDir.isDirectory() || !portDir.canRead()) {
-                    throw new IOException("Can not read table directory "
-                            + portDir.getAbsolutePath());
+                    throw new IOException("Can not read table directory " + portDir.getAbsolutePath());
                 }
-                BufferedDataTable t = loadBufferedDataTable(portDirRef,
-                        subProgress, loadTblRep, tblRep,
-                        fileStoreHandlerRepository);
+                BufferedDataTable t =
+                    loadBufferedDataTable(portDirRef, subProgress, loadTblRep, tblRep, fileStoreHandlerRepository);
                 result[index] = t;
             }
             subProgress.setProgress(1.0);
@@ -612,13 +560,11 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
 
     /** {@inheritDoc} */
     @Override
-    IFileStoreHandler loadFileStoreHandler(final Node node,
-            final ExecutionMonitor execMon, final NodeSettingsRO settings,
-            final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository)
-    throws InvalidSettingsException {
+    IFileStoreHandler loadFileStoreHandler(final Node node, final ExecutionMonitor execMon,
+        final NodeSettingsRO settings, final WorkflowFileStoreHandlerRepository fileStoreHandlerRepository)
+        throws InvalidSettingsException {
         if (getLoadVersion().ordinal() < LoadVersion.V260.ordinal()) {
-            return super.loadFileStoreHandler(node, execMon,
-                    settings, fileStoreHandlerRepository);
+            return super.loadFileStoreHandler(node, execMon, settings, fileStoreHandlerRepository);
         }
         NodeSettingsRO fsSettings = settings.getNodeSettings("filestores");
         String dirNameInFlow = fsSettings.getString("file_store_location");
@@ -627,22 +573,19 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         } else {
             String uuidS = fsSettings.getString("file_store_id");
             UUID uuid = UUID.fromString(uuidS);
-            ReferencedFile subDirFile =
-                new ReferencedFile(getNodeDirectory(), dirNameInFlow);
-            IFileStoreHandler fsh = WriteFileStoreHandler.restore(node.getName(), uuid,
-                    fileStoreHandlerRepository, subDirFile.getFile());
+            ReferencedFile subDirFile = new ReferencedFile(getNodeDirectory(), dirNameInFlow);
+            IFileStoreHandler fsh =
+                WriteFileStoreHandler.restore(node.getName(), uuid, fileStoreHandlerRepository, subDirFile.getFile());
             return fsh;
         }
     }
 
     /** {@inheritDoc} */
     @Override
-    void loadPorts(final Node node, final ExecutionMonitor exec,
-            final NodeSettingsRO settings,
-            final Map<Integer, BufferedDataTable> loadTblRep,
-            final HashMap<Integer, ContainerTable> tblRep,
-            final FileStoreHandlerRepository fileStoreHandlerRepository)
-    throws IOException, InvalidSettingsException, CanceledExecutionException {
+    void loadPorts(final Node node, final ExecutionMonitor exec, final NodeSettingsRO settings,
+        final Map<Integer, BufferedDataTable> loadTblRep, final HashMap<Integer, ContainerTable> tblRep,
+        final FileStoreHandlerRepository fileStoreHandlerRepository) throws IOException, InvalidSettingsException,
+        CanceledExecutionException {
         final int nrOutPorts = node.getNrOutPorts();
         if (nrOutPorts == 1) {
             // only the mandatory flow variable port
@@ -659,11 +602,10 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             }
             String portDirN = singlePortSetting.getString("port_dir_location");
             if (portDirN != null) {
-                ReferencedFile portDir =
-                        new ReferencedFile(getNodeDirectory(), portDirN);
+                ReferencedFile portDir = new ReferencedFile(getNodeDirectory(), portDirN);
                 subProgress.setMessage("Port " + index);
-                loadPort(node, portDir, singlePortSetting, subProgress, index,
-                        loadTblRep, tblRep, fileStoreHandlerRepository);
+                loadPort(node, portDir, singlePortSetting, subProgress, index, loadTblRep, tblRep,
+                    fileStoreHandlerRepository);
             }
             subProgress.setProgress(1.0);
         }
@@ -678,8 +620,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         return settings.getNodeSettings("ports");
     }
 
-    int loadPortIndex(final NodeSettingsRO singlePortSetting)
-        throws InvalidSettingsException {
+    int loadPortIndex(final NodeSettingsRO singlePortSetting) throws InvalidSettingsException {
         int index = singlePortSetting.getInt("index");
         // KNIME v2.1 and before had no optional flow variable input port
         // port 0 in v2.1 is port 1 now.
@@ -689,14 +630,10 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         return index;
     }
 
-
-    void loadPort(final Node node, final ReferencedFile portDir,
-            final NodeSettingsRO settings, final ExecutionMonitor exec,
-            final int portIdx,
-            final Map<Integer, BufferedDataTable> loadTblRep,
-            final HashMap<Integer, ContainerTable> tblRep,
-            final FileStoreHandlerRepository fileStoreHandlerRepository)
-    throws IOException, InvalidSettingsException, CanceledExecutionException {
+    void loadPort(final Node node, final ReferencedFile portDir, final NodeSettingsRO settings,
+        final ExecutionMonitor exec, final int portIdx, final Map<Integer, BufferedDataTable> loadTblRep,
+        final HashMap<Integer, ContainerTable> tblRep, final FileStoreHandlerRepository fileStoreHandlerRepository)
+        throws IOException, InvalidSettingsException, CanceledExecutionException {
         String specClass = settings.getString("port_spec_class");
         String objectClass = loadPortObjectClassName(settings);
 
@@ -706,34 +643,22 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         // this can not be simplified as BDT must be loaded as BDT even if
         // the port type is not BDT (but general PortObject)
         boolean isBDT =
-                (BufferedDataTable.TYPE.getPortObjectClass().getName().equals(
-                        objectClass) && BufferedDataTable.TYPE
-                        .getPortObjectSpecClass().getName().equals(specClass))
-                        || designatedType.equals(BufferedDataTable.TYPE);
+            (BufferedDataTable.TYPE.getPortObjectClass().getName().equals(objectClass) && BufferedDataTable.TYPE
+                .getPortObjectSpecClass().getName().equals(specClass))
+                || designatedType.equals(BufferedDataTable.TYPE);
         // an InactiveBranchPortObjectSpec can be put into any port!
-        boolean isInactive =
-            InactiveBranchPortObjectSpec.class.getName().equals(specClass);
+        boolean isInactive = InactiveBranchPortObjectSpec.class.getName().equals(specClass);
         if (isBDT && !isInactive) {
-            if (specClass != null
-                    && !specClass.equals(BufferedDataTable.TYPE
-                            .getPortObjectSpecClass().getName())) {
-                throw new IOException("Actual spec class \""
-                        + specClass
-                        + "\", expected \""
-                        + BufferedDataTable.TYPE.getPortObjectSpecClass()
-                                .getName() + "\"");
+            if (specClass != null && !specClass.equals(BufferedDataTable.TYPE.getPortObjectSpecClass().getName())) {
+                throw new IOException("Actual spec class \"" + specClass + "\", expected \""
+                    + BufferedDataTable.TYPE.getPortObjectSpecClass().getName() + "\"");
             }
-            if (objectClass != null
-                    && !objectClass.equals(BufferedDataTable.TYPE
-                            .getPortObjectClass().getName())) {
-                throw new IOException("Actual object class \"" + objectClass
-                        + "\", expected \""
-                        + BufferedDataTable.TYPE.getPortObjectClass().getName()
-                        + "\"");
+            if (objectClass != null && !objectClass.equals(BufferedDataTable.TYPE.getPortObjectClass().getName())) {
+                throw new IOException("Actual object class \"" + objectClass + "\", expected \""
+                    + BufferedDataTable.TYPE.getPortObjectClass().getName() + "\"");
             }
             if (objectClass != null) {
-                object = loadBufferedDataTable(portDir, exec,
-                        loadTblRep, tblRep, fileStoreHandlerRepository);
+                object = loadBufferedDataTable(portDir, exec, loadTblRep, tblRep, fileStoreHandlerRepository);
                 ((BufferedDataTable)object).setOwnerRecursively(node);
                 spec = ((BufferedDataTable)object).getDataTableSpec();
             } else if (specClass != null) {
@@ -746,35 +671,25 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                 try {
                     cl = Class.forName(specClass);
                 } catch (ClassNotFoundException e) {
-                    throw new IOException("Can't load class \"" + specClass
-                            + "\"", e);
+                    throw new IOException("Can't load class \"" + specClass + "\"", e);
                 }
                 if (!PortObjectSpec.class.isAssignableFrom(cl)) {
-                    throw new IOException("Class \"" + cl.getSimpleName()
-                            + "\" is not a sub-class \""
-                            + PortObjectSpec.class.getSimpleName() + "\"");
+                    throw new IOException("Class \"" + cl.getSimpleName() + "\" is not a sub-class \""
+                        + PortObjectSpec.class.getSimpleName() + "\"");
                 }
-                ReferencedFile specDirRef =
-                        new ReferencedFile(portDir, settings
-                                .getString("port_spec_location"));
+                ReferencedFile specDirRef = new ReferencedFile(portDir, settings.getString("port_spec_location"));
                 File specFile = specDirRef.getFile();
                 if (!specFile.isFile()) {
-                    throw new IOException("Can't read spec file "
-                            + specFile.getAbsolutePath());
+                    throw new IOException("Can't read spec file " + specFile.getAbsolutePath());
                 }
                 PortObjectSpecZipInputStream in =
-                    PortUtil.getPortObjectSpecZipInputStream(
-                            new BufferedInputStream(
-                                    new FileInputStream(specFile)));
+                    PortUtil.getPortObjectSpecZipInputStream(new BufferedInputStream(new FileInputStream(specFile)));
                 PortObjectSpecSerializer<?> serializer =
-                        PortUtil.getPortObjectSpecSerializer(cl
-                                .asSubclass(PortObjectSpec.class));
+                    PortUtil.getPortObjectSpecSerializer(cl.asSubclass(PortObjectSpec.class));
                 spec = serializer.loadPortObjectSpec(in);
                 in.close();
                 if (spec == null) {
-                    throw new IOException("Serializer \""
-                            + serializer.getClass().getName()
-                            + "\" restored null spec ");
+                    throw new IOException("Serializer \"" + serializer.getClass().getName() + "\" restored null spec ");
                 }
             }
             if (spec != null && objectClass != null) {
@@ -782,67 +697,51 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                 try {
                     cl = Class.forName(objectClass);
                 } catch (ClassNotFoundException e) {
-                    throw new IOException("Can't load port object class \""
-                            + objectClass + "\"", e);
+                    throw new IOException("Can't load port object class \"" + objectClass + "\"", e);
                 }
                 if (!PortObject.class.isAssignableFrom(cl)) {
-                    throw new IOException("Class \"" + cl.getSimpleName()
-                            + "\" is not a sub-class \""
-                            + PortObject.class.getSimpleName() + "\"");
+                    throw new IOException("Class \"" + cl.getSimpleName() + "\" is not a sub-class \""
+                        + PortObject.class.getSimpleName() + "\"");
                 }
-                ReferencedFile objectFileRef =
-                        new ReferencedFile(portDir, settings
-                                .getString("port_object_location"));
+                ReferencedFile objectFileRef = new ReferencedFile(portDir, settings.getString("port_object_location"));
                 if (BufferedDataTable.class.equals(cl)) {
                     File objectDir = objectFileRef.getFile();
                     if (!objectDir.isDirectory()) {
-                        throw new IOException("Can't read directory "
-                                + objectDir.getAbsolutePath());
+                        throw new IOException("Can't read directory " + objectDir.getAbsolutePath());
                     }
                     // can't be true, however as BDT can only be saved
                     // for adequate port types (handled above)
                     // we leave the code here for future versions..
-                    object = loadBufferedDataTable(objectFileRef, exec,
-                            loadTblRep, tblRep, fileStoreHandlerRepository);
+                    object = loadBufferedDataTable(objectFileRef, exec, loadTblRep, tblRep, fileStoreHandlerRepository);
                     ((BufferedDataTable)object).setOwnerRecursively(node);
                 } else {
                     File objectFile = objectFileRef.getFile();
                     if (!objectFile.isFile()) {
-                        throw new IOException("Can't read file "
-                                + objectFile.getAbsolutePath());
+                        throw new IOException("Can't read file " + objectFile.getAbsolutePath());
                     }
                     // buffering both disc I/O and the gzip stream pays off
                     PortObjectZipInputStream in =
-                        PortUtil.getPortObjectZipInputStream(
-                                new BufferedInputStream(
-                                        new FileInputStream(objectFile)));
+                        PortUtil.getPortObjectZipInputStream(new BufferedInputStream(new FileInputStream(objectFile)));
                     PortObjectSerializer<?> serializer =
-                            PortUtil.getPortObjectSerializer(cl
-                                    .asSubclass(PortObject.class));
+                        PortUtil.getPortObjectSerializer(cl.asSubclass(PortObject.class));
                     object = serializer.loadPortObject(in, spec, exec);
                     in.close();
                 }
             }
         }
         if (spec != null) {
-            if (!designatedType.getPortObjectSpecClass().isInstance(spec)
-                    && !isInactive) {
-                throw new IOException("Actual port spec type (\""
-                        + spec.getClass().getSimpleName()
-                        + "\") does not match designated one (\""
-                        + designatedType.getPortObjectSpecClass()
-                                .getSimpleName() + "\")");
+            if (!designatedType.getPortObjectSpecClass().isInstance(spec) && !isInactive) {
+                throw new IOException("Actual port spec type (\"" + spec.getClass().getSimpleName()
+                    + "\") does not match designated one (\"" + designatedType.getPortObjectSpecClass().getSimpleName()
+                    + "\")");
             }
         }
         String summary = null;
         if (object != null) {
-            if (!designatedType.getPortObjectClass().isInstance(object)
-                    && !isInactive) {
-                throw new IOException("Actual port object type (\""
-                        + object.getClass().getSimpleName()
-                        + "\") does not match designated one (\""
-                        + designatedType.getPortObjectClass().getSimpleName()
-                        + "\")");
+            if (!designatedType.getPortObjectClass().isInstance(object) && !isInactive) {
+                throw new IOException("Actual port object type (\"" + object.getClass().getSimpleName()
+                    + "\") does not match designated one (\"" + designatedType.getPortObjectClass().getSimpleName()
+                    + "\")");
             }
             summary = settings.getString("port_object_summary", null);
             if (summary == null) {
@@ -865,21 +764,17 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         /* In versions < V230 different PMMLPortObject classes existed which
          * got all replaced by a general PMMLPortObject. To stay backward
          * compatible we have to load the new object for them. */
-        if (getLoadVersion().ordinal() <= LoadVersion.V230.ordinal()
-                && PMML_PORTOBJECT_CLASSES.contains(objectClass)) {
+        if (getLoadVersion().ordinal() <= LoadVersion.V230.ordinal() && PMML_PORTOBJECT_CLASSES.contains(objectClass)) {
             objectClass = PMMLPortObject.class.getName();
         }
         return objectClass;
     }
 
-    private BufferedDataTable loadBufferedDataTable(
-            final ReferencedFile objectDir, final ExecutionMonitor exec,
-            final Map<Integer, BufferedDataTable> loadTblRep,
-            final HashMap<Integer, ContainerTable> tblRep,
-            final FileStoreHandlerRepository fileStoreHandlerRepository)
-            throws CanceledExecutionException, IOException,
-            InvalidSettingsException {
+    private BufferedDataTable loadBufferedDataTable(final ReferencedFile objectDir, final ExecutionMonitor exec,
+        final Map<Integer, BufferedDataTable> loadTblRep, final HashMap<Integer, ContainerTable> tblRep,
+        final FileStoreHandlerRepository fileStoreHandlerRepository) throws CanceledExecutionException, IOException,
+        InvalidSettingsException {
         return BufferedDataTable.loadFromFile(objectDir, /* ignored in 1.2+ */
-        null, exec, loadTblRep, tblRep, fileStoreHandlerRepository);
+            null, exec, loadTblRep, tblRep, fileStoreHandlerRepository);
     }
 }

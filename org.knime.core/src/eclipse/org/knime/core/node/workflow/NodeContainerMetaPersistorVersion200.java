@@ -67,43 +67,46 @@ import org.knime.core.util.FileUtil;
  *
  * @author wiswedel, University of Konstanz
  */
-class NodeContainerMetaPersistorVersion200 extends
-        NodeContainerMetaPersistorVersion1xx {
+class NodeContainerMetaPersistorVersion200 extends NodeContainerMetaPersistorVersion1xx {
 
     private static final String CFG_STATE = "state";
+
     private static final String CFG_IS_DELETABLE = "isDeletable";
+
     private static final String CFG_JOB_MANAGER_CONFIG = "job.manager";
+
     private static final String CFG_JOB_MANAGER_DIR = "job.manager.dir";
+
     private static final String CFG_JOB_CONFIG = "execution.job";
 
-    private static final NodeLogger LOGGER =
-        NodeLogger.getLogger(NodeContainerMetaPersistorVersion200.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeContainerMetaPersistorVersion200.class);
 
-    /** Create load persistor.
+    /**
+     * Create load persistor.
+     *
      * @param settingsFile The node file (only important while load)
      * @param loadHelper As required by super constructor.
      * @param version The load version
      */
-    NodeContainerMetaPersistorVersion200(final ReferencedFile settingsFile,
-            final WorkflowLoadHelper loadHelper, final LoadVersion version) {
+    NodeContainerMetaPersistorVersion200(final ReferencedFile settingsFile, final WorkflowLoadHelper loadHelper,
+        final LoadVersion version) {
         super(settingsFile, loadHelper, version);
     }
 
     /** {@inheritDoc} */
     @Override
-    protected NodeExecutionJobManager loadNodeExecutionJobManager(
-            final NodeSettingsRO settings) throws InvalidSettingsException {
+    protected NodeExecutionJobManager loadNodeExecutionJobManager(final NodeSettingsRO settings)
+        throws InvalidSettingsException {
         if (!settings.containsKey(CFG_JOB_MANAGER_CONFIG)) {
             return null;
         }
-        return NodeExecutionJobManagerPool.load(
-                settings.getNodeSettings(CFG_JOB_MANAGER_CONFIG));
+        return NodeExecutionJobManagerPool.load(settings.getNodeSettings(CFG_JOB_MANAGER_CONFIG));
     }
 
     /** {@inheritDoc} */
     @Override
-    protected NodeSettingsRO loadNodeExecutionJobSettings(
-            final NodeSettingsRO settings) throws InvalidSettingsException {
+    protected NodeSettingsRO loadNodeExecutionJobSettings(final NodeSettingsRO settings)
+        throws InvalidSettingsException {
         if (!settings.containsKey(CFG_JOB_CONFIG)) {
             return null;
         }
@@ -112,25 +115,22 @@ class NodeContainerMetaPersistorVersion200 extends
 
     /** {@inheritDoc} */
     @Override
-    protected ReferencedFile loadJobManagerInternalsDirectory(
-            final ReferencedFile parentDir, final NodeSettingsRO settings)
-    throws InvalidSettingsException {
+    protected ReferencedFile loadJobManagerInternalsDirectory(final ReferencedFile parentDir,
+        final NodeSettingsRO settings) throws InvalidSettingsException {
         if (!settings.containsKey(CFG_JOB_MANAGER_DIR)) {
             return null;
         }
         String dir = settings.getString(CFG_JOB_MANAGER_DIR);
         if (dir == null) {
-            throw new InvalidSettingsException(
-                    "Job manager internals dir is null");
+            throw new InvalidSettingsException("Job manager internals dir is null");
         }
         return new ReferencedFile(parentDir, dir);
     }
 
     /** {@inheritDoc} */
     @Override
-    protected InternalNodeContainerState loadState(final NodeSettingsRO settings,
-            final NodeSettingsRO parentSettings)
-    throws InvalidSettingsException {
+    protected InternalNodeContainerState loadState(final NodeSettingsRO settings, final NodeSettingsRO parentSettings)
+        throws InvalidSettingsException {
         String stateString = settings.getString(CFG_STATE);
         if (stateString == null) {
             throw new InvalidSettingsException("State information is null");
@@ -138,8 +138,7 @@ class NodeContainerMetaPersistorVersion200 extends
         try {
             return InternalNodeContainerState.valueOf(stateString);
         } catch (IllegalArgumentException e) {
-            throw new InvalidSettingsException("Unable to parse state \""
-                    + stateString + "\"");
+            throw new InvalidSettingsException("Unable to parse state \"" + stateString + "\"");
         }
     }
 
@@ -151,16 +150,14 @@ class NodeContainerMetaPersistorVersion200 extends
 
     /** {@inheritDoc} */
     @Override
-    protected NodeAnnotationData loadNodeAnnotationData(
-            final NodeSettingsRO settings, final NodeSettingsRO parentSettings)
-        throws InvalidSettingsException {
+    protected NodeAnnotationData loadNodeAnnotationData(final NodeSettingsRO settings,
+        final NodeSettingsRO parentSettings) throws InvalidSettingsException {
         if (getLoadVersion().ordinal() < LoadVersion.V250.ordinal()) {
             String customName = settings.getString(KEY_CUSTOM_NAME, null);
             return NodeAnnotationData.createFromObsoleteCustomName(customName);
         } else {
             if (settings.containsKey("nodeAnnotation")) {
-                NodeSettingsRO anno =
-                    settings.getNodeSettings("nodeAnnotation");
+                NodeSettingsRO anno = settings.getNodeSettings("nodeAnnotation");
                 NodeAnnotationData result = new NodeAnnotationData(false);
                 result.load(anno, getLoadVersion());
                 return result;
@@ -171,9 +168,8 @@ class NodeContainerMetaPersistorVersion200 extends
 
     /** {@inheritDoc} */
     @Override
-    protected String loadCustomDescription(final NodeSettingsRO settings,
-            final NodeSettingsRO parentSettings)
-    throws InvalidSettingsException {
+    protected String loadCustomDescription(final NodeSettingsRO settings, final NodeSettingsRO parentSettings)
+        throws InvalidSettingsException {
         // custom description was not saved in v2.5.0 (but again in v2.5.1)
         // see bug 3034
         if (!settings.containsKey(KEY_CUSTOM_DESCRIPTION)) {
@@ -184,21 +180,18 @@ class NodeContainerMetaPersistorVersion200 extends
 
     /** {@inheritDoc} */
     @Override
-    protected NodeMessage loadNodeMessage(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected NodeMessage loadNodeMessage(final NodeSettingsRO settings) throws InvalidSettingsException {
         if (settings.containsKey("node_message")) {
             NodeSettingsRO sub = settings.getNodeSettings("node_message");
             String typeS = sub.getString("type");
             if (typeS == null) {
-                throw new InvalidSettingsException(
-                        "Message type must not be null");
+                throw new InvalidSettingsException("Message type must not be null");
             }
             Type type;
             try {
                 type = Type.valueOf(typeS);
             } catch (IllegalArgumentException iae) {
-                throw new InvalidSettingsException("Invalid message type: "
-                        + typeS, iae);
+                throw new InvalidSettingsException("Invalid message type: " + typeS, iae);
             }
             String message = sub.getString("message");
             return new NodeMessage(type, message);
@@ -206,8 +199,7 @@ class NodeContainerMetaPersistorVersion200 extends
         return null;
     }
 
-    public static void save(final NodeSettingsWO settings,
-            final NodeContainer nc, final ReferencedFile targetDir) {
+    public static void save(final NodeSettingsWO settings, final NodeContainer nc, final ReferencedFile targetDir) {
         synchronized (nc.m_nodeMutex) {
             saveNodeAnnotation(settings, nc);
             saveCustomDescription(settings, nc);
@@ -222,8 +214,7 @@ class NodeContainerMetaPersistorVersion200 extends
         }
     }
 
-    protected static void saveNodeExecutionJobManager(
-            final NodeSettingsWO settings, final NodeContainer nc) {
+    protected static void saveNodeExecutionJobManager(final NodeSettingsWO settings, final NodeContainer nc) {
         NodeExecutionJobManager jobManager = nc.getJobManager();
         if (jobManager != null) {
             NodeSettingsWO s = settings.addNodeSettings(CFG_JOB_MANAGER_CONFIG);
@@ -231,76 +222,65 @@ class NodeContainerMetaPersistorVersion200 extends
         }
     }
 
-    protected static void saveNodeExecutionJob(
-            final NodeSettingsWO settings, final NodeContainer nc) {
-        assert nc.findJobManager().canDisconnect(nc.getExecutionJob())
-        : "Execution job can be saved/disconnected";
-        nc.saveNodeExecutionJobReconnectInfo(
-                settings.addNodeSettings(CFG_JOB_CONFIG));
+    protected static void saveNodeExecutionJob(final NodeSettingsWO settings, final NodeContainer nc) {
+        assert nc.findJobManager().canDisconnect(nc.getExecutionJob()) : "Execution job can be saved/disconnected";
+        nc.saveNodeExecutionJobReconnectInfo(settings.addNodeSettings(CFG_JOB_CONFIG));
     }
 
-    protected static void saveJobManagerInternalsDirectory(
-            final NodeSettingsWO settings, final NodeContainer nc,
-            final ReferencedFile targetDir) {
+    protected static void saveJobManagerInternalsDirectory(final NodeSettingsWO settings, final NodeContainer nc,
+        final ReferencedFile targetDir) {
         NodeExecutionJobManager jobManager = nc.getJobManager();
         if (jobManager != null && jobManager.canSaveInternals()) {
             String dirName = "job_manager_internals";
             File dir = new File(targetDir.getFile(), dirName);
             if (dir.exists()) {
-                LOGGER.warn("Directory \"" + dir.getAbsolutePath() + "\""
-                        + " already exists; deleting it");
+                LOGGER.warn("Directory \"" + dir.getAbsolutePath() + "\"" + " already exists; deleting it");
                 FileUtil.deleteRecursively(dir);
             }
             if (!dir.mkdirs()) {
-                LOGGER.error("Unable to create directory \""
-                        + dir.getAbsolutePath() + "\"");
+                LOGGER.error("Unable to create directory \"" + dir.getAbsolutePath() + "\"");
                 return;
             }
             try {
-                jobManager.saveInternals(
-                        new ReferencedFile(targetDir, dirName));
+                jobManager.saveInternals(new ReferencedFile(targetDir, dirName));
                 settings.addString(CFG_JOB_MANAGER_DIR, dirName);
             } catch (Throwable e) {
                 if (!(e instanceof IOException)) {
-                    LOGGER.coding("Saving internals of job manager should "
-                            + "only throw IOException, caught "
-                            + e.getClass().getSimpleName());
+                    LOGGER.coding("Saving internals of job manager should " + "only throw IOException, caught "
+                        + e.getClass().getSimpleName());
                 }
-                String error = "Saving job manager internals failed: "
-                    + e.getMessage();
+                String error = "Saving job manager internals failed: " + e.getMessage();
                 LOGGER.error(error, e);
             }
         }
     }
 
-    protected static boolean saveState(final NodeSettingsWO settings,
-            final NodeContainer nc) {
+    protected static boolean saveState(final NodeSettingsWO settings, final NodeContainer nc) {
         String state;
         boolean mustAlsoSaveExecutorSettings = false;
         switch (nc.getInternalState()) {
-        case IDLE:
-        case UNCONFIGURED_MARKEDFOREXEC:
-            state = InternalNodeContainerState.IDLE.toString();
-            break;
-        case EXECUTED:
-            state = InternalNodeContainerState.EXECUTED.toString();
-            break;
-        case EXECUTINGREMOTELY:
-            if (nc.findJobManager().canDisconnect(nc.getExecutionJob())) {
-                // state will also be CONFIGURED only ... we set executing later
-                mustAlsoSaveExecutorSettings = true;
-            }
-            state = InternalNodeContainerState.EXECUTINGREMOTELY.toString();
-            break;
-        default:
-            state = InternalNodeContainerState.CONFIGURED.toString();
+            case IDLE:
+            case UNCONFIGURED_MARKEDFOREXEC:
+                state = InternalNodeContainerState.IDLE.toString();
+                break;
+            case EXECUTED:
+                state = InternalNodeContainerState.EXECUTED.toString();
+                break;
+            case EXECUTINGREMOTELY:
+                if (nc.findJobManager().canDisconnect(nc.getExecutionJob())) {
+                    // state will also be CONFIGURED only ... we set executing later
+                    mustAlsoSaveExecutorSettings = true;
+                }
+                state = InternalNodeContainerState.EXECUTINGREMOTELY.toString();
+                break;
+            default:
+                state = InternalNodeContainerState.CONFIGURED.toString();
         }
         settings.addString(CFG_STATE, state);
         return mustAlsoSaveExecutorSettings;
     }
 
-    protected static void saveNodeAnnotation(final NodeSettingsWO settings,
-            final NodeContainer nc) {
+    protected static void saveNodeAnnotation(final NodeSettingsWO settings, final NodeContainer nc) {
         NodeAnnotation annotation = nc.getNodeAnnotation();
         if (annotation != null && !annotation.getData().isDefault()) {
             NodeSettingsWO anno = settings.addNodeSettings("nodeAnnotation");
@@ -308,20 +288,17 @@ class NodeContainerMetaPersistorVersion200 extends
         }
     }
 
-    protected static void saveCustomDescription(final NodeSettingsWO settings,
-            final NodeContainer nc) {
+    protected static void saveCustomDescription(final NodeSettingsWO settings, final NodeContainer nc) {
         settings.addString(KEY_CUSTOM_DESCRIPTION, nc.getCustomDescription());
     }
 
-    protected static void saveIsDeletable(final NodeSettingsWO settings,
-            final NodeContainer nc) {
+    protected static void saveIsDeletable(final NodeSettingsWO settings, final NodeContainer nc) {
         if (!nc.isDeletable()) {
             settings.addBoolean(CFG_IS_DELETABLE, false);
         }
     }
 
-    protected static void saveNodeMessage(final NodeSettingsWO settings,
-            final NodeContainer nc) {
+    protected static void saveNodeMessage(final NodeSettingsWO settings, final NodeContainer nc) {
         NodeMessage message = nc.getNodeMessage();
         if (message != null && !message.getMessageType().equals(Type.RESET)) {
             NodeSettingsWO sub = settings.addNodeSettings("node_message");
