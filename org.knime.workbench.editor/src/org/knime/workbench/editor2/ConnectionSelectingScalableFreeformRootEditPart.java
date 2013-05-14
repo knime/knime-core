@@ -67,7 +67,7 @@ public class ConnectionSelectingScalableFreeformRootEditPart extends
     /**
      * Creates a MarqueeDragTracker selecting also connections.
      *
-     * @see org.eclipse.gef.EditPart#getDragTracker(org.eclipse.gef.Request)
+     * {@inheritDoc}
      */
     @Override
     public DragTracker getDragTracker(final Request req) {

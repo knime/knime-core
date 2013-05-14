@@ -144,14 +144,8 @@ public class CopyAction extends AbstractClipboardAction {
         content.setAnnotation(annotations);
         WorkflowPersistor copyPersistor = getManager().copy(false, content);
 
-        // ClipboardWorkflowManager.put(getManager(), ids);
-
         // the information about the nodes is stored in the config XML format
         // also used to store workflow information in the kflow files
-        // getEditor().getClipboard().setContents(
-        // new Object[]{getNodeSettings(nodeParts,
-        // connectionParts)},
-        // new Transfer[]{ResourceTransfer.getInstance()});
         getEditor().setClipboardContent(new ClipboardObject(copyPersistor));
 
         // update the actions

@@ -50,7 +50,6 @@
  */
 package org.knime.workbench.editor2.commands;
 
-import org.eclipse.draw2d.AbsoluteBendpoint;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.knime.core.node.workflow.ConnectionContainer;
@@ -70,8 +69,6 @@ public class NewBendpointCreateCommand extends AbstractKNIMECommand {
     private final Point m_location;
 
     private final int m_index;
-
-    private AbsoluteBendpoint m_bendpoint;
 
     private final ZoomManager m_zoomManager;
 
@@ -123,10 +120,7 @@ public class NewBendpointCreateCommand extends AbstractKNIMECommand {
         ConnectionUIInformation uiInfo = getUIInfo(connection);
         Point location = m_location.getCopy();
         WorkflowEditor.adaptZoom(m_zoomManager, location, true);
-
-        m_bendpoint = new AbsoluteBendpoint(location);
-        m_bendpoint.setLocation(location);
-        uiInfo.addBendpoint(m_bendpoint.x, m_bendpoint.y, m_index);
+        uiInfo.addBendpoint(location.x, location.y, m_index);
 
         // we need this to fire some update event up
         connection.setUIInfo(uiInfo);

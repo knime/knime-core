@@ -60,7 +60,7 @@ import org.knime.workbench.editor2.figures.SubworkflowFigure;
  */
 public class SubworkflowEditPart extends NodeContainerEditPart {
 
-    /** {inheritDoc} */
+    /** {@inheritDoc} */
     @Override
     protected IFigure createFigure() {
         // create the visuals for the node container.

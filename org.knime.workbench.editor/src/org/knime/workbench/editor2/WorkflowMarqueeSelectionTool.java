@@ -83,14 +83,6 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
      * This behaviour selects nodes completely encompassed by the marquee
      * rectangle, and all connections between those nodes.
      *
-     * @since 3.1
-     */
-    public static final int BEHAVIOR_NODES_AND_CONNECTIONS = 3;
-
-    /**
-     * This behaviour selects nodes completely encompassed by the marquee
-     * rectangle, and all connections between those nodes.
-     *
      * @since KNIME development (knime 1.2.2)
      */
     public static final int BEHAVIOR_NODES_AND_CONNECTIONS_TOUCHED = 3;
@@ -103,13 +95,13 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
 
     private Figure marqueeRectangleFigure;
 
-    private Set allChildren = new HashSet();
+    private Set<GraphicalEditPart> allChildren = new HashSet<GraphicalEditPart>();
 
-    private Collection selectedEditParts;
+    private Collection<GraphicalEditPart> selectedEditParts;
 
-    private Collection deselectedEditParts;
+    private Collection<GraphicalEditPart> deselectedEditParts;
 
-    private Collection alreadySelectedEditParts;
+    private Collection<GraphicalEditPart> alreadySelectedEditParts;
 
     private Request targetRequest;
 
@@ -144,17 +136,17 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
         super.applyProperty(key, value);
     }
 
-    private void calculateConnections(final Collection newSelections,
-            final Collection deselections) {
+    private void calculateConnections(final Collection<GraphicalEditPart> newSelections,
+            final Collection<GraphicalEditPart> deselections) {
         // determine the currently selected nodes minus the ones that are to be
         // deselected
-        Collection currentNodes = new HashSet();
+        Collection<EditPart> currentNodes = new HashSet<EditPart>();
         if (getSelectionMode() != DEFAULT_MODE) { // everything is deselected
             // in default mode
-            Iterator iter =
+            Iterator<EditPart> iter =
                     getCurrentViewer().getSelectedEditParts().iterator();
             while (iter.hasNext()) {
-                EditPart selected = (EditPart)iter.next();
+                EditPart selected = iter.next();
                 if (!(selected instanceof ConnectionEditPart)
                         && !deselections.contains(selected)) {
                     currentNodes.add(selected);
@@ -162,21 +154,19 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
             }
         }
         // add new connections to be selected to newSelections
-        Collection connections = new ArrayList();
-        for (Iterator nodes = newSelections.iterator(); nodes.hasNext();) {
-            GraphicalEditPart node = (GraphicalEditPart)nodes.next();
-            for (Iterator itr = node.getSourceConnections().iterator(); itr
-                    .hasNext();) {
-                ConnectionEditPart sourceConn = (ConnectionEditPart)itr.next();
+        Collection<ConnectionEditPart> connections = new ArrayList<ConnectionEditPart>();
+        for (Iterator<GraphicalEditPart> nodes = newSelections.iterator(); nodes.hasNext();) {
+            GraphicalEditPart node = nodes.next();
+            for (Iterator<ConnectionEditPart> itr = node.getSourceConnections().iterator(); itr.hasNext();) {
+                ConnectionEditPart sourceConn = itr.next();
                 if (sourceConn.getSelected() == EditPart.SELECTED_NONE
                         && (newSelections.contains(sourceConn.getTarget()) || currentNodes
                                 .contains(sourceConn.getTarget()))) {
                     connections.add(sourceConn);
                 }
             }
-            for (Iterator itr = node.getTargetConnections().iterator(); itr
-                    .hasNext();) {
-                ConnectionEditPart targetConn = (ConnectionEditPart)itr.next();
+            for (Iterator<ConnectionEditPart> itr = node.getTargetConnections().iterator(); itr.hasNext();) {
+                ConnectionEditPart targetConn = itr.next();
                 if (targetConn.getSelected() == EditPart.SELECTED_NONE
                         && (newSelections.contains(targetConn.getSource()) || currentNodes
                                 .contains(targetConn.getSource()))) {
@@ -187,19 +177,17 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
         newSelections.addAll(connections);
         // add currently selected connections that are to be deselected to
         // deselections
-        connections = new HashSet();
-        for (Iterator nodes = deselections.iterator(); nodes.hasNext();) {
-            GraphicalEditPart node = (GraphicalEditPart)nodes.next();
-            for (Iterator itr = node.getSourceConnections().iterator(); itr
-                    .hasNext();) {
-                ConnectionEditPart sourceConn = (ConnectionEditPart)itr.next();
+        connections = new HashSet<ConnectionEditPart>();
+        for (Iterator<GraphicalEditPart> nodes = deselections.iterator(); nodes.hasNext();) {
+            GraphicalEditPart node = nodes.next();
+            for (Iterator<ConnectionEditPart> itr = node.getSourceConnections().iterator(); itr.hasNext();) {
+                ConnectionEditPart sourceConn = itr.next();
                 if (sourceConn.getSelected() != EditPart.SELECTED_NONE) {
                     connections.add(sourceConn);
                 }
             }
-            for (Iterator itr = node.getTargetConnections().iterator(); itr
-                    .hasNext();) {
-                ConnectionEditPart targetConn = (ConnectionEditPart)itr.next();
+            for (Iterator<ConnectionEditPart> itr = node.getTargetConnections().iterator(); itr.hasNext();) {
+                ConnectionEditPart targetConn = itr.next();
                 if (targetConn.getSelected() != EditPart.SELECTED_NONE) {
                     connections.add(targetConn);
                 }
@@ -208,11 +196,11 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
         deselections.addAll(connections);
     }
 
-    private void calculateNewSelection(final Collection newSelections,
-            final Collection deselections) {
+    private void calculateNewSelection(final Collection<GraphicalEditPart> newSelections,
+            final Collection<GraphicalEditPart> deselections) {
         Rectangle marqueeRect = getMarqueeSelectionRectangle();
-        for (Iterator itr = getAllChildren().iterator(); itr.hasNext();) {
-            GraphicalEditPart child = (GraphicalEditPart)itr.next();
+        for (Iterator<GraphicalEditPart> itr = getAllChildren().iterator(); itr.hasNext();) {
+            GraphicalEditPart child = itr.next();
             IFigure figure = child.getFigure();
             if (!child.isSelectable()
                     || child.getTargetEditPart(MARQUEE_REQUEST) != child
@@ -246,22 +234,13 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
             if (included) {
                 if (isToggle()) {
                     if (wasSelected(child)) {
-                        // System.out.println("was selected");
                         deselections.add(child);
                     } else {
-                        // System.out.println("was not selected");
                         newSelections.add(child);
                     }
                 } else {
                     newSelections.add(child);
                 }
-                // if (child.getSelected() == EditPart.SELECTED_NONE
-                // || getSelectionMode() != TOGGLE_MODE)
-                // newSelections.add(child);
-                // else {
-                // deselections.add(child);
-                // System.out.println("was selected");
-                // }
             } else if (isToggle()) {
                 // if in toggle mode, a not included child must be
                 // readded if it was in the selection before
@@ -273,8 +252,7 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
             }
         }
 
-        if (marqueeBehavior == BEHAVIOR_NODES_AND_CONNECTIONS
-                || marqueeBehavior == BEHAVIOR_NODES_AND_CONNECTIONS_TOUCHED) {
+        if (marqueeBehavior == BEHAVIOR_NODES_AND_CONNECTIONS_TOUCHED) {
             calculateConnections(newSelections, deselections);
         }
     }
@@ -317,26 +295,23 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
         if (selectedEditParts == null) {
             return;
         }
-        Iterator oldEditParts = selectedEditParts.iterator();
-        while (oldEditParts.hasNext()) {
-            EditPart editPart = (EditPart)oldEditParts.next();
+        for (EditPart editPart : selectedEditParts) {
             editPart.eraseTargetFeedback(getTargetRequest());
         }
     }
 
-    private Set getAllChildren() {
+    private Set<GraphicalEditPart> getAllChildren() {
         if (allChildren.isEmpty()) {
             getAllChildren(getCurrentViewer().getRootEditPart(), allChildren);
         }
         return allChildren;
     }
 
-    private void getAllChildren(final EditPart editPart, final Set allChildren) {
-        List children = editPart.getChildren();
+    private void getAllChildren(final EditPart editPart, final Set<GraphicalEditPart> allChildren) {
+        List<GraphicalEditPart> children = editPart.getChildren();
         for (int i = 0; i < children.size(); i++) {
-            GraphicalEditPart child = (GraphicalEditPart)children.get(i);
+            GraphicalEditPart child = children.get(i);
             if (marqueeBehavior == BEHAVIOR_NODES_CONTAINED
-                    || marqueeBehavior == BEHAVIOR_NODES_AND_CONNECTIONS
                     || marqueeBehavior == BEHAVIOR_NODES_AND_CONNECTIONS_TOUCHED) {
                 allChildren.add(child);
             }
@@ -409,10 +384,9 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
                 setSelectionMode(DEFAULT_MODE);
             }
         }
-        alreadySelectedEditParts = new ArrayList();
+        alreadySelectedEditParts = new ArrayList<GraphicalEditPart>();
         alreadySelectedEditParts.addAll(getCurrentViewer()
                 .getSelectedEditParts());
-        // System.out.println("already selected set");
         return true;
     }
 
@@ -430,25 +404,20 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
         return true;
     }
 
-    static void printCollection(final Collection c) {
-        for (Object o : c) {
-            System.out.println("in list: " + o);
-        }
-    }
 
-    boolean nodesAndConnectionsEqual(final Collection c1, final Collection c2) {
+    boolean nodesAndConnectionsEqual(final Collection<GraphicalEditPart> c1, final Collection<GraphicalEditPart> c2) {
         if (c1.size() != c2.size()) {
             return false;
         }
-        for (Object o : c1) {
+        for (EditPart o : c1) {
             // only node and connection container parts are relevant
-            if (o instanceof NodeContainerEditPart
-                    || o instanceof ConnectionContainerEditPart
-                    || o instanceof AbstractWorkflowPortBarEditPart) {
+            if ((o instanceof NodeContainerEditPart)
+                    || (o instanceof ConnectionContainerEditPart)
+                    || (o instanceof AbstractWorkflowPortBarEditPart)) {
                 // now check if o is also in c2
                 boolean found = false;
-                for (Object o2 : c2) {
-                    if (o2 == o) {
+                for (EditPart o2 : c2) {
+                    if (o2.equals(o)) {
                         found = true;
                     }
                 }
@@ -466,45 +435,30 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
     }
 
     /**
-     * @see org.eclipse.gef.tools.AbstractTool#handleDragInProgress()
+     * {@inheritDoc}
      */
     @Override
     protected boolean handleDragInProgress() {
         if (isInState(STATE_DRAG | STATE_DRAG_IN_PROGRESS)) {
             showMarqueeFeedback();
             eraseTargetFeedback();
-            ArrayList previousSelection = new ArrayList();
-            ArrayList previousDeselection = new ArrayList();
-            try {
-                if (selectedEditParts != null) {
-                    previousSelection.addAll(selectedEditParts);
-                } else {
-                    performMarqueeSelect();
-                }
-                if (isToggle() && deselectedEditParts != null) {
-                    previousDeselection.addAll(deselectedEditParts);
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+            List<GraphicalEditPart> previousSelection = new ArrayList<GraphicalEditPart>();
+            List<GraphicalEditPart> previousDeselection = new ArrayList<GraphicalEditPart>();
+            if (selectedEditParts != null) {
+                previousSelection.addAll(selectedEditParts);
+            } else {
+                performMarqueeSelect();
             }
-            // System.out.println("Already selected:");
-            // printCollection(alreadySelectedEditParts);
-            calculateNewSelection(selectedEditParts = new ArrayList(),
-                    deselectedEditParts = new ArrayList());
-            // System.out.println("Current selection");
-            // printCollection(deselectedEditParts);
-            // System.out.println("Previous selection");
-            // printCollection(previousDeselection);
+            if (isToggle() && deselectedEditParts != null) {
+                previousDeselection.addAll(deselectedEditParts);
+            }
+            selectedEditParts = new ArrayList<GraphicalEditPart>();
+            deselectedEditParts = new ArrayList<GraphicalEditPart>();
+            calculateNewSelection(selectedEditParts, deselectedEditParts);
             showTargetFeedback();
             if (!nodesAndConnectionsEqual(previousSelection, selectedEditParts)
                     || !nodesAndConnectionsEqual(previousDeselection,
                             deselectedEditParts)) {
-                // System.out.println("Previous selection differs");
-                // System.out.println("Current selection");
-                // printCollection(selectedEditParts);
-                // System.out.println("Previous selection");
-                // printCollection(previousSelection);
-                // System.out.println("Selection changed");
                 performMarqueeSelect();
             }
         }
@@ -512,7 +466,7 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
     }
 
     /**
-     * @see org.eclipse.gef.tools.AbstractTool#handleFocusLost()
+     * {@inheritDoc}
      */
     @Override
     protected boolean handleFocusLost() {
@@ -582,8 +536,8 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
 
     private void performMarqueeSelect() {
         EditPartViewer viewer = getCurrentViewer();
-        Collection newSelections = new LinkedHashSet(), deselections =
-                new HashSet();
+        Collection<GraphicalEditPart> newSelections = new LinkedHashSet<GraphicalEditPart>(),
+                deselections = new HashSet<GraphicalEditPart>();
         calculateNewSelection(newSelections, deselections);
         if (getSelectionMode() != DEFAULT_MODE) {
             newSelections.addAll(viewer.getSelectedEditParts());
@@ -597,15 +551,13 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
      * only be invoked once: when the tool is being initialized.
      *
      * @param type {@link #BEHAVIOR_CONNECTIONS_TOUCHED} or
-     *            {@link #BEHAVIOR_NODES_CONTAINED} or
-     *            {@link #BEHAVIOR_NODES_AND_CONNECTIONS}
+     *            {@link #BEHAVIOR_NODES_CONTAINED}
      * @since 3.1
      */
     public void setMarqueeBehavior(final int type) {
-        if (type != BEHAVIOR_CONNECTIONS_TOUCHED
-                && type != BEHAVIOR_NODES_CONTAINED
-                && type != BEHAVIOR_NODES_AND_CONNECTIONS)
-         {
+        if ((type != BEHAVIOR_CONNECTIONS_TOUCHED)
+                && (type != BEHAVIOR_NODES_CONTAINED)
+                && (type != BEHAVIOR_NODES_AND_CONNECTIONS_TOUCHED)) {
             throw new IllegalArgumentException(
                     "Invalid marquee behaviour specified."); //$NON-NLS-1$
         }
@@ -627,13 +579,8 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
         super.setViewer(viewer);
         if (viewer instanceof GraphicalViewer) {
             setDefaultCursor(Cursors.CROSS);
-        }
-        else {
+        } else {
             setDefaultCursor(Cursors.NO);
-        // if (selectedEditParts == null) {
-        // if (mode == TOGGLE_MODE)
-        // selectedEditParts = getCurrentViewer().getSelectedEditParts();
-        // }
         }
     }
 
@@ -644,8 +591,8 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
     }
 
     private void showTargetFeedback() {
-        for (Iterator itr = selectedEditParts.iterator(); itr.hasNext();) {
-            EditPart editPart = (EditPart)itr.next();
+        for (Iterator<GraphicalEditPart> itr = selectedEditParts.iterator(); itr.hasNext();) {
+            EditPart editPart = itr.next();
             editPart.showTargetFeedback(getTargetRequest());
         }
     }
@@ -697,6 +644,7 @@ public class WorkflowMarqueeSelectionTool extends AbstractTool implements
 
             if (schedulePaint) {
                 Display.getCurrent().timerExec(DELAY, new Runnable() {
+                    @Override
                     public void run() {
                         offset++;
                         if (offset > 5) {

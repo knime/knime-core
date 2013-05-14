@@ -107,7 +107,6 @@ public class ProgressFigure extends RectangleFigure implements
         int height = 8;
         if (systemFontData.length >= 1) {
             name = systemFontData[0].getName();
-            // height = systemFontData[0].getHeight();
         }
         PROGRESS_FONT = new Font(current, name, height, SWT.NORMAL);
         QUEUED_FONT = new Font(current, name, 7, SWT.NORMAL);

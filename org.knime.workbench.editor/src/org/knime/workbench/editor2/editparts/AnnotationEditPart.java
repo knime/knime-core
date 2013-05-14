@@ -135,9 +135,8 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
      *         uses the preference page setting to determine the font size
      */
     public static int nodeAnnotationDefaultOneLineHeight() {
-        TextUtilities iNSTANCE = TextUtilities.INSTANCE;
         Font font = getNodeAnnotationDefaultFont();
-        return iNSTANCE.getStringExtents("Agq|_ÊZ", font).height;
+        return TextUtilities.INSTANCE.getStringExtents("Agq|_ÊZ", font).height;
     }
 
     /**
@@ -146,9 +145,8 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
      *         default font
      */
     public static int workflowAnnotationDefaultLineWidth(final String text) {
-        TextUtilities INSTANCE = TextUtilities.INSTANCE;
         Font font = getWorkflowAnnotationDefaultFont();
-        return INSTANCE.getStringExtents(text, font).width;
+        return TextUtilities.INSTANCE.getStringExtents(text, font).width;
     }
 
     /**
@@ -157,9 +155,8 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
      *         default font
      */
     public static int nodeAnnotationDefaultLineWidth(final String text) {
-        TextUtilities INSTANCE = TextUtilities.INSTANCE;
         Font font = getNodeAnnotationDefaultFont();
-        return INSTANCE.getStringExtents(text, font).width;
+        return TextUtilities.INSTANCE.getStringExtents(text, font).width;
     }
 
     /**
@@ -336,7 +333,6 @@ public class AnnotationEditPart extends AbstractWorkflowEditPart implements
         WorkflowRootEditPart parent = (WorkflowRootEditPart)getParent();
         parent.setLayoutConstraint(this, getFigure(), new Rectangle(
                 anno.getX(), anno.getY(), anno.getWidth(), anno.getHeight()));
-        // annoFig.revalidate();
         refreshVisuals();
         parent.refresh();
     }

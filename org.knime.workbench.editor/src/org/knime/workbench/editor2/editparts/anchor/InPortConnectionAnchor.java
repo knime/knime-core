@@ -57,7 +57,7 @@ import org.eclipse.draw2d.geometry.Rectangle;
 import org.knime.workbench.editor2.figures.AbstractPortFigure;
 
 /**
- * Anchor that lets the connection end
+ * Anchor that lets the connection end.
  *
  * @author Florian Georg, University of Konstanz
  */
@@ -81,8 +81,7 @@ public class InPortConnectionAnchor extends ChopboxAnchor {
         }
 
         AbstractPortFigure port = (AbstractPortFigure)owner;
-        Rectangle box = port.computePortShapeBounds(port.getBounds());
-        return box;
+        return port.computePortShapeBounds(port.getBounds());
     }
 
     /**

@@ -319,7 +319,7 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
             if (m_newConnectionUIInfo != null) {
                 m_connection.setUIInfo(m_newConnectionUIInfo);
             }
-        } catch (Throwable e) {
+        } catch (Exception e) {
             LOGGER.error("Connection could not be created.", e);
             m_connection = null;
             m_oldConnection = null;
@@ -333,7 +333,6 @@ public class CreateConnectionCommand extends AbstractKNIMECommand {
                     + "the following reason:\n " + e.getMessage());
 
         }
-
     }
 
     /**

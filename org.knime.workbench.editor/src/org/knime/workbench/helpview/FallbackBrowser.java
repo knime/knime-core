@@ -165,7 +165,6 @@ public class FallbackBrowser {
         try {
             m_transformer.transform(source, result);
         } catch (TransformerException ex) {
-            ex.printStackTrace();
             LOGGER.coding("Unable to process fullDescription in " + "xml: "
                     + ex.getMessage(), ex);
             return "Unable to process fullDescription in " + "xml: "

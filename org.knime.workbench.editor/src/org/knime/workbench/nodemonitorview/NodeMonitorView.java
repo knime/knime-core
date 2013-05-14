@@ -111,13 +111,8 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 public class NodeMonitorView extends ViewPart
                               implements ISelectionListener, LocationListener,
                                          NodeStateChangeListener {
-
-//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-//            VariableMonitorView.class);
-
     private Text m_title;
     private Text m_state;
-    private Composite m_infoPanel;
     private Label m_info;
     private ComboViewer m_portIndex;
     private Table m_table;
@@ -129,13 +124,6 @@ public class NodeMonitorView extends ViewPart
 
     private enum DISPLAYOPTIONS { VARS, SETTINGS, ALLSETTINGS, TABLE };
     private DISPLAYOPTIONS m_choice = DISPLAYOPTIONS.VARS;
-
-    /**
-     * The Constructor.
-     */
-    public NodeMonitorView() {
-        super();
-    }
 
     /** {@inheritDoc} */
     @Override
@@ -166,8 +154,6 @@ public class NodeMonitorView extends ViewPart
         toolbarMGR.add(pinButton);
         toolbarMGR.add(new Separator());
         // configure drop down menu
-//        ImageDescriptor ddicon = ImageDescriptor.createFromFile(
-//                this.getClass(), "icons/table.png");
         IMenuManager dropDownMenu
                           = getViewSite().getActionBars().getMenuManager();
         // drop down menu entry for outport table:
@@ -261,16 +247,16 @@ public class NodeMonitorView extends ViewPart
         m_state.setText("n/a.");
         // Panel for currently displayed information (some information
         // providers will add more elements to this):
-        m_infoPanel = new Composite(parent, SWT.NONE);
+        Composite infoPanel = new Composite(parent, SWT.NONE);
         GridData infoGrid = new GridData(SWT.FILL, SWT.TOP, true, false);
         infoGrid.horizontalSpan = 2;
-        m_infoPanel.setLayoutData(infoGrid);
-        GridLayoutFactory.swtDefaults().numColumns(3).applyTo(m_infoPanel);
-        m_info = new Label(m_infoPanel, SWT.NONE);
+        infoPanel.setLayoutData(infoGrid);
+        GridLayoutFactory.swtDefaults().numColumns(3).applyTo(infoPanel);
+        m_info = new Label(infoPanel, SWT.NONE);
         m_info.setLayoutData(
                 new GridData(SWT.LEFT, SWT.CENTER, false, false));
         m_info.setText("n/a.                        ");
-        m_portIndex = new ComboViewer(m_infoPanel);
+        m_portIndex = new ComboViewer(infoPanel);
         m_portIndex.add(new String[] {"port 0", "port 1", "port 2"});
         m_portIndex.getCombo().setEnabled(false);
         m_portIndex.addSelectionChangedListener(new ISelectionChangedListener() {
@@ -409,6 +395,8 @@ public class NodeMonitorView extends ViewPart
             m_portIndex.getCombo().setItems(vals);
             m_portIndex.getCombo().select(0);
             updateDataTable(nc, 0);
+         default:
+             throw new AssertionError("Unhandled switch case: " + m_choice);
         }
     }
 

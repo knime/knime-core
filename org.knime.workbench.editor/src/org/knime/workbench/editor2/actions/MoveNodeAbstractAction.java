@@ -144,10 +144,7 @@ public abstract class MoveNodeAbstractAction extends AbstractNodeAction {
     public abstract Point getMoveDirection();
 
     /**
-     *
-     * @see org.knime.workbench.editor2.actions.AbstractNodeAction
-     *      #runOnNodes(org.knime.workbench.editor2.
-     *      editparts.NodeContainerEditPart[])
+     * {@inheritDoc}
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
@@ -178,7 +175,7 @@ public abstract class MoveNodeAbstractAction extends AbstractNodeAction {
                     IFigure fig = ((AbstractWorkflowEditPart)selParts.get(0)).getFigure();
                     refLoc = new Point(fig.getBounds().x, fig.getBounds().y);
                 }
-                Point gridLoc = new Point(0,0);
+                Point gridLoc = new Point(0, 0);
                 Point prevGridLoc = getEditor().getPrevGridLocation(refLoc);
                 Point nextGridLoc = getEditor().getNextGridLocation(refLoc);
                 boolean toGrid = false;

@@ -163,8 +163,6 @@ public class ExecuteAction extends AbstractNodeAction {
         }
         manager.executeUpToHere(ids);
         try {
-//            Workbench.getInstance().getActiveWorkbenchWindow().getActivePage()
-//                    .showView("org.eclipse.ui.views.ProgressView");
             // Give focus to the editor again. Otherwise the actions (selection)
             // is not updated correctly.
             getWorkbenchPart().getSite().getPage().activate(getWorkbenchPart());

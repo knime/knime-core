@@ -101,9 +101,6 @@ public class MoveModelProvider extends ModelProvider {
         try {
 
             // check whether this is a knime project
-            // boolean existsworkflow =
-            // delta.getAffectedChildren()[1].getResource().getProject()
-            // .exists(new Path("workflow.knime"));
             IProject project = null;
             IFile workflowFile = null;
             for (IResourceDelta affectedChild : delta.getAffectedChildren()) {
@@ -165,7 +162,7 @@ public class MoveModelProvider extends ModelProvider {
                                     + "workflow before renaming it.");
                 }
             }
-        } catch (Throwable t) {
+        } catch (Exception e) {
             // do nothing
         }
 

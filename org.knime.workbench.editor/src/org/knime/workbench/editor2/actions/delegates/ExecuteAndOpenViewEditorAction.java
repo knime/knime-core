@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   10.12.2005 (Christoph Sieb): created
  */
@@ -56,14 +56,12 @@ import org.knime.workbench.editor2.actions.ExecuteAndOpenViewAction;
 
 /**
  * Editor action for "execute and open first view".
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class ExecuteAndOpenViewEditorAction extends AbstractEditorAction {
     /**
-     * @see 
-     * org.knime.workbench.editor2.actions.delegates.AbstractEditorAction
-     *      #createAction(org.knime.workbench.editor2.WorkflowEditor)
+     * {@inheritDoc}
      */
     @Override
     protected AbstractNodeAction createAction(final WorkflowEditor editor) {

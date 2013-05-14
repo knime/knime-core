@@ -73,10 +73,6 @@ import org.knime.workbench.ui.SyncExecQueueDispatcher;
  */
 public abstract class AbstractEditorAction implements IEditorActionDelegate,
         NodeStateChangeListener {
-
-//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-//            AbstractEditorAction.class);
-
     private WorkflowEditor m_editor;
 
     private AbstractNodeAction m_decoratedAction;

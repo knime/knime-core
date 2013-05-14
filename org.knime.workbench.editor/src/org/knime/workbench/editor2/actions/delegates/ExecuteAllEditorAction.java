@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   10.11.2005 (Florian Georg): created
  */
@@ -56,14 +56,12 @@ import org.knime.workbench.editor2.actions.ExecuteAllAction;
 
 /**
  * Editor action for "execute" all executable nodes.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class ExecuteAllEditorAction extends AbstractEditorAction {
     /**
-     * @see 
-     * org.knime.workbench.editor2.actions.delegates.AbstractEditorAction
-     *      #createAction(org.knime.workbench.editor2.WorkflowEditor)
+     * {@inheritDoc}
      */
     @Override
     protected AbstractNodeAction createAction(final WorkflowEditor editor) {

@@ -72,8 +72,6 @@ public class NodeDescriptionDialog extends Dialog {
 
     private final String m_initDescription;
 
-    private Label m_nodeIdLabel;
-
     private Text m_descriptionField;
 
     private String m_description;
@@ -94,7 +92,6 @@ public class NodeDescriptionDialog extends Dialog {
             final String descriptionInit,
             final NodeID nodeID) {
         super(parent);
-//        this.setShellStyle(SWT.APPLICATION_MODAL);
         m_nodeID = nodeID;
         m_initDescription = descriptionInit;
         m_title = dialogTitle;
@@ -127,9 +124,9 @@ public class NodeDescriptionDialog extends Dialog {
         nameData.grabExcessHorizontalSpace = true;
 
         // NodeID value (bugfix 1402)
-        m_nodeIdLabel = new Label(content, SWT.LEFT | SWT.READ_ONLY);
-        m_nodeIdLabel.setText(m_nodeID.toString());
-        m_nodeIdLabel.setLayoutData(nameData);
+        Label nodeIdLabel = new Label(content, SWT.LEFT | SWT.READ_ONLY);
+        nodeIdLabel.setText(m_nodeID.toString());
+        nodeIdLabel.setLayoutData(nameData);
 
         // Description label
         Label descriptionLabel = new Label(content, SWT.RIGHT);
@@ -144,7 +141,6 @@ public class NodeDescriptionDialog extends Dialog {
         m_descriptionField = new Text(content, SWT.MULTI | SWT.WRAP
                 | SWT.V_SCROLL);
         m_descriptionField.setLayoutData(descrData);
-        //m_descriptionField.setSize(500, 300);
         if (m_initDescription == null) {
             m_descriptionField.setText("");
         } else {

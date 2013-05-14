@@ -68,12 +68,12 @@ public class Port {
      *
      * @param type the port type
      */
-    public Port(final PortType type, String typeName) {
+    public Port(final PortType type, final String typeName) {
         m_type = type;
         m_typeName = typeName;
     }
 
-    public Port(final PortType type, String typeName, final String name) {
+    public Port(final PortType type, final String typeName, final String name) {
         this(type, typeName);
         m_name = name;
     }
@@ -85,7 +85,7 @@ public class Port {
     public PortType getType() {
         return m_type;
     }
-    
+
     /**
      * Returns the port type name (i.e. "Data")
      * @return

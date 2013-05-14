@@ -154,19 +154,17 @@ public class ExecuteAndOpenViewAction extends AbstractNodeAction {
                     NodeContainerState ncState = cont.getNodeContainerState();
                     // check if the node has finished (either executed or
                     // removed from the queue)
-                    if (state.getSource() == cont.getID() && ncState.isExecuted()) {
+                    if ((state.getSource() == cont.getID()) && ncState.isExecuted()) {
                         // if the node was successfully executed
                         // start the view
-                        if (ncState.isExecuted()) {
-                            Display.getDefault().asyncExec(new Runnable() {
-                                @Override
-                                public void run() {
-                                    // run open view action
-                                    IAction viewAction = new OpenViewAction(cont, 0);
-                                    viewAction.run();
-                                }
-                            });
-                        }
+                        Display.getDefault().asyncExec(new Runnable() {
+                            @Override
+                            public void run() {
+                                // run open view action
+                                IAction viewAction = new OpenViewAction(cont, 0);
+                                viewAction.run();
+                            }
+                        });
                     }
                     if (!ncState.isExecutionInProgress()) {
                         // in those cases remove the listener

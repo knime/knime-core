@@ -108,11 +108,6 @@ public class NodeConnectionContainerDeleteAction extends DeleteAction {
         NodeContainerEditPart[] nodeParts = AbstractNodeAction.filterObjects(
                 NodeContainerEditPart.class, objects);
 
-        /* can't currently be marked ... */
-//        AnnotationEditPart[] annotationParts =
-//            AbstractNodeAction.filterObjects(
-//                    AnnotationEditPart.class, objects);
-
         WorkflowManager manager =
             ((WorkflowEditor)getWorkbenchPart()).getWorkflowManager();
         DeleteCommand cmd = new DeleteCommand(objects, manager);

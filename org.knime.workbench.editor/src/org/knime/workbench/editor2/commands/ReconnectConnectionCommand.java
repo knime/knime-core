@@ -78,10 +78,6 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
  * @author Christoph Sieb, University of Konstanz
  */
 public class ReconnectConnectionCommand extends AbstractKNIMECommand {
-
-//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-//            ReconnectConnectionCommand.class);
-
     private DeleteCommand m_deleteCommand;
 
     private CreateConnectionCommand m_createCommand;
@@ -124,10 +120,8 @@ public class ReconnectConnectionCommand extends AbstractKNIMECommand {
 
         m_newTarget = target.getID();
 
-        if (m_oldTarget.equals(m_newTarget)) {
-            if (oldConnection.getDestPort() == target.getIndex()) {
-                m_identical = true;
-            }
+        if (m_oldTarget.equals(m_newTarget) && (oldConnection.getDestPort() == target.getIndex())) {
+            m_identical = true;
         }
 
         // create the create command
@@ -198,7 +192,7 @@ public class ReconnectConnectionCommand extends AbstractKNIMECommand {
                 if (newExecuted) {
                     message.append(" the new target node");
                 }
-                message.append("!");
+                message.append('!');
             }
             MessageDialogWithToggle msgD = CreateConnectionCommand
                 .openReconnectConfirmDialog(m_confirm,

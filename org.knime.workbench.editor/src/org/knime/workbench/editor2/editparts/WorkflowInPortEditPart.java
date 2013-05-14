@@ -75,19 +75,15 @@ import org.knime.workbench.editor2.model.WorkflowPortBar;
  * Edit part representing a {@link WorkflowInPort}.
  * Model: {@link WorkflowInPort}
  * View: {@link WorkflowInPortFigure}
- * Controller: {@link WorkflowInPortEditPart} 
- * 
+ * Controller: {@link WorkflowInPortEditPart}
+ *
  * @author Fabian Dill, University of Konstanz
  */
 public class WorkflowInPortEditPart extends AbstractPortEditPart {
-
-//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-//            WorkflowInPortEditPart.class);
-
     private static final String PORT_NAME = "Workflow In Port";
 
     private boolean m_isSelected = false;
-    
+
     /**
      *
      * @param type port type
@@ -120,12 +116,12 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
         if (getParent() == null) {
             return null;
         }
-        // if the referring WorkflowManager is displayed as a meta node, then  
+        // if the referring WorkflowManager is displayed as a meta node, then
         // the parent is a NodeContainerEditPart
         if (getParent() instanceof NodeContainerEditPart) {
             return (NodeContainer)getParent().getModel();
         }
-        // if the referring WorkflowManager is the "root" workflow manager of 
+        // if the referring WorkflowManager is the "root" workflow manager of
         // the open editor then the parent is a WorkflowRootEditPart
         return ((WorkflowPortBar)getParent().getModel()).getWorkflowManager();
     }
@@ -141,15 +137,15 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
     }
 
     /**
-     * Creates {@link WorkflowInPortFigure}, sets the tooltip and adds a 
+     * Creates {@link WorkflowInPortFigure}, sets the tooltip and adds a
      * {@link MouseListener} to the figure in order to detect if the figure was
-     * clicked and a context menu entry should be provided to open the port 
+     * clicked and a context menu entry should be provided to open the port
      * view.
-     * 
+     *
      * @see WorkflowContextMenuProvider#buildContextMenu(
      * org.eclipse.jface.action.IMenuManager)
      * @see WorkflowInPortFigure
-     *  
+     *
      * {@inheritDoc}
      */
     @Override
@@ -163,27 +159,27 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
             public void mouseDoubleClicked(final MouseEvent me) { }
 
             /**
-             * Set the selection state of the figure to true. This is 
-             * evaluated in the context menu. If it is selected a context menu 
-             * entry is provided to open the port view. 
-             * 
+             * Set the selection state of the figure to true. This is
+             * evaluated in the context menu. If it is selected a context menu
+             * entry is provided to open the port view.
+             *
              * @see WorkflowContextMenuProvider#buildContextMenu(
              *  org.eclipse.jface.action.IMenuManager)
-             *  
+             *
              * {@inheritDoc}
              */
             public void mousePressed(final MouseEvent me) {
                 setSelected(true);
             }
-            
+
             /**
-             * Set the selection state of the figure to true. This is 
-             * evaluated in the context menu. If it is selected a context menu 
-             * entry is provided to open the port view. 
-             * 
+             * Set the selection state of the figure to true. This is
+             * evaluated in the context menu. If it is selected a context menu
+             * entry is provided to open the port view.
+             *
              * @see WorkflowContextMenuProvider#buildContextMenu(
              *  org.eclipse.jface.action.IMenuManager)
-             *  
+             *
              * {@inheritDoc}
              */
             public void mouseReleased(final MouseEvent me) {
@@ -196,15 +192,15 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
 
     /**
      * The context menu ({@link WorkflowContextMenuProvider#buildContextMenu(
-     * org.eclipse.jface.action.IMenuManager)}) reads and resets the selection 
-     * state. This state is read by the mouse listener added in 
+     * org.eclipse.jface.action.IMenuManager)}) reads and resets the selection
+     * state. This state is read by the mouse listener added in
      * {@link #createFigure()}.
-     * 
+     *
      * @return true if the underlying workflow in port figure was clicked, false
      *  otherwise
      * @see WorkflowContextMenuProvider#buildContextMenu(
      *  org.eclipse.jface.action.IMenuManager)
-     *  
+     *
      */
     public boolean isSelected() {
         return m_isSelected;
@@ -212,12 +208,12 @@ public class WorkflowInPortEditPart extends AbstractPortEditPart {
 
     /**
      * The context menu ({@link WorkflowContextMenuProvider#buildContextMenu(
-     * org.eclipse.jface.action.IMenuManager)}) reads and resets the selection 
-     * state. This state is set by the mouse listener added in 
+     * org.eclipse.jface.action.IMenuManager)}) reads and resets the selection
+     * state. This state is set by the mouse listener added in
      * {@link #createFigure()}.
-     * 
+     *
      * @param isSelected true if the figure was clicked, false otherwise.
-     * 
+     *
      * @see WorkflowContextMenuProvider#buildContextMenu(
      *  org.eclipse.jface.action.IMenuManager)
      */

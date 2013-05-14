@@ -114,7 +114,7 @@ public class OpenWorkflowPortViewAction extends OpenPortViewAction {
     @Override
     public void run() {
         LOGGER.debug("Open Workflow Port View " + getNodeContainer().getName()
-                + " (#" + getPortIndex()+ ")");
+                + " (#" + getPortIndex() + ")");
         m_port.openPortView(m_port.getPortName());
     }
 

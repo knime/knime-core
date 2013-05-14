@@ -95,7 +95,7 @@ public class CreateMetaNodeCommand extends AbstractKNIMECommand {
         super(manager);
         m_persistor = persistor;
         m_location = location;
-        m_snapToGrid= snapToGrid;
+        m_snapToGrid = snapToGrid;
     }
 
     /** We can execute, if all components were 'non-null' in the constructor.
@@ -123,7 +123,7 @@ public class CreateMetaNodeCommand extends AbstractKNIMECommand {
                 info.setIsDropLocation(true);
                 container.setUIInformation(info);
             }
-        } catch (Throwable t) {
+        } catch (Exception t) {
             // if fails notify the user
             String error = "Meta node cannot be created";
             LOGGER.debug(error + ": " + t.getMessage(), t);

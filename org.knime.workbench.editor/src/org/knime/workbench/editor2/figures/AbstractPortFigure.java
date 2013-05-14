@@ -95,7 +95,7 @@ public abstract class AbstractPortFigure extends Shape {
         }
     }
 
-    private static Color COLOR_FLOWVAR_PORT = null;
+    private static Color colorFlowvarPort = null;
 
     private int m_nrOfPorts;
 
@@ -228,7 +228,6 @@ public abstract class AbstractPortFigure extends Shape {
             if (!m_isMetaNodePort && m_portIdx == 0 && !m_isConnected
                     && !showFlowVarPorts()) {
                 color = Display.getCurrent().getSystemColor(SWT.COLOR_WHITE);
-                // color = new Color(Display.getCurrent(), 80, 80, 80);
             } else {
                 color = getFlowVarPortColor();
             }
@@ -246,12 +245,11 @@ public abstract class AbstractPortFigure extends Shape {
      *
      * @return the color used to color flow variable ports.
      */
-    public static Color getFlowVarPortColor() {
-        if (COLOR_FLOWVAR_PORT == null) {
-            COLOR_FLOWVAR_PORT =
-                    Display.getCurrent().getSystemColor(SWT.COLOR_RED);
+    public static synchronized Color getFlowVarPortColor() {
+        if (colorFlowvarPort == null) {
+            colorFlowvarPort = Display.getCurrent().getSystemColor(SWT.COLOR_RED);
         }
-        return COLOR_FLOWVAR_PORT;
+        return colorFlowvarPort;
     }
 
     /**

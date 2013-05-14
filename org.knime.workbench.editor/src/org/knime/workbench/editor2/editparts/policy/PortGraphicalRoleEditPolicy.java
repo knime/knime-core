@@ -55,7 +55,6 @@ import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.editpolicies.GraphicalNodeEditPolicy;
 import org.eclipse.gef.requests.CreateConnectionRequest;
 import org.eclipse.gef.requests.ReconnectRequest;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.commands.CreateConnectionCommand;
 import org.knime.workbench.editor2.commands.ReconnectConnectionCommand;
@@ -82,9 +81,6 @@ import org.knime.workbench.editor2.model.WorkflowPortBar;
  * @author Christoph Sieb, University of Konstanz
  */
 public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
-
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-            PortGraphicalRoleEditPolicy.class);
     /**
      * This tries to initialize the command to create a connection as far as
      * possible. However, it is completed by
@@ -126,12 +122,7 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
             cmd.setStartedOnOutPort(true);
         } else if (getHost() instanceof NodeInPortEditPart
                 || getHost() instanceof WorkflowOutPortEditPart) {
-            // // request started on in port ?
-            // cmd.setTargetNode(nodePart);
-            // cmd.setTargetPortID(((NodeInPortEditPart) getHost()).getId());
-            // cmd.setStartedOnOutPort(false);
             return null;
-            // LOGGER.debug("Started connection on in-port...");
         }
 
         // we need the manager to execute the command
@@ -167,7 +158,6 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
                 || target instanceof WorkflowInPortEditPart) {
             return null;
 
-//             LOGGER.debug("Ending connection on out-port...");
         } else if (target instanceof NodeInPortEditPart
                 || target instanceof WorkflowOutPortEditPart) {
             cmd.setTargetPortID(((AbstractPortEditPart)target).getIndex());
@@ -181,14 +171,10 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
                 cmd.setSourcePortID(-1);
                 cmd.setSourceNode((NodeContainerEditPart)target);
             }
-            // LOGGER.debug("Ending connection on NODE...");
-
         } else {
             return null;
 
         }
-
-        // LOGGER.debug("Command is executable: " + cmd.canExecute());
 
         return cmd;
 
@@ -200,28 +186,6 @@ public class PortGraphicalRoleEditPolicy extends GraphicalNodeEditPolicy {
      */
     @Override
     protected Command getReconnectSourceCommand(final ReconnectRequest req) {
-
-        LOGGER.debug("getReconnectSourceCommand. Host: "
-                + getHost() + ". TargetEditPart: " + getTargetEditPart(req));
-//        // get the connection to change
-//        ConnectionContainerEditPart connection
-//            = (ConnectionContainerEditPart)getHost();
-//
-//        // get the workflow manager
-//        if (!(getHost() instanceof AbstractPortEditPart)) {
-//            return null;
-//        }
-//        NodeContainerEditPart nodePart = (NodeContainerEditPart)getHost()
-//                .getParent();
-//        WorkflowManager manager = ((WorkflowRootEditPart)nodePart.getParent())
-//                .getWorkflowManager();
-//
-//        ReconnectConnectionCommand reconnectCommand
-        // = new ReconnectConnectionCommand(
-//                connection, manager, null, null);
-//
-//        return reconnectCommand;
-
         return null;
     }
 

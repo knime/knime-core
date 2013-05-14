@@ -509,6 +509,8 @@ public class NodeContainerFigure extends RectangleFigure {
             m_progressFigure.setProgressMode(ProgressMode.PAUSED);
             m_progressFigure.setStateMessage("Paused");
             break;
+        default:
+            throw new AssertionError("Unhandled switch case: " + mode);
         }
     }
 
@@ -592,6 +594,8 @@ public class NodeContainerFigure extends RectangleFigure {
                 case ERROR:
                     m_infoWarnErrorPanel.setError(msg.getMessage());
                     break;
+                default:
+                    throw new AssertionError("Unhandled switch case: " + msg.getMessageType());
             }
         }
         m_statusFigure.repaint();
@@ -607,11 +611,7 @@ public class NodeContainerFigure extends RectangleFigure {
         }
         for (final Object contentFigure : getChildren()) {
             if (((IFigure)contentFigure).containsPoint(x, y)) {
-                if (contentFigure == m_headingContainer) {
-                    return false;
-                } else {
-                    return true;
-                }
+                return (contentFigure != m_headingContainer);
             }
         }
         return false;
@@ -829,15 +829,12 @@ public class NodeContainerFigure extends RectangleFigure {
             setOpaque(false);
             setFill(false);
 
-            // setLayoutManager(new BorderLayout());
 
             // the "frame", that indicates the node type
             m_backgroundIcon = new Label();
-            // m_backgroundIcon.setIconAlignment(PositionConstants.CENTER);
 
             // create a label that shows the nodes' icon
             m_iconFigure = new Label();
-            // m_iconFigure.setBorder(new RaisedBorder(2, 2, 2, 2));
             m_iconFigure.setOpaque(false);
 
             // create the delete icon
@@ -980,9 +977,6 @@ public class NodeContainerFigure extends RectangleFigure {
             }
 
             m_iconFigure.setIcon(icon);
-            // m_iconFigure.setIconAlignment(PositionConstants.CENTER);
-            // m_iconFigure.setIconDimension(new Dimension(16, 16));
-
             m_iconFigure.revalidate();
         }
 
@@ -1067,7 +1061,7 @@ public class NodeContainerFigure extends RectangleFigure {
             // check if there is already a warning sign
             boolean alreadyInserted = false;
             for (final Figure child : children) {
-                if (child == m_warningFigure) {
+                if (child.equals(m_warningFigure)) {
                     alreadyInserted = true;
                 }
             }
@@ -1084,7 +1078,7 @@ public class NodeContainerFigure extends RectangleFigure {
                     final Figure figure = children.get(0);
                     // in case of the error sign, the warning sign has to be
                     // inserted before the error sign
-                    if (figure == m_errorFigure) {
+                    if (figure.equals(m_errorFigure)) {
                         add(m_warningFigure, 0);
                     } else {
                         // else append at the end (after the info sign)
@@ -1131,10 +1125,10 @@ public class NodeContainerFigure extends RectangleFigure {
             if (getChildren().size() == 0) {
                 return new Dimension(0, 0);
             }
-            org.eclipse.swt.graphics.Rectangle err_bnds = ERROR_SIGN.getBounds();
-            org.eclipse.swt.graphics.Rectangle wrn_bnds = WARNING_SIGN.getBounds();
-            int h = Math.max(0, Math.max(err_bnds.height, wrn_bnds.height));
-            int w = Math.max(0, Math.max(err_bnds.width, wrn_bnds.width));
+            org.eclipse.swt.graphics.Rectangle errBnds = ERROR_SIGN.getBounds();
+            org.eclipse.swt.graphics.Rectangle wrnBnds = WARNING_SIGN.getBounds();
+            int h = Math.max(0, Math.max(errBnds.height, wrnBnds.height));
+            int w = Math.max(0, Math.max(errBnds.width, wrnBnds.width));
             return new Dimension(w, h);
         }
     }
@@ -1167,11 +1161,9 @@ public class NodeContainerFigure extends RectangleFigure {
             // font is bigger than the slot for the image.
             m_label.setFont(NODE_FONT);
 
-            // m_label.setIconAlignment(PositionConstants.CENTER);
             add(m_label);
             setOpaque(false);
             setIcon(RED);
-            // setIcon(null);
 
         }
 
@@ -1213,7 +1205,6 @@ public class NodeContainerFigure extends RectangleFigure {
             setLayoutManager(layout);
             m_label = new Label();
 
-            // m_label.setIconAlignment(PositionConstants.CENTER);
             add(m_label);
             setOpaque(false);
         }
@@ -1348,8 +1339,7 @@ public class NodeContainerFigure extends RectangleFigure {
         }
         final int xDiff = (thiswidth - m_symbolFigure.getPreferredSize().width) / 2;
 
-        final Point r = new Point(xDiff, yDiff);
-        return r;
+        return new Point(xDiff, yDiff);
     }
 
 }

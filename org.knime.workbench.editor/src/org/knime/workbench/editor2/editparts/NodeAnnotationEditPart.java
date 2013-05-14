@@ -45,13 +45,6 @@ public class NodeAnnotationEditPart extends AnnotationEditPart {
     private Font m_lastDefaultFont = null;
 
     /**
-     *
-     */
-    public NodeAnnotationEditPart() {
-        // TODO Auto-generated constructor stub
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
@@ -148,6 +141,6 @@ public class NodeAnnotationEditPart extends AnnotationEditPart {
     }
 
     public static int getNodeAnnotationMinHeight() {
-        return NodeAnnotationEditPart.nodeAnnotationDefaultOneLineHeight();
+        return AnnotationEditPart.nodeAnnotationDefaultOneLineHeight();
     }
 }

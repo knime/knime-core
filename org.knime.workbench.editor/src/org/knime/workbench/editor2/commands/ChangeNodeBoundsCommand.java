@@ -96,12 +96,6 @@ public class ChangeNodeBoundsCommand extends AbstractKNIMECommand {
         m_nodeID = container.getID();
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public boolean canExecute() {
-        return super.canExecute();
-    }
-
     /**
      * Sets the new bounds.
      *

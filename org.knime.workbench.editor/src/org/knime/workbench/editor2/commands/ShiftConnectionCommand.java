@@ -41,10 +41,10 @@ public class ShiftConnectionCommand extends AbstractKNIMECommand {
 
     private final NodeID m_nodeID;
 
-    /** for undo */
+    /* for undo */
     private int m_oldPort = -1;
 
-    /** for undo */
+    /* for undo */
     private int m_newPort = -1;
 
     /**
@@ -72,11 +72,9 @@ public class ShiftConnectionCommand extends AbstractKNIMECommand {
                 lastConnPort = p;
             }
         }
-        if (lastConnPort < 0 && startIdx > 0) {
+        if ((lastConnPort < 0) && (startIdx > 0) && (getHostWFM().getIncomingConnectionFor(m_nodeID, 0) != null)) {
             // test the implicit flow var port, if it is the only connected port
-            if (getHostWFM().getIncomingConnectionFor(m_nodeID, 0) != null) {
-                lastConnPort = 0;
-            }
+            lastConnPort = 0;
         }
         return lastConnPort;
     }

@@ -79,10 +79,6 @@ import org.knime.workbench.explorer.view.ContentObject;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public class SaveAsMetaNodeTemplateAction extends AbstractNodeAction {
-
-//    private static final NodeLogger LOGGER =
-//        NodeLogger.getLogger(SaveAsMetaNodeTemplateAction.class);
-
     /** Action ID. */
     public static final String ID = "knime.action.meta_node_save_as_template";
 

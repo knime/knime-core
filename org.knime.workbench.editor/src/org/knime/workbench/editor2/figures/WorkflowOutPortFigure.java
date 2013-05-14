@@ -63,11 +63,7 @@ import org.knime.core.node.port.PortType;
  * @author Fabian Dill, University of Konstanz
  */
 public class WorkflowOutPortFigure extends AbstractPortFigure {
-
-    // private static final NodeLogger LOGGER = NodeLogger.getLogger(
-    // WorkflowOutPortFigure.class);
-
-    WorkflowPortLocator m_portLocator;
+    private WorkflowPortLocator m_portLocator;
 
     /**
      *

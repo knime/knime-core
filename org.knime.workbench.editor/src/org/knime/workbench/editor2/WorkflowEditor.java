@@ -764,17 +764,6 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     /**
-     * Configures the graphical viewer.
-     *
-     * @see org.eclipse.gef.ui.parts.GraphicalEditor#configureGraphicalViewer()
-     */
-    @Override
-    protected void configureGraphicalViewer() {
-        super.configureGraphicalViewer();
-
-    }
-
-    /**
      * @return The graphical viewer in this editor
      * @see org.eclipse.gef.ui.parts.GraphicalEditor#getGraphicalViewer()
      */
@@ -855,38 +844,32 @@ public class WorkflowEditor extends GraphicalEditor implements
                     // check if the editor should be disposed
                     // non-null if set by workflow runnable above
                     if (m_manager == null) {
-                    if (loadWorflowRunnable.hasLoadingBeenCanceled()) {
-                        final String cancelError =
-                            loadWorflowRunnable.getLoadingCanceledMessage();
-                        SwingUtilities.invokeLater(new Runnable() {
-                            /** {@inheritDoc} */
-                            @Override
-                            public void run() {
-                                JOptionPane.showMessageDialog(null,
-                                        cancelError,
-                                        "Editor could not be opened",
-                                        JOptionPane.ERROR_MESSAGE);
-//                                    ErrorDialog.openError(Display
-//                                            .getDefault()
-//                                            .getActiveShell(),
-//                                            "Editor could not be opened",
-//                                            cancelError, null);
-
-                            }
-                        });
-                        Display.getDefault().asyncExec(new Runnable() {
-                            /** {@inheritDoc} */
-                            @Override
-                            public void run() {
-                                getEditorSite().getPage().closeEditor(
-                                        WorkflowEditor.this, false);
-                            }
-                        });
-                        throw new OperationCanceledException(cancelError);
-                    } else if (loadWorflowRunnable.getThrowable() != null) {
-                        throw new RuntimeException(
-                                loadWorflowRunnable.getThrowable());
-                    }
+                        if (loadWorflowRunnable.hasLoadingBeenCanceled()) {
+                            final String cancelError =
+                                loadWorflowRunnable.getLoadingCanceledMessage();
+                            SwingUtilities.invokeLater(new Runnable() {
+                                /** {@inheritDoc} */
+                                @Override
+                                public void run() {
+                                    JOptionPane.showMessageDialog(null,
+                                            cancelError,
+                                            "Editor could not be opened",
+                                            JOptionPane.ERROR_MESSAGE);
+                                }
+                            });
+                            Display.getDefault().asyncExec(new Runnable() {
+                                /** {@inheritDoc} */
+                                @Override
+                                public void run() {
+                                    getEditorSite().getPage().closeEditor(
+                                            WorkflowEditor.this, false);
+                                }
+                            });
+                            throw new OperationCanceledException(cancelError);
+                        } else if (loadWorflowRunnable.getThrowable() != null) {
+                            throw new RuntimeException(
+                                    loadWorflowRunnable.getThrowable());
+                        }
                     }
                     ProjectWorkflowMap.putWorkflow(m_fileResource, m_manager);
                 }
@@ -1081,7 +1064,7 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
     /**
-     * Sets the snap functionality and zoomlevel
+     * Sets the snap functionality and zoomlevel.
      */
     private void loadProperties() {
         // Snap to Geometry property
@@ -1174,7 +1157,7 @@ public class WorkflowEditor extends GraphicalEditor implements
         LOGGER.debug("Saving workflow ...");
 
         // Exception messages from the inner thread
-        final StringBuffer exceptionMessage = new StringBuffer();
+        final StringBuilder exceptionMessage = new StringBuilder();
 
         if (fileResource == null && m_parentEditor != null) {
             m_parentEditor.doSave(monitor);
@@ -1229,7 +1212,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             LOGGER.error("Could not save workflow: " + exceptionMessage, e);
 
             // inform the user
-            if (exceptionMessage.toString().trim().length() > 0) {
+            if (exceptionMessage.length() > 0) {
                 showInfoMessage("Workflow could not be saved ...",
                         exceptionMessage.toString());
             }
@@ -1449,9 +1432,6 @@ public class WorkflowEditor extends GraphicalEditor implements
             // if this is a meta node - derive settings from parent
             if (m_fileResource == null && m_parentEditor != null) {
                 settings = m_parentEditor.getCurrentEditorSettings();
-                if (settings == null) {
-                    settings = getEditorSettingsDefault();
-                }
             } else {
                 // this is an old workflow: don't show or enable grid
                 settings = getEditorSettingsDefault();
@@ -1790,7 +1770,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             }
             EditPart parent = ep.getParent();
             // avoid endless loops
-            if (parent == null || ep == parent) {
+            if (parent == null || parent.equals(ep)) {
                 return false;
             }
             ep = parent;
@@ -2232,7 +2212,8 @@ public class WorkflowEditor extends GraphicalEditor implements
                 case CONNECTION_ADDED:
                     getViewer().getContents().refresh();
                     break;
-                default: // no further actions, all handled in edit policies etc
+                default:
+                    // all other event types are handled somewhere else, e.g. in edit policies etc
                 }
                 markDirty();
                 updateActions();
@@ -2259,7 +2240,7 @@ public class WorkflowEditor extends GraphicalEditor implements
             getViewer().getContents().refresh();
             break;
         default:
-            // ignore
+            throw new AssertionError("Unhandeled switch case: " + e.getProperty());
         }
     }
 

@@ -63,10 +63,6 @@ import org.eclipse.swt.graphics.Image;
  * @author Florian Georg, University of Konstanz
  */
 public class WorkflowFigure extends FreeformLayeredPane {
-
-//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-//            WorkflowFigure.class);
-
     private ProgressToolTipHelper m_progressToolTipHelper;
 
     private Image m_jobManagerFigure;

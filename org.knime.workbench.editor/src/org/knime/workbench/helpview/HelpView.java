@@ -101,13 +101,6 @@ public class HelpView extends ViewPart implements ISelectionListener,
     private IStructuredSelection m_lastSelection;
 
     /**
-     * the constructor.
-     */
-    public HelpView() {
-        super();
-    }
-
-    /**
      * {@inheritDoc}
      */
     @Override
@@ -184,8 +177,8 @@ public class HelpView extends ViewPart implements ISelectionListener,
             if (useSingleLine) {
                 // add the prefix to make it a html page
                 content.append("<html><head>");
-                content.append("<meta http-equiv=\"content-type\" " +
-                        "content=\"text/html; charset=UTF-8\"></meta>");
+                content.append("<meta http-equiv=\"content-type\" "
+                        + "content=\"text/html; charset=UTF-8\"></meta>");
                 // include stylesheet
                 content.append("<style>");
                 content.append(DynamicNodeDescriptionCreator.instance().getCss());
@@ -262,10 +255,6 @@ public class HelpView extends ViewPart implements ISelectionListener,
                 });
             }
         }
-        // Object first = ((IStructuredSelection)selection).getFirstElement();
-        // if (first instanceof Word) {
-        // label.setText(((Word)first).toString());
-        // }
     }
 
     /**

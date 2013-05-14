@@ -90,7 +90,7 @@ public class UpdateMetaNodeLinkCommand extends AbstractKNIMECommand {
     public UpdateMetaNodeLinkCommand(final WorkflowManager manager,
             final NodeID[] ids) {
         super(manager);
-        m_ids = ids;
+        m_ids = ids.clone();
     }
 
     /** We can execute, if all components were 'non-null' in the constructor.
@@ -134,13 +134,13 @@ public class UpdateMetaNodeLinkCommand extends AbstractKNIMECommand {
             m_newIDs = updateRunner.getNewIDs();
             m_undoPersistors = updateRunner.getUndoPersistors();
             assert m_newIDs.size() == m_undoPersistors.size();
-        } catch (Throwable t) {
+        } catch (Exception ex) {
             // if fails notify the user
-            LOGGER.debug("Node cannot be created.", t);
+            LOGGER.debug("Node cannot be created.", ex);
             MessageDialog.openWarning(Display.getDefault().
                     getActiveShell(), "Node cannot be created.",
                     "The selected node could not be created "
-                    + "due to the following reason:\n" + t.getMessage());
+                    + "due to the following reason:\n" + ex.getMessage());
             return;
         } finally {
             if (updateRunner != null) {

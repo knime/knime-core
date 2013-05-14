@@ -167,7 +167,6 @@ public class AnnotationFigure3 extends Figure {
             }
         }
         BlockFlow bf = new BlockFlow();
-        // bf.setBorder(new MarginBorder(4, 2, 4, 0));
         BlockFlowLayout bfl = new BlockFlowLayout(bf);
         bfl.setContinueOnSameLine(true);
         bf.setLayoutManager(bfl);
@@ -186,7 +185,6 @@ public class AnnotationFigure3 extends Figure {
         bf.setOrientation(SWT.LEFT_TO_RIGHT);
         bf.setBackgroundColor(bg);
         for (TextFlow tf : segments) {
-            // tf.setLayoutManager(new SimpleFlowLayout(tf));
             bf.add(tf);
         }
 

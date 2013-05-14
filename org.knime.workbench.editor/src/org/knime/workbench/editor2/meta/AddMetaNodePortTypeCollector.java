@@ -77,10 +77,10 @@ public final class AddMetaNodePortTypeCollector {
 
     private static AddMetaNodePortTypeCollector instance;
 
-    /** Get instance to be used. 
+    /** Get instance to be used.
      * @return The static instance.
      */
-    public static AddMetaNodePortTypeCollector getInstance() {
+    public static synchronized AddMetaNodePortTypeCollector getInstance() {
         if (instance == null) {
             try {
                 instance = initInstance();

@@ -245,7 +245,7 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
             }
 
             Boolean snapToGrid = (Boolean)getViewer().getProperty(SnapToGrid.PROPERTY_GRID_ENABLED);
-			if (snapToGrid != null && snapToGrid.booleanValue()) {
+            if (snapToGrid != null && snapToGrid.booleanValue()) {
 				snapStrategies.add(new SnapIconToGrid(this));
 			} else {
 				// snap to ports
@@ -457,10 +457,8 @@ public class WorkflowRootEditPart extends AbstractWorkflowEditPart implements
             EditPartViewer viewer = getViewer();
             if (viewer != null) {
                 Control c = viewer.getControl();
-                if (c != null) {
-                    if ((c.getStyle() & SWT.MIRRORED) == 0) {
-                        cLayer.setAntialias(SWT.ON);
-                    }
+                if ((c != null) && ((c.getStyle() & SWT.MIRRORED) == 0)) {
+                    cLayer.setAntialias(SWT.ON);
                 }
             }
         }

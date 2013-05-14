@@ -54,7 +54,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Vector;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.runtime.IAdaptable;
@@ -314,11 +313,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     public void performRequest(final Request request) {
         if (request.getType() == RequestConstants.REQ_OPEN) {
             // double click on node
-            if (request instanceof SelectionRequest) {
-                if (((SelectionRequest)request).isShiftKeyPressed()) {
-                    shiftConnection();
-                    return;
-                }
+            if ((request instanceof SelectionRequest) && ((SelectionRequest)request).isShiftKeyPressed()) {
+                shiftConnection();
+                return;
             }
             // simple dbl-click, no modifier key
              openDialog();
@@ -367,7 +364,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * <code>NodeContainer</code> managed by this edit part. Note that in/out
      * ports are handled the same.
      *
-     * @see org.eclipse.gef.editparts.AbstractEditPart#getModelChildren()
+     * {@inheritDoc}
      */
     @Override
     protected List<NodePort> getModelChildren() {
@@ -653,7 +650,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * Overridden to return a custom <code>DragTracker</code> for
      * NodeContainerEditParts.
      *
-     * @see org.eclipse.gef.EditPart#getDragTracker(Request)
+     * {@inheritDoc}
      */
     @Override
     public DragTracker getDragTracker(final Request request) {
@@ -665,8 +662,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      */
     public ConnectionContainerEditPart[] getOutgoingConnections() {
 
-        Vector<ConnectionContainerEditPart> result =
-                new Vector<ConnectionContainerEditPart>();
+        List<ConnectionContainerEditPart> result =
+                new ArrayList<ConnectionContainerEditPart>();
 
         for (Object part : getChildren()) {
 
@@ -684,8 +681,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      */
     public ConnectionContainerEditPart[] getIncomingConnections() {
 
-        Vector<ConnectionContainerEditPart> result =
-                new Vector<ConnectionContainerEditPart>();
+        List<ConnectionContainerEditPart> result =
+                new ArrayList<ConnectionContainerEditPart>();
 
         for (Object part : getChildren()) {
 
@@ -791,11 +788,11 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             mb.setMessage("The dialog cannot be opened for the following"
                     + " reason:\n" + ex.getMessage());
             mb.open();
-        } catch (Throwable t) {
+        } catch (Exception ex) {
             LOGGER.error("The dialog pane for node '"
                     + container.getNameWithID() + "' has thrown a '"
-                    + t.getClass().getSimpleName()
-                    + "'. That is most likely an implementation error.", t);
+                    + ex.getClass().getSimpleName()
+                    + "'. That is most likely an implementation error.", ex);
         }
 
     }
@@ -824,7 +821,6 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                             "org.knime.workbench.editor.WorkflowEditor");
         } catch (PartInitException e) {
             LOGGER.error("Error while opening new editor", e);
-            e.printStackTrace();
         }
         return;
     }
@@ -1102,12 +1098,10 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                 break;
             }
         }
-        if (connPortIdx < 0 && startPortIdx == 1) {
+        if ((connPortIdx < 0) && (startPortIdx == 1)
+                && wm.canAddConnection(sourceNode.getNodeContainer().getID(), srcPortIdx, nc.getID(), 0)) {
             // if the src is a flow var port, connect it to impl flow var port
-            if (wm.canAddConnection(sourceNode.getNodeContainer().getID(),
-                    srcPortIdx, nc.getID(), 0)) {
-                connPortIdx = 0;
-            }
+            connPortIdx = 0;
         }
         return connPortIdx;
     }

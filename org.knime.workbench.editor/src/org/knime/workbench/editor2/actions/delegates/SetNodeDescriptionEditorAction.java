@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   8.05.2005 (sieb): created
  */
@@ -56,14 +56,12 @@ import org.knime.workbench.editor2.actions.SetNodeDescriptionAction;
 
 /**
  * Editor action for "set description".
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class SetNodeDescriptionEditorAction extends AbstractEditorAction {
     /**
-     * @see 
-     * org.knime.workbench.editor2.actions.delegates.AbstractEditorAction
-     *      #createAction(org.knime.workbench.editor2.WorkflowEditor)
+     * {@inheritDoc}
      */
     @Override
     protected AbstractNodeAction createAction(final WorkflowEditor editor) {

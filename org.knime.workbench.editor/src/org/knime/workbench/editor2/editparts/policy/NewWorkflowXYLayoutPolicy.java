@@ -209,7 +209,7 @@ public class NewWorkflowXYLayoutPolicy extends XYLayoutEditPolicy {
          *
          * @author Peter Ohl, KNIME.com AG, Zurich, Switzerland
          */
-        class Handle extends MoveHandle {
+        static class Handle extends MoveHandle {
 
             /**
              * @param owner the editpart this handle is shown on

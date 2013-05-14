@@ -60,17 +60,11 @@ import org.knime.workbench.editor2.actions.OpenMultiDialogAction;
  * @author Peter Ohl, KNIME.com AG, Switzerland
  */
 public class OpenMultipleDialogEditorAction extends AbstractEditorAction {
-
     /**
-     * @see
-     * org.knime.workbench.editor2.actions.delegates.AbstractEditorAction
-     *      #createAction(org.knime.workbench.editor2.WorkflowEditor)
+     * {@inheritDoc}
      */
     @Override
     protected AbstractNodeAction createAction(final WorkflowEditor editor) {
         return new OpenMultiDialogAction(editor);
     }
-
-
-
 }

@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   16.01.2008 (Fabian Dill): created
  */
@@ -54,9 +54,11 @@ import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.actions.AbstractNodeAction;
 
 public class DefaultOpenViewAction extends AbstractEditorAction {
-
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    protected AbstractNodeAction createAction(WorkflowEditor editor) {
+    protected AbstractNodeAction createAction(final WorkflowEditor editor) {
         return null;
     }
 

@@ -61,9 +61,7 @@ import org.knime.workbench.editor2.actions.SendAnnotationToBackAction;
  */
 public class SendAnnotationToBackEditorAction extends AbstractEditorAction {
     /**
-     * @see
-     * org.knime.workbench.editor2.actions.delegates.AbstractEditorAction
-     *      #createAction(org.knime.workbench.editor2.WorkflowEditor)
+     * {@inheritDoc}
      */
     @Override
     protected AbstractNodeAction createAction(final WorkflowEditor editor) {

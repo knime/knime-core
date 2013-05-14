@@ -94,7 +94,7 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
      * Additionally the method creates a command to adapt connections where both
      * node container are include in the drag operation.
      *
-     * @see org.eclipse.gef.tools.AbstractTool#getCommand()
+     * {@inheritDoc}
      */
     @Override
     protected Command getCommand() {
@@ -206,7 +206,6 @@ public class WorkflowSelectionDragEditPartsTracker extends DragEditPartsTracker 
 
         for (EditPart part : children) {
             if (part instanceof AbstractPortEditPart) {
-//                    && !((AbstractPortEditPart)part).isInPort()) {
                 AbstractPortEditPart outPortPart = (AbstractPortEditPart)part;
 
                 // append all connection edit parts

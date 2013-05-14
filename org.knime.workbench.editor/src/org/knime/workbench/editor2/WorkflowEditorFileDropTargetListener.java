@@ -56,14 +56,11 @@ public class WorkflowEditorFileDropTargetListener
         URL url;
         try {
             url = new File(file).toURI().toURL();
-        } catch (Throwable e1) {
-            LOGGER.error("Unable to create URI from file location (" + file
-                    + ")");
-            return;
+            getFactory().setReaderNodeSettings(new ReaderNodeSettings(getNodeFactory(url), url));
+            super.handleDrop();
+        } catch (Exception ex) {
+            LOGGER.error("Unable to create URI from file location (" + file + "): " + ex.getMessage(), ex);
         }
-        getFactory().setReaderNodeSettings(
-                new ReaderNodeSettings(getNodeFactory(url), url));
-        super.handleDrop();
     }
     /**
      * @param event

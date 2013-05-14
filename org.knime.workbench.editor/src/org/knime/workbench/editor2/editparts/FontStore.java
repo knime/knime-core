@@ -51,6 +51,7 @@
 package org.knime.workbench.editor2.editparts;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.swt.graphics.Font;
@@ -66,7 +67,7 @@ import org.knime.core.node.workflow.AnnotationData;
  */
 public class FontStore {
 
-    private final HashMap<StoreKey, StoreValue> m_fontMap =
+    private final Map<StoreKey, StoreValue> m_fontMap =
             new HashMap<StoreKey, StoreValue>();
 
     private final Font m_defaultFont;
@@ -79,7 +80,7 @@ public class FontStore {
      */
     public FontStore(final Font defaultFont) {
         if (defaultFont == null) {
-            throw new NullPointerException("Default font can't be null");
+            throw new IllegalArgumentException("Default font must not be null");
         }
         m_defaultFont = defaultFont;
         m_fontMap.put(new StoreKey(defaultFont), new StoreValue(defaultFont));
@@ -165,22 +166,22 @@ public class FontStore {
      * Returns the specified font with at least the specified style(s) set.
      *
      * @param font the font to add styles to
-     * @param SWTstyle the styles the result font should have (in addition to
+     * @param swtStyle the styles the result font should have (in addition to
      *            the styles already set in the font).
      *
      * @return the specified font with the specified style(s) set
      */
-    public Font addStyleToFont(final Font font, final int SWTstyle) {
+    public Font addStyleToFont(final Font font, final int swtStyle) {
         Font f = font;
         if (f == null) {
             f = m_defaultFont;
         }
         FontData fd = f.getFontData()[0];
-        if ((fd.getStyle() & SWTstyle) == SWTstyle) {
+        if ((fd.getStyle() & swtStyle) == swtStyle) {
             // already has all styles set
             return f;
         }
-        return getFont(fd.getName(), fd.getHeight(), fd.getStyle() | SWTstyle);
+        return getFont(fd.getName(), fd.getHeight(), fd.getStyle() | swtStyle);
     }
 
     /**
@@ -188,21 +189,21 @@ public class FontStore {
      * the font are unaffected.
      *
      * @param font the font to clear the styles in
-     * @param SWTstyle the style(s) to clear in the result font.
+     * @param swtStyle the style(s) to clear in the result font.
      * @return the specified font with the specified style(s) cleared.
      */
-    public Font removeStyleFromFont(final Font font, final int SWTstyle) {
+    public Font removeStyleFromFont(final Font font, final int swtStyle) {
         Font f = font;
         if (f == null) {
             f = m_defaultFont;
         }
         FontData fd = f.getFontData()[0];
-        if ((fd.getStyle() & SWTstyle) == 0) {
+        if ((fd.getStyle() & swtStyle) == 0) {
             // doesn't have the styles
             return f;
         }
         return getFont(fd.getName(), fd.getHeight(), fd.getStyle()
-                & (~SWTstyle));
+                & (~swtStyle));
     }
 
     /**
@@ -223,7 +224,7 @@ public class FontStore {
      *         time.
      */
     public boolean isDefaultFont(final Font font) {
-        return font == m_defaultFont;
+        return font.equals(m_defaultFont);
     }
 
     /**
@@ -242,7 +243,7 @@ public class FontStore {
         if (usage == 0) {
             m_fontMap.remove(key);
             Font f = val.getFont();
-            if (f != m_defaultFont) {
+            if (!f.equals(m_defaultFont)) {
                 // default font SHOULD never have ref count zero...
                 val.getFont().dispose();
             }

@@ -74,10 +74,6 @@ import org.knime.workbench.explorer.view.ExplorerView;
  * @author Dominik Morent, KNIME.com, Zurich, Switzerland
  */
 public class RevealMetaNodeTemplateAction extends AbstractNodeAction {
-
-//    private static final NodeLogger LOGGER =
-//        NodeLogger.getLogger(RevealMetaNodeTemplateAction.class);
-
     /** Action ID. */
     public static final String ID = "knime.action.meta_node_reveal_template";
 

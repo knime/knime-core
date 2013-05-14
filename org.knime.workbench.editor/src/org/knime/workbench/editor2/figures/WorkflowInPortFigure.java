@@ -63,11 +63,7 @@ import org.knime.core.node.port.PortType;
  * @author Fabian Dill, University of Konstanz
  */
 public class WorkflowInPortFigure extends AbstractPortFigure {
-
-//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-//            WorkflowInPortFigure.class);
-
-    WorkflowPortLocator m_portLocator;
+    private WorkflowPortLocator m_portLocator;
 
     /**
      *
@@ -123,9 +119,6 @@ public class WorkflowInPortFigure extends AbstractPortFigure {
      */
     @Override
     protected PointList createShapePoints(final Rectangle r) {
-//        Rectangle parent = getParent().getBounds().getCopy();
-//        int yPos = (parent.height / (getNrPorts() + 1))
-//            * (getPortIndex() + 1);
         Rectangle rect = getBounds().getCopy();
         if (getType().equals(BufferedDataTable.TYPE)) {
             // triangle

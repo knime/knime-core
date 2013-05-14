@@ -82,8 +82,7 @@ public class OutPortConnectionAnchor extends ChopboxAnchor {
         }
 
         AbstractPortFigure port = (AbstractPortFigure)owner;
-        Rectangle box = port.computePortShapeBounds(port.getBounds());
-        return box;
+        return port.computePortShapeBounds(port.getBounds());
     }
 
     /**

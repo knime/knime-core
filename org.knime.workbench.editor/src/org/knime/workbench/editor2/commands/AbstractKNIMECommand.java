@@ -66,7 +66,7 @@ public abstract class AbstractKNIMECommand extends Command {
    /** @param hostWFM The host workflow, must not be null. */
     public AbstractKNIMECommand(final WorkflowManager hostWFM) {
         if (hostWFM == null) {
-            throw new NullPointerException("Argument must not be null.");
+            throw new IllegalArgumentException("Argument must not be null.");
         }
         m_hostWFM = hostWFM;
     }

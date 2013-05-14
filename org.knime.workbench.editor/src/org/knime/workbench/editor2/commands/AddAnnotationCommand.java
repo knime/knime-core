@@ -99,11 +99,6 @@ public class AddAnnotationCommand extends AbstractKNIMECommand {
         m_viewer = viewer;
     }
 
-    /** {@inheritDoc} */
-    @Override
-    public boolean canExecute() {
-        return super.canExecute();
-    }
 
     /**
      * {@inheritDoc}

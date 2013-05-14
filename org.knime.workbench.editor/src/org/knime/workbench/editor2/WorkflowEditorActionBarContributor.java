@@ -58,7 +58,6 @@ import org.eclipse.gef.ui.actions.UndoRetargetAction;
 import org.eclipse.gef.ui.actions.ZoomComboContributionItem;
 import org.eclipse.gef.ui.actions.ZoomInRetargetAction;
 import org.eclipse.gef.ui.actions.ZoomOutRetargetAction;
-import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.ui.IEditorPart;
@@ -120,25 +119,5 @@ public class WorkflowEditorActionBarContributor extends ActionBarContributor {
                     .remove("org.knime.workbench.editor.actions.openMultiDialog");
         }
         super.setActiveEditor(editor);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void contributeToMenu(final IMenuManager menubar) {
-        super.contributeToMenu(menubar);
-
-        // MenuManager viewMenu = new MenuManager("Zoom");
-        // viewMenu.add(getAction(GEFActionConstants.ZOOM_IN));
-        // viewMenu.add(getAction(GEFActionConstants.ZOOM_OUT));
-        // viewMenu.add(new Separator());
-        // viewMenu.add(getAction(GEFActionConstants.TOGGLE_RULER_VISIBILITY));
-        // viewMenu.add(getAction(GEFActionConstants.TOGGLE_GRID_VISIBILITY));
-        // viewMenu.add(getAction(GEFActionConstants.TOGGLE_SNAP_TO_GEOMETRY));
-        // viewMenu.add(new Separator());
-        // viewMenu.add(getAction(GEFActionConstants.MATCH_WIDTH));
-        // viewMenu.add(getAction(GEFActionConstants.MATCH_HEIGHT));
-        // menubar.insertAfter(IWorkbenchActionConstants.M_EDIT, viewMenu);
     }
 }

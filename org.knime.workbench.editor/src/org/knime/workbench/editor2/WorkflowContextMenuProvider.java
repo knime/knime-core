@@ -300,15 +300,6 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     }
                 }
             }
-            /*
-             * if (p instanceof SubworkflowEditPart) { // meta node -> add to
-             * template repository action SubworkflowEditPart metaNode =
-             * (SubworkflowEditPart)p; action = new
-             * CreateMetaNodeTemplateAction( metaNode.getWorkflowManager(),
-             * metaNode.getNodeContainer());
-             * manager.appendToGroup(IWorkbenchActionConstants.GROUP_APP,
-             * action); }
-             */
             if (p instanceof NodeContainerEditPart) {
 
                 NodeContainer container = null;

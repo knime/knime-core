@@ -52,7 +52,6 @@ package org.knime.workbench.editor2;
 
 import org.eclipse.gef.EditPart;
 import org.eclipse.gef.EditPartFactory;
-import org.eclipse.gef.GraphicalViewer;
 import org.knime.core.node.workflow.Annotation;
 import org.knime.core.node.workflow.ConnectionContainer;
 import org.knime.core.node.workflow.NodeAnnotation;
@@ -87,10 +86,6 @@ import org.knime.workbench.editor2.model.WorkflowPortBar;
  * @author Fabian Dill, University of Konstanz
  */
 public final class WorkflowEditPartFactory implements EditPartFactory {
-
-//    private static final NodeLogger LOGGER =
-//            NodeLogger.getLogger(WorkflowEditPartFactory.class);
-
     /*
      * we need this flag to determine between the "root" workflow manager and
      * all subsequent meta nodes. This means that we implicitely assume that
@@ -103,15 +98,6 @@ public final class WorkflowEditPartFactory implements EditPartFactory {
      * @see WorkflowRootEditPart#getModelChildren
      */
     private boolean m_isTop = true;
-
-    /**
-     * An instance per {@link GraphicalViewer} is necessary, in order to
-     * distinguish between the workflow manager of the editor and contained
-     * subworkflows.
-     *
-     */
-    public WorkflowEditPartFactory() {
-    }
 
     /**
      * Creates the referring edit parts for the following parts of the model.
@@ -156,7 +142,6 @@ public final class WorkflowEditPartFactory implements EditPartFactory {
             } else {
                 // we already have a "root" workflow manager
                 // must be a meta node
-//                part = new NodeContainerEditPart();
                 part = new SubworkflowEditPart();
             }
         } else if (model instanceof NodeAnnotation) {

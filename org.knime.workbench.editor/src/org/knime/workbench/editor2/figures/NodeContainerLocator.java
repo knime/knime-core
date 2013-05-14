@@ -66,9 +66,9 @@ public class NodeContainerLocator implements Locator {
     private final NodeContainerFigure m_container;
 
     /**
-     * Distance (vertically) between the contained figures in the node figure
+     * Distance (vertically) between the contained figures in the node figure.
      */
-    public final static int GAP = 1;
+    public static final int GAP = 1;
 
     /**
      * Places the components in the node figure. (I.e. the Node Name, the icon
@@ -102,7 +102,7 @@ public class NodeContainerLocator implements Locator {
             above = f;
         }
         Rectangle r = above.getBounds().getCopy();
-        if (above == m_container) {
+        if (above.equals(m_container)) {
             // we are the first component in the container
             y = r.y + GAP;
         } else {

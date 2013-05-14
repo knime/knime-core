@@ -308,9 +308,9 @@ public class NodeContainerProperties implements IPropertySource {
                 }
                 try {
                     wfm.loadNodeSettings(node.getID(), nodeSettings);
-                } catch (Throwable t) {
+                } catch (Exception ex) {
                     LOGGER.error("Invalid Value (" + strVal + "): "
-                            + t.getMessage(), t);
+                            + ex.getMessage(), ex);
                     return;
                 }
 

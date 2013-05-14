@@ -159,10 +159,6 @@ public abstract class AbstractCreateNewConnectedNodeCommand extends
         }
         WorkflowManager hostWFM = getHostWFM();
         NodeContainer sourceNode = hostWFM.getNodeContainer(m_connectTo);
-        if (sourceNode == null) {
-            // it's gone...
-            return;
-        }
         NodeContainer nc = hostWFM.getNodeContainer(m_newNode);
         Map<Integer, Integer> matchingPorts = getMatchingPorts(sourceNode, nc);
         if (matchingPorts.size() == 0) {

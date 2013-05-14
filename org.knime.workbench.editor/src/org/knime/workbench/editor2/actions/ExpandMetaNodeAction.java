@@ -159,8 +159,8 @@ public class ExpandMetaNodeAction extends AbstractNodeAction {
                 MessageBox mb = new MessageBox(
                       Display.getCurrent().getActiveShell(),
                         SWT.OK | SWT.CANCEL);
-                mb.setMessage("Executed Nodes inside Metanode will be reset" +
-                        " - are you sure?");
+                mb.setMessage("Executed Nodes inside Metanode will be reset"
+                        + " - are you sure?");
                 mb.setText("Reset Executed Nodes");
                 int dialogreturn = mb.open();
                 if (dialogreturn == SWT.CANCEL) {

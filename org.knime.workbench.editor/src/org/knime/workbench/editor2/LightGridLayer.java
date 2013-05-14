@@ -50,7 +50,6 @@
  */
 package org.knime.workbench.editor2;
 
-import org.eclipse.draw2d.Graphics;
 import org.eclipse.gef.editparts.GridLayer;
 import org.eclipse.swt.graphics.Color;
 
@@ -67,13 +66,4 @@ public class LightGridLayer extends GridLayer {
         super();
         setForegroundColor(veryLightGray);
     }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void paintGrid(final Graphics g) {
-        super.paintGrid(g);
-    }
-
 }

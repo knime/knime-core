@@ -132,17 +132,6 @@ public class MetaPortDialog extends Dialog {
         gridData.horizontalSpan = 2;
         m_error.setLayoutData(gridData);
 
-//        Label label1 = new Label(composite, SWT.NONE);
-//        label1.setText("Port Name: ");
-//        m_name = new Text(composite, SWT.BORDER | SWT.SHADOW_IN);
-//        m_name.addFocusListener(new FocusAdapter() {
-//            @Override
-//            public void focusGained(final FocusEvent e) {
-//                resetError();
-//            }
-//
-//        });
-
         Label label2 = new Label(composite, SWT.NONE);
         label2.setText("Port Type:");
         m_type = new Combo(composite,
@@ -166,19 +155,16 @@ public class MetaPortDialog extends Dialog {
         Button ok = new Button(composite, SWT.PUSH);
         ok.setText("OK");
         ok.addSelectionListener(new SelectionListener() {
+            @Override
             public void widgetDefaultSelected(final SelectionEvent e) {
                 widgetSelected(e);
             }
+            @Override
             public void widgetSelected(final SelectionEvent e) {
                 if (m_type.getSelectionIndex() < 0) {
                     setError("Please select port type");
                     return;
                 }
-//                if (m_name.getText() == null
-//                        || m_name.getText().trim().isEmpty()) {
-//                    setError("Please enter port name");
-//                    return;
-//                }
                 resetError();
                 String selected = m_type.getItem(m_type.getSelectionIndex());
                 MetaNodePortType type = null;
@@ -206,11 +192,12 @@ public class MetaPortDialog extends Dialog {
         Button cancel = new Button(composite, SWT.PUSH);
         cancel.setText("Cancel");
         cancel.addSelectionListener(new SelectionListener() {
-
+            @Override
             public void widgetDefaultSelected(final SelectionEvent e) {
                 widgetSelected(e);
             }
 
+            @Override
             public void widgetSelected(final SelectionEvent e) {
                 m_port = null;
                 m_shell.dispose();

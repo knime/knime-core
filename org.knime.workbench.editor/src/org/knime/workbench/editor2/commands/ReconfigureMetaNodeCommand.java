@@ -52,6 +52,7 @@ package org.knime.workbench.editor2.commands;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortType;
@@ -70,18 +71,18 @@ public class ReconfigureMetaNodeCommand extends AbstractKNIMECommand {
 
     private final NodeID m_metanodeID;
 
-    private ArrayList<MetaPortInfo> m_inPorts;
+    private List<MetaPortInfo> m_inPorts;
 
-    private ArrayList<MetaPortInfo> m_outPorts;
+    private List<MetaPortInfo> m_outPorts;
 
     private String m_name;
 
     // for undo
     private String m_oldName;
 
-    private ArrayList<MetaPortInfo> m_reverseInports;
+    private List<MetaPortInfo> m_reverseInports;
 
-    private ArrayList<MetaPortInfo> m_reverseOutports;
+    private List<MetaPortInfo> m_reverseOutports;
 
     /**
      * Creates a new command.
@@ -99,14 +100,14 @@ public class ReconfigureMetaNodeCommand extends AbstractKNIMECommand {
     /**
      * @param inPorts the inPorts to set
      */
-    public void setNewInPorts(final ArrayList<MetaPortInfo> inPorts) {
+    public void setNewInPorts(final List<MetaPortInfo> inPorts) {
         m_inPorts = inPorts;
     }
 
     /**
      * @param outPorts the outPorst to set
      */
-    public void setNewOutPorts(final ArrayList<MetaPortInfo> outPorts) {
+    public void setNewOutPorts(final List<MetaPortInfo> outPorts) {
         m_outPorts = outPorts;
     }
 
@@ -165,8 +166,8 @@ public class ReconfigureMetaNodeCommand extends AbstractKNIMECommand {
      * @param newPortList
      * @return
      */
-    private ArrayList<MetaPortInfo> createReverseOperationList(final MetaPortInfo[] currentPortList,
-            final ArrayList<MetaPortInfo> newPortList) {
+    private List<MetaPortInfo> createReverseOperationList(final MetaPortInfo[] currentPortList,
+            final List<MetaPortInfo> newPortList) {
         MetaPortInfo[] reverse = new MetaPortInfo[currentPortList.length];
         for (MetaPortInfo newInfo : newPortList) {
             if (newInfo.getOldIndex() >= 0) {

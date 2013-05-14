@@ -132,10 +132,8 @@ public abstract class AbstractWorkflowPortBarEditPart
         for (NodeContainer nc : manager.getNodeContainers()) {
             int nodeWidth = NodeContainerFigure.WIDTH;
             NodeAnnotation nodeAnno = nc.getNodeAnnotation();
-            if (nodeAnno != null) {
-                if (nodeAnno.getWidth() > nodeWidth) {
-                    nodeWidth = nodeAnno.getWidth();
-                }
+            if ((nodeAnno != null) && (nodeAnno.getWidth() > nodeWidth)) {
+                nodeWidth = nodeAnno.getWidth();
             }
             NodeUIInformation uiInfo = nc.getUIInformation();
             if (uiInfo != null) {
@@ -230,7 +228,7 @@ public abstract class AbstractWorkflowPortBarEditPart
      * Overridden to return a custom <code>DragTracker</code> for
      * NodeContainerEditParts.
      *
-     * @see org.eclipse.gef.EditPart#getDragTracker(Request)
+     * {@inheritDoc}
      */
     @Override
     public DragTracker getDragTracker(final Request request) {

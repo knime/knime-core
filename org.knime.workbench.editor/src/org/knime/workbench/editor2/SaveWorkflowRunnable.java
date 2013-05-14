@@ -81,7 +81,7 @@ class SaveWorkflowRunnable extends PersistWorkflowRunnable {
 
     private File m_workflowFile;
 
-    private StringBuffer m_exceptionMessage;
+    private StringBuilder m_exceptionMessage;
 
     private IProgressMonitor m_monitor;
 
@@ -98,7 +98,7 @@ class SaveWorkflowRunnable extends PersistWorkflowRunnable {
      *            the progress monitor to report the progress to
      */
     public SaveWorkflowRunnable(final WorkflowEditor editor,
-            final File workflowFile, final StringBuffer exceptionMessage,
+            final File workflowFile, final StringBuilder exceptionMessage,
             final IProgressMonitor monitor) {
         m_editor = editor;
         m_workflowFile = workflowFile;
@@ -151,16 +151,6 @@ class SaveWorkflowRunnable extends PersistWorkflowRunnable {
             LOGGER.info("Canceled saving worflow: " + m_workflowFile.getName());
             m_exceptionMessage.append("Saving workflow" + " was canceled.");
             m_monitor.setCanceled(true);
-            /*
-        } catch (Exception e) {
-            // inform the user
-            m_exceptionMessage.append("Execution in progress! "
-                    + "The workflow could not be saved.");
-
-            LOGGER.warn("Could not save workflow,"
-                    + " node execution in progress");
-            m_monitor.setCanceled(true);
-            */
         } catch (Error e) {
             LOGGER.error("Could not save workflow", e);
 

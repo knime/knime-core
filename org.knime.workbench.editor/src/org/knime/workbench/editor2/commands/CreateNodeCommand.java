@@ -111,7 +111,7 @@ public class CreateNodeCommand extends AbstractKNIMECommand {
         try {
             NodeID id = hostWFM.createAndAddNode(m_factory);
             m_container = hostWFM.getNodeContainer(id);
-        } catch (Throwable t) {
+        } catch (Exception t) {
             // if fails notify the user
             LOGGER.debug("Node cannot be created.", t);
             MessageBox mb = new MessageBox(Display.getDefault().

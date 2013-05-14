@@ -123,9 +123,9 @@ public class OpenViewAction extends Action {
         LOGGER.debug("Open Node View " + m_nodeContainer.getName() + " (#"
                 + m_index + ")");
         try {
-            final String title = m_nodeContainer.getViewName(m_index) + " - " 
+            final String title = m_nodeContainer.getViewName(m_index) + " - "
                 + m_nodeContainer.getDisplayLabel();
-            
+
             Runnable runner = new Runnable() {
                 @Override
                 public void run() {
@@ -135,7 +135,7 @@ public class OpenViewAction extends Action {
             };
             // workaround for bug 2136: Schrodinger views must be opened
             // in non-AWT thread (unchecked call to SU.invokeAndWait)
-            // This fix is to be reverted in future versions, 
+            // This fix is to be reverted in future versions,
             // see bug 2137 for details
             boolean isSchrodinger = false;
             if (m_nodeContainer instanceof SingleNodeContainer) {
@@ -150,24 +150,24 @@ public class OpenViewAction extends Action {
             } else {
                 SwingUtilities.invokeLater(runner);
             }
-        } catch (Throwable t) {
+        } catch (Exception ex) {
             MessageBox mb = new MessageBox(
                     Display.getDefault().getActiveShell(),
                     SWT.ICON_ERROR | SWT.OK);
             mb.setText("View cannot be opened");
-            mb.setMessage("The view cannot be opened for the " 
-                    + "following reason:\n" + t.getMessage());
+            mb.setMessage("The view cannot be opened for the "
+                    + "following reason:\n" + ex.getMessage());
             mb.open();
             LOGGER.error("The view for node '"
                     + m_nodeContainer.getNameWithID() + "' has thrown a '"
-                    + t.getClass().getSimpleName()
-                    + "'. That is most likely an " 
-                    + "implementation error.", t);
-        } 
+                    + ex.getClass().getSimpleName()
+                    + "'. That is most likely an "
+                    + "implementation error.", ex);
+        }
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override

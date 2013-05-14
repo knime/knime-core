@@ -50,7 +50,7 @@
  */
 package org.knime.workbench.editor2.meta;
 
-import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.gef.EditPartViewer;
 import org.eclipse.jface.resource.ImageDescriptor;
@@ -117,8 +117,8 @@ public class ReconfigureMetaNodeWizard extends Wizard {
      */
     @Override
     public boolean performFinish() {
-        ArrayList<MetaPortInfo> inPorts = m_addPage.getInports();
-        ArrayList<MetaPortInfo> outPorts = m_addPage.getOutPorts();
+        List<MetaPortInfo> inPorts = m_addPage.getInports();
+        List<MetaPortInfo> outPorts = m_addPage.getOutPorts();
         String name = m_addPage.getMetaNodeName();
 
         // fix the indicies

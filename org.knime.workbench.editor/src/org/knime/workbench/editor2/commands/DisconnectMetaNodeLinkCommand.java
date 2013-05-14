@@ -89,7 +89,7 @@ public class DisconnectMetaNodeLinkCommand extends AbstractKNIMECommand {
     public DisconnectMetaNodeLinkCommand(final WorkflowManager manager,
             final NodeID[] ids) {
         super(manager);
-        m_ids = ids;
+        m_ids = ids.clone();
     }
 
     /** We can execute, if all components were 'non-null' in the constructor.

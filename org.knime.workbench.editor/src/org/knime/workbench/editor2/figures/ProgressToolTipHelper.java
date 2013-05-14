@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   27.10.2006 (sieb): created
  */
@@ -62,7 +62,7 @@ import org.knime.workbench.editor2.WorkflowEditor;
 
 /**
  * Implements a tool tip helper that is able to update a tooltip dynamically.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class ProgressToolTipHelper extends PopUpHelper {
@@ -71,10 +71,10 @@ public class ProgressToolTipHelper extends PopUpHelper {
 
     /**
      * Constructs a ProgressToolTipHelper to be associated with Control <i>c</i>.
-     * 
+     *
      * @param c the control
      */
-    public ProgressToolTipHelper(final Control c, ZoomManager zoomManager) {
+    public ProgressToolTipHelper(final Control c, final ZoomManager zoomManager) {
         super(c, SWT.TOOL | SWT.ON_TOP);
         getShell().setBackground(ColorConstants.tooltipBackground);
         getShell().setForeground(ColorConstants.tooltipForeground);
@@ -84,9 +84,10 @@ public class ProgressToolTipHelper extends PopUpHelper {
 
     /**
      * Disposes of the tooltip's shell.
-     * 
+     *
      * @see PopUpHelper#dispose()
      */
+    @Override
     public void dispose() {
         if (isShowing()) {
             hide();
@@ -102,9 +103,9 @@ public class ProgressToolTipHelper extends PopUpHelper {
      * <p>
      * The tooltip will be painted directly below the cursor if possible,
      * otherwise it will be painted directly above cursor.
-     * 
+     *
      * No timer is set for this kind of dynamic tool tip.
-     * 
+     *
      * @param hoverSource the figure over which the hover event was fired
      * @param tip the tooltip to be displayed
      * @param eventX the x coordinate of the hover event
@@ -183,21 +184,15 @@ public class ProgressToolTipHelper extends PopUpHelper {
         return preferredLocation;
     }
 
-    // This method does not seem to be necessary at all. Even worse it prevents
-    // a closed workflow to get garbage collected, because the created anonymous
-    // inner class has a reference chain up to the workflow manager. The object
-    // itself is registered at some global UI objects and stays alive until
-    // Eclipse is closed.
     /**
      * {@inheritDoc}
      */
     @Override
     protected void hookShellListeners() {
-//        // Close the tooltip window if the mouse enters the tooltip
-//        getShell().addMouseTrackListener(new MouseTrackAdapter() {
-//            public void mouseEnter(final MouseEvent e) {
-//                hide();
-//            }
-//        });
+        // This method does not seem to be necessary at all. Even worse it prevents
+        // a closed workflow to get garbage collected, because the created anonymous
+        // inner class has a reference chain up to the workflow manager. The object
+        // itself is registered at some global UI objects and stays alive until
+        // Eclipse is closed.
     }
 }

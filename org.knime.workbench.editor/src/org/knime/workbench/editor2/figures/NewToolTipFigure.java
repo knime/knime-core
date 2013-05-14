@@ -67,8 +67,6 @@ import org.knime.workbench.editor2.ImageRepository;
 public class NewToolTipFigure extends Figure {
     private static final Border TOOL_TIP_BORDER = new MarginBorder(0, 2, 0, 2);
 
-    private String m_text;
-
     private Label m_tooltip;
 
     /**
@@ -94,9 +92,7 @@ public class NewToolTipFigure extends Figure {
      * @param text The text to show
      */
     public void setText(final String text) {
-        m_text = text;
-
-        m_tooltip.setText(m_text);
+        m_tooltip.setText(text);
         m_tooltip.setSize(m_tooltip.getPreferredSize().expand(10, 10));
         this.setSize(m_tooltip.getSize().expand(5, 7));
     }

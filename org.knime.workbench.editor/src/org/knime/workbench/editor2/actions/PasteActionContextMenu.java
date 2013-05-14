@@ -56,7 +56,6 @@ import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.workbench.editor2.ClipboardObject;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.commands.PasteFromWorkflowPersistorCommand.ShiftCalculator;
-import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 
 /**
  * Implements the clipboard paste action to paste nodes and connections from the
@@ -66,9 +65,6 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
  * @author Christoph Sieb, University of Konstanz
  */
 public class PasteActionContextMenu extends PasteAction {
-//     private static final NodeLogger LOGGER =
-//         NodeLogger.getLogger(PasteActionContextMenu.class);
-
     /** ID for this action. */
     public static final String ID = "PasteActionContext";
 
@@ -87,15 +83,6 @@ public class PasteActionContextMenu extends PasteAction {
     @Override
     public String getId() {
         return ID;
-    }
-
-    /**
-     *
-     * {@inheritDoc}
-     */
-    @Override
-    public void runOnNodes(final NodeContainerEditPart[] nodeParts) {
-        super.runOnNodes(nodeParts);
     }
 
     /** {@inheritDoc} */

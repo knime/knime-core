@@ -217,11 +217,9 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
      */
     @Override
     public void eraseSourceFeedback(final Request request) {
-        if (request instanceof BendpointRequest) {
-            if (REQ_MOVE_BENDPOINT.equals(request.getType())
-                    || REQ_CREATE_BENDPOINT.equals(request.getType())) {
-                eraseConnectionFeedback((BendpointRequest)request);
-            }
+        if ((request instanceof BendpointRequest)
+                && (REQ_MOVE_BENDPOINT.equals(request.getType()) || REQ_CREATE_BENDPOINT.equals(request.getType()))) {
+            eraseConnectionFeedback((BendpointRequest)request);
         }
     }
 

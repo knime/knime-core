@@ -162,7 +162,6 @@ public class StyledTextEditor extends CellEditor {
     @Override
     protected Control createControl(final Composite parent) {
         m_panel = new Composite(parent, SWT.NONE);
-//        m_panel.setLayout(createPanelGridLayout(1, true));
         StackLayout layout = new StackLayout();
         m_panel.setLayout(layout);
         layout.topControl = createStyledText(m_panel);
@@ -675,12 +674,12 @@ public class StyledTextEditor extends CellEditor {
         }
     }
 
-    private void setSWTStyle(final int SWTstyle) {
+    private void setSWTStyle(final int swtStyle) {
         List<StyleRange> styles = getStylesInSelection();
         boolean setAttr = true;
         for (StyleRange s : styles) {
             if (s.font != null
-                    && (s.font.getFontData()[0].getStyle() & SWTstyle) != 0) {
+                    && (s.font.getFontData()[0].getStyle() & swtStyle) != 0) {
                 setAttr = false;
                 break;
             }
@@ -689,11 +688,11 @@ public class StyledTextEditor extends CellEditor {
             if (setAttr) {
                 s.font =
                         AnnotationEditPart.FONT_STORE.addStyleToFont(s.font,
-                                SWTstyle);
+                                swtStyle);
             } else {
                 s.font =
                         AnnotationEditPart.FONT_STORE.removeStyleFromFont(
-                                s.font, SWTstyle);
+                                s.font, swtStyle);
             }
             m_styledText.setStyleRange(s);
         }

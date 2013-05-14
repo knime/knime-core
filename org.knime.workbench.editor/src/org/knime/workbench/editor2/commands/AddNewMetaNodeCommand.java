@@ -91,8 +91,8 @@ public class AddNewMetaNodeCommand extends AbstractKNIMECommand {
     public AddNewMetaNodeCommand(final WorkflowManager workflowManager, final PortType[] inPorts,
             final PortType[] outPorts, final String name, final Point location) {
         super(workflowManager);
-        m_inPorts = inPorts;
-        m_outPorts = outPorts;
+        m_inPorts = inPorts.clone();
+        m_outPorts = outPorts.clone();
         m_name = name;
         m_location = location;
     }

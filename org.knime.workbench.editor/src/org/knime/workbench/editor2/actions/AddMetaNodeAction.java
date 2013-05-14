@@ -69,8 +69,6 @@ public class AddMetaNodeAction implements IEditorActionDelegate {
 
     private WorkflowEditor m_editor;
 
-    private AddMetaNodeWizard m_wizard;
-
     /**
      *
      * {@inheritDoc}
@@ -94,9 +92,9 @@ public class AddMetaNodeAction implements IEditorActionDelegate {
     @Override
     public void run(final IAction action) {
         Display display = Display.getCurrent();
-        m_wizard = new AddMetaNodeWizard(m_editor);
+        AddMetaNodeWizard wizard = new AddMetaNodeWizard(m_editor);
         MetaNodeWizardDialog dialog = new MetaNodeWizardDialog(
-                display.getActiveShell(), m_wizard);
+                display.getActiveShell(), wizard);
         dialog.create();
         dialog.open();
     }

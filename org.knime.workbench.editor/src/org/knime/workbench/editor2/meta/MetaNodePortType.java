@@ -84,7 +84,7 @@ public abstract class MetaNodePortType {
     protected MetaNodePortType(final PortType type,
             final String name) {
         if (name == null || type == null) {
-            throw new NullPointerException("Argument must not be null.");
+            throw new IllegalArgumentException("Argument must not be null.");
         }
         m_type = type;
         m_name = name;

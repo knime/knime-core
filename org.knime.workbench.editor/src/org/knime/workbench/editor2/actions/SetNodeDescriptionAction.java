@@ -187,8 +187,8 @@ public class SetNodeDescriptionAction extends AbstractNodeAction {
                 String description = dialog.getDescription();
                 container.setCustomDescription(description);
             }
-        } catch (Throwable t) {
-            LOGGER.error("trying to open description editor: ", t);
+        } catch (Exception ex) {
+            LOGGER.error("Could not open node description editor: " + ex.getMessage(), ex);
         }
     }
 }

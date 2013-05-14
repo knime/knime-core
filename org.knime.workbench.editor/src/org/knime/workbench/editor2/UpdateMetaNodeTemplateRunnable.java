@@ -94,7 +94,7 @@ public class UpdateMetaNodeTemplateRunnable extends PersistWorkflowRunnable {
     public UpdateMetaNodeTemplateRunnable(final WorkflowManager wfm,
             final NodeID[] ids) {
         m_parentWFM = wfm;
-        m_ids = ids;
+        m_ids = ids.clone();
     }
 
     /** {@inheritDoc} */

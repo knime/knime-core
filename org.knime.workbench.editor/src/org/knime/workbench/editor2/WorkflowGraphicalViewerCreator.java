@@ -107,9 +107,6 @@ public class WorkflowGraphicalViewerCreator {
      * @return The viewer
      */
     protected GraphicalViewer createViewer(final Composite parent) {
-
-        // StatusLineValidationMessageHandler validationMessageHandler = new
-        // StatusLineValidationMessageHandler(editorSite);
         ScrollingGraphicalViewer viewer = new ScrollingGraphicalViewer();
         viewer.createControl(parent);
 
@@ -133,8 +130,6 @@ public class WorkflowGraphicalViewerCreator {
         /* Don't add any drag listener here. Processing of drag events seems
          * to influence GEF events (resize, node move, create connection).
          * See bug 2844 for details (linux only) */
-        // viewer.addDragSourceListener(
-        //        new WorkflowEditorTemplateDragSourceListener(viewer));
         MetaNodeTemplateDropTargetListener metaNodeTemplateDropListener =
             new MetaNodeTemplateDropTargetListener(viewer);
         viewer.addDropTargetListener(metaNodeTemplateDropListener);

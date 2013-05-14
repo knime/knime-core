@@ -244,7 +244,7 @@ public final class PasteFromWorkflowPersistorCommand
 
         /** @param moveDist The shift to return. */
         public FixedShiftCalculator(final int[] moveDist) {
-            m_moveDist = moveDist;
+            m_moveDist = moveDist.clone();
         }
 
         /** {@inheritDoc} */

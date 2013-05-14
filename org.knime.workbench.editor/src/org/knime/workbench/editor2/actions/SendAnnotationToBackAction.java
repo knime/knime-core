@@ -134,10 +134,7 @@ public class SendAnnotationToBackAction extends AbstractNodeAction {
     }
 
     /**
-     *
-     * @see org.knime.workbench.editor2.actions.AbstractNodeAction
-     *      #runOnNodes(org.knime.workbench.editor2.
-     *      editparts.NodeContainerEditPart[])
+     * {@inheritDoc}
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {

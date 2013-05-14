@@ -102,7 +102,6 @@ public class DropNodeCommand extends AbstractKNIMECommand {
                     // and has only a variable in port
                     && m_container.getNrInPorts() == 1) {
                 // if not executable and has a dialog and is fully connected
-//                m_container.openDialogInJFrame();
 
                 // This is embedded in a special JFace wrapper dialog
                 //
@@ -115,14 +114,14 @@ public class DropNodeCommand extends AbstractKNIMECommand {
                                         Display.getCurrent().getActiveShell(),
                                         m_container);
                             dlg.open();
-                        } catch (Throwable t) {
+                        } catch (Exception e) {
                             // they need to open it manually then
                         }
                     }
                 });
             }
 
-        } catch (Throwable t) {
+        } catch (Exception t) {
             // if fails notify the user
             LOGGER.debug("Node cannot be created.", t);
             MessageBox mb =

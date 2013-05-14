@@ -62,14 +62,6 @@ import org.eclipse.draw2d.geometry.Rectangle;
  */
 public class WorkflowLayout extends FreeformLayout {
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void layout(final IFigure container) {
-        super.layout(container);
-    }
-
-    /**
      * This ensures that all for all elements an <code>Rectangle</code>
      * objects is returned as contraint.
      *
@@ -80,7 +72,7 @@ public class WorkflowLayout extends FreeformLayout {
         Object constraint = constraints.get(child);
 
         // Do we already have a reactangle constraint ?
-        if (constraint != null && constraint instanceof Rectangle) {
+        if (constraint instanceof Rectangle) {
             return constraint;
         }
 

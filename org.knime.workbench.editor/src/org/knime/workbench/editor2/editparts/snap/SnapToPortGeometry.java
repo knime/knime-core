@@ -55,7 +55,6 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Vector;
 
 import org.eclipse.draw2d.Connection;
 import org.eclipse.draw2d.IFigure;
@@ -148,7 +147,7 @@ public class SnapToPortGeometry extends SnapToHelper {
     /**
      * A vertical or horizontal snapping point. since 3.0
      */
-    protected static class Entry {
+    private static class Entry {
         /**
          * The side from which this entry was created. -1 is used to indicate
          * left or top, 0 indicates the middle or center, and 1 indicates right
@@ -211,30 +210,30 @@ public class SnapToPortGeometry extends SnapToHelper {
      * The sensitivity of the snapping. Corrections greater than this value will
      * not occur.
      */
-    protected static final double THRESHOLD = 5.0001;
+    private static final double THRESHOLD = 5.0001;
 
-    boolean m_cachedCloneBool;
+    private boolean m_cachedCloneBool;
 
     /**
      * The horizontal rows being snapped to.
      */
-    protected Entry[] m_rows;
+    private Entry[] m_rows;
 
     /**
      * The vertical columnd being snapped to.
      */
-    protected Entry[] m_cols;
+    private Entry[] m_cols;
 
     /**
      * The y port values of the dragged node.
      */
-    protected Entry[] m_yValues;
+    private Entry[] m_yValues;
 
     /**
      * The container editpart providing the coordinates and the children to
      * which snapping occurs.
      */
-    protected GraphicalEditPart m_container;
+    private GraphicalEditPart m_container;
 
     private final ZoomManager m_zoomManager;
 
@@ -329,7 +328,6 @@ public class SnapToPortGeometry extends SnapToHelper {
         // get the smallest distance to the next y value
         double result = Double.MAX_VALUE;
         for (Entry entry : entries) {
-            // System.out.println("Entry: " + entry.offset);
             for (Entry y : ys) {
 
                 // only compare inports to outports as only oposite parts
@@ -344,7 +342,6 @@ public class SnapToPortGeometry extends SnapToHelper {
                     continue;
                 }
 
-                // System.out.println("y val: " + (y.offset + moveDelta));
                 double diff = entry.m_offset - (y.m_offset + moveDelta);
                 if (Math.abs(diff) < Math.abs(result)) {
                     result = diff;
@@ -476,7 +473,7 @@ public class SnapToPortGeometry extends SnapToHelper {
         List<AbstractPortEditPart> portList = getPorts(parts);
 
         // create all row relevant points fromt the port list
-        Vector<Entry> rowVector = new Vector<Entry>();
+        List<Entry> rowVector = new ArrayList<Entry>();
         for (int i = 0; i < portList.size(); i++) {
             GraphicalEditPart child = portList.get(i);
             Rectangle bounds = getFigureBounds(child);
@@ -523,7 +520,7 @@ public class SnapToPortGeometry extends SnapToHelper {
             }
         }
 
-        Vector<Entry> colVector = new Vector<Entry>();
+        List<Entry> colVector = new ArrayList<Entry>();
 
         for (int i = 0; i < parts.size(); i++) {
             GraphicalEditPart child = (GraphicalEditPart)parts.get(i);
@@ -569,9 +566,6 @@ public class SnapToPortGeometry extends SnapToHelper {
                 snapOrientation &= ~HORIZONTAL;
                 correction.preciseX += xcorrect;
             }
-
-            // System.out.println("Xcorrect:" + correction.preciseX
-            //             + " intermediat: " + xcorrect);
         }
 
         // get y values of the draged node part ports

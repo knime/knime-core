@@ -86,19 +86,6 @@ public class ChangeAnnotationBoundsCommand extends AbstractKNIMECommand {
     }
 
     /**
-     *
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean canExecute() {
-//        Dimension min = m_annotationEditPart.getFigure().getMinimumSize();
-//        if (m_newBounds.width < min.width || m_newBounds.height < min.height) {
-//            return false;
-//        }
-        return super.canExecute();
-    }
-
-    /**
      * Sets the new bounds.
      *
      * @see org.eclipse.gef.commands.Command#execute()

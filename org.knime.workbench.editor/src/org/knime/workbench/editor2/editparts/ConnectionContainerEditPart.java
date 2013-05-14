@@ -179,13 +179,13 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
      * @return the command to change the bendpoint locations
      */
     public Command getBendpointAdaptionCommand(final Request request) {
-        ChangeBoundsRequest boundsRequest = (ChangeBoundsRequest)request;
+        assert (request instanceof ChangeBoundsRequest) : "Unexpected request type: " + request.getClass();
 
         ZoomManager zoomManager =
                 (ZoomManager)(getRoot().getViewer()
                         .getProperty(ZoomManager.class.toString()));
 
-        Point moveDelta = boundsRequest.getMoveDelta();
+        Point moveDelta = ((ChangeBoundsRequest) request).getMoveDelta();
         return new ChangeBendPointLocationCommand(this, moveDelta, zoomManager);
     }
 
@@ -320,8 +320,7 @@ public class ConnectionContainerEditPart extends AbstractConnectionEditPart
         if (zoom < 1.0) {
             newZoomValue = 1.0;
         }
-        double connectinWidth = Math.round(newZoomValue);
-        return (int)connectinWidth;
+        return (int) Math.round(newZoomValue);
     }
 
     /**

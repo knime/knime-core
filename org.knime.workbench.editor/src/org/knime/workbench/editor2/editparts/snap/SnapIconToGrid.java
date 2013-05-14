@@ -129,7 +129,7 @@ public class SnapIconToGrid extends SnapToGrid {
     }
 
     /**
-     * Returns the part the request started on (the part that was dragged to move all selected nodes)
+     * Returns the part the request started on (the part that was dragged to move all selected nodes).
      * @param parts
      * @param mouseLoc
      * @param moveDelta

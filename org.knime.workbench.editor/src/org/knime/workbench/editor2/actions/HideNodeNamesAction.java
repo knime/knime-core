@@ -48,7 +48,6 @@
  */
 package org.knime.workbench.editor2.actions;
 
-import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.ui.parts.ScrollingGraphicalViewer;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.knime.workbench.editor2.ImageRepository;
@@ -120,24 +119,16 @@ public class HideNodeNamesAction extends AbstractClipboardAction {
      * {@inheritDoc}
      */
     @Override
-    protected void execute(final Command command) {
-        super.execute(command);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public synchronized void runOnNodes(final NodeContainerEditPart[] parts) {
 
-        ScrollingGraphicalViewer provider = (ScrollingGraphicalViewer) 
+        ScrollingGraphicalViewer provider = (ScrollingGraphicalViewer)
                 getEditor().getEditorSite().getSelectionProvider();
         if (provider == null) {
             return;
         }
 
         // get parent of the node parts
-        WorkflowRootEditPart editorPart = (WorkflowRootEditPart) 
+        WorkflowRootEditPart editorPart = (WorkflowRootEditPart)
                 provider.getRootEditPart().getChildren().get(0);
         editorPart.changeHideNodeNames();
         for (NodeContainerEditPart edit : getAllParts(

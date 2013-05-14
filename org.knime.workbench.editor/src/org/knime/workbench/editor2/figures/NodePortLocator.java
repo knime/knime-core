@@ -65,9 +65,6 @@ public class NodePortLocator extends PortLocator {
 
     private final NodeContainerFigure m_parent;
 
-    // private static final NodeLogger LOGGER = NodeLogger.getLogger(
-    // NodePortLocator.class);
-
     /**
      * Creates a new locator.
      *

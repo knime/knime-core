@@ -100,8 +100,8 @@ public class AddMetaNodePage extends WizardPage {
     private Text m_name;
     private List m_inPorts;
     private List m_outPorts;
-    private final ArrayList<MetaPortInfo>m_inPortList = new ArrayList<MetaPortInfo>();
-    private final ArrayList<MetaPortInfo>m_outPortList = new ArrayList<MetaPortInfo>();
+    private final java.util.List<MetaPortInfo>m_inPortList = new ArrayList<MetaPortInfo>();
+    private final java.util.List<MetaPortInfo>m_outPortList = new ArrayList<MetaPortInfo>();
 
 
     private boolean m_wasVisible = false;
@@ -244,7 +244,7 @@ public class AddMetaNodePage extends WizardPage {
         populateSelectionlistFromInfolist(m_outPorts, m_outPortList, "out_");
     }
 
-    private void populateSelectionlistFromInfolist(final List selList, final ArrayList<MetaPortInfo> infoList,
+    private void populateSelectionlistFromInfolist(final List selList, final java.util.List<MetaPortInfo> infoList,
             final String namePrefix) {
         selList.removeAll();
         for (int i = 0; i < infoList.size(); i++) {
@@ -266,14 +266,14 @@ public class AddMetaNodePage extends WizardPage {
     /**
      * @return list of entered out ports
      */
-    public ArrayList<MetaPortInfo> getOutPorts() {
+    public java.util.List<MetaPortInfo> getOutPorts() {
         return m_outPortList;
     }
 
     /**
      * @return list of entered in ports
      */
-    public ArrayList<MetaPortInfo>getInports() {
+    public java.util.List<MetaPortInfo>getInports() {
         return m_inPortList;
     }
 
@@ -349,7 +349,7 @@ public class AddMetaNodePage extends WizardPage {
 
     private void updateButtonState() {
         int inSel = m_inPorts.getSelectionIndex();
-        if (inSel >=0) {
+        if (inSel >= 0) {
             MetaPortInfo info = m_inPortList.get(inSel);
             m_addInPort.setEnabled(true);
             m_remInPort.setEnabled(!info.isConnected());
@@ -587,7 +587,7 @@ public class AddMetaNodePage extends WizardPage {
 
 
     private void addPort(final boolean inPort) {
-        ArrayList<MetaPortInfo> infoList = inPort ? m_inPortList : m_outPortList;
+        java.util.List<MetaPortInfo> infoList = inPort ? m_inPortList : m_outPortList;
         List portList = inPort ? m_inPorts : m_outPorts;
         MetaPortDialog dialog = new MetaPortDialog(Display.getDefault().getActiveShell());
         Port port = dialog.open();
@@ -602,7 +602,7 @@ public class AddMetaNodePage extends WizardPage {
     }
 
     private void removeSelPort(final boolean inPort) {
-        ArrayList<MetaPortInfo> infoList = inPort ? m_inPortList : m_outPortList;
+        java.util.List<MetaPortInfo> infoList = inPort ? m_inPortList : m_outPortList;
         List portList = inPort ? m_inPorts : m_outPorts;
 
         int idx = portList.getSelectionIndex();
@@ -619,7 +619,7 @@ public class AddMetaNodePage extends WizardPage {
     }
 
     private void moveSelPort(final boolean inPort, final boolean moveUp) {
-        ArrayList<MetaPortInfo> infoList = inPort ? m_inPortList : m_outPortList;
+        java.util.List<MetaPortInfo> infoList = inPort ? m_inPortList : m_outPortList;
         List portList = inPort ? m_inPorts : m_outPorts;
         int idx = portList.getSelectionIndex();
         int minIdx = moveUp ? 1 : 0;
@@ -741,7 +741,7 @@ public class AddMetaNodePage extends WizardPage {
                                 SWT.COLOR_RED));
                         gc.fillOval(
                                 left - PORT_SIZE - 1,
-                                y -1,
+                                y - 1,
                                 PORT_SIZE + 1, PORT_SIZE + 1);
                     } else {
                         gc.setBackground(getShell().getDisplay().getSystemColor(

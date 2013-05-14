@@ -315,20 +315,18 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
                     }
 
                     // if we have a connection to refresh...
-                    if (c != null && getNodeContainer() != null) {
+                    if ((c != null) && (getNodeContainer() != null)
+                            && (c.getSource().equals(getNodeContainer().getID())
+                                    || c.getDest().equals(getNodeContainer().getID()))) {
                         // only refresh if we are actually involved in the
                         // connection change
-                        if (c.getSource().equals(getNodeContainer().getID())
-                                || c.getDest().equals(
-                                        getNodeContainer().getID())) {
-                            AbstractPortFigure fig =
-                                    (AbstractPortFigure)getFigure();
-                            fig.setIsConnected(isConnected());
-                            fig.repaint();
-                            refreshChildren();
-                            refreshSourceConnections();
-                            refreshTargetConnections();
-                        }
+                        AbstractPortFigure fig =
+                                (AbstractPortFigure)getFigure();
+                        fig.setIsConnected(isConnected());
+                        fig.repaint();
+                        refreshChildren();
+                        refreshSourceConnections();
+                        refreshTargetConnections();
                     }
                 }
             });

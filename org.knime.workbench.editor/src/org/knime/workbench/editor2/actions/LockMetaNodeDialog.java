@@ -53,7 +53,14 @@ package org.knime.workbench.editor2.actions;
 
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
+
+import javax.crypto.NoSuchPaddingException;
 
 import org.eclipse.jface.dialogs.IconAndMessageDialog;
 import org.eclipse.jface.dialogs.MessageDialog;
@@ -97,6 +104,7 @@ public class LockMetaNodeDialog extends IconAndMessageDialog {
      * the password and the password hint.
      *
      * @param parent the parent shell for this dialog
+     * @param mgr the workflow manager for the meta node
      */
     public LockMetaNodeDialog(final Shell parent, final WorkflowManager mgr) {
         super(parent);
@@ -140,7 +148,6 @@ public class LockMetaNodeDialog extends IconAndMessageDialog {
         m_showPlainChecker.setSelection(false);
         final int indent = 20;
         GridData gd = new GridData();
-//        gd.heightHint = convertVerticalDLUsToPixels(BAR_DLUS);
         gd.horizontalAlignment = GridData.FILL;
         gd.grabExcessHorizontalSpace = true;
         gd.horizontalSpan = 2;
@@ -254,16 +261,21 @@ public class LockMetaNodeDialog extends IconAndMessageDialog {
         } else {
             if (enabled) {
                 try {
-                    verifyPassword(pass, m_passwordKnimeCOMTextField.getText());
+                    if (!verifyPassword(pass, m_passwordKnimeCOMTextField.getText())) {
+                        MessageDialog.openError(getParentShell(),
+                                                "Invalid password", "The password you entered does "
+                                                + "not match the signature (write EMail to "
+                                                + "contact@knime.com for details)");
+                    } else {
+                        m_newPassword = pass;
+                        m_passwordHint = m_passwordHintTextField.getText();
+                    }
                 } catch (Exception e) {
                     MessageDialog.openError(getParentShell(),
-                            "Invalid password", "The password you entered does "
-                            + "not match the signature (write EMail to "
-                            + "contact@knime.com for details)");
+                            "Password error", "Error while checking password. Please check if the entered signature is"
+                            + " valid or write EMail to contact@knime.com for details");
                     return;
                 }
-                m_newPassword = pass;
-                m_passwordHint = m_passwordHintTextField.getText();
             } else {
                 m_newPassword = null;
                 m_passwordHint = null;
@@ -277,21 +289,26 @@ public class LockMetaNodeDialog extends IconAndMessageDialog {
      * This probably should go into the KNIME (safer) but all this is
      * weak anyway.
      * @param password The password as entered
-     * @param knimeCOMPassword The hex string of the knime.com encrypted
+     * @param encryptedPassword The hex string of the knime.com encrypted
      *        password (it's deciphered and compared with the
-     * @throws Exception If decryption fails or the passwords don't match.
+     *
+     * @throws InvalidKeySpecException if decryption fails
+     * @throws NoSuchPaddingException if decryption fails
+     * @throws NoSuchAlgorithmException if decryption fails
+     * @throws InvalidKeyException if decryption fails
+     * @throws IOException should not happen since no real I/O takes place
      */
-    private static void verifyPassword(final String password,
-            final String knimeCOMPassword) throws Exception {
-        byte[] knimeCOMPasswordBytes = HexUtils.hexToBytes(knimeCOMPassword);
-        ByteArrayInputStream in =
-            new ByteArrayInputStream(knimeCOMPasswordBytes);
+    private static boolean verifyPassword(final String password, final String encryptedPassword)
+            throws InvalidKeyException, NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeySpecException,
+            IOException {
+        byte[] encryptedBytes = HexUtils.hexToBytes(encryptedPassword);
+        ByteArrayInputStream in = new ByteArrayInputStream(encryptedBytes);
         KNIMEDecryptionStream decr = new KNIMEDecryptionStream(in);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(decr));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(decr, Charset.forName("UTF-8")));
         String str = reader.readLine();
-        if (!str.equals(password)) {
-            throw new Exception("Passwords don't match.");
-        }
+        boolean match = (str != null) && str.equals(password);
+        reader.close();
+        return match;
     }
 
     /** @return password as entered or null if disabled. */

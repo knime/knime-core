@@ -76,31 +76,22 @@ public class SelectMetaNodePage extends WizardPage {
         + " with a usual number of data in and out ports, select one; \n"
         + "otherwise click next to define a custom MetaNode";
 
-//    private Combo m_comboBox;
-
     static final String ZERO_ONE = "0:1";
     static final String ONE_ONE = "1:1";
     static final String ONE_TWO = "1:2";
     static final String TWO_ONE = "2:1";
     static final String TWO_TWO = "2:2";
     static final String CUSTOM = "custom";
-    
-    private Button m_btnZeroOne;
-    private Button m_btnOneOne;
-    private Button m_btnOneTwo;
-    private Button m_btnTwoOne;
-    private Button m_btnTwoTwo;
-    private Button m_btnCustom;
-    
-    private final Map<Button, Image> m_activeIconMap 
+
+    private final Map<Button, Image> m_activeIconMap
         = new HashMap<Button, Image>();
 
-    private final Map<Button, Image> m_inactiveIconMap 
+    private final Map<Button, Image> m_inactiveIconMap
         = new HashMap<Button, Image>();
 
-    
+
     private Button m_selectedButton;
-    
+
     private String m_selectedMetaNode;
 
 
@@ -116,10 +107,10 @@ public class SelectMetaNodePage extends WizardPage {
     /**
      * {@inheritDoc}
      */
-    public void createControl(final Composite parent) { 
+    public void createControl(final Composite parent) {
         Composite overall = new Composite(parent, SWT.NONE);
         overall.setLayout(new GridLayout(1, true));
-        
+
         Composite buttonGrid = new Composite(overall, SWT.NONE);
         buttonGrid.setLayout(new GridLayout(3, true));
         GridData gridData = new GridData(GridData.FILL_BOTH);
@@ -132,114 +123,114 @@ public class SelectMetaNodePage extends WizardPage {
 
         GridData buttonGD = new GridData();
         buttonGD.heightHint = 80;
-        
+
         /* On the Mac toggle buttons seem to have a fixed size. Therefore the
          * images do not fit into the button. The only viable workaround was
          * to use check buttons instead. */
-        int BUTTON_STYLE = SWT.TOGGLE;
+        int buttonStyle = SWT.TOGGLE;
         if (System.getProperty("os.name").startsWith("Mac")) {
-        	BUTTON_STYLE = SWT.CHECK;
+            buttonStyle = SWT.CHECK;
         }
-        
-		m_btnZeroOne = new Button(buttonGrid, BUTTON_STYLE);
-        m_btnZeroOne.setImage(ImageRepository.getImage(
-                "/icons/meta/meta_0_1_inactive.png"));
-        m_inactiveIconMap.put(m_btnZeroOne, ImageRepository.getImage(
-            "/icons/meta/meta_0_1_inactive.png"));
-        m_activeIconMap.put(m_btnZeroOne, ImageRepository.getImage(
-            "/icons/meta/meta_0_1.png"));   
-        m_btnZeroOne.setLayoutData(buttonGD);
-        m_btnZeroOne.addSelectionListener(new SelectionListener() {
 
+		Button btnZeroOne = new Button(buttonGrid, buttonStyle);
+        btnZeroOne.setImage(ImageRepository.getImage(
+                "/icons/meta/meta_0_1_inactive.png"));
+        m_inactiveIconMap.put(btnZeroOne, ImageRepository.getImage(
+            "/icons/meta/meta_0_1_inactive.png"));
+        m_activeIconMap.put(btnZeroOne, ImageRepository.getImage(
+            "/icons/meta/meta_0_1.png"));
+        btnZeroOne.setLayoutData(buttonGD);
+        btnZeroOne.addSelectionListener(new SelectionListener() {
+            @Override
             public void widgetDefaultSelected(final SelectionEvent e) {
                 widgetSelected(e);
             }
 
+            @Override
             public void widgetSelected(final SelectionEvent e) {
                 m_selectedMetaNode = ZERO_ONE;
                 changeSelection((Button)e.getSource());
                 setPageComplete(true);
             }
-            
-        });
-        m_btnOneOne = new Button(buttonGrid, BUTTON_STYLE);
-        m_btnOneOne.setImage(ImageRepository.getImage(
-                "/icons/meta/meta_1_1_inactive.png"));
-        m_inactiveIconMap.put(m_btnOneOne, ImageRepository.getImage(
-                "/icons/meta/meta_1_1_inactive.png"));
-        m_activeIconMap.put(m_btnOneOne, ImageRepository.getImage(
-                "/icons/meta/meta_1_1.png"));
-        m_btnOneOne.setLayoutData(buttonGD);
-        m_btnOneOne.addSelectionListener(new SelectionListener() {
 
+        });
+        Button btnOneOne = new Button(buttonGrid, buttonStyle);
+        btnOneOne.setImage(ImageRepository.getImage(
+                "/icons/meta/meta_1_1_inactive.png"));
+        m_inactiveIconMap.put(btnOneOne, ImageRepository.getImage(
+                "/icons/meta/meta_1_1_inactive.png"));
+        m_activeIconMap.put(btnOneOne, ImageRepository.getImage(
+                "/icons/meta/meta_1_1.png"));
+        btnOneOne.setLayoutData(buttonGD);
+        btnOneOne.addSelectionListener(new SelectionListener() {
+            @Override
             public void widgetDefaultSelected(final SelectionEvent e) {
                 widgetSelected(e);
             }
 
+            @Override
             public void widgetSelected(final SelectionEvent e) {
                 m_selectedMetaNode = ONE_ONE;
                 changeSelection((Button)e.getSource());
                 setPageComplete(true);
             }
-            
         });
-        m_btnOneTwo = new Button(buttonGrid, BUTTON_STYLE);
-        m_btnOneTwo.setImage(ImageRepository.getImage(
+        Button btnOneTwo = new Button(buttonGrid, buttonStyle);
+        btnOneTwo.setImage(ImageRepository.getImage(
                 "/icons/meta/meta_1_2_inactive.png"));
-        m_inactiveIconMap.put(m_btnOneTwo, ImageRepository.getImage(
+        m_inactiveIconMap.put(btnOneTwo, ImageRepository.getImage(
                 "/icons/meta/meta_1_2_inactive.png"));
-        m_activeIconMap.put(m_btnOneTwo,
+        m_activeIconMap.put(btnOneTwo,
                 ImageRepository.getImage("/icons/meta/meta_1_2.png"));
-        m_btnOneTwo.setLayoutData(buttonGD);
-        m_btnOneTwo.addSelectionListener(new SelectionListener() {
-
+        btnOneTwo.setLayoutData(buttonGD);
+        btnOneTwo.addSelectionListener(new SelectionListener() {
+            @Override
             public void widgetDefaultSelected(final SelectionEvent e) {
-//                widgetSelected(e);
             }
 
+            @Override
             public void widgetSelected(final SelectionEvent e) {
                 m_selectedMetaNode = ONE_TWO;
                 changeSelection((Button)e.getSource());
                 setPageComplete(true);
             }
-            
         });
-        m_btnTwoOne = new Button(buttonGrid, BUTTON_STYLE);
-        m_btnTwoOne.setImage(ImageRepository.getImage(
+        Button btnTwoOne = new Button(buttonGrid, buttonStyle);
+        btnTwoOne.setImage(ImageRepository.getImage(
                 "/icons/meta/meta_2_1_inactive.png"));
-                
-        m_activeIconMap.put(m_btnTwoOne, ImageRepository.getImage(
-                "/icons/meta/meta_2_1.png"));
-        m_inactiveIconMap.put(m_btnTwoOne, ImageRepository.getImage(
-                "/icons/meta/meta_2_1_inactive.png"));
-        m_btnTwoOne.setLayoutData(buttonGD);
-        m_btnTwoOne.addSelectionListener(new SelectionListener() {
 
+        m_activeIconMap.put(btnTwoOne, ImageRepository.getImage(
+                "/icons/meta/meta_2_1.png"));
+        m_inactiveIconMap.put(btnTwoOne, ImageRepository.getImage(
+                "/icons/meta/meta_2_1_inactive.png"));
+        btnTwoOne.setLayoutData(buttonGD);
+        btnTwoOne.addSelectionListener(new SelectionListener() {
+            @Override
             public void widgetDefaultSelected(final SelectionEvent e) {
-//                widgetSelected(e);
             }
 
+            @Override
             public void widgetSelected(final SelectionEvent e) {
                 m_selectedMetaNode = TWO_ONE;
                 changeSelection((Button)e.getSource());
                 setPageComplete(true);
             }
-            
-        });
-        m_btnTwoTwo = new Button(buttonGrid, BUTTON_STYLE);
-        m_btnTwoTwo.setImage(ImageRepository.getImage(
-                "/icons/meta/meta_2_2_inactive.png"));
-        m_activeIconMap.put(m_btnTwoTwo, ImageRepository.getImage(
-                "/icons/meta/meta_2_2.png"));                
-        m_inactiveIconMap.put(m_btnTwoTwo, ImageRepository.getImage(
-                "/icons/meta/meta_2_2_inactive.png"));
-        m_btnTwoTwo.setLayoutData(buttonGD);
-        m_btnTwoTwo.addSelectionListener(new SelectionListener() {
 
+        });
+        Button btnTwoTwo = new Button(buttonGrid, buttonStyle);
+        btnTwoTwo.setImage(ImageRepository.getImage(
+                "/icons/meta/meta_2_2_inactive.png"));
+        m_activeIconMap.put(btnTwoTwo, ImageRepository.getImage(
+                "/icons/meta/meta_2_2.png"));
+        m_inactiveIconMap.put(btnTwoTwo, ImageRepository.getImage(
+                "/icons/meta/meta_2_2_inactive.png"));
+        btnTwoTwo.setLayoutData(buttonGD);
+        btnTwoTwo.addSelectionListener(new SelectionListener() {
+            @Override
             public void widgetDefaultSelected(final SelectionEvent e) {
-//                widgetSelected(e);
             }
 
+            @Override
             public void widgetSelected(final SelectionEvent e) {
                 changeSelection((Button)e.getSource());
                 m_selectedMetaNode = TWO_TWO;
@@ -247,32 +238,31 @@ public class SelectMetaNodePage extends WizardPage {
                         m_selectedMetaNode);
                 setPageComplete(true);
             }
-            
-        });
-        m_btnCustom = new Button(buttonGrid, BUTTON_STYLE);
-        m_btnCustom.setImage(ImageRepository.getImage(
-                "/icons/meta/custom_meta_inactive.png"));
-        m_activeIconMap.put(m_btnCustom, ImageRepository.getImage(
-                "/icons/meta/custom_meta.png"));
-        m_inactiveIconMap.put(m_btnCustom, ImageRepository.getImage(
-                "/icons/meta/custom_meta_inactive.png"));
-        m_btnCustom.setLayoutData(buttonGD);
-        m_btnCustom.addSelectionListener(new SelectionListener() {
 
+        });
+        Button btnCustom = new Button(buttonGrid, buttonStyle);
+        btnCustom.setImage(ImageRepository.getImage(
+                "/icons/meta/custom_meta_inactive.png"));
+        m_activeIconMap.put(btnCustom, ImageRepository.getImage(
+                "/icons/meta/custom_meta.png"));
+        m_inactiveIconMap.put(btnCustom, ImageRepository.getImage(
+                "/icons/meta/custom_meta_inactive.png"));
+        btnCustom.setLayoutData(buttonGD);
+        btnCustom.addSelectionListener(new SelectionListener() {
+            @Override
             public void widgetDefaultSelected(final SelectionEvent e) {
-//                widgetSelected(e);
             }
 
+            @Override
             public void widgetSelected(final SelectionEvent e) {
                 m_selectedMetaNode = CUSTOM;
                 changeSelection((Button)e.getSource());
                 setPageComplete(false);
             }
-            
-        });          
+        });
         setControl(overall);
     }
-    
+
     private void changeSelection(final Button newSelection) {
         if (m_selectedButton != null) {
             m_selectedButton.setSelection(false);
@@ -283,16 +273,16 @@ public class SelectMetaNodePage extends WizardPage {
         m_selectedButton = newSelection;
         ((AddMetaNodePage)getNextPage()).setTemplate(m_selectedMetaNode);
     }
-    
+
     /**
      *
      * {@inheritDoc}
      */
     @Override
     public boolean isPageComplete() {
-        // TODO: replace the last check -> makes no sense 
-        // rather check for nr of ports 
-        return m_selectedMetaNode != null && m_selectedMetaNode != CUSTOM;
+        // TODO: replace the last check -> makes no sense
+        // rather check for nr of ports
+        return (m_selectedMetaNode != null) && !m_selectedMetaNode.equals(CUSTOM);
     }
 
 
@@ -302,7 +292,7 @@ public class SelectMetaNodePage extends WizardPage {
      */
     @Override
     public boolean canFlipToNextPage() {
-        return m_selectedMetaNode != null; 
+        return m_selectedMetaNode != null;
     }
 
     String getSelectedMetaNode() {

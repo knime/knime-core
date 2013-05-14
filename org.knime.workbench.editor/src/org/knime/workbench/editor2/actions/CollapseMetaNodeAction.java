@@ -48,11 +48,12 @@
  */
 package org.knime.workbench.editor2.actions;
 
-import java.util.Vector;
+import java.util.ArrayList;
+import java.util.List;
 
-import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.MessageBox;
@@ -160,7 +161,7 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
         try {
             // before testing anything, let's see if we should reset
             // the selected nodes:
-            Vector<NodeID> resetableIDs = new Vector<NodeID>();
+            List<NodeID> resetableIDs = new ArrayList<NodeID>();
             for (NodeID id : nodeIds) {
                 if (manager.canResetNode(id)) {
                     resetableIDs.add(id);
@@ -192,10 +193,10 @@ public class CollapseMetaNodeAction extends AbstractNodeAction {
             InputDialog idia = new InputDialog(Display.getCurrent().getActiveShell(),
                     "Enter Name of Metanode", "Enter name of metanode:", name, null);
             int dialogreturn = idia.open();
-            if (dialogreturn == Dialog.CANCEL) {
+            if (dialogreturn == Window.CANCEL) {
                 return;
             }
-            if (dialogreturn == Dialog.OK) {
+            if (dialogreturn == Window.OK) {
                 if (resetableIDs.size() > 0) {
                     // do quick&dirty reset: just reset them in random order
                     // and skip the ones that were already reset in passing.

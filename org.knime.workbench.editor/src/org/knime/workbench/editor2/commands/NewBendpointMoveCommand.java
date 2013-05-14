@@ -50,7 +50,6 @@
  */
 package org.knime.workbench.editor2.commands;
 
-import org.eclipse.draw2d.AbsoluteBendpoint;
 import org.eclipse.draw2d.geometry.Point;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.knime.core.node.workflow.ConnectionContainer;
@@ -71,8 +70,6 @@ public class NewBendpointMoveCommand extends AbstractKNIMECommand {
     private Point m_oldLocation;
 
     private int m_index;
-
-    //private AbsoluteBendpoint m_bendpoint;
 
     private ZoomManager m_zoomManager;
 
@@ -108,17 +105,13 @@ public class NewBendpointMoveCommand extends AbstractKNIMECommand {
         ConnectionContainer connection = getConnection();
         ConnectionUIInformation uiInfo = connection.getUIInfo();
         int[] p = uiInfo.getBendpoint(m_index);
-
-        AbsoluteBendpoint bendpoint = new AbsoluteBendpoint(p[0], p[1]);
-        m_oldLocation = bendpoint.getLocation();
+        m_oldLocation = new Point(p[0], p[1]);
 
         Point newLocation = m_newLocation.getCopy();
         WorkflowEditor.adaptZoom(m_zoomManager, newLocation, true);
 
-        bendpoint = new AbsoluteBendpoint(newLocation);
-
         uiInfo.removeBendpoint(m_index);
-        uiInfo.addBendpoint(bendpoint.x, bendpoint.y, m_index);
+        uiInfo.addBendpoint(newLocation.x, newLocation.y, m_index);
 
         // issue notification
         connection.setUIInfo(uiInfo);
@@ -151,7 +144,6 @@ public class NewBendpointMoveCommand extends AbstractKNIMECommand {
         ConnectionContainer connection = getConnection();
         ConnectionUIInformation uiInfo = connection.getUIInfo();
         Point oldLocation = m_oldLocation.getCopy();
-        //WorkflowEditor.adaptZoom(m_zoomManager, oldLocation, true);
 
         uiInfo.removeBendpoint(m_index);
         uiInfo.addBendpoint(oldLocation.x, oldLocation.y, m_index);

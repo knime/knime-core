@@ -149,9 +149,7 @@ public class CancelAction extends AbstractNodeAction {
      * This cancels all the selected nodes. Note that this is all controlled by
      * the WorkflowManager object of the currently open editor.
      *
-     * @see org.knime.workbench.editor2.actions.AbstractNodeAction
-     *      #runOnNodes(org.knime.workbench.editor2.
-     *      editparts.NodeContainerEditPart[])
+     * {@inheritDoc}
      */
     @Override
     public void runOnNodes(final NodeContainerEditPart[] nodeParts) {

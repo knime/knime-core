@@ -81,10 +81,9 @@ public class CollapseMetaNodeCommand extends AbstractKNIMECommand {
             final NodeID[] nodes, final WorkflowAnnotation[] annos,
             final String name) {
         super(wfm);
-        m_nodes = nodes;
-        m_annos = annos;
+        m_nodes = nodes.clone();
+        m_annos = annos.clone();
         m_name = name;
-        m_wrapper = null;
     }
 
     /** {@inheritDoc} */
