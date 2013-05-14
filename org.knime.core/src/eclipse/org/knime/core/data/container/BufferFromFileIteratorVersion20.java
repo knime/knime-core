@@ -73,6 +73,7 @@ import org.knime.core.node.NodeLogger;
  * File iterator to read stream written by a {@link Buffer}.
  * @author Bernd Wiswedel, University of Konstanz
  */
+@SuppressWarnings("javadoc")
 final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
 
     private static final NodeLogger LOGGER =
@@ -163,7 +164,7 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
         RowKey key;
         try {
             key = readRowKeyAndEndBlock(inStream);
-        } catch (Throwable throwable) {
+        } catch (Exception throwable) {
             handleReadThrowable(throwable);
             // can't ensure that we generate a unique key but it should
             // cover 99.9% of all cases
@@ -179,7 +180,7 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
                 } finally {
                     m_inStream.endBlock();
                 }
-            } catch (final Throwable e) {
+            } catch (final Exception e) {
                 handleReadThrowable(e);
                 nextCell = DataType.getMissingCell();
             }
@@ -290,7 +291,6 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
          * @return the data cell being read
          * @throws IOException If exceptions occur.
          */
-        @SuppressWarnings("unchecked")
         DataCell readDataCell(final DCObjectInputVersion2 inStream)
                 throws IOException {
             inStream.setCurrentClassLoader(null);
