@@ -109,23 +109,18 @@ public class ExponentialOldMA extends MovingAverage {
                 m_avg += newValue * m_weights[m_indexNewestValue];
                 m_originalValues[m_indexNewestValue] = newValue;
                 m_indexNewestValue++;
-
                 m_initialValues++;
                 m_enoughValues = (m_initialValues == m_winLength);
+            } else {
+                m_avg -= (m_originalValues[m_indexOldestValue] * m_weights[m_indexOldestValue])
+                        + (newValue * m_weights[m_indexOldestValue]);
 
-                if (!m_enoughValues) {
-                    return DataType.getMissingCell();
+                m_indexNewestValue = m_indexOldestValue;
+                m_originalValues[m_indexNewestValue] = newValue;
+                m_indexOldestValue++;
+                if (m_indexOldestValue >= m_winLength) {
+                    m_indexOldestValue = 0;
                 }
-            }
-            m_avg = m_avg - (m_originalValues[m_indexOldestValue]
-                                              * m_weights[m_indexOldestValue])
-                    + (newValue * m_weights[m_indexOldestValue]);
-
-            m_indexNewestValue = m_indexOldestValue;
-            m_originalValues[m_indexNewestValue] = newValue;
-            m_indexOldestValue++;
-            if (m_indexOldestValue >= m_winLength) {
-                m_indexOldestValue = 0;
             }
 
             if (previousEnoughValues) {
