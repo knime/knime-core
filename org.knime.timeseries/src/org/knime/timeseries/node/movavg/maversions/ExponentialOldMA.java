@@ -102,6 +102,9 @@ public class ExponentialOldMA extends MovingAverage {
          */
         @Override
         public DataCell getMeanandUpdate(final double newValue) {
+            double previousAvg = m_avg;
+            boolean previousEnoughValues = m_enoughValues;
+
             if (!m_enoughValues) {
                 m_avg += newValue * m_weights[m_indexNewestValue];
                 m_originalValues[m_indexNewestValue] = newValue;
@@ -113,7 +116,6 @@ public class ExponentialOldMA extends MovingAverage {
                 if (!m_enoughValues) {
                     return DataType.getMissingCell();
                 }
-                return new DoubleCell(m_avg);
             }
             m_avg = m_avg - (m_originalValues[m_indexOldestValue]
                                               * m_weights[m_indexOldestValue])
@@ -126,10 +128,10 @@ public class ExponentialOldMA extends MovingAverage {
                 m_indexOldestValue = 0;
             }
 
-            if (m_enoughValues) {
-                  return new DoubleCell(newValue * m_expWeight + m_avg * (1 - m_expWeight));
+            if (previousEnoughValues) {
+                return new DoubleCell(newValue * m_expWeight + previousAvg * (1 - m_expWeight));
             } else {
-                 return DataType.getMissingCell();
+                return DataType.getMissingCell();
             }
         }
 
