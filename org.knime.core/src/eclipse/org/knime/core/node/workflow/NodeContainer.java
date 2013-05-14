@@ -1419,7 +1419,7 @@ public abstract class NodeContainer implements NodeProgressListener {
      */
     protected void setExecutionEnvironment(final ExecutionEnvironment exEnv) {
         assert exEnv == null || ((m_executionEnv == null) && (exEnv != null))
-                : "Execution Environment set on unclean Env. " + toString();
+                : "Execution Environment set on unclean Environment (" + toString() +")";
         m_executionEnv = exEnv;
     }
 
