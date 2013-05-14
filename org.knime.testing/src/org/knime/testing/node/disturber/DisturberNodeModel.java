@@ -84,7 +84,7 @@ public class DisturberNodeModel extends NodeModel {
                 sum += r.nextDouble();
                 if (sum >= 5) {
                     cells[i] = DataType.getMissingCell();
-                    sum = 0;
+                    sum -= 5;
                 } else {
                     cells[i] = row.getCell(i);
                 }
