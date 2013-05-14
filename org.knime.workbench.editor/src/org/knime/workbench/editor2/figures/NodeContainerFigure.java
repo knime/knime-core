@@ -235,8 +235,7 @@ public class NodeContainerFigure extends RectangleFigure {
             KNIMEUIPlugin.getDefault().getPreferenceStore();
         final int height = store.getInt(PreferenceConstants.P_NODE_LABEL_FONT_SIZE);
         final String fontName = fontName();
-        final Display current = Display.getDefault();
-        Font normalFont = new Font(current, fontName, height, SWT.NORMAL);
+        Font normalFont = new Font(Display.getDefault(), fontName, height, SWT.NORMAL);
         super.setFont(normalFont);
 
 

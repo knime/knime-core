@@ -70,7 +70,6 @@ import org.eclipse.gef.SnapToHelper;
 import org.eclipse.gef.editparts.ZoomManager;
 import org.eclipse.gef.handles.HandleBounds;
 import org.eclipse.gef.requests.ChangeBoundsRequest;
-import org.eclipse.gef.requests.GroupRequest;
 import org.knime.core.node.port.PortType;
 import org.knime.workbench.editor2.WorkflowEditor;
 import org.knime.workbench.editor2.editparts.AbstractPortEditPart;
@@ -542,6 +541,9 @@ public class SnapToPortGeometry extends SnapToHelper {
     @Override
     public int snapRectangle(final Request request, int snapOrientation,
             PrecisionRectangle baseRect, final PrecisionRectangle result) {
+        assert (request instanceof ChangeBoundsRequest) : "Unexpected request type: " + request.getClass();
+        ChangeBoundsRequest changeBoundsRequest = (ChangeBoundsRequest)request;
+
         baseRect = baseRect.getPreciseCopy();
         makeRelative(m_container.getContentPane(), baseRect);
         PrecisionRectangle correction = new PrecisionRectangle();
@@ -553,16 +555,15 @@ public class SnapToPortGeometry extends SnapToHelper {
         if (m_rows == null || m_cols == null || isClone != m_cachedCloneBool) {
             m_cachedCloneBool = isClone;
             exclusionSet = Collections.EMPTY_LIST;
-            if (!isClone && request instanceof GroupRequest) {
-                exclusionSet = ((GroupRequest)request).getEditParts();
+            if (!isClone) {
+                exclusionSet = changeBoundsRequest.getEditParts();
             }
             populateRowsAndCols(generateSnapPartsList(exclusionSet),
                     exclusionSet);
         }
 
         if ((snapOrientation & HORIZONTAL) != 0) {
-            double xcorrect = THRESHOLD;
-            xcorrect = getCorrectionFor(m_cols, request.getExtendedData(),
+            double xcorrect = getCorrectionFor(m_cols, changeBoundsRequest.getExtendedData(),
                     true, baseRect.preciseX, baseRect.preciseRight());
             if (xcorrect != THRESHOLD) {
                 snapOrientation &= ~HORIZONTAL;
@@ -594,12 +595,12 @@ public class SnapToPortGeometry extends SnapToHelper {
         }
 
         // get the move delta of the orignial location
-        Point moveDeltaPoint = ((ChangeBoundsRequest)request).getMoveDelta();
+        Point moveDeltaPoint = changeBoundsRequest.getMoveDelta();
         WorkflowEditor.adaptZoom(m_zoomManager, moveDeltaPoint, false);
         int moveDelta = moveDeltaPoint.y;
         if ((snapOrientation & VERTICAL) != 0) {
             double ycorrect = THRESHOLD;
-            ycorrect = getCorrectionForY(m_rows, request.getExtendedData(),
+            ycorrect = getCorrectionForY(m_rows, changeBoundsRequest.getExtendedData(),
                     m_yValues, moveDelta);
             if (Math.abs(ycorrect) < THRESHOLD) {
                 snapOrientation &= ~VERTICAL;

@@ -174,7 +174,7 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
      * {@link org.eclipse.gef.handles.BendpointCreationHandle} is placed in the
      * middle of the Connection.
      *
-     * @see SelectionHandlesEditPolicy#createSelectionHandles()
+     * {@inheritDoc}
      */
     @Override
     protected List createSelectionHandles() {
@@ -217,9 +217,11 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
      */
     @Override
     public void eraseSourceFeedback(final Request request) {
-        if (REQ_MOVE_BENDPOINT.equals(request.getType())
-                || REQ_CREATE_BENDPOINT.equals(request.getType())) {
-            eraseConnectionFeedback((BendpointRequest)request);
+        if (request instanceof BendpointRequest) {
+            if (REQ_MOVE_BENDPOINT.equals(request.getType())
+                    || REQ_CREATE_BENDPOINT.equals(request.getType())) {
+                eraseConnectionFeedback((BendpointRequest)request);
+            }
         }
     }
 
@@ -227,18 +229,20 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
      * Factors the Request into either a MOVE, a DELETE, or a CREATE of a
      * bendpoint.
      *
-     * @see org.eclipse.gef.EditPolicy#getCommand(Request)
+     * {@inheritDoc}
      */
     @Override
     public Command getCommand(final Request request) {
-        if (REQ_MOVE_BENDPOINT.equals(request.getType())) {
-            if (m_isDeleting) {
-                return getDeleteBendpointCommand((BendpointRequest)request);
+        if (request instanceof BendpointRequest) {
+            if (REQ_MOVE_BENDPOINT.equals(request.getType())) {
+                if (m_isDeleting) {
+                    return getDeleteBendpointCommand((BendpointRequest)request);
+                }
+                return getMoveBendpointCommand((BendpointRequest)request);
             }
-            return getMoveBendpointCommand((BendpointRequest)request);
-        }
-        if (REQ_CREATE_BENDPOINT.equals(request.getType())) {
-            return getCreateBendpointCommand((BendpointRequest)request);
+            if (REQ_CREATE_BENDPOINT.equals(request.getType())) {
+                return getCreateBendpointCommand((BendpointRequest)request);
+            }
         }
         return null;
     }
@@ -297,9 +301,9 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
     /**
      * If the number of bendpoints changes, handles are updated.
      *
-     * @see java.beans.PropertyChangeListener
-     *      #propertyChange(PropertyChangeEvent)
+     * {@inheritDoc}
      */
+    @Override
     public void propertyChange(final PropertyChangeEvent evt) {
         // $TODO optimize so that handles aren't added constantly.
         if (getHost().getSelected() != EditPart.SELECTED_NONE) {
@@ -454,10 +458,12 @@ public class ConnectionBendpointEditPolicy extends SelectionHandlesEditPolicy
      */
     @Override
     public void showSourceFeedback(final Request request) {
-        if (REQ_MOVE_BENDPOINT.equals(request.getType())) {
-            showMoveBendpointFeedback((BendpointRequest)request);
-        } else if (REQ_CREATE_BENDPOINT.equals(request.getType())) {
-            showCreateBendpointFeedback((BendpointRequest)request);
+        if (request instanceof BendpointRequest) {
+            if (REQ_MOVE_BENDPOINT.equals(request.getType())) {
+                showMoveBendpointFeedback((BendpointRequest)request);
+            } else if (REQ_CREATE_BENDPOINT.equals(request.getType())) {
+                showCreateBendpointFeedback((BendpointRequest)request);
+            }
         }
     }
 

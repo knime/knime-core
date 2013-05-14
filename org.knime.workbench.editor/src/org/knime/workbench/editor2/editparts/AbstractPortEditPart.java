@@ -362,7 +362,7 @@ public abstract class AbstractPortEditPart extends AbstractGraphicalEditPart
     public DragTracker getDragTracker(final Request request) {
 
         // Selection event: Start the connection creation
-        if (request.getType().equals(REQ_SELECTION)) {
+        if (request.getType().equals(REQ_SELECTION) && (request instanceof SelectionRequest)) {
 
             // we need to select the parent edit part !
             // Be sure to preserve already selected nodes, so check for keyboard
