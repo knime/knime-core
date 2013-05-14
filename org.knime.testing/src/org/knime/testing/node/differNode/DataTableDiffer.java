@@ -137,6 +137,9 @@ public class DataTableDiffer implements TestEvaluator {
                     double diff =
                             ((DoubleValue)c1).getDoubleValue()
                                     / ((DoubleValue)c2).getDoubleValue();
+                    if (diff < 0) {
+                        diff = -diff;
+                    }
                     if (diff < 1) {
                         diff = 1 / diff;
                     }
