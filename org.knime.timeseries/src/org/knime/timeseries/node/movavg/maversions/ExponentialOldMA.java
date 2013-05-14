@@ -72,7 +72,6 @@ public class ExponentialOldMA extends MovingAverage {
         private final double[] m_originalValues;
         private final double[] m_weights;
         private double m_expWeight = 0.0;
-
         private int m_indexOldestValue = 0;
         private int m_indexNewestValue = 0;
         private double m_avg = 0.0;
@@ -86,9 +85,7 @@ public class ExponentialOldMA extends MovingAverage {
          *            MA window length
          */
         public ExponentialOldMA(final int winLength) {
-
             m_winLength = winLength;
-
             m_originalValues = new double[m_winLength];
             m_weights = new double[m_winLength];
             defineWeights();
@@ -103,24 +100,8 @@ public class ExponentialOldMA extends MovingAverage {
          *            new value from time series
          * @return m_avg current moving average value
          */
-
         @Override
         public DataCell getMeanandUpdate(final double newValue) {
-
-            double previousAvg = m_avg;
-            boolean previousEnoughValues = m_enoughValues;
-            DataCell dc = simpleMA(newValue);
-
-               if (previousEnoughValues) {
-                    dc = new DoubleCell(newValue * m_expWeight + previousAvg
-                            * (1 - m_expWeight));
-                } else {
-                    return DataType.getMissingCell();
-                }
-            return dc;
-        }
-
-        private DataCell simpleMA(final double newValue) {
             if (!m_enoughValues) {
                 m_avg += newValue * m_weights[m_indexNewestValue];
                 m_originalValues[m_indexNewestValue] = newValue;
@@ -132,8 +113,7 @@ public class ExponentialOldMA extends MovingAverage {
                 if (!m_enoughValues) {
                     return DataType.getMissingCell();
                 }
-                DoubleCell dc = new DoubleCell(m_avg);
-                return dc;
+                return new DoubleCell(m_avg);
             }
             m_avg = m_avg - (m_originalValues[m_indexOldestValue]
                                               * m_weights[m_indexOldestValue])
@@ -146,17 +126,18 @@ public class ExponentialOldMA extends MovingAverage {
                 m_indexOldestValue = 0;
             }
 
-            DoubleCell dc = new DoubleCell(m_avg);
-            return dc;
+            if (m_enoughValues) {
+                  return new DoubleCell(newValue * m_expWeight + m_avg * (1 - m_expWeight));
+            } else {
+                 return DataType.getMissingCell();
+            }
         }
 
         private void defineWeights() {
-
             for (int i = 0; i < m_winLength; i++) {
                 m_weights[i] = 1.0 / m_winLength;
             }
             m_expWeight = 2.0 / (m_winLength + 1);
-
         }
 
 

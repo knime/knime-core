@@ -140,8 +140,7 @@ public class DialogComponentDate extends DialogComponent {
         datePanel.add(new JLabel("Year:"));
         datePanel.add(m_yearUI);
         // select boxes month
-        m_monthUI = new JComboBox(new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-                11, 12});
+        m_monthUI = new JComboBox(new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12});
         m_monthUI.addItemListener(new ItemListener() {
 
             @Override
@@ -234,7 +233,7 @@ public class DialogComponentDate extends DialogComponent {
      *
      * @throws InvalidSettingsException if the year is not an integer
      */
-    protected void updateModel() throws InvalidSettingsException {
+    protected final void updateModel() throws InvalidSettingsException {
         SettingsModelCalendar model = (SettingsModelCalendar)getModel();
         if (!model.useDate()) {
             // do not update/validate if date is not used by the model
@@ -258,7 +257,7 @@ public class DialogComponentDate extends DialogComponent {
         } catch (NumberFormatException nfe) {
             throw new InvalidSettingsException("Not a valid year: "
                     + m_yearUI.getText() + "! "
-                    + "Please use only integer numbers");
+                    + "Please use only integer numbers", nfe);
         }
     }
 

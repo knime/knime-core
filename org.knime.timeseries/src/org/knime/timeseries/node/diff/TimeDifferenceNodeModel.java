@@ -76,43 +76,36 @@ import org.knime.timeseries.util.SettingsModelCalendar;
 /**
  * Appends the difference between two dates with a selected granularity (year,
  * quarter, month, week, day, hour, minute).
- * 
+ *
  * @author KNIME GmbH
- * @author Iris Adä, University Konstanz
+ * @author Iris Adae, University Konstanz
  */
 public class TimeDifferenceNodeModel extends NodeModel {
 
     // first date column
-    private final SettingsModelString m_col1 = TimeDifferenceNodeDialog
-            .createColmn1Model();
+    private final SettingsModelString m_col1 = TimeDifferenceNodeDialog.createColmn1Model();
 
     // ... and the referring index
     private int m_col1Idx;
 
     // second date column
-    private final SettingsModelString m_col2 = TimeDifferenceNodeDialog
-            .createColumn2Model();
+    private final SettingsModelString m_col2 = TimeDifferenceNodeDialog.createColumn2Model();
 
     // ... and the referring index
     private int m_col2Idx;
 
     // new column name
-    private final SettingsModelString m_newColName = TimeDifferenceNodeDialog
-            .createNewColNameModel();
+    private final SettingsModelString m_newColName = TimeDifferenceNodeDialog.createNewColNameModel();
 
     // selected granularity level
-    private final SettingsModelString m_granularity = TimeDifferenceNodeDialog
-            .createGranularityModel();
+    private final SettingsModelString m_granularity = TimeDifferenceNodeDialog.createGranularityModel();
 
     // number of fraction digits for rounding
-    private final SettingsModelInteger m_rounding = TimeDifferenceNodeDialog
-            .createRoundingModel();
-    
-    private final SettingsModelString m_typeofreference
-                = TimeDifferenceNodeDialog.getReferenceTypeModel();
-    
-    private final SettingsModelCalendar m_timemodel
-                = TimeDifferenceNodeDialog.getCalendarModel();
+    private final SettingsModelInteger m_rounding = TimeDifferenceNodeDialog.createRoundingModel();
+
+    private final SettingsModelString m_typeofreference = TimeDifferenceNodeDialog.getReferenceTypeModel();
+
+    private final SettingsModelCalendar m_timemodel = TimeDifferenceNodeDialog.getCalendarModel();
 
     private long m_time = 0;
 
@@ -130,23 +123,20 @@ public class TimeDifferenceNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         // get the selected granularity level
-        final Granularity g = Granularity.valueOf(m_granularity
-                .getStringValue());
+        final Granularity g = Granularity.valueOf(m_granularity.getStringValue());
         // create rearranger
-        ColumnRearranger rearranger = new ColumnRearranger(inData[0]
-                .getDataTableSpec());
-        
+        ColumnRearranger rearranger = new ColumnRearranger(inData[0].getDataTableSpec());
+
         String typeofref = m_typeofreference.getStringValue();
         if (typeofref.equals(TimeDifferenceNodeDialog.CFG_COLUMN)) {
             // append the new column with single cell factory
             rearranger.append(new SingleCellFactory(
-                    createOutputColumnSpec(inData[0].getDataTableSpec(),
-                            m_newColName.getStringValue())) {
+                    createOutputColumnSpec(inData[0].getDataTableSpec(), m_newColName.getStringValue())) {
                 /**
                  * Value for the new column is based on the values of two column
                  * of the row (first and second date column), the selected
                  * granularity, and the fraction digits for rounding.
-                 * 
+                 *
                  * @param row the current row
                  * @return the difference between the two date values with the
                  *         given granularity and rounding
@@ -161,12 +151,12 @@ public class TimeDifferenceNodeModel extends NodeModel {
                     long first = ((DateAndTimeValue)cell1).getUTCTimeInMillis();
                     long last = ((DateAndTimeValue)cell2).getUTCTimeInMillis();
                     return getRoundedTimeDifference(first, last , g);
-                    
+
                 }
             });
         } else if (typeofref.equals(TimeDifferenceNodeDialog.CFG_ROW_DIFF)) {
             // option for producing the time difference between current and the
-            // previous row. 
+            // previous row.
             // append the new column with single cell factory
             rearranger.append(new SingleCellFactory(
                     createOutputColumnSpec(inData[0].getDataTableSpec(),
@@ -175,12 +165,12 @@ public class TimeDifferenceNodeModel extends NodeModel {
                 private DateAndTimeValue m_previous = null;
 
                 /**
-                 * Value for the new column is based on the values of the 
+                 * Value for the new column is based on the values of the
                  * current row and the value of the previous row.
                  * Therefore both rows must contain a DateAndTimeValue,
-                 * the selected granularity, and the fraction digits for 
+                 * the selected granularity, and the fraction digits for
                  * rounding.
-                 * 
+                 *
                  * @param row the current row
                  * @return the difference between the two date values with the
                  *         given granularity and rounding
@@ -188,15 +178,15 @@ public class TimeDifferenceNodeModel extends NodeModel {
                 @Override
                 public DataCell getCell(final DataRow row) {
                     DataCell cell1 = row.getCell(m_col1Idx);
-                    // the cell is missing or not compatible to date and time 
+                    // the cell is missing or not compatible to date and time
                     // value
-                    if ((cell1.isMissing()) 
+                    if ((cell1.isMissing())
                             || !cell1.getType().isCompatible(
                                     DateAndTimeValue.class)) {
                         m_previous = null;
                         return DataType.getMissingCell();
                     }
-                    // the previous line didn't contain a value 
+                    // the previous line didn't contain a value
                     // (e.g. we are in the first row)
                     if (m_previous == null) {
                         m_previous = (DateAndTimeValue)cell1;
@@ -206,7 +196,7 @@ public class TimeDifferenceNodeModel extends NodeModel {
                     long last = ((DateAndTimeValue)cell1).getUTCTimeInMillis();
                     m_previous = (DateAndTimeValue)cell1;
                     return getRoundedTimeDifference(first, last , g);
-                    
+
                 }
             });
         } else {
@@ -215,7 +205,7 @@ public class TimeDifferenceNodeModel extends NodeModel {
             } else {
                 m_time  = System.currentTimeMillis();
             }
-            
+
             // append the new column with single cell factory
             rearranger.append(new SingleCellFactory(
                     createOutputColumnSpec(inData[0].getDataTableSpec(),
@@ -225,7 +215,7 @@ public class TimeDifferenceNodeModel extends NodeModel {
                  * Value for the new column is based on the values of two column
                  * of the row (first and second date column), the selected
                  * granularity, and the fraction digits for rounding.
-                 * 
+                 *
                  * @param row the current row
                  * @return the difference between the two date values with the
                  *         given granularity and rounding
@@ -239,7 +229,7 @@ public class TimeDifferenceNodeModel extends NodeModel {
                     long first = ((DateAndTimeValue)cell1).getUTCTimeInMillis();
                     return getRoundedTimeDifference(first, m_time, g);
                 }
-            });            
+            });
         }
 
         BufferedDataTable out = exec.createColumnRearrangeTable(inData[0],
@@ -255,15 +245,15 @@ public class TimeDifferenceNodeModel extends NodeModel {
         // nothing
     }
     /**
-     * 
+     *
      * @param first the older time
      * @param last the newer time
      * @param g the granularity
      * @return a double cell containing the time difference between the first
-     * and the last, already granulated and rounded. 
+     * and the last, already granulated and rounded.
      */
-    private DoubleCell getRoundedTimeDifference(final long first, 
-            final long last, 
+    private DoubleCell getRoundedTimeDifference(final long first,
+            final long last,
             final Granularity g) {
         double diffTime = (last - first) / g.getFactor();
         BigDecimal bd = new BigDecimal(diffTime);
@@ -300,7 +290,7 @@ public class TimeDifferenceNodeModel extends NodeModel {
                 // if autoconfigure -> set first column
                 if (autoConfigure && m_col1.getStringValue().isEmpty()) {
                     m_col1.setStringValue(colSpec.getName());
-                } else if (autoConfigure 
+                } else if (autoConfigure
                         // if autoconfigure=true first column was null/empty
                         // if not empty anymore autoconfigure second column
                         && !m_col1.getStringValue().isEmpty()) {
@@ -353,7 +343,7 @@ public class TimeDifferenceNodeModel extends NodeModel {
         m_newColName.saveSettingsTo(settings);
         m_granularity.saveSettingsTo(settings);
         m_rounding.saveSettingsTo(settings);
-        
+
         m_typeofreference.saveSettingsTo(settings);
         m_timemodel.saveSettingsTo(settings);
     }

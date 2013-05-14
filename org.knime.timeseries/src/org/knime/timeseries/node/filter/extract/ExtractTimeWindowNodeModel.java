@@ -153,12 +153,11 @@ public class ExtractTimeWindowNodeModel extends NodeModel {
                         + "\" does not contain string values: "
                         + colSpec.getType().toString());
             }
-        }        
+        }
         validateFromTo(m_fromDate.getCalendar(), m_toDate.getCalendar());
         // we return input specs since only rows are filtered
         // (no structural changes)
-        DataTableSpec[] outs = inSpecs.clone();
-        return outs;
+        return inSpecs.clone();
     }
 
     private void validateFromTo(final Calendar start, final Calendar end)
@@ -200,8 +199,8 @@ public class ExtractTimeWindowNodeModel extends NodeModel {
                     continue;
                 }
                 Calendar time = ((DateAndTimeValue)cell).getUTCCalendarClone();
-                // use "compareTo" in order to include also the dates on the 
-                // interval borders (instead of using "after" and "before", 
+                // use "compareTo" in order to include also the dates on the
+                // interval borders (instead of using "after" and "before",
                 // which is implemented as a real < or >
                 if (time.compareTo(m_fromDate.getCalendar()) >= 0
                         && time.compareTo(m_toDate.getCalendar()) <= 0) {

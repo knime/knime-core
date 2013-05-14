@@ -245,7 +245,7 @@ public class Time2StringNodeModel extends SimpleStreamableFunctionNodeModel {
             new SimpleDateFormat(patternString);
         } catch (Exception e) {
             throw new InvalidSettingsException("Pattern " + patternString
-                    + " is invalid!");
+                    + " is invalid!", e);
         }
     }
 

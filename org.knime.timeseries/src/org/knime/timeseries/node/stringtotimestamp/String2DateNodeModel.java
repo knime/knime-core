@@ -161,8 +161,7 @@ public class String2DateNodeModel extends
         try {
             m_dateFormat = new SimpleDateFormat(m_formatModel.getStringValue());
         } catch (IllegalArgumentException ex) {
-            throw new InvalidSettingsException("Invalid format: "
-                    + m_formatModel.getStringValue());
+            throw new InvalidSettingsException("Invalid format: " + m_formatModel.getStringValue(), ex);
         }
         m_dateFormat.setTimeZone(DateAndTimeCell.UTC_TIMEZONE);
 
@@ -181,13 +180,11 @@ public class String2DateNodeModel extends
         }
         // if still null -> no String compatible column at all
         if (selectedCol == null || selectedCol.isEmpty()) {
-            throw new InvalidSettingsException(
-                    "No String compatible column found!");
+            throw new InvalidSettingsException("No String compatible column found!");
         }
         final int colIndex = spec.findColumnIndex(selectedCol);
         if (colIndex < 0) {
-            throw new InvalidSettingsException("No such column: "
-                    + selectedCol);
+            throw new InvalidSettingsException("No such column: " + selectedCol);
         }
         DataColumnSpec colSpec = spec.getColumnSpec(colIndex);
         if (!colSpec.getType().isCompatible(StringValue.class)) {
@@ -228,11 +225,9 @@ public class String2DateNodeModel extends
                 } catch (ParseException pe) {
                     m_failCounter++;
                     if (m_cancelOnFail.getBooleanValue()
-                            && m_failCounter >= m_failNumberModel
-                                .getIntValue()) {
-                        throw new RuntimeException(
-                                "Maximum number of fails reached: "
-                                + m_failNumberModel.getIntValue());
+                            && m_failCounter >= m_failNumberModel.getIntValue()) {
+                        throw new IllegalArgumentException(
+                                "Maximum number of fails reached: " + m_failNumberModel.getIntValue());
                     }
                     return DataType.getMissingCell();
                 }
@@ -284,7 +279,7 @@ public class String2DateNodeModel extends
             if (errMsg != null && !errMsg.isEmpty()) {
                 msg += " Reason: " + errMsg;
             }
-            throw new InvalidSettingsException(msg);
+            throw new InvalidSettingsException(msg, e);
         }
         m_cancelOnFail.validateSettings(settings);
         m_failNumberModel.validateSettings(settings);

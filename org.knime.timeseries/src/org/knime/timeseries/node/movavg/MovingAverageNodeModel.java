@@ -126,8 +126,7 @@ public class MovingAverageNodeModel extends NodeModel {
             setWarningMessage("Auto-configure: selected all double columns!");
         }
         if (m_columnNames.getIncludeList().isEmpty()) {
-            setWarningMessage("No double columns selected: "
-                    + "input will be same as output!");
+            setWarningMessage("No double columns selected: input will be same as output!");
         }
         // check for the existence of the selected columns
         for (String colName : m_columnNames.getIncludeList()) {
@@ -140,28 +139,24 @@ public class MovingAverageNodeModel extends NodeModel {
         // define moving average window length
         int winLength = m_winLength.getIntValue();
         if (winLength == -1) {
-            throw new InvalidSettingsException(
-            "Window length is not selected.");
+            throw new InvalidSettingsException("Window length is not selected.");
         }
 
         // define weight function
         if (m_kindOfMAModel.getStringValue() == null) {
-            throw new InvalidSettingsException(
-                    "No weight function selected.");
+            throw new InvalidSettingsException("No weight function selected.");
         } else {
            // create one MA-compute engine per column (overkill, I know
            // but much easier to reference later on in our DataCellFactory)
 
-            MA_METHODS method = MA_METHODS.getPolicy4Label(
-                    m_kindOfMAModel.getStringValue());
+            MA_METHODS method = MA_METHODS.getPolicy4Label(m_kindOfMAModel.getStringValue());
             // if the center method is selected, the window size
             // has to be uneven
 
             if (MA_METHODS.getCenteredMethods().contains(method)) {
                 if (winLength % 2 == 0) {
                     throw new InvalidSettingsException(
-                            "For centered methods, the window "
-                                    + "size has to be uneven");
+                            "For centered methods, the window size has to be uneven");
                 }
             }
 
@@ -394,7 +389,6 @@ public class MovingAverageNodeModel extends NodeModel {
         m_replace.validateSettings(settings);
         m_kindOfMAModel.validateSettings(settings);
         m_winLength.validateSettings(settings);
-//        m_positionModel.validateSettings(settings);
     }
 
     /**

@@ -66,6 +66,8 @@ import org.knime.timeseries.util.DialogComponentCalendar;
 import org.knime.timeseries.util.SettingsModelCalendar;
 
 /**
+ * The dialog of the time generator node.
+ *
  * @author Fabian Dill
  *
  */
@@ -74,7 +76,7 @@ public class DateGeneratorNodeDialog extends DefaultNodeSettingsPane {
 
 
     /**
-     *
+     * Constructor.
      */
     public DateGeneratorNodeDialog() {
 
