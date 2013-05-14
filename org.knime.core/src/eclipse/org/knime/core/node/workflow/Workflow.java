@@ -543,18 +543,15 @@ class Workflow {
      */
     Set<Integer> connectedOutPorts(final int inPortIx) {
         HashSet<Integer> outSet = new HashSet<Integer>();
-        // Map to remember connected nodes with the index of the corresponding
-        // input port
-        LinkedHashMap<NodeID, Integer> nodesToCheck
-                            = new LinkedHashMap<NodeID, Integer>();
+        // Map to remember connected nodes with the index of the corresponding input port
+        LinkedHashMap<NodeID, Integer> nodesToCheck = new LinkedHashMap<NodeID, Integer>();
         // find everything that is connected to an input port of this workflow
         // with an index contained in the set:
         for (ConnectionContainer cc : m_connectionsBySource.get(getID())) {
             if (inPortIx == cc.getSourcePort()) {
                 NodeID nextID = cc.getDest();
                 if (nextID.equals(this.getID())) {
-                    assert cc.getType().
-                         equals(ConnectionContainer.ConnectionType.WFMTHROUGH);
+                    assert cc.getType().equals(ConnectionContainer.ConnectionType.WFMTHROUGH);
                     outSet.add(cc.getDestPort());
                 } else {
                     nodesToCheck.put(nextID, cc.getDestPort());
@@ -564,16 +561,14 @@ class Workflow {
         // now follow those nodes and see if we reach a workflow outport
         int currentNode = 0;
         while (currentNode < nodesToCheck.size()) {
-            // Not a very nice way to iterate over this set but
-            //   since we are adding things to it inside the loop?!
+            // Not a very nice way to iterate over this set but since we are adding things to it inside the loop?!
             Object[] ani = nodesToCheck.keySet().toArray();
             NodeID thisID = (NodeID)(ani[currentNode]);
             assert !(thisID.equals(this.getID()));
             NodeContainer thisNode = m_nodes.get(thisID);
             if (thisNode instanceof SingleNodeContainer) {
                 // simply add everything that is connected to this node
-                for (ConnectionContainer cc : m_connectionsBySource.get(
-                        thisID)) {
+                for (ConnectionContainer cc : m_connectionsBySource.get(thisID)) {
                     NodeID nextID = cc.getDest();
                     if (nextID.equals(this.getID())) {
                         outSet.add(cc.getDestPort());
@@ -586,11 +581,9 @@ class Workflow {
                 // inport we are currently considering (recurse...)
                 assert thisNode instanceof WorkflowManager;
                 int portToCheck = nodesToCheck.get(thisID);
-                Set<Integer> connectedOutPorts =
-                     ((WorkflowManager)thisNode).getWorkflow().
-                                          connectedOutPorts(portToCheck);
-                for (ConnectionContainer cc : m_connectionsBySource.get(
-                        thisID)) {
+                Set<Integer> connectedOutPorts = ((WorkflowManager)thisNode).getWorkflow().
+                                                        connectedOutPorts(portToCheck);
+                for (ConnectionContainer cc : m_connectionsBySource.get(thisID)) {
                     if (connectedOutPorts.contains(cc.getSourcePort())) {
                         NodeID nextID = cc.getDest();
                         if (nextID.equals(this.getID())) {
@@ -1324,6 +1317,140 @@ class Workflow {
             }
         }
         return foundStart;
+    }
+
+    /** Analyse entire workflow graph and mark scope start/end node pairs and
+     * level of layered depth search. Do not dive into metanodes but consider
+     * their internal connectivity to continue outside search on appropriate
+     * ports.
+     */
+    /* Private helper class */
+    private class NodeIDWithLayerAndScope implements Comparable<NodeIDWithLayerAndScope> {
+        private final NodeID m_id;
+        private int m_outportIndex;
+        private int m_depth;
+        private Stack<NodeID> m_scopes;
+        public NodeIDWithLayerAndScope(final NodeID id, final int outportIx, final int depth) {
+            m_id = id;
+            m_outportIndex = outportIx;
+            m_depth = depth;
+            m_scopes = new Stack<NodeID>();
+        }
+        /** @return id of node. */
+        public NodeID getID() { return m_id; }
+        /** @return input port indices. */
+        public int getOutportIndex() { return m_outportIndex; }
+        /** @param d new depth of node. */
+        public void setDepth(final int d) { m_depth = d; }
+        /** @return depth of node. */
+        public int getDepth() { return m_depth; }
+        /** {@inheritDoc} */
+        @Override
+        public int compareTo(final NodeIDWithLayerAndScope o2) {
+            return (Integer.valueOf(this.m_depth).compareTo(o2.m_depth));
+        }
+        /** {@inheritDoc} */
+        @Override
+        public boolean equals(final Object obj) {
+            if (!(obj instanceof NodeIDWithLayerAndScope)) {
+                return false;
+            }
+            return this.m_id.equals(((NodeIDWithLayerAndScope)obj).m_id)
+                    && (this.m_outportIndex == (((NodeIDWithLayerAndScope)obj).m_outportIndex));
+        }
+        /** {@inheritDoc} */
+        @Override
+        public int hashCode() {
+            return m_id.hashCode() + m_outportIndex;
+        }
+    }
+    /* actual routing */
+    private void analyseGraph() {
+        ArrayList<NodeIDWithLayerAndScope> sortedNodes;
+        sortedNodes = new ArrayList<NodeIDWithLayerAndScope>();
+        // insert metanode itself with all connected inports as "outport" indices
+        for (ConnectionContainer cc : getConnectionsBySource(getID())) {
+            NodeIDWithLayerAndScope nls = new NodeIDWithLayerAndScope(getID(), cc.getSourcePort(), 0);
+            if (!sortedNodes.contains(nls)) {
+                sortedNodes.add(nls);
+            }
+        }
+        // also add source nodes with all of their outports (SNC or WFM doesn't matter here!)
+        for (NodeID id : m_nodes.keySet()) {
+            if (m_connectionsByDest.get(id).size() == 0) {
+                NodeContainer nc = m_nodes.get(id);
+                for (int o = 0; o < nc.getNrOutPorts(); o++) {
+                    sortedNodes.add(new NodeIDWithLayerAndScope(id, o, 0));
+                }
+            }
+        }
+        // now follow those nodes and keep adding until we reach and end or a metanode outport.
+        int currIndex = 0;
+        while (currIndex < sortedNodes.size()) {
+            NodeIDWithLayerAndScope currNLS = sortedNodes.get(currIndex);
+            NodeID currID = currNLS.getID();
+            NodeContainer currNode = m_nodes.get(currID);
+            int currOutport = currNLS.getOutportIndex();
+            int currDepth = currNLS.getDepth();
+            // and now find all nodes that are connected to this node/outport pair
+            for (ConnectionContainer cc : this.getConnectionsBySource(currID)) {
+                if (currOutport == cc.getSourcePort()) {
+                    NodeID destID = cc.getDest();
+                    if (!destID.equals(this.getID())) {
+                        // only if we have not yet reached an outport - try to find node/port in existing list:
+                        NodeContainer destNC = m_nodes.get(destID);
+                        int destInPort = cc.getDestPort();
+                        // determine set of relevant outport indices
+                        Set<Integer> connectedOutports;
+                        if (destNC instanceof SingleNodeContainer) {
+                            // trivial for SNC: all
+                            connectedOutports = new HashSet<Integer>();
+                            for (int o = 0; o < destNC.getNrOutPorts(); o++) {
+                                connectedOutports.add(o);
+                            }
+                        } else {
+                            assert destNC instanceof WorkflowManager;
+                            connectedOutports = ((WorkflowManager)destNC).getWorkflow().connectedOutPorts(destInPort);
+                        }
+                        int ix = 0;
+                        for (ix = 0; ix < sortedNodes.size(); ix++) {
+                            NodeIDWithLayerAndScope nls = sortedNodes.get(ix);
+                            if ((nls.getID().equals(destID)) && (connectedOutports.contains(nls.getOutportIndex()))) {
+                                assert ix != currIndex;
+                                // node is already in list, adjust depth to new maximum.
+                                if (nls.getDepth() <= currDepth) {
+                                    // fix depth if smaller or equal
+                                    nls.setDepth(currDepth + 1);
+                                    if (ix < currIndex) {
+                                        // move this node to end of list if it was already "touched" so that depth of
+                                        // successors will also be adjusted!
+                                        nls = sortedNodes.remove(ix);
+                                        sortedNodes.add(nls);
+                                        // critical: we removed an element in our list which resided before our
+                                        // pointer. Make sure we still point to current node.
+                                        currIndex--;
+                                    }
+                                } else {
+                                    // don't fix, depth is already larger. Node was seen previously
+                                }
+                                // and remove this port from our list - no need to add it again later.
+                                connectedOutports.remove(sortedNodes.get(ix).getOutportIndex());
+                            }
+                            if (connectedOutports.size() == 0) {
+                                break;
+                            }
+                        }
+                        for (int o : connectedOutports) {
+                            // ...it's a node/port combo not yet in our list: add it
+                            sortedNodes.add(new NodeIDWithLayerAndScope(destID, o, currDepth + 1));
+                        }
+                    }
+                }
+            }
+            currIndex++;
+        }
+        // make sure nodes are sorted by their final depth!
+        Collections.sort(sortedNodes);
     }
 
     /** Create list of nodes (id)s that are part of a loop body. Note that
