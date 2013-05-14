@@ -123,7 +123,7 @@ public class CreateMetaNodeCommand extends AbstractKNIMECommand {
                 info.setIsDropLocation(true);
                 container.setUIInformation(info);
             }
-        } catch (Exception t) {
+        } catch (Throwable t) {
             // if fails notify the user
             String error = "Meta node cannot be created";
             LOGGER.debug(error + ": " + t.getMessage(), t);

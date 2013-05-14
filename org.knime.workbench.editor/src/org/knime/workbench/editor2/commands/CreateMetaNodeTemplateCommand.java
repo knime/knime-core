@@ -143,33 +143,33 @@ public class CreateMetaNodeTemplateCommand extends AbstractKNIMECommand {
             info.setSnapToGrid(m_snapToGrid);
             info.setIsDropLocation(true);
             m_container.setUIInformation(info);
-        } catch (Exception ex) {
-            Throwable cause = ex;
+        } catch (Throwable t) {
+            Throwable cause = t;
             while ((cause.getCause() != null) && (cause.getCause() != cause)) {
                 cause = cause.getCause();
             }
 
             String error = "The selected node could not be created";
             if (cause instanceof FileNotFoundException) {
-                error += " because a file could not be found: " + ex.getMessage();
+                error += " because a file could not be found: " + cause.getMessage();
                 MessageDialog.openError(Display.getDefault().
                         getActiveShell(), "Node cannot be created.", error);
             } else if (cause instanceof IOException) {
-                error += " because of an I/O error: " + ex.getMessage();
+                error += " because of an I/O error: " + cause.getMessage();
                 MessageDialog.openError(Display.getDefault().
                         getActiveShell(), "Node cannot be created.", error);
             } else if (cause instanceof InvalidSettingsException) {
-                error += " because the metanode contains invalid settings: " + ex.getMessage();
+                error += " because the metanode contains invalid settings: " + cause.getMessage();
                 MessageDialog.openError(Display.getDefault().
                         getActiveShell(), "Node cannot be created.", error);
             } else if (cause instanceof UnsupportedWorkflowVersionException) {
-                error += " because the metanode version is incompatible: " + ex.getMessage();
+                error += " because the metanode version is incompatible: " + cause.getMessage();
                 MessageDialog.openError(Display.getDefault().
                         getActiveShell(), "Node cannot be created.", error);
             } else if ((cause instanceof CanceledExecutionException) || (cause instanceof InterruptedException)) {
-                LOGGER.info("Metanode loading was canceled by the user", ex);
+                LOGGER.info("Metanode loading was canceled by the user", cause);
             } else {
-                error += ": " + ex.getMessage();
+                error += ": " + cause.getMessage();
                 MessageDialog.openError(Display.getDefault().
                         getActiveShell(), "Node cannot be created.", error);
             }

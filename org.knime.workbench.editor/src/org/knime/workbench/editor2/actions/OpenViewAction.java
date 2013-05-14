@@ -150,19 +150,19 @@ public class OpenViewAction extends Action {
             } else {
                 SwingUtilities.invokeLater(runner);
             }
-        } catch (Exception ex) {
+        } catch (Throwable t) {
             MessageBox mb = new MessageBox(
                     Display.getDefault().getActiveShell(),
                     SWT.ICON_ERROR | SWT.OK);
             mb.setText("View cannot be opened");
             mb.setMessage("The view cannot be opened for the "
-                    + "following reason:\n" + ex.getMessage());
+                    + "following reason:\n" + t.getMessage());
             mb.open();
             LOGGER.error("The view for node '"
                     + m_nodeContainer.getNameWithID() + "' has thrown a '"
-                    + ex.getClass().getSimpleName()
+                    + t.getClass().getSimpleName()
                     + "'. That is most likely an "
-                    + "implementation error.", ex);
+                    + "implementation error.", t);
         }
     }
 

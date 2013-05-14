@@ -107,7 +107,7 @@ public class CreateNewConnectedNodeCommand extends AbstractCreateNewConnectedNod
         WorkflowManager hostWFM = getHostWFM();
         try {
             newID = hostWFM.createAndAddNode(m_factory);
-        } catch (Exception t) {
+        } catch (Throwable t) {
             // if fails notify the user
             LOGGER.debug("Node cannot be created.", t);
             MessageBox mb =

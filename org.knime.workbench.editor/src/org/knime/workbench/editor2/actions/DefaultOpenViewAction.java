@@ -170,7 +170,7 @@ public class DefaultOpenViewAction extends AbstractNodeAction {
                             final String title = cont.getViewName(0) + " - "
                                 + cont.getDisplayLabel();
                             Node.invokeOpenView(cont.getView(0), title);
-                        } catch (Exception t) {
+                        } catch (Throwable t) {
                             MessageBox mb = new MessageBox(
                                     Display.getDefault().getActiveShell(),
                                     SWT.ICON_ERROR | SWT.OK);

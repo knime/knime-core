@@ -788,11 +788,11 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             mb.setMessage("The dialog cannot be opened for the following"
                     + " reason:\n" + ex.getMessage());
             mb.open();
-        } catch (Exception ex) {
+        } catch (Throwable t) {
             LOGGER.error("The dialog pane for node '"
                     + container.getNameWithID() + "' has thrown a '"
-                    + ex.getClass().getSimpleName()
-                    + "'. That is most likely an implementation error.", ex);
+                    + t.getClass().getSimpleName()
+                    + "'. That is most likely an implementation error.", t);
         }
 
     }

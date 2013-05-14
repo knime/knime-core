@@ -121,7 +121,7 @@ public class DropNodeCommand extends AbstractKNIMECommand {
                 });
             }
 
-        } catch (Exception t) {
+        } catch (Throwable t) {
             // if fails notify the user
             LOGGER.debug("Node cannot be created.", t);
             MessageBox mb =
