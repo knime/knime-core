@@ -153,11 +153,9 @@ public class MovingAverageNodeModel extends NodeModel {
             // if the center method is selected, the window size
             // has to be uneven
 
-            if (MA_METHODS.getCenteredMethods().contains(method)) {
-                if (winLength % 2 == 0) {
+            if (MA_METHODS.getCenteredMethods().contains(method) && winLength % 2 == 0) {
                     throw new InvalidSettingsException(
                             "For centered methods, the window size has to be uneven");
-                }
             }
 
            m_mas = new MovingAverage[inSpecs[0].getNumColumns()];

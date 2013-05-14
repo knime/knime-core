@@ -140,7 +140,11 @@ public class DialogComponentDate extends DialogComponent {
         datePanel.add(new JLabel("Year:"));
         datePanel.add(m_yearUI);
         // select boxes month
-        m_monthUI = new JComboBox(new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12});
+        Integer[] months = new Integer[12];
+        for (int i = 0; i < 12; i++) {
+            months[i] = new Integer(i + 1);
+        }
+        m_monthUI = new JComboBox(months);
         m_monthUI.addItemListener(new ItemListener() {
 
             @Override
@@ -156,9 +160,11 @@ public class DialogComponentDate extends DialogComponent {
         datePanel.add(new JLabel("Month:"));
         datePanel.add(m_monthUI);
         // select box day
-        m_dayUI = new JComboBox(new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-                11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26,
-                27, 28, 29, 30, 31});
+        Integer[] days = new Integer[31];
+        for (int i = 0; i < 31; i++) {
+            days[i] = new Integer(i + 1);
+        }
+        m_dayUI = new JComboBox(days);
         m_dayUI.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(final ItemEvent e) {

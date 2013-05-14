@@ -180,9 +180,7 @@ public class TimeDifferenceNodeModel extends NodeModel {
                     DataCell cell1 = row.getCell(m_col1Idx);
                     // the cell is missing or not compatible to date and time
                     // value
-                    if ((cell1.isMissing())
-                            || !cell1.getType().isCompatible(
-                                    DateAndTimeValue.class)) {
+                    if ((cell1.isMissing()) || !cell1.getType().isCompatible(DateAndTimeValue.class)) {
                         m_previous = null;
                         return DataType.getMissingCell();
                     }
@@ -192,7 +190,7 @@ public class TimeDifferenceNodeModel extends NodeModel {
                         m_previous = (DateAndTimeValue)cell1;
                         return DataType.getMissingCell();
                     }
-                    long first = (m_previous).getUTCTimeInMillis();
+                    long first = m_previous.getUTCTimeInMillis();
                     long last = ((DateAndTimeValue)cell1).getUTCTimeInMillis();
                     m_previous = (DateAndTimeValue)cell1;
                     return getRoundedTimeDifference(first, last , g);

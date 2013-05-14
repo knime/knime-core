@@ -44,16 +44,13 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
- *   January 24, 2007 (rosaria): created 
+ *   January 24, 2007 (rosaria): created
  */
 package org.knime.timeseries.node.filter.extract;
 
-import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.date.DateAndTimeValue;
-import org.knime.core.node.NodeSettingsRO;
-import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.defaultnodesettings.DefaultNodeSettingsPane;
 import org.knime.core.node.defaultnodesettings.DialogComponent;
 import org.knime.core.node.defaultnodesettings.DialogComponentColumnNameSelection;
@@ -63,54 +60,35 @@ import org.knime.timeseries.util.SettingsModelCalendar;
 
 /**
  * This dialog lets the user choose the column that contains the string values
- * that should be converted into Smiles values. 
- * 
+ * that should be converted into Smiles values.
+ *
  * @author Rosaria Silipo
  * @author Fabian Dill, KNIME.com AG
  */
 public class ExtractTimeWindowNodeDialog extends DefaultNodeSettingsPane {
 
-    private final SettingsModelString m_colName;
-    private final SettingsModelCalendar m_from;
-    private final SettingsModelCalendar m_to;
-    
+
     /** Constructor adding three components. */
     @SuppressWarnings("unchecked")
     public ExtractTimeWindowNodeDialog() {
-        m_colName = createColumnNameModel();
-        m_from = createFromModel();
-        m_to = createToModel();
         DialogComponent columnChooser =
-            new DialogComponentColumnNameSelection(m_colName,
-                    "Columns containing Timestamp: ", 0, 
-                    DateAndTimeValue.class);
+            new DialogComponentColumnNameSelection(createColumnNameModel(),
+                    "Columns containing Timestamp: ", 0, DateAndTimeValue.class);
         addDialogComponent(columnChooser);
-        addDialogComponent(new DialogComponentCalendar(m_from, 
+        addDialogComponent(new DialogComponentCalendar(createFromModel(),
                 "Select starting point:"));
-        addDialogComponent(new DialogComponentCalendar(
-                m_to, "Select end point:"));
+        addDialogComponent(new DialogComponentCalendar(createToModel(), "Select end point:"));
     }
-    
-    
+
+
     /**
-     * 
-     * {@inheritDoc}
-     */
-    @Override
-    public void loadAdditionalSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
-        super.loadAdditionalSettingsFrom(settings, specs);
-        // get the spec for minimum and maximum date
-    }
-    
-    /**
-     * 
+     *
      * @return settings model to store the selected column
      */
     static SettingsModelString createColumnNameModel() {
-        return new SettingsModelString("column_name", null); 
+        return new SettingsModelString("column_name", null);
     }
-    
+
     /** @return settings model for the "from" date.*/
     static SettingsModelCalendar createFromModel() {
         return new SettingsModelCalendar("timestamp_from", null);
@@ -119,5 +97,5 @@ public class ExtractTimeWindowNodeDialog extends DefaultNodeSettingsPane {
     static SettingsModelCalendar createToModel() {
         return new SettingsModelCalendar("timestamp_to", null);
     }
-    
+
 }

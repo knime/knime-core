@@ -92,6 +92,8 @@ public class DialogComponentTime extends DialogComponent {
 
     private JCheckBox m_useMillis;
 
+    private static final int WIDTH = 5;
+
     /**
      *
      * @param model SettingsModel to represent the selected date
@@ -140,7 +142,7 @@ public class DialogComponentTime extends DialogComponent {
         });
         timePanel.add(new JLabel("Hour:"));
         timePanel.add(m_hourUI);
-        timePanel.add(Box.createHorizontalStrut(5));
+        timePanel.add(Box.createHorizontalStrut(WIDTH));
         m_minuteUI = new JTextField(2);
         m_minuteUI.addFocusListener(new FocusAdapter() {
             @Override
@@ -161,7 +163,7 @@ public class DialogComponentTime extends DialogComponent {
         });
         timePanel.add(new JLabel("Minute:"));
         timePanel.add(m_minuteUI);
-        timePanel.add(Box.createHorizontalStrut(5));
+        timePanel.add(Box.createHorizontalStrut(WIDTH));
         m_secondUI = new JTextField(2);
         m_secondUI.addFocusListener(new FocusAdapter() {
             @Override
@@ -182,7 +184,7 @@ public class DialogComponentTime extends DialogComponent {
         });
         timePanel.add(new JLabel("Second:"));
         timePanel.add(m_secondUI);
-        timePanel.add(Box.createHorizontalStrut(5));
+        timePanel.add(Box.createHorizontalStrut(WIDTH));
 
         m_useMillis = new JCheckBox();
         m_useMillis.setSelected(false);

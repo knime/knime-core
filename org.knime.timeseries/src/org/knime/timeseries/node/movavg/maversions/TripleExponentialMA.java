@@ -49,6 +49,7 @@
 package org.knime.timeseries.node.movavg.maversions;
 
 import org.knime.core.data.DataCell;
+import org.knime.core.data.DataType;
 import org.knime.core.data.def.DoubleCell;
 
 
@@ -67,7 +68,7 @@ public class TripleExponentialMA extends MovingAverage {
 
     /**
      *
-     * @param winsize the size ofthe window.
+     * @param winsize the size of the window.
      */
     public TripleExponentialMA(final int winsize) {
         m_ema = new ExponentialMA(winsize);
@@ -82,23 +83,23 @@ public class TripleExponentialMA extends MovingAverage {
         DataCell dc = m_ema.getMeanandUpdate(newValue);
         if (!dc.isMissing()) {
             dc = m_emaema.getMeanandUpdate(m_ema.getMean());
-            if (!dc.isMissing()) {
-                dc = m_emaemaema.getMeanandUpdate(m_emaema.getMean());
-                if (!dc.isMissing()) {
-                    return new DoubleCell(getMean());
-                }
-            }
         }
-        return dc;
+        if (!dc.isMissing()) {
+            dc = m_emaemaema.getMeanandUpdate(m_emaema.getMean());
+        }
+        if (!dc.isMissing()) {
+            return new DoubleCell(getMean());
+        } else {
+            return DataType.getMissingCell();
+        }
     }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
    public double getMean() {
-        return 3 * m_ema.getMean() - 3 * m_emaema.getMean()
-                        + m_emaemaema.getMean();
+        return 3 * m_ema.getMean() - 3 * m_emaema.getMean() + m_emaemaema.getMean();
     }
 
 }
