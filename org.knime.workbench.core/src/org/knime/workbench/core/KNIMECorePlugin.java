@@ -53,6 +53,7 @@ package org.knime.workbench.core;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
@@ -101,7 +102,7 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
      * Keeps list of <code>ConsoleViewAppender</code>. TODO FIXME remove
      * static if you want to have a console for each Workbench
      */
-    private static final ArrayList<ConsoleViewAppender> APPENDERS =
+    private static final List<ConsoleViewAppender> APPENDERS =
             new ArrayList<ConsoleViewAppender>();
 
     /**
@@ -188,9 +189,6 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
                         LEVEL level = LEVEL.WARN;
                         try {
                             level = LEVEL.valueOf(newName);
-                        } catch (NullPointerException ne) {
-                            LOGGER.error(
-                                    "Null is an invalid log level, using WARN");
                         } catch (IllegalArgumentException iae) {
                             LOGGER.error("Invalid log level " + newName
                                     + ", using WARN");
@@ -219,7 +217,6 @@ public class KNIMECorePlugin extends AbstractUIPlugin {
 
             String logLevelConsole =
                 pStore.getString(P_LOGLEVEL_CONSOLE);
-            // TODO: only if awt.headless ==  false
             if (!Boolean.valueOf(
                     System.getProperty("java.awt.headless", "false"))) {
                 try {

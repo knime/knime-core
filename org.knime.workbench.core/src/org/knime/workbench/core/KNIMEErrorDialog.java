@@ -1,4 +1,4 @@
-/*  
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   ${date} (${user}): created
  */
@@ -57,53 +57,40 @@ import org.eclipse.swt.widgets.Shell;
 
 /**
  * JFace dialog presenting an (internal) error to the user.
- * 
+ *
  * TODO add a "details" section
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
-public class KNIMEErrorDialog extends ErrorDialog {
-
-    /**
-     * Main constructor, takes all possible arguments.
-     * 
-     * @param parentShell The parent shell
-     * @param dialogTitle Title to display
-     * @param text The message text
-     * @param status Statuscode, like <code>IStatus.ERROR</code>
-     * @param displayMask mask for filtering children
-     */
-    public KNIMEErrorDialog(final Shell parentShell, final String dialogTitle,
-            final String text, final IStatus status, final int displayMask) {
-        super(parentShell, dialogTitle, text, status, displayMask);
-    }
+public final class KNIMEErrorDialog {
+    private KNIMEErrorDialog() {}
 
     /**
      * Opens an error dialog.
-     * 
+     *
      * @param parentShell The Shell
      * @param title The title
      * @param message the message
      * @param status the status code
      * @param displayMask display mask for filtering
-     * 
+     *
      * @return <code>Window.OK</code> or <code>Window.CANCEL</code>
      */
     public static int openError(final Shell parentShell, final String title,
             final String message, final IStatus status, final int displayMask) {
-        KNIMEErrorDialog dialog = new KNIMEErrorDialog(parentShell, title,
+        ErrorDialog dialog = new ErrorDialog(parentShell, title,
                 message, status, displayMask);
         return dialog.open();
     }
 
     /**
      * Opens an error dialog with standard filtering (displayMask).
-     * 
+     *
      * @param parentShell The Shell
      * @param title The title
      * @param message the message
      * @param status the status code
-     * 
+     *
      * @return <code>Window.OK</code> or <code>Window.CANCEL</code>
      */
     public static int openError(final Shell parentShell, final String title,
@@ -115,10 +102,10 @@ public class KNIMEErrorDialog extends ErrorDialog {
     /**
      * Opens an error dialog with standard filtering (displayMask) and standard
      * title on the active shell on the current display.
-     * 
+     *
      * @param message the message
      * @param status the status code
-     * 
+     *
      * @return <code>Window.OK</code> or <code>Window.CANCEL</code>
      */
     public static int openError(final String message, final IStatus status) {

@@ -51,7 +51,8 @@ package org.knime.workbench.core.preferences;
  *
  * @author Fabian Dill, University of Konstanz
  */
-public interface HeadlessPreferencesConstants {
+public final class HeadlessPreferencesConstants {
+    private HeadlessPreferencesConstants() {}
 
     /** Preference constant: log level for console appender. */
     public static final String P_LOGLEVEL_LOG_FILE = "logging.loglevel.logfile";

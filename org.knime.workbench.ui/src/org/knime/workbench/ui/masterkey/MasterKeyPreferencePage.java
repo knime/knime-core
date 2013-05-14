@@ -94,8 +94,9 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
             @Override
             public synchronized String getEncryptionKey() {
                 super.getEncryptionKey();
-                if (m_isEnabled) {
-                    if (m_lastMasterKey == null || m_lastMasterKey.isEmpty()) {
+                if (isEnabled()) {
+                    final String lastMasterKey = getLastMasterKey();
+                    if (lastMasterKey == null || getLastMasterKey().isEmpty()) {
                         Display.getDefault().syncExec(new Runnable() {
                             @Override
                             public void run() {
@@ -103,7 +104,7 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
                             }
                         });
                     }
-                    return m_lastMasterKey;
+                    return lastMasterKey;
                 } else {
                     return null;
                 }
@@ -145,7 +146,7 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
      */
     MasterKeyPreferencePage(final boolean flag) {
         super(GRID);
-        if (SUPPLIER.m_wasSet) {
+        if (SUPPLIER.isWasSet()) {
             setDescription(OBSOLETE_MASTERKEY + NEW_DESCRIPTION + DESCRIPTION);
         } else {
             setDescription(OBSOLETE_MASTERKEY + DESCRIPTION);
@@ -202,29 +203,29 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
         super.initialize();
         initPrefStore();
         // init dialog options from preference store
-        if (SUPPLIER.m_lastMasterKey == null
-                || SUPPLIER.m_lastMasterKey.isEmpty()) {
+        if (SUPPLIER.getLastMasterKey() == null
+                || SUPPLIER.getLastMasterKey().isEmpty()) {
             try {
                 String mk = getPreferenceStore().getString(
                         HeadlessPreferencesConstants.P_MASTER_KEY);
                 SecretKey sk =
                         KnimeEncryption.createSecretKey(
                                 HeadlessPreferencesConstants.P_MASTER_KEY);
-                SUPPLIER.m_lastMasterKey = KnimeEncryption.decrypt(sk, mk);
+                SUPPLIER.setLastMasterKey(KnimeEncryption.decrypt(sk, mk));
             } catch (Exception e) {
                 m_masterKey.setErrorMessage("Could not encrypt Master Key:\n"
                         + e.getMessage());
             }
-            m_masterKey.setStringValue(SUPPLIER.m_lastMasterKey);
-            m_masterKeyConfirm.setStringValue(SUPPLIER.m_lastMasterKey);
+            m_masterKey.setStringValue(SUPPLIER.getLastMasterKey());
+            m_masterKeyConfirm.setStringValue(SUPPLIER.getLastMasterKey());
             if (m_isMasterKey.getBooleanValue()) {
                 setErrorMessage("Master key must not be empty.");
             }
         } else {
-            m_masterKey.setStringValue(SUPPLIER.m_lastMasterKey);
-            m_masterKeyConfirm.setStringValue(SUPPLIER.m_lastMasterKey);
+            m_masterKey.setStringValue(SUPPLIER.getLastMasterKey());
+            m_masterKeyConfirm.setStringValue(SUPPLIER.getLastMasterKey());
         }
-        enableFields(SUPPLIER.m_isEnabled);
+        enableFields(SUPPLIER.isEnabled());
     }
 
     /**
@@ -232,7 +233,7 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
      */
     final void enableMasterKey() {
         Composite parent = super.getFieldEditorParent();
-        if (SUPPLIER.m_wasSet) {
+        if (SUPPLIER.isWasSet()) {
             m_isMasterKey.setEnabled(false, parent);
         } else {
             m_isMasterKey.setEnabled(true, parent);
@@ -273,18 +274,18 @@ public class MasterKeyPreferencePage extends FieldEditorPreferencePage
             if (encryptedMasterKey == null) {
                 return false;
             }
-            SUPPLIER.m_isEnabled = true;
-            SUPPLIER.m_lastMasterKey = masterKey;
+            SUPPLIER.setEnabled(true);
+            SUPPLIER.setLastMasterKey(masterKey);
             if (m_saveMasterKey.getBooleanValue()) {
                 pstore.setValue(HeadlessPreferencesConstants.P_MASTER_KEY,
                         encryptedMasterKey);
             }
         } else {
-            SUPPLIER.m_isEnabled = false;
-            SUPPLIER.m_lastMasterKey = null;
+            SUPPLIER.setEnabled(false);
+            SUPPLIER.setLastMasterKey(null);
         }
         pstore.setValue(HeadlessPreferencesConstants.P_MASTER_KEY_ENABLED,
-                Boolean.toString(SUPPLIER.m_isEnabled));
+                Boolean.toString(SUPPLIER.isEnabled()));
         pstore.setValue(HeadlessPreferencesConstants.P_MASTER_KEY_SAVED,
                 Boolean.toString(m_saveMasterKey.getBooleanValue()));
         return true;

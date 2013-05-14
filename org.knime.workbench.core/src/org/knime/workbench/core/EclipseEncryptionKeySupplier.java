@@ -67,13 +67,13 @@ import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
 public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
 
     /** Last master entered with the dialog/preference page. */
-    public String m_lastMasterKey = null;
+    private String m_lastMasterKey = null;
 
     /** If encryption with master key is enabled. */
-    public boolean m_isEnabled = true;
+    private boolean m_isEnabled = true;
 
     /** Master key has been set before, but was not saved. */
-    public boolean m_wasSet = false;
+    private boolean m_wasSet = false;
 
     /**
      * Creates a new encryption key supplier.
@@ -135,5 +135,48 @@ public class EclipseEncryptionKeySupplier implements EncryptionKeySupplier {
     public synchronized String getEncryptionKey() {
         return init();
     }
+
+    /**
+     * @return the lastMasterKey
+     */
+    public String getLastMasterKey() {
+        return m_lastMasterKey;
+    }
+
+    /**
+     * @param lastMasterKey the lastMasterKey to set
+     */
+    public void setLastMasterKey(final String lastMasterKey) {
+        m_lastMasterKey = lastMasterKey;
+    }
+
+    /**
+     * @return the isEnabled
+     */
+    public boolean isEnabled() {
+        return m_isEnabled;
+    }
+
+    /**
+     * @param isEnabled the isEnabled to set
+     */
+    public void setEnabled(final boolean isEnabled) {
+        m_isEnabled = isEnabled;
+    }
+
+    /**
+     * @return the wasSet
+     */
+    public boolean isWasSet() {
+        return m_wasSet;
+    }
+
+    /**
+     * @param wasSet the wasSet to set
+     */
+    public void setWasSet(final boolean wasSet) {
+        m_wasSet = wasSet;
+    }
+
 
 }

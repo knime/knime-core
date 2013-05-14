@@ -186,7 +186,6 @@ public final class ConsoleViewAppender extends Writer {
         Display.getDefault().asyncExec(new Runnable() {
             @Override
             public void run() {
-                // activateConsole();
                 m_out.setColor(m_color);
                 m_out.print(str);
             }

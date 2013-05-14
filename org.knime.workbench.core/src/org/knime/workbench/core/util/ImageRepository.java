@@ -75,12 +75,14 @@ import org.knime.workbench.core.KNIMECorePlugin;
  * @author Thorsten Meinl, University of Konstanz
  * @since 2.6
  */
-public class ImageRepository {
+public final class ImageRepository {
     private static final NodeLogger logger = NodeLogger
             .getLogger(ImageRepository.class);
 
     private static final ImageRegistry registry = KNIMECorePlugin.getDefault()
             .getImageRegistry();
+
+    private ImageRepository() {}
 
     /**
      * Enumeration for shared images.
@@ -150,6 +152,11 @@ public class ImageRepository {
             m_url = url;
         }
 
+        /**
+         * Returns the URL for this image.
+         *
+         * @return the URL for this image
+         */
         URL getUrl() {
             return m_url;
         }
