@@ -117,6 +117,7 @@ public class LogfileAppender extends FileAppender {
         m_logFile = new File(tmpDir + "knime.log");
         setFile(m_logFile.getAbsolutePath());
         setImmediateFlush(true);
+        setEncoding("UTF-8");
     }
 
     /**
