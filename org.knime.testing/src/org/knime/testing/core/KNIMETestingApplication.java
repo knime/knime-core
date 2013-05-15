@@ -75,6 +75,8 @@ public class KNIMETestingApplication implements IApplication {
 
     private boolean m_testDialogs;
 
+    private int m_timeout = FullWorkflowTest.TIMEOUT;
+
     private File m_saveLocation = null;
 
     /**
@@ -267,7 +269,7 @@ public class KNIMETestingApplication implements IApplication {
 
         KnimeTestRegistry registry =
                 new KnimeTestRegistry(testPattern, new File(m_rootDir),
-                        m_saveLocation, m_testDialogs, m_testViews);
+                        m_saveLocation, m_testDialogs, m_testViews, m_timeout);
         Test tests = registry.collectTestCases(FullWorkflowTest.factory);
 
         System.out.println("=============  Running...  ==================");
@@ -465,6 +467,19 @@ public class KNIMETestingApplication implements IApplication {
                 continue;
             }
 
+            if ((stringArgs[i] != null) && stringArgs[i].equals("-timeout")) {
+                i++;
+                // requires another argument
+                if ((i >= stringArgs.length) || (stringArgs[i] == null)
+                        || (stringArgs[i].length() == 0)) {
+                    System.err.println("Missing <seconds> for option -timeout.");
+                    printUsage();
+                    return false;
+                }
+                m_timeout = Integer.parseInt(stringArgs[i++]);
+                continue;
+            }
+
             System.err.println("Invalid option: '" + stringArgs[i] + "'\n");
             printUsage();
             return false;
@@ -495,6 +510,8 @@ public class KNIMETestingApplication implements IApplication {
                 + "<dir_name> is omitted the Java temp dir is used.");
         System.err.println("    -root <dir_name>: optional, specifies the"
                 + " root dir where all testcases are located in.");
+        System.err.println("    -timeout <seconds>: optional, specifies the"
+                + " timeout for each individual workflow.");
         System.err.println("IF -pattern OR -root IS OMITTED A DIALOG OPENS"
                 + " REQUESTING USER INPUT.");
 

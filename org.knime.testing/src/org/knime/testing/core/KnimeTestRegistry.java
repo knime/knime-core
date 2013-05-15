@@ -62,6 +62,8 @@ public class KnimeTestRegistry {
 
     private final boolean m_testViews;
 
+    private final int m_timeout;
+
     /**
      * Registry for all testing workflows.
      *
@@ -75,10 +77,12 @@ public class KnimeTestRegistry {
      *            <code>false</code> otherwise
      * @param testViews <code>true</code> if all views should be opended prior
      *            to running the workflow, <code>false</code> otherwise
+     * @param timeout the timeout for each individual workflow
      */
     public KnimeTestRegistry(final String testNamePattern,
-            final File testRootDir, final File saveRoot, final boolean testDialogs, final boolean testViews) {
-        this(testNamePattern, Collections.singleton(testRootDir), saveRoot, testDialogs, testViews);
+            final File testRootDir, final File saveRoot, final boolean testDialogs, final boolean testViews,
+            final int timeout) {
+        this(testNamePattern, Collections.singleton(testRootDir), saveRoot, testDialogs, testViews, timeout);
     }
 
     /**
@@ -95,10 +99,11 @@ public class KnimeTestRegistry {
      *            <code>false</code> otherwise
      * @param testViews <code>true</code> if all views should be opended prior
      *            to running the workflow, <code>false</code> otherwise
+     * @param timeout the timeout for each individual workflow
      */
     public KnimeTestRegistry(final String testNamePattern,
             final Collection<File> testRootDirs, final File saveRoot, final boolean testDialogs,
-            final boolean testViews) {
+            final boolean testViews, final int timeout) {
         if (testRootDirs == null) {
             throw new NullPointerException("Root dir for tests must not be null");
         }
@@ -152,6 +157,7 @@ public class KnimeTestRegistry {
 
         m_testDialogs = testDialogs;
         m_testViews = testViews;
+        m_timeout = timeout;
     }
 
     /**
@@ -206,6 +212,7 @@ public class KnimeTestRegistry {
                         factory.createTestcase(workflowFile, saveLoc);
                 testCase.setTestDialogs(m_testDialogs);
                 testCase.setTestViews(m_testViews);
+                testCase.setTimeout(m_timeout);
                 tests.add(testCase);
             } else {
                 logger.info("Skipping testcase '" + name + "' (doesn't match"

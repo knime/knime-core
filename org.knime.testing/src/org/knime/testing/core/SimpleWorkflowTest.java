@@ -52,6 +52,7 @@ package org.knime.testing.core;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Timer;
 import java.util.TimerTask;
 
 import junit.framework.AssertionFailedError;
@@ -69,7 +70,6 @@ import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
-import org.knime.core.util.KNIMETimer;
 import org.knime.core.util.LockFailedException;
 
 /**
@@ -80,6 +80,8 @@ import org.knime.core.util.LockFailedException;
  * @since 2.6
  */
 public class SimpleWorkflowTest implements WorkflowTest {
+    private static final Timer TIMEOUT_TIMER = new Timer("Workflow watchdog", true);
+
     /**
      * Factory for simple workflow tests.
      */
@@ -96,7 +98,7 @@ public class SimpleWorkflowTest implements WorkflowTest {
             };
 
     /**
-     * The maximum runtime for a single testcase in seconds. After the timeout
+     * The default maximum runtime for a single testcase in seconds. After the timeout
      * the workflow will be canceled.
      */
     public static final int TIMEOUT = 300;
@@ -104,6 +106,8 @@ public class SimpleWorkflowTest implements WorkflowTest {
     private final File m_knimeWorkFlow;
 
     private final File m_saveLoc;
+
+    private int m_timeout = TIMEOUT;
 
     /**
      *
@@ -183,13 +187,13 @@ public class SimpleWorkflowTest implements WorkflowTest {
                     String status = m.printNodeSummary(m.getID(), 0);
                     result.addFailure(SimpleWorkflowTest.this,
                             new AssertionFailedError(
-                                    "Worklow running longer than " + TIMEOUT
+                                    "Worklow running longer than " + m_timeout
                                             + " seconds.\n" + status));
                     m.getParent().cancelExecution(m);
                 }
             };
 
-            KNIMETimer.getInstance().schedule(timeout, TIMEOUT * 1000);
+            TIMEOUT_TIMER.schedule(timeout, m_timeout * 1000);
             runWorkflow(manager, result);
 
             if (m_saveLoc != null) {
@@ -231,5 +235,13 @@ public class SimpleWorkflowTest implements WorkflowTest {
     @Override
     public void setTestViews(final boolean b) {
         // not applicable for simple tests
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setTimeout(final int seconds) {
+        m_timeout = seconds;
     }
 }

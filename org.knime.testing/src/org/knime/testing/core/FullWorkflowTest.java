@@ -40,6 +40,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Timer;
 import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -76,7 +77,6 @@ import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
-import org.knime.core.util.KNIMETimer;
 import org.knime.core.util.Pointer;
 import org.knime.testing.node.config.TestConfigNodeModel;
 import org.knime.testing.node.config.TestConfigSettings;
@@ -90,6 +90,8 @@ import org.knime.testing.node.config.TestConfigSettings;
  * @since 2.6
  */
 public class FullWorkflowTest extends TestCase implements WorkflowTest {
+    private static final Timer TIMEOUT_TIMER = new Timer("Workflow watchdog", true);
+
     /**
      * Factory for full workflow tests.
      *
@@ -387,7 +389,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
     private static final int MAX_LINES = 100;
 
     /**
-     * The maximum runtime for a single testcase in seconds. After the timeout
+     * The default maximum runtime for a single testcase in seconds. After the timeout
      * the workflow will be canceled.
      */
     public static final int TIMEOUT = 300;
@@ -402,6 +404,9 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
     private boolean m_testDialogs;
 
     private boolean m_testViews;
+
+    private int m_timeout = TIMEOUT;
+
 
     /**
      *
@@ -1358,7 +1363,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
         TimerTask timeout = new TimerTask() {
             @Override
             public void run() {
-                logger.error("Workflow is running longer than " + TIMEOUT
+                logger.error("Workflow is running longer than " + m_timeout
                         + " seconds, dumping status, followed by cancel:");
                 String status =
                         m_manager.printNodeSummary(m_manager.getID(), 0);
@@ -1372,7 +1377,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                     logger.error("Failed to cancel workflow, giving up", e);
                     return;
                 }
-                logger.error("Workflow canceled after " + TIMEOUT
+                logger.error("Workflow canceled after " + m_timeout
                         + " seconds, status after cancel follows: ");
                 status = m_manager.printNodeSummary(m_manager.getID(), 0);
                 logger.error("------- Status after Cancel (Start) ----------");
@@ -1382,7 +1387,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
         };
         try {
             try {
-                KNIMETimer.getInstance().schedule(timeout, TIMEOUT * 1000);
+                TIMEOUT_TIMER.schedule(timeout, m_timeout * 1000);
 
                 // execute all nodes.
                 logger.info("Executing workflow ----------------------");
@@ -1451,7 +1456,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
             for (AbstractNodeView<? extends NodeModel> v : allViews) {
                 Node.invokeCloseView(v);
             }
-            
+
             // always close the interactive view.
             if (inv != null) {
                 Node.invokeCloseView(inv);
@@ -1645,5 +1650,13 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
     @Override
     public void setTestViews(final boolean b) {
         m_testViews = b;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setTimeout(final int seconds) {
+        m_timeout = seconds;
     }
 }
