@@ -108,11 +108,11 @@ public class ExponentialOldMA extends MovingAverage {
             // simpleMA has side constrains on the calculations
             simpleMA(newValue);
 
-               if (previousEnoughValues) {
-                    return new DoubleCell(newValue * m_expWeight + previousAvg * (1 - m_expWeight));
-                } else {
-                    return DataType.getMissingCell();
-                }
+            if (previousEnoughValues) {
+                return new DoubleCell(newValue * m_expWeight + previousAvg * (1 - m_expWeight));
+            } else {
+                return DataType.getMissingCell();
+            }
         }
 
         private void simpleMA(final double newValue) {
@@ -120,23 +120,18 @@ public class ExponentialOldMA extends MovingAverage {
                 m_avg += newValue * m_weights[m_indexNewestValue];
                 m_originalValues[m_indexNewestValue] = newValue;
                 m_indexNewestValue++;
-
                 m_initialValues++;
                 m_enoughValues = (m_initialValues == m_winLength);
+            } else {
+                m_avg = m_avg - (m_originalValues[m_indexOldestValue] * m_weights[m_indexOldestValue])
+                        + (newValue * m_weights[m_indexOldestValue]);
 
-                if (!m_enoughValues) {
-                    return;
+                m_indexNewestValue = m_indexOldestValue;
+                m_originalValues[m_indexNewestValue] = newValue;
+                m_indexOldestValue++;
+                if (m_indexOldestValue >= m_winLength) {
+                    m_indexOldestValue = 0;
                 }
-                return;
-            }
-            m_avg = m_avg - (m_originalValues[m_indexOldestValue] * m_weights[m_indexOldestValue])
-                    + (newValue * m_weights[m_indexOldestValue]);
-
-            m_indexNewestValue = m_indexOldestValue;
-            m_originalValues[m_indexNewestValue] = newValue;
-            m_indexOldestValue++;
-            if (m_indexOldestValue >= m_winLength) {
-                m_indexOldestValue = 0;
             }
         }
 
