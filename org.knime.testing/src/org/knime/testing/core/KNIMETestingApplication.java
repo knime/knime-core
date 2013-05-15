@@ -354,8 +354,9 @@ public class KNIMETestingApplication implements IApplication {
             return true;
 
         } catch (IOException ioe) {
-            System.err.println("Couldn't access logfile! (in "
+            System.err.println("Couldn't access logfile (in "
                     + logfile.getAbsolutePath() + ")");
+            ioe.printStackTrace();
             return false;
         }
     }
