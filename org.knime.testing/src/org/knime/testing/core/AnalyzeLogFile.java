@@ -37,6 +37,7 @@ import java.nio.charset.Charset;
 import javax.swing.JFileChooser;
 
 import org.knime.core.node.KNIMEConstants;
+import org.knime.core.util.FileUtil;
 
 /**
  * Analyzes a log file of a previous regression run. Log file should only
@@ -127,8 +128,6 @@ public class AnalyzeLogFile {
         }
 
         // copy log file into result dir
-        BufferedReader logReader =
-                new BufferedReader(new InputStreamReader(new FileInputStream(logFile), Charset.forName("UTF-8")));
         String copyName = logFile.getName();
         if (copyName.endsWith(".log") && (copyName.length() > 4)) {
             copyName =
@@ -138,14 +137,7 @@ public class AnalyzeLogFile {
             copyName = "_" + copyName + m_startTime;
         }
         File logCopy = new File(m_tmpDir, copyName);
-        Writer logWriter = new OutputStreamWriter(new FileOutputStream(logCopy), Charset.forName("UTF-8"));
-        String line = null;
-        while ((line = logReader.readLine()) != null) {
-            logWriter.write(line);
-            logWriter.write(CRLF);
-        }
-        logReader.close();
-        logWriter.close();
+        FileUtil.copy(logFile, logCopy);
 
         // global file writer. All methods write in there.
         File failTests =
