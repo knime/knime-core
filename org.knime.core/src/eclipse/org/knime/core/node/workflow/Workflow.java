@@ -1329,12 +1329,42 @@ class Workflow {
         private final NodeID m_id;
         private int m_outportIndex;
         private int m_depth;
+        private HashSet<Integer> m_connectedMetaInPorts;
         private Stack<NodeID> m_scopes;
-        public NodeIDWithLayerAndScope(final NodeID id, final int outportIx, final int depth) {
+        // constructor for depth=0 nodes not coming from a metanode inport - stack will be empty
+        public NodeIDWithLayerAndScope(final NodeID id) {
+            m_id = id;
+            m_outportIndex = -1;
+            m_depth = 0;
+            m_connectedMetaInPorts = new HashSet<Integer>();
+            m_scopes = new Stack<NodeID>();
+        }
+        // constructor for depth=0 nodes coming from a metanode inport - stack will be empty
+        public NodeIDWithLayerAndScope(final NodeID id, final int metanodeInportIx) {
+            m_id = id;
+            m_outportIndex = metanodeInportIx;
+            m_depth = 0;
+            m_connectedMetaInPorts = new HashSet<Integer>();
+            m_connectedMetaInPorts.add(metanodeInportIx);
+            m_scopes = new Stack<NodeID>();
+        }
+        // constructor for depth > 0 - depth & stack will be inialized (copied!) from predecessor
+        public NodeIDWithLayerAndScope(final NodeID id, final int outportIx, final NodeIDWithLayerAndScope prec) {
             m_id = id;
             m_outportIndex = outportIx;
-            m_depth = depth;
-            m_scopes = new Stack<NodeID>();
+            m_depth = prec.m_depth + 1;
+            m_connectedMetaInPorts = (HashSet<Integer>)prec.m_connectedMetaInPorts.clone();
+            m_scopes = (Stack<NodeID>)prec.m_scopes.clone();
+        }
+        // merge with another object arriving at the same node
+        public void merge(final NodeIDWithLayerAndScope nls2) {
+            // join the lists of meta node inports this chain of nodes is connected to
+            m_connectedMetaInPorts.addAll(nls2.m_connectedMetaInPorts);
+            // merge the two stacks:
+            // a) they are equal: easy
+            // b) one is longer but the common parts of equal: use the longer
+            // c) fail.
+            m_scopes = m_scopes.size() < nls2.m_scopes.size() ? (Stack<NodeID>)nls2.m_scopes.clone() : m_scopes;
         }
         /** @return id of node. */
         public NodeID getID() { return m_id; }
@@ -1344,6 +1374,10 @@ class Workflow {
         public void setDepth(final int d) { m_depth = d; }
         /** @return depth of node. */
         public int getDepth() { return m_depth; }
+        /** @param id add a scope start node id to stack */
+        public void pushScopeMarker(final NodeID id) { m_scopes.push(id); }
+        /** @return pop scope start node id from stack */
+        public NodeID popScopeMarker() { return m_scopes.pop(); }
         /** {@inheritDoc} */
         @Override
         public int compareTo(final NodeIDWithLayerAndScope o2) {
@@ -1364,13 +1398,13 @@ class Workflow {
             return m_id.hashCode() + m_outportIndex;
         }
     }
-    /* actual routing */
+    /* actual routine */
     private void analyseGraph() {
         ArrayList<NodeIDWithLayerAndScope> sortedNodes;
         sortedNodes = new ArrayList<NodeIDWithLayerAndScope>();
         // insert metanode itself with all connected inports as "outport" indices
         for (ConnectionContainer cc : getConnectionsBySource(getID())) {
-            NodeIDWithLayerAndScope nls = new NodeIDWithLayerAndScope(getID(), cc.getSourcePort(), 0);
+            NodeIDWithLayerAndScope nls = new NodeIDWithLayerAndScope(getID(), cc.getSourcePort());
             if (!sortedNodes.contains(nls)) {
                 sortedNodes.add(nls);
             }
@@ -1379,9 +1413,12 @@ class Workflow {
         for (NodeID id : m_nodes.keySet()) {
             if (m_connectionsByDest.get(id).size() == 0) {
                 NodeContainer nc = m_nodes.get(id);
-                for (int o = 0; o < nc.getNrOutPorts(); o++) {
-                    sortedNodes.add(new NodeIDWithLayerAndScope(id, o, 0));
+                NodeIDWithLayerAndScope nls = new NodeIDWithLayerAndScope(id);
+                if ((nc instanceof SingleNodeContainer)
+                        && (((SingleNodeContainer)nc).getNodeModel() instanceof ScopeStartNode)) {
+                    nls.pushScopeMarker(id);
                 }
+                sortedNodes.add(nls);
             }
         }
         // now follow those nodes and keep adding until we reach and end or a metanode outport.
@@ -1389,12 +1426,11 @@ class Workflow {
         while (currIndex < sortedNodes.size()) {
             NodeIDWithLayerAndScope currNLS = sortedNodes.get(currIndex);
             NodeID currID = currNLS.getID();
-            NodeContainer currNode = m_nodes.get(currID);
             int currOutport = currNLS.getOutportIndex();
             int currDepth = currNLS.getDepth();
             // and now find all nodes that are connected to this node/outport pair
             for (ConnectionContainer cc : this.getConnectionsBySource(currID)) {
-                if (currOutport == cc.getSourcePort()) {
+                if ((currOutport == -1) || (currOutport == cc.getSourcePort())) {
                     NodeID destID = cc.getDest();
                     if (!destID.equals(this.getID())) {
                         // only if we have not yet reached an outport - try to find node/port in existing list:
@@ -1405,9 +1441,7 @@ class Workflow {
                         if (destNC instanceof SingleNodeContainer) {
                             // trivial for SNC: all
                             connectedOutports = new HashSet<Integer>();
-                            for (int o = 0; o < destNC.getNrOutPorts(); o++) {
-                                connectedOutports.add(o);
-                            }
+                            connectedOutports.add(-1);
                         } else {
                             assert destNC instanceof WorkflowManager;
                             connectedOutports = ((WorkflowManager)destNC).getWorkflow().connectedOutPorts(destInPort);
@@ -1417,7 +1451,9 @@ class Workflow {
                             NodeIDWithLayerAndScope nls = sortedNodes.get(ix);
                             if ((nls.getID().equals(destID)) && (connectedOutports.contains(nls.getOutportIndex()))) {
                                 assert ix != currIndex;
-                                // node is already in list, adjust depth to new maximum.
+                                // node is already in list, merge stacks with "new" element
+                                nls.merge(new NodeIDWithLayerAndScope(destID, nls.getOutportIndex(), currNLS));
+                                // also adjust depth to new maximum.
                                 if (nls.getDepth() <= currDepth) {
                                     // fix depth if smaller or equal
                                     nls.setDepth(currDepth + 1);
@@ -1442,7 +1478,16 @@ class Workflow {
                         }
                         for (int o : connectedOutports) {
                             // ...it's a node/port combo not yet in our list: add it
-                            sortedNodes.add(new NodeIDWithLayerAndScope(destID, o, currDepth + 1));
+                            NodeIDWithLayerAndScope nls = new NodeIDWithLayerAndScope(destID, o, currNLS);
+                            if (destNC instanceof SingleNodeContainer) {
+                                if (((SingleNodeContainer)destNC).getNodeModel() instanceof ScopeStartNode) {
+                                    nls.pushScopeMarker(destID);
+                                }
+                                if (((SingleNodeContainer)destNC).getNodeModel() instanceof ScopeEndNode) {
+                                    nls.popScopeMarker();
+                                }
+                            }
+                            sortedNodes.add(nls);
                         }
                     }
                 }
