@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Nov 27, 2008 (wiswedel): created
  */
@@ -28,16 +28,16 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * NodeFactory that creates a node whose implementation is defined as inline 
+ * NodeFactory that creates a node whose implementation is defined as inline
  * code. It uses an abstract runtime node model.
  * @author wiswedel, University of Konstanz
  */
-public class RuntimeNodeFactory extends NodeFactory<RuntimeNodeModel>{
-    
+public class RuntimeNodeFactory extends NodeFactory<RuntimeNodeModel> {
+
     private final RuntimeNodeModel m_model;
-    
+
     /**
-     * 
+     *
      */
     public RuntimeNodeFactory(final RuntimeNodeModel model) {
         m_model = model;
@@ -57,8 +57,8 @@ public class RuntimeNodeFactory extends NodeFactory<RuntimeNodeModel>{
 
     /** {@inheritDoc} */
     @Override
-    public NodeView<RuntimeNodeModel> createNodeView(int viewIndex,
-            RuntimeNodeModel nodeModel) {
+    public NodeView<RuntimeNodeModel> createNodeView(final int viewIndex,
+            final RuntimeNodeModel nodeModel) {
         return null;
     }
 

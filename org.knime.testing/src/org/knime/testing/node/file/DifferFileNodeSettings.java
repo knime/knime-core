@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ------------------------------------------------------------------------
- * 
+ *
  * History
  *   29.04.2011 (hofer): created
  */
@@ -56,74 +56,77 @@ import org.knime.core.node.NodeSettingsWO;
 
 /**
  * This is the settings of the Differ File Node.
- * 
+ *
  * @author Heiko Hofer
  */
 class DifferFileNodeSettings {
 
-	    private static final String TEST_FILE_FLOW_VAR = "testFileFlowVar";
-	    private static final String REFERENCE_FILE_FLOW_VAR = 
-	    	"referenceFileFlowVar";
-	    
+    private static final String TEST_FILE_FLOW_VAR = "testFileFlowVar";
 
-	    private String m_TestFileFlowVar = null;
-	    private String m_referenceFileFlowVar = null;	    
+    private static final String REFERENCE_FILE_FLOW_VAR = "referenceFileFlowVar";
 
-		/**
-		 * @return the testFileFlowVar
-		 */
-		String getTestFileFlowVar() {
-			return m_TestFileFlowVar;
-		}
+    private String m_testFileFlowVar = null;
 
-		/**
-		 * @param testFileFlowVar the testFileFlowVar to set
-		 */
-		void setTestFileFlowVar(String testFileFlowVar) {
-			m_TestFileFlowVar = testFileFlowVar;
-		}
+    private String m_referenceFileFlowVar = null;
 
-		/**
-		 * @return the referenceFileFlowVar
-		 */
-		String getReferenceFileFlowVar() {
-			return m_referenceFileFlowVar;
-		}
+    /**
+     * @return the testFileFlowVar
+     */
+    String getTestFileFlowVar() {
+        return m_testFileFlowVar;
+    }
 
-		/**
-		 * @param referenceFileFlowVar the referenceFileFlowVar to set
-		 */
-		void setReferenceFileFlowVar(String referenceFileFlowVar) {
-			m_referenceFileFlowVar = referenceFileFlowVar;
-		}
+    /**
+     * @param testFileFlowVar the testFileFlowVar to set
+     */
+    void setTestFileFlowVar(final String testFileFlowVar) {
+        m_testFileFlowVar = testFileFlowVar;
+    }
 
-		/** Called from dialog when settings are to be loaded.
-	     * @param settings To load from
-	     */
-	    void loadSettingsDialog(final NodeSettingsRO settings) {
-	        m_TestFileFlowVar = settings.getString(TEST_FILE_FLOW_VAR, null);
-	        m_referenceFileFlowVar = 
-	        	settings.getString(REFERENCE_FILE_FLOW_VAR, null);
-	    }
-	    
-		/** Called from model when settings are to be loaded.
-	     * @param settings To load from
-	     * @throws InvalidSettingsException If settings are invalid.
-	     */
-	    void loadSettingsModel(final NodeSettingsRO settings)
-	        throws InvalidSettingsException {
-	        m_TestFileFlowVar = settings.getString(TEST_FILE_FLOW_VAR);
-	        m_referenceFileFlowVar = 
-	        	settings.getString(REFERENCE_FILE_FLOW_VAR);
-	    }
+    /**
+     * @return the referenceFileFlowVar
+     */
+    String getReferenceFileFlowVar() {
+        return m_referenceFileFlowVar;
+    }
 
-	    /** Called from model and dialog to save current settings.
-	     * @param settings To save to.
-	     */
-	    void saveSettings(final NodeSettingsWO settings) {
-	        settings.addString(TEST_FILE_FLOW_VAR, m_TestFileFlowVar);
-	        settings.addString(REFERENCE_FILE_FLOW_VAR, m_referenceFileFlowVar);
+    /**
+     * @param referenceFileFlowVar the referenceFileFlowVar to set
+     */
+    void setReferenceFileFlowVar(final String referenceFileFlowVar) {
+        m_referenceFileFlowVar = referenceFileFlowVar;
+    }
 
-	    }
+    /**
+     * Called from dialog when settings are to be loaded.
+     *
+     * @param settings To load from
+     */
+    void loadSettingsDialog(final NodeSettingsRO settings) {
+        m_testFileFlowVar = settings.getString(TEST_FILE_FLOW_VAR, null);
+        m_referenceFileFlowVar = settings.getString(REFERENCE_FILE_FLOW_VAR, null);
+    }
 
-	}
+    /**
+     * Called from model when settings are to be loaded.
+     *
+     * @param settings To load from
+     * @throws InvalidSettingsException If settings are invalid.
+     */
+    void loadSettingsModel(final NodeSettingsRO settings) throws InvalidSettingsException {
+        m_testFileFlowVar = settings.getString(TEST_FILE_FLOW_VAR);
+        m_referenceFileFlowVar = settings.getString(REFERENCE_FILE_FLOW_VAR);
+    }
+
+    /**
+     * Called from model and dialog to save current settings.
+     *
+     * @param settings To save to.
+     */
+    void saveSettings(final NodeSettingsWO settings) {
+        settings.addString(TEST_FILE_FLOW_VAR, m_testFileFlowVar);
+        settings.addString(REFERENCE_FILE_FLOW_VAR, m_referenceFileFlowVar);
+
+    }
+
+}

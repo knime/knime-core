@@ -57,9 +57,7 @@ import org.knime.core.data.DataValue;
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public interface LargeFileStoreValue extends DataValue {
+    LargeFile getLargeFile();
 
-    public LargeFile getLargeFile();
-
-    public long getSeed();
-
+    long getSeed();
 }

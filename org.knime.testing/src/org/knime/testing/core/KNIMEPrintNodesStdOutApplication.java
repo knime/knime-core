@@ -23,12 +23,12 @@
  */
 package org.knime.testing.core;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 
 import org.apache.commons.lang.StringEscapeUtils;
@@ -65,7 +65,6 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
     public Object start(final IApplicationContext context) throws Exception {
         Object args =
             context.getArguments().get(IApplicationContext.APPLICATION_ARGS);
-        Writer writer = new OutputStreamWriter(System.out);
         boolean found = false;
         String filename = null;
         File directory = null;
@@ -77,20 +76,18 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
                         filename = as[i + 1];
                         found = true;
                     }
-                } else if(PARAM_DIRECTORY.equals(as[i])) {
-                    if (i + 1 <= as.length - 1) {
-                        directory = new File(as[i + 1]);
-                        if (directory.exists() && !directory.isDirectory()) {
-                            throw new IllegalArgumentException(
-                                    directory.getCanonicalPath()
-                                    + " already exists, but is no directory.");
-                        }
-                        directory.mkdirs();
-                        // create sub directory for detailed node descriptions
-                        m_detailsDir = new File(directory, DETAIL_DIR_NAME);
-                        m_detailsDir.mkdir();
-                        m_createDir = true;
+                } else if (PARAM_DIRECTORY.equals(as[i]) && (i + 1 <= as.length - 1)) {
+                    directory = new File(as[i + 1]);
+                    if (directory.exists() && !directory.isDirectory()) {
+                        throw new IllegalArgumentException(
+                                directory.getCanonicalPath()
+                                + " already exists, but is no directory.");
                     }
+                    directory.mkdirs();
+                    // create sub directory for detailed node descriptions
+                    m_detailsDir = new File(directory, DETAIL_DIR_NAME);
+                    m_detailsDir.mkdir();
+                    m_createDir = true;
                 }
             }
         }
@@ -116,7 +113,7 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
                     + " descriptions of the nodes are created in addition.");
             return IApplication.EXIT_OK;
         }
-        writer = new BufferedWriter(new FileWriter(file));
+        Writer writer = new OutputStreamWriter(new FileOutputStream(file), Charset.forName("UTF-8"));
 
         // unless the user specified this property, we set it to true here
         // (true means no icons etc will be loaded, if it is false, the
@@ -189,9 +186,9 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
                     writer.append(readShortDescriptionFromXML(
                             nodeXML, indent));
                     if (m_createDir) {
-                        Writer detailsWriter = new BufferedWriter(
-                                new FileWriter(
-                                    new File(m_detailsDir, detailFileName)));
+                        Writer detailsWriter =
+                                new OutputStreamWriter(new FileOutputStream(new File(m_detailsDir, detailFileName)),
+                                        Charset.forName("UTF-8"));
                         detailsWriter.append(createHTMLDescription(t));
                         detailsWriter.close();
                     }
@@ -267,8 +264,8 @@ public class KNIMEPrintNodesStdOutApplication implements IApplication {
      */
     private static String getVersionString() {
         Bundle eclipseCore = Platform.getBundle("org.knime.core");
-        String version = (String)eclipseCore.getHeaders().get("Bundle-Version");
-        return version.substring(0, version.lastIndexOf("."));
+        String version = eclipseCore.getHeaders().get("Bundle-Version");
+        return version.substring(0, version.lastIndexOf('.'));
     }
 
     private static final void indent(final int indent, final Writer writer)

@@ -26,13 +26,16 @@ package org.knime.testing.core;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.StringReader;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -109,7 +112,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                 }
             };
 
-    private final class MsgPattern {
+    private static final class MsgPattern {
         private static final String REGEXPRPATTERN = "_!_";
 
         private final String m_msg;
@@ -189,14 +192,6 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
         }
 
         /**
-         * {@inheritDoc}
-         */
-        @Override
-        public int hashCode() {
-            return super.hashCode();
-        }
-
-        /**
          * Compares the actual message with the pattern.
          *
          * @param actualMsg the message to test.
@@ -259,7 +254,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
          */
         Option(final int[] nodeIDs, final String name, final String value,
                 final String type) {
-            m_nodeIDs = nodeIDs;
+            m_nodeIDs = nodeIDs.clone();
             m_name = name;
             m_value = value;
             m_type = type;
@@ -347,10 +342,9 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
     private final Map<NodeID, MsgPattern> m_errorStatus =
             new HashMap<NodeID, MsgPattern>();
 
-    private final LinkedList<String> m_unexpectedErrors =
-            new LinkedList<String>();
+    private final Deque<String> m_unexpectedErrors = new LinkedList<String>();
 
-    private final LinkedList<String> m_exceptions = new LinkedList<String>();
+    private final Deque<String> m_exceptions = new LinkedList<String>();
 
     private final AppenderSkeleton m_customAppender = new AppenderSkeleton() {
         {
@@ -381,7 +375,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
      * These guys own all tests without owner file. They will be notified about
      * their failure due to missing owners.
      */
-    public final static String REGRESSIONS_OWNER = "peter.ohl@uni-konstanz.de";
+    public static final String REGRESSIONS_OWNER = "peter.ohl@uni-konstanz.de";
 
     private static final NodeLogger logger = NodeLogger
             .getLogger(FullWorkflowTest.class);
@@ -424,34 +418,30 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
         Level msgLevel = aEvent.getLevel();
 
         // try recognizing stacktraces in warning messages.
-        if ((msgLevel == Level.ERROR) || (msgLevel == Level.WARN)
-                || (msgLevel == Level.FATAL)) {
-            if (msg != null) {
-                boolean exceptionStartLine = false;
-                String lines[] = msg.replace("\r", "").split("\n");
+        if ((msg != null) && ((msgLevel == Level.ERROR) || (msgLevel == Level.WARN)
+                || (msgLevel == Level.FATAL))) {
+            boolean exceptionStartLine = false;
+            String[] lines = msg.replace("\r", "").split("\n");
 
-                /*
-                 * An Exception starts with a line containing "....Exception:
-                 * ..." followed by a line starting with "<TAB>at
-                 * ...blah...:<linenumber>)"
-                 */
-                for (String line : lines) {
-                    if (line.indexOf("Exception: ") > 0) {
-                        exceptionStartLine = true;
-                    } else {
-                        if (exceptionStartLine == true) {
-                            // if the previous line started an exception dump
-                            // this should be the first line of the stackstrace
-                            if (line.matches("^\\tat .*\\(.*\\)$")) {
-                                m_exceptions.add(lines[0]);
-                                // make sure list won't get too long
-                                if (m_exceptions.size() > MAX_LINES) {
-                                    m_exceptions.removeFirst();
-                                }
-                            }
+            /*
+             * An Exception starts with a line containing "....Exception:
+             * ..." followed by a line starting with "<TAB>at
+             * ...blah...:<linenumber>)"
+             */
+            for (String line : lines) {
+                if (line.indexOf("Exception: ") > 0) {
+                    exceptionStartLine = true;
+                } else {
+                    if (exceptionStartLine && line.matches("^\\tat .*\\(.*\\)$")) {
+                        // if the previous line started an exception dump
+                        // this should be the first line of the stackstrace
+                        m_exceptions.add(lines[0]);
+                        // make sure list won't get too long
+                        if (m_exceptions.size() > MAX_LINES) {
+                            m_exceptions.removeFirst();
                         }
-                        exceptionStartLine = false;
                     }
+                    exceptionStartLine = false;
                 }
             }
         }
@@ -485,18 +475,17 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
      * @param wfm the workflow manager holding the workflow
      * @throws InvalidSettingsException if the options file contains incorrect
      *             settings
-     * @throws FileNotFoundException if the options file does not exist nothing
-     *             happens.
      * @throws IOException if an I/O Error occurs
      */
     private void applySettings(final File optionsFile)
-            throws FileNotFoundException, InvalidSettingsException, IOException {
+            throws InvalidSettingsException, IOException {
         if (!optionsFile.exists()) {
             return;
         }
 
         BufferedReader optfile =
-                new BufferedReader(new FileReader(optionsFile));
+                new BufferedReader(new InputStreamReader(new FileInputStream(optionsFile), Charset.forName("UTF-8")));
+
 
         logger.debug("Applying new settings to workflow ----------------"
                 + "------------------");
@@ -535,9 +524,10 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                 options.add(new Option(nodeIDs, optionName, value, type));
             } catch (ArrayIndexOutOfBoundsException aobe) {
                 throw new InvalidSettingsException("Invalid options line, "
-                        + "in File '" + optionsFile + "', line: " + line);
+                        + "in File '" + optionsFile + "', line: " + line, aobe);
             }
         }
+        optfile.close();
         if (options.size() <= 0) {
             throw new InvalidSettingsException(
                     "Options file with no settings to change. "
@@ -902,7 +892,7 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                     logger.error(msg);
                 }
 
-                expMsg = m_errorStatus.get(node.getID().toString());
+                expMsg = m_errorStatus.get(node.getID());
                 if (expMsg != null) {
                     String msg =
                             "Node '" + node.getNameWithID()
@@ -954,10 +944,9 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
 
     private SingleNodeContainer findConfigNode() {
         for (NodeContainer cont : m_manager.getNodeContainers()) {
-            if (cont instanceof SingleNodeContainer) {
-                if (((SingleNodeContainer)cont).getNodeModel() instanceof TestConfigNodeModel) {
-                    return (SingleNodeContainer)cont;
-                }
+            if ((cont instanceof SingleNodeContainer)
+                    && (((SingleNodeContainer)cont).getNodeModel() instanceof TestConfigNodeModel)) {
+                return (SingleNodeContainer)cont;
             }
         }
         return null;
@@ -1170,19 +1159,19 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
      * @param statusFile the file containing the lines defining the node status
      *            after execution. If it doesn't exist, the method returns
      *            without error or without doing anything.
-     * @throws FileNotFoundException if the file opening fails
      * @throws IOException if the file reading fails
      * @throws InvalidSettingsException if the settings in the file are
      *             incorrect
      */
     private void readNodeStatusFile(final File statusFile)
-            throws FileNotFoundException, IOException, InvalidSettingsException {
+            throws IOException, InvalidSettingsException {
         if (!statusFile.exists()) {
             return;
         }
 
         BufferedReader statusReader =
-                new BufferedReader(new FileReader(statusFile));
+                new BufferedReader(new InputStreamReader(new FileInputStream(statusFile), Charset.forName("UTF-8")));
+
 
         logger.debug("Reading configuration file for node status / messages");
         String line;
@@ -1214,11 +1203,12 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
      *
      * @param ownerFile the file containing the owners of the test case. Each
      *            line of the file must contain one email address.
-     * @throws IOException if an I/O error occurrs
+     * @throws IOException if an I/O error occurs
      */
     private void readOwners(final File ownerFile) throws IOException {
         if (ownerFile.exists()) {
-            BufferedReader r = new BufferedReader(new FileReader(ownerFile));
+            BufferedReader r =
+                    new BufferedReader(new InputStreamReader(new FileInputStream(ownerFile), Charset.forName("UTF-8")));
             String line = null;
             while ((line = r.readLine()) != null) {
                 if (line.trim().length() > 0) {
@@ -1348,7 +1338,8 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                 // test InteractiveNodeViews
                 if (nodeCont.hasInteractiveView()) {
                     logger.debug("opening interactive view for node " + nodeCont.getName());
-                    final  AbstractNodeView<?> finalInv = inv = nodeCont.getInteractiveView();
+                    inv = nodeCont.getInteractiveView();
+                    final AbstractNodeView<?> finalInv = inv;
                     // open it now.
                     ViewUtils.invokeAndWaitInEDT(new Runnable() {
                         /** {@inheritDoc} */
@@ -1578,8 +1569,6 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
             File optionsFile =
                     new File(m_knimeWorkFlow.getParentFile(), OPTIONS_FILE);
             applySettings(optionsFile);
-        } catch (AssertionError err) {
-            throw err;
         } catch (IOException ex) {
             String msg = ex.getMessage();
             logger.error("I/O Error during workflow loading:"

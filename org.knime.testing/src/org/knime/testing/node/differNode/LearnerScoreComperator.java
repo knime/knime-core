@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   May 18, 2006 (ritmeier): created
  */
@@ -29,7 +29,7 @@ import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTable;
 
 /**
- * 
+ *
  * @author ritmeier, University of Konstanz
  */
 public class LearnerScoreComperator implements TestEvaluator {
@@ -39,21 +39,15 @@ public class LearnerScoreComperator implements TestEvaluator {
     private int m_upperTolerance;
 
     /**
-     * default Constructor.
-     */
-    public LearnerScoreComperator() {
-        super();
-    }
-
-    /**
      * Compares the score of a learner with an old score. Throws exception if
      * the actual score is worse than the old or if it is more than 5% better.
-     * 
+     *
      * @param lastScoreTable - the score to compare with
      * @param newScoreTable - the score of the actual run
      * @see org.knime.testing.node.differNode.TestEvaluator#compare(
      *      org.knime.core.data.DataTable, org.knime.core.data.DataTable)
      */
+    @Override
     public void compare(final DataTable newScoreTable,
             final DataTable lastScoreTable) throws TestEvaluationException {
         double lastError = getError(lastScoreTable);
@@ -76,24 +70,24 @@ public class LearnerScoreComperator implements TestEvaluator {
      * interpreted as absolute percent numbers, i.e. if the golden score is
      * X% classification error and the upper and lower tolerance is set to 5,
      * this comparator will accept all actual error from X-5 to X+5.
-     * 
+     *
      * @param lower - the lower bound of tolerated score differences. Specify
      *            the percentage number.
      * @param upper - the upper bound of the tolerated score differences in
      *            percent.
      */
-    public void setTolerance(int lower, int upper) {
+    public void setTolerance(final int lower, final int upper) {
         m_lowerTolerance = lower;
         m_upperTolerance = upper;
     }
 
     /**
      * Calculates the error in the score table.
-     * 
+     *
      * @param scoreTable - the score table
      * @return - the error in percent.
      */
-    private double getError(DataTable scoreTable) {
+    private double getError(final DataTable scoreTable) {
         double matchCount = 0;
         double errorCount = 0;
         int rowIndex = 0;

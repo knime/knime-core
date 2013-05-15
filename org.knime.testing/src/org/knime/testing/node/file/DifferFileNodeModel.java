@@ -88,7 +88,7 @@ public class DifferFileNodeModel extends NodeModel {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(DifferFileNodeModel.class);
 
-	private static int BUFFER_SIZE = 8192;
+    private static final int BUFFER_SIZE = 8192;
 	private final DifferFileNodeSettings m_settings;
 
 	/**
@@ -116,10 +116,8 @@ public class DifferFileNodeModel extends NodeModel {
         			if (null == first) {
         				first = flow.getName();
         			} else {
-        				if (null == second) {
-        					second = flow.getName();
-        					break;
-        				}
+    					second = flow.getName();
+    					break;
         			}
         		}
         	}

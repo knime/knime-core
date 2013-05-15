@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   May 10, 2006 (ritmeier): created
  */
@@ -30,18 +30,10 @@ import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ *
  * @author ritmeier, University of Konstanz
  */
 public class DiffModelContentFactory extends NodeFactory {
-
-    /**
-     * 
-     */
-    public DiffModelContentFactory() {
-        super();
-    }
-
     /**
      * {@inheritDoc}
      */
@@ -62,7 +54,7 @@ public class DiffModelContentFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(int viewIndex, NodeModel nodeModel) {
+    public NodeView createNodeView(final int viewIndex, final NodeModel nodeModel) {
         return null;
     }
 

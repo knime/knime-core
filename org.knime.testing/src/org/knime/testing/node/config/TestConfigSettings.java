@@ -351,6 +351,7 @@ public class TestConfigSettings {
                 }
             }
         } catch (InvalidSettingsException ex) {
+            // ignore it
         }
 
         m_requiredNodeErrors.clear();
@@ -366,6 +367,7 @@ public class TestConfigSettings {
                 }
             }
         } catch (InvalidSettingsException ex) {
+            // ignore it
         }
     }
 

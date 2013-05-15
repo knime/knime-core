@@ -33,14 +33,6 @@ import org.knime.core.data.RowIterator;
  * @author Tobias Koetter, University of Konstanz
  */
 public class EmptyTableChecker implements TestEvaluator {
-
-    /**
-     * default Constructor.
-     */
-    public EmptyTableChecker() {
-        super();
-    }
-
     /**
      *
      * @throws TestEvaluationException
@@ -52,13 +44,13 @@ public class EmptyTableChecker implements TestEvaluator {
             throws TestEvaluationException {
         int table1RowCount = 0;
         final RowIterator iter1 = table1.iterator();
-        while(iter1.hasNext()) {
+        while (iter1.hasNext()) {
             table1RowCount++;
             iter1.next();
         }
         int table2RowCount = 0;
         final RowIterator iter2 = table2.iterator();
-        while(iter2.hasNext()) {
+        while (iter2.hasNext()) {
             table2RowCount++;
             iter2.next();
         }

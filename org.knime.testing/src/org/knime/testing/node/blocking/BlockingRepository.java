@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Nov 3, 2008 (wiswedel): created
  */
@@ -33,15 +33,16 @@ import java.util.concurrent.locks.ReentrantLock;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class BlockingRepository {
-    
-    private final static Map<String, ReentrantLock> LOCK_REPOSITORY =
+
+    private static final Map<String, ReentrantLock> LOCK_REPOSITORY =
         new HashMap<String, ReentrantLock>();
-    
+
     private BlockingRepository() {
     }
-    
+
     /**
-     * Add a lock to the repository
+     * Add a lock to the repository.
+     *
      * @param id The id of the lock
      * @param lock The lock
      * @throws NullPointerException if either arg is null
@@ -50,26 +51,27 @@ public final class BlockingRepository {
     public static synchronized void put(
             final String id, final ReentrantLock lock) {
         if (id == null || lock == null) {
-            throw new NullPointerException();
+            throw new IllegalArgumentException("id or lock must not be null");
         }
         if (LOCK_REPOSITORY.containsKey(id)) {
             throw new IllegalArgumentException("Lock ID already in use: " + id);
         }
         LOCK_REPOSITORY.put(id, lock);
     }
-    
+
     /**
-     * Get the lock associated with the id or null if not present
+     * Get the lock associated with the id or null if not present.
+     *
      * @param id The id of interest
      * @return The lock or null
      */
     public static synchronized ReentrantLock get(final String id) {
         return LOCK_REPOSITORY.get(id);
     }
-    
+
     /**
      * Remove and get the lock associated with the id. (The id will not present
-     * in the map after the call.) 
+     * in the map after the call.)
      * @param id The id of interest.
      * @return The lock previously assigned to the id or null if not present.
      */

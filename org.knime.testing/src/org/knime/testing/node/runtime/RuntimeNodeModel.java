@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Nov 27, 2008 (wiswedel): created
  */
@@ -45,19 +45,19 @@ public abstract class RuntimeNodeModel extends NodeModel {
      * @param nrInDataPorts
      * @param nrOutDataPorts
      */
-    protected RuntimeNodeModel(int nrInDataPorts, int nrOutDataPorts) {
+    protected RuntimeNodeModel(final int nrInDataPorts, final int nrOutDataPorts) {
         super(nrInDataPorts, nrOutDataPorts);
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void loadInternals(File nodeInternDir, ExecutionMonitor exec)
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void loadValidatedSettingsFrom(NodeSettingsRO settings)
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
     }
 
@@ -68,26 +68,26 @@ public abstract class RuntimeNodeModel extends NodeModel {
 
     /** {@inheritDoc} */
     @Override
-    protected void saveInternals(File nodeInternDir, ExecutionMonitor exec)
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void saveSettingsTo(NodeSettingsWO settings) {
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void validateSettings(NodeSettingsRO settings)
+    protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
     }
-    
+
     /** {@inheritDoc} */
     @Override
-    protected DataTableSpec[] configure(DataTableSpec[] inSpecs)
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         return null;
     }
-    
+
 }

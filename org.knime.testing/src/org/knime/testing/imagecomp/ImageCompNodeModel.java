@@ -74,91 +74,86 @@ import org.knime.core.node.port.image.ImagePortObject;
 
 /**
  * Model to compare two images.
+ *
  * @author Iris Adae, University of Konstanz
  */
 public class ImageCompNodeModel extends NodeModel {
-    
+
     private final SettingsModelDoubleBounded m_allowance = ImageCompNodeDialog.getAllowanceModel();
 
     /**
      * New node model with on image port input and a data table output.
      */
     public ImageCompNodeModel() {
-        super(new PortType[]{ImagePortObject.TYPE, ImagePortObject.TYPE},
-                new PortType[] {});
+        super(new PortType[]{ImagePortObject.TYPE, ImagePortObject.TYPE}, new PortType[]{});
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
-            throws InvalidSettingsException {
-        return new DataTableSpec[] {};
+    protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        return new DataTableSpec[]{};
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected PortObject[] execute(final PortObject[] inObjects,
-            final ExecutionContext exec) throws Exception {
-        ImagePortObject ipo1 = (ImagePortObject) inObjects[0];
-        ImagePortObject ipo2 = (ImagePortObject) inObjects[1];
-        if(!ipo1.getSpec().getDataType().equals(ipo2.getSpec().getDataType())){
-        		throw new IOException("Image types don't match: " + ipo1.getSpec().getDataType() 
-        				+  " vs. " + ipo2.getSpec().getDataType());
-        	}
+    protected PortObject[] execute(final PortObject[] inObjects, final ExecutionContext exec) throws Exception {
+        ImagePortObject ipo1 = (ImagePortObject)inObjects[0];
+        ImagePortObject ipo2 = (ImagePortObject)inObjects[1];
+        if (!ipo1.getSpec().getDataType().equals(ipo2.getSpec().getDataType())) {
+            throw new IOException("Image types don't match: " + ipo1.getSpec().getDataType() + " vs. "
+                    + ipo2.getSpec().getDataType());
+        }
         // compare PNGs
         DataCell cell1 = ipo1.toDataCell();
         DataCell cell2 = ipo2.toDataCell();
-        if(cell1.getType().isASuperTypeOf(PNGImageContent.TYPE)){
-            
-            comparePNGs((PNGImageValue) cell1, (PNGImageValue) cell2, m_allowance.getDoubleValue() * 0.01); 
-        
-        } else if(cell1.getType().isASuperTypeOf(SvgCell.TYPE)){
+        if (cell1.getType().isASuperTypeOf(PNGImageContent.TYPE)) {
+
+            comparePNGs((PNGImageValue)cell1, (PNGImageValue)cell2, m_allowance.getDoubleValue() * 0.01);
+
+        } else if (cell1.getType().isASuperTypeOf(SvgCell.TYPE)) {
             // compare SVGs
-        	boolean t = ((SvgCell) cell1).equals((SvgCell) cell2);
-        	if(!t){
-        		throw new IOException("SVG images don't match");
-        	}
+            boolean t = ((SvgCell)cell1).equals(cell2);
+            if (!t) {
+                throw new IOException("SVG images don't match");
+            }
         } else {
-        	throw new IOException("Currently only SVG's and PNG's are supported!");
+            throw new IOException("Currently only SVG's and PNG's are supported!");
         }
-        
-        return new PortObject[] {};
+
+        return new PortObject[]{};
     }
-    
+
     /*
      * Compares two png images. If the image sizes and types match, an exception
      * will be thrown, if the image pixel-wise disagreement exceeds the
      * specified amount (allowedDisagreement - [0,1]).
      */
-    private final void comparePNGs(PNGImageValue val1, PNGImageValue val2,
-            double allowedDisagreement) throws IOException {
+    private final void
+            comparePNGs(final PNGImageValue val1, final PNGImageValue val2, final double allowedDisagreement)
+                    throws IOException {
 
         // create awt images
-        BufferedImage image1 =(BufferedImage) val1.getImageContent().getImage();
-        BufferedImage image2 = (BufferedImage) val2.getImageContent().getImage();
-                
-        
-        if (image1.getWidth() != image2.getWidth()
-                || image1.getHeight() != image2.getHeight()) {
+        BufferedImage image1 = (BufferedImage)val1.getImageContent().getImage();
+        BufferedImage image2 = (BufferedImage)val2.getImageContent().getImage();
+
+        if (image1.getWidth() != image2.getWidth() || image1.getHeight() != image2.getHeight()) {
             throw new RuntimeException("PNG image sizes doesn't match.");
         }
-        
-        if(image1.getType() != image2.getType()) {
+
+        if (image1.getType() != image2.getType()) {
             throw new RuntimeException("PNG image types doesn't match.");
         }
-        
-        
+
         int width = image1.getWidth();
-        int height = image2.getHeight();        
+        int height = image2.getHeight();
 
         // pixel-wise agreement
         int pixErrors = 0;
-        int maxPixError =
-                (int)Math.round(allowedDisagreement * width * height);
+        int maxPixError = (int)Math.round(allowedDisagreement * width * height);
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 if (image1.getRGB(x, y) != image2.getRGB(x, y)) {
@@ -168,10 +163,9 @@ public class ImageCompNodeModel extends NodeModel {
         }
 
         if (pixErrors > maxPixError) {
-            double pixPerc = pixErrors * 1.0 / (1.0*width*height);
-            throw new RuntimeException(
-                    "PNG images doesn't match (more than "
-                            + (allowedDisagreement * 100) + "% disagreement): " + pixPerc  * 100 + "%");
+            double pixPerc = pixErrors * 1.0 / (1.0 * width * height);
+            throw new RuntimeException("PNG images doesn't match (more than " + (allowedDisagreement * 100)
+                    + "% disagreement): " + pixPerc * 100 + "%");
         }
 
     }
@@ -180,9 +174,8 @@ public class ImageCompNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void loadInternals(final File nodeInternDir,
-            final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
         // empty
     }
 
@@ -190,9 +183,8 @@ public class ImageCompNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void saveInternals(final File nodeInternDir,
-            final ExecutionMonitor exec)
-            throws IOException, CanceledExecutionException {
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec) throws IOException,
+            CanceledExecutionException {
         // empty
     }
 
@@ -208,21 +200,19 @@ public class ImageCompNodeModel extends NodeModel {
      * {@inheritDoc}
      */
     @Override
-    protected void validateSettings(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void validateSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
         // new since 2.8.0
-//        m_allowance.validateSettings(settings);
+        //        m_allowance.validateSettings(settings);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings) throws InvalidSettingsException {
         try {
-             m_allowance.loadSettingsFrom(settings);
-        } catch ( InvalidSettingsException ise) {
+            m_allowance.loadSettingsFrom(settings);
+        } catch (InvalidSettingsException ise) {
             // new since 2.8.0
             m_allowance.setDoubleValue(0.0);
         }

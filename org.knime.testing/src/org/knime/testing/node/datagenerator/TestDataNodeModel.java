@@ -36,6 +36,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.Random;
+
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -84,8 +85,8 @@ public class TestDataNodeModel extends NodeModel {
     private static final int[] intVals = new int[] {Integer.MAX_VALUE,
         Integer.MIN_VALUE, -1, 1, 0, 65, 123789043, -489546568};
     private static final long[] longVals = new long[] {Long.MAX_VALUE,
-        Long.MIN_VALUE, -1, 1, 0, 6782346868234l, 4327897691234567123l,
-        -3685468548523478l, -678546786868234l};
+        Long.MIN_VALUE, -1, 1, 0, 6782346868234L, 4327897691234567123L,
+        -3685468548523478L, -678546786868234L};
     private static final double[] doubleVals = new double[] {Double.NaN,
         Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY,
         Double.MAX_VALUE, Double.MIN_VALUE, Double.MIN_NORMAL,
@@ -97,9 +98,9 @@ public class TestDataNodeModel extends NodeModel {
         new GregorianCalendar(1600, 1, 1).getTime(),
         new GregorianCalendar(0, 1, 1).getTime(),
         new GregorianCalendar(4000, 1, 1).getTime(),
-        new GregorianCalendar(1600, 12, 31).getTime(),
-        new GregorianCalendar(0, 12, 31).getTime(),
-        new GregorianCalendar(4000, 12, 31).getTime(),
+        new GregorianCalendar(1600, 11, 31).getTime(),
+        new GregorianCalendar(0, 11, 31).getTime(),
+        new GregorianCalendar(4000, 11, 31).getTime(),
         new GregorianCalendar(1600, 1, 1, 1, 1, 1).getTime(),
         new GregorianCalendar(0, 1, 1, 1, 1, 1).getTime(),
         new GregorianCalendar(4000, 1, 1, 1, 1, 1).getTime(),
@@ -116,7 +117,7 @@ public class TestDataNodeModel extends NodeModel {
         createMaxStringLengthModel();
     private final SettingsModelInteger m_noOfAllMissingRows = createNoOfAllMissingRowsModel();
 
-    private final static Random rnd = new Random();
+    private static final Random rnd = new Random();
 
     /**Constructor for class TestDataNodeModel.
      */
@@ -217,9 +218,9 @@ public class TestDataNodeModel extends NodeModel {
             cells.add(getUriListVal(rowIdx, noOfListItems));
             cells.add(getUriSetVal(rowIdx, noOfSetItems));
 
-            cells.add(getMissingVal(rowIdx));
-            cells.add(getMissingValListVal(rowIdx, noOfListItems));
-            cells.add(getMissingValSetVal(rowIdx, noOfSetItems));
+            cells.add(DataType.getMissingCell());
+            cells.add(getMissingValListVal(noOfListItems));
+            cells.add(getMissingValSetVal(noOfSetItems));
 
             cells.add(getStringVal(exec, rowIdx));
             cells.add(getDoubleVal(rowIdx));
@@ -230,7 +231,7 @@ public class TestDataNodeModel extends NodeModel {
         }
         //add the all missing cells row last
         final DataCell[] allMissing = new DataCell[newSpec.getNumColumns()];
-        Arrays.fill(allMissing, getMissingVal(0));
+        Arrays.fill(allMissing, DataType.getMissingCell());
         for (int i = 0; i < m_noOfAllMissingRows.getIntValue(); i++) {
             final int rowIdx = noOfValueRows + i;
             exec.setProgress((double)rowIdx / totalNoOfRows, "Generating row "
@@ -274,7 +275,7 @@ public class TestDataNodeModel extends NodeModel {
     }
 
 
-    private DataCell getUriVal(final int rowIdx){
+    private DataCell getUriVal(final int rowIdx) {
         final String scheme = uriSchemes[rowIdx % uriSchemes.length];
         final String extension = uriExtensions[rowIdx % uriExtensions.length];
         final StringBuilder buf = new StringBuilder();
@@ -318,19 +319,12 @@ public class TestDataNodeModel extends NodeModel {
         return cells;
     }
 
-    private DataCell getMissingVal(
-            @SuppressWarnings("unused") final int rowIdx) {
-        return DataType.getMissingCell();
-    }
-
-    private DataCell getMissingValSetVal(
-            @SuppressWarnings("unused") final int rowIdx, final int i) {
+    private DataCell getMissingValSetVal(final int i) {
         return CollectionCellFactory.createSetCell(
                 createMissingCellCollection(i));
     }
 
-    private DataCell getMissingValListVal(
-            @SuppressWarnings("unused") final int rowIdx, final int i) {
+    private DataCell getMissingValListVal(final int i) {
         return CollectionCellFactory.createListCell(
                 createMissingCellCollection(i));
     }
@@ -339,7 +333,7 @@ public class TestDataNodeModel extends NodeModel {
         final Collection<DataCell> cells =
             new ArrayList<DataCell>(noOf);
         for (int i = 0; i < noOf; i++) {
-            cells.add(getMissingVal(i));
+            cells.add(DataType.getMissingCell());
         }
         return cells;
     }

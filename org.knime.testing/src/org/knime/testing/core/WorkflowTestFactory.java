@@ -67,5 +67,5 @@ public interface WorkflowTestFactory {
      *            workflow; can be <code>null</code> if it should not be saved
      * @return a testcase
      */
-    public WorkflowTest createTestcase(File workflowDir, File saveLocation);
+    WorkflowTest createTestcase(File workflowDir, File saveLocation);
 }

@@ -27,7 +27,6 @@ package org.knime.testing.node.differNode;
 import java.io.File;
 import java.io.IOException;
 
-import org.knime.core.data.DataTable;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -57,8 +56,6 @@ public class DiffNodeModel extends NodeModel {
     /** Config key for the epsilon for numeric values. */
     public static final String CFGKEY_EPSILON = "EPSILON";
 
-
-    private DataTable m_diffTable;
 
     private Evaluators m_evaluator = Evaluators.TableDiffer;
 
@@ -166,15 +163,6 @@ public class DiffNodeModel extends NodeModel {
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         return new DataTableSpec[]{};
-    }
-
-    /**
-     * Returns the result of the table differ.
-     *
-     * @return - the result of the table differ.
-     */
-    public DataTable getDiffTable() {
-        return m_diffTable;
     }
 
     /**

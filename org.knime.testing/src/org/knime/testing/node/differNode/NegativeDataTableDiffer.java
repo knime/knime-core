@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   May 18, 2006 (ritmeier): created
  */
@@ -32,25 +32,18 @@ import org.knime.core.data.DataTable;
 
 
 /**
- * 
+ *
  * @author ritmeier, University of Konstanz
  */
 public class NegativeDataTableDiffer implements TestEvaluator {
-
     /**
-     * default Constructor.
-     */
-    public NegativeDataTableDiffer() {
-        super();
-    }
-
-    /**
-     * 
+     *
      * @throws TestEvaluationException
      * @see org.knime.testing.node.differNode.TestEvaluator#compare(
      *      org.knime.core.data.DataTable,
      *      org.knime.core.data.DataTable)
      */
+    @Override
     public void compare(final DataTable table1, final DataTable table2)
             throws TestEvaluationException {
         boolean testResult = true;

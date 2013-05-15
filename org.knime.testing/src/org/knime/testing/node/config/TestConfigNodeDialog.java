@@ -136,8 +136,8 @@ public class TestConfigNodeDialog extends NodeDialogPane {
             public Component getListCellRendererComponent(final JList list,
                     final Object value, final int index,
                     final boolean isSelected, final boolean cellHasFocus) {
-                NodeContainer cont = (NodeContainer)value;
                 if (value != null) {
+                    NodeContainer cont = (NodeContainer)value;
                     String text = cont.getNameWithID();
                     return super.getListCellRendererComponent(list, text,
                             index, isSelected, cellHasFocus);

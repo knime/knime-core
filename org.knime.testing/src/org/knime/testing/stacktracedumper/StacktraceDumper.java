@@ -55,7 +55,7 @@ import org.knime.core.util.MutableInteger;
  *
  * @author ohl, University of Konstanz
  */
-public class StacktraceDumper {
+public final class StacktraceDumper {
 
     /**
      * A pattern for the analyzer.

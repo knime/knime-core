@@ -27,10 +27,13 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileFilter;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.util.Enumeration;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -87,19 +90,6 @@ public class KNIMETestingApplication implements IApplication {
         // we need a display, initialized as early as possible, otherwise closing JFrames may result
         // in X errors (BadWindow) under Linux
         PlatformUI.createDisplay();
-
-        // unless the user specified this property, we set it to true here
-        // (true means no icons etc will be loaded, if it is false, the
-        // loading of the repository manager is likely to print many errors
-        // - though it will still function)
-        // Under Linux this must be not be true, otherwise the views will not
-        // open!
-        // Suddenly under windows this causes a headless exception (at least
-        // if started without command line arguments)
-        // if (!System.getProperty("os.name").equals("Linux")
-        // && System.getProperty("java.awt.headless") == null) {
-        // System.setProperty("java.awt.headless", "true");
-        // }
 
         // make sure the logfile doesn't get split.
         System.setProperty(KNIMEConstants.PROPERTY_MAX_LOGFILESIZE, "-1");
@@ -532,17 +522,22 @@ public class KNIMETestingApplication implements IApplication {
         File copyFile =
                 new File(logFile.getParent(), "KNIMELastRunLogCopy.log");
 
-        BufferedReader reader = new BufferedReader(new FileReader(logFile));
+        BufferedReader reader =
+                new BufferedReader(new InputStreamReader(new FileInputStream(logFile), Charset.forName("UTF-8")));
         String line;
-        BufferedWriter writer = new BufferedWriter(new FileWriter(copyFile));
+        BufferedWriter writer =
+                new BufferedWriter(new OutputStreamWriter(new FileOutputStream(copyFile), Charset.forName("UTF-8")));
 
         while ((line = reader.readLine()) != null) {
             if (line.contains(startLine) && line.endsWith("#")) {
                 // (re-) open the output file, overriding any previous content
-                writer = new BufferedWriter(new FileWriter(copyFile));
+                writer =
+                        new BufferedWriter(new OutputStreamWriter(new FileOutputStream(copyFile),
+                                Charset.forName("UTF-8")));
             }
             writer.write(line + "\n");
         }
+        reader.close();
         writer.close();
 
         return copyFile;

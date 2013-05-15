@@ -7,7 +7,7 @@ import org.knime.core.node.defaultnodesettings.SettingsModelDoubleBounded;
 
 /**
  * Dialog for the image comparator node.
- * @author Iris Ad‰, University of Konstanz
+ * @author Iris Ad√§, University of Konstanz
  *
  */
 public class ImageCompNodeDialog extends DefaultNodeSettingsPane {

@@ -18,20 +18,20 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   Jul 12, 2006 (ritmeier): created
  */
 package org.knime.testing.node.differNode;
 
 /**
- * 
+ *
  * @author ritmeier, University of Konstanz
  */
 public class TestEvaluationException extends Exception {
 
     /**
-     * 
+     *
      */
     public TestEvaluationException() {
         super();
@@ -41,7 +41,7 @@ public class TestEvaluationException extends Exception {
     /**
      * @param message
      */
-    public TestEvaluationException(String message) {
+    public TestEvaluationException(final String message) {
         super(message);
         // TODO Auto-generated constructor stub
     }
@@ -50,7 +50,7 @@ public class TestEvaluationException extends Exception {
      * @param message
      * @param cause
      */
-    public TestEvaluationException(String message, Throwable cause) {
+    public TestEvaluationException(final String message, final Throwable cause) {
         super(message, cause);
         // TODO Auto-generated constructor stub
     }
@@ -58,7 +58,7 @@ public class TestEvaluationException extends Exception {
     /**
      * @param cause
      */
-    public TestEvaluationException(Throwable cause) {
+    public TestEvaluationException(final Throwable cause) {
         super(cause);
         // TODO Auto-generated constructor stub
     }

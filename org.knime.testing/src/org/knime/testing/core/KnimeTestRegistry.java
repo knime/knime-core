@@ -50,7 +50,7 @@ public class KnimeTestRegistry {
             .getLogger(KnimeTestRegistry.class);
 
     /**
-     * pattern (regular expression) used to select test cases to run
+     * pattern (regular expression) used to select test cases to run.
      */
     private final String m_pattern;
 
@@ -105,11 +105,12 @@ public class KnimeTestRegistry {
             final Collection<File> testRootDirs, final File saveRoot, final boolean testDialogs,
             final boolean testViews, final int timeout) {
         if (testRootDirs == null) {
-            throw new NullPointerException("Root dir for tests must not be null");
+            throw new IllegalArgumentException("Root dir for tests must not be null");
         }
         for (File dir : testRootDirs) {
-            if (!dir.isDirectory()) { throw new IllegalArgumentException("Root dir '" + dir
-                    + "' for tests must be an existing directory"); }
+            if (!dir.isDirectory()) {
+                throw new IllegalArgumentException("Root dir '" + dir + "' for tests must be an existing directory");
+            }
         }
 
         if ((testNamePattern != null) && (testNamePattern.length() == 0)) {
@@ -188,7 +189,7 @@ public class KnimeTestRegistry {
 
     /**
      * Searches in the directory and subdirectories for workflow.knime files and
-     * adds them to m_registry
+     * adds them to m_registry.
      *
      * @param dir - the basedir for the search
      * @param saveRoot - the baseDir executed flows will be saved to (or null).
@@ -267,8 +268,7 @@ public class KnimeTestRegistry {
             // seems the test was in the testRoot dir
             postfix = testName.getName();
         }
-        File save = new File(m_saveRootDir, postfix);
-        return save;
+        return new File(m_saveRootDir, postfix);
 
     }
 

@@ -24,8 +24,9 @@
  */
 package org.knime.testing.node.differNode;
 
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.Vector;
+import java.util.List;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
@@ -47,16 +48,9 @@ public class DataTableDiffer implements TestEvaluator {
 
     private DataTable m_dataTable2 = null;
 
-    private DataTable m_DiffTable;
+    private DataTable m_diffTable;
 
     private double m_epsilon = 0.0;
-
-    /**
-     * default Constructor.
-     */
-    public DataTableDiffer() {
-        super();
-    }
 
     /**
      * Sets the maximum allowed relative deviation of reference and actual value
@@ -172,8 +166,8 @@ public class DataTableDiffer implements TestEvaluator {
      * @return - the difference table.
      */
     public DataTable getDiffTable() {
-        if (m_DiffTable == null) {
-            Vector<DataRow> rows = new Vector<DataRow>();
+        if (m_diffTable == null) {
+            List<DataRow> rows = new ArrayList<DataRow>();
             Iterator<DataRow> rowIt1 = m_dataTable1.iterator();
             Iterator<DataRow> rowIt2 = m_dataTable2.iterator();
             // this is bullshit! (po)
@@ -190,7 +184,6 @@ public class DataTableDiffer implements TestEvaluator {
                 DataCell[] cells = new DataCell[currentRow.getNumCells()];
                 DataCell currentCell1 = null;
                 DataCell currentCell2 = null;
-                // TODO tg boolean rowDiffers = false;
                 int pos = 0;
                 while (cellIt1.hasNext() && cellIt2.hasNext()) {
                     currentCell1 = cellIt1.next();
@@ -208,7 +201,7 @@ public class DataTableDiffer implements TestEvaluator {
                                         / ((DoubleValue)currentCell2)
                                                 .getDoubleValue();
                         if (diff < 1) {
-                            diff = 1/ diff;
+                            diff = 1 / diff;
                         }
                         if ((diff - 1) > m_epsilon) {
                             cells[pos] =
@@ -219,7 +212,6 @@ public class DataTableDiffer implements TestEvaluator {
                             cells[pos] = currentCell1;
                         }
                     } else {
-                        // TODO tg rowDiffers = true;
                         cells[pos] =
                                 new StringCell("CELL DIFFERS:"
                                         + currentCell1.toString() + " <> "
@@ -237,10 +229,10 @@ public class DataTableDiffer implements TestEvaluator {
                 dataRows[i] = (DataRow)tmp[i];
             }
 
-            m_DiffTable =
+            m_diffTable =
                     new DefaultTable(dataRows, m_dataTable1.getDataTableSpec());
         }
-        return m_DiffTable;
+        return m_diffTable;
     }
 
 }

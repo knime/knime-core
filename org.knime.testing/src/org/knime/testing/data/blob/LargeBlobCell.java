@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Nov 27, 2008 (wiswedel): created
  */
@@ -36,31 +36,32 @@ import org.knime.core.node.NodeLogger;
 
 /**
  * Blob cell that keeps a string identifier and whose size is artifically
- * increased by several 100k (random bytes)
+ * increased by several 100k (random bytes).
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class LargeBlobCell extends BlobDataCell {
-    
+
     public static final DataType TYPE = DataType.getType(LargeBlobCell.class);
-    
+
     public static final int SIZE_OF_CELL = 1024 * 1024;
 
     /** Don't compress this cell. */
     public static final boolean USE_COMPRESSION = false;
-    
+
     private final String m_identifier;
-    
+
     public static final DataCellSerializer<LargeBlobCell> getCellSerializer() {
         return new DataCellSerializer<LargeBlobCell>() {
             private final Random m_random;
-            
+
             {
                 long time = System.currentTimeMillis();
                 NodeLogger.getLogger(LargeBlobCell.class).debug(
                         "Using seed " + time);
                 m_random = new Random(time);
             }
-            
+
             /** {@inheritDoc} */
             @Override
             public LargeBlobCell deserialize(final DataCellDataInput input)
@@ -74,10 +75,10 @@ public class LargeBlobCell extends BlobDataCell {
                 }
                 return new LargeBlobCell(identifier);
             }
-            
+
             /** {@inheritDoc} */
             @Override
-            public void serialize(LargeBlobCell cell, DataCellDataOutput output)
+            public void serialize(final LargeBlobCell cell, final DataCellDataOutput output)
                     throws IOException {
                 byte[] ar = new byte[SIZE_OF_CELL / 2];
                 m_random.nextBytes(ar);
@@ -88,13 +89,13 @@ public class LargeBlobCell extends BlobDataCell {
             }
         };
     }
-    
+
     /**
-     * 
+     *
      */
     public LargeBlobCell(final String identifier) {
         if (identifier == null) {
-            throw new NullPointerException();
+            throw new IllegalArgumentException("Identifier must not be null");
         }
         m_identifier = identifier;
     }

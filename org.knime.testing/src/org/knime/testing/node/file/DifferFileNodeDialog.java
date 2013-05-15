@@ -110,7 +110,7 @@ public class DifferFileNodeDialog extends NodeDialogPane {
         m_referenceUrlFlowVar.setEditable(false);
         m_referenceUrlFlowVar.setRenderer(new FlowVariableListCellRenderer());
         m_referenceUrlFlowVar.setBorder(BorderFactory.createTitledBorder(
-        		"Reference File"));
+                "Reference File"));
         p.add(m_referenceUrlFlowVar, c);
 
         c.gridy++;
@@ -134,8 +134,7 @@ public class DifferFileNodeDialog extends NodeDialogPane {
         s.setTestFileFlowVar(url);
         FlowVariable referenceUrlFlow =
         	(FlowVariable)m_referenceUrlFlowVar.getSelectedItem();
-        String referenceUrl = referenceUrlFlow != null ?
-        		referenceUrlFlow.getName() : null;
+        String referenceUrl = referenceUrlFlow != null ? referenceUrlFlow.getName() : null;
         s.setReferenceFileFlowVar(referenceUrl);
 
         s.saveSettings(settings);

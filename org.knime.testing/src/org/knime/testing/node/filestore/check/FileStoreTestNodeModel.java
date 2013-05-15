@@ -112,8 +112,8 @@ final class FileStoreTestNodeModel extends NodeModel {
                 }
             }
             exec.checkCanceled();
-            exec.setProgress((index++)/(double)rowcount,
-                    String.format("Row \"%s\" (%d/%d)", r.getKey(), index, rowcount));
+            exec.setProgress((index++) / (double)rowcount,
+                             String.format("Row \"%s\" (%d/%d)", r.getKey(), index, rowcount));
         }
         return inData;
     }

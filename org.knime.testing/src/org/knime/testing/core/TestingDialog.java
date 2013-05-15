@@ -55,11 +55,11 @@ import org.knime.core.util.FilelistAccessory;
  */
 class TestingDialog extends JDialog {
 
-    private final static String PATTERN_HISTORY = "TESTING_PATTERN";
+    private static final String PATTERN_HISTORY = "TESTING_PATTERN";
 
-    private final static String ROOTDIR_HISTORY = "TESTING_ROOTDIR";
+    private static final String ROOTDIR_HISTORY = "TESTING_ROOTDIR";
 
-    private final static String OUTDIR_HISTORY = "TESTING_OUTDIR";
+    private static final String OUTDIR_HISTORY = "TESTING_OUTDIR";
 
     private boolean m_closedViaOK = false;
 

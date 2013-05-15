@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   01.11.2008 (wiswedel): created
  */
@@ -37,28 +37,28 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
 class FailingNodeModel extends NodeModel {
-    
-    
+
+
     /** One data input, one data output.
      */
     FailingNodeModel() {
         super(1, 1);
     }
-    
+
     /** {@inheritDoc} */
     @Override
-    protected BufferedDataTable[] execute(BufferedDataTable[] inData,
-            ExecutionContext exec) throws Exception {
-        throw new RuntimeException("This node fails on each execution");
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+            final ExecutionContext exec) throws Exception {
+        throw new Exception("This node fails on each execution");
     }
-    
+
     /** {@inheritDoc} */
     @Override
-    protected DataTableSpec[] configure(DataTableSpec[] inSpecs)
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         return inSpecs;
     }
@@ -70,30 +70,30 @@ class FailingNodeModel extends NodeModel {
 
     /** {@inheritDoc} */
     @Override
-    protected void loadValidatedSettingsFrom(NodeSettingsRO settings)
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void validateSettings(NodeSettingsRO settings)
+    protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void saveSettingsTo(NodeSettingsWO settings) {
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void loadInternals(File nodeInternDir, ExecutionMonitor exec)
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void saveInternals(File nodeInternDir, ExecutionMonitor exec)
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
     }
 

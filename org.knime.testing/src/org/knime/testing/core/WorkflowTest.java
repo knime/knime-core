@@ -64,21 +64,21 @@ public interface WorkflowTest extends Test {
      *
      * @return a name
      */
-    public String getName();
+    String getName();
 
     /**
      * Sets if dialogs for all nodes in the workflow should be tested, i.e. load settings and save settings.
      *
      * @param b <code>true</code> if dialogs should be tested, <code>false</code> otherwise
      */
-    public void setTestDialogs(final boolean b);
+    void setTestDialogs(final boolean b);
 
     /**
      * Sets if all views should be opened prior to running the workflow.
      *
      * @param b <code>true</code> if views should be opened, <code>false</code> otherwise
      */
-    public void setTestViews(final boolean b);
+    void setTestViews(final boolean b);
 
     /**
      * Sets the timeout for this workflow in seconds. After the timeout the workflow will be canceled if it is still
@@ -86,5 +86,5 @@ public interface WorkflowTest extends Test {
      *
      * @param seconds the timeout
      */
-    public void setTimeout(int seconds);
+    void setTimeout(int seconds);
 }

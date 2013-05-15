@@ -54,13 +54,9 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
 
     private JComboBox m_differCombo;
 
-    private JPanel m_content;
+    private static final int defaultLowerTolerance = 5;
 
-    private JPanel m_tolerancePanel;
-
-    private static final int m_defaultLowerTolerance = 5;
-
-    private static final int m_defaultUpperTolerance = 0;
+    private static final int defaultUpperTolerance = 0;
 
     private JSpinner m_lowerToleranceSpinner;
 
@@ -69,8 +65,6 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
     private int m_loadedLowerTolerance = 0;
 
     private int m_loadedUpperTolerance = 0;
-
-    private double m_loadedEpsilon = 0;
 
     private JLabel m_lowerToleranceLable;
 
@@ -81,7 +75,7 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
     private final JSpinner m_epsilonSpinner = new JSpinner(new SpinnerNumberModel(0.001, 0, 1, 0.001));
 
     /**
-     * enumeration of different evaluators for the test results
+     * enumeration of different evaluators for the test results.
      *
      * @author ritmeier, University of Konstanz
      */
@@ -115,7 +109,7 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
             }
         },
         /**
-         * get n LearnerScoreComperator
+         * get n LearnerScoreComperator.
          */
         LearnerScoreComperator() {
 
@@ -145,20 +139,20 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
     }
 
     /**
-     * creates the panels
+     * creates the panels.
      *
      * @return Component with content
      */
     private Component buildContentPanel() {
-        m_content = new JPanel();
-        m_content.setLayout(new BorderLayout());
-        m_tolerancePanel = buildTolerancePanel();
+        JPanel content = new JPanel();
+        content.setLayout(new BorderLayout());
+        JPanel tolerancePanel = buildTolerancePanel();
         final JComboBox combo = getEvalCombo();
-        m_content.add(combo, BorderLayout.NORTH);
-        m_content.add(m_tolerancePanel, BorderLayout.SOUTH);
-        m_content.add(buildEpsilonPanel(), BorderLayout.SOUTH);
+        content.add(combo, BorderLayout.NORTH);
+        content.add(tolerancePanel, BorderLayout.SOUTH);
+        content.add(buildEpsilonPanel(), BorderLayout.SOUTH);
 
-        return m_content;
+        return content;
     }
 
     private JPanel buildTolerancePanel() {
@@ -171,7 +165,7 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
         if (m_loadedLowerTolerance > 0) {
             smin = new SpinnerNumberModel(m_loadedLowerTolerance, 0, 100, 1);
         } else {
-            smin = new SpinnerNumberModel(m_defaultLowerTolerance, 0, 100, 1);
+            smin = new SpinnerNumberModel(defaultLowerTolerance, 0, 100, 1);
         }
         m_lowerToleranceSpinner = new JSpinner(smin);
         panel.add(m_lowerToleranceSpinner);
@@ -183,7 +177,7 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
         if (m_loadedUpperTolerance > 0) {
             smax = new SpinnerNumberModel(m_loadedUpperTolerance, 0, 100, 1);
         } else {
-            smax = new SpinnerNumberModel(m_defaultUpperTolerance, 0, 100, 1);
+            smax = new SpinnerNumberModel(defaultUpperTolerance, 0, 100, 1);
         }
         m_upperToleranceSpinner = new JSpinner(smax);
         panel.add(m_upperToleranceSpinner);
@@ -231,7 +225,7 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
                 return ((Integer)valueObject).intValue();
             }
         }
-        return m_defaultLowerTolerance;
+        return defaultLowerTolerance;
     }
 
     private int getUpperTollerance() {
@@ -241,7 +235,7 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
                 return ((Integer)valueObject).intValue();
             }
         }
-        return m_defaultUpperTolerance;
+        return defaultUpperTolerance;
     }
 
     /**
@@ -264,15 +258,15 @@ public class DiffNodeDialog extends NodeDialogPane implements ActionListener {
                 m_loadedUpperTolerance = settings
                         .getInt(DiffNodeModel.CFGKEY_UPPERERTOLERANCEKEY);
             }
-            m_loadedEpsilon = settings.getDouble(DiffNodeModel.CFGKEY_EPSILON, 0);
+            double loadedEpsilon = settings.getDouble(DiffNodeModel.CFGKEY_EPSILON, 0);
 
             m_lowerToleranceSpinner.setValue(m_loadedLowerTolerance);
             m_upperToleranceSpinner.setValue(m_loadedUpperTolerance);
-            m_epsilonSpinner.setValue(m_loadedEpsilon);
+            m_epsilonSpinner.setValue(loadedEpsilon);
         } catch (final IllegalArgumentException e) {
             eval = Evaluators.TableDiffer;
         } catch (final InvalidSettingsException e) {
-
+            // ignore it
         }
 
     }

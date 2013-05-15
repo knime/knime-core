@@ -70,7 +70,7 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
 
     private final long m_seed;
 
-    public static final DataCellSerializer<LargeFileStoreCell> getCellSerializer() {
+    public static DataCellSerializer<LargeFileStoreCell> getCellSerializer() {
         return new DataCellSerializer<LargeFileStoreCell>() {
 
             /** {@inheritDoc} */
@@ -127,11 +127,4 @@ public final class LargeFileStoreCell extends FileStoreCell implements LargeFile
         }
         return super.equalsDataCell(odc);
     }
-
-    /** {@inheritDoc} */
-    @Override
-    public int hashCode() {
-        return super.hashCode();
-    }
-
 }

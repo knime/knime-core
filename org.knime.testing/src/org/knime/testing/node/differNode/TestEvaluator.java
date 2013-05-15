@@ -18,31 +18,27 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   May 19, 2006 (ritmeier): created
  */
 package org.knime.testing.node.differNode;
 
 import org.knime.core.data.DataTable;
-import org.knime.core.node.InvalidSettingsException;
 
 
 /**
- * 
+ *
  * @author ritmeier, University of Konstanz
  */
 public interface TestEvaluator {
 
     /**
      * Compares the result of the workflow with a golden DataTable.
-     * 
+     *
      * @param goldenTable - what the result should be
      * @param workflowResult - what the result was
-     * @return - true if the workflowresult matches the golden DataTable
-     * @throws InvalidSettingsException
      */
-    public void compare(DataTable goldenTable, DataTable workflowResult)
+    void compare(DataTable goldenTable, DataTable workflowResult)
             throws TestEvaluationException;
-
 }

@@ -25,10 +25,14 @@ package org.knime.testing.core;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.charset.Charset;
 
 import javax.swing.JFileChooser;
 
@@ -45,28 +49,27 @@ import org.knime.core.node.KNIMEConstants;
  * @author ohl, University of Konstanz
  */
 public class AnalyzeLogFile {
-
-    /**
+    /*
      * privately used enum
      */
-    enum ErrorCode {
-        /** good test */
+    private enum ErrorCode {
+        /** good test. */
         OK,
-        /** test produced error(s) */
+        /** test produced error(s). */
         ERROR,
-        /** test fails due to exception */
+        /** test fails due to exception. */
         EXCEPTION,
-        /** test has errors and exceptions */
+        /** test has errors and exceptions. */
         ERREXCEPT
     }
 
     // this pattern in the log file indicates a starting test log
-    private final static String TEST_START_CODE = "<Start> Test='";
+    private static final String TEST_START_CODE = "<Start> Test='";
 
     // this pattern in the log file indicates the end of a test log
-    private final static String TEST_END_CODE = "<End> Test='";
+    private static final String TEST_END_CODE = "<End> Test='";
 
-    private final static String CRLF = "\r\n";
+    private static final String CRLF = "\r\n";
 
     private int m_numOfTestsRun = 0;
 
@@ -77,9 +80,9 @@ public class AnalyzeLogFile {
 
     private final String m_startTime;
 
-    private FileWriter m_summaryFailingTests;
+    private Writer m_summaryFailingTests;
 
-    private FileWriter m_summarySucceedingTests;
+    private Writer m_summarySucceedingTests;
 
     /**
      * Constructor.
@@ -90,8 +93,7 @@ public class AnalyzeLogFile {
      * @throws FileNotFoundException if it couldn't find the log file.
      * @throws IOException if something went wrong writing the files.
      */
-    public AnalyzeLogFile(final File logFile, final File outputDir)
-            throws FileNotFoundException, IOException {
+    public AnalyzeLogFile(final File logFile, final File outputDir) throws IOException {
         if ((logFile == null) || (!logFile.exists())) {
             throw new IllegalArgumentException("You must specify an existing"
                     + " LogFile to analyze.");
@@ -125,7 +127,8 @@ public class AnalyzeLogFile {
         }
 
         // copy log file into result dir
-        BufferedReader logReader = new BufferedReader(new FileReader(logFile));
+        BufferedReader logReader =
+                new BufferedReader(new InputStreamReader(new FileInputStream(logFile), Charset.forName("UTF-8")));
         String copyName = logFile.getName();
         if (copyName.endsWith(".log") && (copyName.length() > 4)) {
             copyName =
@@ -135,7 +138,7 @@ public class AnalyzeLogFile {
             copyName = "_" + copyName + m_startTime;
         }
         File logCopy = new File(m_tmpDir, copyName);
-        FileWriter logWriter = new FileWriter(logCopy);
+        Writer logWriter = new OutputStreamWriter(new FileOutputStream(logFile), Charset.forName("UTF-8"));
         String line = null;
         while ((line = logReader.readLine()) != null) {
             logWriter.write(line);
@@ -148,13 +151,13 @@ public class AnalyzeLogFile {
         File failTests =
                 new File(m_tmpDir, "SummaryFailingTests_" + m_startTime
                         + ".txt");
-        m_summaryFailingTests = new FileWriter(failTests);
+        m_summaryFailingTests = new OutputStreamWriter(new FileOutputStream(failTests), Charset.forName("UTF-8"));
 
         // global file writer. All methods write in there.
         File goodTests =
                 new File(m_tmpDir, "SummarySucceedingTests_" + m_startTime
                         + ".txt");
-        m_summarySucceedingTests = new FileWriter(goodTests);
+        m_summarySucceedingTests = new OutputStreamWriter(new FileOutputStream(goodTests), Charset.forName("UTF-8"));
 
         checkWorkbenchInit(logCopy);
 
@@ -165,9 +168,9 @@ public class AnalyzeLogFile {
         m_summarySucceedingTests.close();
 
         BufferedReader negReader =
-                new BufferedReader(new FileReader(failTests));
+                new BufferedReader(new InputStreamReader(new FileInputStream(failTests), Charset.forName("UTF-8")));
         BufferedReader posReader =
-                new BufferedReader(new FileReader(goodTests));
+                new BufferedReader(new InputStreamReader(new FileInputStream(goodTests), Charset.forName("UTF-8")));
         // combines the two summary files
         createSummary(negReader, posReader);
         negReader.close();
@@ -182,9 +185,8 @@ public class AnalyzeLogFile {
 
     private void createSummary(final BufferedReader failTests,
             final BufferedReader goodTests) throws IOException {
-        FileWriter summary =
-                new FileWriter(new File(m_tmpDir, "_Summary_" + m_startTime
-                        + ".txt"));
+        File summaryFile = new File(m_tmpDir, "_Summary_" + m_startTime + ".txt");
+        Writer summary = new OutputStreamWriter(new FileOutputStream(summaryFile), Charset.forName("UTF-8"));
 
         int posTests = m_numOfTestsRun - m_numOfFailingTests;
         int posRate = (int)Math.floor((posTests * 100.0) / m_numOfTestsRun);
@@ -251,14 +253,14 @@ public class AnalyzeLogFile {
      * @throws IOException if the log file is not accessible
      */
     private void checkWorkbenchInit(final File logFile) throws IOException {
-
-        BufferedReader logReader = new BufferedReader(new FileReader(logFile));
+        BufferedReader logReader =
+                new BufferedReader(new InputStreamReader(new FileInputStream(logFile), Charset.forName("UTF-8")));
         String testName = "_workbenchInitializing";
         String ownerAddress = FullWorkflowTest.REGRESSIONS_OWNER;
 
         File testFile =
                 new File(m_tmpDir, testName + "_" + m_startTime + ".txt");
-        FileWriter testFileWriter = new FileWriter(testFile);
+        Writer testFileWriter = new OutputStreamWriter(new FileOutputStream(testFile), Charset.forName("UTF-8"));
         testFileWriter.write(ownerAddress + CRLF);
 
         String line = null;
@@ -311,8 +313,8 @@ public class AnalyzeLogFile {
     }
 
     private void extractFailingTests(final File logFile) throws IOException {
-
-        BufferedReader logReader = new BufferedReader(new FileReader(logFile));
+        BufferedReader logReader =
+                new BufferedReader(new InputStreamReader(new FileInputStream(logFile), Charset.forName("UTF-8")));
 
         String startKey = TEST_START_CODE;
         String startLine;
@@ -324,7 +326,7 @@ public class AnalyzeLogFile {
                             .lastIndexOf('\''));
             File testFile =
                     new File(m_tmpDir, testName + "_" + m_startTime + ".txt");
-            FileWriter testFileWriter = new FileWriter(testFile);
+            Writer testFileWriter = new OutputStreamWriter(new FileOutputStream(testFile), Charset.forName("UTF-8"));
 
             String ownerKey = "TestOwners=";
             String ownerLine = getLineContaining(ownerKey, logReader);
@@ -373,7 +375,7 @@ public class AnalyzeLogFile {
      * returns true, if it sound the success pattern, or false, if it found the
      * fail pattern.
      */
-    private boolean writeOneTest(final FileWriter testFile,
+    private boolean writeOneTest(final Writer testFile,
             final BufferedReader logReader, final String testName)
             throws IOException {
 
@@ -416,8 +418,8 @@ public class AnalyzeLogFile {
      * the date in the log file).
      */
     private String extractTimestamp(final File logFile) throws IOException {
-
-        BufferedReader logReader = new BufferedReader(new FileReader(logFile));
+        BufferedReader logReader =
+                new BufferedReader(new InputStreamReader(new FileInputStream(logFile), Charset.forName("UTF-8")));
 
         String result = "unknown";
         String key = "logging date=";

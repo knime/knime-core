@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   01.11.2008 (wiswedel): created
  */
@@ -28,11 +28,11 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
 public final class BlockingNodeFactory extends NodeFactory<BlockingNodeModel> {
-    
+
     /** {@inheritDoc} */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
@@ -48,7 +48,7 @@ public final class BlockingNodeFactory extends NodeFactory<BlockingNodeModel> {
     /** {@inheritDoc} */
     @Override
     public NodeView<BlockingNodeModel> createNodeView(
-            int viewIndex, BlockingNodeModel nodeModel) {
+            final int viewIndex, final BlockingNodeModel nodeModel) {
         return null;
     }
 

@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------
  * This source code, its documentation and all appendant files
  * are protected by copyright law. All rights reserved.
@@ -18,7 +18,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   Sep 1, 2006 (ritmeier): created
  */
@@ -41,13 +41,13 @@ import junit.extensions.jfcunit.finder.ComponentFinder;
 import org.knime.core.node.tableview.TableView;
 
 /**
- * 
+ *
  * @author ritmeier, University of Konstanz
  */
 public class GUITestCase extends JFCTestCase {
 
     /**
-     * 
+     *
      */
     public GUITestCase() {
         super();
@@ -57,21 +57,21 @@ public class GUITestCase extends JFCTestCase {
     /**
      * @param arg0
      */
-    public GUITestCase(String arg0) {
+    public GUITestCase(final String arg0) {
         super(arg0);
         // TODO Auto-generated constructor stub
     }
 
-    public void sendEnterKey(Component comp) {
+    public void sendEnterKey(final Component comp) {
         getHelper().sendKeyAction(
                 new KeyEventData(this, comp, KeyEvent.VK_ENTER));
     }
 
-    public void sendString(Component comp, String text) {
+    public void sendString(final Component comp, final String text) {
         getHelper().sendString(new StringEventData(this, comp, text));
     }
 
-    public JComboBox findComboBox(int pos) {
+    public JComboBox findComboBox(final int pos) {
         ComponentFinder comboBoxFinder = new ComponentFinder(JComboBox.class);
         JComboBox comboBox = (JComboBox)comboBoxFinder.find(pos);
         assertNotNull("Could not find Combobox", comboBox);
@@ -85,19 +85,19 @@ public class GUITestCase extends JFCTestCase {
         return dataTableView;
     }
 
-    public void click(Component readColHeaders) {
+    public void click(final Component readColHeaders) {
         getHelper()
                 .enterClickAndLeave(new MouseEventData(this, readColHeaders));
     }
 
     public JCheckBox findCheckbox(String text) {
-        if(text == null) {
+        if (text == null) {
             text = "";
         }
         ComponentFinder checkBoxFinder = new ComponentFinder(JCheckBox.class);
         List<JCheckBox> checkboxList = checkBoxFinder.findAll();
         for (JCheckBox currentCheckBox : checkboxList) {
-            if(text.equalsIgnoreCase(currentCheckBox.getText())) {
+            if (text.equalsIgnoreCase(currentCheckBox.getText())) {
                 return currentCheckBox;
             }
         }

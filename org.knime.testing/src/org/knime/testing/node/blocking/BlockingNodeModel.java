@@ -17,7 +17,7 @@
  * website: www.knime.org
  * email: contact@knime.org
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   01.11.2008 (wiswedel): created
  */
@@ -39,24 +39,24 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.defaultnodesettings.SettingsModelString;
 
 /**
- * 
+ *
  * @author wiswedel, University of Konstanz
  */
 class BlockingNodeModel extends NodeModel {
-    
+
     private final SettingsModelString m_lockIDModel;
-    
+
     /** One data input, one data output.
      */
     BlockingNodeModel() {
         super(1, 1);
         m_lockIDModel = createLockIDModel();
     }
-    
+
     /** {@inheritDoc} */
     @Override
-    protected BufferedDataTable[] execute(BufferedDataTable[] inData,
-            ExecutionContext exec) throws Exception {
+    protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
+            final ExecutionContext exec) throws Exception {
         Lock lock = getLock();
         lock.lockInterruptibly();
         try {
@@ -65,10 +65,10 @@ class BlockingNodeModel extends NodeModel {
             lock.unlock();
         }
     }
-    
+
     /** {@inheritDoc} */
     @Override
-    protected DataTableSpec[] configure(DataTableSpec[] inSpecs)
+    protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
         String id = m_lockIDModel.getStringValue();
         if (id == null || id.length() == 0) {
@@ -84,36 +84,36 @@ class BlockingNodeModel extends NodeModel {
 
     /** {@inheritDoc} */
     @Override
-    protected void loadValidatedSettingsFrom(NodeSettingsRO settings)
+    protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_lockIDModel.loadSettingsFrom(settings);
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void validateSettings(NodeSettingsRO settings)
+    protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_lockIDModel.validateSettings(settings);
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void saveSettingsTo(NodeSettingsWO settings) {
+    protected void saveSettingsTo(final NodeSettingsWO settings) {
         m_lockIDModel.saveSettingsTo(settings);
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void loadInternals(File nodeInternDir, ExecutionMonitor exec)
+    protected void loadInternals(final File nodeInternDir, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
     }
 
     /** {@inheritDoc} */
     @Override
-    protected void saveInternals(File nodeInternDir, ExecutionMonitor exec)
+    protected void saveInternals(final File nodeInternDir, final ExecutionMonitor exec)
             throws IOException, CanceledExecutionException {
     }
-    
+
     private Lock getLock() throws InvalidSettingsException {
         String id = m_lockIDModel.getStringValue();
         if (id == null) {
@@ -126,8 +126,8 @@ class BlockingNodeModel extends NodeModel {
         }
         return lock;
     }
-    
-    /** Factory method to create the lock id model. 
+
+    /** Factory method to create the lock id model.
      * @return a new model used in dialog and model. */
     static final SettingsModelString createLockIDModel() {
         return new SettingsModelString("lock_id", null);

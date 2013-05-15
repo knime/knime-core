@@ -27,10 +27,13 @@ package org.knime.testing.stacktracedumper;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -72,10 +75,10 @@ public class StackDumpAnalyzer {
      * The names of the threads seen in the dump with the methods they have been
      * executing.
      */
-    private final HashMap<String, StackElementCount> m_threads =
+    private final Map<String, StackElementCount> m_threads =
             new HashMap<String, StackElementCount>();
 
-    private final HashSet<StackElementCount> m_allMethods =
+    private final Set<StackElementCount> m_allMethods =
             new HashSet<StackElementCount>();
 
     /**
@@ -89,7 +92,7 @@ public class StackDumpAnalyzer {
     public StackDumpAnalyzer(final String dumpFile) throws IOException {
         BufferedReader reader;
         try {
-            reader = new BufferedReader(new FileReader(dumpFile));
+            reader = new BufferedReader(new InputStreamReader(new FileInputStream(dumpFile), Charset.forName("UTF-8")));
         } catch (IOException ioe) {
             LOGGER.error("Can't open dump file. Not analyzing stack traces.");
             m_reader = null;
@@ -124,7 +127,7 @@ public class StackDumpAnalyzer {
 
         while (true) {
             String threadHdr = m_reader.readLine();
-            if (threadHdr.contains(StacktraceDumper.DUMPEND)) {
+            if ((threadHdr == null) || threadHdr.contains(StacktraceDumper.DUMPEND)) {
                 // done with the dump - we can return
                 return true;
             }
@@ -278,7 +281,7 @@ public class StackDumpAnalyzer {
          * the sub methods that were called from this method - if there is none
          * this method spent all the time itself...
          */
-        private final HashMap<String, StackElementCount> m_subMethods =
+        private final Map<String, StackElementCount> m_subMethods =
                 new HashMap<String, StackElementCount>();
 
         private final StackElementCount m_caller;
@@ -391,8 +394,7 @@ public class StackDumpAnalyzer {
      * @throws IOException if it occurs.
      */
     public void writeToHTML(final File output) throws IOException {
-
-        Writer w = new BufferedWriter(new FileWriter(output));
+        Writer w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(output), Charset.forName("UTF-8")));
         w.write("<html>" + CRLF);
         w.write("<body>" + CRLF);
         writeAnchor(w, "Top");
