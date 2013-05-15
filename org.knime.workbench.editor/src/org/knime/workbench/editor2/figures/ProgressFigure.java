@@ -557,7 +557,7 @@ public class ProgressFigure extends RectangleFigure implements
                     for (final ProgressFigure figure : m_figuresToPaint) {
                         Display dp = figure.m_currentDisplay;
                         if ((dp != null) && !dp.isDisposed()) {
-                            dp.syncExec(new Runnable() {
+                            dp.asyncExec(new Runnable() {
                                 @Override
                                 public void run() {
                                     figure.repaint();
