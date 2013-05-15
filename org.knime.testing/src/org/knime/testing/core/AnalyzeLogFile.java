@@ -138,7 +138,7 @@ public class AnalyzeLogFile {
             copyName = "_" + copyName + m_startTime;
         }
         File logCopy = new File(m_tmpDir, copyName);
-        Writer logWriter = new OutputStreamWriter(new FileOutputStream(logFile), Charset.forName("UTF-8"));
+        Writer logWriter = new OutputStreamWriter(new FileOutputStream(logCopy), Charset.forName("UTF-8"));
         String line = null;
         while ((line = logReader.readLine()) != null) {
             logWriter.write(line);
