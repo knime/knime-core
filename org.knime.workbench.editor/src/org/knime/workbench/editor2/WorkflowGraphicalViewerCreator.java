@@ -76,6 +76,8 @@ public class WorkflowGraphicalViewerCreator {
     /** the editor's action registry. */
     private final ActionRegistry m_actionRegistry;
 
+    private final IEditorSite m_editorSite;
+
     /**
      *
      * @param editorSite Current editor site
@@ -85,7 +87,7 @@ public class WorkflowGraphicalViewerCreator {
             final ActionRegistry actionRegistry) {
 
         assert editorSite != null;
-
+        this.m_editorSite = editorSite;
         this.m_actionRegistry = actionRegistry;
     }
 
@@ -137,6 +139,7 @@ public class WorkflowGraphicalViewerCreator {
         viewer.setContextMenu(
                 new WorkflowContextMenuProvider(m_actionRegistry, viewer));
 
+        m_editorSite.registerContextMenu(viewer.getContextMenu(), viewer, false);
         // set the factory that is able to create the edit parts to be
         // used in the viewer
         viewer.setEditPartFactory(new WorkflowEditPartFactory());

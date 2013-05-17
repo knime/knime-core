@@ -76,13 +76,11 @@ import org.knime.workbench.core.KNIMECorePlugin;
  * @since 2.6
  */
 public final class ImageRepository {
-    private static final NodeLogger logger = NodeLogger
+    private static final NodeLogger LOGGER = NodeLogger
             .getLogger(ImageRepository.class);
 
-    private static final ImageRegistry registry = KNIMECorePlugin.getDefault()
+    private static final ImageRegistry REGISTRY = KNIMECorePlugin.getDefault()
             .getImageRegistry();
-
-    private ImageRepository() {}
 
     /**
      * Enumeration for shared images.
@@ -97,6 +95,8 @@ public final class ImageRepository {
         ExportBig("icons/knime_export55.png"),
         /** Big icon for import wizards. */
         ImportBig("icons/knime_import55.png"),
+        /** Big icon for new KNIME flow. */
+        NewKnimeBig("icons/new_knime55.png"),
         /** The default node icon. */
         DefaultNodeIcon(NodeFactory.getDefaultIcon()),
         /** The default metanode icon. */
@@ -123,6 +123,41 @@ public final class ImageRepository {
         CollapseAll("icons/collapseall.png"),
         /** Icon for expanding all levels in a tree. */
         ExpandAll("icons/expandall.png"),
+        /** Icon for synching a tree with another selection. */
+        Synch("icons/sync.png"),
+
+        /** Icon for a folder. */
+        Folder("icons/folder.png"),
+        /** Icon for a file. */
+        File("icons/any_file.png"),
+        /** Icon for another file. */
+        File2("icons/file.png"),
+        /** Icon for a workflow node. */
+        Node("icons/node.png"),
+        /** Icon for knime project (neutral). */
+        Workflow("icons/project_basic.png"),
+        /** Icon for a metanode template. */
+        MetaNodeTemplate("icons/meta_nodes/metanode_template_repository.png"),
+        /** Icon for a workflow group. */
+        WorkflowGroup("icons/wf_set.png"),
+        /** Icon for a system folder. */
+        SystemFolder("icons/system_folder.png"),
+
+        /** Icon for configured knime project. */
+        WorkflowConfigured("icons/project_configured.png"),
+        /** Icon for executing knime project. */
+        WorkflowExecuting("icons/project_executing.png"),
+        /** Icon for fully executed knime project. */
+        WorkflowExecuted("icons/project_executed.png"),
+        /** Icon for knime project with errors. */
+        WorkflowError("icons/project_error.png"),
+        /** Icon for a closed knime project. */
+        WorkflowClosed("icons/project_basic.png"),
+        /** Icon for a knime project with unknown state. */
+        WorkflowUnknown("icons/knime_unknown.png"),
+        /** Icon for a knime project with a red unknown state. */
+        WorkflowUnknownRed("icons/knime_unknown_red.png"),
+
         /** Icon for the favorite nodes view. */
         FavoriteNodesFolder("icons/fav/folder_fav.png"),
         /** Icon for the most frequently used nodes category. */
@@ -130,11 +165,55 @@ public final class ImageRepository {
         /** Icon for the last used nodes category. */
         FavoriteNodesLastUsed("icons/fav/folder_last.png"),
         /** Icon for all kinds of warnings. */
-        Warning("icons/warning.gif"),
+        Warning("icons/warning.png"),
         /** Icon for information messages. */
         Info("icons/info.gif"),
+        /** Icon icon in a round blue button. */
+        InfoButton("icons/info.png"),
+        /** Info icon in a little speech balloon. */
+        InfoBalloon("icons/info_balloon.png"),
         /** Icon for all kinds of errors. */
-        Error("icons/error.png");
+        Error("icons/error.png"),
+        /** busy cursor (hour glass). */
+        Busy("icons/busy.png"),
+        /** ServerSpace Explorer Icon: server logo, 55px.*/
+        ServerSpaceServerLogo("icons/server_space/server_logo_55.png"),
+        /** ServerSpace Explorer Icon: server root. */
+        ServerSpaceIcon("icons/server_space/explorer_server.png"),
+        /** ServerSpace Explorer Icon: scheduled job. */
+        ServerScheduledJob("icons/server_space/flow_scheduled.png"),
+        /** ServerSpace Explorer Icon: scheduled periodic job. */
+        ServerScheduledPeriodicJob("icons/server_space/flow_periodic.png"),
+        /** ServerSpace Explorer Icon: configured job. */
+        ServerJobConfigured("icons/server_space/running_job_confgd.png"),
+        /** ServerSpace Explorer Icon: executing job. */
+        ServerJobExecuting("icons/server_space/running_job_execting.png"),
+        /** ServerSpace Explorer Icon: executed job. */
+        ServerJobExecuted("icons/server_space/running_job_execed.png"),
+        /** ServerSpace Explorer Icon: idle job. */
+        ServerJobIdle("icons/server_space/running_job_idle.png"),
+        /** ServerSpace Explorer Icon: Dialog icon - group permissions. */
+        ServerDialogGroupPermissions("icons/server_space/grp_permission_55.png"),
+        /** ServerSpace Explorer Icon: Dialog icon - Meta Info Edit. */
+        ServerDialogEditMetaInfo("icons/server_space/meta_info_edit55.png"),
+        /** ServerSpace Explorer Icon: Dialog icon - Permissions. */
+        ServerDialogPermissions("icons/server_space/permission.png"),
+        /** ServerSpace Explorer Icon: Dialog icon - upload workflow. */
+        ServerDialogWorkflowUpload("icons/server_space/upload_wf55.png"),
+        /** ServerSpace Explorer Menu Icon: edit meta info. */
+        ServerEditMetaInfo("icons/server_space/meta_info_edit.png"),
+        /** ServerSpace Explorer Menu Icon: show node messages. */
+        ServerShowNodeMsg("icons/server_space/nodemsg.png"),
+        /** ServerSpace Explorer Menu Icon: show schedule info. */
+        ServerShowScheduleInfo("icons/server_space/schedinfo.png"),
+        /** ServerSpace Explorer Menu Icon: upload workflow. */
+        ServerUploadWorkflow("icons/server_space/upload_wf.png"),
+        /** ServerSpace Explorer Menu Icon: edit meta info. */
+        ServerPermissions("icons/server_space/key.png"),
+        /** ServerSpace Explorer Icon: server root. */
+        TeamSpaceIcon("icons/team_space/explorer_teamspace.png"),
+        /** LocalSpace Explorer Icon: server root. */
+        LocalSpaceIcon("icons/workflow_projects.png");
 
         private final URL m_url;
 
@@ -143,7 +222,7 @@ public final class ImageRepository {
                     FileLocator.find(KNIMECorePlugin.getDefault().getBundle(),
                             new Path(path), null);
             if (m_url == null) {
-                logger.coding("Cannot find icon for '" + toString() + "' at "
+                LOGGER.coding("Cannot find icon for '" + toString() + "' at "
                         + path);
             }
         }
@@ -152,14 +231,30 @@ public final class ImageRepository {
             m_url = url;
         }
 
-        /**
-         * Returns the URL for this image.
-         *
-         * @return the URL for this image
-         */
         URL getUrl() {
             return m_url;
         }
+    }
+
+    /**
+     * Flags to decorate server space icons. Icon file names with the corresponding combinations of suffixes must exist!
+     */
+    public enum ImgDecorator {
+        Message("_msg"), Outdated("_out"), Orphaned("_orph");
+        private final String m_suffix;
+        private ImgDecorator(final String suffix) {
+            m_suffix = suffix;
+        }
+        String getSuffix() {
+            return m_suffix;
+        }
+    }
+
+    /**
+     *
+     */
+    private ImageRepository() {
+        // don't instantiate. Utility class.
     }
 
     /**
@@ -170,13 +265,63 @@ public final class ImageRepository {
      */
     public static Image getImage(final SharedImages image) {
         final String key = image.name();
-        Image img = registry.get(key);
+        Image img = REGISTRY.get(key);
         if (img != null) {
             return img;
         }
         ImageDescriptor desc = ImageDescriptor.createFromURL(image.getUrl());
-        registry.put(key, desc);
-        return registry.get(key);
+        REGISTRY.put(key, desc);
+        return REGISTRY.get(key);
+    }
+
+    /**
+     * Returns the specified image with the passed decorators.<p>
+     * The current implementation requires each icon that may be requested with decorators to be present in the
+     * corresponding icons directory (the decorators are not added programmatically!) with the corresponding name.
+     *
+     * @param image the image to return
+     * @param decorators the decorators to add to the image
+     * @return the image with the specified decorators
+     */
+    public static Image getImage(final SharedImages image, final ImgDecorator... decorators) {
+        URL imgURL = image.getUrl();
+        if (imgURL == null) {
+            // returning the undecorated image
+            return getImage(image);
+        }
+        String suffix = "";
+        // add the decorator suffixes in the order they are defined
+        if (decorators != null) {
+            for (ImgDecorator dec : ImgDecorator.values()) {
+                for (ImgDecorator flag : decorators) {
+                    if (flag.equals(dec)) {
+                        suffix += flag.getSuffix();
+                        break; // add each decorator only once
+                    }
+                }
+            }
+        }
+        // the key for the registry simply appends the suffix
+        String key = image.name() + suffix;
+        Image img = REGISTRY.get(key);
+        if (img != null) {
+            return img;
+        }
+        // in the path we have to insert the suffix in front of the extension (.jpg, .png, etc.)
+        String path = imgURL.getPath();
+        int dotIdx = path.lastIndexOf('.');
+        if (dotIdx <= 0) {
+            path += suffix;
+        } else {
+            path = path.substring(0, dotIdx) + suffix + path.substring(dotIdx);
+        }
+        imgURL = FileLocator.find(KNIMECorePlugin.getDefault().getBundle(), new Path(path), null);
+        if (imgURL == null) {
+            LOGGER.coding("Cannot find icon for '" + image.name() + suffix + "' at " + path);
+        }
+        ImageDescriptor desc = ImageDescriptor.createFromURL(imgURL);
+        REGISTRY.put(key, desc);
+        return REGISTRY.get(key);
     }
 
     /**
@@ -187,12 +332,12 @@ public final class ImageRepository {
      */
     public static ImageDescriptor getImageDescriptor(final SharedImages image) {
         final String key = image.name();
-        ImageDescriptor desc = registry.getDescriptor(key);
+        ImageDescriptor desc = REGISTRY.getDescriptor(key);
         if (desc != null) {
             return desc;
         }
         desc = ImageDescriptor.createFromURL(image.getUrl());
-        registry.put(key, desc);
+        REGISTRY.put(key, desc);
         return desc;
     }
 
@@ -208,7 +353,7 @@ public final class ImageRepository {
     public static Image getImage(
             final NodeFactory<? extends NodeModel> nodeFactory) {
         final String key = nodeFactory.getClass().getCanonicalName();
-        Image img = registry.get(key);
+        Image img = REGISTRY.get(key);
         if (img != null) {
             return img;
         }
@@ -218,8 +363,8 @@ public final class ImageRepository {
         }
         ImageDescriptor desc =
                 ImageDescriptor.createFromURL(nodeFactory.getIcon());
-        registry.put(key, desc);
-        return registry.get(key);
+        REGISTRY.put(key, desc);
+        return REGISTRY.get(key);
     }
 
     /**
@@ -231,7 +376,7 @@ public final class ImageRepository {
     public static ImageDescriptor getImageDescriptor(
             final NodeFactory<? extends NodeModel> nodeFactory) {
         final String key = nodeFactory.getClass().getCanonicalName();
-        ImageDescriptor desc = registry.getDescriptor(key);
+        ImageDescriptor desc = REGISTRY.getDescriptor(key);
         if (desc != null) {
             return desc;
         }
@@ -240,7 +385,7 @@ public final class ImageRepository {
             return getImageDescriptor(SharedImages.DefaultNodeIcon);
         }
         desc = ImageDescriptor.createFromURL(nodeFactory.getIcon());
-        registry.put(key, desc);
+        REGISTRY.put(key, desc);
         return desc;
 
     }
@@ -261,7 +406,7 @@ public final class ImageRepository {
         final String key =
                 nodeFactory.getClass().getCanonicalName() + "@" + width + "x"
                         + height;
-        Image img = registry.get(key);
+        Image img = REGISTRY.get(key);
         if (img != null) {
             return img;
         }
@@ -275,7 +420,7 @@ public final class ImageRepository {
             scaled =
                     new Image(Display.getDefault(), unscaled.getImageData()
                             .scaledTo(width, height));
-            registry.put(key, scaled);
+            REGISTRY.put(key, scaled);
         } else {
             scaled = unscaled;
         }
@@ -293,7 +438,7 @@ public final class ImageRepository {
     public static Image getScaledImage(final SharedImages image,
             final int width, final int height) {
         final String key = image.name() + "@" + width + "x" + height;
-        Image img = registry.get(key);
+        Image img = REGISTRY.get(key);
         if (img != null) {
             return img;
         }
@@ -304,7 +449,7 @@ public final class ImageRepository {
             scaled =
                     new Image(Display.getDefault(), unscaled.getImageData()
                             .scaledTo(width, height));
-            registry.put(key, scaled);
+            REGISTRY.put(key, scaled);
         } else {
             scaled = unscaled;
         }
@@ -322,13 +467,13 @@ public final class ImageRepository {
     public static ImageDescriptor getImageDescriptor(final String pluginID,
             final String path) {
         if (path == null) {
-            logger.error("Null path passed to getImageDescriptor (pluginID: "
+            LOGGER.error("Null path passed to getImageDescriptor (pluginID: "
                     + pluginID + ")");
             return ImageDescriptor.getMissingImageDescriptor();
         }
 
         final String key = "bundle://" + pluginID + "/" + path;
-        ImageDescriptor desc = registry.getDescriptor(key);
+        ImageDescriptor desc = REGISTRY.getDescriptor(key);
         if (desc != null) {
             return desc;
         }
@@ -336,7 +481,7 @@ public final class ImageRepository {
                 FileLocator.find(Platform.getBundle(pluginID), new Path(path),
                         null);
         desc = ImageDescriptor.createFromURL(url);
-        registry.put(key, desc);
+        REGISTRY.put(key, desc);
         return desc;
     }
 
@@ -350,13 +495,13 @@ public final class ImageRepository {
      */
     public static Image getImage(final String pluginID, final String path) {
         if (path == null) {
-            logger.error("Null path passed to getImage (pluginID: " + pluginID
+            LOGGER.error("Null path passed to getImage (pluginID: " + pluginID
                     + ")");
-            return registry.get("###MISSING_IMAGE###");
+            return REGISTRY.get("###MISSING_IMAGE###");
         }
 
         final String key = "bundle://" + pluginID + "/" + path;
-        Image img = registry.get(key);
+        Image img = REGISTRY.get(key);
         if (img != null) {
             return img;
         }
@@ -367,7 +512,7 @@ public final class ImageRepository {
             return null;
         }
         ImageDescriptor desc = ImageDescriptor.createFromURL(url);
-        registry.put(key, desc);
-        return registry.get(key);
+        REGISTRY.put(key, desc);
+        return REGISTRY.get(key);
     }
 }
