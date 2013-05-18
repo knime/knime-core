@@ -71,7 +71,6 @@ import org.knime.core.util.KnimeEncryption;
 import org.knime.workbench.repository.NodeUsageRegistry;
 import org.knime.workbench.ui.favorites.FavoriteNodesManager;
 import org.knime.workbench.ui.masterkey.MasterKeyPreferencePage;
-import org.knime.workbench.ui.metanodes.MetaNodeTemplateRepositoryView;
 import org.knime.workbench.ui.preferences.PreferenceConstants;
 import org.osgi.framework.BundleContext;
 
@@ -173,11 +172,9 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
                         LOGGER.error("Unable to set maximum number of "
                                 + "last used nodes", e);
                     }
-                } else if (PreferenceConstants.P_WRAP_TABLE_HEADER.equals(prop)) {
-                    if (event.getNewValue() instanceof Boolean) {
-                        CorePlugin.getInstance().setWrapColumnHeaderInTableViews((Boolean)event.getNewValue());
-                    }
-
+                } else if (PreferenceConstants.P_WRAP_TABLE_HEADER.equals(prop)
+                    && (event.getNewValue() instanceof Boolean)) {
+                    CorePlugin.getInstance().setWrapColumnHeaderInTableViews((Boolean)event.getNewValue());
                 }
             }
         });
@@ -219,9 +216,6 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
         // @see FavoritesView#frequentHistoryChanged
         if (FavoriteNodesManager.wasInitialized()) {
             FavoriteNodesManager.getInstance().saveFavoriteNodes();
-        }
-        if (MetaNodeTemplateRepositoryView.wasInitialized()) {
-            MetaNodeTemplateRepositoryView.getInstance().dispose();
         }
         IJobManager jobMan = Job.getJobManager();
         jobMan.cancel(getBundle().getSymbolicName());
