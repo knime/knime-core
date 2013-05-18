@@ -104,7 +104,7 @@ public class WorkflowVariablesEditDialog extends Dialog {
         Composite twoColComp = new Composite(parent, SWT.NONE);
         twoColComp.setLayout(new GridLayout(3, true));
 
-        GridData horizontalFill = 
+        GridData horizontalFill =
             new GridData(SWT.FILL, SWT.CENTER, true, false);
         horizontalFill.horizontalSpan = 2;
 
@@ -120,12 +120,10 @@ public class WorkflowVariablesEditDialog extends Dialog {
             public void modifyText(final ModifyEvent arg0) {
                 String text = m_varNameCtrl.getText();
                 for (Scope s : FlowVariable.Scope.values()) {
-                    if (!Scope.Flow.equals(s)) {
-                        if (text.startsWith(s.getPrefix())) {
-                            showError("Flow variables must not start with \""
-                                    + s.getPrefix() + "\"!");
-                            m_varNameCtrl.setText("");
-                        }
+                    if (!Scope.Flow.equals(s) && text.startsWith(s.getPrefix())) {
+                        showError("Flow variables must not start with \""
+                                + s.getPrefix() + "\"!");
+                        m_varNameCtrl.setText("");
                     }
                 }
             }
@@ -190,40 +188,28 @@ public class WorkflowVariablesEditDialog extends Dialog {
         String typeString = m_typeSelectionCtrl.getItem(selectionIdx);
         m_type = FlowVariable.Type.valueOf(typeString);
         if (FlowVariable.Type.DOUBLE.equals(m_type)) {
-            if (value != null && value.length() > 0) {
-                try {
-                   m_variable = new FlowVariable(varName,
-                           Double.parseDouble(value));
-                } catch (NumberFormatException nfe) {
-                    m_variable = null;
-                    String msg = "Invalid default value " + value
-                        + " for variable " + varName + "!";
-                    showError(msg);
-                    throw new OperationCanceledException(msg);
-                }
-            }
-        } else if (FlowVariable.Type.STRING.equals(m_type)) {
-            if (value != null && value.length() > 0) {
-                   m_variable = new FlowVariable(varName, value);
-            } else {
+            try {
+               m_variable = new FlowVariable(varName,
+                       Double.parseDouble(value));
+            } catch (NumberFormatException nfe) {
                 m_variable = null;
                 String msg = "Invalid default value " + value
                     + " for variable " + varName + "!";
                 showError(msg);
                 throw new OperationCanceledException(msg);
             }
+        } else if (FlowVariable.Type.STRING.equals(m_type)) {
+           m_variable = new FlowVariable(varName, value);
         } else if (FlowVariable.Type.INTEGER.equals(m_type)) {
-            if (value != null && value.length() > 0) {
-                try {
-                   m_variable = new FlowVariable(varName, Integer.parseInt(
-                           value));
-                } catch (NumberFormatException nfe) {
-                    m_variable = null;
-                    String msg = "Invalid default value " + value
-                        + " for variable " + varName + "!";
-                    showError(msg);
-                    throw new OperationCanceledException(msg);
-                }
+            try {
+               m_variable = new FlowVariable(varName, Integer.parseInt(
+                       value));
+            } catch (NumberFormatException nfe) {
+                m_variable = null;
+                String msg = "Invalid default value " + value
+                    + " for variable " + varName + "!";
+                showError(msg);
+                throw new OperationCanceledException(msg);
             }
         }
         super.okPressed();

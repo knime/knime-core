@@ -78,7 +78,7 @@ import org.knime.workbench.repository.util.DynamicNodeDescriptionCreator;
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class HelpWindow extends Window implements LocationListener {
+public final class HelpWindow extends Window implements LocationListener {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(HelpWindow.class);
 

@@ -172,7 +172,7 @@ public final class ProjectWorkflowMap {
      *
      * @see #unregisterClientFrom(URI, Object)
      */
-    public static final void registerClientTo(final URI workflow,
+    public static void registerClientTo(final URI workflow,
             final Object client) {
         if (workflow == null) {
             return;
@@ -197,7 +197,7 @@ public final class ProjectWorkflowMap {
      * {@link #registerClientTo(URI, Object)} method
      * @see #registerClientTo(URI, Object)
      */
-    public static final void unregisterClientFrom(final URI workflow,
+    public static void unregisterClientFrom(final URI workflow,
             final Object client) {
         if (workflow == null) {
             return;
@@ -420,7 +420,7 @@ public final class ProjectWorkflowMap {
      * @return URI of the directory containing the corresponding workflow, or
      *         null, if the workflow is not registered (not opened).
      */
-    public static final URI findProjectFor(final NodeID workflowID) {
+    public static URI findProjectFor(final NodeID workflowID) {
         for (Map.Entry<MapWFKey, NodeContainer> entry : PROJECTS.entrySet()) {
             if (entry.getValue().getID().equals(workflowID)) {
                 return entry.getKey().getURI();

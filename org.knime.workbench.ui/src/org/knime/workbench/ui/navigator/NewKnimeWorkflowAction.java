@@ -102,10 +102,6 @@ public class NewKnimeWorkflowAction extends Action {
         this.m_workbenchWindow = window;
         setToolTipText("Creates a new KNIME workflow project.");
         setId(ID); //$NON-NLS-1$
-        // window.getWorkbench().getHelpSystem().setHelp(this,
-        // IWorkbenchHelpContextIds.IMPORT_ACTION);
-        // self-register selection listener (new for 3.0)
-
     }
 
     /**
@@ -152,16 +148,12 @@ public class NewKnimeWorkflowAction extends Action {
 
         wizard.init(m_workbenchWindow.getWorkbench(), selectionToPass);
 
-        // wizard.setForcePreviousAndNextButtons(true);
-
         Shell parent = m_workbenchWindow.getShell();
         WizardDialog dialog = new WizardDialog(parent, wizard);
         dialog.create();
         dialog.getShell().setSize(
                 Math.max(SIZING_WIZARD_WIDTH, dialog.getShell().getSize().x),
                 SIZING_WIZARD_HEIGHT);
-        // PlatformUI.getWorkbench().getHelpSystem().setHelp(dialog.getShell(),
-        // IWorkbenchHelpContextIds.IMPORT_WIZARD);
         dialog.open();
     }
 
@@ -171,11 +163,6 @@ public class NewKnimeWorkflowAction extends Action {
      * @since 3.0
      */
     public void dispose() {
-        if (m_workbenchWindow == null) {
-            // action has already been disposed
-            return;
-        }
-
         m_workbenchWindow = null;
     }
 }

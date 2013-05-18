@@ -110,8 +110,9 @@ public class RemoteFileTransfer extends ByteArrayTransfer {
     @Override
     public void javaToNative(final Object object,
             final TransferData transferData) {
-        if (object == null || !(object instanceof URI[]))
+        if (object == null || !(object instanceof URI[])) {
             return;
+        }
 
         if (isSupportedType(transferData)) {
             URI[] remoteFiles = (URI[])object;
@@ -303,6 +304,6 @@ public class RemoteFileTransfer extends ByteArrayTransfer {
          * @return the absolute paths of the files. The files will be deleted if
          *         necessary by the target.
          */
-        public String[] writeFile(URI[] eventData, Object tag);
+        String[] writeFile(URI[] eventData, Object tag);
     }
 }

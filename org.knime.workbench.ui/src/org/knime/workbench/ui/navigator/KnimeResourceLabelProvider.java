@@ -95,10 +95,6 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
  */
 public class KnimeResourceLabelProvider extends LabelProvider implements
         IColorProvider, IFontProvider {
-
-//    private static final Image PROJECT = KNIMEUIPlugin.getDefault().getImage(
-//            KNIMEUIPlugin.PLUGIN_ID, "icons/project_basic.png");
-
     /** Icon representing the executing state. */
     public static final Image EXECUTING = KNIMEUIPlugin.getDefault()
         .getImage(KNIMEUIPlugin.PLUGIN_ID, "icons/project_executing.png");
@@ -121,9 +117,6 @@ public class KnimeResourceLabelProvider extends LabelProvider implements
     public static final Image WORKFLOW_GROUP
         = KNIMEUIPlugin.imageDescriptorFromPlugin(KNIMEUIPlugin.PLUGIN_ID,
                 "icons/wf_set.png").createImage();
-
-//    private static final NodeLogger LOGGER = NodeLogger.getLogger(
-//            KnimeResourceLableProvider.class);
 
     /** Path representation of the workflow file. */
     public static final Path WORKFLOW_FILE = new Path(

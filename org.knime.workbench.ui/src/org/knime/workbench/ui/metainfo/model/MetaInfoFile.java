@@ -35,6 +35,7 @@ import org.eclipse.core.resources.IProject;
 import org.eclipse.core.resources.IProjectDescription;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.WorkflowPersistor;
 import org.knime.core.util.FileUtil;
@@ -184,13 +185,12 @@ public final class MetaInfoFile {
      * @param natureId one of {@link KNIMEProjectNature}
      *  or {@link KNIMEWorkflowSetProjectNature}
      * @return the created project (already open and with description)
-     * @throws Exception if something goes wrong
+     * @throws CoreException if something goes wrong
      *
-     * @see {@link KNIMEWorkflowSetProjectNature}
+     * @see KNIMEWorkflowSetProjectNature
      */
     public static IProject createKnimeProject(final String name,
-            final String natureId)
-        throws Exception {
+            final String natureId) throws CoreException {
         if (!KNIMEProjectNature.ID.equals(natureId)
                 && !KNIMEWorkflowSetProjectNature.ID.equals(natureId)) {
             throw new IllegalArgumentException(
@@ -207,8 +207,9 @@ public final class MetaInfoFile {
             IProjectDescription desc = newProject.getDescription();
             desc.setNatureIds(new String[] {natureId});
             newProject.setDescription(desc, null);
-        } catch (Exception e) {
+        } catch (CoreException e) {
             LOGGER.error("Error while creating project "  + name, e);
+            throw e;
         }
         return newProject;
     }

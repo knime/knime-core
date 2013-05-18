@@ -67,7 +67,6 @@ public class ModellerPerspectiveFactory implements IPerspectiveFactory {
      * {@inheritDoc}
      */
     public void createInitialLayout(final IPageLayout layout) {
-        // layout.addView(IPageLayout.ID_RES_NAV,IPageLayout.LEFT,0.3f,
-        // IPageLayout.ID_EDITOR_AREA);
+        // nothing to do?
     }
 }

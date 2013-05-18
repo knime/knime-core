@@ -1103,11 +1103,8 @@ public class WorkflowImportSelectionPage extends WizardPage {
             initialZipLocation = settings.get(KEY_ZIP_LOC);
             initialDirLocation = settings.get(KEY_DIR_LOC);
             initialFromDir = settings.getBoolean(KEY_FROM_DIR);
-            if (!initialFromDir) {
-                if (m_copyProjectsUI != null
-                        && !m_copyProjectsUI.isDisposed()) {
-                    m_copyProjectsUI.setEnabled(false);
-                }
+            if (!initialFromDir && (m_copyProjectsUI != null) && !m_copyProjectsUI.isDisposed()) {
+                m_copyProjectsUI.setEnabled(false);
             }
         }
     }

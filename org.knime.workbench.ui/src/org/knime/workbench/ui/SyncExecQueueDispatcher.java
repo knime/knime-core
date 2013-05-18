@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Nov 5, 2008 (wiswedel): created
  */
@@ -62,7 +62,7 @@ import org.knime.core.node.NodeLogger;
 /**
  * A static class offering functionality that should be used instead of the
  * usual <code>Display.getDefault().asyncExec(Runnable)</code> procedure.
- * 
+ *
  * <p>
  * The method {@link Display#asyncExec(Runnable) asyncExec} offered by the
  * {@link Display} class has performance problems if requests come in faster
@@ -72,27 +72,27 @@ import org.knime.core.node.NodeLogger;
  * virtually resized by a fixed size (currently 4) as more runnables come in.
  * There are three expensive operations: a static synchronization, the memory
  * allocation for the new array, and the array copy.
- * 
- * <p>This class uses a {@link java.util.concurrent.ThreadPoolExecutor} to 
- * queue runnables (which are then processed using 
- * {@link Display#syncExec(Runnable)}. 
- * 
+ *
+ * <p>This class uses a {@link java.util.concurrent.ThreadPoolExecutor} to
+ * queue runnables (which are then processed using
+ * {@link Display#syncExec(Runnable)}.
+ *
  * <p>The use of this class fixes bug #1551 (NodeFigure update events block UI),
  * i.e. the update events that are sent by a looping workflow block the UI.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class SyncExecQueueDispatcher {
-    
-    private static final NodeLogger LOGGER = 
+
+    private static final NodeLogger LOGGER =
         NodeLogger.getLogger(SyncExecQueueDispatcher.class);
-    
-    private static final ExecutorService EXECUTOR = 
+
+    private static final ExecutorService EXECUTOR =
         Executors.newSingleThreadExecutor(new ThreadFactory() {
             private AtomicInteger m_threadCounter = new AtomicInteger();
             @Override
             public Thread newThread(final Runnable r) {
-                Thread t = new Thread(r, "KNIME Sync Exec Dispatcher-" 
+                Thread t = new Thread(r, "KNIME Sync Exec Dispatcher-"
                         + m_threadCounter.incrementAndGet());
                 t.setUncaughtExceptionHandler(new UncaughtExceptionHandler() {
                     @Override
@@ -106,13 +106,13 @@ public final class SyncExecQueueDispatcher {
                 return t;
             }
         });
-    
+
     /** Queues a runnable in a local {@link ExecutorService}, that will hand off
-     * the runnable to the {@link Display#getDefault()} using the 
+     * the runnable to the {@link Display#getDefault()} using the
      * {@link Display#syncExec(Runnable)} method.
      * @param runnable the runnable to be processed.
      */
-    public static final void asyncExec(final Runnable runnable) {
+    public static void asyncExec(final Runnable runnable) {
         if (runnable == null) {
             LOGGER.coding("Can't execute null runnable.");
             return;
@@ -124,16 +124,16 @@ public final class SyncExecQueueDispatcher {
                 if (!display.isDisposed()) {
                     display.syncExec(runnable);
                 } else {
-                    LOGGER.error("Ignoring async execution of runnable " 
-                            + "(full class name \"" 
-                            + runnable.getClass().getName() 
+                    LOGGER.error("Ignoring async execution of runnable "
+                            + "(full class name \""
+                            + runnable.getClass().getName()
                             + "\" since device is disposed.");
                 }
             }
         });
     }
-    
+
     private SyncExecQueueDispatcher() {
     }
-    
+
 }

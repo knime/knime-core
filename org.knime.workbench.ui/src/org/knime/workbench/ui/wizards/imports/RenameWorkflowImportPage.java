@@ -196,16 +196,6 @@ public class RenameWorkflowImportPage extends WizardPage {
 
     /**
      *
-     * {@inheritDoc}
-     */
-    @Override
-    public IWizardPage getPreviousPage() {
-        // not possible to return to previous page....
-        return super.getPreviousPage();
-    }
-
-    /**
-     *
      * @return true if all workflows have been renamed
      */
     public boolean canFinish() {

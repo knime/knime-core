@@ -101,10 +101,6 @@ public class ExportPreferencesAction extends Action {
         }
         setToolTipText("Exports the current preferences to a file");
         setId(ID); //$NON-NLS-1$
-        // window.getWorkbench().getHelpSystem().setHelp(this,
-        // IWorkbenchHelpContextIds.IMPORT_ACTION);
-        // self-register selection listener (new for 3.0)
-
     }
 
     /**

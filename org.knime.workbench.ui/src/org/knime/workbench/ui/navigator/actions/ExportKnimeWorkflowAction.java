@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   20.10.2006 (sieb): created
  */
@@ -65,7 +65,7 @@ import org.knime.workbench.ui.wizards.export.WorkflowExportWizard;
 
 /**
  * Action to invoke the knime export wizard.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public class ExportKnimeWorkflowAction extends Action {
@@ -73,8 +73,8 @@ public class ExportKnimeWorkflowAction extends Action {
     private static final int SIZING_WIZARD_WIDTH = 470;
 
     private static final int SIZING_WIZARD_HEIGHT = 550;
-    
-    private static final ImageDescriptor ICON 
+
+    private static final ImageDescriptor ICON
         = KNIMEUIPlugin.imageDescriptorFromPlugin(
                 KNIMEUIPlugin.PLUGIN_ID, "icons/knime_export.png");
 
@@ -90,7 +90,7 @@ public class ExportKnimeWorkflowAction extends Action {
 
     /**
      * Create a new instance of this class.
-     * 
+     *
      * @param window the window
      */
     public ExportKnimeWorkflowAction(final IWorkbenchWindow window) {
@@ -100,19 +100,16 @@ public class ExportKnimeWorkflowAction extends Action {
         }
         setToolTipText("Exports a KNIME workflow to an archive");
         setId(ID); //$NON-NLS-1$
-        // window.getWorkbench().getHelpSystem().setHelp(this,
-        // IWorkbenchHelpContextIds.IMPORT_ACTION);
-        // self-register selection listener (new for 3.0)
-
     }
 
     /**
      * Create a new instance of this class.
-     * 
+     *
      * @param workbench the workbench
      * @deprecated use the constructor
      *             <code>ImportResourcesAction(IWorkbenchWindow)</code>
      */
+    @Deprecated
     public ExportKnimeWorkflowAction(final IWorkbench workbench) {
         this(workbench.getActiveWorkbenchWindow());
     }
@@ -128,8 +125,9 @@ public class ExportKnimeWorkflowAction extends Action {
     /**
      * Invoke the Import wizards selection Wizard.
      */
+    @Override
     public void run() {
-        IWorkbenchWindow workbenchWindow = 
+        IWorkbenchWindow workbenchWindow =
             PlatformUI.getWorkbench().getActiveWorkbenchWindow();
         if (workbenchWindow == null) {
             // action has been disposed
@@ -149,16 +147,12 @@ public class ExportKnimeWorkflowAction extends Action {
 
         wizard.init(workbenchWindow.getWorkbench(), selectionToPass);
 
-        // wizard.setForcePreviousAndNextButtons(true);
-
         Shell parent = workbenchWindow.getShell();
         WizardDialog dialog = new WizardDialog(parent, wizard);
         dialog.create();
         dialog.getShell().setSize(
                 Math.max(SIZING_WIZARD_WIDTH, dialog.getShell().getSize().x),
                 SIZING_WIZARD_HEIGHT);
-        // PlatformUI.getWorkbench().getHelpSystem().setHelp(dialog.getShell(),
-        // IWorkbenchHelpContextIds.IMPORT_WIZARD);
         dialog.open();
     }
 

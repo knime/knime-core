@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   11.03.2005 (georg): created
  */
@@ -57,36 +57,37 @@ import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
  * Project nature for KNIME projects, not used by now.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class KNIMEProjectNature implements IProjectNature {
-    
+
     /** Project nature ID as defined in plugin.xml. */
-    public static final String ID = KNIMEUIPlugin.PLUGIN_ID 
+    public static final String ID = KNIMEUIPlugin.PLUGIN_ID
         + ".KNIMEProjectNature";
-    
+
     private IProject m_project;
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void configure() throws CoreException {
-        // TODO Auto-generated method stub
-
+        // nothing to do
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public void deconfigure() throws CoreException {
-        // TODO Auto-generated method stub
-
+        // nothing to do
     }
 
     /**
      * {@inheritDoc}
      */
+    @Override
     public IProject getProject() {
         return m_project;
     }
@@ -94,6 +95,7 @@ public class KNIMEProjectNature implements IProjectNature {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void setProject(final IProject project) {
         m_project = project;
 

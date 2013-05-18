@@ -220,7 +220,7 @@ public class WorkflowVariableTable implements Iterable<FlowVariable> {
             case 0: return parameter.getName();
             case 1: return parameter.getType().name();
             case 2: return getValueFrom(parameter);
-            default: throw new RuntimeException(
+            default: throw new IllegalArgumentException(
                     "Invalid number of columns defined: " + arg1);
             }
         }

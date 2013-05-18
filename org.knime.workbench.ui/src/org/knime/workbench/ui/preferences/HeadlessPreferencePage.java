@@ -51,8 +51,6 @@ public class HeadlessPreferencePage extends FieldEditorPreferencePage implements
     public HeadlessPreferencePage() {
         super(GRID);
 
-        // setDescription("KNIME global preferences");
-
         // get the preference store for the UI plugin
         IPreferenceStore store =
                 KNIMECorePlugin.getDefault().getPreferenceStore();

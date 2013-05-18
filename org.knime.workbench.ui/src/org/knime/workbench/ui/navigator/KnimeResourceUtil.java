@@ -51,12 +51,14 @@
 package org.knime.workbench.ui.navigator;
 
 import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.zip.ZipEntry;
+import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 import org.eclipse.core.resources.IContainer;
@@ -154,10 +156,8 @@ public final class KnimeResourceUtil {
         IContainer container = (IContainer)resource;
         // if container contains a workflow file but not its parent
         IContainer parent = container.getParent();
-        if (parent != null) {
-            if (parent.exists(WORKFLOW_FILE)) {
-                return false;
-            }
+        if ((parent != null) && parent.exists(WORKFLOW_FILE)) {
+            return false;
         }
         return container.exists(WORKFLOW_FILE);
     }
@@ -210,10 +210,8 @@ public final class KnimeResourceUtil {
         IContainer container = (IContainer)resource;
         // if container contains a workflow file but not its parent
         IContainer parent = container.getParent();
-        if (parent != null) {
-            if (!parent.exists(WORKFLOW_FILE)) {
-                return false;
-            }
+        if ((parent != null)  && !parent.exists(WORKFLOW_FILE)) {
+            return false;
         }
         return container.exists(WORKFLOW_FILE);
     }
@@ -404,10 +402,13 @@ public final class KnimeResourceUtil {
      * @param destination the name of the new workflow. Must denote a flow (if
      *            it exists it is overwritten).
      * @param zippedWorkflow
-     * @throws Exception
+     * @throws IOException
+     * @throws ZipException
+     * @throws InterruptedException
+     * @throws InvocationTargetException
      */
     private static void importWorkflowIntoWorkspace(final IPath destination,
-            final File zippedWorkflow) throws Exception {
+            final File zippedWorkflow) throws ZipException, IOException, InvocationTargetException, InterruptedException {
 
         ZipFile zFile = new ZipFile(zippedWorkflow);
         ZipLeveledStructProvider importStructureProvider =

@@ -110,10 +110,6 @@ public class ImportPreferencesAction extends Action {
         }
         setToolTipText("Sets the preferences to values imported from a file");
         setId(ID); //$NON-NLS-1$
-        // window.getWorkbench().getHelpSystem().setHelp(this,
-        // IWorkbenchHelpContextIds.IMPORT_ACTION);
-        // self-register selection listener (new for 3.0)
-
     }
 
     /**
@@ -175,14 +171,14 @@ public class ImportPreferencesAction extends Action {
             IPreferenceFilter filter = new IPreferenceFilter() {
                 @Override
                 public String[] getScopes() {
-                    return new String[]{ InstanceScope.SCOPE,
+                    return new String[] { InstanceScope.SCOPE,
                             ConfigurationScope.SCOPE,
                             "profile" };
                 }
 
                 @Override
                 @SuppressWarnings("rawtypes")
-                public Map getMapping(String scope) {
+                public Map getMapping(final String scope) {
                     return null; // this filter is applicable for all nodes
                 }
             };

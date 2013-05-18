@@ -128,7 +128,7 @@ public class CredentialVariableTable implements Iterable<Credentials> {
         TableViewerColumn loginCol = new TableViewerColumn(viewer, SWT.NONE);
         loginCol.getColumn().setText(VAR_LOGIN);
         loginCol.getColumn().setWidth(100);
-        
+
         TableViewerColumn typeCol = new TableViewerColumn(viewer, SWT.NONE);
         typeCol.getColumn().setText(VAR_PASSWORD);
         typeCol.getColumn().setWidth(100);
@@ -172,19 +172,18 @@ public class CredentialVariableTable implements Iterable<Credentials> {
             switch (arg1) {
             case 0: return cred.getName();
             case 1: return cred.getLogin();
-            case 2: {
+            case 2:
                 String passString = cred.getPassword();
                 if (passString == null || passString.isEmpty()) {
                     return "<not set>";
                 }
                 StringBuilder buf = new StringBuilder();
-                for (int i = 0; 
+                for (int i = 0;
                         i < Integer.bitCount(passString.hashCode()); i++) {
                     buf.append('*');
                 }
                 return buf.toString();
-            }
-            default: throw new RuntimeException(
+            default: throw new IllegalArgumentException(
                     "Invalid number of columns defined: " + arg1);
             }
         }

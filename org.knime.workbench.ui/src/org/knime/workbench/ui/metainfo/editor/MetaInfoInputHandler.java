@@ -27,51 +27,51 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 /**
- * 
+ *
  * @author Fabian Dill, KNIME.com AG
  */
 public class MetaInfoInputHandler extends DefaultHandler {
-    
-    
+
+
     private StringBuffer m_buffer = new StringBuffer();
 
-    private final List<MetaGUIElement>m_elements 
+    private final List<MetaGUIElement>m_elements
         = new ArrayList<MetaGUIElement>();
-    
+
     private String m_currentForm;
     private String m_currentLabel;
     private boolean m_isReadOnly;
 
     @Override
-    public void characters(char[] ch, int start, int length)
+    public void characters(final char[] ch, final int start, final int length)
             throws SAXException {
         m_buffer.append(ch, start, length);
     }
 
-    
+
     @Override
-    public void startElement(String uri, String localName, String name,
-            Attributes atts) throws SAXException {
+    public void startElement(final String uri, final String localName, final String name,
+            final Attributes atts) throws SAXException {
         if (name.equals(MetaGUIElement.ELEMENT)) {
             m_currentForm = atts.getValue(MetaGUIElement.FORM);
             m_currentLabel = atts.getValue(MetaGUIElement.NAME);
             m_isReadOnly = Boolean.valueOf(
                     atts.getValue(MetaGUIElement.READ_ONLY));
-            
+
         }
     }
 
     @Override
-    public void endElement(String uri, String localName, String name)
+    public void endElement(final String uri, final String localName, final String name)
             throws SAXException {
         if (name.equals(MetaGUIElement.ELEMENT)) {
-            m_elements.add(MetaGUIElement.create(m_currentForm, m_currentLabel, 
+            m_elements.add(MetaGUIElement.create(m_currentForm, m_currentLabel,
                     m_buffer.toString(), m_isReadOnly));
             m_buffer = new StringBuffer();
-        }        
+        }
     }
-    
-    public List<MetaGUIElement>getElements(){
+
+    public List<MetaGUIElement>getElements() {
         return m_elements;
     }
 

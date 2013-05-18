@@ -115,8 +115,6 @@ public class WrappedNodeDialog extends Dialog {
 
     private final NodeDialogPane m_dialogPane;
 
-    private Menu m_menuBar;
-
     private final NodeLogger m_logger;
 
     private final AtomicBoolean m_dialogSizeComputed = new AtomicBoolean();
@@ -197,10 +195,10 @@ public class WrappedNodeDialog extends Dialog {
         super.configureShell(newShell);
         Image img = KNIMEUIPlugin.getDefault().getImageRegistry().get("knime");
         newShell.setImage(img);
-        m_menuBar = new Menu(newShell, SWT.BAR);
-        newShell.setMenuBar(m_menuBar);
+        Menu menuBar = new Menu(newShell, SWT.BAR);
+        newShell.setMenuBar(menuBar);
         Menu menu = new Menu(newShell, SWT.DROP_DOWN);
-        MenuItem rootItem = new MenuItem(m_menuBar, SWT.CASCADE);
+        MenuItem rootItem = new MenuItem(menuBar, SWT.CASCADE);
         rootItem.setText("File");
         rootItem.setAccelerator(SWT.CTRL | 'F');
         rootItem.setMenu(menu);
@@ -351,27 +349,23 @@ public class WrappedNodeDialog extends Dialog {
             /** {@inheritDoc} */
             @Override
             public void keyPressed(final KeyEvent ke) {
-                if (ke.keyCode == SWT.ESC) {
-                    if (m_dialogPane.closeOnESC()) {
-                        // close dialog on ESC
-                        doCancel();
-                    }
+                if ((ke.keyCode == SWT.ESC) && m_dialogPane.closeOnESC()) {
+                    // close dialog on ESC
+                    doCancel();
                 }
                 if (ke.keyCode == SWT.CTRL) {
                     // change OK button label, when CTRL is pressed
                     btnOK.setText("OK - Execute");
                 }
-                if (ke.keyCode == SWT.CR) {
-                    if (ke.stateMask == SWT.CTRL || ke.stateMask == SWT.SHIFT + SWT.CTRL) {
-                        // Bug 3942: transfer focus to OK button to have all component to auto-commit their changes
-                        btnOK.forceFocus();
-                        // force OK - Execute when CTRL and ENTER is pressed
-                        // open first out-port view if SHIFT is pressed
-                        doOK(ke, true, ke.stateMask == SWT.SHIFT + SWT.CTRL);
-                        // reset ok button state/label
-                        if (ke.doit == false) {
-                            btnOK.setText("OK");
-                        }
+                if ((ke.keyCode == SWT.CR) && ((ke.stateMask == SWT.CTRL) || (ke.stateMask == SWT.SHIFT + SWT.CTRL))) {
+                    // Bug 3942: transfer focus to OK button to have all component to auto-commit their changes
+                    btnOK.forceFocus();
+                    // force OK - Execute when CTRL and ENTER is pressed
+                    // open first out-port view if SHIFT is pressed
+                    doOK(ke, true, ke.stateMask == SWT.SHIFT + SWT.CTRL);
+                    // reset ok button state/label
+                    if (!ke.doit) {
+                        btnOK.setText("OK");
                     }
                 }
             }
@@ -397,7 +391,7 @@ public class WrappedNodeDialog extends Dialog {
                     // OK only
                     doOK(se, false, false);
                 }
-                if (se.doit == false) {
+                if (!se.doit) {
                     // reset ok button state/label
                     btnOK.setText("OK");
                 }
@@ -640,14 +634,6 @@ public class WrappedNodeDialog extends Dialog {
         mb.setMessage("The settings were not changed. "
                 + "The node will not be reset.");
         mb.open();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean close() {
-        return super.close();
     }
 
     // these are extra height and width value since the parent dialog

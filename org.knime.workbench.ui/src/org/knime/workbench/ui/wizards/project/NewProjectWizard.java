@@ -94,7 +94,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     private NewProjectWizardPage m_page;
 
     private IStructuredSelection m_initialSelection;
-    
+
     /**
      * Creates the wizard.
      */
@@ -129,7 +129,6 @@ public class NewProjectWizard extends Wizard implements INewWizard {
     @Override
     public boolean performFinish() {
         final IPath workflowPath = m_page.getWorkflowPath();
-        // final boolean addDataset = m_page.getAddDataset();
 
         // Create new runnable
         IRunnableWithProgress op = new IRunnableWithProgress() {
@@ -161,7 +160,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         }
 
         // found a better solution to update knime resource navigator
-        // @see KnimeResourceChangeListener 
+        // @see KnimeResourceChangeListener
         // Delta.CHANGED is now also processed for every resource
 
         return true;
@@ -208,7 +207,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                 project.setDescription(description, monitor);
             } catch (CoreException ce) {
                 throwCoreException(
-                        "Error while creating project description for " 
+                        "Error while creating project description for "
                         + project.getName(), ce);
             }
         }
@@ -219,7 +218,7 @@ public class NewProjectWizard extends Wizard implements INewWizard {
         final IFile defaultFile =
                 containerResult.getFile(
                         new Path(WorkflowPersistor.WORKFLOW_FILE));
-        InputStream is = new ByteArrayInputStream("".getBytes());
+        InputStream is = new ByteArrayInputStream(new byte[0]);
         defaultFile.create(is, true, monitor);
 
         // open the default file, if it was created
@@ -238,13 +237,10 @@ public class NewProjectWizard extends Wizard implements INewWizard {
                 }
             }
         });
-
-        // just to make sure: refresh the new project
-//        project.getProject().refreshLocal(IResource.DEPTH_ONE, monitor);
     }
 
-    private static void throwCoreException(final String message, 
-            final Throwable t) 
+    private static void throwCoreException(final String message,
+            final Throwable t)
         throws CoreException {
         IStatus status =
                 new Status(IStatus.ERROR, "org.knime.workbench.ui", IStatus.OK,

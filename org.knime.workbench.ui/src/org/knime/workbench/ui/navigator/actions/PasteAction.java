@@ -53,6 +53,7 @@ package org.knime.workbench.ui.navigator.actions;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
+import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -99,7 +100,7 @@ public class PasteAction extends SelectionListenerAction {
 
     private IResource[] m_sources;
 
-    private LinkedList<IContainer> m_lockedFlows;
+    private Deque<IContainer> m_lockedFlows;
 
     private IContainer m_target;
 
@@ -331,7 +332,7 @@ public class PasteAction extends SelectionListenerAction {
     }
 
     private boolean lockWorkflows(final List<IContainer> toBeLockedWFs,
-            final List<IContainer> lockedWF) {
+            final Deque<IContainer> lockedWF) {
         boolean result = true;
         assert lockedWF.size() == 0;
         // open workflows can be locked multiple times.
@@ -346,7 +347,7 @@ public class PasteAction extends SelectionListenerAction {
         return result;
     }
 
-    private void unlockWorkflows(final List<IContainer> workflows) {
+    private void unlockWorkflows(final Deque<IContainer> workflows) {
         for (IContainer wf : workflows) {
             assert KnimeResourceUtil.isWorkflow(wf);
             VMFileLocker.unlockForVM(new File(wf.getLocationURI()));
@@ -355,7 +356,7 @@ public class PasteAction extends SelectionListenerAction {
 
     private boolean isEnabledPrivate(final IStructuredSelection sel) {
         Object c = m_clipboard.getContents(ResourceTransfer.getInstance());
-        if (c == null || !(c instanceof IResource[])) {
+        if (!(c instanceof IResource[])) {
             return false;
         }
         if (((IResource[])c).length == 0) {
@@ -385,20 +386,6 @@ public class PasteAction extends SelectionListenerAction {
         return result;
     }
 
-    private void showTargetExistsMessage() {
-        Display.getDefault().syncExec(new Runnable() {
-            @Override
-            public void run() {
-                MessageDialog.openWarning(
-                        Display.getDefault().getActiveShell(),
-                        "Resource already exists",
-                        "One of the flows or groups to copy "
-                                + " already exists in \""
-                                + m_target.getFullPath()
-                                + "\".\nPlease rename/remove before copying.");
-            }
-        });
-    }
 
     private void showSourceVanishedMessage() {
         Display.getDefault().syncExec(new Runnable() {

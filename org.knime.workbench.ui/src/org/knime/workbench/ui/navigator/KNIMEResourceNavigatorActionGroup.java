@@ -73,9 +73,6 @@ import org.knime.workbench.ui.navigator.actions.RenameAction;
  */
 @SuppressWarnings("deprecation")
 public class KNIMEResourceNavigatorActionGroup extends MainActionGroup {
-
-    private final Clipboard m_clipboard;
-
     private DeleteAction m_delAction;
 
     private RenameAction m_renAction;
@@ -91,11 +88,10 @@ public class KNIMEResourceNavigatorActionGroup extends MainActionGroup {
             final IResourceNavigator navigator, final TreeViewer viewer,
             final Clipboard clipboard) {
         super(navigator);
-        m_clipboard = clipboard;
         m_delAction = new DeleteAction(viewer.getControl().getShell(), viewer);
         m_renAction = new RenameAction(viewer);
-        m_copyAction = new CopyToClipboard(viewer, m_clipboard);
-        m_pasteAction = new PasteAction(viewer, m_clipboard);
+        m_copyAction = new CopyToClipboard(viewer, clipboard);
+        m_pasteAction = new PasteAction(viewer, clipboard);
         // the copy action must notify the paste action of new clipboard content
         m_copyAction.setPasteAction(m_pasteAction);
     }

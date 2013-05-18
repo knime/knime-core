@@ -69,7 +69,7 @@ import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
  * @author Thomas Gabriel, University of Konstanz
  */
 public class DatabasePreferencePage extends FieldEditorPreferencePage
-		implements IWorkbenchPreferencePage {
+    implements IWorkbenchPreferencePage {
 
 	/**
 	 *
@@ -105,9 +105,7 @@ public class DatabasePreferencePage extends FieldEditorPreferencePage
 					}
 				}
 				if (!failed.isEmpty()) {
-				    setErrorMessage(
-				        "Some driver file(s) are not available anymore: " +
-				        failed.toString());
+                    setErrorMessage("Some driver file(s) are not available anymore: " + failed.toString());
 				}
 				return result.toArray(new String[0]);
 			}
@@ -128,14 +126,14 @@ public class DatabasePreferencePage extends FieldEditorPreferencePage
 
 			@Override
 			protected String createList(final String[] string) {
-				String res = "";
+				StringBuilder res = new StringBuilder();
 				for (int i = 0; i < string.length; i++) {
 					if (i > 0) {
-						res += ";";
+						res.append(';');
 					}
-					res += string[i];
+					res.append(string[i]);
 				}
-				return res;
+				return res.toString();
 			}
 		});
 	}

@@ -84,7 +84,7 @@ public abstract class AbstractWorkflowImportElement implements
     private final String m_name;
 
     /**
-     * In case of name clashes this is the renamed name of this import element
+     * In case of name clashes this is the renamed name of this import element.
      */
     private String m_newName;
 
@@ -134,6 +134,7 @@ public abstract class AbstractWorkflowImportElement implements
     /**
      * {@inheritDoc}
      */
+    @Override
     public String getOriginalName() {
         return m_name;
     }
@@ -168,6 +169,7 @@ public abstract class AbstractWorkflowImportElement implements
      *
      * {@inheritDoc}
      */
+    @Override
     public IPath getRenamedPath() {
         List<String> segments = new ArrayList<String>();
         IWorkflowImportElement element = this;
@@ -178,20 +180,21 @@ public abstract class AbstractWorkflowImportElement implements
         Collections.reverse(segments);
         // remove last element (which is the workspace or zip file)
         segments.remove(0);
-        String path = "";
+        StringBuilder path = new StringBuilder();
         for (int i = 0; i < segments.size(); i++) {
-                path += segments.get(i);
+                path.append(segments.get(i));
                 if (i < segments.size() - 1 && !path.equals("/")) {
-                    path += "/";
+                    path.append('/');
                 }
         }
-        return new Path(path);
+        return new Path(path.toString());
     }
 
     /**
      *
      * {@inheritDoc}
      */
+    @Override
     public IPath getOriginalPath() {
         List<String> segments = new ArrayList<String>();
         IWorkflowImportElement element = this;
@@ -202,14 +205,14 @@ public abstract class AbstractWorkflowImportElement implements
         Collections.reverse(segments);
         // remove last element (which is the workspace or zip file)
         segments.remove(0);
-        String path = "";
+        StringBuilder path = new StringBuilder();
         for (int i = 0; i < segments.size(); i++) {
-                path += segments.get(i);
+                path.append(segments.get(i));
                 if (i < segments.size() - 1 && !path.equals("/")) {
-                    path += "/";
+                    path.append('/');
                 }
         }
-        return new Path(path);
+        return new Path(path.toString());
     }
 
     /**

@@ -198,11 +198,11 @@ public class WorkflowSetMetaInfoEditor extends EditorPart {
             inputFile = new File(path);
         } catch (IllegalArgumentException iae) {
             if (!path.getScheme().equalsIgnoreCase("file")) {
-                throw new PartInitException("Only local meta info can be edited");
+                throw new PartInitException("Only local meta info can be edited", iae);
             }
             throw new PartInitException("Unexpected input for "
                     + getClass().getName() + ": "
-                    + path);
+                    + path, iae);
         }
         setPartName(new File(inputFile.getParent()).getName()
                 + " : Meta Information");

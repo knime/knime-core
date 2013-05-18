@@ -68,9 +68,6 @@ public class FavoriteNodesDropTarget extends DropTargetAdapter {
 
     private FavoritesView m_view;
 
-    // private static final NodeLogger LOGGER = NodeLogger.getLogger(
-    // FavoriteNodesDropTarget.class);
-
     /**
      *
      * @param view the view
@@ -86,7 +83,6 @@ public class FavoriteNodesDropTarget extends DropTargetAdapter {
     @Override
     public void dragEnter(final DropTargetEvent event) {
         event.detail = DND.DROP_COPY;
-        // LOGGER.debug("event item: " + event.item);
     }
 
     /**
@@ -130,12 +126,9 @@ public class FavoriteNodesDropTarget extends DropTargetAdapter {
 
     private boolean isNodeTemplate(final Object o) {
         Object template = o;
-        if (!(template instanceof NodeTemplate)) {
+        if (!(template instanceof NodeTemplate) && (template instanceof IAdaptable)) {
             // Last change: Ask adaptables for an adapter object
-            if (template instanceof IAdaptable) {
-                template =
-                        ((IAdaptable)template).getAdapter(NodeTemplate.class);
-            }
+            template = ((IAdaptable)template).getAdapter(NodeTemplate.class);
         }
         return template instanceof NodeTemplate;
     }

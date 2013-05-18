@@ -135,7 +135,9 @@ public class CopyAction extends MoveWorkflowAction {
         for (File f : list) {
             if (f.isDirectory()) {
                 File targetDir = new File(target, f.getName());
-                targetDir.mkdir();
+                if (!targetDir.mkdir()) {
+                    throw new IOException("Could not create directory '" + targetDir + "'");
+                }
                 copyRecWithoutLockFile(f, targetDir);
             } else {
                 // skip the lock file

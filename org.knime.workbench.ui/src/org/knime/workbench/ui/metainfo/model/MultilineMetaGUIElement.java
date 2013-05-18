@@ -32,12 +32,12 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.AttributesImpl;
 
 /**
- * 
+ *
  * @author Fabian Dill, KNIME.com AG
  */
 public class MultilineMetaGUIElement extends MetaGUIElement {
-    
-    
+
+
     public MultilineMetaGUIElement(final String label, final String value,
             final boolean isReadOnly) {
         super(label, value, isReadOnly);
@@ -47,7 +47,7 @@ public class MultilineMetaGUIElement extends MetaGUIElement {
      * {@inheritDoc}
      */
     @Override
-    public Control createGUIElement(FormToolkit toolkit, Composite parent) {
+    public Control createGUIElement(final FormToolkit toolkit, final Composite parent) {
         int style = SWT.BORDER | SWT.MULTI | SWT.SCROLL_LINE;
         Text text = toolkit.createText(parent, getValue().trim(), style);
         GridData layout = new GridData(GridData.FILL_HORIZONTAL);
@@ -63,8 +63,8 @@ public class MultilineMetaGUIElement extends MetaGUIElement {
         setControl(text);
         return text;
     }
-    
-    
+
+
     private Text getTextControl() {
         return (Text)getControl();
     }
@@ -73,19 +73,19 @@ public class MultilineMetaGUIElement extends MetaGUIElement {
      * {@inheritDoc}
      */
     @Override
-    public void saveTo(final TransformerHandler parentElement) 
+    public void saveTo(final TransformerHandler parentElement)
         throws SAXException {
         AttributesImpl atts = new AttributesImpl();
-        atts.addAttribute(null, null, MetaGUIElement.FORM, "CDATA", 
+        atts.addAttribute(null, null, MetaGUIElement.FORM, "CDATA",
                 "multiline");
         atts.addAttribute(null, null, MetaGUIElement.NAME, "CDATA", getLabel());
-        atts.addAttribute(null, null, MetaGUIElement.READ_ONLY, "CDATA", 
+        atts.addAttribute(null, null, MetaGUIElement.READ_ONLY, "CDATA",
                 "" + isReadOnly());
         parentElement.startElement(null, null, MetaGUIElement.ELEMENT, atts);
         char[] value = getTextControl().getText().trim().toCharArray();
         parentElement.characters(value, 0, value.length);
         parentElement.endElement(null, null, MetaGUIElement.ELEMENT);
     }
-    
+
 
 }

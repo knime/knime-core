@@ -64,8 +64,6 @@ public class TreeSelectionControl {
 
     private Label m_errMsg;
 
-    private Label m_msg;
-
     private ViewerComparator m_comparator;
 
     /**
@@ -171,9 +169,9 @@ public class TreeSelectionControl {
         msgPanel.setLayoutData(leftTop);
         msgPanel.setLayout(new GridLayout(1, false));
 
-        m_msg = new Label(msgPanel, SWT.LEFT);
-        m_msg.setText(m_message);
-        m_msg.setLayoutData(leftTop);
+        Label msg = new Label(msgPanel, SWT.LEFT);
+        msg.setText(m_message);
+        msg.setLayoutData(leftTop);
         return msgPanel;
     }
 

@@ -79,6 +79,7 @@ public class KnimeResourceChangeListener implements IResourceChangeListener {
              private void doRefresh(final Object node) {
                  Display.getDefault().asyncExec(new Runnable() {
 
+                    @Override
                     public void run() {
                         if (navigator.getViewer().getControl().isDisposed()) {
                             return;
@@ -99,6 +100,7 @@ public class KnimeResourceChangeListener implements IResourceChangeListener {
 
                 Display.getDefault().asyncExec(new Runnable() {
 
+                    @Override
                     public void run() {
                         if (navigator != null && navigator.getViewSite() != null
                                 && navigator.getViewSite().getShell() != null
@@ -111,7 +113,8 @@ public class KnimeResourceChangeListener implements IResourceChangeListener {
                  });
              }
 
-              public boolean visit(final IResourceDelta delta) {
+              @Override
+            public boolean visit(final IResourceDelta delta) {
                  IResource res = delta.getResource();
                  IResource parent = res.getParent();
 
@@ -132,6 +135,8 @@ public class KnimeResourceChangeListener implements IResourceChangeListener {
                         // new projects added!
                         doRefresh(parent);
                         break;
+                    default:
+                        // all other kinds are ignored
                     }
                  return true; // visit the children
               }
@@ -141,26 +146,16 @@ public class KnimeResourceChangeListener implements IResourceChangeListener {
     /**
      * {@inheritDoc}
      */
+    @Override
     public void resourceChanged(final IResourceChangeEvent event) {
-        switch (event.getType()) {
-        case IResourceChangeEvent.PRE_CLOSE:
-
-            break;
-        case IResourceChangeEvent.PRE_DELETE:
-
-            break;
-        case IResourceChangeEvent.POST_CHANGE:
-
-                try {
-                        event.getDelta().accept(m_visitor);
-
-                    } catch (CoreException e) {
-                        // do nothing
-                        // Only used to keep the tree in sync with the
-                        // resources.
-                    }
-
-            break;
+        if (event.getType() == IResourceChangeEvent.POST_CHANGE) {
+            try {
+                event.getDelta().accept(m_visitor);
+            } catch (CoreException e) {
+                // do nothing
+                // Only used to keep the tree in sync with the
+                // resources.
+            }
         }
     }
 

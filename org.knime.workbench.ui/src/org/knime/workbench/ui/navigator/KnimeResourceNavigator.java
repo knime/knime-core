@@ -61,7 +61,6 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.action.ActionContributionItem;
 import org.eclipse.jface.action.GroupMarker;
-import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.Separator;
@@ -146,15 +145,6 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
     // clipboard for our copy&paste actions
     private Clipboard m_clipboard;
 
-    // Global standard actions being replaced by our own implementations
-    private IAction m_delAction;
-
-    private IAction m_copyAction;
-
-    private IAction m_pasteAction;
-
-    private IAction m_renAction;
-
     private KNIMEResourceNavigatorActionGroup m_actionGroup;
 
     /**
@@ -214,16 +204,6 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
             }
 
         });
-
-        // to be sure register to all existing projects (in case they are added
-        // before this constructor is called)
-        // for (NodeContainer nc : WorkflowManager.ROOT.getNodeContainers()) {
-        // // register here to this nc and listen to changes
-        // // on change -> update labels
-        // // TODO: remove the listener?
-        // nc.addNodeStateChangeListener(this);
-        // }
-
     }
 
     /**
@@ -278,9 +258,6 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                              * we don't need to refresh the tree because meta
                              * node states are not shown in the tree
                              */
-                            // LOGGER.debug(
-                            // "didn't find project name - do refresh");
-                            // getTreeViewer().refresh();
                         }
                     } catch (IllegalArgumentException iae) {
                         // node couldn't be found -> so we don't make a refresh
@@ -329,7 +306,6 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
         initLabelProvider(viewer);
         initFilters(viewer);
         initListeners(viewer);
-        // viewer.getControl().setDragDetect(false);
 
 
         /*
@@ -410,8 +386,6 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
      */
     @Override
     protected void initFilters(final TreeViewer viewer) {
-        // super.initFilters(viewer);
-        // viewer.resetFilters();
         viewer.addFilter(new KnimeResourcePatternFilter());
     }
 

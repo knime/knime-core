@@ -87,8 +87,6 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
         super("Move...");
         setId(ID);
         m_viewer = viewer;
-        m_source = null;
-        m_target = null;
     }
 
     /**
@@ -123,11 +121,9 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
             return;
         }
 
-        if (getTarget() == null) {
-            if (!setSourceAndselectTarget()) {
-                LOGGER.debug("Move canceled by user.");
-                return;
-            }
+        if ((getTarget() == null) && !setSourceAndselectTarget()) {
+            LOGGER.debug("Move canceled by user.");
+            return;
         }
         try {
             PlatformUI.getWorkbench().getProgressService()
@@ -323,6 +319,8 @@ public class MoveWorkflowAction extends Action implements IRunnableWithProgress 
                 // exception handling
                 deleteSourceDir(source, monitor);
                 targetRes.refreshLocal(IResource.DEPTH_INFINITE, monitor);
+            } catch (CoreException ex) {
+                throw new InvocationTargetException(ex);
             } catch (Exception e) {
                 LOGGER.error("Error while moving/copying resource " + source,
                         e);

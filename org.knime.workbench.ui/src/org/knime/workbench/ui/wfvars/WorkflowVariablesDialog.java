@@ -449,13 +449,11 @@ public class WorkflowVariablesDialog extends Dialog {
     @Override
     protected void cancelPressed() {
         // if has changes -> open confirmation dialog "discard changes?"
-        if (hasChanges()) {
-            if (!MessageDialog.openConfirm(getShell(),
+        if (hasChanges() && !MessageDialog.openConfirm(getShell(),
                     "Discard Changes",
                     "Do you really want to discard your changes?")) {
                 // leave it open
                 return;
-            }
         }
         super.cancelPressed();
     }

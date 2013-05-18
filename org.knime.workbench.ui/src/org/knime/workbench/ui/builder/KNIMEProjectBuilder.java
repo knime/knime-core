@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   11.03.2005 (georg): created
  */
@@ -57,34 +57,26 @@ import org.eclipse.core.resources.IncrementalProjectBuilder;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.knime.core.node.NodeLogger;
-
 import org.knime.workbench.ui.KNIMEUIPlugin;
 
 /**
  * Builder for KNIME Projects. TODO Not used yet - may be used e.g. to validate
  * project/workflows and attach resource markers to the .knime files.
- * 
+ *
  * @author Florian Georg, University of Konstanz
  */
 public class KNIMEProjectBuilder extends IncrementalProjectBuilder {
-    private static final NodeLogger LOGGER = 
+    private static final NodeLogger LOGGER =
         NodeLogger.getLogger(KNIMEProjectBuilder.class);
 
     /**
      * Builder id.
-     * 
+     *
      * NOTE: This is always constructed by the ID of the plugin(!) + the ID as
      * defined in plugin.xml !
      */
     public static final String BUILDER_ID = KNIMEUIPlugin.PLUGIN_ID
             + ".KNIMEProjectBuilder";
-
-    /**
-     * Constructor.
-     */
-    public KNIMEProjectBuilder() {
-        super();
-    }
 
     /**
      * {@inheritDoc}

@@ -93,10 +93,6 @@ import org.knime.workbench.ui.navigator.KnimeResourceUtil;
  */
 public class WorkflowExportWizard extends ExportWizard
     implements IExportWizard {
-
-//    private static final NodeLogger LOGGER =
-//            NodeLogger.getLogger(WorkflowExportWizard.class);
-
     private WorkflowExportPage m_page;
 
     private ISelection m_selection;
@@ -107,8 +103,6 @@ public class WorkflowExportWizard extends ExportWizard
     private boolean m_excludeData;
 
     private IContainer m_container;
-
-    private String m_fileName;
 
     /**
      * Constructor.
@@ -163,7 +157,7 @@ public class WorkflowExportWizard extends ExportWizard
         m_page.saveDialogSettings();
 
         m_container = m_page.getSelectedContainer();
-        m_fileName = m_page.getFileName().trim();
+        String fileName = m_page.getFileName().trim();
         m_excludeData = m_page.excludeData();
         m_workflowsToExport.clear();
         m_workflowsToExport.addAll(m_page.getWorkflows());
@@ -171,7 +165,7 @@ public class WorkflowExportWizard extends ExportWizard
         // if the specified export file already exist ask the user
         // for confirmation
 
-        final File exportFile = new File(m_fileName);
+        final File exportFile = new File(fileName);
 
         if (exportFile.exists()) {
             // if it exists we have to check if we can write to:
@@ -196,22 +190,20 @@ public class WorkflowExportWizard extends ExportWizard
                     m_page.setErrorMessage("Cannot write to specified file");
                     return false;
                 }
-            } else if (parentFile != null && !parentFile.exists()) {
-                if (!exportFile.getParentFile().mkdirs()) {
-                    boolean wasRoot = false;
-                    for (File root : File.listRoots()) {
-                        if (exportFile.getParentFile().equals(root)) {
-                            wasRoot = true;
-                            break;
-                        }
+            } else if ((parentFile != null) && !parentFile.exists() && !exportFile.getParentFile().mkdirs()) {
+                boolean wasRoot = false;
+                for (File root : File.listRoots()) {
+                    if (exportFile.getParentFile().equals(root)) {
+                        wasRoot = true;
+                        break;
                     }
-                    if (!wasRoot) {
-                        m_page.setErrorMessage("Failed to create: "
-                                + exportFile.getAbsolutePath()
-                                + ". \n Please check if it is a "
-                                + "valid file name.");
-                        return false;
-                    }
+                }
+                if (!wasRoot) {
+                    m_page.setErrorMessage("Failed to create: "
+                            + exportFile.getAbsolutePath()
+                            + ". \n Please check if it is a "
+                            + "valid file name.");
+                    return false;
                 }
             }
         }
@@ -417,13 +409,12 @@ public class WorkflowExportWizard extends ExportWizard
      */
     private static void addWorkflowResources(final List<IResource> resourceList,
             final IResource resource, final boolean excludeData) {
-        if (!KnimeResourceUtil.isWorkflow(resource) &&
-                !KnimeResourceUtil.isMetaNode(resource)) {
+        if (!KnimeResourceUtil.isWorkflow(resource)
+                && !KnimeResourceUtil.isMetaNode(resource)
+                && excludeData && excludeResource(resource)) {
             // workflows and metanodes named like excluded resourced
             // (e.g. "drop" or "internal") should still be included
-            if (excludeData && excludeResource(resource)) {
-                return;
-            }
+            return;
         }
         // if this is a file add it to the list
         if (resource instanceof IFile) {
@@ -478,8 +469,7 @@ public class WorkflowExportWizard extends ExportWizard
      * @return an empty content stream
      */
     InputStream openContentStream() {
-        String contents = "";
-        return new ByteArrayInputStream(contents.getBytes());
+        return new ByteArrayInputStream(new byte[0]);
     }
 
 

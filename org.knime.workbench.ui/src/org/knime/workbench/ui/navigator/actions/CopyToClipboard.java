@@ -91,7 +91,6 @@ public class CopyToClipboard extends SelectionListenerAction {
         super("&Copy");
         m_clipboard = clipboard;
         m_viewer = viewer;
-        m_pasteAction = null;
         setId(ID);
         setImageDescriptor(PlatformUI.getWorkbench().getSharedImages()
                 .getImageDescriptor(ISharedImages.IMG_TOOL_COPY));

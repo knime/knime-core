@@ -265,10 +265,8 @@ public class WorkflowExportPage extends WizardPage {
                 if (element instanceof IWorkspaceRoot) {
                     return true;
                 }
-                if (element instanceof IContainer) {
-                    if (KnimeResourceUtil.isWorkflowGroup((IContainer)element)) {
-                        return true;
-                    }
+                if ((element instanceof IContainer) && KnimeResourceUtil.isWorkflowGroup((IContainer)element)) {
+                    return true;
                 }
                 return false;
             }

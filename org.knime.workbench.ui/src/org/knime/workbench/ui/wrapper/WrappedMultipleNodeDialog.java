@@ -110,7 +110,7 @@ public class WrappedMultipleNodeDialog extends Dialog {
 
     private final AtomicBoolean m_dialogSizeComputed = new AtomicBoolean();
 
-    private final static boolean enableMacOSXWorkaround = Boolean
+    private static final boolean enableMacOSXWorkaround = Boolean
             .getBoolean(KNIMEConstants.PROPERTY_MACOSX_DIALOG_WORKAROUND);
 
     /**
@@ -160,15 +160,6 @@ public class WrappedMultipleNodeDialog extends Dialog {
         // dialog window x'ed out
         doCancel();
         super.handleShellCloseEvent();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public int open() {
-        // nothing special on open
-        return super.open();
     }
 
     /**
@@ -269,12 +260,10 @@ public class WrappedMultipleNodeDialog extends Dialog {
                     // close dialog on ESC
                     doCancel();
                 }
-                if (ke.keyCode == SWT.CR) {
-                    if (ke.stateMask == SWT.CTRL || ke.stateMask == SWT.SHIFT + SWT.CTRL) {
-                        // force OK - Execute when CTRL and ENTER is pressed
-                        // open first out-port view if SHIFT is pressed
-                        doOK(ke);
-                    }
+                if ((ke.keyCode == SWT.CR) && ((ke.stateMask == SWT.CTRL) || (ke.stateMask == SWT.SHIFT + SWT.CTRL))) {
+                    // force OK - Execute when CTRL and ENTER is pressed
+                    // open first out-port view if SHIFT is pressed
+                    doOK(ke);
                 }
             }
         };
@@ -385,14 +374,6 @@ public class WrappedMultipleNodeDialog extends Dialog {
         mb.setText("Settings were not changed.");
         mb.setMessage("The settings were not changed. " + "The node will not be reset.");
         mb.open();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public boolean close() {
-        return super.close();
     }
 
     // these are extra height and width value since the parent dialog

@@ -56,6 +56,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JApplet;
 import javax.swing.JComponent;
@@ -73,11 +74,9 @@ import org.eclipse.swt.widgets.Composite;
  * @author Florian Georg, University of Konstanz
  */
 public class Panel2CompositeWrapper extends Composite {
-    private Frame m_awtFrame;
-
     private JComponent m_awtComponent;
     /** see {@link #initX11ErrorHandlerFix()} for details. */
-    private static boolean x11ErrorHandlerFixInstalled;
+    private static final AtomicBoolean x11ErrorHandlerFixInstalled = new AtomicBoolean(false);
 
     /**
      * Creates a new wrapper.
@@ -96,10 +95,10 @@ public class Panel2CompositeWrapper extends Composite {
         gridLayout.horizontalSpacing = 0;
         setLayout(gridLayout);
 
-        m_awtFrame = SWT_AWT.new_Frame(this);
-        if (!x11ErrorHandlerFixInstalled && "gtk".equals(SWT.getPlatform())) {
-            x11ErrorHandlerFixInstalled = true;
+        Frame awtFrame = SWT_AWT.new_Frame(this);
+        if ("gtk".equals(SWT.getPlatform()) && !x11ErrorHandlerFixInstalled.getAndSet(true)) {
             EventQueue.invokeLater(new Runnable() {
+                @Override
                 public void run() {
                     initX11ErrorHandlerFix();
                 }
@@ -113,27 +112,11 @@ public class Panel2CompositeWrapper extends Composite {
          */
         JApplet wrap = new JApplet();
         wrap.add(m_awtComponent);
-        m_awtFrame.add(wrap);
+        awtFrame.add(wrap);
 
         // Pack the frame
-        m_awtFrame.pack();
-        m_awtFrame.setVisible(true);
-
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void dispose() {
-        super.dispose();
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    protected void checkSubclass() {
+        awtFrame.pack();
+        awtFrame.setVisible(true);
     }
 
     /**

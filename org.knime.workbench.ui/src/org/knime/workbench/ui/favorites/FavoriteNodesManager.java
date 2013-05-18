@@ -51,10 +51,15 @@
 package org.knime.workbench.ui.favorites;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.Writer;
+import java.nio.charset.Charset;
 
 import org.eclipse.ui.IMemento;
 import org.eclipse.ui.XMLMemento;
@@ -106,7 +111,7 @@ public final class FavoriteNodesManager {
      *
      * @return singleton instance
      */
-    public synchronized static final FavoriteNodesManager getInstance() {
+    public static synchronized FavoriteNodesManager getInstance() {
         if (instance == null) {
             instance = new FavoriteNodesManager();
         }
@@ -215,9 +220,9 @@ public final class FavoriteNodesManager {
     public void saveFavoriteNodes() {
         XMLMemento memento = XMLMemento.createWriteRoot(TAG_FAVORITES);
         saveFavoriteNodes(memento);
-        FileWriter writer = null;
+        Writer writer = null;
         try {
-            writer = new FileWriter(getFavoriteNodesFile());
+            writer = new OutputStreamWriter(new FileOutputStream(getFavoriteNodesFile()), Charset.forName("UTF-8"));
             memento.save(writer);
         } catch (IOException ioe) {
             LOGGER.error("Problems writing file for FavoriteNodes: ", ioe);
@@ -255,9 +260,9 @@ public final class FavoriteNodesManager {
 
     private void loadFavorites() {
         // load the personal favorites
-        FileReader reader = null;
+        Reader reader = null;
         try {
-            reader = new FileReader(getFavoriteNodesFile());
+            reader = new InputStreamReader(new FileInputStream(getFavoriteNodesFile()), Charset.forName("UTF-8"));
             loadFavoriteNodes(XMLMemento.createReadRoot(reader));
         } catch (FileNotFoundException fnf) {
             // no favorites saved

@@ -116,10 +116,8 @@ public abstract class AbstractP2Action extends Action {
         loadJob.addJobChangeListener(new JobChangeAdapter() {
             @Override
             public void done(final IJobChangeEvent event) {
-                if (PlatformUI.isWorkbenchRunning()) {
-                    if (event.getResult().isOK()) {
-                        openWizard(loadJob, provUI);
-                    }
+                if (PlatformUI.isWorkbenchRunning() && event.getResult().isOK()) {
+                    openWizard(loadJob, provUI);
                 }
             }
         });

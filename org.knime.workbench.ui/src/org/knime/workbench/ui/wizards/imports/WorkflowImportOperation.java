@@ -52,6 +52,7 @@ package org.knime.workbench.ui.wizards.imports;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -63,6 +64,7 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.resources.IWorkspace;
 import org.eclipse.core.resources.IWorkspaceRoot;
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.core.runtime.CoreException;
 import org.eclipse.core.runtime.IPath;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.NullProgressMonitor;
@@ -129,7 +131,7 @@ public class WorkflowImportOperation extends WorkspaceModifyOperation {
      */
     @Override
     protected void execute(final IProgressMonitor monitor)
-            throws InvocationTargetException, InterruptedException {
+            throws CoreException, InvocationTargetException, InterruptedException {
         ILeveledImportStructureProvider provider = null;
         try {
             monitor.beginTask("", m_workflows.size());
@@ -154,13 +156,20 @@ public class WorkflowImportOperation extends WorkspaceModifyOperation {
                 .findMember(m_targetPath);
             if (result != null) {
                 Display.getDefault().syncExec(new Runnable() {
+                    @Override
                     public void run() {
                         KnimeResourceUtil.revealInNavigator(result);
                     }
                 });
             }
-        } catch (Exception e) {
-            throw new InvocationTargetException(e);
+        } catch (CoreException ex) {
+            throw ex;
+        } catch (InterruptedException ex) {
+            throw ex;
+        } catch (InvocationTargetException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new InvocationTargetException(ex);
         } finally {
             if (provider != null) {
                 ArchiveFileManipulations.closeStructureProvider(
@@ -172,7 +181,7 @@ public class WorkflowImportOperation extends WorkspaceModifyOperation {
 
     private ILeveledImportStructureProvider handleCopyProject(
             final IWorkflowImportElement importElement,
-            final IProgressMonitor monitor) throws Exception {
+            final IProgressMonitor monitor) throws CoreException, InvocationTargetException, InterruptedException  {
         IPath destination = m_targetPath.append(importElement.getRenamedPath());
         ImportOperation operation = null;
         ILeveledImportStructureProvider provider = null;
@@ -185,12 +194,6 @@ public class WorkflowImportOperation extends WorkspaceModifyOperation {
                 instanceof WorkflowImportElementFromArchive) {
             WorkflowImportElementFromArchive zip
                 = (WorkflowImportElementFromArchive)importElement;
-            if (provider != null) {
-                // since we can only import from one archive
-                // file we assume to have the very same provider
-                // for all entries
-                assert provider == zip.getProvider();
-            }
             provider = zip.getProvider();
             operation = createWorkflowFromArchive(zip,
                     destination,
@@ -213,8 +216,7 @@ public class WorkflowImportOperation extends WorkspaceModifyOperation {
 
 
     private void setProjectNature(
-            final IWorkflowImportElement importElement)
-        throws Exception {
+            final IWorkflowImportElement importElement) throws CoreException {
         // get name
         String projectName = importElement.getName();
         // get project
@@ -244,7 +246,7 @@ public class WorkflowImportOperation extends WorkspaceModifyOperation {
 
     private void handleLinkedProject(
             final IWorkflowImportElement importElement,
-            final IProgressMonitor monitor) throws Exception {
+            final IProgressMonitor monitor) throws CoreException, IOException  {
         // assumptions: link them as projects into workspace root!
         // not from zip but from file
         // link to the referring destination
@@ -267,9 +269,9 @@ public class WorkflowImportOperation extends WorkspaceModifyOperation {
                 IProjectDescription.DESCRIPTION_FILE_NAME);
         FileInputStream io = new FileInputStream(projectDescrFile);
         IProjectDescription description = null;
-        if (io != null) {
-            description = ResourcesPlugin.getWorkspace().loadProjectDescription(
-                    io);
+        try {
+            description = ResourcesPlugin.getWorkspace().loadProjectDescription(io);
+        } finally {
             io.close();
         }
         if (description == null) {
@@ -297,13 +299,10 @@ public class WorkflowImportOperation extends WorkspaceModifyOperation {
      * @param target the destination path to import the workflow to
      * @param monitor a progress monitor to report progress to
      * @return the created import operation
-     * @throws InterruptedException if wizard was canceled
-     * @throws InvocationTargetException if something goes wrong
      */
     protected ImportOperation createWorkflowFromFile(
             final WorkflowImportElementFromFile workflow, final IPath target,
-            final IProgressMonitor monitor) throws InterruptedException,
-            InvocationTargetException {
+            final IProgressMonitor monitor) {
         monitor.beginTask(workflow.getName(), 1);
         ImportOperation operation = null;
         if (workflow.isWorkflow()) {
@@ -350,13 +349,10 @@ public class WorkflowImportOperation extends WorkspaceModifyOperation {
      * @param target the destination path of this workflow
      * @param monitor a submonitor to report progress to
      * @return the prepared import operation
-     * @throws InvocationTargetException if something goes wrong
-     * @throws InterruptedException if wizard was canceled
      */
     protected ImportOperation createWorkflowFromArchive(
             final WorkflowImportElementFromArchive workflow,
-            final IPath target, final IProgressMonitor monitor)
-    throws InvocationTargetException, InterruptedException {
+            final IPath target, final IProgressMonitor monitor) {
         // import only workflow -> the path to them will be created anyway
         // by ContainerGenerator in ImportOperation
         monitor.beginTask(workflow.getName(), 1);
@@ -366,6 +362,7 @@ public class WorkflowImportOperation extends WorkspaceModifyOperation {
                     workflow.getEntry(),
                     workflow.getProvider(),
                     new IOverwriteQuery() {
+                        @Override
                         public String queryOverwrite(final String pathString) {
                         return IOverwriteQuery.YES;
                     }
@@ -382,7 +379,7 @@ public class WorkflowImportOperation extends WorkspaceModifyOperation {
 
 
 
-    private void createMetaInfo() throws Exception {
+    private void createMetaInfo() throws CoreException {
         IWorkspaceRoot root = ResourcesPlugin.getWorkspace().getRoot();
         for (IPath p : m_missingMetaInfoLocations) {
             // to be sure that target location indeed exists -> create it

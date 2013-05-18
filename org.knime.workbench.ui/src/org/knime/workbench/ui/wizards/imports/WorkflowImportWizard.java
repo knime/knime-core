@@ -206,8 +206,7 @@ public class WorkflowImportWizard extends Wizard {
         if (destination == null || destination.isEmpty()) {
             return ResourcesPlugin.getWorkspace().getRoot().getFullPath();
         }
-        IPath path = new Path(destination);
-        return path;
+        return new Path(destination);
     }
 
 
