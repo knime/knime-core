@@ -183,7 +183,7 @@ public abstract class AbstractWorkflowImportElement implements
         StringBuilder path = new StringBuilder();
         for (int i = 0; i < segments.size(); i++) {
                 path.append(segments.get(i));
-                if (i < segments.size() - 1 && !path.equals("/")) {
+                if ((i < segments.size() - 1) && !((path.length() == 1) && (path.charAt(0) == '/'))) {
                     path.append('/');
                 }
         }
@@ -208,7 +208,7 @@ public abstract class AbstractWorkflowImportElement implements
         StringBuilder path = new StringBuilder();
         for (int i = 0; i < segments.size(); i++) {
                 path.append(segments.get(i));
-                if (i < segments.size() - 1 && !path.equals("/")) {
+                if ((i < segments.size() - 1) && !((path.length() == 1) && (path.charAt(0) == '/'))) {
                     path.append('/');
                 }
         }
