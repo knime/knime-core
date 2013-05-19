@@ -51,8 +51,9 @@
 package org.knime.base.node.preproc.rename;
 
 import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.GridLayout;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.Insets;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.FocusEvent;
@@ -102,7 +103,7 @@ public class RenameNodeDialogPane extends NodeDialogPane {
      */
     public RenameNodeDialogPane() {
         super();
-        m_panel = new JPanel(new GridLayout(0, 1));
+        m_panel = new JPanel(new GridBagLayout());
         JScrollPane pane = new JScrollPane(m_panel);
         addTab("Change columns", pane);
     }
@@ -164,12 +165,13 @@ public class RenameNodeDialogPane extends NodeDialogPane {
         int max = 0;
         for (RenameColumnSetting colSet : m_colSettings) {
             JLabel label = new JLabel(colSet.getName().toString());
-            max = Math.max(max, label.getPreferredSize().width);
+            max = Math.min(300, Math.max(max, label.getPreferredSize().width));
         }
         // hm, don't let it look squeezed
         max += 10;
+        int index = 0;
         for (RenameColumnSetting colSet : m_colSettings) {
-            addPanelFor(colSet, max);
+            addPanelFor(colSet, max, index++);
         }
     }
 
@@ -209,9 +211,9 @@ public class RenameNodeDialogPane extends NodeDialogPane {
      *
      * @param colSet the settings for the column
      * @param labelWidth the width to be used for the column's name
+     * @param rowIndex The index of the column - used for GridBag row
      */
-    private void addPanelFor(final RenameColumnSetting colSet,
-            final int labelWidth) {
+    private void addPanelFor(final RenameColumnSetting colSet, final int labelWidth, final int rowIndex) {
         final String oldColName = colSet.getName();
         final String newColName = colSet.getNewColumnName();
         boolean hasNewName = newColName != null;
@@ -223,10 +225,12 @@ public class RenameNodeDialogPane extends NodeDialogPane {
         int labelHeight = nameLabel.getPreferredSize().height;
         nameLabel.setPreferredSize(new Dimension(labelWidth, labelHeight));
         nameLabel.setMinimumSize(new Dimension(labelWidth, labelHeight));
-        final JTextField newNameField = new JTextField(oldColName, 8);
+        nameLabel.setToolTipText(oldColName);
+        final JTextField newNameField = new JTextField(oldColName);
         if (hasNewName) {
             newNameField.setText(newColName);
         }
+        newNameField.setPreferredSize(new Dimension(labelWidth, newNameField.getPreferredSize().height));
         // add listeners to all fields that can change: They will update their
         // RenameColumnSetting immediately
         newNameField.addFocusListener(new FocusListener() {
@@ -284,11 +288,19 @@ public class RenameNodeDialogPane extends NodeDialogPane {
                 colSet.setNewValueClassIndex(typeChooser.getSelectedIndex());
             }
         });
-        JPanel oneRow = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        oneRow.add(nameLabel);
-        oneRow.add(checker);
-        oneRow.add(newNameField);
-        oneRow.add(typeChooser);
-        m_panel.add(oneRow);
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = GridBagConstraints.RELATIVE;
+        gbc.gridy = rowIndex;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.weightx = 0.5;
+        m_panel.add(nameLabel, gbc);
+        gbc.weightx = 0.0;
+        m_panel.add(checker, gbc);
+        gbc.weightx = 1.0;
+        m_panel.add(newNameField, gbc);
+        gbc.weightx = 0.0;
+        m_panel.add(typeChooser, gbc);
     }
 }
