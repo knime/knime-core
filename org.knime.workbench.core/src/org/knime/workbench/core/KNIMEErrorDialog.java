@@ -63,7 +63,7 @@ import org.eclipse.swt.widgets.Shell;
  * @author Florian Georg, University of Konstanz
  */
 public final class KNIMEErrorDialog {
-    private KNIMEErrorDialog() {}
+    private KNIMEErrorDialog() { }
 
     /**
      * Opens an error dialog.

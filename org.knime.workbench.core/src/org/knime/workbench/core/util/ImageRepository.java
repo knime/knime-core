@@ -231,6 +231,11 @@ public final class ImageRepository {
             m_url = url;
         }
 
+        /**
+         * Returns the URL to the image.
+         *
+         * @return a URL
+         */
         URL getUrl() {
             return m_url;
         }
@@ -240,11 +245,24 @@ public final class ImageRepository {
      * Flags to decorate server space icons. Icon file names with the corresponding combinations of suffixes must exist!
      */
     public enum ImgDecorator {
-        Message("_msg"), Outdated("_out"), Orphaned("_orph");
+        /** Decorator for messages. */
+        Message("_msg"),
+        /** Decorator for outdated jobs. */
+        Outdated("_out"),
+        /** Decorator for orphaned jobs. */
+        Orphaned("_orph");
+
         private final String m_suffix;
+
         private ImgDecorator(final String suffix) {
             m_suffix = suffix;
         }
+
+        /**
+         * Returns the image filename suffix for this image decorator.
+         *
+         * @return a suffix
+         */
         String getSuffix() {
             return m_suffix;
         }
@@ -289,18 +307,7 @@ public final class ImageRepository {
             // returning the undecorated image
             return getImage(image);
         }
-        String suffix = "";
-        // add the decorator suffixes in the order they are defined
-        if (decorators != null) {
-            for (ImgDecorator dec : ImgDecorator.values()) {
-                for (ImgDecorator flag : decorators) {
-                    if (flag.equals(dec)) {
-                        suffix += flag.getSuffix();
-                        break; // add each decorator only once
-                    }
-                }
-            }
-        }
+        String suffix = getRequestedDecoratorSuffixes(decorators);
         // the key for the registry simply appends the suffix
         String key = image.name() + suffix;
         Image img = REGISTRY.get(key);
@@ -322,6 +329,23 @@ public final class ImageRepository {
         ImageDescriptor desc = ImageDescriptor.createFromURL(imgURL);
         REGISTRY.put(key, desc);
         return REGISTRY.get(key);
+    }
+
+    // Computes an ordered list of image name suffixes for the requested decorators
+    private static String getRequestedDecoratorSuffixes(final ImgDecorator... decorators) {
+        StringBuilder suffix = new StringBuilder();
+        // add the decorator suffixes in the order they are defined
+        if (decorators != null) {
+            for (ImgDecorator dec : ImgDecorator.values()) {
+                for (ImgDecorator flag : decorators) {
+                    if (flag.equals(dec)) {
+                        suffix.append(flag.getSuffix());
+                        break; // add each decorator only once
+                    }
+                }
+            }
+        }
+        return suffix.toString();
     }
 
     /**
