@@ -1095,9 +1095,9 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
     private void readConfigFromNode(final SingleNodeContainer configNode)
             throws InvalidSettingsException {
         NodeSettings s = new NodeSettings("");
-        configNode.getNode().saveSettingsTo(s);
+        configNode.getNode().saveModelSettingsTo(s);
         TestConfigSettings settings = new TestConfigSettings();
-        settings.loadSettings(s.getNodeSettings(Node.CFG_MODEL));
+        settings.loadSettings(s);
 
         for (String owner : settings.owner().split(",")) {
             m_owners.add(owner);
@@ -1519,6 +1519,24 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                                     new ExecutionMonitor(),
                                     WorkflowLoadHelper.INSTANCE);
             boolean mustReportErrors;
+            switch (loadRes.getType()) {
+                case Ok:
+                case Warning:
+                    mustReportErrors = false;
+                    break;
+                case DataLoadError:
+                    mustReportErrors = loadRes.getGUIMustReportDataLoadErrors();
+                    break;
+                default:
+                    mustReportErrors = true;
+            }
+            m_manager = loadRes.getWorkflowManager();
+            m_manager.save(m_knimeWorkFlow.getParentFile(), new ExecutionMonitor(), true);
+            loadRes =
+                    WorkflowManager
+                    .loadProject(m_knimeWorkFlow.getParentFile(),
+                        new ExecutionMonitor(),
+                        WorkflowLoadHelper.INSTANCE);
             switch (loadRes.getType()) {
                 case Ok:
                 case Warning:
