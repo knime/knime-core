@@ -1531,24 +1531,6 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                     mustReportErrors = true;
             }
             m_manager = loadRes.getWorkflowManager();
-            m_manager.save(m_knimeWorkFlow.getParentFile(), new ExecutionMonitor(), true);
-            loadRes =
-                    WorkflowManager
-                    .loadProject(m_knimeWorkFlow.getParentFile(),
-                        new ExecutionMonitor(),
-                        WorkflowLoadHelper.INSTANCE);
-            switch (loadRes.getType()) {
-                case Ok:
-                case Warning:
-                    mustReportErrors = false;
-                    break;
-                case DataLoadError:
-                    mustReportErrors = loadRes.getGUIMustReportDataLoadErrors();
-                    break;
-                default:
-                    mustReportErrors = true;
-            }
-            m_manager = loadRes.getWorkflowManager();
             logger.debug("Workflow loaded ----------------------------"
                     + "--------------");
 
