@@ -444,10 +444,10 @@ public class NodeMonitorView extends ViewPart
             item.setText(1, "" + nga.getOutportIndex());
             item = new TableItem(m_table, SWT.NONE);
             item.setText(0, "connected inports");
-            item.setText(1, nga.getConnectedInportIndices());
+            item.setText(1, "" + nga.getConnectedInportIndices());
             item = new TableItem(m_table, SWT.NONE);
             item.setText(0, "connected outports");
-            item.setText(1, nga.getConnectedOutportIndices());
+            item.setText(1, "" + nga.getConnectedOutportIndices());
             item = new TableItem(m_table, SWT.NONE);
             item.setText(0, "start node stack");
             item.setText(1, nga.getStartNodeStackAsString());

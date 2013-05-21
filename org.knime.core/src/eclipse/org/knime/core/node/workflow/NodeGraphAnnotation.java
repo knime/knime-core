@@ -49,6 +49,7 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -152,8 +153,8 @@ public final class NodeGraphAnnotation implements Comparable<NodeGraphAnnotation
     /**
      * @return connected input port indices.
      */
-    public String getConnectedInportIndices() {
-        return m_connectedMetaInPorts.toString();
+    public Set<Integer> getConnectedInportIndices() {
+        return m_connectedMetaInPorts == null ? null : Collections.unmodifiableSet(m_connectedMetaInPorts);
     }
 
     /** Add a new connected outport to the metanode outport indices this node is (directly
@@ -168,8 +169,8 @@ public final class NodeGraphAnnotation implements Comparable<NodeGraphAnnotation
     /**
      * @return connected outport port indices.
      */
-    public String getConnectedOutportIndices() {
-        return m_connectedMetaOutPorts.toString();
+    public Set<Integer> getConnectedOutportIndices() {
+        return m_connectedMetaOutPorts == null ? null : Collections.unmodifiableSet(m_connectedMetaOutPorts);
     }
 
     /**

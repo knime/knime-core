@@ -581,6 +581,47 @@ class Workflow {
      * @return set of outport indices
      */
     Set<Integer> connectedOutPorts(final int inPortIx) {
+        if (m_nodeAnnotationCache == null) {
+            updateGraphAnnotationCache();
+        }
+        HashSet<Integer> outSet = new HashSet<Integer>();
+        for (ConnectionContainer cc : m_connectionsBySource.get(this.getID())) {
+            if (cc.getSourcePort() == inPortIx) {
+                if (cc.getDest().equals(this.getID())) {
+                    assert ConnectionContainer.ConnectionType.WFMTHROUGH.equals(cc.getType());
+                    outSet.add(cc.getDestPort());
+                } else {
+                    for (NodeGraphAnnotation nga : m_nodeAnnotationCache) {
+                        if (nga.getID().equals(cc.getDest())) {
+                            if (nga.getOutportIndex() == -1) {
+                                // the simple one, just add all metanode outports this node connects to:
+                                outSet.addAll(nga.getConnectedOutportIndices());
+                            } else {
+                                // more complex, a metanode. We need to first figure out which ports we
+                                // are connected to before potentially adding the outport lists.
+                                NodeContainer nc = getNode(nga.getID());
+                                assert nc instanceof WorkflowManager;
+                                Set<Integer> outPorts
+                                            = ((WorkflowManager)nc).getWorkflow().connectedOutPorts(cc.getDestPort());
+                                if (outPorts.contains(nga.getOutportIndex())) {
+                                    outSet.addAll(nga.getConnectedOutportIndices());
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return outSet;
+    }
+
+    /** Determine outports which are connected (directly or indirectly) to
+     * the given inport in this workflow.
+     *
+     * @param inPortIx index of inport
+     * @return set of outport indices
+     */
+    Set<Integer> connectedOutPortsOLD(final int inPortIx) {
         HashSet<Integer> outSet = new HashSet<Integer>();
         // Map to remember connected nodes with the index of the corresponding input port
         LinkedHashMap<NodeID, Integer> nodesToCheck = new LinkedHashMap<NodeID, Integer>();
@@ -793,6 +834,36 @@ class Workflow {
      * @return set of inport indices
      */
     Set<Integer> connectedInPorts(final int outPortIx) {
+        if (m_nodeAnnotationCache == null) {
+            updateGraphAnnotationCache();
+        }
+        HashSet<Integer> inSet = new HashSet<Integer>();
+        for (ConnectionContainer cc : m_connectionsByDest.get(this.getID())) {
+            if (cc.getDestPort() == outPortIx) {
+                if (cc.getSource().equals(this.getID())) {
+                    assert ConnectionContainer.ConnectionType.WFMTHROUGH.equals(cc.getType());
+                    inSet.add(cc.getSourcePort());
+                } else {
+                    for (NodeGraphAnnotation nga : m_nodeAnnotationCache) {
+                        if (nga.getID().equals(cc.getSource())) {
+                            if ((nga.getOutportIndex() == -1) || (nga.getOutportIndex() == cc.getSourcePort())) {
+                                inSet.addAll(nga.getConnectedInportIndices());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return inSet;
+    }
+
+    /** Determine inports which are connected (directly or indirectly) to
+     * the given outport in this workflow.
+     *
+     * @param outPortIx index of outport
+     * @return set of inport indices
+     */
+    Set<Integer> connectedInPortsOLD(final int outPortIx) {
         HashSet<Integer> inSet = new HashSet<Integer>();
         // Map to remember connected nodes with the index of the corresponding
         // output port
