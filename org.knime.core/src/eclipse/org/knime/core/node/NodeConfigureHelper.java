@@ -53,13 +53,21 @@ package org.knime.core.node;
 import org.knime.core.node.port.PortObjectSpec;
 
 /**
- * Object passed to {@link Node#configure(PortObjectSpec[], NodePostConfigure)}
+ * Object passed to {@link Node#configure(PortObjectSpec[], NodeConfigureHelper)}
  * in order to modify the output specs in case the node is wrapped and its
  * output is modified.
  *
+ * @noimplement This interface is not intended to be implemented by clients.
+ * @noextend This interface is not intended to be extended by clients.
  * @author ohl, University of Konstanz
  */
-public interface NodePostConfigure {
+public interface NodeConfigureHelper {
+
+    /**
+     * Called immediately before NodeModel's configure is called. (Used to apply variables to the settings.)
+     * @throws InvalidSettingsException ...
+     */
+    public void preConfigure() throws InvalidSettingsException;
 
     /**
      * Modifies the output table specs calculated by the
@@ -70,7 +78,7 @@ public interface NodePostConfigure {
      * @return the output specs actually delivered at the node's output ports
      * @throws InvalidSettingsException if the node can't be executed.
      */
-    public PortObjectSpec[] configure(final PortObjectSpec[] inSpecs,
+    public PortObjectSpec[] postConfigure(final PortObjectSpec[] inSpecs,
             PortObjectSpec[] nodeModelOutSpecs) throws InvalidSettingsException;
 
 }

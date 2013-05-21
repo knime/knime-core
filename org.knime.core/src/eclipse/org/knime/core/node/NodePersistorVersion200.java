@@ -56,7 +56,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -94,6 +93,7 @@ import org.knime.core.util.FileUtil;
  * @author wiswedel, University of Konstanz
  * @noinstantiate
  * @noextend
+ * @noreference
  */
 public class NodePersistorVersion200 extends NodePersistorVersion1xx {
 
@@ -115,11 +115,11 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
      *
      * @param sncPersistor Forwarded.
      * @param loadVersion Version, must not be null.
-     * @param configFileRef node.xml
+     * @param settings Forwarded
      */
     public NodePersistorVersion200(final SingleNodeContainerPersistorVersion200 sncPersistor,
-        final LoadVersion loadVersion, final ReferencedFile configFileRef) {
-        super(sncPersistor, loadVersion, configFileRef);
+        final LoadVersion loadVersion, final NodeSettingsRO settings) {
+        super(sncPersistor, loadVersion, settings);
         if (loadVersion == null) {
             throw new NullPointerException("Version arg must not be null.");
         }
@@ -133,12 +133,11 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
     static {
         PMML_PORTOBJECT_CLASSES = new HashSet<String>();
         PMML_PORTOBJECT_CLASSES.add("org.knime.base.node.mine.cluster.PMMLClusterPortObject");
-        PMML_PORTOBJECT_CLASSES.add("org.knime.base.node.mine.decisiontree2" + ".PMMLDecisionTreePortObject");
+        PMML_PORTOBJECT_CLASSES.add("org.knime.base.node.mine.decisiontree2.PMMLDecisionTreePortObject");
         PMML_PORTOBJECT_CLASSES.add("org.knime.base.node.mine.neural.mlp.PMMLNeuralNetworkPortObject");
         PMML_PORTOBJECT_CLASSES.add("org.knime.base.node.mine.regression.PMMLRegressionPortObject");
-        PMML_PORTOBJECT_CLASSES
-            .add("org.knime.base.node.mine.regression.pmmlgreg" + ".PMMLGeneralRegressionPortObject");
-        PMML_PORTOBJECT_CLASSES.add("org.knime.base.node.mine.subgroupminer" + ".PMMLAssociationRulePortObject");
+        PMML_PORTOBJECT_CLASSES.add("org.knime.base.node.mine.regression.pmmlgreg.PMMLGeneralRegressionPortObject");
+        PMML_PORTOBJECT_CLASSES.add("org.knime.base.node.mine.subgroupminer.PMMLAssociationRulePortObject");
         PMML_PORTOBJECT_CLASSES.add("org.knime.base.node.mine.svm.PMMLSVMPortObject");
     }
 
@@ -146,25 +145,19 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
      * Saves the node, node settings, and all internal structures, spec, data, and models, to the given node directory
      * (located at the node file).
      *
-     * @param nodeFile To write node settings to.
+     * @param nodeDir Directory associated with node - will create internals folder in it
      * @param execMon Used to report progress during saving.
      * @throws IOException If the node file can't be found or read.
      * @throws CanceledExecutionException If the saving has been canceled.
      */
-    public static void save(final SingleNodeContainer snc, final ReferencedFile nodeFile,
-        final ExecutionMonitor execMon, final boolean isSaveData) throws IOException, CanceledExecutionException {
+    public static void save(final SingleNodeContainer snc, final NodeSettingsWO settings,
+        final ExecutionMonitor execMon, final ReferencedFile nodeDirRef,
+        final boolean isSaveData) throws IOException, CanceledExecutionException {
         final Node node = snc.getNode();
-        NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
-        final ReferencedFile nodeDirRef = nodeFile.getParent();
-        if (nodeDirRef == null) {
-            throw new IOException("parent file of file \"" + nodeFile + "\" is not represented as object of class "
-                + ReferencedFile.class.getSimpleName());
-        }
+
         saveCustomName(node, settings);
-        node.saveSettingsTo(settings);
         saveHasContent(node, settings);
         saveIsInactive(node, settings);
-        saveWarningMessage(node, settings);
         ReferencedFile nodeInternDirRef = getNodeInternDirectory(nodeDirRef);
         File nodeInternDir = nodeInternDirRef.getFile();
         if (nodeInternDir.exists()) {
@@ -201,10 +194,6 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         execMon.setMessage("File Store Objects");
         saveFileStoreObjects(node, nodeDirRef, settings, fileStoreMon, isSaveData);
         fileStoreMon.setProgress(1.0);
-        // file name has already correct ending
-        OutputStream os = new FileOutputStream(nodeFile.getFile());
-        os = snc.getParent().cipherOutput(os);
-        settings.saveToXML(new BufferedOutputStream(os));
         execMon.setProgress(1.0);
     }
 
@@ -367,7 +356,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
      * @throws IOException
      */
     private static void saveFileStoreObjects(final Node node, final ReferencedFile nodeDirRef,
-        final NodeSettings settings, final ExecutionMonitor fileStoreMon, final boolean isSaveData) throws IOException {
+        final NodeSettingsWO settings, final ExecutionMonitor fileStoreMon, final boolean isSaveData) throws IOException {
         NodeSettingsWO fsSettings = settings.addNodeSettings("filestores");
         IFileStoreHandler fileStoreHandler = node.getFileStoreHandler();
         String uuidS;
@@ -404,13 +393,6 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
         settings.addBoolean("isInactive", isInactive);
     }
 
-    private static void saveWarningMessage(final Node node, final NodeSettingsWO settings) {
-        String warnMessage = node.getWarningMessageFromModel();
-        if (warnMessage != null) {
-            settings.addString(CFG_NODE_MESSAGE, warnMessage);
-        }
-    }
-
     /**
      * Sub-class hook to save location of internal directory.
      *
@@ -437,12 +419,6 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
 
     /** {@inheritDoc} */
     @Override
-    protected String loadWarningMessage(final NodeSettingsRO settings) throws InvalidSettingsException {
-        return settings.getString(CFG_NODE_MESSAGE, null);
-    }
-
-    /** {@inheritDoc} */
-    @Override
     public LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy() {
         LoadNodeModelSettingsFailPolicy result = getSingleNodeContainerPersistor().getModelSettingsFailPolicy();
         if (isInactive()) {
@@ -457,9 +433,8 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
 
     /** {@inheritDoc} */
     @Override
-    public PortType[] guessOutputPortTypes(final WorkflowPersistor parentPersistor, final LoadResult loadResult,
-        final String nodeName) throws IOException, InvalidSettingsException {
-        NodeSettingsRO settings = loadSettingsFromConfigFile(parentPersistor, loadResult, nodeName);
+    PortType[] guessOutputPortTypes(final WorkflowPersistor parentPersistor, final LoadResult loadResult,
+        final String nodeName, final NodeSettingsRO settings) throws IOException, InvalidSettingsException {
         if (!loadHasContent(settings)) {
             return null;
         }

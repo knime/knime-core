@@ -118,13 +118,17 @@ final class BufferFromFileIteratorVersion20 extends Buffer.FromFileIterator {
         BufferedInputStream bufferedStream =
             new BufferedInputStream(new FileInputStream(buffer.getBinFile()));
         InputStream in;
-        // stream was not zipped in KNIME 1.1.x
-        if (!buffer.isBinFileGZipped()) {
-            in = bufferedStream;
-        } else {
-            in = new GZIPInputStream(bufferedStream);
-            // buffering is important when reading gzip streams
-            in = new BufferedInputStream(in);
+        switch (buffer.getBinFileCompressionFormat()) {
+            case Gzip:
+                in = new GZIPInputStream(bufferedStream);
+                // buffering is important when reading gzip streams
+                in = new BufferedInputStream(in);
+                break;
+            case None:
+                in = bufferedStream;
+                break;
+            default:
+                throw new IOException("Unsupported compression format: " + buffer.getBinFileCompressionFormat());
         }
         m_dataCellStreamReader = new DataCellStreamReader(buffer);
         m_inStream = new DCObjectInputVersion2(in, m_dataCellStreamReader);

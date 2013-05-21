@@ -65,6 +65,7 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeAndBundleInformation;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
 import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
 /**
@@ -181,6 +182,12 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
      * @return The template info
      */
     public MetaNodeTemplateInformation getTemplateInformation();
+
+    /** The workflow author information or null for meta nodes (or copied WFMs, which have not been saved yet).
+     * @return ...
+     * @since 2.8
+     */
+    public AuthorInformation getAuthorInformation();
 
     /** Open decryption stream for locked meta nodes. Implementations will
      * also call the decipher method on their parent workflow persistors.

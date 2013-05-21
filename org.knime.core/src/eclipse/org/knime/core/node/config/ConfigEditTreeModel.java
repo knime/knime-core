@@ -68,6 +68,7 @@ import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.config.base.AbstractConfigEntry;
 import org.knime.core.node.config.base.ConfigBase;
+import org.knime.core.node.config.base.ConfigBaseRO;
 import org.knime.core.node.config.base.ConfigBooleanEntry;
 import org.knime.core.node.config.base.ConfigByteEntry;
 import org.knime.core.node.config.base.ConfigCharEntry;
@@ -102,9 +103,10 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
      * @param variableTree The variables mask.
      * @return a new object of this class.
      * @throws InvalidSettingsException If setting can't be parsed
+     * @noreference This method is not intended to be referenced by clients.
      */
     public static ConfigEditTreeModel create(final ConfigBase settingsTree,
-            final ConfigBase variableTree) throws InvalidSettingsException {
+            final ConfigBaseRO variableTree) throws InvalidSettingsException {
         ConfigEditTreeModel result = create(settingsTree);
         result.getRoot().readVariablesFrom(variableTree, false);
         return result;
@@ -445,9 +447,9 @@ public final class ConfigEditTreeModel extends DefaultTreeModel {
         private static final String CFG_EXPOSED_VALUE = "exposed_variable";
 
         /** Persistence method to restore the tree. */
-        private void readVariablesFrom(final ConfigBase variableTree,
+        private void readVariablesFrom(final ConfigBaseRO variableTree,
                 final boolean readThisEntry) throws InvalidSettingsException {
-            ConfigBase subConfig;
+            ConfigBaseRO subConfig;
             if (readThisEntry) {
                 String key = getConfigEntry().getKey();
                 if (!variableTree.containsKey(key)) {

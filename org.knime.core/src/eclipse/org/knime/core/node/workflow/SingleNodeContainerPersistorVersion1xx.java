@@ -53,6 +53,7 @@ package org.knime.core.node.workflow;
 import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -207,6 +208,24 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
         return m_metaPersistor;
     }
 
+    /** @return Directory associated with node.
+     * @since 2.8 */
+    public ReferencedFile getNodeContainerDirectory() {
+        return m_metaPersistor.getNodeContainerDirectory();
+    }
+
+    /** Called by {@link Node} to update the message field in the {@link NodeModel} class.
+     * @return the msg or null.
+     * @since 2.8
+     */
+    public String getNodeMessage() {
+        NodeMessage nodeMessage = getMetaPersistor().getNodeMessage();
+        if (nodeMessage != null && !nodeMessage.getMessageType().equals(NodeMessage.Type.RESET)) {
+            return nodeMessage.getMessage();
+        }
+        return null;
+    }
+
     public WorkflowLoadHelper getLoadHelper() {
         return m_metaPersistor.getLoadHelper();
     }
@@ -235,8 +254,8 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
         return new SingleNodeContainer(wm, id, this);
     }
 
-    NodePersistorVersion1xx createNodePersistor(final ReferencedFile nodeConfigFile) {
-        return new NodePersistorVersion1xx(this, null, nodeConfigFile);
+    NodePersistorVersion1xx createNodePersistor(final NodeSettingsRO settings) {
+        return new NodePersistorVersion1xx(this, null, settings);
     }
 
     /** {@inheritDoc} */
@@ -316,20 +335,60 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
     @Override
     public void loadNodeContainer(final Map<Integer, BufferedDataTable> tblRep, final ExecutionMonitor exec,
         final LoadResult result) throws InvalidSettingsException, CanceledExecutionException, IOException {
-        ReferencedFile nodeFile;
+        final NodeSettingsRO settingsForNode = loadSettingsForNode(result);
+        m_settingsFailPolicy = translateToFailPolicy(m_metaPersistor.getState());
+        NodePersistorVersion1xx nodePersistor = createNodePersistor(settingsForNode);
+        m_sncSettings = new SingleNodeContainerSettings();
         try {
-            nodeFile = loadNodeFile(m_nodeSettings);
+            m_sncSettings.setMemoryPolicy(loadMemoryPolicySettings(m_nodeSettings, nodePersistor));
         } catch (InvalidSettingsException e) {
-            String error =
-                "Unable to load node settings file for node with ID suffix " + m_metaPersistor.getNodeIDSuffix()
-                    + " (node \"" + m_node.getName() + "\"): " + e.getMessage();
+            String error = "Unable to load SNC settings: " + e.getMessage();
             result.addError(error);
             getLogger().debug(error, e);
             setDirtyAfterLoad();
             return;
         }
-        m_settingsFailPolicy = translateToFailPolicy(m_metaPersistor.getState());
-        NodePersistorVersion1xx nodePersistor = createNodePersistor(nodeFile);
+        try {
+            // this also validates the settings
+            NodeSettings modelSettings = loadModelSettings(settingsForNode);
+            m_sncSettings.setModelSettings(modelSettings);
+            m_node.loadModelSettingsFrom(modelSettings);
+        } catch (Throwable e) {
+            final String error;
+            if (e instanceof InvalidSettingsException) {
+                error = "Loading model settings failed: " + e.getMessage();
+            } else {
+                error = "Caught \"" + e.getClass().getSimpleName() + "\", "
+                        + "Loading model settings failed: " + e.getMessage();
+            }
+            LoadNodeModelSettingsFailPolicy pol = getModelSettingsFailPolicy();
+            if (pol == null) {
+                if (!nodePersistor.isConfigured()) {
+                    pol = LoadNodeModelSettingsFailPolicy.IGNORE;
+                } else if (nodePersistor.isExecuted()) {
+                    pol = LoadNodeModelSettingsFailPolicy.WARN;
+                } else {
+                    pol = LoadNodeModelSettingsFailPolicy.FAIL;
+                }
+            }
+            switch (pol) {
+                case IGNORE:
+                    if (!(e instanceof InvalidSettingsException)) {
+                        m_logger.coding(error, e);
+                    }
+                    break;
+                case FAIL:
+                    result.addError(error);
+                    m_node.createErrorMessageAndNotify(error, e);
+                    setNeedsResetAfterLoad();
+                    break;
+                case WARN:
+                    m_node.createWarningMessageAndNotify(error, e);
+                    result.addWarning(error);
+                    setDirtyAfterLoad();
+                    break;
+            }
+        }
         try {
             WorkflowPersistorVersion1xx wfmPersistor = getWorkflowManagerPersistor();
             HashMap<Integer, ContainerTable> globalTableRepository = wfmPersistor.getGlobalTableRepository();
@@ -344,6 +403,14 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
             result.addError(error);
         }
         try {
+            m_sncSettings.setVariablesSettings(loadVariableSettings(settingsForNode));
+        } catch (InvalidSettingsException e) {
+            String msg = "Could load variable settings: " + e.getMessage();
+            result.addError(msg);
+            setDirtyAfterLoad();
+            setNeedsResetAfterLoad();
+        }
+        try {
             m_flowObjects = loadFlowObjects(m_nodeSettings);
         } catch (Exception e) {
             m_flowObjects = Collections.emptyList();
@@ -351,17 +418,7 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
             getLogger().warn(error, e);
             result.addError(error);
             setDirtyAfterLoad();
-            needsResetAfterLoad();
-        }
-        try {
-            m_sncSettings = loadSNCSettings(m_nodeSettings, nodePersistor);
-        } catch (InvalidSettingsException e) {
-            String error = "Unable to load SNC settings: " + e.getMessage();
-            result.addError(error);
-            getLogger().debug(error, e);
-            m_sncSettings = new SingleNodeContainerSettings();
-            setDirtyAfterLoad();
-            return;
+            setNeedsResetAfterLoad();
         }
         if (nodePersistor.isDirtyAfterLoad()) {
             setDirtyAfterLoad();
@@ -370,6 +427,45 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
             setNeedsResetAfterLoad();
         }
         exec.setProgress(1.0);
+    }
+
+    /** Loads the settings passed to the NodePersistor class. It includes node settings, variable settings,
+     * file store information (but not node factory information). In 2.7 and before it was contained in a separate
+     * node.xml, in 2.8+ it's all in one file.
+     * @param loadResult ...
+     * @return ...
+     * @throws FileNotFoundException ...
+     * @throws IOException ...
+     */
+    private NodeSettingsRO loadSettingsForNode(final LoadResult loadResult) throws FileNotFoundException, IOException {
+        if (getLoadVersion().ordinal() < LoadVersion.V280.ordinal()) {
+            ReferencedFile nodeFile;
+            try {
+                nodeFile = loadNodeFile(m_nodeSettings);
+            } catch (InvalidSettingsException e) {
+                String error = "Unable to load node settings file for node with ID suffix "
+                        + m_metaPersistor.getNodeIDSuffix() + " (node \"" + m_node.getName() + "\"): " + e.getMessage();
+                loadResult.addError(error);
+                getLogger().debug(error, e);
+                setDirtyAfterLoad();
+                return new NodeSettings("empty");
+            }
+            File configFile = nodeFile.getFile();
+            if (configFile == null || !configFile.isFile() || !configFile.canRead()) {
+                String error = "Unable to read node settings file for node with ID suffix "
+                        + m_metaPersistor.getNodeIDSuffix() + " (node \"" + m_node.getName() + "\"), file \""
+                        + configFile + "\"";
+                loadResult.addError(error);
+                setNeedsResetAfterLoad(); // also implies dirty
+                return new NodeSettings("empty");
+            } else {
+                InputStream in = new FileInputStream(configFile);
+                in = m_parentPersistor.decipherInput(in);
+                return NodeSettings.loadFromXML(new BufferedInputStream(in));
+            }
+        } else {
+            return m_nodeSettings;
+        }
     }
 
     /**
@@ -478,32 +574,46 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
      * @return node config
      * @throws InvalidSettingsException if that fails for any reason.
      */
-    SingleNodeContainerSettings loadSNCSettings(final NodeSettingsRO settings,
+    MemoryPolicy loadMemoryPolicySettings(final NodeSettingsRO settings,
         final NodePersistorVersion1xx nodePersistor) throws InvalidSettingsException {
-        NodeSettingsRO s = nodePersistor.getSettings();
-        SingleNodeContainerSettings sncs = new SingleNodeContainerSettings();
         // in versions before KNIME 1.2.0, there were no misc settings
         // in the dialog, we must use caution here: if they are not present
         // we use the default, i.e. small data are kept in memory
-        MemoryPolicy p;
-        if (s.containsKey(Node.CFG_MISC_SETTINGS)
-            && s.getNodeSettings(Node.CFG_MISC_SETTINGS).containsKey(SingleNodeContainer.CFG_MEMORY_POLICY)) {
-            NodeSettingsRO sub = s.getNodeSettings(Node.CFG_MISC_SETTINGS);
+        if (settings.containsKey(Node.CFG_MISC_SETTINGS)
+            && settings.getNodeSettings(Node.CFG_MISC_SETTINGS).containsKey(SingleNodeContainer.CFG_MEMORY_POLICY)) {
+            NodeSettingsRO sub = settings.getNodeSettings(Node.CFG_MISC_SETTINGS);
             String memoryPolicy =
                 sub.getString(SingleNodeContainer.CFG_MEMORY_POLICY, MemoryPolicy.CacheSmallInMemory.toString());
             if (memoryPolicy == null) {
                 throw new InvalidSettingsException("Can't use null memory policy.");
             }
             try {
-                p = MemoryPolicy.valueOf(memoryPolicy);
+                return MemoryPolicy.valueOf(memoryPolicy);
             } catch (IllegalArgumentException iae) {
                 throw new InvalidSettingsException("Invalid memory policy: " + memoryPolicy);
             }
         } else {
-            p = MemoryPolicy.CacheSmallInMemory;
+            return MemoryPolicy.CacheSmallInMemory;
         }
-        sncs.setMemoryPolicy(p);
-        return sncs;
+    }
+
+    /** The settings passed to the NodeModel's validate and load method.
+     * @param settings The whole settings tree.
+     * @return the settings child {@link SingleNodeContainer#CFG_MODEL}.
+     * @throws InvalidSettingsException ... */
+    NodeSettings loadModelSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        return (NodeSettings)settings.getNodeSettings(SingleNodeContainer.CFG_MODEL);
+    }
+
+    /** The variable settings (whatever overwrites user parameters).
+     * @param settings The whole settings tree.
+     * @return the settings child {@link SingleNodeContainer#CFG_VARIABLES} if present, or null.
+     * @throws InvalidSettingsException ... */
+    NodeSettings loadVariableSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+        if (settings.containsKey(SingleNodeContainer.CFG_VARIABLES)) {
+            return (NodeSettings)settings.getNodeSettings(SingleNodeContainer.CFG_VARIABLES);
+        }
+        return null;
     }
 
     /**
@@ -575,8 +685,9 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
             String nodeName = nodeInfo.getNodeNameNotNull();
             PortType[] outPortTypes;
             try {
-                NodePersistorVersion1xx nodePersistor = createNodePersistor(loadNodeFile(m_nodeSettings));
                 LoadResult guessLoadResult = new LoadResult("Port type guessing for missing node \"" + nodeName + "\"");
+                NodeSettingsRO settingsForNode = loadSettingsForNode(guessLoadResult);
+                NodePersistorVersion1xx nodePersistor = createNodePersistor(settingsForNode);
                 outPortTypes = nodePersistor.guessOutputPortTypes(m_parentPersistor, guessLoadResult, nodeName);
                 if (guessLoadResult.hasErrors()) {
                     getLogger().debug(

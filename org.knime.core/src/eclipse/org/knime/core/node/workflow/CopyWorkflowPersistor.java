@@ -66,6 +66,7 @@ import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
 import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
 /**
@@ -83,6 +84,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     private final String m_name;
     private final WorkflowCipher m_workflowCipher;
     private final MetaNodeTemplateInformation m_templateInformation;
+    private final AuthorInformation m_authorInformation;
     private final CopyNodeContainerMetaPersistor m_metaPersistor;
     private final HashMap<Integer, ContainerTable> m_tableRep;
     private final WorkflowFileStoreHandlerRepository m_fileStoreHandlerRepository;
@@ -90,7 +92,6 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     private final List<Credentials> m_credentials;
     private final List<WorkflowAnnotation> m_workflowAnnotations;
     private final boolean m_isProject;
-
     /** Create copy persistor.
      * @param original To copy from
      * @param tableRep The table map in the target
@@ -129,6 +130,7 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
         m_name = original.getNameField();
         m_workflowCipher = original.getWorkflowCipher().clone();
         m_templateInformation = original.getTemplateInformation().clone();
+        m_authorInformation = original.getAuthorInformation();
         m_metaPersistor = new CopyNodeContainerMetaPersistor(
                 original, preserveDeletableFlags, isUndoableDeleteCommand);
         if (m_isProject) {
@@ -223,6 +225,14 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
     @Override
     public MetaNodeTemplateInformation getTemplateInformation() {
         return m_templateInformation;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public AuthorInformation getAuthorInformation() {
+        return m_authorInformation;
     }
 
     /** {@inheritDoc} */

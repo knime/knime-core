@@ -59,14 +59,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -81,8 +78,6 @@ import org.knime.core.data.container.DataContainerException;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.NodeFactory.NodeType;
-import org.knime.core.node.NodePersistor.LoadNodeModelSettingsFailPolicy;
-import org.knime.core.node.config.ConfigEditTreeModel;
 import org.knime.core.node.interactive.InteractiveNode;
 import org.knime.core.node.interactive.InteractiveNodeFactoryExtension;
 import org.knime.core.node.interactive.InteractiveView;
@@ -162,14 +157,15 @@ public final class Node implements NodeModelWarningListener {
      */
     public static final String CFG_MISC_SETTINGS = "internal_node_subsettings";
 
-    /** The sub settings entry where the model can save its setup. */
+    /** The sub settings entry where the model can save its setup.
+     * @deprecated Clients should not be required to understand model internals. */
+    @Deprecated
     public static final String CFG_MODEL = "model";
     /** The sub settings entry containing the flow variable settings. These
-     * settings are not available in the derived node model. */
+     * settings are not available in the derived node model.
+     * @deprecated Clients should not be required to understand model internals. */
+    @Deprecated
     public static final String CFG_VARIABLES = "variables";
-
-    static final boolean DIALOG_IN_EDT =
-        Boolean.getBoolean(KNIMEConstants.PROPERTY_DIALOG_IN_EDT);
 
     /** The node's name. */
     private String m_name;
@@ -182,8 +178,6 @@ public final class Node implements NodeModelWarningListener {
 
     /** The node's dialog or <code>null</code> if not available. */
     private NodeDialogPane m_dialogPane;
-
-    private NodeSettings m_variablesSettings;
 
     private boolean m_forceSychronousIO;
 
@@ -313,14 +307,12 @@ public final class Node implements NodeModelWarningListener {
         setForceSynchronousIO(false); // may set to true if this is a loop end
     }
 
-    /** Create a persistor that is used to paste a copy of this node into
-     * the same or a different workflow. (Used by copy&paste actions and
-     * undo operations)
-     * @return A new copy persistor that clones this node's settings. The copy
-     * has a non-executed state (ports and internals are not copied).
+    /** Create a persistor that is used to paste a copy of this node into the same or a different workflow.
+     * (Used by copy&paste actions and undo operations)
+     * @return A new copy persistor (which doesn't copy anything as settings are taken care of by the SNC class).
      */
     public CopyNodePersistor createCopyPersistor() {
-        return new CopyNodePersistor(this);
+        return new CopyNodePersistor();
     }
 
     /** Load settings and data + internals from a loader instance.
@@ -331,46 +323,6 @@ public final class Node implements NodeModelWarningListener {
      */
     void load(final NodePersistor loader, final ExecutionMonitor exec,
             final LoadResult loadResult) throws CanceledExecutionException {
-        try {
-            // this also validates the settings
-            loadSettingsFrom(loader.getSettings());
-        } catch (Throwable e) {
-            final String error;
-            if (e instanceof InvalidSettingsException) {
-                error = "Loading model settings failed: " + e.getMessage();
-            } else {
-                error = "Caught \"" + e.getClass().getSimpleName() + "\", "
-                    + "Loading model settings failed: " + e.getMessage();
-            }
-            LoadNodeModelSettingsFailPolicy pol =
-                loader.getModelSettingsFailPolicy();
-            if (pol == null) {
-                if (!loader.isConfigured()) {
-                    pol = LoadNodeModelSettingsFailPolicy.IGNORE;
-                } else if (loader.isExecuted()) {
-                    pol = LoadNodeModelSettingsFailPolicy.WARN;
-                } else {
-                    pol = LoadNodeModelSettingsFailPolicy.FAIL;
-                }
-            }
-            switch (pol) {
-            case IGNORE:
-                if (!(e instanceof InvalidSettingsException)) {
-                    m_logger.coding(error, e);
-                }
-                break;
-            case FAIL:
-                loadResult.addError(error);
-                createErrorMessageAndNotify(error, e);
-                loader.setNeedsResetAfterLoad();
-                break;
-            case WARN:
-                createWarningMessageAndNotify(error, e);
-                loadResult.addWarning(error);
-                loader.setDirtyAfterLoad();
-                break;
-            }
-        }
         loadDataAndInternals(loader, exec, loadResult);
         exec.setProgress(1.0);
     }
@@ -561,34 +513,36 @@ public final class Node implements NodeModelWarningListener {
     /**
      * Loads the settings (but not the data) from the given settings object.
      *
-     * @param settings a settings object
+     * @param modelSettings a settings object
      * @throws InvalidSettingsException if an expected setting is missing
+     * @noreference This method is not intended to be referenced by clients.
      */
-    public void loadSettingsFrom(final NodeSettingsRO settings)
-            throws InvalidSettingsException {
-        SettingsLoaderAndWriter l = SettingsLoaderAndWriter.load(settings);
+    public void loadModelSettingsFrom(final NodeSettingsRO modelSettings) throws InvalidSettingsException {
+        /* Note, as of 2.8 the argument contains ONLY the actual settings, no variable settings. The root element
+         * is passed to the NodeModel. In 2.7- the root element was "model" and "variableSettings"; */
         try {
-            NodeSettingsRO modelSettings = l.getModelSettings();
             m_model.validateSettings(modelSettings);
             m_model.loadSettingsFrom(modelSettings);
         } catch (InvalidSettingsException e) {
             throw e;
         } catch (Throwable t) {
-            m_logger.error("Loading model settings failed", t);
+            String msg = "Loading model settings failed, caught \""
+                    + t.getClass().getSimpleName() + "\": " + t.getMessage();
+            m_logger.coding(msg, t);
+            throw new InvalidSettingsException(msg, t);
         }
-        m_variablesSettings = l.getVariablesSettings();
     }
 
     /**
      * Validates the argument settings.
      *
-     * @param settings a settings object
+     * @param modelSettings a settings object
      * @return if valid.
+     * @noreference This method is not intended to be referenced by clients.
      */
-    public boolean areSettingsValid(final NodeSettingsRO settings) {
+    public boolean areSettingsValid(final NodeSettingsRO modelSettings) {
+        /* Note the comment in method loadSettingsFrom(NodeSettingsROf) */
         try {
-            SettingsLoaderAndWriter l = SettingsLoaderAndWriter.load(settings);
-            NodeSettingsRO modelSettings = l.getModelSettings();
             m_model.validateSettings(modelSettings);
         } catch (InvalidSettingsException e) {
             return false;
@@ -1253,10 +1207,11 @@ public final class Node implements NodeModelWarningListener {
      * registered {@link NodeMessageListener}s. Also logs a warning message.
      * If a throwable is provided its stacktrace is logged at debug level.
      *
+     * @noreference This method is not intended to be referenced by clients.
      * @param warningMessage the new warning message
      * @param t its stacktrace is logged at debug level.
      */
-    private void createWarningMessageAndNotify(final String warningMessage,
+    public void createWarningMessageAndNotify(final String warningMessage,
             final Throwable t) {
         m_logger.warn(warningMessage);
         if (t != null) {
@@ -1281,10 +1236,11 @@ public final class Node implements NodeModelWarningListener {
      * registered {@link NodeMessageListener}s. Also logs an error message.
      * If a throwable is provided its stacktrace is logged at debug level.
      *
+     * @noreference This method is not intended to be referenced by clients.
      * @param errorMessage the new error message
      * @param t its stacktrace is logged at debug level.
      */
-    private void createErrorMessageAndNotify(final String errorMessage, final
+    public void createErrorMessageAndNotify(final String errorMessage, final
             Throwable t) {
         m_logger.error(errorMessage);
         if (t != null) {
@@ -1318,14 +1274,6 @@ public final class Node implements NodeModelWarningListener {
         } else {
             clearNodeMessageAndNotify();
         }
-    }
-
-    /** Getter for the currently set node warning message in the corresponding
-     * NodeModel.
-     * @return The currently set warning message (may be null).
-     */
-    public String getWarningMessageFromModel() {
-        return m_model.getWarningMessage();
     }
 
     /**
@@ -1532,93 +1480,6 @@ public final class Node implements NodeModelWarningListener {
         cleanOutPorts(false);
     }
 
-    /** Used before configure, to apply the variable mask to the nodesettings,
-     * that is to change individual node settings to reflect the current values
-     * of the variables (if any).
-     * @return a map containing the exposed variables (which are visible to
-     * downstream nodes. These variables are put onto the node's
-     * {@link FlowObjectStack}.
-     */
-    private Map<String, FlowVariable> applySettingsUsingFlowObjectStack()
-        throws InvalidSettingsException {
-        if (m_variablesSettings == null) {
-            return Collections.emptyMap();
-        }
-        NodeSettings fromModel = new NodeSettings("model");
-        try {
-            m_model.saveSettingsTo(fromModel);
-        } catch (Throwable e) {
-            m_logger.error("Saving of model settings failed with "
-                    + e.getClass().getSimpleName() + ": " + e.getMessage(), e);
-            String message = "Failed to apply flow variables; "
-                + "model failed to save its settings";
-            throw new InvalidSettingsException(message, e);
-        }
-        ConfigEditTreeModel configEditor;
-        try {
-            configEditor =
-                ConfigEditTreeModel.create(fromModel, m_variablesSettings);
-        } catch (final InvalidSettingsException e) {
-            throw new InvalidSettingsException("Errors reading flow variables: "
-                    + e.getMessage(), e);
-        }
-        Map<String, FlowVariable> flowVariablesMap =
-            getFlowObjectStack().getAvailableFlowVariables();
-        List<FlowVariable> newVariableList;
-        try {
-            newVariableList = configEditor.overwriteSettings(
-                    fromModel, flowVariablesMap);
-        } catch (InvalidSettingsException e) {
-            throw new InvalidSettingsException(
-                    "Errors overwriting node settings with flow variables: "
-                    + e.getMessage(), e);
-        }
-        try {
-            m_model.validateSettings(fromModel);
-        } catch (final Throwable e) {
-            String message = "Validation of node settings failed";
-            if (!(e instanceof InvalidSettingsException)) {
-                message = message + " with " + e.getClass().getSimpleName() + ": " + e.getMessage();
-                m_logger.error(message, e);
-            } else {
-                message = message + ": " + e.getMessage();
-            }
-            throw new InvalidSettingsException(message, e);
-        }
-        try {
-            m_model.loadValidatedSettingsFrom(fromModel);
-        } catch (Throwable e) {
-            if (!(e instanceof InvalidSettingsException)) {
-                m_logger.error("Loading of node settings failed with "
-                        + e.getClass().getSimpleName(), e);
-            }
-            m_logger.error("loadSettings failed after validation succeeded.");
-            throw new InvalidSettingsException(
-                    "Errors loading flow variables into node : "
-                    + e.getMessage(), e);
-        }
-        Map<String, FlowVariable> newVariableHash =
-            new LinkedHashMap<String, FlowVariable>();
-        for (FlowVariable v : newVariableList) {
-            if (newVariableHash.put(v.getName(), v) != null) {
-                m_logger.warn("Duplicate variable assignment for key \""
-                        + v.getName() + "\")");
-            }
-        }
-        return newVariableHash;
-    }
-
-    private void addOutgoingFlowVariables(
-            final Map<String, FlowVariable> newVars) {
-        FlowObjectStack outgoingFlowObjectStack = getOutgoingFlowObjectStack();
-        ArrayList<FlowVariable> reverseOrder =
-            new ArrayList<FlowVariable>(newVars.values());
-        Collections.reverse(reverseOrder);
-        for (FlowVariable v : reverseOrder) {
-            outgoingFlowObjectStack.push(v);
-        }
-    }
-
     /**
      * Sets all (new) incoming <code>DataTableSpec</code> elements in the
      * model, calls the model to create output table specs and propagates these
@@ -1640,9 +1501,9 @@ public final class Node implements NodeModelWarningListener {
      * @param postConfigure object called after node model calculated output
      *            specs
      * @return true if configure finished successfully.
+     * @noreference This method is not intended to be referenced by clients.
      */
-    public boolean configure(final PortObjectSpec[] rawInSpecs,
-            final NodePostConfigure postConfigure) {
+    public boolean configure(final PortObjectSpec[] rawInSpecs, final NodeConfigureHelper postConfigure) {
         boolean success = false;
         synchronized (m_configureLock) {
             // reset message object
@@ -1703,17 +1564,16 @@ public final class Node implements NodeModelWarningListener {
                     }
                     return true;
                 }
-                if (m_variablesSettings != null) {
-                    newVariables = applySettingsUsingFlowObjectStack();
+                if (postConfigure != null) {
+                    postConfigure.preConfigure();
                 }
 
                 // call configure model to create output table specs
                 // guaranteed to return non-null, correct-length array
                 newOutSpec = invokeNodeModelConfigure(inSpecs);
                 if (postConfigure != null) {
-                    newOutSpec = postConfigure.configure(inSpecs, newOutSpec);
+                    newOutSpec = postConfigure.postConfigure(inSpecs, newOutSpec);
                 }
-                addOutgoingFlowVariables(newVariables);
                 for (int p = 0; p < newOutSpec.length; p++) {
                     // update data table spec
                     m_outputs[p + 1].spec = newOutSpec[p];
@@ -2008,21 +1868,18 @@ public final class Node implements NodeModelWarningListener {
     /**
      * Saves the settings (but not the data).
      *
-     * @param settings a settings object
+     * @param modelSettings a settings object to save to (empty on invocation).
+     * @noreference This method is not intended to be referenced by clients.
      */
-    public void saveSettingsTo(final NodeSettingsWO settings) {
-        SettingsLoaderAndWriter l = new SettingsLoaderAndWriter();
-        final NodeSettings model = new NodeSettings("field_ignored");
+    public void saveModelSettingsTo(final NodeSettingsWO modelSettings) {
+        /* Note the comment in method loadSettingsFrom(NodeSettingsROf) */
         try {
-            m_model.saveSettingsTo(model);
+            m_model.saveSettingsTo(modelSettings);
         } catch (Exception e) {
             m_logger.error("Could not save model", e);
         } catch (Throwable t) {
             m_logger.fatal("Could not save model", t);
         }
-        l.setModelSettings(model);
-        l.setVariablesSettings(m_variablesSettings);
-        l.save(settings);
     }
 
     /** Call {@link NodeModel#saveInternals(File, ExecutionMonitor)} and handles errors by logging to the NodeLogger
@@ -2410,66 +2267,5 @@ public final class Node implements NodeModelWarningListener {
         return m_model.getCredentialsProvider();
     }
 
-    static class SettingsLoaderAndWriter {
-
-        private NodeSettings m_variablesSettings =
-            new NodeSettings("variables");
-        private NodeSettings m_modelSettings;
-
-        /**
-         * @return the modelSettings
-         */
-        NodeSettings getModelSettings() {
-            return m_modelSettings;
-        }
-
-        /**
-         * @param modelSettings the modelSettings to set
-         */
-        void setModelSettings(final NodeSettings modelSettings) {
-            m_modelSettings = modelSettings;
-        }
-
-        /**
-         * @return the variableSettings
-         */
-        NodeSettings getVariablesSettings() {
-            return m_variablesSettings;
-        }
-
-        /**
-         * @param variablesSettings the variablesSettings to set
-         */
-        void setVariablesSettings(final NodeSettings variablesSettings) {
-            m_variablesSettings = variablesSettings;
-        }
-
-        static SettingsLoaderAndWriter load(final NodeSettingsRO settings)
-                throws InvalidSettingsException {
-            SettingsLoaderAndWriter result = new SettingsLoaderAndWriter();
-            // in versions before KNIME 1.2.0, there were no misc settings
-            // in the dialog, we must use caution here: if they are not present
-            // we use the default.
-            if (settings.containsKey(CFG_VARIABLES)) {
-                result.m_variablesSettings =
-                    (NodeSettings)settings.getNodeSettings(CFG_VARIABLES);
-            } else {
-                result.m_variablesSettings = null;
-            }
-            result.m_modelSettings =
-                (NodeSettings)settings.getNodeSettings(CFG_MODEL);
-            return result;
-        }
-
-        void save(final NodeSettingsWO settings) {
-            NodeSettingsWO model = settings.addNodeSettings(CFG_MODEL);
-            m_modelSettings.copyTo(model);
-            if (m_variablesSettings != null) {
-                NodeSettingsWO variables =
-                    settings.addNodeSettings(CFG_VARIABLES);
-                m_variablesSettings.copyTo(variables);
-            }
-        }
-    }
 
 }

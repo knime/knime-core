@@ -62,6 +62,7 @@ import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
 import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
 /**
@@ -147,6 +148,12 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
     @Override
     public MetaNodeTemplateInformation getTemplateInformation() {
         throw new IllegalStateException("No template information on root");
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public AuthorInformation getAuthorInformation() {
+        throw new IllegalStateException("No author information on root");
     }
 
     /** {@inheritDoc} */

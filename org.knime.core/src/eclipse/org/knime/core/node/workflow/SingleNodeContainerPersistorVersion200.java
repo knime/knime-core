@@ -75,7 +75,6 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.FlowLoopContext.RestoredFlowLoopContext;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
-import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 import org.knime.core.util.FileUtil;
 
@@ -108,8 +107,8 @@ public class SingleNodeContainerPersistorVersion200 extends SingleNodeContainerP
      * {@inheritDoc}
      */
     @Override
-    NodePersistorVersion200 createNodePersistor(final ReferencedFile nodeConfigFile) {
-        return new NodePersistorVersion200(this, getLoadVersion(), nodeConfigFile);
+    NodePersistorVersion200 createNodePersistor(final NodeSettingsRO nodeSettings) {
+        return new NodePersistorVersion200(this, getLoadVersion(), nodeSettings);
     }
 
     /** {@inheritDoc} */
@@ -139,15 +138,13 @@ public class SingleNodeContainerPersistorVersion200 extends SingleNodeContainerP
 
     /** {@inheritDoc} */
     @Override
-    SingleNodeContainerSettings loadSNCSettings(final NodeSettingsRO settings,
+    MemoryPolicy loadMemoryPolicySettings(final NodeSettingsRO settings,
         final NodePersistorVersion1xx nodePersistor) throws InvalidSettingsException {
         if (LoadVersion.V200.equals(getLoadVersion())) {
-            return super.loadSNCSettings(settings, nodePersistor);
+            return super.loadMemoryPolicySettings(settings, nodePersistor);
         } else {
             // any version after 2.0 saves the snc settings in the settings.xml
             // (previously these settings were saves as part of the node.xml)
-            SingleNodeContainerSettings sncs = new SingleNodeContainerSettings();
-            MemoryPolicy p;
             NodeSettingsRO sub = settings.getNodeSettings(Node.CFG_MISC_SETTINGS);
             String memoryPolicy =
                 sub.getString(SingleNodeContainer.CFG_MEMORY_POLICY, MemoryPolicy.CacheSmallInMemory.toString());
@@ -155,14 +152,11 @@ public class SingleNodeContainerPersistorVersion200 extends SingleNodeContainerP
                 throw new InvalidSettingsException("Can't use null memory policy.");
             }
             try {
-                p = MemoryPolicy.valueOf(memoryPolicy);
+                return MemoryPolicy.valueOf(memoryPolicy);
             } catch (IllegalArgumentException iae) {
                 throw new InvalidSettingsException("Invalid memory policy: " + memoryPolicy);
             }
-            sncs.setMemoryPolicy(p);
-            return sncs;
         }
-
     }
 
     /** {@inheritDoc} */
@@ -258,11 +252,11 @@ public class SingleNodeContainerPersistorVersion200 extends SingleNodeContainerP
         }
         NodeSettings settings = new NodeSettings(SETTINGS_FILE_NAME);
         saveNodeFactory(settings, snc);
-        ReferencedFile nodeXMLFileRef = saveNodeFileName(snc, settings, nodeDirRef);
+        saveNodeFileName(snc, settings, nodeDirRef); // only to allow 2.7- clients to load 2.8+ workflows
         saveFlowObjectStack(settings, snc);
         saveSNCSettings(settings, snc);
         NodeContainerMetaPersistorVersion200.save(settings, snc, nodeDirRef);
-        NodePersistorVersion200.save(snc, nodeXMLFileRef, exec,
+        NodePersistorVersion200.save(snc, settings, exec, nodeDirRef,
             isSaveData && snc.getInternalState().equals(InternalNodeContainerState.EXECUTED));
         File nodeSettingsXMLFile = new File(nodeDir, settingsDotXML);
         OutputStream os = new FileOutputStream(nodeSettingsXMLFile);
@@ -295,7 +289,10 @@ public class SingleNodeContainerPersistorVersion200 extends SingleNodeContainerP
 
     protected static ReferencedFile saveNodeFileName(final SingleNodeContainer snc, final NodeSettingsWO settings,
         final ReferencedFile nodeDirectoryRef) {
-        String fileName = NODE_FILE;
+        // KNIME 2.7- reads from this file. It used to be "node.xml", which was removed in 2.8 and now the settings.xml
+        // (contains the settings from this method argument) contains everything. We save the node_file so that
+        // old KNIME instances can read new workflows
+        String fileName = SETTINGS_FILE_NAME;
         fileName = snc.getParent().getCipherFileName(fileName);
         settings.addString("node_file", fileName);
         return new ReferencedFile(nodeDirectoryRef, fileName);

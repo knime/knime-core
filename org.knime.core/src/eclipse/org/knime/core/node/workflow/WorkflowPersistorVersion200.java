@@ -54,6 +54,9 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -75,6 +78,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.MetaNodeTemplateInformation.Role;
+import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
 import org.knime.core.util.LockFailedException;
 
 /**
@@ -82,6 +86,9 @@ import org.knime.core.util.LockFailedException;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
+
+    /** Format used to save author/edit infos. */
+    static final DateFormat DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss Z");
 
     private static final String CFG_UIINFO_SUB_CONFIG = "ui_settings";
 
@@ -126,12 +133,15 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             V240("2.4.0"),
             /** Version 2.5.x, lockable meta nodes, node-relative annotations. */
             V250("2.5.0"),
-            /**
-             * Version 2.6.x, file store objects, grid information, node vendor & plugin information.
-             *
-             * @since 2.6
-             */
-            V260("2.6.0");
+            /** Version 2.6.x, file store objects, grid information, node vendor & plugin information.
+             * @since 2.6 */
+            V260("2.6.0"),
+            /** node.xml and settings.xml are one file, settings in SNC, meta data in workflow.knime.
+             * @since 2.8 */
+            V280("2.8.0"),
+            /** Try to be forward compatible.
+             * @since 2.8 */
+            FUTURE("<future>");
 
         private final String m_versionString;
 
@@ -160,7 +170,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         }
     }
 
-    static final LoadVersion VERSION_LATEST = LoadVersion.V260;
+    static final LoadVersion VERSION_LATEST = LoadVersion.V280;
 
     static LoadVersion canReadVersionV200(final String versionString) {
         return LoadVersion.get(versionString);
@@ -283,6 +293,45 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             return MetaNodeTemplateInformation.load(s, getLoadVersion());
         } else {
             return MetaNodeTemplateInformation.NONE;
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    AuthorInformation loadAuthorInformation(final NodeSettingsRO settings) throws InvalidSettingsException {
+        if (getLoadVersion().ordinal() >= LoadVersion.V280.ordinal()) {
+            final NodeSettingsRO sub = settings.getNodeSettings("authorInformation");
+            final String author = sub.getString("authored-by");
+            final String authorDateS = sub.getString("authored-when");
+            final Date authorDate;
+            if (authorDateS == null) {
+                authorDate = null;
+            } else {
+                try {
+                    authorDate = DATE_FORMAT.parse(authorDateS);
+                } catch (ParseException e) {
+                    throw new InvalidSettingsException("Can't parse authored-when \"" + authorDateS
+                        + "\": " + e.getMessage(), e);
+                }
+            }
+            final String editor = sub.getString("lastEdited-by");
+            final String editDateS = sub.getString("lastEdited-when");
+            final Date editDate;
+            if (editDateS == null) {
+                editDate = null;
+            } else {
+                try {
+                    editDate = DATE_FORMAT.parse(editDateS);
+                } catch (ParseException e) {
+                    throw new InvalidSettingsException("Can't parse lastEdit-when \"" + editDateS
+                        + "\": " + e.getMessage(), e);
+                }
+            }
+            return new AuthorInformation(author, authorDate, editor, editDate);
+        } else {
+            return super.loadAuthorInformation(settings);
         }
     }
 
@@ -510,6 +559,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
             saveWorkflowName(settings, wm.getNameField());
             saveWorkflowCipher(settings, wm.getWorkflowCipher());
             saveTemplateInformation(wm.getTemplateInformation(), settings);
+            saveAuthorInformation(wm.getAuthorInformation(), settings);
             NodeContainerMetaPersistorVersion200.save(settings, wm, workflowDirRef);
             saveWorkflowVariables(wm, settings);
             saveCredentials(wm, settings);
@@ -612,8 +662,8 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         }
     }
 
-    protected static void
-        saveTemplateInformation(final MetaNodeTemplateInformation mnti, final NodeSettingsWO settings) {
+    protected static void saveTemplateInformation(
+        final MetaNodeTemplateInformation mnti, final NodeSettingsWO settings) {
         switch (mnti.getRole()) {
             case None:
                 // don't save
@@ -622,6 +672,17 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
                 NodeSettingsWO s = settings.addNodeSettings(CFG_TEMPLATE_INFO);
                 mnti.save(s);
         }
+    }
+
+    /** @since 2.8 */
+    protected static void saveAuthorInformation(final AuthorInformation aI, final NodeSettingsWO settings) {
+        final NodeSettingsWO sub = settings.addNodeSettings("authorInformation");
+        sub.addString("authored-by", aI.getAuthor());
+        String authorWhen = aI.getAuthoredDate() == null ? null : DATE_FORMAT.format(aI.getAuthoredDate());
+        sub.addString("authored-when", authorWhen);
+        sub.addString("lastEdited-by", aI.getLastEditor());
+        String lastEditWhen = aI.getLastEditDate() == null ? null : DATE_FORMAT.format(aI.getLastEditDate());
+        sub.addString("lastEdited-when", lastEditWhen);
     }
 
     /**

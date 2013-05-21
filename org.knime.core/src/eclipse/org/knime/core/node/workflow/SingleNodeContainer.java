@@ -53,10 +53,12 @@ package org.knime.core.node.workflow;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -82,16 +84,17 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
+import org.knime.core.node.NodeConfigureHelper;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory.NodeType;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
-import org.knime.core.node.NodePostConfigure;
 import org.knime.core.node.NodeProgressMonitor;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
+import org.knime.core.node.config.ConfigEditTreeModel;
 import org.knime.core.node.exec.ThreadNodeExecutionJobManager;
 import org.knime.core.node.interactive.InteractiveView;
 import org.knime.core.node.interactive.ViewContent;
@@ -150,6 +153,11 @@ public final class SingleNodeContainer extends NodeContainer {
 
     /** Config key: What memory policy to use for a node outport. */
     static final String CFG_MEMORY_POLICY = "memory_policy";
+    /** The sub settings entry where the model can save its setup. */
+    static final String CFG_MODEL = "model";
+    /** The sub settings entry containing the flow variable settings. These
+     * settings are not available in the derived node model. */
+    static final String CFG_VARIABLES = "variables";
 
     /**
      * Create new SingleNodeContainer based on existing Node.
@@ -501,19 +509,76 @@ public final class SingleNodeContainer extends NodeContainer {
      * @return true of configure succeeded.
      */
     private boolean nodeConfigure(final PortObjectSpec[] inSpecs) {
-
         final NodeExecutionJobManager jobMgr = findJobManager();
+        NodeConfigureHelper npc = new NodeConfigureHelper() {
 
-        NodePostConfigure npc = new NodePostConfigure() {
+            private Map<String, FlowVariable> m_exportedSettingsVariables;
+
+            /** {@inheritDoc} */
+            @Override
+            public void preConfigure() throws InvalidSettingsException {
+                m_exportedSettingsVariables = applySettingsUsingFlowObjectStack();
+            }
+
             /** {inheritDoc} */
             @Override
-            public PortObjectSpec[] configure(final PortObjectSpec[] inObjSpecs,
-                    final PortObjectSpec[] nodeModelOutSpecs)
-                    throws InvalidSettingsException {
+            public PortObjectSpec[] postConfigure(final PortObjectSpec[] inObjSpecs,
+                final PortObjectSpec[] nodeModelOutSpecs) throws InvalidSettingsException {
+                if (!m_exportedSettingsVariables.isEmpty()) {
+                    FlowObjectStack outgoingFlowObjectStack = getOutgoingFlowObjectStack();
+                    ArrayList<FlowVariable> reverseOrder =
+                            new ArrayList<FlowVariable>(m_exportedSettingsVariables.values());
+                    Collections.reverse(reverseOrder);
+                    for (FlowVariable v : reverseOrder) {
+                        outgoingFlowObjectStack.push(v);
+                    }
+                }
                 return jobMgr.configure(inObjSpecs, nodeModelOutSpecs);
             }
         };
         return m_node.configure(inSpecs, npc);
+    }
+
+    /** Used before configure, to apply the variable mask to the nodesettings,
+     * that is to change individual node settings to reflect the current values
+     * of the variables (if any).
+     * @return a map containing the exposed variables (which are visible to
+     * downstream nodes. These variables are put onto the node's
+     * {@link FlowObjectStack}.
+     */
+    private Map<String, FlowVariable> applySettingsUsingFlowObjectStack() throws InvalidSettingsException {
+        NodeSettingsRO variablesSettings = m_settings.getVariablesSettings();
+        if (variablesSettings == null) {
+            return Collections.emptyMap();
+        }
+        NodeSettings fromModel = m_settings.getModelSettingsClone();
+        ConfigEditTreeModel configEditor;
+        try {
+            configEditor = ConfigEditTreeModel.create(fromModel, variablesSettings);
+        } catch (final InvalidSettingsException e) {
+            throw new InvalidSettingsException("Errors reading flow variables: " + e.getMessage(), e);
+        }
+        Map<String, FlowVariable> flowVariablesMap = getFlowObjectStack().getAvailableFlowVariables();
+        List<FlowVariable> newVariableList;
+        try {
+            newVariableList = configEditor.overwriteSettings(fromModel, flowVariablesMap);
+        } catch (InvalidSettingsException e) {
+            throw new InvalidSettingsException("Errors overwriting node settings with flow variables: "
+                + e.getMessage(), e);
+        }
+
+        try {
+            m_node.loadModelSettingsFrom(fromModel);
+        } catch (Throwable e) {
+            throw new InvalidSettingsException("Errors loading flow variables into node : " + e.getMessage(), e);
+        }
+        Map<String, FlowVariable> newVariableHash = new LinkedHashMap<String, FlowVariable>();
+        for (FlowVariable v : newVariableList) {
+            if (newVariableHash.put(v.getName(), v) != null) {
+                LOGGER.warn("Duplicate variable assignment for key \"" + v.getName() + "\")");
+            }
+        }
+        return newVariableHash;
     }
 
     /**
@@ -1094,8 +1159,8 @@ public final class SingleNodeContainer extends NodeContainer {
             throws InvalidSettingsException {
         synchronized (m_nodeMutex) {
             super.loadSettings(settings);
-            m_node.loadSettingsFrom(settings);
-            loadSNCSettings(settings);
+            m_settings = new SingleNodeContainerSettings(settings);
+            m_node.loadModelSettingsFrom(m_settings.getModelSettings());
             setDirty();
         }
     }
@@ -1200,33 +1265,15 @@ public final class SingleNodeContainer extends NodeContainer {
     @Override
     void saveSettings(final NodeSettingsWO settings) {
         super.saveSettings(settings);
-        m_node.saveSettingsTo(settings);
         saveSNCSettings(settings);
     }
 
     /**
-     * Saves the SingleNodeContainer settings such as the job executor to the
-     * argument node settings object.
-     *
+     * Saves the {@link SingleNodeContainerSettings}.
      * @param settings To save to.
-     * @see #loadSNCSettings(NodeSettingsRO)
      */
     void saveSNCSettings(final NodeSettingsWO settings) {
         m_settings.save(settings);
-    }
-
-    /**
-     * Loads the SingleNodeContainer settings from the argument. This is the
-     * reverse operation to {@link #saveSNCSettings(NodeSettingsWO)}.
-     *
-     * @param settings To load from.
-     * @throws InvalidSettingsException If settings are invalid.
-     */
-    void loadSNCSettings(final NodeSettingsRO settings)
-        throws InvalidSettingsException {
-        synchronized (m_nodeMutex) {
-            m_settings = new SingleNodeContainerSettings(settings);
-        }
     }
 
     /** @return reference to internally used settings (contains information for
@@ -1241,12 +1288,13 @@ public final class SingleNodeContainer extends NodeContainer {
         if (!super.areSettingsValid(settings)) {
             return false;
         }
+        final SingleNodeContainerSettings sncSettings;
         try {
-            new SingleNodeContainerSettings(settings);
+            sncSettings = new SingleNodeContainerSettings(settings);
         } catch (InvalidSettingsException ise) {
             return false;
         }
-        return m_node.areSettingsValid(settings);
+        return m_node.areSettingsValid(sncSettings.getModelSettings());
     }
 
     ////////////////////////////////////
@@ -1611,14 +1659,17 @@ public final class SingleNodeContainer extends NodeContainer {
      * Handles the settings specific to a SingleNodeContainer. Reads and writes
      * them from and into a NodeSettings object.
      */
-    public static class SingleNodeContainerSettings implements Cloneable {
+    public static final class SingleNodeContainerSettings implements Cloneable {
 
         private MemoryPolicy m_memoryPolicy = MemoryPolicy.CacheSmallInMemory;
+        private NodeSettingsRO m_modelSettings;
+        private NodeSettingsRO m_variablesSettings;
+
         /**
          * Creates a settings object with default values.
          */
         public SingleNodeContainerSettings() {
-            // stay with the default values
+            m_modelSettings = new NodeSettings("empty");
         }
 
         /**
@@ -1630,20 +1681,25 @@ public final class SingleNodeContainer extends NodeContainer {
          * @throws InvalidSettingsException if the settings in the argument are
          *             invalid
          */
-        public SingleNodeContainerSettings(final NodeSettingsRO settings)
-                throws InvalidSettingsException {
-            NodeSettingsRO sncSettings =
-                    settings.getNodeSettings(Node.CFG_MISC_SETTINGS);
+        public SingleNodeContainerSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
+            NodeSettingsRO sncSettings = settings.getNodeSettings(Node.CFG_MISC_SETTINGS);
             if (sncSettings.containsKey(CFG_MEMORY_POLICY)) {
                 String memPolStr = sncSettings.getString(CFG_MEMORY_POLICY);
                 try {
                     m_memoryPolicy = MemoryPolicy.valueOf(memPolStr);
                 } catch (IllegalArgumentException iae) {
-                    throw new InvalidSettingsException(
-                            "Invalid memory policy: " + memPolStr);
+                    throw new InvalidSettingsException("Invalid memory policy: " + memPolStr);
                 }
             }
-
+            // in versions before KNIME 1.2.0, there were no misc settings
+            // in the dialog, we must use caution here: if they are not present
+            // we use the default.
+            if (settings.containsKey(CFG_VARIABLES)) {
+                m_variablesSettings = settings.getNodeSettings(CFG_VARIABLES);
+            } else {
+                m_variablesSettings = null;
+            }
+            m_modelSettings = settings.getNodeSettings(CFG_MODEL);
         }
 
         /**
@@ -1652,9 +1708,15 @@ public final class SingleNodeContainer extends NodeContainer {
          * @param settings the object to write the settings into.
          */
         public void save(final NodeSettingsWO settings) {
-            NodeSettingsWO sncSettings =
-                    settings.addNodeSettings(Node.CFG_MISC_SETTINGS);
+            NodeSettingsWO sncSettings = settings.addNodeSettings(Node.CFG_MISC_SETTINGS);
             sncSettings.addString(CFG_MEMORY_POLICY, m_memoryPolicy.name());
+            NodeSettingsWO model = settings.addNodeSettings(CFG_MODEL);
+            m_modelSettings.copyTo(model);
+            if (m_variablesSettings != null) {
+                NodeSettingsWO variables = settings.addNodeSettings(CFG_VARIABLES);
+                m_variablesSettings.copyTo(variables);
+            }
+
         }
 
         /**
@@ -1675,14 +1737,53 @@ public final class SingleNodeContainer extends NodeContainer {
             return m_memoryPolicy;
         }
 
+        /**
+         * @return the modelSettings
+         */
+        public NodeSettings getModelSettingsClone() {
+            NodeSettings s = new NodeSettings("ignored");
+            m_modelSettings.copyTo(s);
+            return s;
+        }
+
+        /**
+         * @return the modelSettings
+         */
+        public NodeSettingsRO getModelSettings() {
+            return m_modelSettings;
+        }
+
+        /**
+         * @param modelSettings the modelSettings to set
+         */
+        public void setModelSettings(final NodeSettings modelSettings) {
+            if (modelSettings == null) {
+                throw new NullPointerException("Settings argument must not be null.");
+            }
+            m_modelSettings = modelSettings;
+        }
+
+        /**
+         * @return the variableSettings
+         */
+        public NodeSettingsRO getVariablesSettings() {
+            return m_variablesSettings;
+        }
+
+        /**
+         * @param variablesSettings the variablesSettings to set
+         */
+        public void setVariablesSettings(final NodeSettings variablesSettings) {
+            m_variablesSettings = variablesSettings;
+        }
+
         /** {@inheritDoc} */
         @Override
         protected SingleNodeContainerSettings clone() {
             try {
                 return (SingleNodeContainerSettings)super.clone();
             } catch (CloneNotSupportedException e) {
-                LOGGER.coding("clone() threw exception although class "
-                        + "implements Clonable", e);
+                LOGGER.coding("clone() threw exception although class implements Clonable", e);
                 return new SingleNodeContainerSettings();
             }
         }

@@ -80,6 +80,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.port.PortObject;
 import org.knime.core.node.port.PortType;
+import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
 import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
 /**
@@ -127,6 +128,8 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor, FromFileN
     private WorkflowCipher m_workflowCipher;
 
     private MetaNodeTemplateInformation m_templateInformation;
+
+    private AuthorInformation m_authorInformation;
 
     private URI m_templateInformationURI;
 
@@ -301,6 +304,12 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor, FromFileN
     @Override
     public MetaNodeTemplateInformation getTemplateInformation() {
         return m_templateInformation;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public AuthorInformation getAuthorInformation() {
+        return m_authorInformation;
     }
 
     /**
@@ -489,6 +498,16 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor, FromFileN
             setDirtyAfterLoad();
             loadResult.addError(error);
             m_templateInformation = MetaNodeTemplateInformation.NONE;
+        }
+
+        try {
+            m_authorInformation = loadAuthorInformation(m_workflowSett);
+        } catch (InvalidSettingsException e) {
+            String error = "Unable to load workflow author information: " + e.getMessage();
+            getLogger().debug(error, e);
+            setDirtyAfterLoad();
+            loadResult.addError(error);
+            m_authorInformation = AuthorInformation.UNKNOWN;
         }
         try {
             m_workflowVariables = loadWorkflowVariables(m_workflowSett);
@@ -1319,6 +1338,10 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor, FromFileN
             return original;
         }
         return original.createLink(m_templateInformationURI);
+    }
+
+    AuthorInformation loadAuthorInformation(final NodeSettingsRO settings) throws InvalidSettingsException {
+        return AuthorInformation.UNKNOWN;
     }
 
     /**

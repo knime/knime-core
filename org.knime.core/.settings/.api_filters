@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <component id="org.knime.core" version="2">
+    <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.NodePostConfigure">
+        <filter comment="workflow version/persistor change" id="305324134">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.NodePostConfigure"/>
+                <message_argument value="org.knime.core_2.8.0"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="META-INF/MANIFEST.MF" type="org.knime.core.node.workflow.InactiveBranchFlowLoopContext">
         <filter id="305324134">
             <message_arguments>
@@ -17,6 +25,12 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/CopyNodePersistor.java" type="org.knime.core.node.CopyNodePersistor">
+        <filter comment="workflow version/persistor change" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.CopyNodePersistor"/>
+                <message_argument value="getSettings()"/>
+            </message_arguments>
+        </filter>
         <filter id="643842064">
             <message_arguments>
                 <message_argument value="IFileStoreHandler"/>
@@ -41,6 +55,37 @@
                 <message_argument value="closeAllViews()"/>
             </message_arguments>
         </filter>
+        <filter comment="workflow version/persistor change" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.Node"/>
+                <message_argument value="configure(PortObjectSpec[], NodePostConfigure)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="workflow version/persistor change" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.Node"/>
+                <message_argument value="getWarningMessageFromModel()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="workflow version/persistor change" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.Node"/>
+                <message_argument value="loadSettingsFrom(NodeSettingsRO)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="workflow version/persistor change" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.Node"/>
+                <message_argument value="saveSettingsTo(NodeSettingsWO)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/NodeConfigureHelper.java" type="org.knime.core.node.NodeConfigureHelper">
+        <filter comment="workflow version/persistor change" id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.NodeConfigureHelper"/>
+            </message_arguments>
+        </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/NodeContentPersistor.java" type="org.knime.core.node.NodeContentPersistor">
         <filter id="643842064">
@@ -59,12 +104,72 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/NodePersistor.java" type="org.knime.core.node.NodePersistor">
+        <filter comment="workflow version/persistor change" id="405901410">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.NodePersistor"/>
+                <message_argument value="getSettings()"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/NodePersistorVersion1xx.java" type="org.knime.core.node.NodePersistorVersion1xx">
+        <filter comment="workflow version/persistor change" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.NodePersistorVersion1xx"/>
+                <message_argument value="getSettings()"/>
+            </message_arguments>
+        </filter>
         <filter id="643842064">
             <message_arguments>
                 <message_argument value="IFileStoreHandler"/>
                 <message_argument value="NodePersistorVersion1xx"/>
                 <message_argument value="getFileStoreHandler()"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="NodePersistorVersion1xx(SingleNodeContainerPersistorVersion1xx, WorkflowPersistorVersion200.LoadVersion, NodeSettingsRO)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="NodePersistorVersion1xx(SingleNodeContainerPersistorVersion1xx, WorkflowPersistorVersion200.LoadVersion, NodeSettingsRO, ReferencedFile)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/NodePersistorVersion200.java" type="org.knime.core.node.NodePersistorVersion200">
+        <filter comment="no API" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.NodePersistorVersion200"/>
+                <message_argument value="save(SingleNodeContainer, ReferencedFile, ExecutionMonitor, boolean)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="NodePersistorVersion200(SingleNodeContainerPersistorVersion200, WorkflowPersistorVersion200.LoadVersion, NodeSettingsRO)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="NodePersistorVersion200(SingleNodeContainerPersistorVersion200, WorkflowPersistorVersion200.LoadVersion, NodeSettingsRO, ReferencedFile)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="internal API" id="1143996420">
+            <message_arguments>
+                <message_argument value="save(SingleNodeContainer, NodeSettingsWO, ExecutionMonitor, ReferencedFile, boolean)"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/eclipse/org/knime/core/node/config/ConfigEditTreeModel.java" type="org.knime.core.node.config.ConfigEditTreeModel">
+        <filter comment="workflow version/persistor change" id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.config.ConfigEditTreeModel"/>
+                <message_argument value="create(ConfigBase, ConfigBase)"/>
+            </message_arguments>
+        </filter>
+        <filter id="1143996420">
+            <message_arguments>
+                <message_argument value="create(ConfigBase, ConfigBaseRO)"/>
             </message_arguments>
         </filter>
     </resource>
@@ -93,6 +198,18 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/PasteWorkflowContentPersistor.java" type="org.knime.core.node.workflow.PasteWorkflowContentPersistor">
+        <filter comment="persistor changes - no APi" id="305365105">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.PasteWorkflowContentPersistor"/>
+                <message_argument value="org.knime.core_2.8.0"/>
+            </message_arguments>
+        </filter>
+        <filter comment="persistor changes" id="305426566">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.PasteWorkflowContentPersistor"/>
+                <message_argument value="org.knime.base_2.7.2"/>
+            </message_arguments>
+        </filter>
         <filter id="643842064">
             <message_arguments>
                 <message_argument value="WorkflowFileStoreHandlerRepository"/>
@@ -101,7 +218,45 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/SingleNodeContainer.java" type="org.knime.core.node.workflow.SingleNodeContainer$SingleNodeContainerSettings">
+        <filter comment="workflow version/persistor change" id="337768515">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings"/>
+            </message_arguments>
+        </filter>
+        <filter comment="workflow version/persistor change" id="1143996420">
+            <message_arguments>
+                <message_argument value="getModelSettings()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="workflow version/persistor change" id="1143996420">
+            <message_arguments>
+                <message_argument value="getModelSettingsClone()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="workflow version/persistor change" id="1143996420">
+            <message_arguments>
+                <message_argument value="getVariablesSettings()"/>
+            </message_arguments>
+        </filter>
+        <filter comment="workflow version/persistor change" id="1143996420">
+            <message_arguments>
+                <message_argument value="setModelSettings(NodeSettings)"/>
+            </message_arguments>
+        </filter>
+        <filter comment="workflow version/persistor change" id="1143996420">
+            <message_arguments>
+                <message_argument value="setVariablesSettings(NodeSettings)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowPersistor.java" type="org.knime.core.node.workflow.WorkflowPersistor">
+        <filter comment="persistor changes" id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
+                <message_argument value="getAuthorInformation()"/>
+            </message_arguments>
+        </filter>
         <filter id="643842064">
             <message_arguments>
                 <message_argument value="WorkflowFileStoreHandlerRepository"/>

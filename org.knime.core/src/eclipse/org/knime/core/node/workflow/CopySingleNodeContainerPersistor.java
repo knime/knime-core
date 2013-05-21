@@ -58,9 +58,9 @@ import java.util.Map;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CopyNodePersistor;
 import org.knime.core.node.ExecutionMonitor;
+import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
-import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -72,7 +72,7 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
 final class CopySingleNodeContainerPersistor implements
         SingleNodeContainerPersistor {
 
-    private final NodeFactory<NodeModel> m_nodeFactory;
+    private final Node m_node;
     private final CopyNodePersistor m_nodePersistor;
     private final List<FlowObject> m_flowObjectList;
     private final SingleNodeContainerSettings m_sncSettings;
@@ -105,7 +105,7 @@ final class CopySingleNodeContainerPersistor implements
             m_flowObjectList.add(o.cloneAndUnsetOwner());
         }
         m_sncSettings = original.getSingleNodeContainerSettings().clone();
-        m_nodeFactory = originalNode.getFactory();
+        m_node = new Node(originalNode.getFactory());
         m_nodePersistor = originalNode.createCopyPersistor();
         m_metaPersistor = new CopyNodeContainerMetaPersistor(
                 original, preserveDeletableFlag, isUndoableDeleteCommand);
@@ -114,9 +114,7 @@ final class CopySingleNodeContainerPersistor implements
     /** {@inheritDoc} */
     @Override
     public Node getNode() {
-        Node node = new Node(m_nodeFactory);
-        m_nodePersistor.loadInto(node);
-        return node;
+        return m_node;
     }
 
     /** {@inheritDoc} */
@@ -151,6 +149,13 @@ final class CopySingleNodeContainerPersistor implements
     public void loadNodeContainer(
             final Map<Integer, BufferedDataTable> tblRep,
             final ExecutionMonitor exec, final LoadResult loadResult) {
+        try {
+            m_node.loadModelSettingsFrom(m_sncSettings.getModelSettings());
+        } catch (InvalidSettingsException e) {
+            NodeLogger.getLogger(CopySingleNodeContainerPersistor.class).debug(
+                "Failed to copy settings into node target: " + e.getMessage(), e);
+        }
+        m_nodePersistor.loadInto(m_node);
     }
 
     /** {@inheritDoc} */

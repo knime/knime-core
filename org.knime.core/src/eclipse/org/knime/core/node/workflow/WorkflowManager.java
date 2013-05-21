@@ -248,6 +248,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * upon save. */
     private LoadVersion m_loadVersion;
 
+    /** When and by whom was workflow changed, null if not saved yet. */
+    private AuthorInformation m_authorInformation;
+
     /** Template information encapsulating template source URI and reference
      * date. This field is {@link MetaNodeTemplateInformation#NONE} for workflow
      * projects and meta nodes, which are not used as linked templates. */
@@ -343,6 +346,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         m_name = persistor.getName();
         m_editorInfo = persistor.getEditorUIInformation();
         m_templateInformation = persistor.getTemplateInformation();
+        m_authorInformation = persistor.getAuthorInformation();
         m_loadVersion = persistor.getLoadVersion();
         m_workflowVariables = new Vector<FlowVariable>(persistor.getWorkflowVariables());
         m_credentialsStore = new CredentialsStore(this, persistor.getCredentials());
@@ -6210,11 +6214,21 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return getNodeContainerDirectory();
     }
 
+    /** @return the authorInformation or null if not saved yet.
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 2.8
+     */
+    public AuthorInformation getAuthorInformation() {
+        return m_authorInformation;
+    }
+
     /** Workflow version, indicates the "oldest"
       * version that is compatible to the current workflow format. */
     static final String CFG_VERSION = "version";
     /** Version of KNIME that has written the workflow. */
     static final String CFG_CREATED_BY = "created_by";
+    /** Timestamp when the workflow was written. */
+    static final String CFG_WRITTEN_ON = "written_on";
 
     public static WorkflowLoadResult loadProject(final File directory,
             final ExecutionMonitor exec, final WorkflowLoadHelper loadHelper)
@@ -6378,10 +6392,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         "Unable to load workflow, version string \"" + v
                         + "\" is unknown");
             default:
-                version = WorkflowPersistorVersion200.VERSION_LATEST;
+                version = LoadVersion.FUTURE;
                 persistor = new WorkflowPersistorVersion200(tableRep,
                         fileStoreHandlerRepository,
                         workflowknimeRef, loadHelper, version, isProject);
+                persistor.setDirtyAfterLoad();
             }
         }
         return persistor;
@@ -6947,6 +6962,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
                 if (isWorkingDirectory) {
                     m_loadVersion = saveVersion;
+                }
+                if (m_authorInformation == null) {
+                    m_authorInformation = new AuthorInformation();
+                } else {
+                    m_authorInformation = new AuthorInformation(m_authorInformation);
                 }
                 workflowDirRef.getFile().mkdirs();
                 WorkflowPersistorVersion200.save(
@@ -7922,6 +7942,61 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public Set<NodeGraphAnnotation> getNodeGraphAnnotation(final NodeID id) {
         return m_workflow.getNodeGraphAnnotations(id);
+    }
+
+    /** Meta data such as who create the workflow and who edited it last and when.
+     * @since 2.8 */
+    public static final class AuthorInformation {
+
+        /** Info for workflows created prior 2.8. */
+        static final AuthorInformation UNKNOWN = new AuthorInformation("<unknown>", new Date(0), null, null);
+
+        private final String m_author;
+        private final Date m_authoredDate;
+        private final String m_lastEditor;
+        private final Date m_lastEditDate;
+
+        private AuthorInformation() {
+            this (System.getProperty("user.name"), new Date(), null, null);
+        }
+
+        private AuthorInformation(final AuthorInformation past) {
+            this (past.m_author, past.m_authoredDate, System.getProperty("user.name"), new Date());
+        }
+
+        /**
+         * @param author
+         * @param authoredDate
+         * @param lastEditor
+         * @param lastEditDate
+         */
+        AuthorInformation(final String author, final Date authoredDate,
+            final String lastEditor, final Date lastEditDate) {
+            m_author = author;
+            m_authoredDate = authoredDate;
+            m_lastEditor = lastEditor;
+            m_lastEditDate = lastEditDate;
+        }
+
+        /** @return Name of the workflow author (person). Null when not saved yet. */
+        String getAuthor() {
+            return m_author;
+        }
+
+        /** @return Date when the workflow was saved the first time. Can be null. */
+        Date getAuthoredDate() {
+            return m_authoredDate;
+        }
+
+        /** @return Name of the person who edited the workflow last (on last save). Null when not saved yet. */
+        String getLastEditor() {
+            return m_lastEditor;
+        }
+
+        /** @return Date when workflow was saved last. */
+        Date getLastEditDate() {
+            return m_lastEditDate;
+        }
     }
 
 }

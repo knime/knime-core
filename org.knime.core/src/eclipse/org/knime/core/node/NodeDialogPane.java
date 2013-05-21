@@ -92,7 +92,6 @@ import javax.swing.event.ChangeListener;
 import javax.swing.plaf.basic.BasicComboPopup;
 
 import org.knime.core.data.DataTableSpec;
-import org.knime.core.node.Node.SettingsLoaderAndWriter;
 import org.knime.core.node.config.Config;
 import org.knime.core.node.config.ConfigEditJTree;
 import org.knime.core.node.config.ConfigEditTreeEvent;
@@ -359,28 +358,37 @@ public abstract class NodeDialogPane {
             final CredentialsProvider credentialsProvider,
             final boolean isWriteProtected)
         throws NotConfigurableException {
-        NodeSettings modelSettings = null;
-        NodeSettings flowVariablesSettings = null;
+        NodeSettingsRO modelSettings = null;
+        NodeSettingsRO flowVariablesSettings = null;
         m_flowObjectStack = foStack;
         m_credentialsProvider = credentialsProvider;
         m_specs = specs;
         m_data = data;
         m_isWriteProtected = isWriteProtected;
+
+        SingleNodeContainerSettings sncSettings;
         try {
-            SettingsLoaderAndWriter l = SettingsLoaderAndWriter.load(settings);
-            modelSettings = l.getModelSettings();
-            flowVariablesSettings = l.getVariablesSettings();
-        } catch (InvalidSettingsException e) {
+            sncSettings = new SingleNodeContainerSettings(settings);
+            modelSettings = sncSettings.getModelSettings();
+            flowVariablesSettings = sncSettings.getVariablesSettings();
+        } catch (InvalidSettingsException ise) {
             // silently ignored here, variables get assigned default values
             // if they are null
+            sncSettings = new SingleNodeContainerSettings();
         }
         if (modelSettings == null) {
             modelSettings = new NodeSettings("empty");
         }
-
+        if (m_memPolicyTab != null) {
+            MemoryPolicy memoryPolicy = sncSettings.getMemoryPolicy();
+            if (memoryPolicy == null) {
+                memoryPolicy = MemoryPolicy.CacheSmallInMemory;
+            }
+            m_memPolicyTab.setStatus(memoryPolicy);
+        }
 
         final AtomicReference<Throwable> exRef = new AtomicReference<Throwable>();
-        final NodeSettings ms = modelSettings;
+        final NodeSettingsRO ms = modelSettings;
         Runnable r = new Runnable() {
             @Override
             public void run() {
@@ -407,24 +415,11 @@ public abstract class NodeDialogPane {
         // output memory policy and job manager (stored in NodeContainer)
         if (m_memPolicyTab != null || m_jobMgrTab != null) {
             NodeContainerSettings ncSettings;
-            SingleNodeContainerSettings sncSettings;
             try {
                 ncSettings = new NodeContainerSettings();
                 ncSettings.load(settings);
             } catch (InvalidSettingsException ise) {
                 ncSettings = new NodeContainerSettings();
-            }
-            try {
-                sncSettings = new SingleNodeContainerSettings(settings);
-            } catch (InvalidSettingsException ise) {
-                sncSettings = new SingleNodeContainerSettings();
-            }
-            if (m_memPolicyTab != null) {
-                MemoryPolicy memoryPolicy = sncSettings.getMemoryPolicy();
-                if (memoryPolicy == null) {
-                    memoryPolicy = MemoryPolicy.CacheSmallInMemory;
-                }
-                m_memPolicyTab.setStatus(memoryPolicy);
             }
             if (m_jobMgrTab != null) {
                 m_jobMgrTab.loadSettings(ncSettings, specs);
@@ -453,9 +448,7 @@ public abstract class NodeDialogPane {
      * @param settings To write to. Forwarded to abstract saveSettings method.
      * @throws InvalidSettingsException If any of the writing fails.
      */
-    void internalSaveSettingsTo(final NodeSettingsWO settings)
-    throws InvalidSettingsException {
-        SettingsLoaderAndWriter l = new SettingsLoaderAndWriter();
+    void internalSaveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         NodeSettings model = new NodeSettings("field_ignored");
         try {
             saveSettingsTo(model);
@@ -470,15 +463,14 @@ public abstract class NodeDialogPane {
             updateFlowVariablesTab();
         }
         NodeSettings variables = m_flowVariableTab.getVariableSettings();
-        l.setModelSettings(model);
-        l.setVariablesSettings(variables);
-        l.save(settings);
         SingleNodeContainerSettings s = new SingleNodeContainerSettings();
-        NodeContainerSettings ncSet = new NodeContainerSettings();
-
+        s.setModelSettings(model);
+        s.setVariablesSettings(variables);
         if (m_memPolicyTab != null) {
             s.setMemoryPolicy(m_memPolicyTab.getStatus());
         }
+
+        NodeContainerSettings ncSet = new NodeContainerSettings();
         if (m_jobMgrTab != null) {
             m_jobMgrTab.saveSettings(ncSet);
         }
@@ -1344,7 +1336,7 @@ public abstract class NodeDialogPane {
                     model = ConfigEditTreeModel.create(nodeSetsCopy);
                 } else {
                     model = ConfigEditTreeModel.create(
-                            nodeSetsCopy, (Config)varSettings);
+                            nodeSetsCopy, varSettings);
                 }
             } catch (InvalidSettingsException e) {
                 JOptionPane.showMessageDialog(this, "Errors reading variable "

@@ -194,6 +194,11 @@ class Buffer implements KNIMEStreamConstants {
      */
     private static final String CFG_SIZE = "table.size";
 
+    /** Config entry for compression format.
+     * @since 2.8
+     */
+    private static final String CFG_COMPRESSION = "container.compression";
+
     /**
      * Config entry: Sub element in config that keeps the list of cell class information (used to be a plain array).
      */
@@ -206,10 +211,10 @@ class Buffer implements KNIMEStreamConstants {
     private static final String CFG_CELL_SINGLE_ELEMENT_TYPE = "collection.element.type";
 
     /** Current version string. */
-    private static final String VERSION = "container_8";
+    private static final String VERSION = "container_9";
 
     /** The version number corresponding to VERSION. */
-    private static final int IVERSION = 8;
+    private static final int IVERSION = 9;
 
     private static final HashMap<String, Integer> COMPATIBILITY_MAP;
 
@@ -222,7 +227,8 @@ class Buffer implements KNIMEStreamConstants {
         COMPATIBILITY_MAP.put("container_5", 5); // 2.0 TechPreview Version
         COMPATIBILITY_MAP.put("container_6", 6); // 2.0 Alpha
         COMPATIBILITY_MAP.put("container_7", 7); // 2.0.0 (final)
-        COMPATIBILITY_MAP.put(VERSION, IVERSION); // version 2.0.1++
+        COMPATIBILITY_MAP.put("container_8", 8); // version 2.0.1++
+        COMPATIBILITY_MAP.put(VERSION, IVERSION);
         // NOTE consider to also increment the workflow.knime version number
         // when updating this list
     }
@@ -339,6 +345,14 @@ class Buffer implements KNIMEStreamConstants {
         BLOB_COMPRESS_MAP.put(cl, result);
         return result;
     }
+
+    /** Compression on the binary (main) file. */
+    enum CompressionFormat {
+        Gzip,
+        None;
+    }
+
+    private CompressionFormat m_compressionFormat;
 
     /** the file to write to. */
     private File m_binFile;
@@ -475,6 +489,7 @@ class Buffer implements KNIMEStreamConstants {
         m_localRepository = localRep;
         m_fileStoreHandler = fileStoreHandler;
         m_fileStoreHandlerRepository = fileStoreHandler.getFileStoreHandlerRepository();
+        m_compressionFormat = IS_USE_GZIP ? CompressionFormat.Gzip : CompressionFormat.None;
     }
 
     /**
@@ -550,8 +565,8 @@ class Buffer implements KNIMEStreamConstants {
     }
 
     /** @return Whether stream is zipped. */
-    final boolean isBinFileGZipped() {
-        return IS_USE_GZIP;
+    final CompressionFormat getBinFileCompressionFormat() {
+        return m_compressionFormat;
     }
 
     /**
@@ -964,6 +979,7 @@ class Buffer implements KNIMEStreamConstants {
         NodeSettingsWO subSettings = settings.addNodeSettings(CFG_INTERNAL_META);
         subSettings.addString(CFG_VERSION, getVersion());
         subSettings.addInt(CFG_SIZE, size());
+        subSettings.addString(CFG_COMPRESSION, m_compressionFormat.name());
         subSettings.addBoolean(CFG_CONTAINS_BLOBS, m_containsBlobs);
         // added between version 8 and 9 - no increment of version number
         String fileStoresUUID = null;
@@ -1011,6 +1027,22 @@ class Buffer implements KNIMEStreamConstants {
             if (m_size < 0) {
                 throw new IOException("Table size must not be < 0: " + m_size);
             }
+            final CompressionFormat cF;
+            if (m_version < 3) { // stream was not zipped in KNIME 1.1.x
+                cF = CompressionFormat.None;
+            } else if (m_version >= 9) {
+                String compFormat = subSettings.getString(CFG_COMPRESSION);
+                try {
+                    cF = CompressionFormat.valueOf(compFormat);
+                } catch (Exception e) {
+                    throw new InvalidSettingsException(String.format("Unable to parse \"%s\" property (\"%s\"): %s",
+                            CFG_COMPRESSION, compFormat, e.getMessage()), e);
+                }
+            } else {
+                cF = CompressionFormat.Gzip;
+            }
+            m_compressionFormat = cF;
+            // added somewhere between format 8 and 9
             m_containsBlobs = false;
             if (m_version >= 4) { // no blobs in version 1.1.x
                 m_containsBlobs = subSettings.getBoolean(CFG_CONTAINS_BLOBS);
@@ -1434,15 +1466,20 @@ class Buffer implements KNIMEStreamConstants {
      */
     private DCObjectOutputVersion2 initOutFile(final OutputStream outStream) throws IOException {
         OutputStream wrap;
-        if (IS_USE_GZIP) {
-            wrap = new GZIPOutputStream(outStream);
-            // buffering the input stream is important as the blockable
-            // stream, which will be put on top of it, reads bytes individually
-            // (had a table, on which a single read-scan took ~6min without
-            // and ~30s with buffering)
-            wrap = new BufferedOutputStream(wrap);
-        } else {
-            wrap = outStream;
+        switch (m_compressionFormat) {
+            case Gzip:
+                wrap = new GZIPOutputStream(outStream);
+                // buffering the input stream is important as the blockable
+                // stream, which will be put on top of it, reads bytes individually
+                // (had a table, on which a single read-scan took ~6min without
+                // and ~30s with buffering)
+                wrap = new BufferedOutputStream(wrap);
+                break;
+            case None:
+                wrap = outStream;
+                break;
+            default:
+                throw new IOException("Unsupported compression format: " + m_compressionFormat);
         }
         return new DCObjectOutputVersion2(wrap, this);
     }

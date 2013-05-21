@@ -181,8 +181,17 @@ class NodeContainerMetaPersistorVersion200 extends NodeContainerMetaPersistorVer
     /** {@inheritDoc} */
     @Override
     protected NodeMessage loadNodeMessage(final NodeSettingsRO settings) throws InvalidSettingsException {
-        if (settings.containsKey("node_message")) {
-            NodeSettingsRO sub = settings.getNodeSettings("node_message");
+        final String key;
+        // in 2.8 we merged the "settings.xml" with the "node.xml". Both files contained the node_message,
+        // therefore we write the NC message under a new name to allow old KNIME instances (2.7-) to load
+        // the node message in the Node class.
+        if (getLoadVersion().ordinal() >= LoadVersion.V280.ordinal()) {
+            key = "nodecontainer_message";
+        } else {
+            key = "node_message";
+        }
+        if (settings.containsKey(key)) {
+            NodeSettingsRO sub = settings.getNodeSettings(key);
             String typeS = sub.getString("type");
             if (typeS == null) {
                 throw new InvalidSettingsException("Message type must not be null");
@@ -301,7 +310,7 @@ class NodeContainerMetaPersistorVersion200 extends NodeContainerMetaPersistorVer
     protected static void saveNodeMessage(final NodeSettingsWO settings, final NodeContainer nc) {
         NodeMessage message = nc.getNodeMessage();
         if (message != null && !message.getMessageType().equals(Type.RESET)) {
-            NodeSettingsWO sub = settings.addNodeSettings("node_message");
+            NodeSettingsWO sub = settings.addNodeSettings("nodecontainer_message");
             sub.addString("type", message.getMessageType().name());
             sub.addString("message", message.getMessage());
         }

@@ -67,6 +67,7 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.workflow.WorkflowManager.AuthorInformation;
 import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
 
 /**
@@ -76,7 +77,7 @@ import org.knime.core.node.workflow.WorkflowPersistorVersion200.LoadVersion;
  * it throws exceptions when any of the load routines are called.
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class PasteWorkflowContentPersistor implements WorkflowPersistor {
+final class PasteWorkflowContentPersistor implements WorkflowPersistor {
 
     private final Set<ConnectionContainerTemplate> m_connectionSet;
     private final Set<ConnectionContainerTemplate> m_additionalConnectionSet;
@@ -178,6 +179,13 @@ public class PasteWorkflowContentPersistor implements WorkflowPersistor {
     /** {@inheritDoc} */
     @Override
     public MetaNodeTemplateInformation getTemplateInformation() {
+        throwUnsupportedOperationException();
+        return null;
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    public AuthorInformation getAuthorInformation() {
         throwUnsupportedOperationException();
         return null;
     }

@@ -119,5 +119,4 @@ public interface NodePersistor extends NodeContentPersistor {
     // may return null in which case the node decides what to do.
     LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy();
 
-    NodeSettingsRO getSettings();
 }

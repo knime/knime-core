@@ -64,17 +64,6 @@ import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
  */
 public class CopyNodePersistor implements NodePersistor {
 
-    private final NodeSettingsRO m_settings;
-
-    /** Create a new persistor.
-     * @param original The node to copy.
-     */
-    CopyNodePersistor(final Node original) {
-        NodeSettings settings = new NodeSettings("copy");
-        original.saveSettingsTo(settings);
-        m_settings = settings;
-    }
-
     /** Apply the settings to the new node.
      * @param node the node just created.
      */
@@ -90,12 +79,6 @@ public class CopyNodePersistor implements NodePersistor {
     @Override
     public LoadNodeModelSettingsFailPolicy getModelSettingsFailPolicy() {
         return LoadNodeModelSettingsFailPolicy.IGNORE;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public NodeSettingsRO getSettings() {
-        return m_settings;
     }
 
     /** {@inheritDoc} */
