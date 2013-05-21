@@ -62,6 +62,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
 
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.port.MetaPortInfo;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.workflow.ConnectionContainer.ConnectionType;
@@ -75,35 +76,40 @@ import org.knime.core.util.Pair;
  */
 class Workflow {
 
+    /** my logger. */
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(Workflow.class);
+
     /** mapping from NodeID to Nodes. */
-    private final TreeMap<NodeID, NodeContainer> m_nodes =
-        new TreeMap<NodeID, NodeContainer>();
+    private final TreeMap<NodeID, NodeContainer> m_nodes = new TreeMap<NodeID, NodeContainer>();
 
     // Connections (by node, source and destination). Note that meta
     // connections (in- and outgoing of this workflow) are also part
     // of these maps. They will have our own ID as source/dest ID.
 
     /** mapping from source NodeID to set of outgoing connections. */
-    private final TreeMap<NodeID, Set<ConnectionContainer>>
-        m_connectionsBySource =
-        new TreeMap<NodeID, Set<ConnectionContainer>>();
+    private final TreeMap<NodeID, Set<ConnectionContainer>> m_connectionsBySource
+                                        = new TreeMap<NodeID, Set<ConnectionContainer>>();
     /** mapping from destination NodeID to set of incoming connections. */
-    private final TreeMap<NodeID, Set<ConnectionContainer>>
-        m_connectionsByDest =
-        new TreeMap<NodeID, Set<ConnectionContainer>>();
+    private final TreeMap<NodeID, Set<ConnectionContainer>> m_connectionsByDest
+                                        = new TreeMap<NodeID, Set<ConnectionContainer>>();
 
+    private WorkflowManager m_wfm;
     private NodeID m_id;
 
     /**
      * Constructor - initialize sets for meta node in/out connections.
+     *
+     * @param wfm WorkflowManager holding this workflow (note that this may not completely initalized!)
      * @param id of workflow
      *
      */
-    Workflow(final NodeID id) {
+    Workflow(final WorkflowManager wfm, final NodeID id) {
+        m_wfm = wfm;
         m_id = id;
         // add sets for this (meta-) node's in- and output connections
         m_connectionsByDest.put(id, new LinkedHashSet<ConnectionContainer>());
         m_connectionsBySource.put(id, new LinkedHashSet<ConnectionContainer>());
+        clearGraphAnnotationCache();
     }
 
     /**
@@ -151,6 +157,7 @@ class Workflow {
         // create Sets of in and outgoing connections
         m_connectionsBySource.put(id, new LinkedHashSet<ConnectionContainer>());
         m_connectionsByDest.put(id, new LinkedHashSet<ConnectionContainer>());
+        clearGraphAnnotationCache();
     }
 
     /** Remove given node.
@@ -162,7 +169,8 @@ class Workflow {
         // clean up the connection lists
         m_connectionsBySource.remove(id);
         m_connectionsByDest.remove(id);
-        // and return removed node id
+        clearGraphAnnotationCache();
+        // and return removed node container
         return m_nodes.remove(id);
     }
 
@@ -170,21 +178,16 @@ class Workflow {
      * @return collection of all NodeContainers that are part of this workflow.
      */
     Collection<NodeContainer> getNodeValues() {
-        return m_nodes.values();
+        Collection<NodeContainer> cnc = m_nodes.values();
+        return cnc == null ? null : Collections.unmodifiableCollection(cnc);
     }
 
     /**
-     * @return collection of all NodeIDs that are part of this workflow.
+     * @return unmodifiable collection of all NodeIDs that are part of this workflow.
      */
     Set<NodeID> getNodeIDs() {
-        return m_nodes.keySet();
-    }
-
-    /**
-     * @return tree map of NodeID/NodeContainers.
-     */
-    TreeMap<NodeID, NodeContainer> getNodeMap() {
-        return m_nodes;
+        Set<NodeID> sn = m_nodes.keySet();
+        return sn == null ? null : Collections.unmodifiableSet(sn);
     }
 
     /**
@@ -208,7 +211,8 @@ class Workflow {
      * @return set as described above
      */
     Set<ConnectionContainer> getConnectionsByDest(final NodeID id) {
-        return m_connectionsByDest.get(id);
+        Set<ConnectionContainer> scc = m_connectionsByDest.get(id);
+        return scc == null ? null : Collections.unmodifiableSet(scc);
     }
 
     /** Return all connections having the same destination.
@@ -217,7 +221,8 @@ class Workflow {
      * @return set as described above
      */
     Set<ConnectionContainer> getConnectionsBySource(final NodeID id) {
-        return m_connectionsBySource.get(id);
+        Set<ConnectionContainer> scc = m_connectionsBySource.get(id);
+        return scc == null ? null : Collections.unmodifiableSet(scc);
     }
 
     /**
@@ -225,9 +230,44 @@ class Workflow {
      *   source node ID.
      */
     Collection<Set<ConnectionContainer>> getConnectionsBySourceValues() {
-        return m_connectionsBySource.values();
+        Collection<Set<ConnectionContainer>> cscc = m_connectionsBySource.values();
+        return cscc == null ? null : Collections.unmodifiableCollection(cscc);
     }
 
+    /** Remove a connection.
+     *
+     * @param cc the connection to be removed.
+     * @throws IllegalArgumentException if connection does not exist.
+     */
+    void removeConnection(final ConnectionContainer cc) throws IllegalArgumentException {
+        // 1) try to delete it from set of outgoing connections
+        if (!m_connectionsBySource.get(cc.getSource()).remove(cc)) {
+            throw new IllegalArgumentException("Connection does not exist!");
+        }
+        clearGraphAnnotationCache();
+        // 2) remove connection from set of ingoing connections
+        if (!m_connectionsByDest.get(cc.getDest()).remove(cc)) {
+            throw new IllegalArgumentException("Connection did not exist (it did exist as outcoming conn.)!");
+        }
+        clearGraphAnnotationCache();
+    }
+
+    /** Add a connection.
+    *
+    * @param cc the connection to be added.
+    * @throws IllegalArgumentException if connection can not be added.
+    */
+    void addConnection(final ConnectionContainer cc) throws IllegalArgumentException {
+        // 1) try to insert it into set of outgoing connections
+        if (!m_connectionsBySource.get(cc.getSource()).add(cc)) {
+            throw new IllegalArgumentException("Connection already exists!");
+        }
+        clearGraphAnnotationCache();
+        // 2) insert connection into set of ingoing connections
+        if (!m_connectionsByDest.get(cc.getDest()).add(cc)) {
+            throw new IllegalArgumentException("Connection already exists (oddly enough only as incoming)!");
+        }
+    }
 
     /** Return map of node ids connected to the given node sorted in breadth
      * first order mapped to a set of portIDs. Note that also nodes which
@@ -247,8 +287,7 @@ class Workflow {
         completeSet(inclusionList, id, -1);
         // and then get all successors which are part of this list in a nice
         // BFS order
-        LinkedHashMap<NodeID, Set<Integer>> bfsSortedNodes
-                    = new LinkedHashMap<NodeID, Set<Integer>>();
+        LinkedHashMap<NodeID, Set<Integer>> bfsSortedNodes = new LinkedHashMap<NodeID, Set<Integer>>();
         // put the origin - note that none of it's ports (if any) are of
         // interest -  into the map
         bfsSortedNodes.put(id, new HashSet<Integer>());
@@ -757,16 +796,14 @@ class Workflow {
         HashSet<Integer> inSet = new HashSet<Integer>();
         // Map to remember connected nodes with the index of the corresponding
         // output port
-        TreeMap<NodeID, Integer> nodesToCheck
-                            = new TreeMap<NodeID, Integer>();
+        TreeMap<NodeID, Integer> nodesToCheck = new TreeMap<NodeID, Integer>();
         // find everything that is connected to an output port of this workflow
         // with an index contained in the set:
         for (ConnectionContainer cc : m_connectionsByDest.get(getID())) {
             if (outPortIx == cc.getDestPort()) {
                 NodeID prevID = cc.getSource();
                 if (prevID.equals(this.getID())) {
-                    assert cc.getType().
-                         equals(ConnectionContainer.ConnectionType.WFMTHROUGH);
+                    assert cc.getType().equals(ConnectionContainer.ConnectionType.WFMTHROUGH);
                     inSet.add(cc.getSourcePort());
                 } else {
                     nodesToCheck.put(prevID, cc.getSourcePort());
@@ -785,8 +822,7 @@ class Workflow {
             NodeContainer thisNode = m_nodes.get(thisID);
             if (thisNode instanceof SingleNodeContainer) {
                 // simply add everything that is connected to this node
-                for (ConnectionContainer cc : m_connectionsByDest.get(
-                        thisID)) {
+                for (ConnectionContainer cc : m_connectionsByDest.get(thisID)) {
                     NodeID prevID = cc.getSource();
                     if (prevID.equals(this.getID())) {
                         inSet.add(cc.getDestPort());
@@ -800,10 +836,8 @@ class Workflow {
                 assert thisNode instanceof WorkflowManager;
                 int portToCheck = nodesToCheck.get(thisID);
                 Set<Integer> connectedInPorts =
-                     ((WorkflowManager)thisNode).getWorkflow().
-                                          connectedInPorts(portToCheck);
-                for (ConnectionContainer cc : m_connectionsByDest.get(
-                        thisID)) {
+                     ((WorkflowManager)thisNode).getWorkflow().connectedInPorts(portToCheck);
+                for (ConnectionContainer cc : m_connectionsByDest.get(thisID)) {
                     if (connectedInPorts.contains(cc.getDestPort())) {
                         NodeID prevID = cc.getSource();
                         if (prevID.equals(this.getID())) {
@@ -829,9 +863,7 @@ class Workflow {
      * @param id of node to start search from
      * @param index of port the outgoing connection connected to
      */
-    private void completeSetBackwards(final HashSet<NodeID> nodes,
-            final NodeID id,
-            final int outgoingPortIndex) {
+    private void completeSetBackwards(final HashSet<NodeID> nodes, final NodeID id, final int outgoingPortIndex) {
         NodeContainer thisNode = m_nodes.get(id);
         for (ConnectionContainer cc : m_connectionsByDest.get(id)) {
             NodeID prevNodeID = cc.getSource();
@@ -847,18 +879,15 @@ class Workflow {
                     // through this WFM (if we have a port index, of course)
                     if (outgoingPortIndex < 0) {
                         // TODO check for unconnected metaoutports?
-                        completeSetBackwards(nodes, prevNodeID,
-                                cc.getSourcePort());
+                        completeSetBackwards(nodes, prevNodeID, cc.getSourcePort());
                     } else {
                         // find out which inports are connected through this
                         // WFM to the given outport
-                        Set<Integer> inports = wfm.getWorkflow()
-                                      .connectedInPorts(cc.getSourcePort());
+                        Set<Integer> inports = wfm.getWorkflow().connectedInPorts(cc.getSourcePort());
                         // and only add the predeccessor if he is connected
                         // to one of those
                         if (inports.contains(cc.getDestPort())) {
-                            completeSetBackwards(nodes, prevNodeID,
-                                        cc.getSourcePort());
+                            completeSetBackwards(nodes, prevNodeID, cc.getSourcePort());
                         }
                     }
                 }
@@ -879,11 +908,9 @@ class Workflow {
      * @param outportIndices set of integers indicating the ports of interest
      * @return BF sorted list of node ids
      */
-    LinkedHashMap<NodeID, Set<Integer>> createBackwardsBreadthFirstSortedList(
-            final Set<Integer> outportIndices) {
+    LinkedHashMap<NodeID, Set<Integer>> createBackwardsBreadthFirstSortedList(final Set<Integer> outportIndices) {
         // this will be our result
-        LinkedHashMap<NodeID, Set<Integer>> sortedNodes
-                        = new LinkedHashMap<NodeID, Set<Integer>>();
+        LinkedHashMap<NodeID, Set<Integer>> sortedNodes = new LinkedHashMap<NodeID, Set<Integer>>();
         // find everything that is connected to an output port of this workflow
         // with an index contained in the set and complete the list,
         // quick&dirty backwards depth first:
@@ -893,8 +920,7 @@ class Workflow {
                 NodeID prevID = cc.getSource();
                 inclusionList.add(prevID);
                 if (!prevID.equals(this.getID())) {
-                    completeSetBackwards(inclusionList, prevID,
-                            cc.getSourcePort());
+                    completeSetBackwards(inclusionList, prevID, cc.getSourcePort());
                     // also add this node as starting point for our ordered list
                     if (sortedNodes.containsKey(prevID)) {
                         // node already added: add port index to set
@@ -1040,8 +1066,7 @@ class Workflow {
         MetaPortInfo[] result = new MetaPortInfo[wfm.getNrOutPorts()];
         for (int i = 0; i < result.length; i++) {
             boolean hasInsideConnection = false;
-            for (ConnectionContainer cc : wfmFlow.getConnectionsByDest(
-                    metaNodeID)) {
+            for (ConnectionContainer cc : wfmFlow.getConnectionsByDest(metaNodeID)) {
                 if (cc.getDestPort() == i) {
                     hasInsideConnection = true;
                     break;
@@ -1059,8 +1084,7 @@ class Workflow {
             if (hasInsideConnection || outsideCount > 0) {
                 isConnected = true;
                 if (hasInsideConnection && outsideCount > 0) {
-                    message = "Connected to one upstream node and "
-                        + outsideCount + " downstream node(s)";
+                    message = "Connected to one upstream node and" + outsideCount + " downstream node(s)";
                 } else if (hasInsideConnection) {
                     // could also be a through conn but we ignore here
                     message = "Connected to one upstream node";
@@ -1079,8 +1103,7 @@ class Workflow {
     /**
      * @param newPorts */
     List<Pair<ConnectionContainer, ConnectionContainer>>
-        changeDestinationPortsForMetaNode(final NodeID metaNodeID,
-                final MetaPortInfo[] newPorts) {
+    changeDestinationPortsForMetaNode(final NodeID metaNodeID, final MetaPortInfo[] newPorts) {
         // argument node is either a contained meta node or this wfm itself
         // (latter only when updating outgoing connections)
         assert metaNodeID.equals(getID()) || m_nodes.get(metaNodeID) instanceof WorkflowManager;
@@ -1104,8 +1127,7 @@ class Workflow {
             }
             if (!hasBeenFound) {
                 throw new IllegalStateException("New meta port information array "
-                        + "does not include currently connected ports, unseen connection: "
-                        + cc);
+                        + "does not include currently connected ports, unseen connection: " + cc);
             }
         }
         return result;
@@ -1116,8 +1138,7 @@ class Workflow {
      * @param newPorts
      * @return */
     List<Pair<ConnectionContainer, ConnectionContainer>>
-        changeSourcePortsForMetaNode(final NodeID metaNodeID,
-                final MetaPortInfo[] newPorts) {
+    changeSourcePortsForMetaNode(final NodeID metaNodeID, final MetaPortInfo[] newPorts) {
         // argument node is either a contained meta node or this wfm itself
         // (latter only when updating outgoing connections)
         assert metaNodeID.equals(getID()) || m_nodes.get(metaNodeID) instanceof WorkflowManager;
@@ -1199,14 +1220,47 @@ class Workflow {
     }
 
     /** Return matching LoopEnd node for the given LoopStart.
+    *
+    * @param id The requested start node (instanceof LoopStart)
+    * @throws IllegalLoopException if loop setup is wrong
+    * @throws IllegalArgumentException if argument is not a LoopStart node
+    * @return id of end node or null if no such node was found.
+    */
+    NodeID getMatchingLoopEnd(final NodeID id) throws IllegalLoopException {
+       NodeContainer nc = getNode(id);
+       if (!(nc instanceof SingleNodeContainer)) {
+           throw new IllegalArgumentException("Not a SingleNodeContainer / LoopStartNode " + id);
+       }
+       SingleNodeContainer snc = (SingleNodeContainer)nc;
+       if (!snc.isModelCompatibleTo(LoopStartNode.class)) {
+           throw new IllegalArgumentException("Not a LoopStartNode " + id);
+       }
+       if (m_nodeAnnotationCache == null) {
+           this.updateGraphAnnotationCache();
+       }
+       for (NodeGraphAnnotation nga : m_nodeAnnotationCache) {
+           if (nga.getID().equals(id)) {
+               assert nga.getOutportIndex() == -1;  // must be SingleNodeContainer, ports don't matter.
+               NodeID end = nga.peekEndNodeStack();
+               if (end != null) {
+                   return end;
+               } else {
+                   return null;
+               }
+           }
+       }
+       assert false : "Failed to find NodeGraphAnnotation for node from this very workflow.";
+       return null;
+    }
+
+    /** Return matching LoopEnd node for the given LoopStart.
      *
      * @param id The requested start node (instanceof LoopStart)
      * @throws IllegalLoopException if loop setup is wrong
      * @throws IllegalArgumentException if argument is not a LoopStart node
      * @return id of end node or null if no such node was found.
      */
-    NodeID getMatchingLoopEnd(final NodeID id)
-    throws IllegalLoopException {
+    NodeID getMatchingLoopEndOLD(final NodeID id) throws IllegalLoopException {
         NodeContainer nc = getNode(id);
         if (!(nc instanceof SingleNodeContainer)) {
             throw new IllegalArgumentException("Not a Loop Start Node " + id);
@@ -1223,25 +1277,20 @@ class Workflow {
             Pair<NodeID, Integer> p = st.pop();
             NodeID currentID = p.getFirst();
             int currentDepth = p.getSecond();
-            for (ConnectionContainer cc
-                    : m_connectionsBySource.get(currentID)) {
+            for (ConnectionContainer cc : m_connectionsBySource.get(currentID)) {
                 assert currentID.equals(cc.getSource());
                 NodeID destID = cc.getDest();
                 if (this.getID().equals(destID)) {
-                    throw new IllegalLoopException("Loops can not leave"
-                                                             + " workflow!");
+                    throw new IllegalLoopException("Loops can not leave workflow!");
                 }
                 NodeContainer destNC = getNode(destID);
                 if (destNC instanceof SingleNodeContainer) {
                     SingleNodeContainer destSNC = (SingleNodeContainer)destNC;
                     if (destSNC.isModelCompatibleTo(LoopEndNode.class)) {
                         if (currentDepth == 0) {
-                            if ((foundEnd != null)
-                                    && (!foundEnd.equals(destID))) {
-                                // we can reach it twice but we should never
-                                // reach another end node!
-                                throw new IllegalLoopException("Loops can not"
-                                      + " connect to more than one End Node!");
+                            if ((foundEnd != null) && (!foundEnd.equals(destID))) {
+                                // we can reach it twice but we should never reach another end node!
+                                throw new IllegalLoopException("Loops can not connect to more than one End Node!");
                             }
                             foundEnd = destID;
                             continue;
@@ -1260,14 +1309,47 @@ class Workflow {
     }
 
     /** Return matching LoopStart node for the given LoopEnd.
+    *
+    * @param id The requested end node (instanceof LoopEnd)
+    * @throws IllegalLoopException if loop setup is wrong
+    * @throws IllegalArgumentException if argument is not a LoopEnd node
+    * @return id of start node or null if no such node was found.
+    */
+    NodeID getMatchingLoopStart(final NodeID id) throws IllegalLoopException {
+       NodeContainer nc = getNode(id);
+       if (!(nc instanceof SingleNodeContainer)) {
+           throw new IllegalArgumentException("Not a SingleNodeContainer / LoopEndNode " + id);
+       }
+       SingleNodeContainer snc = (SingleNodeContainer)nc;
+       if (!snc.isModelCompatibleTo(LoopEndNode.class)) {
+           throw new IllegalArgumentException("Not a LoopEndNode " + id);
+       }
+       if (m_nodeAnnotationCache == null) {
+           this.updateGraphAnnotationCache();
+       }
+       for (NodeGraphAnnotation nga : m_nodeAnnotationCache) {
+           if (nga.getID().equals(id)) {
+               assert nga.getOutportIndex() == -1;  // must be SingleNodeContainer, ports don't matter.
+               NodeID start = nga.peekStartNodeStack();
+               if (start != null) {
+                   return start;
+               } else {
+                   return null;
+               }
+           }
+       }
+       assert false : "Failed to find NodeGraphAnnotation for node from this very workflow.";
+       return null;
+    }
+
+    /** Return matching LoopStart node for the given LoopEnd.
      *
      * @param id The requested end node (instanceof LoopEnd)
      * @throws IllegalLoopException if loop setup is wrong
      * @throws IllegalArgumentException if argument is not a LoopEnd node
      * @return id of start node or null if no such node was found.
      */
-    NodeID getMatchingLoopStart(final NodeID id)
-    throws IllegalLoopException {
+    NodeID getMatchingLoopStartOLD(final NodeID id) throws IllegalLoopException {
         NodeContainer nc = getNode(id);
         if (!(nc instanceof SingleNodeContainer)) {
             throw new IllegalArgumentException("Not a Loop End Node " + id);
@@ -1319,185 +1401,6 @@ class Workflow {
         return foundStart;
     }
 
-    /** Analyse entire workflow graph and mark scope start/end node pairs and
-     * level of layered depth search. Do not dive into metanodes but consider
-     * their internal connectivity to continue outside search on appropriate
-     * ports.
-     */
-    /* Private helper class */
-    private class NodeIDWithLayerAndScope implements Comparable<NodeIDWithLayerAndScope> {
-        private final NodeID m_id;
-        private int m_outportIndex;
-        private int m_depth;
-        private HashSet<Integer> m_connectedMetaInPorts;
-        private Stack<NodeID> m_scopes;
-        // constructor for depth=0 nodes not coming from a metanode inport - stack will be empty
-        public NodeIDWithLayerAndScope(final NodeID id) {
-            m_id = id;
-            m_outportIndex = -1;
-            m_depth = 0;
-            m_connectedMetaInPorts = new HashSet<Integer>();
-            m_scopes = new Stack<NodeID>();
-        }
-        // constructor for depth=0 nodes coming from a metanode inport - stack will be empty
-        public NodeIDWithLayerAndScope(final NodeID id, final int metanodeInportIx) {
-            m_id = id;
-            m_outportIndex = metanodeInportIx;
-            m_depth = 0;
-            m_connectedMetaInPorts = new HashSet<Integer>();
-            m_connectedMetaInPorts.add(metanodeInportIx);
-            m_scopes = new Stack<NodeID>();
-        }
-        // constructor for depth > 0 - depth & stack will be inialized (copied!) from predecessor
-        public NodeIDWithLayerAndScope(final NodeID id, final int outportIx, final NodeIDWithLayerAndScope prec) {
-            m_id = id;
-            m_outportIndex = outportIx;
-            m_depth = prec.m_depth + 1;
-            m_connectedMetaInPorts = (HashSet<Integer>)prec.m_connectedMetaInPorts.clone();
-            m_scopes = (Stack<NodeID>)prec.m_scopes.clone();
-        }
-        // merge with another object arriving at the same node
-        public void merge(final NodeIDWithLayerAndScope nls2) {
-            // join the lists of meta node inports this chain of nodes is connected to
-            m_connectedMetaInPorts.addAll(nls2.m_connectedMetaInPorts);
-            // merge the two stacks:
-            // a) they are equal: easy
-            // b) one is longer but the common parts of equal: use the longer
-            // c) fail.
-            m_scopes = m_scopes.size() < nls2.m_scopes.size() ? (Stack<NodeID>)nls2.m_scopes.clone() : m_scopes;
-        }
-        /** @return id of node. */
-        public NodeID getID() { return m_id; }
-        /** @return input port indices. */
-        public int getOutportIndex() { return m_outportIndex; }
-        /** @param d new depth of node. */
-        public void setDepth(final int d) { m_depth = d; }
-        /** @return depth of node. */
-        public int getDepth() { return m_depth; }
-        /** @param id add a scope start node id to stack */
-        public void pushScopeMarker(final NodeID id) { m_scopes.push(id); }
-        /** @return pop scope start node id from stack */
-        public NodeID popScopeMarker() { return m_scopes.pop(); }
-        /** {@inheritDoc} */
-        @Override
-        public int compareTo(final NodeIDWithLayerAndScope o2) {
-            return (Integer.valueOf(this.m_depth).compareTo(o2.m_depth));
-        }
-        /** {@inheritDoc} */
-        @Override
-        public boolean equals(final Object obj) {
-            if (!(obj instanceof NodeIDWithLayerAndScope)) {
-                return false;
-            }
-            return this.m_id.equals(((NodeIDWithLayerAndScope)obj).m_id)
-                    && (this.m_outportIndex == (((NodeIDWithLayerAndScope)obj).m_outportIndex));
-        }
-        /** {@inheritDoc} */
-        @Override
-        public int hashCode() {
-            return m_id.hashCode() + m_outportIndex;
-        }
-    }
-    /* actual routine */
-    private void analyseGraph() {
-        ArrayList<NodeIDWithLayerAndScope> sortedNodes;
-        sortedNodes = new ArrayList<NodeIDWithLayerAndScope>();
-        // insert metanode itself with all connected inports as "outport" indices
-        for (ConnectionContainer cc : getConnectionsBySource(getID())) {
-            NodeIDWithLayerAndScope nls = new NodeIDWithLayerAndScope(getID(), cc.getSourcePort());
-            if (!sortedNodes.contains(nls)) {
-                sortedNodes.add(nls);
-            }
-        }
-        // also add source nodes with all of their outports (SNC or WFM doesn't matter here!)
-        for (NodeID id : m_nodes.keySet()) {
-            if (m_connectionsByDest.get(id).size() == 0) {
-                NodeContainer nc = m_nodes.get(id);
-                NodeIDWithLayerAndScope nls = new NodeIDWithLayerAndScope(id);
-                if ((nc instanceof SingleNodeContainer)
-                        && (((SingleNodeContainer)nc).getNodeModel() instanceof ScopeStartNode)) {
-                    nls.pushScopeMarker(id);
-                }
-                sortedNodes.add(nls);
-            }
-        }
-        // now follow those nodes and keep adding until we reach and end or a metanode outport.
-        int currIndex = 0;
-        while (currIndex < sortedNodes.size()) {
-            NodeIDWithLayerAndScope currNLS = sortedNodes.get(currIndex);
-            NodeID currID = currNLS.getID();
-            int currOutport = currNLS.getOutportIndex();
-            int currDepth = currNLS.getDepth();
-            // and now find all nodes that are connected to this node/outport pair
-            for (ConnectionContainer cc : this.getConnectionsBySource(currID)) {
-                if ((currOutport == -1) || (currOutport == cc.getSourcePort())) {
-                    NodeID destID = cc.getDest();
-                    if (!destID.equals(this.getID())) {
-                        // only if we have not yet reached an outport - try to find node/port in existing list:
-                        NodeContainer destNC = m_nodes.get(destID);
-                        int destInPort = cc.getDestPort();
-                        // determine set of relevant outport indices
-                        Set<Integer> connectedOutports;
-                        if (destNC instanceof SingleNodeContainer) {
-                            // trivial for SNC: all
-                            connectedOutports = new HashSet<Integer>();
-                            connectedOutports.add(-1);
-                        } else {
-                            assert destNC instanceof WorkflowManager;
-                            connectedOutports = ((WorkflowManager)destNC).getWorkflow().connectedOutPorts(destInPort);
-                        }
-                        int ix = 0;
-                        for (ix = 0; ix < sortedNodes.size(); ix++) {
-                            NodeIDWithLayerAndScope nls = sortedNodes.get(ix);
-                            if ((nls.getID().equals(destID)) && (connectedOutports.contains(nls.getOutportIndex()))) {
-                                assert ix != currIndex;
-                                // node is already in list, merge stacks with "new" element
-                                nls.merge(new NodeIDWithLayerAndScope(destID, nls.getOutportIndex(), currNLS));
-                                // also adjust depth to new maximum.
-                                if (nls.getDepth() <= currDepth) {
-                                    // fix depth if smaller or equal
-                                    nls.setDepth(currDepth + 1);
-                                    if (ix < currIndex) {
-                                        // move this node to end of list if it was already "touched" so that depth of
-                                        // successors will also be adjusted!
-                                        nls = sortedNodes.remove(ix);
-                                        sortedNodes.add(nls);
-                                        // critical: we removed an element in our list which resided before our
-                                        // pointer. Make sure we still point to current node.
-                                        currIndex--;
-                                    }
-                                } else {
-                                    // don't fix, depth is already larger. Node was seen previously
-                                }
-                                // and remove this port from our list - no need to add it again later.
-                                connectedOutports.remove(sortedNodes.get(ix).getOutportIndex());
-                            }
-                            if (connectedOutports.size() == 0) {
-                                break;
-                            }
-                        }
-                        for (int o : connectedOutports) {
-                            // ...it's a node/port combo not yet in our list: add it
-                            NodeIDWithLayerAndScope nls = new NodeIDWithLayerAndScope(destID, o, currNLS);
-                            if (destNC instanceof SingleNodeContainer) {
-                                if (((SingleNodeContainer)destNC).getNodeModel() instanceof ScopeStartNode) {
-                                    nls.pushScopeMarker(destID);
-                                }
-                                if (((SingleNodeContainer)destNC).getNodeModel() instanceof ScopeEndNode) {
-                                    nls.popScopeMarker();
-                                }
-                            }
-                            sortedNodes.add(nls);
-                        }
-                    }
-                }
-            }
-            currIndex++;
-        }
-        // make sure nodes are sorted by their final depth!
-        Collections.sort(sortedNodes);
-    }
-
     /** Create list of nodes (id)s that are part of a loop body. Note that
      * this also includes any dangling branches which leave the loop but
      * do not connect back to the end-node. Used to re-execute all nodes
@@ -1511,15 +1414,12 @@ class Workflow {
      * @param startNode id of head of loop
      * @param endNode if of tail of loop
      * @return list of nodes within loop body & any dangling branches. The list
-     *   also contains the used input ports of each node.
-     * @throws IllegalLoopException
-     *    If there is a ill-posed loop (dangling branches)
+     *         also contains the used input ports of each node.
+     * @throws IllegalLoopException If there is a ill-posed loop (dangling branches)
      */
-    ArrayList<NodeAndInports> findAllNodesConnectedToLoopBody(
-            final NodeID startNode,
-            final NodeID endNode) throws IllegalLoopException {
-        ArrayList<NodeAndInports> tempOutput =
-                     findAllNodesInbetween(startNode, null, endNode);
+    ArrayList<NodeAndInports> findAllNodesConnectedToLoopBody(final NodeID startNode, final NodeID endNode)
+            throws IllegalLoopException {
+        ArrayList<NodeAndInports> tempOutput = findAllNodesInbetween(startNode, null, endNode);
         if (startNode.equals(endNode)) {
             // silly case - start = end node.
             return tempOutput;
@@ -1528,8 +1428,7 @@ class Workflow {
         for (NodeAndInports nai : tempOutput) {
             if (nai.getID().equals(this.getID())) {
                 // if any branch leaves this WFM, complain!
-                throw new IllegalLoopException(
-                    "Loops are not permitted to leave workflows!");
+                throw new IllegalLoopException("Loops are not permitted to leave workflows!");
             }
         }
         // make sure we have no branches from within the loop body reconnecting
@@ -1538,11 +1437,210 @@ class Workflow {
             createBreadthFirstSortedList(Collections.singleton(endNode), true);
         for (NodeAndInports nai2 : tempOutput) {
             if (nodesAfterEndNode.containsKey(nai2.getID())) {
-                throw new IllegalLoopException(
-                        "Branches are not permitted to leave loops!");
+                throw new IllegalLoopException("Branches are not permitted to leave loops!");
             }
         }
         return tempOutput;
     }
 
+    /** Return list of nodes that are part of the same scope as the given one.
+     * List will contain anchor node alone if there is no scope around it.
+     *
+     * @param anchor node
+     * @return list of nodes.
+     * @since 2.8
+     */
+    public List<NodeContainer> getNodesInScope(final SingleNodeContainer anchor) {
+        if (m_nodeAnnotationCache == null) {
+            updateGraphAnnotationCache();
+        }
+        NodeID scope = null;
+        for (NodeGraphAnnotation nga : m_nodeAnnotationCache) {
+            if (nga.getID().equals(anchor.getID())) {
+                scope = nga.peekStartNodeStack();
+                break;
+            }
+        }
+        ArrayList<NodeContainer> result = new ArrayList<NodeContainer>();
+        if (scope == null) {
+            // no scope - return anchor only
+            result.add(anchor);
+        } else {
+            for (NodeGraphAnnotation nga : m_nodeAnnotationCache) {
+                if (nga.startNodeStackContains(scope)) {
+                    result.add(m_nodes.get(nga.getID()));
+                }
+            }
+        }
+        return result;
+    }
+
+    ///////////////////////////
+    // Workflow Graph Analysis.
+    ///////////////////////////
+
+    /**
+     * @param id of node.
+     * @return set of graph annotations for this node.
+     * @since 2.8
+     */
+    public Set<NodeGraphAnnotation> getNodeGraphAnnotations(final NodeID id) {
+        if (m_nodeAnnotationCache == null) {
+            updateGraphAnnotationCache();
+        }
+        HashSet<NodeGraphAnnotation> output = new HashSet<NodeGraphAnnotation>();
+        for (NodeGraphAnnotation nga : m_nodeAnnotationCache) {
+            if (nga.getID().equals(id)) {
+                output.add(nga);
+            }
+        }
+        return output;
+    }
+
+    /** hold graph based annotations for all nodes. */
+    private ArrayList<NodeGraphAnnotation> m_nodeAnnotationCache = null;
+
+    /** clean cache - called internally whenever the structure (connections/nodes) are altered. */
+    private void clearGraphAnnotationCache() {
+        m_nodeAnnotationCache = null;
+        // also clear cache in parent - changes here may affect the connectivity outside as well.
+        if (m_wfm != null && m_wfm.getParent() != null && m_wfm.getParent().getWorkflow() != null) {
+            m_wfm.getParent().getWorkflow().clearGraphAnnotationCache();
+        }
+    }
+
+    /** Analyse entire workflow graph and mark scope start/end node pairs and
+     * level of layered depth search. Do not dive into metanodes but consider
+     * their internal connectivity to continue outside search on appropriate
+     * ports.
+     */
+    private void updateGraphAnnotationCache() {
+        LOGGER.debug("Triggering graph analysis on " + getID());
+        assert m_nodeAnnotationCache == null;
+        m_nodeAnnotationCache = new ArrayList<NodeGraphAnnotation>();
+        // 1) add start nodes.
+        // insert metanode itself with all connected inports as "outport" indices
+        for (ConnectionContainer cc : getConnectionsBySource(getID())) {
+            NodeGraphAnnotation nls = new NodeGraphAnnotation(getID(), cc.getSourcePort());
+            if (!m_nodeAnnotationCache.contains(nls)) {
+                m_nodeAnnotationCache.add(nls);
+            }
+        }
+        // also add source nodes with all of their outports (SNC or WFM doesn't matter here!)
+        for (NodeID id : m_nodes.keySet()) {
+            if (m_connectionsByDest.get(id).size() == 0) {
+                NodeContainer nc = m_nodes.get(id);
+                NodeGraphAnnotation nls = new NodeGraphAnnotation(nc);
+                m_nodeAnnotationCache.add(nls);
+            }
+        }
+        // 2) follow chain of nodes and keep adding until we reach and end or a metanode outport.
+        int currIndex = 0;
+        while (currIndex < m_nodeAnnotationCache.size()) {
+            NodeGraphAnnotation currNGA = m_nodeAnnotationCache.get(currIndex);
+            NodeID currID = currNGA.getID();
+            int currOutport = currNGA.getOutportIndex();
+            // find all nodes that are connected to this node/outport pair
+            for (ConnectionContainer cc : this.getConnectionsBySource(currID)) {
+                if ((currOutport == -1) || (currOutport == cc.getSourcePort())) {
+                    NodeID destID = cc.getDest();
+                    if (!destID.equals(this.getID())) {
+                        // only if we have not yet reached an outport - try to find node/port in existing list:
+                        NodeContainer destNC = m_nodes.get(destID);
+                        int destInPort = cc.getDestPort();
+                        // determine set of relevant outport indices
+                        Set<Integer> connectedOutports;
+                        if (destNC instanceof SingleNodeContainer) {
+                            // trivial for SNC: all ports (indicated by -1 place holder)
+                            connectedOutports = new HashSet<Integer>();
+                            connectedOutports.add(-1);
+                        } else {
+                            assert destNC instanceof WorkflowManager;
+                            // retrieve outports of this node that are (internally) connected to given inport
+                            connectedOutports = ((WorkflowManager)destNC).getWorkflow().connectedOutPorts(destInPort);
+                        }
+                        int ix = 0;
+                        while (ix < m_nodeAnnotationCache.size()) {
+                            NodeGraphAnnotation nga = m_nodeAnnotationCache.get(ix);
+                            int outportIndex = nga.getOutportIndex();
+                            if ((nga.getID().equals(destID)) && (connectedOutports.contains(outportIndex))) {
+                                assert ix != currIndex;
+                                // node is already in list, merge stacks with "new" element
+                                // and check if we made any adjustments:
+                                if (nga.mergeForward(new NodeGraphAnnotation(destNC, outportIndex, currNGA))) {
+                                    // changes were made, let's check if we need to move the node.
+                                    if (ix < currIndex) {
+                                        // move node to end of list if it was already "touched" so that depth,
+                                        // stacks, and other info of its successors will also be adjusted!
+                                        NodeGraphAnnotation ngaOrg = m_nodeAnnotationCache.remove(ix);
+                                        assert ngaOrg.getID().equals(nga.getID());
+                                        m_nodeAnnotationCache.add(nga);
+                                        // critical: we removed an element in our list which resided before our
+                                        // pointer. Make sure we still point to current node.
+                                        currIndex--;
+                                        ix--;
+                                    }
+                                }
+                                // remove this port from our list - no need to add it "as new" later.
+                                connectedOutports.remove(outportIndex);
+                            }
+                            if (connectedOutports.size() == 0) {
+                                // skip the rest of the list...
+                                ix = m_nodeAnnotationCache.size();
+                            }
+                            ix++;
+                        }
+                        for (int o : connectedOutports) {
+                            // ...it's a node/port combo not yet in our list: add it
+                            NodeGraphAnnotation nga = new NodeGraphAnnotation(destNC, o, currNGA);
+                            m_nodeAnnotationCache.add(nga);
+                        }
+                    }
+                }
+            }
+            currIndex++;
+        }
+        // make sure nodes are inversely sorted by their final depth!
+        Collections.sort(m_nodeAnnotationCache);
+        Collections.reverse(m_nodeAnnotationCache);
+        // now let's do all of this backwards, so that we also detect end nodes depending on
+        // the same start node:
+        for (NodeGraphAnnotation nga : m_nodeAnnotationCache) {
+            NodeID currID = nga.getID();
+            int currOutPort = nga.getOutportIndex();
+            HashSet<NodeGraphAnnotation> connectedNGAs = new HashSet<NodeGraphAnnotation>();
+            for (ConnectionContainer cc : m_connectionsBySource.get(currID)) {
+                if ((currOutPort == -1) || currOutPort == cc.getSourcePort()) {
+                    NodeID destID = cc.getDest();
+                    if (destID.equals(getID())) {
+                        // leaving metanode, remember port index!
+                        nga.addConnectedOutport(cc.getDestPort());
+                    } else {
+                        NodeContainer destNC = getNode(destID);
+                        if (destNC instanceof SingleNodeContainer) {
+                            // just add the NGA of the successor
+                            for (NodeGraphAnnotation nga2 : m_nodeAnnotationCache) {
+                                if (nga2.getID().equals(destID)) {
+                                    connectedNGAs.add(nga2);
+                                }
+                            }
+                        } else {
+                            assert destNC instanceof WorkflowManager;
+                            // add only NGAs that are available on outports which are connected this inport
+                            Set<Integer> connectedOutPorts
+                                    = ((WorkflowManager)destNC).getWorkflow().connectedOutPorts(cc.getDestPort());
+                            for (NodeGraphAnnotation nga2 : m_nodeAnnotationCache) {
+                                if (nga2.getID().equals(destID) && connectedOutPorts.contains(nga2.getOutportIndex())) {
+                                    connectedNGAs.add(nga2);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            nga.setAndMergeBackwards(connectedNGAs);
+        }
+        // and finally sort node again:
+        Collections.reverse(m_nodeAnnotationCache);
+    }
 }

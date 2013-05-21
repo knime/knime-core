@@ -53,6 +53,7 @@ package org.knime.workbench.nodemonitorview;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.Stack;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -95,6 +96,7 @@ import org.knime.core.node.port.PortObject;
 import org.knime.core.node.workflow.FlowObjectStack;
 import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeGraphAnnotation;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.NodeStateChangeListener;
 import org.knime.core.node.workflow.NodeStateEvent;
@@ -122,7 +124,7 @@ public class NodeMonitorView extends ViewPart
     private NodeContainer m_lastNode;
     private boolean m_pinned = false;
 
-    private enum DISPLAYOPTIONS { VARS, SETTINGS, ALLSETTINGS, TABLE };
+    private enum DISPLAYOPTIONS { VARS, SETTINGS, ALLSETTINGS, TABLE, GRAPHANNOTATIONS };
     private DISPLAYOPTIONS m_choice = DISPLAYOPTIONS.VARS;
 
     /** {@inheritDoc} */
@@ -158,8 +160,7 @@ public class NodeMonitorView extends ViewPart
                           = getViewSite().getActionBars().getMenuManager();
         // drop down menu entry for outport table:
         final RetargetAction menuentrytable
-                = new RetargetAction("OutputTable", "Show Output Table",
-                                 IAction.AS_RADIO_BUTTON);
+                = new RetargetAction("OutputTable", "Show Output Table", IAction.AS_RADIO_BUTTON);
         menuentrytable.setChecked(DISPLAYOPTIONS.TABLE.equals(m_choice));
         menuentrytable.addPropertyChangeListener(new IPropertyChangeListener() {
             @Override
@@ -174,8 +175,7 @@ public class NodeMonitorView extends ViewPart
         dropDownMenu.add(menuentrytable);
         // drop down menu entry for node variables:
         final RetargetAction dropdownmenuvars
-                = new RetargetAction("NodeVariables", "Show Variables",
-                               IAction.AS_RADIO_BUTTON);
+                = new RetargetAction("NodeVariables", "Show Variables", IAction.AS_RADIO_BUTTON);
         dropdownmenuvars.setChecked(DISPLAYOPTIONS.VARS.equals(m_choice));
         dropdownmenuvars.addPropertyChangeListener(
                 new IPropertyChangeListener() {
@@ -191,8 +191,7 @@ public class NodeMonitorView extends ViewPart
         dropDownMenu.add(dropdownmenuvars);
         // drop down menu entry for configuration/settings:
         final RetargetAction menuentrysettings
-                = new RetargetAction("NodeConf", "Show Configuration",
-                            IAction.AS_RADIO_BUTTON);
+                = new RetargetAction("NodeConf", "Show Configuration", IAction.AS_RADIO_BUTTON);
         menuentrysettings.setChecked(DISPLAYOPTIONS.SETTINGS.equals(m_choice));
         menuentrysettings.addPropertyChangeListener(
                 new IPropertyChangeListener() {
@@ -208,8 +207,7 @@ public class NodeMonitorView extends ViewPart
         dropDownMenu.add(menuentrysettings);
         // drop down menu entry for configuration/settings:
         final RetargetAction menuentryallsettings
-                = new RetargetAction("NodeConfAll", "Show Entire Configuration",
-                            IAction.AS_RADIO_BUTTON);
+                = new RetargetAction("NodeConfAll", "Show Entire Configuration", IAction.AS_RADIO_BUTTON);
         menuentryallsettings.setChecked(DISPLAYOPTIONS.ALLSETTINGS.equals(m_choice));
         menuentryallsettings.addPropertyChangeListener(
                 new IPropertyChangeListener() {
@@ -223,6 +221,22 @@ public class NodeMonitorView extends ViewPart
         });
         menuentryallsettings.setEnabled(true);
         dropDownMenu.add(menuentryallsettings);
+        // drop down menu entry for node graph annotations
+        final RetargetAction menuentrygraphannotations
+                = new RetargetAction("NodeGraphAnno", "Show GraphAnnotations",
+                            IAction.AS_RADIO_BUTTON);
+        menuentrygraphannotations.setChecked(DISPLAYOPTIONS.GRAPHANNOTATIONS.equals(m_choice));
+        menuentrygraphannotations.addPropertyChangeListener(new IPropertyChangeListener() {
+            @Override
+            public void propertyChange(final PropertyChangeEvent event) {
+                if (menuentrygraphannotations.isChecked()) {
+                    m_choice = DISPLAYOPTIONS.GRAPHANNOTATIONS;
+                    updateNodeContainerInfo(m_lastNode);
+                }
+            }
+        });
+        menuentrygraphannotations.setEnabled(true);
+        dropDownMenu.add(menuentrygraphannotations);
         // Content
         GridLayoutFactory.swtDefaults().numColumns(2).applyTo(parent);
         // Node Title:
@@ -362,8 +376,7 @@ public class NodeMonitorView extends ViewPart
         m_portIndex.getCombo().setEnabled(false);
         assert Display.getCurrent().getThread() == Thread.currentThread();
         if ((m_lastNode != null) && (m_lastNode != nc)) {
-            m_lastNode.removeNodeStateChangeListener(
-                                   NodeMonitorView.this);
+            m_lastNode.removeNodeStateChangeListener(NodeMonitorView.this);
         }
         if ((m_lastNode == null) || (m_lastNode != nc)) {
             m_lastNode = nc;
@@ -377,8 +390,7 @@ public class NodeMonitorView extends ViewPart
             break;
         case SETTINGS:
         case ALLSETTINGS:
-            updateSettingsTable(nc,
-                            DISPLAYOPTIONS.ALLSETTINGS.equals(m_choice));
+            updateSettingsTable(nc, DISPLAYOPTIONS.ALLSETTINGS.equals(m_choice));
             break;
         case TABLE:
             m_portIndex.getCombo().setEnabled(true);
@@ -395,8 +407,64 @@ public class NodeMonitorView extends ViewPart
             m_portIndex.getCombo().setItems(vals);
             m_portIndex.getCombo().select(0);
             updateDataTable(nc, 0);
-         default:
+        case GRAPHANNOTATIONS:
+            updateGraphAnnotationTable(nc);
+            break;
+        default:
              throw new AssertionError("Unhandled switch case: " + m_choice);
+        }
+    }
+
+    /*
+     *  Put info about node graph annotations into table.
+     */
+    private void updateGraphAnnotationTable(final NodeContainer nc) {
+        assert Display.getCurrent().getThread() == Thread.currentThread();
+        // Initialize table
+        m_table.removeAll();
+        for (TableColumn tc : m_table.getColumns()) {
+            tc.dispose();
+        }
+        String[] titles = {"Property", "Value"};
+        for (int i = 0; i < titles.length; i++) {
+            TableColumn column = new TableColumn(m_table, SWT.NONE);
+            column.setText(titles[i]);
+        }
+        // retrieve content
+        Set<NodeGraphAnnotation> ngas = nc.getParent().getNodeGraphAnnotation(nc.getID());
+        for (NodeGraphAnnotation nga : ngas) {
+            TableItem item = new TableItem(m_table, SWT.NONE);
+            item.setText(0, "ID");
+            item.setText(1, nga.getID().toString());
+            item = new TableItem(m_table, SWT.NONE);
+            item.setText(0, "depth");
+            item.setText(1, "" + nga.getDepth());
+            item = new TableItem(m_table, SWT.NONE);
+            item.setText(0, "outport Index");
+            item.setText(1, "" + nga.getOutportIndex());
+            item = new TableItem(m_table, SWT.NONE);
+            item.setText(0, "connected inports");
+            item.setText(1, nga.getConnectedInportIndices());
+            item = new TableItem(m_table, SWT.NONE);
+            item.setText(0, "connected outports");
+            item.setText(1, nga.getConnectedOutportIndices());
+            item = new TableItem(m_table, SWT.NONE);
+            item.setText(0, "start node stack");
+            item.setText(1, nga.getStartNodeStackAsString());
+            item = new TableItem(m_table, SWT.NONE);
+            item.setText(0, "end node stack");
+            item.setText(1, nga.getEndNodeStackAsString());
+            item = new TableItem(m_table, SWT.NONE);
+            item.setText(0, "role");
+            item.setText(1, nga.getRole());
+            item = new TableItem(m_table, SWT.NONE);
+            item.setText(0, "status");
+            String status = nga.getError();
+            item.setText(1, status == null ? "ok" : status);
+        }
+        m_info.setText("Node Annotation");
+        for (int i = 0; i < m_table.getColumnCount(); i++) {
+            m_table.getColumn(i).pack();
         }
     }
 

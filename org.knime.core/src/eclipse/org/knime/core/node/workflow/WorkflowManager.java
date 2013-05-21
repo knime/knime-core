@@ -292,7 +292,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             final PortType[] inTypes, final PortType[] outTypes,
             final boolean isProject) {
         super(parent, id);
-        m_workflow = new Workflow(id);
+        m_workflow = new Workflow(this, id);
         m_inPorts = new WorkflowInPort[inTypes.length];
         for (int i = 0; i < inTypes.length; i++) {
             m_inPorts[i] = new WorkflowInPort(i, inTypes[i]);
@@ -328,8 +328,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** Constructor - create new workflow from persistor.
      */
-    private WorkflowManager(final WorkflowManager parent, final NodeID id,
-            final WorkflowPersistor persistor) {
+    private WorkflowManager(final WorkflowManager parent, final NodeID id, final WorkflowPersistor persistor) {
         super(parent, id, persistor.getMetaPersistor());
         ReferencedFile ncDir = super.getNodeContainerDirectory();
         if (ncDir != null) {
@@ -340,33 +339,28 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
         }
         boolean isProject = persistor.isProject();
-        m_workflow = new Workflow(id);
+        m_workflow = new Workflow(this, id);
         m_name = persistor.getName();
         m_editorInfo = persistor.getEditorUIInformation();
         m_templateInformation = persistor.getTemplateInformation();
         m_loadVersion = persistor.getLoadVersion();
-        m_workflowVariables =
-            new Vector<FlowVariable>(persistor.getWorkflowVariables());
-        m_credentialsStore =
-            new CredentialsStore(this, persistor.getCredentials());
+        m_workflowVariables = new Vector<FlowVariable>(persistor.getWorkflowVariables());
+        m_credentialsStore = new CredentialsStore(this, persistor.getCredentials());
         m_cipher = persistor.getWorkflowCipher();
         WorkflowPortTemplate[] inPortTemplates = persistor.getInPortTemplates();
         m_inPorts = new WorkflowInPort[inPortTemplates.length];
         for (int i = 0; i < inPortTemplates.length; i++) {
             WorkflowPortTemplate t = inPortTemplates[i];
-            m_inPorts[i] = new WorkflowInPort(
-                    t.getPortIndex(), t.getPortType());
+            m_inPorts[i] = new WorkflowInPort(t.getPortIndex(), t.getPortType());
             m_inPorts[i].setPortName(t.getPortName());
         }
         m_inPortsBarUIInfo = persistor.getInPortsBarUIInfo();
 
-        WorkflowPortTemplate[] outPortTemplates =
-            persistor.getOutPortTemplates();
+        WorkflowPortTemplate[] outPortTemplates = persistor.getOutPortTemplates();
         m_outPorts = new WorkflowOutPort[outPortTemplates.length];
         for (int i = 0; i < outPortTemplates.length; i++) {
             WorkflowPortTemplate t = outPortTemplates[i];
-            m_outPorts[i] = new WorkflowOutPort(
-                    t.getPortIndex(), t.getPortType());
+            m_outPorts[i] = new WorkflowOutPort(t.getPortIndex(), t.getPortType());
             m_outPorts[i].setPortName(t.getPortName());
         }
         m_outPortsBarUIInfo = persistor.getOutPortsBarUIInfo();
@@ -405,8 +399,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @return newly created workflow
      */
     public WorkflowManager createAndAddProject(final String name) {
-        WorkflowManager wfm = createAndAddSubWorkflow(new PortType[0],
-                new PortType[0], name, true);
+        WorkflowManager wfm = createAndAddSubWorkflow(new PortType[0], new PortType[0], name, true);
         LOGGER.debug("Created project " + ((NodeContainer)wfm).getID());
         return wfm;
     }
@@ -524,13 +517,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             // remove lists of in- and outgoing connections.
             while (!m_workflow.getConnectionsByDest(nodeID).isEmpty()) {
-                ConnectionContainer toDel =
-                    m_workflow.getConnectionsByDest(nodeID).iterator().next();
+                ConnectionContainer toDel =  m_workflow.getConnectionsByDest(nodeID).iterator().next();
                 removeConnection(toDel);
             }
             while (!m_workflow.getConnectionsBySource(nodeID).isEmpty()) {
-                ConnectionContainer toDel =
-                    m_workflow.getConnectionsBySource(nodeID).iterator().next();
+                ConnectionContainer toDel = m_workflow.getConnectionsBySource(nodeID).iterator().next();
                 removeConnection(toDel);
             }
             // and finally remove node itself as well.
@@ -563,18 +554,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** Adds new empty meta node to this WFM. */
     private WorkflowManager createAndAddSubWorkflow(final PortType[] inPorts,
-            final PortType[] outPorts, final String name,
-            final boolean isNewProject) {
+            final PortType[] outPorts, final String name, final boolean isNewProject) {
         final boolean hasPorts = inPorts.length != 0 || outPorts.length != 0;
         if (this == ROOT) {
             if (hasPorts) {
-                throw new IllegalStateException(
-                        "Can't create sub workflow on root workflow manager, "
+                throw new IllegalStateException("Can't create sub workflow on root workflow manager, "
                         + "use createAndAddProject() instead");
             }
             if (!isNewProject) {
-                throw new IllegalStateException("Children of ROOT workflow "
-                        + "manager must have 'isProject' flag set");
+                throw new IllegalStateException("Children of ROOT workflow manager must have 'isProject' flag set");
             }
         }
         if (isNewProject && hasPorts) {
@@ -584,8 +572,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         WorkflowManager wfm;
         synchronized (m_workflowMutex) {
             newID = m_workflow.createUniqueID();
-            wfm = new WorkflowManager(this, newID, inPorts,
-                    outPorts, isNewProject);
+            wfm = new WorkflowManager(this, newID, inPorts, outPorts, isNewProject);
             if (name != null) {
                 wfm.m_name = name;
             }
@@ -630,14 +617,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param propagateChanges Whether to also check workflow state
      * (this is always true unless called from the load routines)
      */
-    private void addNodeContainer(final NodeContainer nodeContainer,
-            final boolean propagateChanges) {
+    private void addNodeContainer(final NodeContainer nodeContainer, final boolean propagateChanges) {
         if (this == ROOT && !(nodeContainer instanceof WorkflowManager)) {
             throw new IllegalStateException("Can't add ordinary node to root "
                     + "workflow, use createAndAddProject() first");
         }
-        if (this == ROOT && (nodeContainer.getNrInPorts() != 0
-                || nodeContainer.getNrOutPorts() != 0)) {
+        if (this == ROOT && (nodeContainer.getNrInPorts() != 0 || nodeContainer.getNrOutPorts() != 0)) {
             throw new IllegalStateException("Can't add sub workflow to root "
                     + " workflow, use createProject() instead");
         }
@@ -647,8 +632,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                + nodeContainer.getNameWithID() + "\" already contained in flow";
             m_workflow.putNode(id, nodeContainer);
         }
-        notifyWorkflowListeners(
-                new WorkflowEvent(WorkflowEvent.Type.NODE_ADDED,
+        notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.NODE_ADDED,
                 id, null, nodeContainer));
         checkForNodeStateChanges(propagateChanges);
     }
@@ -702,8 +686,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         NodeContainer sourceNC;
         NodeContainer destNC;
         synchronized (m_workflowMutex) {
-            if (!canAddConnection(
-                    source, sourcePort, dest, destPort, true, currentlyLoadingFlow)) {
+            if (!canAddConnection(source, sourcePort, dest, destPort, true, currentlyLoadingFlow)) {
                 throw new IllegalArgumentException("Can not add connection!");
             }
             // check for existence of a connection to the destNode/Port
@@ -731,33 +714,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 newConnType = ConnectionType.STD;
             }
             // create new connection
-            newConn = new ConnectionContainer(source, sourcePort,
-                    dest, destPort, newConnType);
-            // 1) try to insert it into set of outgoing connections
-            Set<ConnectionContainer> outConns =
-                m_workflow.getConnectionsBySource(source);
-            if (!outConns.add(newConn)) {
-                throw new IllegalArgumentException(
-                "Connection already exists!");
-            }
-            // 2) insert connection into set of ingoing connections
-            Set<ConnectionContainer> inConns = m_workflow.getConnectionsByDest(dest);
-            if (!inConns.add(newConn)) {
-                throw new IllegalArgumentException(
-                "Connection already exists (oddly enough only as incoming)!");
-            }
+            newConn = new ConnectionContainer(source, sourcePort, dest, destPort, newConnType);
+            m_workflow.addConnection(newConn);
             // handle special cases with port reference chains (WFM border
             // crossing connections:
             if ((source.equals(getID())) && (dest.equals(getID()))) {
                 // connection goes directly from workflow in to workflow outport
                 assert newConnType == ConnectionType.WFMTHROUGH;
-                getOutPort(destPort).setUnderlyingPort(
-                        getWorkflowIncomingPort(sourcePort));
-            } else if ((!dest.equals(getID()))
-                    && (destNC instanceof WorkflowManager)) {
+                getOutPort(destPort).setUnderlyingPort(getWorkflowIncomingPort(sourcePort));
+            } else if ((!dest.equals(getID())) && (destNC instanceof WorkflowManager)) {
                 // we are feeding data into a subworkflow
-                WorkflowInPort wfmIPort
-                        = ((WorkflowManager)destNC).getInPort(destPort);
+                WorkflowInPort wfmIPort = ((WorkflowManager)destNC).getInPort(destPort);
                 NodeOutPort underlyingPort;
                 if (sourceNC != null) {
                     underlyingPort = sourceNC.getOutPort(sourcePort);
@@ -769,8 +736,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             } else if (dest.equals(getID())) {
                 // we are feeding data out of the subworkflow
                 assert newConnType == ConnectionType.WFMOUT;
-                getOutPort(destPort).setUnderlyingPort(
-                        sourceNC.getOutPort(sourcePort));
+                getOutPort(destPort).setUnderlyingPort(sourceNC.getOutPort(sourcePort));
             }
         }
         if (!currentlyLoadingFlow) { // user adds connection -> configure
@@ -785,8 +751,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 // (can't have optional ins -- no reset required)
                 WorkflowManager destWFM = (WorkflowManager)destNC;
                 destWFM.configureNodesConnectedToPortInWFM(destPort);
-                Set<Integer> outPorts =
-                    destWFM.getWorkflow().connectedOutPorts(destPort);
+                Set<Integer> outPorts = destWFM.getWorkflow().connectedOutPorts(destPort);
                 configureNodeAndPortSuccessors(dest, outPorts,
                         /* do not configure dest itself */false, true);
             } else {
@@ -1002,15 +967,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             // make sure connection exists
             if ((!m_workflow.getConnectionsByDest(cc.getDest()).contains(cc))) {
-                if ((!m_workflow.getConnectionsBySource(
-                        cc.getSource()).contains(cc))) {
+                if ((!m_workflow.getConnectionsBySource(cc.getSource()).contains(cc))) {
                     // if connection doesn't exist anywhere, we are fine
                     return;
                 } else {
                     // this should never happen - only one direction exists
                     assert false;
-                    throw new IllegalArgumentException(
-                    "Can not remove partially existing connection!");
+                    throw new IllegalArgumentException("Can not remove partially existing connection!");
                 }
             }
             // now check if other reasons forbit to delete this connection:
@@ -1044,11 +1007,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             } else if (!dest.equals(this.getID())) {
                 // connection goes into a metanode
                 WorkflowManager destWFM = (WorkflowManager)destNC;
-                destWFM.resetNodesInWFMConnectedToInPorts(
-                           Collections.singleton(cc.getDestPort()));
+                destWFM.resetNodesInWFMConnectedToInPorts(Collections.singleton(cc.getDestPort()));
                 // also reset successors of this "port"
-                Set<Integer> outPorts =
-                    destWFM.getWorkflow().connectedOutPorts(destPort);
+                Set<Integer> outPorts = destWFM.getWorkflow().connectedOutPorts(destPort);
                 for (int i : outPorts) {
                     resetSuccessors(dest, i);
                 }
@@ -1057,32 +1018,16 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 assert cc.getType().isLeavingWorkflow();
                 getParent().resetSuccessors(this.getID(), cc.getDestPort());
             }
-            // 1) try to delete it from set of outgoing connections
-            Set<ConnectionContainer> outConns =
-                m_workflow.getConnectionsBySource(source);
-            if (!outConns.remove(cc)) {
-                throw new IllegalArgumentException(
-                "Connection does not exist!");
-            }
-            // 2) remove connection from set of ingoing connections
-            Set<ConnectionContainer> inConns
-                              = m_workflow.getConnectionsByDest(dest);
-            if (!inConns.remove(cc)) {
-                throw new IllegalArgumentException(
-                "Connection did not exist (it did exist as outcoming conn.)!");
-            }
-            // handle special cases with port reference chains (WFM border
-            // crossing connections:
-            if ((source.equals(getID()))
-                && (dest.equals(getID()))) {
+            // and finally delete connection from workflow
+            m_workflow.removeConnection(cc);
+            // cleanup for special cases with port reference chains (WFM border crossing connections:
+            if ((source.equals(getID())) && (dest.equals(getID()))) {
                 // connection goes directly from workflow in to workflow outport
                 assert cc.getType() == ConnectionType.WFMTHROUGH;
                 getOutPort(destPort).setUnderlyingPort(null);
-            } else if ((!dest.equals(getID()))
-                    && (destNC instanceof WorkflowManager)) {
+            } else if ((!dest.equals(getID())) && (destNC instanceof WorkflowManager)) {
                 // we are feeding data into a subworkflow
-                WorkflowInPort wfmIPort
-                        = ((WorkflowManager)destNC).getInPort(destPort);
+                WorkflowInPort wfmIPort = ((WorkflowManager)destNC).getInPort(destPort);
                 wfmIPort.setUnderlyingPort(null);
             } else if (dest.equals(getID())) {
                 // we are feeding data out of the subworkflow
@@ -1091,10 +1036,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             // and finally reconfigure destination node(s)
             if (cc.getType().isLeavingWorkflow()) {
-                // this is a bit too broad (configure ALL successors)
-                // but should not be harmful
-                this.getParent().configureNodeAndSuccessors(this.getID(),
-                        false);
+                // this is a bit too broad (configure ALL successors) but should not be harmful
+                this.getParent().configureNodeAndSuccessors(this.getID(), false);
                 // make sure to reflect state changes
                 checkForNodeStateChanges(true);
             } else if (destNC instanceof WorkflowManager) {
@@ -1109,9 +1052,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
         }
         setDirty();
-        notifyWorkflowListeners(
-                new WorkflowEvent(WorkflowEvent.Type.CONNECTION_REMOVED,
-                        null, cc, null));
+        notifyWorkflowListeners(new WorkflowEvent(WorkflowEvent.Type.CONNECTION_REMOVED, null, cc, null));
     }
 
     /////////////////////////////////
@@ -1130,10 +1071,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     public Set<ConnectionContainer> getOutgoingConnectionsFor(final NodeID id,
             final int portIdx) {
         synchronized (m_workflowMutex) {
-            Set<ConnectionContainer> outConnections
-                = m_workflow.getConnectionsBySource(id);
-            Set<ConnectionContainer> outConsForPort
-                = new HashSet<ConnectionContainer>();
+            Set<ConnectionContainer> outConnections = m_workflow.getConnectionsBySource(id);
+            Set<ConnectionContainer> outConsForPort = new HashSet<ConnectionContainer>();
             if (outConnections == null) {
                 return outConsForPort;
             }
@@ -1154,8 +1093,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     public Set<ConnectionContainer> getOutgoingConnectionsFor(final NodeID id) {
         synchronized (m_workflowMutex) {
             getNodeContainer(id); // for exception handling
-            return new LinkedHashSet<ConnectionContainer>(
-                    m_workflow.getConnectionsBySource(id));
+            return new LinkedHashSet<ConnectionContainer>(m_workflow.getConnectionsBySource(id));
         }
     }
 
@@ -1170,8 +1108,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     public ConnectionContainer getIncomingConnectionFor(final NodeID id,
             final int portIdx) {
         synchronized (m_workflowMutex) {
-            Set<ConnectionContainer>inConns =
-                m_workflow.getConnectionsByDest(id);
+            Set<ConnectionContainer>inConns = m_workflow.getConnectionsByDest(id);
             if (inConns != null) {
                 for (ConnectionContainer cont : inConns) {
                     if (cont.getDestPort() == portIdx) {
@@ -1236,8 +1173,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /**
      * @param newPorts
      * @since 2.6 */
-    public void changeMetaNodeInputPorts(final NodeID subFlowID,
-            final MetaPortInfo[] newPorts) {
+    public void changeMetaNodeInputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
         synchronized (m_workflowMutex) {
             WorkflowManager subFlowMgr = getMetaNodeContainer(subFlowID);
             if (!haveMetaPortsChanged(newPorts, true, subFlowMgr)) {
@@ -1302,8 +1238,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     /**
      * @param newPorts
      * @since 2.6 */
-    public void changeMetaNodeOutputPorts(final NodeID subFlowID,
-            final MetaPortInfo[] newPorts) {
+    public void changeMetaNodeOutputPorts(final NodeID subFlowID, final MetaPortInfo[] newPorts) {
         synchronized (m_workflowMutex) {
             WorkflowManager subFlowMgr = getMetaNodeContainer(subFlowID);
             if (!haveMetaPortsChanged(newPorts, false, subFlowMgr)) {
@@ -3142,8 +3077,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             WorkflowCopyContent orgContent = new WorkflowCopyContent();
             orgContent.setNodeIDs(orgIDs);
             orgContent.setAnnotation(orgAnnos);
-            WorkflowCopyContent newContent
-                    = this.copyFromAndPasteHere(subWFM, orgContent);
+            WorkflowCopyContent newContent = this.copyFromAndPasteHere(subWFM, orgContent);
             NodeID[] newIDs = newContent.getNodeIDs();
             Annotation[] newAnnos = newContent.getAnnotations();
             // create map and set of quick lookup/search
@@ -3154,46 +3088,37 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 newIDsHashSet.add(newIDs[i]);
             }
             // connect connections TO the sub workflow:
-            for (ConnectionContainer cc :
-                        m_workflow.getConnectionsByDest(subWFM.getID())) {
+            for (ConnectionContainer cc : m_workflow.getConnectionsByDest(subWFM.getID())) {
                 int destPortIndex = cc.getDestPort();
-                for (ConnectionContainer subCC :
-                        subWFM.m_workflow.getConnectionsBySource(subWFM.getID())) {
+                for (ConnectionContainer subCC : subWFM.m_workflow.getConnectionsBySource(subWFM.getID())) {
                     if (subCC.getSourcePort() == destPortIndex) {
                         if (subCC.getDest().equals(subWFM.getID())) {
                             // THROUGH connection - skip here, handled below!
                         } else {
                         // reconnect
                         NodeID newID = oldIDsHash.get(subCC.getDest());
-                        this.addConnection(cc.getSource(), cc.getSourcePort(),
-                                newID, subCC.getDestPort());
+                        this.addConnection(cc.getSource(), cc.getSourcePort(), newID, subCC.getDestPort());
                     }
                 }
             }
             }
             // connect connection FROM the sub workflow
-            for (ConnectionContainer cc :
-                        getOutgoingConnectionsFor(subWFM.getID())) {
+            for (ConnectionContainer cc : getOutgoingConnectionsFor(subWFM.getID())) {
                 int sourcePortIndex = cc.getSourcePort();
-                ConnectionContainer subCC = subWFM.getIncomingConnectionFor(
-                        subWFM.getID(), sourcePortIndex);
+                ConnectionContainer subCC = subWFM.getIncomingConnectionFor(subWFM.getID(), sourcePortIndex);
                 if (subCC != null) {
                     if (subCC.getSource().equals(subWFM.getID())) {
                         // THROUGH connection
-                        ConnectionContainer incomingCC =
-                            this.getIncomingConnectionFor(
-                                subWFM.getID(), subCC.getSourcePort());
+                        ConnectionContainer incomingCC
+                                        = this.getIncomingConnectionFor(subWFM.getID(), subCC.getSourcePort());
                         // delete existing connection from Metanode to
                         // Node (done automatically) and reconnect
-                        this.addConnection(incomingCC.getSource(),
-                                incomingCC.getSourcePort(),
+                        this.addConnection(incomingCC.getSource(), incomingCC.getSourcePort(),
                                 cc.getDest(), cc.getDestPort());
                     } else {
-                    // delete existing connection from Metanode to Node
-                        // (automatically) and reconnect
+                    // delete existing connection from Metanode to Node (automatically) and reconnect
                     NodeID newID = oldIDsHash.get(subCC.getSource());
-                    this.addConnection(newID, subCC.getSourcePort(),
-                            cc.getDest(), cc.getDestPort());
+                    this.addConnection(newID, subCC.getSourcePort(), cc.getDest(), cc.getDestPort());
                 }
             }
             }
@@ -4021,8 +3946,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      *
      * @param allnodes ...
      */
-    private void resetAndConfigureAffectedLoopContext(
-            final LinkedHashMap<NodeID, Set<Integer>> allnodes) {
+    private void resetAndConfigureAffectedLoopContext(final LinkedHashMap<NodeID, Set<Integer>> allnodes) {
         // find any LoopEnd nodes without loop starts in the set:
         for (NodeID leid : allnodes.keySet()) {
             NodeContainer lenc = getNodeContainer(leid);
@@ -5348,11 +5272,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         synchronized (m_workflowMutex) {
             build.append(getNameWithID());
             build.append(": " + getInternalState() + " (start)\n");
-            for (Map.Entry<NodeID, NodeContainer> it
-                    : m_workflow.getNodeMap().tailMap(prefix).entrySet()) {
-                NodeID id = it.getKey();
+            for (NodeID id : m_workflow.getNodeIDs()) {
                 if (id.hasPrefix(prefix)) {
-                    NodeContainer nc = it.getValue();
+                    NodeContainer nc = m_workflow.getNode(id);
                     if (nc instanceof WorkflowManager) {
                         build.append(((WorkflowManager)nc).printNodeSummary(
                                 nc.getID(), indent + 2));
@@ -5478,14 +5400,20 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         return result;
     }
 
-    /** Return list of nodes that are part of the same node as the given one.
-     * List will only contain anchor node if there is no scope around it.
+    /** Return list of nodes that are part of the same scope as the given one.
+     * List will contain anchor node alone if there is no scope around it.
      *
      * @param anchor node
      * @return list of nodes.
      * @since 2.8
      */
     public List<NodeContainer> getNodesInScope(final SingleNodeContainer anchor) {
+        List<NodeContainer> result = m_workflow.getNodesInScope(anchor);
+        return result;
+    }
+
+    /** @since 2.8 */
+    public List<NodeContainer> getNodesInScopeOLD(final SingleNodeContainer anchor) {
         ArrayList<NodeContainer> result = new ArrayList<NodeContainer>();
         // get closest (=top of stack) scope context for given anchor
         FlowScopeContext anchorFSC = anchor.getFlowObjectStack().peek(FlowScopeContext.class);
@@ -7946,6 +7874,16 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 m_workflowVariables.remove(i);
             }
         }
+    }
+
+
+    /**
+     * @param id of node
+     * @return set of NodeGraphAnnotations for this node (can be more than one for Metanodes).
+     * @since 2.8
+     */
+    public Set<NodeGraphAnnotation> getNodeGraphAnnotation(final NodeID id) {
+        return m_workflow.getNodeGraphAnnotations(id);
     }
 
 }
