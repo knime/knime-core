@@ -1688,17 +1688,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param outportIndex the node's outport
      */
     private void disableSuccessorsForExecution(final NodeID id, final int outportIndex) {
-        if (hasSuccessorInProgress(id)) {
-            for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
-                if ((outportIndex) == -1 || (cc.getSourcePort() == outportIndex)) {
-                    NodeID succId = cc.getDest();
-                    if (succId.equals(this.getID())) {
-                        // unmark successors of this metanode
-                        getParent().disableSuccessorsForExecution(this.getID(), cc.getDestPort());
-                    } else {
-                        // handle normal node
-                        disableNodeForExecution(succId, cc.getDestPort());
-                    }
+        for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
+            if ((outportIndex) == -1 || (cc.getSourcePort() == outportIndex)) {
+                NodeID succId = cc.getDest();
+                if (succId.equals(this.getID())) {
+                    // unmark successors of this metanode
+                    getParent().disableSuccessorsForExecution(this.getID(), cc.getDestPort());
+                } else {
+                    // handle normal node
+                    disableNodeForExecution(succId, cc.getDestPort());
                 }
             }
         }
