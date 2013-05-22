@@ -179,7 +179,7 @@ class Workflow {
      */
     Collection<NodeContainer> getNodeValues() {
         Collection<NodeContainer> cnc = m_nodes.values();
-        return cnc == null ? null : Collections.unmodifiableCollection(cnc);
+        return Collections.unmodifiableCollection(cnc);
     }
 
     /**
@@ -187,7 +187,7 @@ class Workflow {
      */
     Set<NodeID> getNodeIDs() {
         Set<NodeID> sn = m_nodes.keySet();
-        return sn == null ? null : Collections.unmodifiableSet(sn);
+        return Collections.unmodifiableSet(sn);
     }
 
     /**

@@ -353,7 +353,7 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
             NodeSettings modelSettings = loadModelSettings(settingsForNode);
             m_sncSettings.setModelSettings(modelSettings);
             m_node.loadModelSettingsFrom(modelSettings);
-        } catch (Throwable e) {
+        } catch (Exception e) {
             final String error;
             if (e instanceof InvalidSettingsException) {
                 error = "Loading model settings failed: " + e.getMessage();
@@ -460,8 +460,17 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
                 return new NodeSettings("empty");
             } else {
                 InputStream in = new FileInputStream(configFile);
-                in = m_parentPersistor.decipherInput(in);
-                return NodeSettings.loadFromXML(new BufferedInputStream(in));
+                try {
+                    in = m_parentPersistor.decipherInput(in);
+                    return NodeSettings.loadFromXML(new BufferedInputStream(in));
+                } finally {
+                    try {
+                        in.close();
+                    } catch (IOException e) {
+                        getLogger().error("Failed to close input stream on \""
+                                + configFile.getAbsolutePath() + "\"", e);
+                    }
+                }
             }
         } else {
             return m_nodeSettings;

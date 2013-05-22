@@ -569,7 +569,7 @@ public final class SingleNodeContainer extends NodeContainer {
 
         try {
             m_node.loadModelSettingsFrom(fromModel);
-        } catch (Throwable e) {
+        } catch (InvalidSettingsException e) {
             throw new InvalidSettingsException("Errors loading flow variables into node : " + e.getMessage(), e);
         }
         Map<String, FlowVariable> newVariableHash = new LinkedHashMap<String, FlowVariable>();

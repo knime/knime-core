@@ -64,7 +64,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.atomic.AtomicReference;
@@ -1520,7 +1519,6 @@ public final class Node implements NodeModelWarningListener {
 
             PortObjectSpec[] newOutSpec =
                 new PortObjectSpec[getNrOutPorts() - 1];
-            Map<String, FlowVariable> newVariables = Collections.emptyMap();
             try {
                 // check the inspecs against null
                 for (int i = 0; i < inSpecs.length; i++) {

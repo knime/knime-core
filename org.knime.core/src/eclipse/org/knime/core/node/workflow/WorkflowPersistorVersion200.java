@@ -310,7 +310,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
                 authorDate = null;
             } else {
                 try {
-                    authorDate = DATE_FORMAT.parse(authorDateS);
+                    authorDate = parseDate(authorDateS);
                 } catch (ParseException e) {
                     throw new InvalidSettingsException("Can't parse authored-when \"" + authorDateS
                         + "\": " + e.getMessage(), e);
@@ -323,7 +323,7 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
                 editDate = null;
             } else {
                 try {
-                    editDate = DATE_FORMAT.parse(editDateS);
+                    editDate = parseDate(editDateS);
                 } catch (ParseException e) {
                     throw new InvalidSettingsException("Can't parse lastEdit-when \"" + editDateS
                         + "\": " + e.getMessage(), e);
@@ -502,6 +502,27 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
         return new File(workflowDir, SAVED_WITH_DATA_FILE).isFile();
     }
 
+    /** Synchronized call to DATE_FORMAT.parse(String).
+     * @param s To parse, not null.
+     * @return The date.
+     * @throws ParseException ...
+     */
+    static Date parseDate(final String s) throws ParseException {
+        synchronized (DATE_FORMAT) {
+            return DATE_FORMAT.parse(s);
+        }
+    }
+
+    /** Synchronized call to DATE_FORMAT.format(Date).
+     * @param date ... not null.
+     * @return The string.
+     */
+    static String formatDate(final Date date) {
+        synchronized (DATE_FORMAT) {
+            return DATE_FORMAT.format(date);
+        }
+    }
+
     protected static void saveUIInfoClassName(final NodeSettingsWO settings, final UIInformation info) {
         settings.addString(CFG_UIINFO_CLASS, info != null ? info.getClass().getName() : null);
     }
@@ -678,10 +699,10 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     protected static void saveAuthorInformation(final AuthorInformation aI, final NodeSettingsWO settings) {
         final NodeSettingsWO sub = settings.addNodeSettings("authorInformation");
         sub.addString("authored-by", aI.getAuthor());
-        String authorWhen = aI.getAuthoredDate() == null ? null : DATE_FORMAT.format(aI.getAuthoredDate());
+        String authorWhen = aI.getAuthoredDate() == null ? null : formatDate(aI.getAuthoredDate());
         sub.addString("authored-when", authorWhen);
         sub.addString("lastEdited-by", aI.getLastEditor());
-        String lastEditWhen = aI.getLastEditDate() == null ? null : DATE_FORMAT.format(aI.getLastEditDate());
+        String lastEditWhen = aI.getLastEditDate() == null ? null : formatDate(aI.getLastEditDate());
         sub.addString("lastEdited-when", lastEditWhen);
     }
 

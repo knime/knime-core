@@ -144,9 +144,12 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
     /**
      * Saves the node, node settings, and all internal structures, spec, data, and models, to the given node directory
      * (located at the node file).
-     *
-     * @param nodeDir Directory associated with node - will create internals folder in it
+
+     * @param snc ...
+     * @param settings ...
      * @param execMon Used to report progress during saving.
+     * @param nodeDirRef Directory associated with node - will create internals folder in it
+     * @param isSaveData  ...
      * @throws IOException If the node file can't be found or read.
      * @throws CanceledExecutionException If the saving has been canceled.
      */

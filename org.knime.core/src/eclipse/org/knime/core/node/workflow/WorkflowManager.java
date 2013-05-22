@@ -6495,9 +6495,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         persistor.preLoadNodeContainer(null, null, result);
         WorkflowManager manager = null;
         boolean fixDataLoadProblems = false;
-        boolean isIsolatedProject =
-            persistor.getInPortTemplates().length == 0
-            && persistor.getOutPortTemplates().length == 0;
+        boolean isIsolatedProject = persistor.isProject();
         InsertWorkflowPersistor insertPersistor =
             new InsertWorkflowPersistor(persistor);
         Object mutex = isIsolatedProject ? new Object() : m_workflowMutex;
@@ -7965,10 +7963,10 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
 
         /**
-         * @param author
-         * @param authoredDate
-         * @param lastEditor
-         * @param lastEditDate
+         * @param author Original author.
+         * @param authoredDate Original authored date.
+         * @param lastEditor Name of last editor.
+         * @param lastEditDate Date of last edit.
          */
         AuthorInformation(final String author, final Date authoredDate,
             final String lastEditor, final Date lastEditDate) {
