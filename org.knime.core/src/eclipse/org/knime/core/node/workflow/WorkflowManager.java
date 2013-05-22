@@ -324,7 +324,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         // initialize listener list
         m_wfmListeners = new CopyOnWriteArrayList<WorkflowListener>();
         m_templateInformation = MetaNodeTemplateInformation.NONE;
-        checkForNodeStateChanges(false); // get default state right
+        synchronized (m_workflowMutex) { // asserted in check -- even from constructor
+            checkForNodeStateChanges(false); // get default state right
+        }
         // done.
         LOGGER.debug("Created subworkflow " + this.getID());
     }
@@ -622,6 +624,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * (this is always true unless called from the load routines)
      */
     private void addNodeContainer(final NodeContainer nodeContainer, final boolean propagateChanges) {
+        assert Thread.holdsLock(m_workflowMutex);
         if (this == ROOT && !(nodeContainer instanceof WorkflowManager)) {
             throw new IllegalStateException("Can't add ordinary node to root "
                     + "workflow, use createAndAddProject() first");
@@ -4055,9 +4058,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             resetNodeAndSuccessors(id);
             // and launch configure starting with this node
             configureNodeAndSuccessors(id, true);
+            checkForNodeStateChanges(true);
         }
-        // TODO this should go into the synchronized block?
-        checkForNodeStateChanges(true);
     }
 
     /**
@@ -4640,8 +4642,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * (true always except for loading)
      */
     private void checkForNodeStateChanges(final boolean propagateChanges) {
-        // TODO enable this assertion
-//        assert Thread.holdsLock(m_workflowMutex);
+        assert Thread.holdsLock(m_workflowMutex);
         int[] nrNodesInState = new int[InternalNodeContainerState.values().length];
         int nrNodes = 0;
         boolean internalNodeHasError = false;
@@ -4816,7 +4817,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                                         propagateChanges);
                         }
                     }
-                  });
+                });
             }
         }
     }
@@ -7109,8 +7110,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                     }
                 }
             }
+            checkForNodeStateChanges(propagate);
         }
-        checkForNodeStateChanges(propagate);
         return wasClean;
     }
 
