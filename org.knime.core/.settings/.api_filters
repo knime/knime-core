@@ -197,20 +197,6 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/eclipse/org/knime/core/node/workflow/PasteWorkflowContentPersistor.java" type="org.knime.core.node.workflow.PasteWorkflowContentPersistor">
-        <filter comment="persistor changes - no API" id="305365105">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.PasteWorkflowContentPersistor"/>
-                <message_argument value="org.knime.core_2.8.0"/>
-            </message_arguments>
-        </filter>
-        <filter id="305426566">
-            <message_arguments>
-                <message_argument value="org.knime.core.node.workflow.PasteWorkflowContentPersistor"/>
-                <message_argument value="org.knime.core_2.7.2"/>
-            </message_arguments>
-        </filter>
-    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/SingleNodeContainer.java" type="org.knime.core.node.workflow.SingleNodeContainer$SingleNodeContainerSettings">
         <filter comment="workflow version/persistor change" id="337768515">
             <message_arguments>
