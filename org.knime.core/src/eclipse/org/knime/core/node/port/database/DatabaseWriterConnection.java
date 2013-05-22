@@ -122,14 +122,14 @@ public final class DatabaseWriterConnection {
                         throw new SQLException("Could not create SQL statement,"
                                 + " reason: " + sqle.getMessage(), sqle);
                     }
-                    LOGGER.info("Table \"" + table
+                    LOGGER.info("It seems table \"" + table
                             + "\" does not exist in database, "
-                            + "will create new table.");
+                            + "will create a new table.", sqle);
                     // and create new table
                     final String query = "CREATE TABLE " + table + " "
                         + createStmt(spec, sqlTypes);
                     LOGGER.debug("Executing SQL statement \"" + query + "\"");
-                    statement.execute(query);
+                    conn.createStatement().execute(query);
                 }
                 // if table exists
                 if (rs != null) {
