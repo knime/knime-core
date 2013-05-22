@@ -86,6 +86,8 @@ final class BinByDictionaryNodeDialogPane extends NodeDialogPane {
     private final ColumnSelectionComboxBox m_labelColumnPort1Combo;
     private final JRadioButton m_failIfNoRuleMatchesButton;
     private final JRadioButton m_insertMissingIfNoRuleMatchesButton;
+    private final JRadioButton m_binarySearchButton;
+    private final JRadioButton m_linearSearchButton;
 
     /**  */
     @SuppressWarnings("unchecked")
@@ -111,6 +113,12 @@ final class BinByDictionaryNodeDialogPane extends NodeDialogPane {
         buttonGroup.add(m_failIfNoRuleMatchesButton);
         buttonGroup.add(m_insertMissingIfNoRuleMatchesButton);
 
+        ButtonGroup searchButtonGroup = new ButtonGroup();
+        m_linearSearchButton = new JRadioButton("Linear");
+        m_binarySearchButton = new JRadioButton("Binary");
+        searchButtonGroup.add(m_linearSearchButton);
+        searchButtonGroup.add(m_binarySearchButton);
+
         m_lowerColumnPort1Checker.addItemListener(new ItemListener() {
             @Override
             public void itemStateChanged(final ItemEvent e) {
@@ -120,6 +128,7 @@ final class BinByDictionaryNodeDialogPane extends NodeDialogPane {
                 if (!isSelected && !m_upperColumnPort1Checker.isSelected()) {
                     m_upperColumnPort1Checker.doClick();
                 }
+                updateEnablementBinarySearch();
             }
         });
         m_upperColumnPort1Checker.addItemListener(new ItemListener() {
@@ -132,12 +141,23 @@ final class BinByDictionaryNodeDialogPane extends NodeDialogPane {
                 if (!isSelected && !m_lowerColumnPort1Checker.isSelected()) {
                     m_lowerColumnPort1Checker.doClick();
                 }
+                updateEnablementBinarySearch();
             }
         });
         m_lowerColumnPort1Checker.doClick();
         m_upperColumnPort1Checker.doClick();
         m_failIfNoRuleMatchesButton.doClick();
+        m_linearSearchButton.doClick();
         initLayout();
+    }
+
+    private void updateEnablementBinarySearch() {
+        if (m_lowerColumnPort1Checker.isSelected() && m_upperColumnPort1Checker.isSelected()) {
+            m_binarySearchButton.setEnabled(true);
+        } else {
+            m_linearSearchButton.doClick();
+            m_binarySearchButton.setEnabled(false);
+        }
     }
 
     /**
@@ -205,6 +225,22 @@ final class BinByDictionaryNodeDialogPane extends NodeDialogPane {
         panel.add(m_insertMissingIfNoRuleMatchesButton, gbc);
         gbc.insets.top = 5;
 
+        gbc.gridy += 1;
+        gbc.gridx = 0;
+        gbc.gridwidth = 1;
+        gbc.anchor = GridBagConstraints.EAST;
+        panel.add(new JLabel("Search pattern: "), gbc);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.gridx += 1;
+        gbc.gridwidth = GridBagConstraints.REMAINDER;
+        gbc.insets.bottom = 0;
+        panel.add(m_linearSearchButton, gbc);
+        gbc.insets.bottom = 5;
+        gbc.gridy += 1;
+        gbc.insets.top = 0;
+        panel.add(m_binarySearchButton, gbc);
+        gbc.insets.top = 5;
+
         addTab("Configuration", panel);
     }
 
@@ -242,6 +278,12 @@ final class BinByDictionaryNodeDialogPane extends NodeDialogPane {
         } else {
             m_insertMissingIfNoRuleMatchesButton.doClick();
         }
+        if (c.isUseBinarySearch()) {
+            m_binarySearchButton.doClick();
+        } else {
+            m_linearSearchButton.doClick();
+        }
+        updateEnablementBinarySearch();
     }
 
     /** {@inheritDoc} */
@@ -262,6 +304,7 @@ final class BinByDictionaryNodeDialogPane extends NodeDialogPane {
         c.setUpperBoundInclusive(m_upperBoundInclusiveChecker.isSelected());
         c.setLabelColumnPort1(labelCol);
         c.setFailIfNoRuleMatches(m_failIfNoRuleMatchesButton.isSelected());
+        c.setUseBinarySearch(m_binarySearchButton.isSelected());
         c.saveSettingsTo(settings);
     }
 

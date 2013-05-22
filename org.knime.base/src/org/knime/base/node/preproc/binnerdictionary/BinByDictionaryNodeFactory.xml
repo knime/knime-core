@@ -63,6 +63,15 @@
           (reasonable when the rule table is assumed to cover the entire domain)
           or "Insert Missing" to insert missing values as result. 
         </option>
+        <option name="Search Pattern">
+          Linear Search scans all rules sequentially in the order they are defined
+          in the rule table and returns the label of the first rule that matches. 
+          Binary search only works if both limits are specified (and not missing); 
+          it sorts the rules based on their lower and upper limits and performs a
+          binary search to find the matching label. Binary search might not be
+          deterministic if rules overlap. It is much faster if there is a large
+          rule set (tens of thousands or millions). If in doubt, use linear search.
+        </option>
     </fullDescription>
 
     <ports>

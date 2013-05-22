@@ -74,6 +74,7 @@ final class BinByDictionaryConfiguration {
     private boolean m_upperBoundInclusive;
     private String m_labelColumnPort1;
     private boolean m_failIfNoRuleMatches;
+    private boolean m_useBinarySearch;
 
     /** @return the valueColumnPort0 */
     String getValueColumnPort0() {
@@ -132,6 +133,14 @@ final class BinByDictionaryConfiguration {
     void setFailIfNoRuleMatches(final boolean failIfNoRuleMatches) {
         m_failIfNoRuleMatches = failIfNoRuleMatches;
     }
+    /** @return the useBinarySearch */
+    boolean isUseBinarySearch() {
+        return m_useBinarySearch;
+    }
+    /** @param useBinarySearch the useBinarySearch to set */
+    void setUseBinarySearch(final boolean useBinarySearch) {
+        m_useBinarySearch = useBinarySearch;
+    }
     /** Load settings in model.
      * @param settings To load from.
      * @throws InvalidSettingsException */
@@ -144,6 +153,16 @@ final class BinByDictionaryConfiguration {
         m_upperBoundInclusive = settings.getBoolean("upperBoundInclusive");
         m_labelColumnPort1 = settings.getString("labelColumnPort1");
         m_failIfNoRuleMatches = settings.getBoolean("failIfNoRuleMatches");
+        // added in 2.8
+        m_useBinarySearch = settings.getBoolean("useBinarySearch", false);
+        if (m_useBinarySearch) {
+            if (m_lowerBoundColumnPort1 == null) {
+                throw new InvalidSettingsException("Lower bound must be selected for binary search");
+            }
+            if (m_upperBoundColumnPort1 == null) {
+                throw new InvalidSettingsException("Upper bound must be selected for binary search");
+            }
+        }
     }
 
     /** Load settings in dialog.
@@ -233,6 +252,7 @@ final class BinByDictionaryConfiguration {
         }
         m_failIfNoRuleMatches =
             settings.getBoolean("failIfNoRuleMatches", false);
+        m_useBinarySearch = settings.getBoolean("useBinarySearch", false);
     }
 
     /** Save current configuration.
@@ -245,6 +265,7 @@ final class BinByDictionaryConfiguration {
         settings.addBoolean("upperBoundInclusive", m_upperBoundInclusive);
         settings.addString("labelColumnPort1", m_labelColumnPort1);
         settings.addBoolean("failIfNoRuleMatches", m_failIfNoRuleMatches);
+        settings.addBoolean("useBinarySearch", m_useBinarySearch);
     }
 
 }

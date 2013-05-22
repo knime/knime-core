@@ -50,8 +50,6 @@ package org.knime.base.node.preproc.binnerdictionary;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
@@ -192,7 +190,9 @@ final class BinByDictionaryNodeModel extends NodeModel {
         labelColSpecCreator.setName(name);
         final DataColumnSpec labelColSpec = labelColSpecCreator.createSpec();
 
-        final List<Rule> rules = new ArrayList<Rule>();
+        final BinByDictionaryRuleSet ruleSet = new BinByDictionaryRuleSet(
+            lowerBoundComparator, isLowerBoundInclusive,
+            upperBoundComparator, isUpperBoundInclusive, c.isUseBinarySearch());
         if (port1Table != null) { // in execute
             int rowCount = port1Table.getRowCount();
             int current = 1;
@@ -202,16 +202,15 @@ final class BinByDictionaryNodeModel extends NodeModel {
                 DataCell upper = upperBoundColIndex < 0 ? null
                         : r.getCell(upperBoundColIndex);
                 DataCell label = r.getCell(labelColIndex);
-                rules.add(new Rule(lowerBoundComparator, lower,
-                        isLowerBoundInclusive, upperBoundComparator, upper,
-                        isUpperBoundInclusive, label));
+                ruleSet.addRule(lower, upper, label);
                 exec.setProgress(/*no prog */0.0,
                         "Indexing rule table " + (current++) + "/" + rowCount
                         + " (\"" + r.getKey() + "\")");
                 exec.checkCanceled();
             }
         }
-        SingleCellFactory fac = new SingleCellFactory(rules.size() > 50, labelColSpec) {
+        ruleSet.close();
+        SingleCellFactory fac = new SingleCellFactory(ruleSet.getSize() > 100, labelColSpec) {
 
             @Override
             public DataCell getCell(final DataRow row) {
@@ -219,10 +218,9 @@ final class BinByDictionaryNodeModel extends NodeModel {
                 if (value.isMissing()) {
                     return DataType.getMissingCell();
                 }
-                for (Rule r : rules) {
-                    if (r.matches(value)) {
-                        return r.getLabel();
-                    }
+                DataCell result = ruleSet.search(value);
+                if (result != null) {
+                    return result;
                 }
                 if (c.isFailIfNoRuleMatches()) {
                     throw new RuntimeException("No rule matched for row \""
@@ -281,65 +279,6 @@ final class BinByDictionaryNodeModel extends NodeModel {
             final ExecutionMonitor exec) throws IOException,
             CanceledExecutionException {
         // no internals
-    }
-
-    private static final class Rule {
-
-        private final DataValueComparator m_lowerBoundComp;
-        private final DataCell m_lowerBoundValue;
-        private final boolean m_lowerBoundInclusive;
-        private final DataValueComparator m_upperBoundComp;
-        private final DataCell m_upperBoundValue;
-        private final boolean m_upperBoundInclusive;
-        private final DataCell m_label;
-
-        Rule(final DataValueComparator lowerBoundComp,
-                final DataCell lowerBoundValue,
-                final boolean lowerBoundInclusive,
-                final DataValueComparator upperBoundComp,
-                final DataCell upperBoundValue,
-                final boolean upperBoundInclusive,
-                final DataCell label) {
-            m_lowerBoundComp = lowerBoundComp;
-            m_upperBoundComp = upperBoundComp;
-            m_lowerBoundValue = lowerBoundValue;
-            m_lowerBoundInclusive = lowerBoundInclusive;
-            m_upperBoundValue = upperBoundValue;
-            m_upperBoundInclusive = upperBoundInclusive;
-            m_label = label;
-        }
-
-        boolean matches(final DataCell c) {
-            if (m_lowerBoundComp != null && !m_lowerBoundValue.isMissing()) {
-                int compare = m_lowerBoundComp.compare(m_lowerBoundValue, c);
-                if (m_lowerBoundInclusive && compare > 0) {
-                    return false;
-                } else if (!m_lowerBoundInclusive && compare >= 0) {
-                    return false;
-                }
-            }
-            if (m_upperBoundComp != null && !m_upperBoundValue.isMissing()) {
-                int compare = m_upperBoundComp.compare(m_upperBoundValue, c);
-                if (m_upperBoundInclusive && compare < 0) {
-                    return false;
-                } else if (!m_upperBoundInclusive && compare <= 0) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        /** @return the label */
-        DataCell getLabel() {
-            return m_label;
-        }
-
-        /** {@inheritDoc} */
-        @Override
-        public String toString() {
-            return "Lower: \"" + m_lowerBoundValue + "\"; Upper: \""
-                + m_upperBoundValue + "\"; Label: \"" + m_label + "\"";
-        }
     }
 
 }
