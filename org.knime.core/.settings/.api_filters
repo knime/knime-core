@@ -207,7 +207,7 @@
         <filter id="305426566">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.PasteWorkflowContentPersistor"/>
-                <message_argument value="org.knime.base_2.7.2"/>
+                <message_argument value="org.knime.core_2.7.2"/>
             </message_arguments>
         </filter>
     </resource>
