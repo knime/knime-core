@@ -306,7 +306,8 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor, FromFileN
         return m_templateInformation;
     }
 
-    /** {@inheritDoc} */
+    /** {@inheritDoc}
+     * @since 2.8*/
     @Override
     public AuthorInformation getAuthorInformation() {
         return m_authorInformation;
