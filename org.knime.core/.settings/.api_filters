@@ -198,23 +198,16 @@
         </filter>
     </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/PasteWorkflowContentPersistor.java" type="org.knime.core.node.workflow.PasteWorkflowContentPersistor">
-        <filter comment="persistor changes - no APi" id="305365105">
+        <filter comment="persistor changes - no API" id="305365105">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.PasteWorkflowContentPersistor"/>
                 <message_argument value="org.knime.core_2.8.0"/>
             </message_arguments>
         </filter>
-        <filter comment="persistor changes" id="305426566">
+        <filter id="305426566">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.PasteWorkflowContentPersistor"/>
                 <message_argument value="org.knime.base_2.7.2"/>
-            </message_arguments>
-        </filter>
-        <filter id="643842064">
-            <message_arguments>
-                <message_argument value="WorkflowFileStoreHandlerRepository"/>
-                <message_argument value="PasteWorkflowContentPersistor"/>
-                <message_argument value="getFileStoreHandlerRepository()"/>
             </message_arguments>
         </filter>
     </resource>
