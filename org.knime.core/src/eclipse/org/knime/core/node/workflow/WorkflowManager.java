@@ -455,20 +455,19 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     private NodeID internalAddNewNode(final NodeFactory<?> factory,
             final NodeCreationContext context) {
-        NodeID newID;
         synchronized (m_workflowMutex) {
             // TODO synchronize to avoid messing with running workflows!
             assert factory != null;
             // insert node
-            newID = m_workflow.createUniqueID();
+            NodeID newID = m_workflow.createUniqueID();
             SingleNodeContainer container = new SingleNodeContainer(this,
                new Node((NodeFactory<NodeModel>)factory, context), newID);
             addNodeContainer(container, true);
+            configureNodeAndSuccessors(newID, true);
+            LOGGER.debug("Added new node " + newID);
+            setDirty();
+            return newID;
         }
-        configureNodeAndSuccessors(newID, true);
-        LOGGER.debug("Added new node " + newID);
-        setDirty();
-        return newID;
     }
 
     /** Check if specific node can be removed (i.e. is not currently being
@@ -1692,19 +1691,19 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     private void disableSuccessorsForExecution(final NodeID id, final int outportIndex) {
         if ((id.equals(this.getID())) || (hasSuccessorInProgress(id))) {
-            for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
-                if ((outportIndex) == -1 || (cc.getSourcePort() == outportIndex)) {
-                    NodeID succId = cc.getDest();
-                    if (succId.equals(this.getID())) {
-                        // unmark successors of this metanode
-                        getParent().disableSuccessorsForExecution(this.getID(), cc.getDestPort());
-                    } else {
-                        // handle normal node
-                        disableNodeForExecution(succId, cc.getDestPort());
-                    }
+        for (ConnectionContainer cc : m_workflow.getConnectionsBySource(id)) {
+            if ((outportIndex) == -1 || (cc.getSourcePort() == outportIndex)) {
+                NodeID succId = cc.getDest();
+                if (succId.equals(this.getID())) {
+                    // unmark successors of this metanode
+                    getParent().disableSuccessorsForExecution(this.getID(), cc.getDestPort());
+                } else {
+                    // handle normal node
+                    disableNodeForExecution(succId, cc.getDestPort());
                 }
             }
         }
+    }
     }
 
     /**
