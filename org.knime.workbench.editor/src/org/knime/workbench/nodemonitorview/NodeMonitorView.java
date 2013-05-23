@@ -407,6 +407,7 @@ public class NodeMonitorView extends ViewPart
             m_portIndex.getCombo().setItems(vals);
             m_portIndex.getCombo().select(0);
             updateDataTable(nc, 0);
+            break;
         case GRAPHANNOTATIONS:
             updateGraphAnnotationTable(nc);
             break;
