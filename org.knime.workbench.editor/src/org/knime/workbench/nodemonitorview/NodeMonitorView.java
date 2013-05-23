@@ -223,7 +223,7 @@ public class NodeMonitorView extends ViewPart
         dropDownMenu.add(menuentryallsettings);
         // drop down menu entry for node graph annotations
         final RetargetAction menuentrygraphannotations
-                = new RetargetAction("NodeGraphAnno", "Show GraphAnnotations",
+                = new RetargetAction("NodeGraphAnno", "Show Graph Annotations",
                             IAction.AS_RADIO_BUTTON);
         menuentrygraphannotations.setChecked(DISPLAYOPTIONS.GRAPHANNOTATIONS.equals(m_choice));
         menuentrygraphannotations.addPropertyChangeListener(new IPropertyChangeListener() {
