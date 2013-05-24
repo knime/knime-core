@@ -1,6 +1,6 @@
-/* @(#)$RCSfile$ 
+/* @(#)$RCSfile$
  * $Revision$ $Date$ $Author$
- * 
+ *
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -46,7 +46,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   07.10.2006 (sieb): created
  */
@@ -54,7 +54,7 @@ package org.knime.base.util.math;
 
 /**
  * Implements basic mathematical functions.
- * 
+ *
  * @author Christoph Sieb, University of Konstanz
  */
 public final class MathUtils {
@@ -71,12 +71,12 @@ public final class MathUtils {
      * result^2 = x^2 * (1 + y^2/x^2)<br>
      * result^2 = x^2 * (1 + (y/x)^2)<br>
      * result = |x| * sqrt(1 + (y/x)^2)<br>
-     * 
+     *
      * It is important to perform a case differentiation. The formula is
      * transformed the same way but by extracting y instead of x. The advantage
      * is that the ^2 is performed on a mostly smaller number due to the
      * division.
-     * 
+     *
      * @param x the x value
      * @param y the y value
      * @return sqrt(x^2 + y^2)
@@ -103,7 +103,7 @@ public final class MathUtils {
      * 2. Therefore, result matrix = matrix 1 * matrix 2. The matrices must be
      * compatible, i.e. the number of columns of matrix 1 must equal to the
      * number of rows of matrix 2.
-     * 
+     *
      * @param matrix1 the matrix on the left side
      * @param matrix2 the matrix on the right side
      * @return the result matrix
@@ -154,10 +154,10 @@ public final class MathUtils {
     }
 
     /**
-     * Adds two matrices. The matrices must have the same column and 
+     * Adds two matrices. The matrices must have the same column and
      * row count. The returned matrix object is a new object (no changes
      * to argument arrays are done).
-     * 
+     *
      * @param matrix1 the matrix on the left side
      * @param matrix2 the matrix on the right side
      * @return the result matrix
@@ -194,13 +194,13 @@ public final class MathUtils {
         }
         return resultMatrix;
     }
-    
+
     /**
      * Multiplies two matrices. Matrix 1 is multiplied from the left to matrix
      * 2. Therefore, result matrix = matrix 1 * matrix 2. The matrices must be
      * compatible, i.e. the number of columns of matrix 1 must equal to the
      * number of rows of matrix 2.
-     * 
+     *
      * @param matrix the matrix on the left side
      * @param vector the vector on the right side
      * @return the result matrix
@@ -219,7 +219,7 @@ public final class MathUtils {
                             + "has rows.");
         }
 
-        double[] resultVector = new double[numRowsVector];
+        double[] resultVector = new double[numRowsMatrix];
 
         for (int i = 0; i < numRowsMatrix; i++) {
             double tmp = 0;
@@ -232,11 +232,11 @@ public final class MathUtils {
         return resultVector;
     }
 
-    
+
     /**
      * Multiplies a matrix with its transposed matrix. The transposed matrix is
      * multiplied to the <em>left</em> of the original matrix.
-     * 
+     *
      * @param mat the matrix
      * @return the result matrix
      */
@@ -268,7 +268,7 @@ public final class MathUtils {
 
     /**
      * Transposes the given matrix.
-     * 
+     *
      * @param inputMatrix the matrix to transposed
      * @return the transposed matrix where the number of rows and columns is
      *         changed according to the given matrix
@@ -298,7 +298,7 @@ public final class MathUtils {
      * Calculates the inverse matrix of a given matrix. The implementation
      * applies the decomposition according to Gauss-Jordan identifying pivot
      * elements.
-     * 
+     *
      * @param aOrig the original matrix
      * @return the inverse matrix
      * @throws ArithmeticException if the matrix is not a square matrix or the
@@ -378,7 +378,7 @@ public final class MathUtils {
     /**
      * Normalizes the matrix relative to the mean of the input data and to the
      * standard deviation.
-     * 
+     *
      * @param matrix the matrix to normalize
      * @param standardDev the standard deviation for all columns used to
      *            normalize the matrix
@@ -408,10 +408,10 @@ public final class MathUtils {
 
     /**
      * Normalizes the matrix relative to the mean of the input data.
-     * 
+     *
      * @param matrix the matrix to normalize
      * @param mean the mean for all columns used to normalize the matrix
-     * 
+     *
      * @return the normalized matrix
      */
     public static double[][] normalizeMatrix(final double[][] matrix,
@@ -436,9 +436,9 @@ public final class MathUtils {
     /**
      * Normalizes the matrix relative to the mean and standard deviation of the
      * input data.
-     * 
+     *
      * @param matrix the matrix to normalize
-     * 
+     *
      * @return the normalized matrix
      */
     public static double[][] normalizeMatrix(final double[][] matrix) {
@@ -451,7 +451,7 @@ public final class MathUtils {
     /**
      * Denormalizes the matrix relativ to the mean of the input data and to the
      * standard deviation.
-     * 
+     *
      * @param y the matrix to denormalize
      * @param standardDev the standard deviation for all columns used to
      *            denormalize the matrix
@@ -480,7 +480,7 @@ public final class MathUtils {
     /**
      * Denormalizes the vector relative to the mean of the input data and to the
      * standard deviation.
-     * 
+     *
      * @param vector the input array to denormalize
      * @param standardDev the standard deviation for all columns used to
      *            denormalize the matrix
@@ -496,7 +496,7 @@ public final class MathUtils {
 
     /**
      * Denormalizes the vector relative to the mean of the input data.
-     * 
+     *
      * @param vector the input array to denormalize
      * @param mean the mean for all columns used to denormalize the matrix
      * @return the denormalized vector
@@ -509,7 +509,7 @@ public final class MathUtils {
 
     /**
      * Denormalizes the matrix relativ to the mean of the input data.
-     * 
+     *
      * @param y the matrix to denormalize
      * @param mean the mean for all columns used to denormalize the matrix
      * @return the denormalized matrix
@@ -537,7 +537,7 @@ public final class MathUtils {
      * Computes the spectral norm of the given matrix. It is defined as the
      * square root of the maximum absolute value of the eigenvalues of the
      * product of the matrix with its transposed form.
-     * 
+     *
      * @param matrix the matrix to compute the norm for.
      * @return the spectral norm of the matrix.
      */
@@ -557,7 +557,7 @@ public final class MathUtils {
 
     /**
      * Adds the second array to the first one.
-     * 
+     *
      * @param firstArray the first array will be changed by adding the second
      *            one to it
      * @param secondArray the second array will be added to the first one (stays
@@ -574,7 +574,7 @@ public final class MathUtils {
 
     /**
      * Adds the second matrix to the first one.
-     * 
+     *
      * @param firstMatrix the first matrix will be changed by adding the second
      *            one to it
      * @param secondMatrix the second matrix will be added to the first one
