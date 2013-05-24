@@ -196,15 +196,57 @@ public final class MathUtils {
     }
 
     /**
-     * Multiplies two matrices. Matrix 1 is multiplied from the left to matrix
-     * 2. Therefore, result matrix = matrix 1 * matrix 2. The matrices must be
-     * compatible, i.e. the number of columns of matrix 1 must equal to the
-     * number of rows of matrix 2.
+     * Subtracts two matrices. The matrices must have the same column and
+     * row count. The returned matrix object is a new object (no changes
+     * to argument arrays are done).
+     *
+     * @param matrix1 the matrix on the left side
+     * @param matrix2 the matrix on the right side
+     * @return the result matrix
+     * @throws IllegalArgumentException if the matrices are not compatible
+     */
+    public static double[][] subtract(final double[][] matrix1,
+            final double[][] matrix2) throws IllegalArgumentException {
+        // set the number of rows for both matrices M1 and M2
+        int numRowsM1 = matrix1.length;
+        int numRowsM2 = matrix2.length;
+
+        // set the number of columns for both matrices M1 and M2
+        int numColsM1 = numRowsM1 != 0 ? matrix1[0].length : 0;
+        int numColsM2 = numRowsM2 != 0 ? matrix2[0].length : 0;
+
+        // check matrix compatibility
+        if (numColsM1 != numColsM2
+                || numRowsM1 != numRowsM2) {
+            throw new IllegalArgumentException(
+                    "Incompatible matrices for subtraction.");
+        }
+
+        // the result matrix has the same number of rows and columns.
+        double[][] resultMatrix = new double[numRowsM1][numColsM1];
+
+        // the result matrix is created row by row, i.e. it is iterated
+        // over the rows of matrix 1
+        for (int row = 0; row < numRowsM1; row++) {
+
+            // now it is iterated over the number of columns of matrix 2
+            for (int col = 0; col < numColsM1; col++) {
+                resultMatrix[row][col] = matrix1[row][col] - matrix2[row][col];
+            }
+        }
+        return resultMatrix;
+    }
+
+    /**
+     * Multiplies matrix with a column vector. Matrix is multiplied from the left to
+     * vector. Therefore, result matrix = matrix * vector. The matrix and the
+     * vector must be compatible, i.e. the number of columns of the matrix must
+     * equal to the length of the vector.
      *
      * @param matrix the matrix on the left side
      * @param vector the vector on the right side
-     * @return the result matrix
-     * @throws IllegalArgumentException if the matrices are not compatible
+     * @return the result vector
+     * @throws IllegalArgumentException if the objects are not compatible
      */
     public static double[] multiply(final double[][] matrix,
             final double[] vector) throws IllegalArgumentException {
@@ -232,6 +274,49 @@ public final class MathUtils {
         return resultVector;
     }
 
+    /**
+     * Subtracts one vector from another.
+     *
+     * @param vector1 Vector 1
+     * @param vector2 Vector 2
+     * @return Vector resulting from subtraction
+     */
+    public static double[] substract(final double[] vector1,
+                                      final double[] vector2) {
+        // set the lengths of both vectors
+        int n1 = vector1.length;
+        int n2 = vector2.length;
+
+        // check compatibility
+        if (n1 != n2) {
+            throw new IllegalArgumentException("Incompatible vectors for substraction.");
+        }
+
+        double[] result = new double[n1];
+
+        for (int i = 0; i < n1; i++) {
+            result[i] = vector1[i] - vector2[i];
+        }
+        return result;
+    }
+
+    /**
+     * Computes dot product of two vectors.
+     *
+     * @param vector1 Vector 1
+     * @param vector2 Vector 2
+     * @return Dot product of the two vectors.
+     */
+    public static double dotProduct(final double[] vector1, final double[] vector2) {
+        if (vector1.length != vector2.length) {
+            throw new IllegalArgumentException("Lengths of vectors do not match.");
+        }
+        double result = 0.0;
+        for (int i = 0; i < vector1.length; i++) {
+            result += vector1[i] * vector2[i];
+        }
+        return result;
+    }
 
     /**
      * Multiplies a matrix with its transposed matrix. The transposed matrix is
