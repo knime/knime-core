@@ -204,6 +204,7 @@ public final class MathUtils {
      * @param matrix2 the matrix on the right side
      * @return the result matrix
      * @throws IllegalArgumentException if the matrices are not compatible
+     * @since 2.8
      */
     public static double[][] subtract(final double[][] matrix1,
             final double[][] matrix2) throws IllegalArgumentException {
@@ -280,6 +281,7 @@ public final class MathUtils {
      * @param vector1 Vector 1
      * @param vector2 Vector 2
      * @return Vector resulting from subtraction
+     * @since 2.8
      */
     public static double[] substract(final double[] vector1,
                                       final double[] vector2) {
@@ -306,6 +308,7 @@ public final class MathUtils {
      * @param vector1 Vector 1
      * @param vector2 Vector 2
      * @return Dot product of the two vectors.
+     * @since 2.8
      */
     public static double dotProduct(final double[] vector1, final double[] vector2) {
         if (vector1.length != vector2.length) {
