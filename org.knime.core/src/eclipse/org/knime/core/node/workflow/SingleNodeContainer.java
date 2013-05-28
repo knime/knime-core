@@ -1160,7 +1160,10 @@ public final class SingleNodeContainer extends NodeContainer {
         synchronized (m_nodeMutex) {
             super.loadSettings(settings);
             m_settings = new SingleNodeContainerSettings(settings);
-            m_node.loadModelSettingsFrom(m_settings.getModelSettings());
+            final NodeSettingsRO modelSettings = m_settings.getModelSettings();
+            if (modelSettings != null) {
+                m_node.loadModelSettingsFrom(modelSettings);
+            }
             setDirty();
         }
     }
@@ -1265,15 +1268,34 @@ public final class SingleNodeContainer extends NodeContainer {
     @Override
     void saveSettings(final NodeSettingsWO settings) {
         super.saveSettings(settings);
-        saveSNCSettings(settings);
+        saveSNCSettings(settings, false);
+    }
+
+    /** Saves config from super NodeContainer (job manager) and the model settings and the variable settings.
+     * @param settings To save to.
+     * @param initDefaultModelSettings If true and the model settings are not yet assigned (node freshly dragged onto
+     * workflow) the NodeModel's saveSettings method is called to init fallback settings.
+     */
+    void saveSettings(final NodeSettingsWO settings, final boolean initDefaultModelSettings) {
+        super.saveSettings(settings);
+        saveSNCSettings(settings, initDefaultModelSettings);
     }
 
     /**
      * Saves the {@link SingleNodeContainerSettings}.
      * @param settings To save to.
+     * @param initDefaultModelSettings If true and the model settings are not yet assigned (node freshly dragged onto
+     * workflow) the NodeModel's saveSettings method is called to init fallback settings.
      */
-    void saveSNCSettings(final NodeSettingsWO settings) {
-        m_settings.save(settings);
+    void saveSNCSettings(final NodeSettingsWO settings, final boolean initDefaultModelSettings) {
+        SingleNodeContainerSettings sncSettings = m_settings;
+        if (initDefaultModelSettings && m_settings.getModelSettings() == null) {
+            sncSettings = m_settings.clone();
+            NodeSettings modelSettings = new NodeSettings("model");
+            getNode().saveModelSettingsTo(modelSettings);
+            sncSettings.setModelSettings(modelSettings);
+        }
+        sncSettings.save(settings);
     }
 
     /** @return reference to internally used settings (contains information for
@@ -1294,7 +1316,11 @@ public final class SingleNodeContainer extends NodeContainer {
         } catch (InvalidSettingsException ise) {
             return false;
         }
-        return m_node.areSettingsValid(sncSettings.getModelSettings());
+        NodeSettingsRO modelSettings = sncSettings.getModelSettings();
+        if (modelSettings == null) {
+            modelSettings = new NodeSettings("empty");
+        }
+        return m_node.areSettingsValid(modelSettings);
     }
 
     ////////////////////////////////////
@@ -1504,9 +1530,8 @@ public final class SingleNodeContainer extends NodeContainer {
     NodeDialogPane getDialogPaneWithSettings(final PortObjectSpec[] inSpecs,
             final PortObject[] inData) throws NotConfigurableException {
         NodeSettings settings = new NodeSettings(getName());
-        saveSettings(settings);
-        return m_node.getDialogPaneWithSettings(inSpecs, inData, settings,
-                getParent().isWriteProtected());
+        saveSettings(settings, true);
+        return m_node.getDialogPaneWithSettings(inSpecs, inData, settings, getParent().isWriteProtected());
     }
 
     /** {@inheritDoc} */
@@ -1520,7 +1545,7 @@ public final class SingleNodeContainer extends NodeContainer {
     public boolean areDialogAndNodeSettingsEqual() {
         final String key = "snc_settings";
         NodeSettingsWO nodeSettings = new NodeSettings(key);
-        saveSettings(nodeSettings);
+        saveSettings(nodeSettings, true);
         NodeSettingsWO dlgSettings = new NodeSettings(key);
         try {
             m_node.getDialogPane().finishEditingAndSaveSettingsTo(dlgSettings);
@@ -1669,7 +1694,6 @@ public final class SingleNodeContainer extends NodeContainer {
          * Creates a settings object with default values.
          */
         public SingleNodeContainerSettings() {
-            m_modelSettings = new NodeSettings("empty");
         }
 
         /**
@@ -1710,8 +1734,10 @@ public final class SingleNodeContainer extends NodeContainer {
         public void save(final NodeSettingsWO settings) {
             NodeSettingsWO sncSettings = settings.addNodeSettings(Node.CFG_MISC_SETTINGS);
             sncSettings.addString(CFG_MEMORY_POLICY, m_memoryPolicy.name());
-            NodeSettingsWO model = settings.addNodeSettings(CFG_MODEL);
-            m_modelSettings.copyTo(model);
+            if (m_modelSettings != null) {
+                NodeSettingsWO model = settings.addNodeSettings(CFG_MODEL);
+                m_modelSettings.copyTo(model);
+            }
             if (m_variablesSettings != null) {
                 NodeSettingsWO variables = settings.addNodeSettings(CFG_VARIABLES);
                 m_variablesSettings.copyTo(variables);
@@ -1742,7 +1768,9 @@ public final class SingleNodeContainer extends NodeContainer {
          */
         public NodeSettings getModelSettingsClone() {
             NodeSettings s = new NodeSettings("ignored");
-            m_modelSettings.copyTo(s);
+            if (m_modelSettings != null) {
+                m_modelSettings.copyTo(s);
+            }
             return s;
         }
 
@@ -1757,9 +1785,6 @@ public final class SingleNodeContainer extends NodeContainer {
          * @param modelSettings the modelSettings to set
          */
         public void setModelSettings(final NodeSettings modelSettings) {
-            if (modelSettings == null) {
-                throw new NullPointerException("Settings argument must not be null.");
-            }
             m_modelSettings = modelSettings;
         }
 

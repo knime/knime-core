@@ -61,6 +61,7 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.workflow.FlowVariable.Scope;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResult;
@@ -150,7 +151,10 @@ final class CopySingleNodeContainerPersistor implements
             final Map<Integer, BufferedDataTable> tblRep,
             final ExecutionMonitor exec, final LoadResult loadResult) {
         try {
-            m_node.loadModelSettingsFrom(m_sncSettings.getModelSettings());
+            final NodeSettingsRO modelSettings = m_sncSettings.getModelSettings();
+            if (modelSettings != null) {
+                m_node.loadModelSettingsFrom(modelSettings);
+            }
         } catch (InvalidSettingsException e) {
             NodeLogger.getLogger(CopySingleNodeContainerPersistor.class).debug(
                 "Failed to copy settings into node target: " + e.getMessage(), e);

@@ -299,7 +299,7 @@ public class SingleNodeContainerPersistorVersion200 extends SingleNodeContainerP
     }
 
     protected static void saveSNCSettings(final NodeSettingsWO settings, final SingleNodeContainer snc) {
-        snc.saveSNCSettings(settings);
+        snc.saveSNCSettings(settings, false);
     }
 
     protected static void saveFlowObjectStack(final NodeSettingsWO settings, final SingleNodeContainer nc) {

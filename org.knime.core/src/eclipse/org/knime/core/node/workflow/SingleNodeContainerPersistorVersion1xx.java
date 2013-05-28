@@ -352,7 +352,9 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
             // this also validates the settings
             NodeSettings modelSettings = loadModelSettings(settingsForNode);
             m_sncSettings.setModelSettings(modelSettings);
-            m_node.loadModelSettingsFrom(modelSettings);
+            if (modelSettings != null) { // null if the node never had settings - no reason to load them
+                m_node.loadModelSettingsFrom(modelSettings);
+            }
         } catch (Exception e) {
             final String error;
             if (e instanceof InvalidSettingsException) {
@@ -611,7 +613,12 @@ public class SingleNodeContainerPersistorVersion1xx implements SingleNodeContain
      * @return the settings child {@link SingleNodeContainer#CFG_MODEL}.
      * @throws InvalidSettingsException ... */
     NodeSettings loadModelSettings(final NodeSettingsRO settings) throws InvalidSettingsException {
-        return (NodeSettings)settings.getNodeSettings(SingleNodeContainer.CFG_MODEL);
+        // settings not present if node never had settings (different since 2.8 -- before the node always had settings,
+        // defined by NodeModel#saveSettings -- these settings were never confirmed through validate/load though)
+        if (settings.containsKey(SingleNodeContainer.CFG_MODEL)) {
+            return (NodeSettings)settings.getNodeSettings(SingleNodeContainer.CFG_MODEL);
+        }
+        return null;
     }
 
     /** The variable settings (whatever overwrites user parameters).
