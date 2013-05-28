@@ -135,6 +135,8 @@ public class JSnippetPanel extends JPanel {
 
     private final ManipulatorProvider m_manipProvider;
 
+    private final boolean m_showColumns;
+
     /**
      * Create new instance.
      *
@@ -144,9 +146,25 @@ public class JSnippetPanel extends JPanel {
      *            in the editor
      */
     public JSnippetPanel(final ManipulatorProvider manipulatorProvider,
-            final KnimeCompletionProvider completionProvider) {
+                         final KnimeCompletionProvider completionProvider) {
+        this(manipulatorProvider, completionProvider, true);
+    }
+
+    /**
+     * Create new instance.
+     *
+     * @param manipulatorProvider a manipulation provider that provides all
+     *            available functions
+     * @param completionProvider a completion provider used for autocompletion
+     *            in the editor
+     * @param showColumns Show the columns panel, or hide it?
+     * @since 2.8
+     */
+    public JSnippetPanel(final ManipulatorProvider manipulatorProvider,
+            final KnimeCompletionProvider completionProvider, final boolean showColumns) {
         m_manipProvider = manipulatorProvider;
         m_completionProvider = completionProvider;
+        this.m_showColumns = showColumns;
         setLayout(new BorderLayout());
         initCompletionProvider();
         initComponents();
@@ -154,22 +172,27 @@ public class JSnippetPanel extends JPanel {
     }
 
     private void createStringManipulationPanel() {
-        final JSplitPane varSplitPane =
-                new JSplitPane(JSplitPane.VERTICAL_SPLIT);
-        JScrollPane colListPane = new JScrollPane(m_colList);
-        colListPane.setBorder(createEmptyTitledBorder("Column List"));
-        varSplitPane.setTopComponent(colListPane);
+        final JComponent leftComponent;
+        if (m_showColumns) {
+            final JSplitPane varSplitPane;
+            leftComponent = varSplitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT);
+            JScrollPane colListPane = new JScrollPane(m_colList);
+            colListPane.setBorder(createEmptyTitledBorder("Column List"));
+            varSplitPane.setTopComponent(colListPane);
 
-        // set variable panel
-        JScrollPane pane = new JScrollPane(m_flowVarsList);
-        pane.setBorder(createEmptyTitledBorder("Flow Variable List"));
-        varSplitPane.setBottomComponent(pane);
-        varSplitPane.setOneTouchExpandable(true);
-        varSplitPane.setResizeWeight(0.9);
-
+            // set variable panel
+            JScrollPane pane = new JScrollPane(m_flowVarsList);
+            pane.setBorder(createEmptyTitledBorder("Flow Variable List"));
+            varSplitPane.setBottomComponent(pane);
+            varSplitPane.setOneTouchExpandable(true);
+            varSplitPane.setResizeWeight(0.9);
+        } else {
+            leftComponent = new JScrollPane(m_flowVarsList);
+            leftComponent.setBorder(createEmptyTitledBorder("Flow Variable List"));
+        }
         JPanel centerPanel = new JPanel(new GridLayout(0, 1));
         JSplitPane mainSplitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
-        mainSplitPane.setLeftComponent(varSplitPane);
+        mainSplitPane.setLeftComponent(leftComponent);
 
         mainSplitPane.setRightComponent(createFunctionAndExpressionPanel());
         centerPanel.add(mainSplitPane);
@@ -299,7 +322,13 @@ public class JSnippetPanel extends JPanel {
         updateManipulatorList(ManipulatorProvider.ALL_CATEGORY);
     }
 
-    private JComponent createEditorComponent() {
+    /**
+     * Creates the text editor component along with the scrollpane.
+     *
+     * @return The {@link RSyntaxTextArea} wrapped within a {@link JScrollPane}.
+     * @since 2.8
+     */
+    protected JComponent createEditorComponent() {
         RSyntaxTextArea textArea = new RSyntaxTextArea(20, 60);
         textArea.setSyntaxEditingStyle(SyntaxConstants.SYNTAX_STYLE_JAVA);
         JScrollPane scroller = new JScrollPane(textArea);
@@ -446,14 +475,20 @@ public class JSnippetPanel extends JPanel {
             }
             String enter =
                     m_completionProvider.escapeFlowVariableName(typeChar
-                            + v.getName());
+                            + v.getName()/*.replace("\\", "\\\\").replace("}", "\\}")*/);
             m_expEdit.replaceSelection(enter);
             m_flowVarsList.clearSelection();
             m_expEdit.requestFocus();
         }
     }
 
-    private void onSelectionInManipulatorList(final Object selected) {
+    /**
+     * Inserts text based on the selected manipulator.
+     *
+     * @param selected A {@link Manipulator}.
+     * @since 2.8
+     */
+    protected void onSelectionInManipulatorList(final Object selected) {
         if (selected != null) {
             Manipulator manipulator = (Manipulator)selected;
             String selectedString = m_expEdit.getSelectedText();
@@ -585,5 +620,21 @@ public class JSnippetPanel extends JPanel {
                             m.getDisplayName(), index, isSelected, cellHasFocus);
             return c;
         }
+    }
+
+    /**
+     * @param expEdit the text editor to set
+     * @since 2.8
+     */
+    protected void setExpEdit(final JTextComponent expEdit) {
+        this.m_expEdit = expEdit;
+    }
+
+    /**
+     * @return the completionProvider
+     * @since 2.8
+     */
+    protected KnimeCompletionProvider getCompletionProvider() {
+        return m_completionProvider;
     }
 }

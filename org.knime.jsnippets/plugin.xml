@@ -20,6 +20,26 @@
             factory-class="org.knime.base.node.jsnippet.JavaEditVarNodeFactory"
             id="org.knime.base.node.jsnippet.JavaEditVarNodeFactory">
       </node>      
+      <node
+            category-path="/manipulation/row/row-other"
+            factory-class="org.knime.base.node.rules.engine.RuleEngineNodeFactory"
+            id="org.knime.base.node.rules.engine.RuleEngineNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/row/row-filter"
+            factory-class="org.knime.base.node.rules.engine.RuleEngineFilterNodeFactory"
+            id="org.knime.base.node.rules.engine.RuleEngineFilterNodeFactory">
+      </node>
+      <node
+            category-path="/manipulation/row/row-filter"
+            factory-class="org.knime.base.node.rules.engine.RuleEngineSplitterNodeFactory"
+            id="org.knime.base.node.rules.engine.RuleEngineSplitterNodeFactory">
+      </node>
+      <node
+            category-path="/flowcontrol/variables"
+            factory-class="org.knime.base.node.rules.engine.RuleEngineVariableNodeFactory"
+            id="org.knime.base.node.rules.engine.RuleEngineVariableNodeFactory">
+      </node>
    </extension>
    <extension
          point="org.knime.jsnippets.templaterepository">

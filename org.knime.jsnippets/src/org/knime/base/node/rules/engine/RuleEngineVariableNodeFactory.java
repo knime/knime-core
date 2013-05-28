@@ -40,84 +40,66 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME. The owner of a Node
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
  * History
- *   24.11.2011 (hofer): created
+ *   11.04.2008 (thor): created
  */
-package org.knime.base.node.jsnippet.ui;
+package org.knime.base.node.rules.engine;
 
-import java.awt.Color;
-
-import org.fife.ui.rsyntaxtextarea.Token;
-import org.fife.ui.rsyntaxtextarea.folding.FoldParserManager;
-import org.knime.base.node.jsnippet.JavaSnippet;
-import org.knime.base.node.jsnippet.JavaSnippetDocument;
-import org.knime.base.node.jsnippet.guarded.GuardedDocument;
-import org.knime.base.node.jsnippet.guarded.GuardedSection;
-import org.knime.base.node.jsnippet.guarded.GuardedSectionsFoldParser;
-import org.knime.base.node.util.KnimeSyntaxTextArea;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
- * A text area for the java snippet expression.
+ * This factory creates all necessary object for the business rule node for variables.
  *
- * @author Heiko Hofer
+ * @author Thorsten Meinl, University of Konstanz
+ * @author Gabor Bakos
+ * @since 2.8
  */
-@SuppressWarnings("serial")
-public class JSnippetTextArea extends KnimeSyntaxTextArea {
-
+public class RuleEngineVariableNodeFactory extends NodeFactory<RuleEngineVariableNodeModel> {
     /**
-     * Create a new component.
-     * @param snippet the snippet
+     * {@inheritDoc}
      */
-    public JSnippetTextArea(final JavaSnippet snippet) {
-        // initial text != null causes a null pointer exception
-        super(new JavaSnippetDocument(), null, 20, 60);
-
-        setDocument(snippet.getDocument());
-        addParser(snippet.getParser());
-
-        boolean parserInstalled = FoldParserManager.get().getFoldParser(
-                SYNTAX_STYLE_JAVA) instanceof GuardedSectionsFoldParser;
-        if (!parserInstalled) {
-            FoldParserManager.get().addFoldParserMapping(SYNTAX_STYLE_JAVA,
-                    new GuardedSectionsFoldParser());
-        }
-        setCodeFoldingEnabled(true);
-        setSyntaxEditingStyle(SYNTAX_STYLE_JAVA);
+    @Override
+    protected NodeDialogPane createNodeDialogPane() {
+        return new RuleEngineVariableNodeDialog();
     }
-
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Color getForegroundForToken(final Token t) {
-        if (isInGuardedSection(t.offset)) {
-            return Color.gray;
-        } else {
-            return super.getForegroundForToken(t);
-        }
+    public RuleEngineVariableNodeModel createNodeModel() {
+        return new RuleEngineVariableNodeModel();
     }
 
     /**
-     * Returns true when offset is within a guarded section.
-     *
-     * @param offset the offset to test
-     * @return true when offset is within a guarded section.
+     * {@inheritDoc}
      */
-    private boolean isInGuardedSection(final int offset) {
-        GuardedDocument doc = (GuardedDocument)getDocument();
+    @Override
+    public NodeView<RuleEngineVariableNodeModel> createNodeView(final int index,
+            final RuleEngineVariableNodeModel model) {
+        return null;
+    }
 
-        for (String name : doc.getGuardedSections()) {
-            GuardedSection gs = doc.getGuardedSection(name);
-            if (gs.contains(offset)) {
-                return true;
-            }
-        }
-        return false;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected int getNrNodeViews() {
+        return 0;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected boolean hasDialog() {
+        return true;
     }
 }

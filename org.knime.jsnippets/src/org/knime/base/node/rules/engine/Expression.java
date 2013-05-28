@@ -40,84 +40,48 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME. The owner of a Node
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
- * History
- *   24.11.2011 (hofer): created
+ * Created on 2013.05.03. by Gabor
  */
-package org.knime.base.node.jsnippet.ui;
+package org.knime.base.node.rules.engine;
 
-import java.awt.Color;
+import java.util.List;
 
-import org.fife.ui.rsyntaxtextarea.Token;
-import org.fife.ui.rsyntaxtextarea.folding.FoldParserManager;
-import org.knime.base.node.jsnippet.JavaSnippet;
-import org.knime.base.node.jsnippet.JavaSnippetDocument;
-import org.knime.base.node.jsnippet.guarded.GuardedDocument;
-import org.knime.base.node.jsnippet.guarded.GuardedSection;
-import org.knime.base.node.jsnippet.guarded.GuardedSectionsFoldParser;
-import org.knime.base.node.util.KnimeSyntaxTextArea;
+import org.knime.core.data.DataRow;
+import org.knime.core.data.DataType;
 
 /**
- * A text area for the java snippet expression.
+ * A typed expression that can be evaluated using a {@link DataRow} and a {@link VariableProvider}.
  *
- * @author Heiko Hofer
+ * @author Gabor Bakos
+ * @since 2.8
  */
-@SuppressWarnings("serial")
-public class JSnippetTextArea extends KnimeSyntaxTextArea {
-
+public interface Expression {
     /**
-     * Create a new component.
-     * @param snippet the snippet
+     * @return {@link DataType} of input arguments (can be empty).
      */
-    public JSnippetTextArea(final JavaSnippet snippet) {
-        // initial text != null causes a null pointer exception
-        super(new JavaSnippetDocument(), null, 20, 60);
-
-        setDocument(snippet.getDocument());
-        addParser(snippet.getParser());
-
-        boolean parserInstalled = FoldParserManager.get().getFoldParser(
-                SYNTAX_STYLE_JAVA) instanceof GuardedSectionsFoldParser;
-        if (!parserInstalled) {
-            FoldParserManager.get().addFoldParserMapping(SYNTAX_STYLE_JAVA,
-                    new GuardedSectionsFoldParser());
-        }
-        setCodeFoldingEnabled(true);
-        setSyntaxEditingStyle(SYNTAX_STYLE_JAVA);
-    }
-
+    List<DataType> getInputArgs();
 
     /**
-     * {@inheritDoc}
+     * @return {@link DataType} of output.
      */
-    @Override
-    public Color getForegroundForToken(final Token t) {
-        if (isInGuardedSection(t.offset)) {
-            return Color.gray;
-        } else {
-            return super.getForegroundForToken(t);
-        }
-    }
+    DataType getOutputType();
 
     /**
-     * Returns true when offset is within a guarded section.
+     * Computes the value of the {@link Expression}.
      *
-     * @param offset the offset to test
-     * @return true when offset is within a guarded section.
+     * @param row A {@link DataRow}.
+     * @param provider The {@link VariableProvider}.
+     * @return The result of the evaluation.
      */
-    private boolean isInGuardedSection(final int offset) {
-        GuardedDocument doc = (GuardedDocument)getDocument();
+    ExpressionValue evaluate(DataRow row, VariableProvider provider);
 
-        for (String name : doc.getGuardedSections()) {
-            GuardedSection gs = doc.getGuardedSection(name);
-            if (gs.contains(offset)) {
-                return true;
-            }
-        }
-        return false;
-    }
+    /**
+     * @return {@code true} means it can be evaluated during construction.
+     */
+    boolean isConstant();
 }

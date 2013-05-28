@@ -40,84 +40,57 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME. The owner of a Node
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
- * History
- *   24.11.2011 (hofer): created
+ * Created on 2013.04.29. by Gabor
  */
-package org.knime.base.node.jsnippet.ui;
-
-import java.awt.Color;
-
-import org.fife.ui.rsyntaxtextarea.Token;
-import org.fife.ui.rsyntaxtextarea.folding.FoldParserManager;
-import org.knime.base.node.jsnippet.JavaSnippet;
-import org.knime.base.node.jsnippet.JavaSnippetDocument;
-import org.knime.base.node.jsnippet.guarded.GuardedDocument;
-import org.knime.base.node.jsnippet.guarded.GuardedSection;
-import org.knime.base.node.jsnippet.guarded.GuardedSectionsFoldParser;
-import org.knime.base.node.util.KnimeSyntaxTextArea;
+package org.knime.base.node.rules.engine;
 
 /**
- * A text area for the java snippet expression.
+ * Some helper methods for {@link Rule} parsing, handling.
  *
- * @author Heiko Hofer
+ * @author Gabor Bakos
+ * @since 2.8
  */
-@SuppressWarnings("serial")
-public class JSnippetTextArea extends KnimeSyntaxTextArea {
+public final class RuleSupport {
+    ///The prefix to signal comments.
+    private static final String COMMENT_START = "//";
 
-    /**
-     * Create a new component.
-     * @param snippet the snippet
-     */
-    public JSnippetTextArea(final JavaSnippet snippet) {
-        // initial text != null causes a null pointer exception
-        super(new JavaSnippetDocument(), null, 20, 60);
-
-        setDocument(snippet.getDocument());
-        addParser(snippet.getParser());
-
-        boolean parserInstalled = FoldParserManager.get().getFoldParser(
-                SYNTAX_STYLE_JAVA) instanceof GuardedSectionsFoldParser;
-        if (!parserInstalled) {
-            FoldParserManager.get().addFoldParserMapping(SYNTAX_STYLE_JAVA,
-                    new GuardedSectionsFoldParser());
-        }
-        setCodeFoldingEnabled(true);
-        setSyntaxEditingStyle(SYNTAX_STYLE_JAVA);
-    }
-
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Color getForegroundForToken(final Token t) {
-        if (isInGuardedSection(t.offset)) {
-            return Color.gray;
-        } else {
-            return super.getForegroundForToken(t);
-        }
+    private RuleSupport() {
+        // no instantiations of this class
     }
 
     /**
-     * Returns true when offset is within a guarded section.
+     * Converts {@code rule} to a comment.
      *
-     * @param offset the offset to test
-     * @return true when offset is within a guarded section.
+     * @param rule A line that might already be comment.
+     * @return A text that {@link #isComment(String)}.
      */
-    private boolean isInGuardedSection(final int offset) {
-        GuardedDocument doc = (GuardedDocument)getDocument();
+    public static String toComment(final String rule) {
+        return !isComment(rule) ? COMMENT_START + rule : rule;
+    }
 
-        for (String name : doc.getGuardedSections()) {
-            GuardedSection gs = doc.getGuardedSection(name);
-            if (gs.contains(offset)) {
-                return true;
-            }
-        }
-        return false;
+    /**
+     * Checks whether {@code rule} is a comment or not.
+     *
+     * @param rule A line that might be comment.
+     * @return {@code true} iff comment.
+     */
+    public static boolean isComment(final String rule) {
+        return rule != null && rule.startsWith(COMMENT_START);
+    }
+
+    /**
+     * Removes the comment prefix.
+     *
+     * @param line A line that might be comment.
+     * @return {@code null} if {@code line} is {@code null}, else a substring of {@code line} that is not
+     *         {@link #isComment(String) comment}.
+     */
+    public static String unComment(final String line) {
+        return isComment(line) ? unComment(line.substring(COMMENT_START.length())) : line;
     }
 }

@@ -60,18 +60,15 @@ import org.knime.core.data.DataColumnSpec;
 import org.knime.core.node.workflow.FlowVariable;
 
 /**
- * A provider for auto-completion that adds completions for column names and
- * flow variables.
+ * A provider for auto-completion that adds completions for column names and flow variables.
  *
  * @author Thorsten Meinl, University of Konstanz
  * @since 2.6
  */
 public abstract class KnimeCompletionProvider extends DefaultCompletionProvider {
-    private final List<Completion> m_columnCompletions =
-            new ArrayList<Completion>();
+    private final List<Completion> m_columnCompletions = new ArrayList<Completion>();
 
-    private final List<Completion> m_flowVariableCompletions =
-            new ArrayList<Completion>();
+    private final List<Completion> m_flowVariableCompletions = new ArrayList<Completion>();
 
     /**
      * Escapes a column name, e.g. by delimiting it with "$".
@@ -102,10 +99,9 @@ public abstract class KnimeCompletionProvider extends DefaultCompletionProvider 
         }
         m_columnCompletions.clear();
         for (DataColumnSpec column : columns) {
-            m_columnCompletions
-                    .add(new BasicCompletion(this, escapeColumnName(column
-                            .getName()), column.getType().toString(),
-                            "The column " + column.getName() + "."));
+            m_columnCompletions.add(new BasicCompletion(this,
+                    escapeColumnName(column.getName()/*.replace("\\", "\\\\").replace("$", "\\$")*/), column.getType()
+                            .toString(), "The column " + column.getName() + "."));
         }
         addCompletions(m_columnCompletions);
     }
@@ -137,9 +133,8 @@ public abstract class KnimeCompletionProvider extends DefaultCompletionProvider 
                 default:
                     return;
             }
-            m_flowVariableCompletions.add(new BasicCompletion(this, "$${"
-                    + typeChar + var.getName() + "}$$", var.getType()
-                    .toString(), "The flow variable " + var.getName() + "."));
+            m_flowVariableCompletions.add(new BasicCompletion(this, "$${" + typeChar + var.getName()/*.replace("\\", "\\\\").replace("}", "\\}")*/
+                    + "}$$", var.getType().toString(), "The flow variable " + var.getName() + "."));
         }
         addCompletions(m_flowVariableCompletions);
     }

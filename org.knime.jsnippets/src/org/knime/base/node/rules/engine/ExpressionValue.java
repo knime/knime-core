@@ -45,25 +45,61 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   11.04.2008 (thor): created
+ * Created on 2013.05.03. by Gabor
  */
-package org.knime.base.node.rules;
+package org.knime.base.node.rules.engine;
 
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.Map;
+
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataRow;
 
 /**
- * Very simple interface for rule node.
+ * The result of an {@link Expression} {@link Expression#evaluate(DataRow, VariableProvider) evaluation}.
  *
- * @author Thorsten Meinl, University of Konstanz
+ * @author Gabor Bakos
+ * @since 2.8
  */
-public interface RuleNode {
+public final class ExpressionValue implements Serializable {
+    private static final long serialVersionUID = -6280095542337802583L;
+
+    private final DataCell m_value;
+
+    private final Map<String, Map<String, String>> m_matchedObjects;
+
     /**
-     * Evaluates this rule node.
+     * Constructs the result.
      *
-     * @param row the row with which the rule should be evaluated
-     * @return <code>true</code> if this node evaluates to <code>true</code>,
-     *         <code>false</code> otherwise
+     * @param value The value of the expression.
+     * @param matchedObjects The additional objects that might get bound.
      */
-    public boolean evaluate(DataRow row);
+    public ExpressionValue(final DataCell value, final Map<String, Map<String, String>> matchedObjects) {
+        super();
+        this.m_value = value;
+        this.m_matchedObjects = Collections.unmodifiableMap(Util.clone(matchedObjects));
+    }
+
+    /**
+     * @return the value
+     */
+    public DataCell getValue() {
+        return m_value;
+    }
+
+    /**
+     * @return the matchedObjects
+     */
+    public Map<String, Map<String, String>> getMatchedObjects() {
+        return m_matchedObjects;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public String toString() {
+        return "ExpressionValue [value=" + m_value + ", matchedObjects=" + m_matchedObjects + "]";
+    }
 }

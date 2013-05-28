@@ -60,7 +60,9 @@ import org.knime.core.node.NodeSettingsWO;
  * This class contains all settings for the business rule node.
  *
  * @author Thorsten Meinl, University of Konstanz
+ * @deprecated Use the org.knime.jsnippets project's ...rules.engine classes.
  */
+@Deprecated
 public class RuleEngineSettings {
     static final String CFG_DEFAULT_LABEL = "default-label";
 

@@ -40,84 +40,54 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME. The owner of a Node
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
- * History
- *   24.11.2011 (hofer): created
+ * Created on 2013.04.26. by Gabor
  */
-package org.knime.base.node.jsnippet.ui;
+package org.knime.base.node.rules.engine.manipulator;
 
-import java.awt.Color;
+import org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator;
 
-import org.fife.ui.rsyntaxtextarea.Token;
-import org.fife.ui.rsyntaxtextarea.folding.FoldParserManager;
-import org.knime.base.node.jsnippet.JavaSnippet;
-import org.knime.base.node.jsnippet.JavaSnippetDocument;
-import org.knime.base.node.jsnippet.guarded.GuardedDocument;
-import org.knime.base.node.jsnippet.guarded.GuardedSection;
-import org.knime.base.node.jsnippet.guarded.GuardedSectionsFoldParser;
-import org.knime.base.node.util.KnimeSyntaxTextArea;
 
 /**
- * A text area for the java snippet expression.
+ * A {@link Manipulator} for infix operators.
  *
- * @author Heiko Hofer
+ * @author Gabor Bakos
+ * @since 2.8
  */
-@SuppressWarnings("serial")
-public class JSnippetTextArea extends KnimeSyntaxTextArea {
+public class InfixManipulator extends AbstractManipulator {
 
     /**
-     * Create a new component.
-     * @param snippet the snippet
+     * Constructs the {@link InfixManipulator}.
+     *
+     * @param name Name of the operator (as it appears in the text to parse).
+     * @param category Category name of the operator.
+     * @param displayName Name to display.
+     * @param description Description of the operator.
+     * @param returnType The class of the result.
+     * @see AbstractManipulator#AbstractManipulator(String, String, String, String, Class)
      */
-    public JSnippetTextArea(final JavaSnippet snippet) {
-        // initial text != null causes a null pointer exception
-        super(new JavaSnippetDocument(), null, 20, 60);
-
-        setDocument(snippet.getDocument());
-        addParser(snippet.getParser());
-
-        boolean parserInstalled = FoldParserManager.get().getFoldParser(
-                SYNTAX_STYLE_JAVA) instanceof GuardedSectionsFoldParser;
-        if (!parserInstalled) {
-            FoldParserManager.get().addFoldParserMapping(SYNTAX_STYLE_JAVA,
-                    new GuardedSectionsFoldParser());
-        }
-        setCodeFoldingEnabled(true);
-        setSyntaxEditingStyle(SYNTAX_STYLE_JAVA);
+    public InfixManipulator(final String name, final String category, final String displayName,
+                            final String description, final Class<?> returnType) {
+        super(name, category, displayName, description, returnType);
     }
-
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Color getForegroundForToken(final Token t) {
-        if (isInGuardedSection(t.offset)) {
-            return Color.gray;
-        } else {
-            return super.getForegroundForToken(t);
-        }
+    public int getNrArgs() {
+        return 2;
     }
 
     /**
-     * Returns true when offset is within a guarded section.
-     *
-     * @param offset the offset to test
-     * @return true when offset is within a guarded section.
+     * {@inheritDoc}
      */
-    private boolean isInGuardedSection(final int offset) {
-        GuardedDocument doc = (GuardedDocument)getDocument();
-
-        for (String name : doc.getGuardedSections()) {
-            GuardedSection gs = doc.getGuardedSection(name);
-            if (gs.contains(offset)) {
-                return true;
-            }
-        }
-        return false;
+    @Override
+    public String toString() {
+        return "? " + getName() + " ?";
     }
 }

@@ -48,7 +48,7 @@
  * History
  *   11.04.2008 (thor): created
  */
-package org.knime.base.node.rules;
+package org.knime.base.node.rules.engine;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
@@ -58,30 +58,31 @@ import org.knime.core.node.NodeView;
  * This factory creates all necessary object for the business rule node.
  *
  * @author Thorsten Meinl, University of Konstanz
+ * @since 2.8
  */
-public class RuleEngineNodeFactory extends NodeFactory<RuleEngineNodeModel> {
+public class RuleEngineFilterNodeFactory extends NodeFactory<RuleEngineFilterNodeModel> {
     /**
      * {@inheritDoc}
      */
     @Override
     protected NodeDialogPane createNodeDialogPane() {
-        return new RuleEngineNodeDialog();
+        return new RuleEngineNodeDialog("include if any rule matches", "exclude if any rule matches");
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public RuleEngineNodeModel createNodeModel() {
-        return new RuleEngineNodeModel();
+    public RuleEngineFilterNodeModel createNodeModel() {
+        return new RuleEngineFilterNodeModel(true);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public NodeView<RuleEngineNodeModel> createNodeView(final int index,
-            final RuleEngineNodeModel model) {
+    public NodeView<RuleEngineFilterNodeModel> createNodeView(final int index,
+            final RuleEngineFilterNodeModel model) {
         return null;
     }
 

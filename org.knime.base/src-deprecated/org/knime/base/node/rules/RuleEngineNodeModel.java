@@ -83,7 +83,9 @@ import org.knime.core.node.NodeSettingsWO;
  * and assigns the outcome of the first matching rule to the new cell.
  *
  * @author Thorsten Meinl, University of Konstanz
+ * @deprecated Use the org.knime.jsnippets project's ...rules.engine classes.
  */
+@Deprecated
 public class RuleEngineNodeModel extends NodeModel {
     private final RuleEngineSettings m_settings = new RuleEngineSettings();
 

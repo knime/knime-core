@@ -103,7 +103,9 @@ import org.knime.core.data.def.StringCell;
  * used.
  *
  * @author Thorsten Meinl, University of Konstanz
+ * @deprecated Use the org.knime.jsnippets project's ...rules.engine classes.
  */
+@Deprecated
 public class Rule {
     static class ColumnReference {
         public final int index;

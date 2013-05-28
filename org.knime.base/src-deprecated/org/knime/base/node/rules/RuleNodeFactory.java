@@ -66,7 +66,9 @@ import org.knime.core.data.IntValue;
  * This utility class has function to create all kinds of rule nodes.
  *
  * @author Thorsten Meinl, University of Konstanz
+ * @deprecated Use the org.knime.jsnippets project's ...rules.engine classes.
  */
+@Deprecated
 final class RuleNodeFactory {
     private RuleNodeFactory() {
     }

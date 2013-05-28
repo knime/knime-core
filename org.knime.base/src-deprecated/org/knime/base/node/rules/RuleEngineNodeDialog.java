@@ -98,7 +98,9 @@ import org.knime.core.node.workflow.FlowVariable;
 /**
  *
  * @author Thorsten Meinl, University of Konstanz
+ * @deprecated Use the org.knime.jsnippets project's ...rules.engine classes.
  */
+@Deprecated
 public class RuleEngineNodeDialog extends NodeDialogPane {
 
     private static final NodeLogger LOGGER = NodeLogger
