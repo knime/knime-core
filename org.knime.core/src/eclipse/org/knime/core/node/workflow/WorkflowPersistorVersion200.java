@@ -107,6 +107,8 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
     /** Key for credentials. */
     private static final String CFG_CREDENTIALS = "workflow_credentials";
 
+    private static final String CFG_AUTHOR_INFORMATION = "authorInformation";
+
     /**
      * A Version representing a specific workflow format. This enum covers only the version that this specific class can
      * read (or write). Ordinal numbering is important.
@@ -301,8 +303,8 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
      */
     @Override
     AuthorInformation loadAuthorInformation(final NodeSettingsRO settings) throws InvalidSettingsException {
-        if (getLoadVersion().ordinal() >= LoadVersion.V280.ordinal()) {
-            final NodeSettingsRO sub = settings.getNodeSettings("authorInformation");
+        if (getLoadVersion().ordinal() >= LoadVersion.V280.ordinal() && settings.containsKey(CFG_AUTHOR_INFORMATION)) {
+            final NodeSettingsRO sub = settings.getNodeSettings(CFG_AUTHOR_INFORMATION);
             final String author = sub.getString("authored-by");
             final String authorDateS = sub.getString("authored-when");
             final Date authorDate;
@@ -697,13 +699,15 @@ public class WorkflowPersistorVersion200 extends WorkflowPersistorVersion1xx {
 
     /** @since 2.8 */
     protected static void saveAuthorInformation(final AuthorInformation aI, final NodeSettingsWO settings) {
-        final NodeSettingsWO sub = settings.addNodeSettings("authorInformation");
-        sub.addString("authored-by", aI.getAuthor());
-        String authorWhen = aI.getAuthoredDate() == null ? null : formatDate(aI.getAuthoredDate());
-        sub.addString("authored-when", authorWhen);
-        sub.addString("lastEdited-by", aI.getLastEditor());
-        String lastEditWhen = aI.getLastEditDate() == null ? null : formatDate(aI.getLastEditDate());
-        sub.addString("lastEdited-when", lastEditWhen);
+        if (aI != null) {
+            final NodeSettingsWO sub = settings.addNodeSettings(CFG_AUTHOR_INFORMATION);
+            sub.addString("authored-by", aI.getAuthor());
+            String authorWhen = aI.getAuthoredDate() == null ? null : formatDate(aI.getAuthoredDate());
+            sub.addString("authored-when", authorWhen);
+            sub.addString("lastEdited-by", aI.getLastEditor());
+            String lastEditWhen = aI.getLastEditDate() == null ? null : formatDate(aI.getLastEditDate());
+            sub.addString("lastEdited-when", lastEditWhen);
+        }
     }
 
     /**
