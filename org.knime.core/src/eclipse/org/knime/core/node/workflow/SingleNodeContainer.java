@@ -1281,6 +1281,14 @@ public final class SingleNodeContainer extends NodeContainer {
         saveSNCSettings(settings, initDefaultModelSettings);
     }
 
+    /** Implementation of {@link WorkflowManager#saveNodeSettingsToDefault(NodeID)}. */
+    void saveNodeSettingsToDefault() {
+        NodeSettings modelSettings = new NodeSettings("model");
+        getNode().saveModelSettingsTo(modelSettings);
+        m_settings.setModelSettings(modelSettings);
+        setDirty();
+    }
+
     /**
      * Saves the {@link SingleNodeContainerSettings}.
      * @param settings To save to.

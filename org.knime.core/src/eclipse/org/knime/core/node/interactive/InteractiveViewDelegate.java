@@ -89,7 +89,6 @@ final class InteractiveViewDelegate<V extends ViewContent> {
     }
 
     void setNewDefaultConfiguration(final ConfigureCallback ccb) {
-        //TODO: implement
-        // m_wfm.saveNodeSettingsToDefault(m_nodeID);
+        m_wfm.saveNodeSettingsToDefault(m_nodeID);
      }
 }

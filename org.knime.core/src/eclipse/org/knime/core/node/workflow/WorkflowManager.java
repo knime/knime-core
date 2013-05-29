@@ -2005,6 +2005,22 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
+    /** Called by views of {@link InteractiveNode interactive nodes}. It will take the settings of the NodeModel
+     * and save them in the {@link SingleNodeContainerSettings} so that they become the default for the next execution.
+     * @param id The node in question.
+     * @since 2.8
+     */
+    public void saveNodeSettingsToDefault(final NodeID id) {
+        synchronized (m_workflowMutex) {
+            NodeContainer nc = getNodeContainer(id);
+            if (!(nc instanceof SingleNodeContainer)) {
+                throw new IllegalArgumentException("Can't set new defaults for metanodes.");
+            }
+            SingleNodeContainer snc = (SingleNodeContainer)nc;
+            snc.saveNodeSettingsToDefault();
+        }
+    }
+
     /** Execute workflow until nodes of the given class - those will
      * usually be QuickForm or view nodes requiring user interaction.
      *
