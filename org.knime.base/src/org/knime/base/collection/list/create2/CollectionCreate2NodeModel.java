@@ -182,7 +182,7 @@ public class CollectionCreate2NodeModel extends NodeModel {
                 // iff ignore missing value is switched on
                 if (m_ignoreMissing.getBooleanValue()) {
                     List<Integer> vCI = new ArrayList<Integer>();
-                    for (int i = 0; i < row.getNumCells(); i++) {
+                    for (int i : validColIndices) {
                         if (!row.getCell(i).isMissing()) {
                             vCI.add(i);
                         }
