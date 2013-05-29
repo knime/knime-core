@@ -86,6 +86,7 @@
 	</fullDescription>
 	
 	<ports>
+        <inPort index="0" name="File source variable">Variable port with a variable that designates the source file location</inPort>
 		<outPort index="0" name="File Table">Datatable just read from the file</outPort>
 	</ports>	
 </knimeNode>
