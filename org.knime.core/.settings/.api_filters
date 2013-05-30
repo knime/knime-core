@@ -262,10 +262,234 @@
             </message_arguments>
         </filter>
     </resource>
-    <resource path="src/xmlbeans/org/knime/node2012/AbstractView.java" type="org.knime.node2012.AbstractView">
+    <resource path="src/xmlbeans/org/knime/node/v28/ADocument.java" type="org.knime.node.v28.ADocument">
         <filter id="1110441988">
             <message_arguments>
-                <message_argument value="org.knime.node2012.AbstractView"/>
+                <message_argument value="org.knime.node.v28.ADocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/AbstractView.java" type="org.knime.node.v28.AbstractView">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.AbstractView"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/BDocument.java" type="org.knime.node.v28.BDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.BDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/BrDocument.java" type="org.knime.node.v28.BrDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.BrDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/FullDescriptionDocument.java" type="org.knime.node.v28.FullDescriptionDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.FullDescriptionDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/H3Document.java" type="org.knime.node.v28.H3Document">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.H3Document"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/H4Document.java" type="org.knime.node.v28.H4Document">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.H4Document"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/HDocument.java" type="org.knime.node.v28.HDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.HDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/IDocument.java" type="org.knime.node.v28.IDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.IDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/InPortDocument.java" type="org.knime.node.v28.InPortDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.InPortDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/IntroDocument.java" type="org.knime.node.v28.IntroDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.IntroDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/KnimeNodeDocument.java" type="org.knime.node.v28.KnimeNodeDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.KnimeNodeDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/LiDocument.java" type="org.knime.node.v28.LiDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.LiDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/NameDocument.java" type="org.knime.node.v28.NameDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.NameDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/OlDocument.java" type="org.knime.node.v28.OlDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.OlDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/OptionDocument.java" type="org.knime.node.v28.OptionDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.OptionDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/OutPortDocument.java" type="org.knime.node.v28.OutPortDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.OutPortDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/PDocument.java" type="org.knime.node.v28.PDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.PDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/PortsDocument.java" type="org.knime.node.v28.PortsDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.PortsDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/PreDocument.java" type="org.knime.node.v28.PreDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.PreDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/ShortDescriptionDocument.java" type="org.knime.node.v28.ShortDescriptionDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.ShortDescriptionDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/SubDocument.java" type="org.knime.node.v28.SubDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.SubDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/SupDocument.java" type="org.knime.node.v28.SupDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.SupDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/TabDocument.java" type="org.knime.node.v28.TabDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.TabDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/TableDocument.java" type="org.knime.node.v28.TableDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.TableDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/TdDocument.java" type="org.knime.node.v28.TdDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.TdDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/ThDocument.java" type="org.knime.node.v28.ThDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.ThDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/TrDocument.java" type="org.knime.node.v28.TrDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.TrDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/TtDocument.java" type="org.knime.node.v28.TtDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.TtDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/UDocument.java" type="org.knime.node.v28.UDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.UDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/UlDocument.java" type="org.knime.node.v28.UlDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.UlDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/ViewDocument.java" type="org.knime.node.v28.ViewDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.ViewDocument"/>
+            </message_arguments>
+        </filter>
+    </resource>
+    <resource path="src/xmlbeans/org/knime/node/v28/ViewsDocument.java" type="org.knime.node.v28.ViewsDocument">
+        <filter id="1110441988">
+            <message_arguments>
+                <message_argument value="org.knime.node.v28.ViewsDocument"/>
             </message_arguments>
         </filter>
     </resource>
@@ -727,13 +951,6 @@
         <filter id="1211105284">
             <message_arguments>
                 <message_argument value="setLiArray(int, LiDocument.Li)"/>
-            </message_arguments>
-        </filter>
-    </resource>
-    <resource path="src/xmlbeans/org/knime/node2012/impl/AbstractViewImpl.java" type="org.knime.node2012.impl.AbstractViewImpl">
-        <filter id="1110441988">
-            <message_arguments>
-                <message_argument value="org.knime.node2012.impl.AbstractViewImpl"/>
             </message_arguments>
         </filter>
     </resource>

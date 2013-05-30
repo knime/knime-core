@@ -176,6 +176,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @throws SAXException if the XML file is not well-formed
      * @throws IOException if the XML file cannot be read
      * @throws XmlException if the XML file is not valid
+     * @since 2.8
      */
     protected NodeDescription createNodeDescription() throws SAXException, IOException, XmlException {
         return PARSER.parseDescription(this.getClass());
