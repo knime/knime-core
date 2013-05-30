@@ -190,6 +190,12 @@
             id="org.knime.workbench.ui.metainfo"
             name="Meta Info Preferences">
       </page>
+      <page
+            category="org.knime.workbench.ui.preferences"
+            class="org.knime.workbench.ui.preferences.PreferredRendererPreferencePage"
+            id="org.knime.workbench.ui.preferredRenderers"
+            name="Preferred Renderers">
+      </page>
    </extension>
    <extension
          point="org.eclipse.core.runtime.preferences">

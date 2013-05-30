@@ -52,14 +52,9 @@ package org.knime.core.data.vector.bytevector;
 
 import javax.swing.Icon;
 
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
-import org.knime.core.data.DoubleValue;
-import org.knime.core.data.renderer.ByteVectorValuePixelRenderer;
-import org.knime.core.data.renderer.ByteVectorValueStringRenderer;
-import org.knime.core.data.renderer.DataValueRendererFamily;
-import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
+import org.knime.core.data.ExtensibleUtilityFactory;
 
 /**
  * Implementations are vectors of fixed length storing byte counts at specific
@@ -69,34 +64,33 @@ import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
  * @author ohl, University of Konstanz
  */
 public interface ByteVectorValue extends DataValue {
-
     /**
      * Meta information to byte vector values.
      *
      * @see DataValue#UTILITY
      */
-    public static final UtilityFactory UTILITY = new ByteVectorUtilityFactory();
+    UtilityFactory UTILITY = new ByteVectorUtilityFactory();
 
     /**
      * Returns the length of the byte vector. The number of stored counts.
      *
      * @return the number of bytes stored in the vector
      */
-    public long length();
+    long length();
 
     /**
      * Calculates the checksum, the sum of all counts stored.
      *
      * @return the sum of all counts in this vector.
      */
-    public long sumOfAllCounts();
+    long sumOfAllCounts();
 
     /**
      * Returns the number of counts larger than zero stored in this vector.
      *
      * @return the number of elements not equal to zero in this vector.
      */
-    public int cardinality();
+    int cardinality();
 
     /**
      * Returns the count stored at the specified position.
@@ -106,14 +100,14 @@ public interface ByteVectorValue extends DataValue {
      * @throws ArrayIndexOutOfBoundsException if the specified index is negative
      *             or too large.
      */
-    public int get(final long index);
+    int get(final long index);
 
     /**
      * Checks all counts and returns true if they are all zero.
      *
      * @return true if all counts are zero.
      */
-    public boolean isEmpty();
+    boolean isEmpty();
 
     /**
      * Finds the next index whose value is zero on or after the specified index.
@@ -127,7 +121,7 @@ public interface ByteVectorValue extends DataValue {
      *         there after.
      * @throws ArrayIndexOutOfBoundsException if the specified startIdx negative
      */
-    public long nextZeroIndex(final long startIdx);
+    long nextZeroIndex(final long startIdx);
 
     /**
      * Finds the next count not equal to zero on or after the specified index.
@@ -142,13 +136,13 @@ public interface ByteVectorValue extends DataValue {
      * @throws ArrayIndexOutOfBoundsException if the specified startIdx is
      *             negative
      */
-    public long nextCountIndex(final long startIdx);
+    long nextCountIndex(final long startIdx);
 
     /** Implementations of the meta information of this value class. */
-    public static class ByteVectorUtilityFactory extends UtilityFactory {
+    class ByteVectorUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
         private static final Icon ICON =
-                loadIcon(DoubleValue.class, "/bytevectoricon.png");
+                loadIcon(ByteVectorValue.class, "bytevectoricon.png");
 
         private static final DataValueComparator COMPARATOR =
                 new DataValueComparator() {
@@ -158,19 +152,13 @@ public interface ByteVectorValue extends DataValue {
                             final DataValue v2) {
                         long c1 = ((ByteVectorValue)v1).cardinality();
                         long c2 = ((ByteVectorValue)v2).cardinality();
-                        if (c1 < c2) {
-                            return -1;
-                        } else if (c1 > c2) {
-                            return 1;
-                        } else {
-                            return 0;
-                        }
+                        return Long.compare(c1, c2);
                     }
                 };
 
         /** Only subclasses are allowed to instantiate this class. */
         protected ByteVectorUtilityFactory() {
-            // intentionally left empty
+            super(ByteVectorValue.class);
         }
 
         /**
@@ -193,12 +181,8 @@ public interface ByteVectorValue extends DataValue {
          * {@inheritDoc}
          */
         @Override
-        protected DataValueRendererFamily getRendererFamily(
-                final DataColumnSpec spec) {
-            return new DefaultDataValueRendererFamily(
-                    ByteVectorValuePixelRenderer.INSTANCE,
-                    ByteVectorValueStringRenderer.INSTANCE);
+        public String getName() {
+            return "Byte vectors";
         }
     }
-
 }

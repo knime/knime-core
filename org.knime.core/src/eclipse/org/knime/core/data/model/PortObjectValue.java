@@ -50,30 +50,27 @@ package org.knime.core.data.model;
 
 import javax.swing.Icon;
 
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
-import org.knime.core.data.renderer.DataValueRendererFamily;
-import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
+import org.knime.core.data.ExtensibleUtilityFactory;
 import org.knime.core.node.port.PortObject;
 
 /** DataValue interface for port objects.
  * @author Thomas Gabriel, KNIME.com AG, Zurich
  */
 public interface PortObjectValue extends DataValue {
-
     /** Get content of this port object.
      * @return The PortObject content, never null.
      */
-    public PortObject getPortObject();
+    PortObject getPortObject();
 
     /** Meta information to this value type.
      * @see DataValue#UTILITY
      */
-    public static final UtilityFactory UTILITY = new PortObjectUtilityFactory();
+    UtilityFactory UTILITY = new PortObjectUtilityFactory();
 
     /** Implementations of the meta information of this value class. */
-    public static class PortObjectUtilityFactory extends UtilityFactory {
+    class PortObjectUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
         private static final Icon ICON =
             loadIcon(PortObjectValue.class, "../icon/porticon.png");
@@ -83,7 +80,7 @@ public interface PortObjectValue extends DataValue {
 
         /** Only subclasses are allowed to instantiate this class. */
         protected PortObjectUtilityFactory() {
-            // empty
+            super(PortObjectValue.class);
         }
 
         /** {@inheritDoc} */
@@ -98,14 +95,12 @@ public interface PortObjectValue extends DataValue {
             return PORTOBJECT_COMPARATOR;
         }
 
-        /** {@inheritDoc} */
+        /**
+         * {@inheritDoc}
+         */
         @Override
-        protected DataValueRendererFamily getRendererFamily(
-                final DataColumnSpec spec) {
-            return new DefaultDataValueRendererFamily(
-                    PortObjectValueRenderer.INSTANCE);
+        public String getName() {
+            return "Port objects";
         }
-
     }
-
 }

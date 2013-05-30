@@ -52,21 +52,16 @@ package org.knime.core.data;
 
 import javax.swing.Icon;
 
-import org.knime.core.data.renderer.DataValueRendererFamily;
-import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
-import org.knime.core.data.renderer.LongValueRenderer;
-
 /**
  * Interface supporting generic long values.
  *
  * @author Thorsten Meinl, University of Konstanz
  */
 public interface LongValue extends DataValue {
-
     /** Meta information to this value type.
      * @see DataValue#UTILITY
      */
-    public static final UtilityFactory UTILITY = new LongUtilityFactory();
+    UtilityFactory UTILITY = new LongUtilityFactory();
 
     /**
      * @return A generic <code>long</code> value.
@@ -74,7 +69,7 @@ public interface LongValue extends DataValue {
     long getLongValue();
 
     /** Implementations of the meta information of this value class. */
-    public static class LongUtilityFactory extends UtilityFactory {
+    class LongUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
         private static final Icon ICON = loadIcon(
                 LongValue.class, "/icon/longicon.png");
@@ -84,6 +79,7 @@ public interface LongValue extends DataValue {
 
         /** Only subclasses are allowed to instantiate this class. */
         protected LongUtilityFactory() {
+            super(LongValue.class);
         }
 
         /**
@@ -106,10 +102,8 @@ public interface LongValue extends DataValue {
          * {@inheritDoc}
          */
         @Override
-        protected DataValueRendererFamily getRendererFamily(
-                final DataColumnSpec spec) {
-            return new DefaultDataValueRendererFamily(
-                    LongValueRenderer.INSTANCE);
+        public String getName() {
+            return "Long numbers";
         }
     }
 }

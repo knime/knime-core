@@ -47,6 +47,9 @@
  */
 package org.knime.core.data.model;
 
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.renderer.AbstractDataValueRendererFactory;
+import org.knime.core.data.renderer.DataValueRenderer;
 import org.knime.core.data.renderer.DefaultDataValueRenderer;
 
 /**
@@ -54,14 +57,47 @@ import org.knime.core.data.renderer.DefaultDataValueRenderer;
  * <code>PortObjectValue</code> classes.
  * @author Thomas Gabriel, KNIME.com AG, Zurich
  */
+@SuppressWarnings("serial")
 public final class PortObjectValueRenderer extends DefaultDataValueRenderer {
+    /**
+     * Factory for {@link PortObjectValueRenderer}.
+     *
+     * @since 2.8
+     */
+    public static final class Factory extends AbstractDataValueRendererFactory {
+        private static final String DESCRIPTION = "Default";
 
-    /** Singleton to be used. */
-    public static final PortObjectValueRenderer INSTANCE =
-        new PortObjectValueRenderer();
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescription() {
+            return DESCRIPTION;
+        }
 
-    private PortObjectValueRenderer() {
-        // no op
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return new PortObjectValueRenderer(DESCRIPTION);
+        }
+    }
+
+    /**
+     * Singleton to be used.
+     * @deprecated Do not use this singleton instance, renderers are not thread-safe!
+     */
+    @Deprecated
+    public static final PortObjectValueRenderer INSTANCE = new PortObjectValueRenderer(Factory.DESCRIPTION);
+
+    /**
+     * Creates a new renderer for port objects.
+     *
+     * @param description a description for the renderer
+     */
+    PortObjectValueRenderer(final String description) {
+        super(description);
     }
 
     /**
@@ -82,10 +118,5 @@ public final class PortObjectValueRenderer extends DefaultDataValueRenderer {
             newValue = value;
         }
         super.setValue(newValue);
-    }
-    /** {@inheritDoc} */
-    @Override
-    public String getDescription() {
-        return "PortObject";
     }
 }

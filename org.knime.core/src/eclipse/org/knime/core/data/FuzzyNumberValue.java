@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   07.07.2005 (mb): created
  */
@@ -53,44 +53,43 @@ package org.knime.core.data;
 import javax.swing.Icon;
 
 /**
- * Interface supporting fuzzy numbers defined by min and max support, and core. 
- * 
+ * Interface supporting fuzzy numbers defined by min and max support, and core.
+ *
  * @author Michael Berthold, University of Konstanz
  */
 public interface FuzzyNumberValue extends DataValue {
-
     /** Meta information to this value type.
      * @see DataValue#UTILITY
      */
-    public static final UtilityFactory UTILITY = 
-        new FuzzyNumberUtilityFactory();
-    
+    UtilityFactory UTILITY = new FuzzyNumberUtilityFactory();
+
     /**
      * @return Minimum support value.
      */
-    public double getMinSupport();
-    
+    double getMinSupport();
+
     /**
      * @return Core value.
      */
-    public double getCore();
-    
+    double getCore();
+
     /**
      * @return Maximum support value.
      */
-    public double getMaxSupport();
-    
+    double getMaxSupport();
+
     /** Implementations of the meta information of this value class. */
-    public static class FuzzyNumberUtilityFactory extends UtilityFactory {
+    class FuzzyNumberUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON = 
+        private static final Icon ICON =
             loadIcon(FuzzyNumberValue.class, "/icon/fuzzyicon.png");
 
         private static final FuzzyNumberValueComparator COMPARATOR =
             new FuzzyNumberValueComparator();
-        
+
         /** Only subclasses are allowed to instantiate this class. */
         protected FuzzyNumberUtilityFactory() {
+            super(FuzzyNumberValue.class);
         }
 
         /**
@@ -107,6 +106,14 @@ public interface FuzzyNumberValue extends DataValue {
         @Override
         protected DataValueComparator getComparator() {
             return COMPARATOR;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getName() {
+            return "Fuzzy numbers";
         }
 
     }

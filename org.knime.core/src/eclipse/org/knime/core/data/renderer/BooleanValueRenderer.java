@@ -49,22 +49,52 @@
 package org.knime.core.data.renderer;
 
 import org.knime.core.data.BooleanValue;
+import org.knime.core.data.DataColumnSpec;
 
 /**
  * Boolean renderer.
  * @author wiswedel, University of Konstanz
  */
+@SuppressWarnings("serial")
 public final class BooleanValueRenderer extends DefaultDataValueRenderer {
+    /**
+     * Factory for the {@link BooleanValueRenderer}.
+     *
+     * @since 2.8
+     */
+    public static final class Factory extends AbstractDataValueRendererFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescription() {
+            return DESCRIPTION;
+        }
 
-    /** Instance to be used. */
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return new BooleanValueRenderer();
+        }
+    }
+
+    private static final String DESCRIPTION = "Default";
+
+    /**
+     * Instance to be used.
+     * @deprecated Do not use this singleton instance, renderers are not thread-safe!
+     */
+    @Deprecated
     public static final BooleanValueRenderer INSTANCE =
         new BooleanValueRenderer();
 
     /**
      * Default Initialization is empty.
      */
-    private BooleanValueRenderer() {
-        // no op
+    BooleanValueRenderer() {
+        super(DESCRIPTION);
     }
 
     /**
@@ -81,5 +111,4 @@ public final class BooleanValueRenderer extends DefaultDataValueRenderer {
             super.setValue(value);
         }
     }
-
 }

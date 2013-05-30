@@ -54,6 +54,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Insets;
 
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
 
 /**
@@ -62,8 +63,32 @@ import org.knime.core.data.vector.bitvector.BitVectorValue;
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class BitVectorValuePixelRenderer extends
-        AbstractPainterDataValueRenderer {
+@SuppressWarnings("serial")
+public class BitVectorValuePixelRenderer extends AbstractPainterDataValueRenderer {
+    /**
+     * Factory for the {@link BitVectorValuePixelRenderer}.
+     *
+     * @since 2.8
+     */
+    public static final class Factory extends AbstractDataValueRendererFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescription() {
+            return DESCRIPTION;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return new BitVectorValuePixelRenderer();
+        }
+    }
+
+    private static final String DESCRIPTION = "Bit Scratch";
 
     private BitVectorValue m_bitVector;
 
@@ -80,7 +105,7 @@ public class BitVectorValuePixelRenderer extends
     /** {@inheritDoc} */
     @Override
     public String getDescription() {
-        return "Bit Scratch";
+        return DESCRIPTION;
     }
 
     /** {@inheritDoc} */
@@ -146,5 +171,4 @@ public class BitVectorValuePixelRenderer extends
             }
         }
     }
-
 }

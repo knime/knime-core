@@ -68,13 +68,13 @@ public interface FileStoreKeyDataValue extends DataValue {
     /** Meta information to this value type.
      * @see DataValue#UTILITY
      */
-    public static final UtilityFactory UTILITY = new FileStoreKeyUtilityFactory();
+    UtilityFactory UTILITY = new FileStoreKeyUtilityFactory();
 
     /** @return the key represented by this cell/value. */
-    public FileStoreKey getKey();
+    FileStoreKey getKey();
 
     /** Implementations of the meta information of this value class. */
-    public static class FileStoreKeyUtilityFactory extends UtilityFactory {
+    public class FileStoreKeyUtilityFactory extends UtilityFactory {
 
         private static final DataValueComparator COMPARATOR =
             new DataValueComparator() {
@@ -112,10 +112,7 @@ public interface FileStoreKeyDataValue extends DataValue {
         @Override
         protected DataValueRendererFamily getRendererFamily(
                 final DataColumnSpec spec) {
-            return new DefaultDataValueRendererFamily(
-                    StringValueRenderer.INSTANCE);
+            return new DefaultDataValueRendererFamily(new StringValueRenderer());
         }
-
     }
-
 }

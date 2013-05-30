@@ -45,105 +45,39 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   13.09.2009 (Fabian Dill): created
+ * Created on 27.05.2013 by thor
  */
-package org.knime.core.data.date;
+package org.knime.core.data.renderer;
 
-import java.util.Calendar;
-
-import org.knime.core.data.DataValue;
 
 /**
- * Interface supporting the representation of time and date independent of the
- * user's time zone and location. Times in KNIME are always UTC times!
+ * Abstract implementation of {@link DataValueRendererFactory} that returns the class name for {@link #getId()}.
  *
- * @author Fabian Dill, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @since 2.8
  */
-public interface DateAndTimeValue extends DataValue {
-    /** Utility implementation for timestamp values. */
-    DateAndTimeUtility UTILITY = new DateAndTimeUtility();
+public abstract class AbstractDataValueRendererFactory implements DataValueRendererFactory {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public final String getId() {
+        return this.getClass().getName();
+    }
 
     /**
-     * @return the year of this date
-     * @see Calendar#YEAR
+     * {@inheritDoc}
      */
-    int getYear();
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
 
     /**
-     *
-     * @return the month of the year, **STARTING WITH 0** for the first month
-     * @see Calendar#MONTH
+     * {@inheritDoc}
      */
-    int getMonth();
-
-    /**
-     *
-     * @return the day of the month in the interval 1-31
-     * @see Calendar#DAY_OF_MONTH
-     */
-    int getDayOfMonth();
-
-    /**
-     *
-     * @return the hour of day represented in the interval 0-23
-     * @see Calendar#HOUR_OF_DAY
-     */
-    int getHourOfDay();
-
-    /**
-     *
-     * @return the minute in the interval 0-59
-     * @see Calendar#MINUTE
-     */
-    int getMinute();
-
-    /**
-     *
-     * @return the second in the interval 0-59
-     * @see Calendar#SECOND
-     */
-    int getSecond();
-
-    /**
-     *
-     * @return the milliseconds in the interval 0-999
-     * @see Calendar#MILLISECOND
-     */
-    int getMillis();
-
-    /**
-     *
-     * @return true if the date is available and it is legal to access the
-     * date fields (year, month, day)
-     */
-    boolean hasDate();
-
-    /**
-     *
-     * @return true if the time is available and it is legal to access the time
-     * fields (hour, minute, second)
-     */
-    boolean hasTime();
-
-    /**
-     *
-     * @return true if the milliseconds are available and it is legal to access
-     * the milliseconds
-     */
-    boolean hasMillis();
-
-    /**
-     *
-     * @return the milliseconds in UTC time
-     * @see Calendar#getTimeInMillis()
-     */
-    long getUTCTimeInMillis();
-
-
-    /**
-     *
-     * @return a clone of the underlying UTC calendar
-     */
-    Calendar getUTCCalendarClone();
+    @Override
+    public boolean equals(final Object obj) {
+        return (this == obj) || ((obj != null) && (this.getClass().equals(obj.getClass())));
+    }
 }

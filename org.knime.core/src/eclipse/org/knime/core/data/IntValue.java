@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   07.07.2005 (mb): created
  */
@@ -52,39 +52,35 @@ package org.knime.core.data;
 
 import javax.swing.Icon;
 
-import org.knime.core.data.renderer.DataValueRendererFamily;
-import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
-import org.knime.core.data.renderer.IntValueRenderer;
-
 
 /**
  * Interface supporting generic int values.
- * 
+ *
  * @author Michael Berthold, University of Konstanz
  */
 public interface IntValue extends DataValue {
-    
     /** Meta information to this value type.
      * @see DataValue#UTILITY
      */
-    public static final UtilityFactory UTILITY = new IntUtilityFactory();
+    UtilityFactory UTILITY = new IntUtilityFactory();
 
     /**
      * @return A generic <code>int</code> value.
      */
     int getIntValue();
-    
+
     /** Implementations of the meta information of this value class. */
-    public static class IntUtilityFactory extends UtilityFactory {
+    class IntUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
         private static final Icon ICON = loadIcon(
                 IntValue.class, "/icon/integericon.png");
 
-        private static final IntValueComparator COMPARATOR = 
+        private static final IntValueComparator COMPARATOR =
             new IntValueComparator();
-        
+
         /** Only subclasses are allowed to instantiate this class. */
         protected IntUtilityFactory() {
+            super(IntValue.class);
         }
 
         /**
@@ -102,16 +98,13 @@ public interface IntValue extends DataValue {
         protected DataValueComparator getComparator() {
             return COMPARATOR;
         }
-        
+
         /**
          * {@inheritDoc}
          */
         @Override
-        protected DataValueRendererFamily getRendererFamily(
-                final DataColumnSpec spec) {
-            return new DefaultDataValueRendererFamily(
-                    IntValueRenderer.INSTANCE);
+        public String getName() {
+            return "Integer numbers";
         }
-
     }
 }

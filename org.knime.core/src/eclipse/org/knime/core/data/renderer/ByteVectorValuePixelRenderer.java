@@ -54,6 +54,7 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Insets;
 
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.vector.bytevector.ByteVectorValue;
 
 /**
@@ -62,12 +63,38 @@ import org.knime.core.data.vector.bytevector.ByteVectorValue;
  *
  * @author Peter Ohl, University of Konstanz
  */
-public class ByteVectorValuePixelRenderer extends
-        AbstractPainterDataValueRenderer {
+@SuppressWarnings("serial")
+public class ByteVectorValuePixelRenderer extends AbstractPainterDataValueRenderer {
+    /**
+     * Factory for {@link ByteVectorValuePixelRenderer}.
+     *
+     * @since 2.8
+     */
+    public static final class Factory extends AbstractDataValueRendererFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescription() {
+            return DESCRIPTION;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return new ByteVectorValuePixelRenderer();
+        }
+    }
+
+    private static final String DESCRIPTION = "Byte Scratch";
 
     /**
-     * Singleton instance to be used.
+     * Instance to be used.
+     * @deprecated Do not use this singleton instance, renderers are not thread-safe!
      */
+    @Deprecated
     public static final ByteVectorValuePixelRenderer INSTANCE =
             new ByteVectorValuePixelRenderer();
 
@@ -86,7 +113,7 @@ public class ByteVectorValuePixelRenderer extends
     /** {@inheritDoc} */
     @Override
     public String getDescription() {
-        return "Byte Scratch";
+        return DESCRIPTION;
     }
 
     /** {@inheritDoc} */

@@ -1,0 +1,165 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Schema file written by PDE -->
+<schema targetNamespace="org.knime.core" xmlns="http://www.w3.org/2001/XMLSchema">
+<annotation>
+      <appInfo>
+         <meta.schema plugin="org.knime.core" id="DataValueRenderer" name="DataValueRenderer"/>
+      </appInfo>
+      <documentation>
+         This extension points lets plug-ins register their own renderers for data types in KNIME.
+      </documentation>
+   </annotation>
+
+   <element name="extension">
+      <annotation>
+         <appInfo>
+            <meta.element />
+         </appInfo>
+      </annotation>
+      <complexType>
+         <sequence>
+            <element ref="dataValue" minOccurs="1" maxOccurs="unbounded"/>
+         </sequence>
+         <attribute name="point" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="renderer">
+      <complexType>
+         <attribute name="rendererFactoryClass" type="string" use="required">
+            <annotation>
+               <documentation>
+                  
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn=":org.knime.core.data.renderer.DataValueRendererFactory"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+         <attribute name="suggestAsDefault" type="boolean" use="default" value="false">
+            <annotation>
+               <documentation>
+                  Set to true if this renderer is a candidate for being the default renderer for its data value.
+               </documentation>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <element name="dataValue">
+      <complexType>
+         <sequence>
+            <element ref="renderer" minOccurs="1" maxOccurs="unbounded"/>
+         </sequence>
+         <attribute name="valueClass" type="string" use="required">
+            <annotation>
+               <documentation>
+                  Value class interface for the data type for which this renderer should be registered.
+               </documentation>
+               <appInfo>
+                  <meta.attribute kind="java" basedOn="org.knime.core.data.DataValue:"/>
+               </appInfo>
+            </annotation>
+         </attribute>
+      </complexType>
+   </element>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="since"/>
+      </appInfo>
+      <documentation>
+         KNIME 2.8
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="examples"/>
+      </appInfo>
+      <documentation>
+         The following is an example of the extension point: 
+
+&lt;pre&gt;
+   &lt;extension
+         point=&quot;org.knime.core.DataValueRenderer&quot;&gt;
+      &lt;dataValue
+            valueClass=&quot;org.knime.core.data.StringValue&quot;&gt;
+         &lt;renderer
+               rendererFactoryClass=&quot;org.knime.core.data.renderer.StringValueRenderer$Factory&quot;
+               suggestAsDefault=&quot;true&quot;&gt;
+         &lt;/renderer&gt;
+         &lt;renderer
+               rendererFactoryClass=&quot;org.knime.core.data.renderer.MultiLineStringValueRenderer$Factory&quot;
+               suggestAsDefault=&quot;false&quot;&gt;
+         &lt;/renderer&gt;
+      &lt;/dataValue&gt;
+   &lt;/extension&gt; 
+&lt;/pre&gt;
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="apiinfo"/>
+      </appInfo>
+      <documentation>
+         The value of the &lt;samp&gt;valueClass&lt;/samp&gt; attribute must be a  fully qualified name of an interface that extends
+&lt;samp&gt;org.knime.core.data.DataValue&lt;/samp&gt;. Do not use a cell implementation here!
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="implementation"/>
+      </appInfo>
+      <documentation>
+         This example shows the implementation of a renderer and its factory for simple strings. The factory (not the renderer!) must be registered at the extension point.
+
+&lt;pre&gt;
+public final class StringValueRenderer extends DefaultDataValueRenderer {
+    public static final class Factory implements DataValueRendererFactory {
+        @Override
+        public String getDescription() {
+            return &quot;String&quot;;
+        }
+
+        @Override
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return new StringValueRenderer(getDescription());
+        }
+    }
+
+    @Override
+    protected void setValue(final Object value) {
+        Object newValue;
+        if (value instanceof StringValue) {
+            StringValue cell = (StringValue)value;
+            newValue = cell.getStringValue();
+        } else {
+            // missing data cells will also end up here
+            newValue = value;
+        }
+        super.setValue(newValue);
+    }
+}
+&lt;/pre&gt;
+      </documentation>
+   </annotation>
+
+   <annotation>
+      <appInfo>
+         <meta.section type="copyright"/>
+      </appInfo>
+      <documentation>
+         (C) 2013 - KNIME GmbH, Konstanz, Germany.
+      </documentation>
+   </annotation>
+
+</schema>

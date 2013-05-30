@@ -45,29 +45,31 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * Created on Sep 14, 2012 by wiswedel
+ * Created on 24.05.2013 by thor
  */
-package org.knime.core.data.blob;
+package org.knime.core.data.collection;
 
-import org.apache.commons.io.FileUtils;
+import java.util.Iterator;
+
+import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.renderer.AbstractDataValueRendererFactory;
 import org.knime.core.data.renderer.DataValueRenderer;
 import org.knime.core.data.renderer.DefaultDataValueRenderer;
 
-/** Shows size of {@link BinaryObjectDataValue}. For instance:
- * 11MB (12383389 bytes) -- /tmp/knime_fs-Files_to_Binary_Objects-12349183/000/000/binaryObject-0
+/**
+ * Generic renderer for {@link CollectionDataValue} which prints the string representation of each object in the
+ * collection.
  *
- * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  * @since 2.8
  */
 @SuppressWarnings("serial")
-public final class BinaryObjectDataValueMetaRenderer extends DefaultDataValueRenderer {
+public final class CollectionValueRenderer extends DefaultDataValueRenderer {
     /**
-     * Factory for {@link BinaryObjectDataValueMetaRenderer}.
+     * Factory for a {@link CollectionValueRenderer} that shows at most the first three elements of the collection.
      */
-    public static final class Factory extends AbstractDataValueRendererFactory {
-        private static final String DESCRIPTION = "Blob information";
+    public static final class ShortRendererFactory extends AbstractDataValueRendererFactory {
+        private static final String DESCRIPTION = "Collection (short)";
 
         /**
          * {@inheritDoc}
@@ -76,40 +78,79 @@ public final class BinaryObjectDataValueMetaRenderer extends DefaultDataValueRen
         public String getDescription() {
             return DESCRIPTION;
         }
+
         /**
          * {@inheritDoc}
          */
         @Override
         public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
-            return new BinaryObjectDataValueMetaRenderer(DESCRIPTION);
+            return new CollectionValueRenderer(3, DESCRIPTION);
         }
     }
 
-    /** @param description ... forwarded to super */
-    BinaryObjectDataValueMetaRenderer(final String description) {
+
+    /**
+     * Factory for a {@link CollectionValueRenderer} that shows all elements of the collection.
+     */
+    public static final class FullRendererFactory extends AbstractDataValueRendererFactory {
+        private static final String DESCRIPTION = "Collection (full)";
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescription() {
+            return DESCRIPTION;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return new CollectionValueRenderer(Integer.MAX_VALUE, DESCRIPTION);
+        }
+    }
+
+
+    private final int m_maxElements;
+
+    /**
+     * Instantiate renderer.
+     *
+     * @param maxElements maximum number of element to show
+     * @param description a description for the renderer
+     */
+    CollectionValueRenderer(final int maxElements, final String description) {
         super(description);
+        m_maxElements = maxElements;
     }
 
     /** {@inheritDoc} */
     @Override
     protected void setValue(final Object value) {
-        if (value instanceof BinaryObjectDataValue) {
-            BinaryObjectDataValue bv = (BinaryObjectDataValue)value;
-            long length = bv.length();
-            StringBuilder b = new StringBuilder();
-            b.append(FileUtils.byteCountToDisplaySize(length));
-            if (length > 1024) {
-                b.append(" (").append(length).append(" bytes)");
+        if (value instanceof CollectionDataValue) {
+            StringBuilder buf = new StringBuilder();
+            buf.append('[');
+            Iterator<DataCell> it = ((CollectionDataValue)value).iterator();
+            if (it.hasNext() && (m_maxElements > 0)) {
+                buf.append(it.next().toString());
             }
-            if (bv instanceof BinaryObjectDataCell) {
-                b.append(" -- in memory");
-            } else if (bv instanceof BinaryObjectFileStoreDataCell) {
-                b.append(" -- ").append(((BinaryObjectFileStoreDataCell)bv).getFilePath());
+
+            for (int i = 1; it.hasNext() && (i < m_maxElements); i++) {
+                buf.append(',').append(it.next().toString());
             }
-            super.setValue(b.toString());
+
+            if (it.hasNext()) {
+                if (m_maxElements > 0) {
+                    buf.append(',');
+                }
+                buf.append("...");
+            }
+            buf.append(']');
+            super.setValue(buf.toString());
         } else {
-            super.setValue("?");
+            super.setValue(value);
         }
     }
-
 }

@@ -53,13 +53,40 @@ import java.awt.Font;
 
 import javax.swing.SwingConstants;
 
+import org.knime.core.data.DataColumnSpec;
+
 /**
  * This class renders strings that consist of more than one line.
  *
  * @author Thorsten Meinl, University of Konstanz
  */
-public class MultiLineStringValueRenderer extends
-        DefaultDataValueRenderer {
+@SuppressWarnings("serial")
+public class MultiLineStringValueRenderer extends DefaultDataValueRenderer {
+    /**
+     * Factory for a multi-line string renderer with a proportional font.
+     *
+     * @since 2.8
+     */
+    public static final class Factory extends AbstractDataValueRendererFactory {
+        private static final String DESCRIPTION = "Multi-line String";
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescription() {
+            return DESCRIPTION;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return new MultiLineStringValueRenderer(DESCRIPTION, false);
+        }
+    }
+
     private final boolean m_monoSpaceFont;
 
     private Font m_currentFont;
@@ -107,10 +134,10 @@ public class MultiLineStringValueRenderer extends
      */
     @Override
     protected void setValue(final Object value) {
-        if (value != null) {
-            super.setValue(value.toString());
-        } else {
+        if (value == null) {
             super.setValue("?");
+        } else {
+            super.setValue(value.toString());
         }
     }
 

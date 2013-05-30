@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   14.09.2009 (Fabian Dill): created
  */
@@ -52,29 +52,33 @@ package org.knime.core.data.date;
 
 import javax.swing.Icon;
 
-import org.knime.core.data.DataColumnSpec;
-import org.knime.core.data.DataValueComparator;
 import org.knime.core.data.DataValue.UtilityFactory;
-import org.knime.core.data.renderer.DataValueRendererFamily;
-import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
+import org.knime.core.data.DataValueComparator;
+import org.knime.core.data.ExtensibleUtilityFactory;
 
 /**
  * The {@link UtilityFactory} for the {@link DateAndTimeValue} providing access
  * to the icon, the renderer and the comparator.
- * 
+ *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
-public class DateAndTimeUtility extends UtilityFactory {
-    
+public class DateAndTimeUtility extends ExtensibleUtilityFactory {
     /** Singleton icon to be used to display this cell type. */
     private static final Icon ICON = loadIcon(
             DateAndTimeUtility.class, "icons/date_time.png");
-    
-    private static final DataValueComparator COMPARATOR 
+
+    private static final DataValueComparator COMPARATOR
         = new DateAndTimeComparator();
-    
+
     /**
-     * 
+     * Default constructor.
+     */
+    public DateAndTimeUtility() {
+        super(DateAndTimeValue.class);
+    }
+
+    /**
+     *
      * {@inheritDoc}
      */
     @Override
@@ -83,7 +87,7 @@ public class DateAndTimeUtility extends UtilityFactory {
     }
 
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -92,16 +96,10 @@ public class DateAndTimeUtility extends UtilityFactory {
     }
 
     /**
-     * 
      * {@inheritDoc}
      */
     @Override
-    protected DataValueRendererFamily getRendererFamily(
-            final DataColumnSpec spec) {
-        return new DefaultDataValueRendererFamily(
-                DateAndTimeValueRenderer.DEFAULT,
-                DateAndTimeValueRenderer.ISO8061,
-                DateAndTimeValueRenderer.US);
+    public String getName() {
+        return "Dates and Times";
     }
-
 }

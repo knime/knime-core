@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,32 +44,57 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   12.08.2005 (bernd): created
  */
 package org.knime.core.data.renderer;
 
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.StringValue;
 
 /**
- * Renderer for DataCells that are compatible with 
+ * Renderer for DataCells that are compatible with
  * <code>StringValue</code> classes.
  * @author Bernd Wiswedel, University of Konstanz
  */
 public final class StringValueRenderer extends DefaultDataValueRenderer {
-    
-    /** Singleton to be used. */
-    public static final StringValueRenderer INSTANCE = 
-        new StringValueRenderer(); 
-
-    private StringValueRenderer() {
-    }
-    
     /**
-     * Formats the object. If <code>value</code> is instance of 
+     * Factory for the {@link StringValueRenderer}.
+     *
+     * @since 2.8
+     */
+    public static final class Factory extends AbstractDataValueRendererFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescription() {
+            return DESCRIPTION;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return new StringValueRenderer();
+        }
+    }
+
+    private static final String DESCRIPTION = "String";
+
+    /**
+     * Instance to be used.
+     * @deprecated Do not use this singleton instance, renderers are not thread-safe!
+     */
+    @Deprecated
+    public static final StringValueRenderer INSTANCE = new StringValueRenderer();
+
+    /**
+     * Formats the object. If <code>value</code> is instance of
      * <code>StringValue</code>, the object's <code>getStringValue</code>
-     * is used. Otherwise the fallback: <code>value.toString()</code> 
+     * is used. Otherwise the fallback: <code>value.toString()</code>
      * @param value The value to be rendered.
      * @see javax.swing.table.DefaultTableCellRenderer#setValue(Object)
      */
@@ -84,12 +109,13 @@ public final class StringValueRenderer extends DefaultDataValueRenderer {
             newValue = value;
         }
         super.setValue(newValue);
-    }    
+    }
+
     /**
      * {@inheritDoc}
      */
     @Override
     public String getDescription() {
-        return "String";
+        return DESCRIPTION;
     }
 }

@@ -7,5 +7,19 @@
             TestcaseCollector="org.knime.core.CoreTestcaseCollector">
       </TestcaseCollector>
    </extension>
+   <extension
+         point="org.knime.core.DataValueRenderer">
+      <dataValue
+            valueClass="org.knime.core.data.renderer.TestDataValue">
+         <renderer
+               rendererFactoryClass="org.knime.core.data.renderer.StringValueRenderer$Factory"
+               suggestAsDefault="false">
+         </renderer>
+         <renderer
+               rendererFactoryClass="org.knime.core.data.renderer.TestValueRenderer$Factory"
+               suggestAsDefault="true">
+         </renderer>
+      </dataValue>
+   </extension>
 
 </fragment>

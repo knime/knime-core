@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   14.09.2009 (Fabian Dill): created
  */
@@ -52,116 +52,220 @@ package org.knime.core.data.date;
 
 import java.text.SimpleDateFormat;
 
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.renderer.AbstractDataValueRendererFactory;
+import org.knime.core.data.renderer.DataValueRenderer;
 import org.knime.core.data.renderer.DefaultDataValueRenderer;
 
 /**
- * Renders the a {@link DateAndTimeValue}.
- * 
+ * Renders a {@link DateAndTimeValue}.
+ *
  * @author Fabian Dill, KNIME.com, Zurich, Switzerland
  */
+@SuppressWarnings("serial")
 public class DateAndTimeValueRenderer extends DefaultDataValueRenderer {
-    
+
     private static final String DATE = "dd.MMM.yyyy";
     private static final String TIME = "HH:mm:ss";
     private static final String ISO_DATE = "yyyy-MM-dd";
     private static final String US_DATE = "MM/dd/yyyy";
     private static final String US_TIME = "hh:mm:ss";
     private static final String MILLIS = ".SSS";
-    
+
     /** MM/dd/yyyy hh:mm:ss a. */
-    static final SimpleDateFormat US_DATE_TIME_FORMAT 
+    static final SimpleDateFormat US_DATE_TIME_FORMAT
         = new SimpleDateFormat(US_DATE + " " + US_TIME + " a");
     /** MM/dd/yyyy hh:mm:ss.SSS a. */
-    static final SimpleDateFormat US_DATE_TIME_MILLIS_FORMAT 
+    static final SimpleDateFormat US_DATE_TIME_MILLIS_FORMAT
         = new SimpleDateFormat(US_DATE + " " + US_TIME + MILLIS + " a");
     /** MM/dd/yyyy. */
-    static final SimpleDateFormat US_DATE_FORMAT 
+    static final SimpleDateFormat US_DATE_FORMAT
         = new SimpleDateFormat(US_DATE);
     /** hh:mm:ss a. */
-    static final SimpleDateFormat US_TIME_FORMAT 
+    static final SimpleDateFormat US_TIME_FORMAT
         = new SimpleDateFormat(US_TIME + " a");
     /** hh:mm:ss.SSS a. */
-    static final SimpleDateFormat US_TIME_MILLIS_FORMAT 
+    static final SimpleDateFormat US_TIME_MILLIS_FORMAT
         = new SimpleDateFormat(US_TIME + MILLIS + " a");
     /** dd.MMM.yyyy HH:mm:ss.*/
-    static final SimpleDateFormat DATE_TIME_FORMAT 
+    static final SimpleDateFormat DATE_TIME_FORMAT
         = new SimpleDateFormat(DATE + " " + TIME);
     /** dd.MMM.yyyy HH:mm:ss.SSS.*/
-    static final SimpleDateFormat DATE_TIME_MILLIS_FORMAT 
+    static final SimpleDateFormat DATE_TIME_MILLIS_FORMAT
         = new SimpleDateFormat(DATE + " " + TIME + MILLIS);
     /** dd.MMM.yyyy.*/
-    static final SimpleDateFormat DATE_FORMAT 
+    static final SimpleDateFormat DATE_FORMAT
         = new SimpleDateFormat(DATE);
     /** HH:mm:ss.*/
-    static final SimpleDateFormat TIME_FORMAT 
+    static final SimpleDateFormat TIME_FORMAT
         = new SimpleDateFormat(TIME);
     /** HH:mm:ss.SSS.*/
-    static final SimpleDateFormat TIME_MILLIS_FORMAT 
+    static final SimpleDateFormat TIME_MILLIS_FORMAT
         = new SimpleDateFormat(TIME + MILLIS);
     /** yyyy-MM-dd'T'HH:mm:ss. */
     static final SimpleDateFormat ISO8601_DATE_TIME_FORMAT
         = new SimpleDateFormat(ISO_DATE + "'T'" + TIME);
     /** yyyy-MM-dd'T'HH:mm:ss.SSS. */
-    static final SimpleDateFormat ISO8601_DATE_TIME_MILLIS_FORMAT 
+    static final SimpleDateFormat ISO8601_DATE_TIME_MILLIS_FORMAT
         = new SimpleDateFormat(ISO_DATE + "'T'" + TIME + MILLIS);
     /** yyyy-MM-dd. */
-    static final SimpleDateFormat ISO8601_DATE_FORMAT 
+    static final SimpleDateFormat ISO8601_DATE_FORMAT
         = new SimpleDateFormat(ISO_DATE);
     /** HH:mm:ss. */
-    static final SimpleDateFormat ISO8601_TIME_FORMAT 
+    static final SimpleDateFormat ISO8601_TIME_FORMAT
         = new SimpleDateFormat(TIME);
     /** yyyy-MM-dd'T'HH:mm:ss.SSS. */
-    static final SimpleDateFormat ISO8601_TIME_MILLIS_FORMAT 
-        = new SimpleDateFormat(TIME + MILLIS);    
-    
-    /**
-     * Renders the datetime as yyyy/dd/MM hh:mm:ss.SSS.
-     */
-    public static final DateAndTimeValueRenderer US 
-        = new DateAndTimeValueRenderer(US_DATE_TIME_MILLIS_FORMAT,
-                US_DATE_TIME_FORMAT, US_DATE_FORMAT, US_TIME_FORMAT,
-                US_TIME_MILLIS_FORMAT) {
+    static final SimpleDateFormat ISO8601_TIME_MILLIS_FORMAT
+        = new SimpleDateFormat(TIME + MILLIS);
+
+
+    private static final class UsRenderer extends DateAndTimeValueRenderer {
+        private static final String DESCRIPTION = "US: MM/dd/yyyy hh:mm:ss.SSS";
+
+        UsRenderer() {
+            super(US_DATE_TIME_MILLIS_FORMAT, US_DATE_TIME_FORMAT, US_DATE_FORMAT, US_TIME_FORMAT,
+                US_TIME_MILLIS_FORMAT);
+        }
+
         @Override
         public String getDescription() {
-            return "US: MM/dd/yyyy hh:mm:ss.SSS";
-        };
-    };
+            return DESCRIPTION;
+        }
+    }
+
+    /**
+     * Factory for renderers in US format.
+     *
+     * @since 2.8
+     */
+    public static final class UsRendererFactory extends AbstractDataValueRendererFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescription() {
+            return UsRenderer.DESCRIPTION;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return new UsRenderer();
+        }
+    }
+
+
+    private static final class DefaultRenderer extends DateAndTimeValueRenderer {
+        private static final String DESCRIPTION = "dd.MMM.yyyy hh:mm:ss.SSS";
+
+        DefaultRenderer() {
+            super(DATE_TIME_MILLIS_FORMAT, DATE_TIME_FORMAT, DATE_FORMAT, TIME_FORMAT, TIME_MILLIS_FORMAT);
+        }
+
+        @Override
+        public String getDescription() {
+            return DESCRIPTION;
+        }
+    }
+
+
+    /**
+     * Factory for renderers in german format.
+     *
+     * @since 2.8
+     */
+    public static final class DefaultRendererFactory extends AbstractDataValueRendererFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescription() {
+            return DefaultRenderer.DESCRIPTION;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return new DefaultRenderer();
+        }
+
+    }
+
+
+    private static final class Iso8061Renderer extends DateAndTimeValueRenderer {
+        private static final String DESCRIPTION = "ISO8601: yyyy-MM-ddTHH:mm:ss.SSS";
+
+        /**
+         *
+         */
+        Iso8061Renderer() {
+            super(ISO8601_DATE_TIME_MILLIS_FORMAT, ISO8601_DATE_TIME_FORMAT, ISO8601_DATE_FORMAT, ISO8601_TIME_FORMAT,
+                ISO8601_TIME_MILLIS_FORMAT);
+        }
+
+        @Override
+        public String getDescription() {
+            return DESCRIPTION;
+        }
+    }
+
+    /**
+     * Factory for renderers in ISO 8061 format.
+     *
+     * @since 2.8
+     */
+    public static final class Iso8061RendererFactory extends AbstractDataValueRendererFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescription() {
+            return Iso8061Renderer.DESCRIPTION;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return new Iso8061Renderer();
+        }
+    }
+
+    /**
+     * Renders the datetime as yyyy/dd/MM hh:mm:ss.SSS.
+     * @deprecated Do not use this singleton instance, renderers are not thread-safe!
+     */
+    @Deprecated
+    public static final DateAndTimeValueRenderer US = new UsRenderer();
 
     /**
      * Renders the datetime as dd.MMM.yyyy hh:mm:ss.SSS.
+     * @deprecated Do not use this singleton instance, renderers are not thread-safe!
      */
-    public static final DateAndTimeValueRenderer DEFAULT 
-        = new DateAndTimeValueRenderer(DATE_TIME_MILLIS_FORMAT, 
-                DATE_TIME_FORMAT, DATE_FORMAT, TIME_FORMAT, 
-                TIME_MILLIS_FORMAT) {
-        @Override
-        public String getDescription() {
-            return "dd.MMM.yyyy hh:mm:ss.SSS";
-        };
-    };
-    
+    @Deprecated
+    public static final DateAndTimeValueRenderer DEFAULT = new DefaultRenderer();
+
     /**
      * Renders the datetime as yyyy-MM-ddTHH:mm:ss.SSS.
+     * @deprecated Do not use this singleton instance, renderers are not thread-safe!
      */
-    public static final DateAndTimeValueRenderer ISO8061 
-        = new DateAndTimeValueRenderer(ISO8601_DATE_TIME_MILLIS_FORMAT,
-                ISO8601_DATE_TIME_FORMAT, ISO8601_DATE_FORMAT,
-                ISO8601_TIME_FORMAT, ISO8601_TIME_MILLIS_FORMAT) {
-        @Override
-        public String getDescription() {
-            return "ISO8601: yyyy-MM-ddTHH:mm:ss.SSS";
-        };
-    };
-    
+    @Deprecated
+    public static final DateAndTimeValueRenderer ISO8061 = new Iso8061Renderer();
+
 
     private final SimpleDateFormat m_dateTimeMillis;
     private final SimpleDateFormat m_dateTime;
     private final SimpleDateFormat m_date;
     private final SimpleDateFormat m_time;
     private final SimpleDateFormat m_timeMillis;
-    
+
     /**
-     * 
+     *
      * @param dateTimeMillis format if all values are set
      * @param dateTime format for date and time but no millis
      * @param date only date, no time, no millis
@@ -184,9 +288,9 @@ public class DateAndTimeValueRenderer extends DefaultDataValueRenderer {
         m_timeMillis = timeMillis;
         m_timeMillis.setTimeZone(DateAndTimeCell.UTC_TIMEZONE);
     }
-    
+
     /**
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -197,9 +301,9 @@ public class DateAndTimeValueRenderer extends DefaultDataValueRenderer {
             super.setValue(value);
         }
     }
-    
+
     /**
-     * 
+     *
      * @param value the date and time value to render
      * @return a string representation of the date and time value
      */

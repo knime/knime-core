@@ -50,6 +50,7 @@
  */
 package org.knime.core.data.renderer;
 
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.vector.bytevector.ByteVectorValue;
 
 /**
@@ -57,19 +58,46 @@ import org.knime.core.data.vector.bytevector.ByteVectorValue;
  *
  * @author ohl, University of Konstanz
  */
+@SuppressWarnings("serial")
 public class ByteVectorValueStringRenderer extends DefaultDataValueRenderer {
+    /**
+     * Factory for {@link ByteVectorValueStringRenderer}.
+     *
+     * @since 2.8
+     */
+    public static final class Factory extends AbstractDataValueRendererFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescription() {
+            return DESCRIPTION;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return new ByteVectorValueStringRenderer();
+        }
+    }
+
+    private static final String DESCRIPTION = "Default";
 
     /**
-     * Singleton instance to be used.
+     * Instance to be used.
+     * @deprecated Do not use this singleton instance, renderers are not thread-safe!
      */
+    @Deprecated
     public static final ByteVectorValueStringRenderer INSTANCE =
             new ByteVectorValueStringRenderer();
 
     /**
      * Default Initialization is empty.
      */
-    private ByteVectorValueStringRenderer() {
-        // this is an empty constructor.
+    ByteVectorValueStringRenderer() {
+        super(DESCRIPTION);
     }
 
     /**

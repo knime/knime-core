@@ -45,105 +45,53 @@
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
  *
- * History
- *   13.09.2009 (Fabian Dill): created
+ * Created on 24.05.2013 by thor
  */
-package org.knime.core.data.date;
+package org.knime.core.data.xml;
 
-import java.util.Calendar;
-
-import org.knime.core.data.DataValue;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.renderer.AbstractDataValueRendererFactory;
+import org.knime.core.data.renderer.DataValueRenderer;
+import org.knime.core.data.renderer.MultiLineStringValueRenderer;
 
 /**
- * Interface supporting the representation of time and date independent of the
- * user's time zone and location. Times in KNIME are always UTC times!
+ * Default renderer for XML values.
  *
- * @author Fabian Dill, KNIME.com, Zurich, Switzerland
+ * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @since 2.8
  */
-public interface DateAndTimeValue extends DataValue {
-    /** Utility implementation for timestamp values. */
-    DateAndTimeUtility UTILITY = new DateAndTimeUtility();
-
+@SuppressWarnings("serial")
+public final class XMLValueRenderer extends MultiLineStringValueRenderer {
     /**
-     * @return the year of this date
-     * @see Calendar#YEAR
+     * Factory for {@link XMLValueRenderer}.
      */
-    int getYear();
+    public static final class Factory extends AbstractDataValueRendererFactory {
+        private static final String DESCRIPTION = "XML Document";
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescription() {
+            return DESCRIPTION;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return new XMLValueRenderer(DESCRIPTION);
+        }
+    }
+
 
     /**
+     * Constructor.
      *
-     * @return the month of the year, **STARTING WITH 0** for the first month
-     * @see Calendar#MONTH
+     * @param description a description for the renderer
      */
-    int getMonth();
-
-    /**
-     *
-     * @return the day of the month in the interval 1-31
-     * @see Calendar#DAY_OF_MONTH
-     */
-    int getDayOfMonth();
-
-    /**
-     *
-     * @return the hour of day represented in the interval 0-23
-     * @see Calendar#HOUR_OF_DAY
-     */
-    int getHourOfDay();
-
-    /**
-     *
-     * @return the minute in the interval 0-59
-     * @see Calendar#MINUTE
-     */
-    int getMinute();
-
-    /**
-     *
-     * @return the second in the interval 0-59
-     * @see Calendar#SECOND
-     */
-    int getSecond();
-
-    /**
-     *
-     * @return the milliseconds in the interval 0-999
-     * @see Calendar#MILLISECOND
-     */
-    int getMillis();
-
-    /**
-     *
-     * @return true if the date is available and it is legal to access the
-     * date fields (year, month, day)
-     */
-    boolean hasDate();
-
-    /**
-     *
-     * @return true if the time is available and it is legal to access the time
-     * fields (hour, minute, second)
-     */
-    boolean hasTime();
-
-    /**
-     *
-     * @return true if the milliseconds are available and it is legal to access
-     * the milliseconds
-     */
-    boolean hasMillis();
-
-    /**
-     *
-     * @return the milliseconds in UTC time
-     * @see Calendar#getTimeInMillis()
-     */
-    long getUTCTimeInMillis();
-
-
-    /**
-     *
-     * @return a clone of the underlying UTC calendar
-     */
-    Calendar getUTCCalendarClone();
+    XMLValueRenderer(final String description) {
+        super(description);
+    }
 }

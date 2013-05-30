@@ -52,81 +52,120 @@ package org.knime.core.data.renderer;
 
 import java.awt.Dimension;
 
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.vector.bitvector.BitVectorValue;
 
 /**
+ * Renderer for bit vector values.
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
+@SuppressWarnings("serial")
 public class BitVectorValueStringRenderer extends DefaultDataValueRenderer {
+    /**
+     * Renderer that shows bit vectors as hex strings.
+     *
+     * @since 2.8
+     */
+    public static final class HexRendererFactory extends AbstractDataValueRendererFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescription() {
+            return HexRenderer.DESCRIPTION;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return new HexRenderer();
+        }
+    }
+
+
+    /**
+     * Renderer that shows bit vectors as binary strings.
+     *
+     * @since 2.8
+     */
+    public static final class BinRendererFactory extends AbstractDataValueRendererFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescription() {
+            return BinRenderer.DESCRIPTION;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return new BinRenderer();
+        }
+    }
+
+
+    private static final class HexRenderer extends BitVectorValueStringRenderer {
+        static final String DESCRIPTION = "Hex String";
+
+        HexRenderer() {
+            super(DESCRIPTION);
+        }
+
+        @Override
+        protected void setValue(final Object value) {
+            if (value instanceof BitVectorValue) {
+                super.setValue(((BitVectorValue)value).toHexString());
+            } else {
+                super.setValue(value);
+            }
+        }
+    }
+
+    private static final class BinRenderer extends BitVectorValueStringRenderer {
+        static final String DESCRIPTION = "Bit String";
+
+        BinRenderer() {
+            super(DESCRIPTION);
+        }
+
+        @Override
+        protected void setValue(final Object value) {
+            if (value instanceof BitVectorValue) {
+                super.setValue(((BitVectorValue)value).toBinaryString());
+            } else {
+                super.setValue(value);
+            }
+        }
+    }
 
     /**
      * Singleton for a hex string renderer of bit vector values.
+     * @deprecated Do not use this singleton instance, renderers are not thread-safe!
      */
-    public static final BitVectorValueStringRenderer HEX_RENDERER =
-            new BitVectorValueStringRenderer(Type.HEX);
+    @Deprecated
+    public static final BitVectorValueStringRenderer HEX_RENDERER = new HexRenderer();
 
     /**
      * Singleton for a binary (0/1) string renderer of bit vector values.
+     * @deprecated Do not use this singleton instance, renderers are not thread-safe!
      */
-    public static final BitVectorValueStringRenderer BIN_RENDERER =
-        new BitVectorValueStringRenderer(Type.BIT);
+    @Deprecated
+    public static final BitVectorValueStringRenderer BIN_RENDERER = new BinRenderer();
 
-    /** Possible types for string representation. */
-    static enum Type {
-        /** Hex string representation. */
-        HEX,
-        /** Bit string representation. */
-        BIT
-    };
-
-    private final Type m_type;
 
     /**
      * Constructs new renderer.
      *
-     * @param type The type to use.
+     * @param description a description for the renderer
      */
-    BitVectorValueStringRenderer(final Type type) {
-        if (type == null) {
-            throw new NullPointerException("Type must not be null.");
-        }
-        m_type = type;
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    protected void setValue(final Object value) {
-        Object val;
-        if (value instanceof BitVectorValue) {
-            BitVectorValue bv = (BitVectorValue)value;
-            switch (m_type) {
-            case HEX:
-                val = bv.toHexString();
-                break;
-            case BIT:
-                val = bv.toBinaryString();
-                break;
-            default:
-                throw new InternalError("Unknown type: " + m_type);
-            }
-        } else {
-            val = value;
-        }
-        super.setValue(val);
-    }
-
-    /** {@inheritDoc} */
-    @Override
-    public String getDescription() {
-        switch (m_type) {
-        case HEX:
-            return "Hex String";
-        case BIT:
-            return "Bit String";
-        default:
-            throw new InternalError("Unknown type: " + m_type);
-        }
+    BitVectorValueStringRenderer(final String description) {
+        super(description);
     }
 
     /** {@inheritDoc} */
@@ -138,5 +177,4 @@ public class BitVectorValueStringRenderer extends DefaultDataValueRenderer {
         }
         return d;
     }
-
 }

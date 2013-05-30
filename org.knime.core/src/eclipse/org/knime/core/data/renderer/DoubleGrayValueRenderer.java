@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   Dec 5, 2005 (wiswedel): created
  */
@@ -70,18 +70,41 @@ import org.knime.core.data.DoubleValue;
  * domain information is available, 0.0 and 1.0 are assumed to define the range.
  * @author Bernd Wiswedel, University of Konstanz
  */
+@SuppressWarnings("serial")
 public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
-    
+    /**
+     * Factory for {@link DoubleGrayValueRenderer}.
+     *
+     * @since 2.8
+     */
+    public static final class Factory extends AbstractDataValueRendererFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescription() {
+            return DESCRIPTION;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return new DoubleGrayValueRenderer(colSpec);
+        }
+    }
+
     /** Description that's returned in {@link #getDescription()}. */
     public static final String DESCRIPTION = "Gray Scale";
-    
+
     private final Icon m_icon = new GrayIcon();
     private boolean m_isPaintCrossForMissing = false;
-    
+
     /** Creates new instance given a column spec. This object will get the
-     * information about min/max from the spec and do the normalization 
+     * information about min/max from the spec and do the normalization
      * accordingly.
-     * @param spec The spec from which to get min/max. May be null in which 
+     * @param spec The spec from which to get min/max. May be null in which
      *         case 0.0 and 1.0 are assumed.
      */
     public DoubleGrayValueRenderer(final DataColumnSpec spec) {
@@ -89,20 +112,20 @@ public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
         setIcon(new GrayIcon());
         setIconTextGap(0);
     }
-    
+
     /** Overridden to ignore any invocation.
      * {@inheritDoc}
      */
     @Override
     public void setText(final String text) {
     }
-    
+
     /** Internal setter for the text, delegates to super.setText().
      * @param text The text to write. */
     protected void setTextInternal(final String text) {
         super.setText(text);
     }
-    
+
     /** Sets the color in the icon.
      * @param c The color to be used.
      */
@@ -114,7 +137,7 @@ public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
         }
         ((GrayIcon)icon).setColor(c);
     }
-    
+
     /**
     /** Sets the gray value according to the value and the column
      * domain's min/max. If the object is not instance of DoubleValue, the
@@ -160,23 +183,23 @@ public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
             setTextInternal(DataType.getMissingCell().toString());
         }
     }
-    
+
     /** Method that may be overwritten to return a more specific color.
      * @param val The current value
      * @param min The minimum according the column spec.
      * @param max The maximum according the column spec.
      * @return The color for the current value, never <code>null</code>.
      */
-    protected Color setDoubleValue(final double val, 
+    protected Color setDoubleValue(final double val,
             final double min, final double max) {
         float gray = (float)((val - min) / (max - min));
         gray = Math.max(0.0f, gray);
         gray = Math.min(1.0f, gray);
         gray = 1.0f - gray;
         return new Color(gray, gray, gray);
-        
+
     }
-    
+
     /**
      * If a cross is painted for missing values.
      * @return the isPaintCrossForMissing property.
@@ -201,28 +224,28 @@ public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
     public String getDescription() {
         return DESCRIPTION;
     }
-    
-    /** Returns <code>true</code> if the spec contains domain information 
-     * and <code>false</code> otherwise. 
+
+    /** Returns <code>true</code> if the spec contains domain information
+     * and <code>false</code> otherwise.
      * {@inheritDoc} */
     @Override
     public boolean accepts(final DataColumnSpec spec) {
         DataColumnDomain domain = spec.getDomain();
         return domain.hasLowerBound() && domain.hasUpperBound();
     }
-    
+
     /** @return the width of the icon, defaults to <code>getWidth()</code>. */
     protected int getIconWidth() {
         return getWidth();
     }
-    
+
     /** @return the height of the icon, defaults to <code>getHeight()</code>. */
     protected int getIconHeight() {
         return getHeight();
     }
 
-    /** Private icon that is shown instead of any string. 
-     * The code is mainly copied from javax.swing.plaf.basic.BasicIconFactory 
+    /** Private icon that is shown instead of any string.
+     * The code is mainly copied from javax.swing.plaf.basic.BasicIconFactory
      * and altered accordingly.
      */
     private class GrayIcon implements Icon {
@@ -232,27 +255,30 @@ public class DoubleGrayValueRenderer extends DefaultDataValueRenderer {
         /**
          * {@inheritDoc}
          */
+        @Override
         public int getIconHeight() {
             return DoubleGrayValueRenderer.this.getIconHeight();
         }
-        
+
         /**
          * {@inheritDoc}
          */
+        @Override
         public int getIconWidth() {
             return DoubleGrayValueRenderer.this.getIconWidth();
         }
-        
+
         /** Sets the color for the next paint operation.
          * @param c The color to be used.
          */
         public void setColor(final Color c) {
             m_color = c;
         }
-        
+
         /**
          * {@inheritDoc}
          */
+        @Override
         public void paintIcon(
             final Component c, final Graphics g, final int x, final int y) {
             if (m_color == null) {

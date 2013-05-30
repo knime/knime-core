@@ -56,7 +56,9 @@ import org.knime.core.data.LongValue;
  * Renderer for long values that simply prints the value.
  *
  * @author Thorsten Meinl, University of Konstanz
+ * @deprecated use the {@link IntValueRenderer} instead, it does the same thing
  */
+@Deprecated
 public final class LongValueRenderer extends DefaultDataValueRenderer {
     /** Instance to be used. */
     public static final LongValueRenderer INSTANCE =

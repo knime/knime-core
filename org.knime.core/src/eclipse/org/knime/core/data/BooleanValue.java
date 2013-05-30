@@ -50,10 +50,6 @@ package org.knime.core.data;
 
 import javax.swing.Icon;
 
-import org.knime.core.data.renderer.BooleanValueRenderer;
-import org.knime.core.data.renderer.DataValueRendererFamily;
-import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
-
 
 /**
  * Interface supporting generic boolean values.
@@ -61,11 +57,10 @@ import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public interface BooleanValue extends DataValue {
-
     /** Meta information to this value type.
      * @see DataValue#UTILITY
      */
-    public static final UtilityFactory UTILITY = new BooleanUtilityFactory();
+    UtilityFactory UTILITY = new BooleanUtilityFactory();
 
     /**
      * @return A generic <code>boolean</code> value.
@@ -73,14 +68,14 @@ public interface BooleanValue extends DataValue {
     boolean getBooleanValue();
 
     /** Implementations of the meta information of this value class. */
-    public static class BooleanUtilityFactory extends UtilityFactory {
+    class BooleanUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
         private static final Icon ICON = loadIcon(
                 BooleanValue.class, "/icon/booleanicon.png");
 
         /** Only subclasses are allowed to instantiate this class. */
         protected BooleanUtilityFactory() {
-            // no op
+            super(BooleanValue.class);
         }
 
         /**
@@ -112,11 +107,8 @@ public interface BooleanValue extends DataValue {
          * {@inheritDoc}
          */
         @Override
-        protected DataValueRendererFamily getRendererFamily(
-                final DataColumnSpec spec) {
-            return new DefaultDataValueRendererFamily(
-                    BooleanValueRenderer.INSTANCE);
+        public String getName() {
+            return "Boolean values";
         }
-
     }
 }

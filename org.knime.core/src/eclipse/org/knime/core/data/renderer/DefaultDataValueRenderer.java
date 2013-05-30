@@ -70,8 +70,32 @@ import org.knime.core.data.DataColumnSpec;
  *
  * @author Bernd Wiswedel, University of Konstanz
  */
-public class DefaultDataValueRenderer
-    extends DefaultTableCellRenderer implements DataValueRenderer {
+@SuppressWarnings("serial")
+public class DefaultDataValueRenderer extends DefaultTableCellRenderer implements DataValueRenderer {
+    /**
+     * Factory for a default (fallback) renderer that uses the string representation of a cell.
+     *
+     * @since 2.8
+     */
+    public static final class Factory extends AbstractDataValueRendererFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescription() {
+            return DEFAULT_DESCRIPTION;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return new DefaultDataValueRenderer(colSpec, DEFAULT_DESCRIPTION);
+        }
+    }
+
+    private static final String DEFAULT_DESCRIPTION = "Default";
 
     /** The spec to the column for which this renderer is being used. */
     private final DataColumnSpec m_colSpec;
@@ -110,7 +134,7 @@ public class DefaultDataValueRenderer
      */
     public DefaultDataValueRenderer(final DataColumnSpec spec, final String description) {
         m_colSpec = spec;
-        m_description = description == null ? "Default" : description;
+        m_description = description == null ? DEFAULT_DESCRIPTION : description;
     }
 
     /**

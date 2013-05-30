@@ -50,17 +50,13 @@
  */
 package org.knime.core.data.collection;
 
-import java.util.Iterator;
 
 import javax.swing.Icon;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataType;
 import org.knime.core.data.DataValue;
-import org.knime.core.data.renderer.DataValueRendererFamily;
-import org.knime.core.data.renderer.DefaultDataValueRenderer;
-import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
+import org.knime.core.data.ExtensibleUtilityFactory;
 
 /**
  * Special interface that is implemented by {@link DataCell}s that represent
@@ -70,28 +66,28 @@ import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public interface CollectionDataValue extends DataValue, CellCollection {
-
     /** Meta information to collection values.
      * @see DataValue#UTILITY
      */
-    public static final UtilityFactory UTILITY = new CollectionUtilityFactory();
+    UtilityFactory UTILITY = new CollectionUtilityFactory();
 
     /** Get the common super type of all elements in this collection.
      * @return The common super type, never null. */
-    public DataType getElementType();
+    DataType getElementType();
 
     /** Get the number of elements in this collection.
      * @return size of the collection. */
-    public int size();
+    int size();
 
     /** Implementations of the meta information of this value class. */
-    public static class CollectionUtilityFactory extends UtilityFactory {
+    class CollectionUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
         private static final Icon ICON =
             loadIcon(CollectionDataValue.class, "/collectionicon.png");
 
         /** Only subclasses are allowed to instantiate this class. */
         protected CollectionUtilityFactory() {
+            super(CollectionDataValue.class);
         }
 
         /** {@inheritDoc} */
@@ -100,59 +96,12 @@ public interface CollectionDataValue extends DataValue, CellCollection {
             return ICON;
         }
 
-        /** {@inheritDoc} */
+        /**
+         * {@inheritDoc}
+         */
         @Override
-        protected DataValueRendererFamily getRendererFamily(
-                final DataColumnSpec spec) {
-            return new DefaultDataValueRendererFamily(
-                    new CollectionRenderer(true),
-                    new CollectionRenderer(false));
-        }
-
-        private static final class CollectionRenderer
-        extends DefaultDataValueRenderer {
-
-            private final StringBuilder m_stringBuilder;
-            private final boolean m_isShort;
-
-            /** Instantiate renderer.
-             * @param isShort Whether to use a short description. */
-            public CollectionRenderer(final boolean isShort) {
-                m_isShort = isShort;
-                m_stringBuilder = new StringBuilder();
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            protected void setValue(final Object value) {
-                if (value instanceof CollectionDataValue) {
-                    m_stringBuilder.setLength(0);
-                    m_stringBuilder.append("[");
-                    Iterator<DataCell> it =
-                        ((CollectionDataValue)value).iterator();
-                    for (int i = 0; it.hasNext()
-                        && (!m_isShort || i < 3); i++) {
-                        if (i > 0) {
-                            m_stringBuilder.append(",");
-                        }
-                        m_stringBuilder.append(it.next().toString());
-                    }
-                    if (it.hasNext()) {
-                        m_stringBuilder.append(",...");
-                    }
-                    m_stringBuilder.append("]");
-                    super.setValue(m_stringBuilder.toString());
-                } else {
-                    super.setValue(value);
-                }
-            }
-
-            /** {@inheritDoc} */
-            @Override
-            public String getDescription() {
-                return "Collection (" + (m_isShort ? "short" : "full") + ")";
-            }
+        public String getName() {
+            return "Collections";
         }
     }
-
 }

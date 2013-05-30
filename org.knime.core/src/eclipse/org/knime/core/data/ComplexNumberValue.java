@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   23.03.2006 (cebron): created
  */
@@ -54,16 +54,14 @@ import javax.swing.Icon;
 
 /**
  * Interface supporting generic complex number values.
- * 
+ *
  * @author ciobaca, University of Konstanz
  */
 public interface ComplexNumberValue extends DataValue {
-    
     /** Meta information.
      * @see DataValue#UTILITY
      */
-    public static final UtilityFactory UTILITY = 
-        new ComplexNumberUtilityFactory();
+    UtilityFactory UTILITY = new ComplexNumberUtilityFactory();
 
     /**
      * @return The real part of the complex number
@@ -74,18 +72,19 @@ public interface ComplexNumberValue extends DataValue {
      * @return The imaginary part of the complex number
      */
     double getImaginaryValue();
-    
+
     /** Meta information to the complex number value. */
-    public static class ComplexNumberUtilityFactory extends UtilityFactory {
+    class ComplexNumberUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON = 
+        private static final Icon ICON =
             loadIcon(ComplexNumberValue.class, "/icon/complexnumbericon.png");
 
         private static final ComplexNumberValueComparator COMPARATOR =
             new ComplexNumberValueComparator();
-        
+
         /** Only subclasses are allowed to instantiate this class. */
         protected ComplexNumberUtilityFactory() {
+            super(ComplexNumberValue.class);
         }
 
         /**
@@ -104,5 +103,12 @@ public interface ComplexNumberValue extends DataValue {
             return COMPARATOR;
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getName() {
+            return "Complex numbers";
+        }
     }
 }

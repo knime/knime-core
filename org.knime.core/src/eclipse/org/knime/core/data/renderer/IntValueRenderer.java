@@ -44,37 +44,72 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.core.data.renderer;
 
+import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.IntValue;
+import org.knime.core.data.LongValue;
 
 /**
- * 
+ * Default renderer for {@link IntValue} and {@link LongValue}.
+ *
  * @author wiswedel, University of Konstanz
  */
+@SuppressWarnings("serial")
 public final class IntValueRenderer extends DefaultDataValueRenderer {
+    /**
+     * Factory for the {@link IntValueRenderer}.
+     *
+     * @since 2.8
+     */
+    public static final class Factory extends AbstractDataValueRendererFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescription() {
+            return DESCRIPTION;
+        }
 
-    /** Instance to be used. */
-    public static final IntValueRenderer INSTANCE = 
-        new IntValueRenderer();
-    
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return new IntValueRenderer();
+        }
+    }
+
+    /**
+     * Instance to be used.
+     * @deprecated Do not use this singleton instance, renderers are not thread-safe!
+     */
+    @Deprecated
+    public static final IntValueRenderer INSTANCE = new IntValueRenderer();
+
+    private static final String DESCRIPTION = "Default";
+
     /**
      * Default Initialization is empty.
      */
-    private IntValueRenderer() {
+    IntValueRenderer() {
+        super(DESCRIPTION);
     }
-    
+
     /**
      * Tries to cast o IntValue and will set the integer in the super class.
      * If that fails, the object's toString() method is used.
-     * @param value The object to be renderered, should be an IntValue.
+     *
+     * @param value the object to be rendered, should be an {@link IntValue} or {@link LongValue}
      */
     @Override
     protected void setValue(final Object value) {
         if (value instanceof IntValue) {
             super.setValue(Integer.toString(((IntValue)value).getIntValue()));
+        } else if (value instanceof LongValue) {
+                super.setValue(Long.toString(((LongValue)value).getLongValue()));
         } else {
             super.setValue(value);
         }

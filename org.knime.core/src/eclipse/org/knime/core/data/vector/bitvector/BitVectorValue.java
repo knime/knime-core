@@ -53,13 +53,9 @@ package org.knime.core.data.vector.bitvector;
 import javax.swing.Icon;
 
 import org.knime.core.data.DataCell;
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataValue;
 import org.knime.core.data.DataValueComparator;
-import org.knime.core.data.renderer.BitVectorValuePixelRenderer;
-import org.knime.core.data.renderer.BitVectorValueStringRenderer;
-import org.knime.core.data.renderer.DataValueRendererFamily;
-import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
+import org.knime.core.data.ExtensibleUtilityFactory;
 
 /**
  * Implementing {@link DataCell}s store '0's and '1's at specific positions in
@@ -68,27 +64,26 @@ import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
  * @author ohl, University of Konstanz
  */
 public interface BitVectorValue extends DataValue {
-
     /**
      * Meta information to bit vector values.
      *
      * @see DataValue#UTILITY
      */
-    public static final UtilityFactory UTILITY = new BitVectorUtilityFactory();
+    UtilityFactory UTILITY = new BitVectorUtilityFactory();
 
     /**
      * Returns the length of the bit vector. The number of stored bits.
      *
      * @return the number of bits stored in the vector
      */
-    public long length();
+    long length();
 
     /**
      * Returns the number of set bits (bits with value '1') in the vector.
      *
      * @return the number of set bits (bits with value '1') in the vector.
      */
-    public long cardinality();
+    long cardinality();
 
     /**
      * Returns the value of the specified bit.
@@ -97,14 +92,14 @@ public interface BitVectorValue extends DataValue {
      * @return true if the bit at the specified index is set, false if it is
      *         zero.
      */
-    public boolean get(final long index);
+    boolean get(final long index);
 
     /**
      * Returns true, if all bits in the vector are cleared.
      *
      * @return true, if all bits are zero, false, if at least one bit is set.
      */
-    public boolean isEmpty();
+    boolean isEmpty();
 
     /**
      * Finds the next bit not set (that is '0') on or after the specified index.
@@ -117,7 +112,7 @@ public interface BitVectorValue extends DataValue {
      *         provided startIdx. Or -1 if the vector contains no zero anymore.
      * @throws ArrayIndexOutOfBoundsException if the specified startIdx negative
      */
-    public long nextClearBit(final long startIdx);
+    long nextClearBit(final long startIdx);
 
     /**
      * Finds the next bit set to one on or after the specified index. Returns an
@@ -132,7 +127,7 @@ public interface BitVectorValue extends DataValue {
      * @throws ArrayIndexOutOfBoundsException if the specified startIdx is
      *             negative
      */
-    public long nextSetBit(final long startIdx);
+    long nextSetBit(final long startIdx);
 
     /**
      * Returns the hex representation of the bits in this vector. Each character
@@ -146,7 +141,7 @@ public interface BitVectorValue extends DataValue {
      *
      * @return the hex representation of this bit vector.
      */
-    public String toHexString();
+    String toHexString();
 
     /**
      * Returns the binary string representation of the bits in this vector. Each
@@ -159,10 +154,10 @@ public interface BitVectorValue extends DataValue {
      *
      * @return the binary (0/1) representation of this bit vector.
      */
-    public String toBinaryString();
+    String toBinaryString();
 
     /** Implementations of the meta information of this value class. */
-    public static class BitVectorUtilityFactory extends UtilityFactory {
+    class BitVectorUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
         private static final Icon ICON =
                 loadIcon(BitVectorValue.class, "/bitvectoricon.png");
@@ -175,19 +170,13 @@ public interface BitVectorValue extends DataValue {
                             final DataValue v2) {
                         long c1 = ((BitVectorValue)v1).cardinality();
                         long c2 = ((BitVectorValue)v2).cardinality();
-                        if (c1 < c2) {
-                            return -1;
-                        } else if (c1 > c2) {
-                            return 1;
-                        } else {
-                            return 0;
-                        }
+                        return Long.compare(c1, c2);
                     }
                 };
 
         /** Only subclasses are allowed to instantiate this class. */
         protected BitVectorUtilityFactory() {
-            // intentionally left empty
+            super(BitVectorValue.class);
         }
 
         /**
@@ -210,13 +199,8 @@ public interface BitVectorValue extends DataValue {
          * {@inheritDoc}
          */
         @Override
-        protected DataValueRendererFamily getRendererFamily(
-                final DataColumnSpec spec) {
-            return new DefaultDataValueRendererFamily(
-                    BitVectorValueStringRenderer.HEX_RENDERER,
-                    BitVectorValueStringRenderer.BIN_RENDERER,
-                    new BitVectorValuePixelRenderer());
+        public String getName() {
+            return "Bit vectors";
         }
     }
-
 }

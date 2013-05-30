@@ -52,36 +52,31 @@ package org.knime.core.data.uri;
 
 import javax.swing.Icon;
 
-import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataValue;
-import org.knime.core.data.renderer.DataValueRendererFamily;
-import org.knime.core.data.renderer.DefaultDataValueRendererFamily;
-import org.knime.core.data.renderer.StringValueRenderer;
+import org.knime.core.data.ExtensibleUtilityFactory;
 
 /**
  *
  * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
  */
 public interface URIDataValue extends DataValue {
-
     /**
      * Meta information to this value type.
      *
      *
      * @see DataValue#UTILITY
      */
-    public static final UtilityFactory UTILITY = new URIDataUtilityFactory();
+    static final UtilityFactory UTILITY = new URIDataUtilityFactory();
 
     /**
      * @return A String value.
      */
-    public URIContent getURIContent();
+    URIContent getURIContent();
 
     /**
      * Implementations of the meta information of this value class.
      */
-    public static class URIDataUtilityFactory extends UtilityFactory {
-
+    static class URIDataUtilityFactory extends ExtensibleUtilityFactory {
         /**
          * Singleton icon to be used to display this cell type.
          */
@@ -91,7 +86,7 @@ public interface URIDataValue extends DataValue {
          * Only subclasses are allowed to instantiate this class.
          */
         protected URIDataUtilityFactory() {
-            // Disables public constructor
+            super(URIDataValue.class);
         }
 
         /**
@@ -106,12 +101,8 @@ public interface URIDataValue extends DataValue {
          * {@inheritDoc}
          */
         @Override
-        protected DataValueRendererFamily getRendererFamily(
-                final DataColumnSpec spec) {
-            return new DefaultDataValueRendererFamily(
-                    StringValueRenderer.INSTANCE);
+        public String getName() {
+            return "URIs";
         }
-
     }
-
 }

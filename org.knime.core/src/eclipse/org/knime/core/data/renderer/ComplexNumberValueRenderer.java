@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   23.03.2006 (cebron): created
  */
@@ -54,51 +54,70 @@ import java.text.NumberFormat;
 import java.util.Locale;
 
 import org.knime.core.data.ComplexNumberValue;
+import org.knime.core.data.DataColumnSpec;
 
 
 /**
  * Render to display a complex number value using a given
  * <code>NumberFormat</code>.
- * 
+ *
  * @see java.text.NumberFormat
  * @author ciobaca, University of Konstanz
  */
+@SuppressWarnings("serial")
 public class ComplexNumberValueRenderer extends DefaultDataValueRenderer {
+    /**
+     * Factory for {@link ComplexNumberValue}.
+     *
+     * @since 2.8
+     */
+    public static final class Factory extends AbstractDataValueRendererFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescription() {
+            return DESCRIPTION;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return new ComplexNumberValueRenderer(NumberFormat.getNumberInstance(Locale.US), DESCRIPTION);
+        }
+    }
+
+    private static final String DESCRIPTION = "Standard Complex Number";
 
     /**
      * Singleton for ordinary representation.
+     * @deprecated Do not use this singleton instance, renderers are not thread-safe!
      */
-    public static final DataValueRenderer STANDARD_RENDERER = 
-            new ComplexNumberValueRenderer(
-                    NumberFormat.getNumberInstance(Locale.US), 
-                    "Standard Complex Number");
-
-    /** disable grouping in renderer */
-    static {
-        NumberFormat.getNumberInstance(Locale.US).setGroupingUsed(false);
-    }
+    @Deprecated
+    public static final DataValueRenderer STANDARD_RENDERER = new ComplexNumberValueRenderer(
+        NumberFormat.getNumberInstance(Locale.US), DESCRIPTION);
 
     /** Used to get a string representation of the complex number value. */
     private final NumberFormat m_format;
 
-    /** Description to the renderer. */
-    private final String m_desc;
-
     /**
      * Instantiates a new object using a given format.
-     * 
+     *
      * @param format To be used to render this object.
      * @param desc The description to the renderer
-     * @throws NullPointerException If argument is <code>null</code>.
+     *
+     * @throws IllegalArgumentException if any argument is <code>null</code>
      */
     public ComplexNumberValueRenderer(final NumberFormat format,
             final String desc) {
+        super(desc);
         if (format == null || desc == null) {
-            throw new NullPointerException(
-                    "Format/Description must not be null.");
+            throw new IllegalArgumentException("Format/Description must not be null.");
         }
+        format.setGroupingUsed(false);
         m_format = format;
-        m_desc = desc;
     }
 
     /**
@@ -106,7 +125,7 @@ public class ComplexNumberValueRenderer extends DefaultDataValueRenderer {
      * <code>ComplexNumberValue</code>, the renderer's formatter is used to get
      * a string from the complex number value of the cell. Otherwise the
      * <code>value</code>'s <code>toString()</code> method is used.
-     * 
+     *
      * @param value The value to be rendered.
      * @see javax.swing.table.DefaultTableCellRenderer#setValue(Object)
      */
@@ -132,13 +151,5 @@ public class ComplexNumberValueRenderer extends DefaultDataValueRenderer {
             newValue = value;
         }
         super.setValue(newValue);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public String getDescription() {
-        return m_desc;
     }
 }

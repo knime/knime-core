@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   01.02.2006 (cebron): created
  */
@@ -71,20 +71,44 @@ import org.knime.core.data.DoubleValue;
  * to the cell's value. It uses the domain information from the column spec to
  * determine min and max value and to find the appropriate gray value. If no
  * domain information is available, 0.0 and 1.0 are assumed to define the range.
+ *
  * @author Bernd Wiswedel, University of Konstanz
  * @author Nicolas Cebron, University of Konstanz
  */
+@SuppressWarnings("serial")
 public class DoubleBarRenderer extends DefaultDataValueRenderer {
+    /**
+     * Factory for {@link DoubleBarRenderer}.
+     *
+     * @since 2.8
+     */
+    public static final class Factory extends AbstractDataValueRendererFactory {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getDescription() {
+            return DESCRIPTION;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public DataValueRenderer createRenderer(final DataColumnSpec colSpec) {
+            return new DoubleBarRenderer(colSpec);
+        }
+    }
 
     /** Description that's returned in {@link #getDescription()}. */
     public static final String DESCRIPTION = "Bars";
-    
+
     private BarIcon m_icon;
 
     /** Creates new instance given a column spec. This object will get the
-     * information about min/max from the spec and do the normalization 
+     * information about min/max from the spec and do the normalization
      * accordingly.
-     * @param spec The spec from which to get min/max. May be null in which 
+     * @param spec The spec from which to get min/max. May be null in which
      *         case 0.0 and 1.0 are assumed.
      */
     public DoubleBarRenderer(final DataColumnSpec spec) {
@@ -114,7 +138,7 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
     }
 
     /**
-     /** Sets the value according to the column domain's min/max. If the 
+     /** Sets the value according to the column domain's min/max. If the
      * object is not instance of DoubleValue, the cell is painted red.
      * @param value The value to be rendered.
      * @see javax.swing.table.DefaultTableCellRenderer#setValue(Object)
@@ -166,9 +190,9 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
     public String getDescription() {
         return DESCRIPTION;
     }
-    
-    /** Returns <code>true</code> if the spec contains domain information 
-     * and <code>false</code> otherwise. 
+
+    /** Returns <code>true</code> if the spec contains domain information
+     * and <code>false</code> otherwise.
      * {@inheritDoc} */
     @Override
     public boolean accepts(final DataColumnSpec spec) {
@@ -176,8 +200,8 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
         return domain.hasLowerBound() && domain.hasUpperBound();
     }
 
-    /** Private icon that is shown instead of any string. 
-     * The code is mainly copied from javax.swing.plaf.basic.BasicIconFactory 
+    /** Private icon that is shown instead of any string.
+     * The code is mainly copied from javax.swing.plaf.basic.BasicIconFactory
      * and altered accordingly.
      */
     private class BarIcon implements Icon {
@@ -187,6 +211,7 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
         /**
          * {@inheritDoc}
          */
+        @Override
         public int getIconHeight() {
             return getHeight();
         }
@@ -194,6 +219,7 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
         /**
          * {@inheritDoc}
          */
+        @Override
         public int getIconWidth() {
             return getWidth();
         }
@@ -209,6 +235,7 @@ public class DoubleBarRenderer extends DefaultDataValueRenderer {
         /**
          * {@inheritDoc}
          */
+        @Override
         public void paintIcon(final Component c, final Graphics g, final int x,
                 final int y) {
             int iconWidth = getIconWidth();

@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.core.data;
 
@@ -52,74 +52,73 @@ import javax.swing.Icon;
 
 /**
  * Interface supporting interval cells holding minimum and maximum boundaries.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
  */
 public interface IntervalValue extends DataValue {
-
     /**
      * Meta information to this value type.
-     * 
+     *
      * @see DataValue#UTILITY
      */
-    public static final UtilityFactory UTILITY = new IntervalUtilityFactory();
+    UtilityFactory UTILITY = new IntervalUtilityFactory();
 
     /**
      * @return minimum border
      */
-    public double getLeftBound();
+    double getLeftBound();
 
     /**
      * @return maximum border
      */
-    public double getRightBound();
+    double getRightBound();
 
     /**
      * @return whether the left bound is included in the interval
      */
-    public boolean leftBoundIncluded();
+    boolean leftBoundIncluded();
 
     /**
      * @return whether the right bound is included in the interval
      */
-    public boolean rightBoundIncluded();
+    boolean rightBoundIncluded();
 
     /**
      * Determines if the given double value is contained in this interval, to
      * the left or to the right.
-     * 
+     *
      * @param value the value to check
-     * 
+     *
      * @return -1 if value is left to the interval, 0 if it is included an 1 if
      *         it is to the right of the interval
      */
-    public int compare(double value);
+    int compare(double value);
 
     /**
      * Determines if the given double value is contained in this interval, to
      * the left or to the right.
-     * 
+     *
      * @param value the value to check
-     * 
+     *
      * @return -1 if value is left to the interval, 0 if it is included an 1 if
      *         it is to the right of the interval
      */
-    public int compare(DoubleValue value);
+    int compare(DoubleValue value);
 
     /**
      * Determines if the given {@link IntervalValue} is contained in this
      * interval.
-     * 
+     *
      * @param value the interval to check
-     * 
+     *
      * @return true if the value is completely contained in the interval
      */
-    public boolean includes(IntervalValue value);
+    boolean includes(IntervalValue value);
 
     /** Implementations of the meta information of this value class. */
-    public static class IntervalUtilityFactory extends UtilityFactory {
+    class IntervalUtilityFactory extends ExtensibleUtilityFactory {
         /** Singleton icon to be used to display this cell type. */
-        private static final Icon ICON = 
+        private static final Icon ICON =
             loadIcon(IntervalValue.class, "/icon/intervalicon.png");
 
         private static final IntervalValueComparator COMPARATOR =
@@ -127,6 +126,7 @@ public interface IntervalValue extends DataValue {
 
         /** Only subclasses are allowed to instantiate this class. */
         protected IntervalUtilityFactory() {
+            super(IntervalValue.class);
         }
 
         /**
@@ -143,6 +143,14 @@ public interface IntervalValue extends DataValue {
         @Override
         protected DataValueComparator getComparator() {
             return COMPARATOR;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String getName() {
+            return "Intervals";
         }
 
     }
