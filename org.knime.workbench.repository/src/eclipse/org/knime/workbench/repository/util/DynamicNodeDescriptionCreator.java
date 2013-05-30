@@ -50,13 +50,14 @@
  */
 package org.knime.workbench.repository.util;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.FileNotFoundException;
 import java.util.Set;
 
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.TransformerFactoryConfigurationError;
+
 import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainer;
@@ -85,31 +86,15 @@ public final class DynamicNodeDescriptionCreator {
     private static final DynamicNodeDescriptionCreator instance =
             new DynamicNodeDescriptionCreator();
 
-    private final String m_css;
-
     private DynamicNodeDescriptionCreator() {
-        try {
-            InputStream is = getClass().getResourceAsStream("style.css");
-
-            BufferedReader in = new BufferedReader(new InputStreamReader(is));
-            String line;
-            StringBuilder buf = new StringBuilder();
-            while ((line = in.readLine()) != null) {
-                buf.append(line).append('\n');
-            }
-            m_css = buf.toString();
-            in.close();
-        } catch (IOException ex) {
-            throw new RuntimeException(
-                    "Could not open 'style.css' for reading", ex);
-        }
     }
 
     /**
+     * Returns the single instance of this class.
      *
      * @return singleton instance of this class
      */
-    public static final DynamicNodeDescriptionCreator instance() {
+    public static DynamicNodeDescriptionCreator instance() {
         return instance;
     }
 
@@ -122,7 +107,7 @@ public final class DynamicNodeDescriptionCreator {
         content.append("<html><head>");
         // include stylesheet
         content.append("<style>");
-        content.append(m_css);
+        content.append(NodeFactoryHTMLCreator.instance.getCss());
         content.append("</style>");
         content.append("</head><body>");
         return content.toString();
@@ -195,11 +180,17 @@ public final class DynamicNodeDescriptionCreator {
         NodeFactory<? extends NodeModel> nf = null;
         try {
             nf = template.createFactoryInstance();
+            if (useSingleLine) {
+                bld.append("<dt><b>");
+                bld.append(nf.getNodeName());
+                bld.append(":</b></dt><dd>");
+                bld.append(goodOneLineDescr(NodeFactoryHTMLCreator.instance.readShortDescriptionFromXML(nf
+                    .getXMLDescription())));
+                bld.append("</dd>");
+            } else {
+                bld.append(NodeFactoryHTMLCreator.instance.readFullDescription(nf.getXMLDescription()));
+            }
         } catch (Exception e) {
-            nf = null;
-        }
-
-        if (nf == null) {
             if (useSingleLine) {
                 bld.append("<dt>");
                 bld.append(template.getName());
@@ -214,21 +205,7 @@ public final class DynamicNodeDescriptionCreator {
                 bld.append("(Internal error: couldn't instantiate ");
                 bld.append("NodeFactory!)</body></html>");
             }
-        } else {
-            if (useSingleLine) {
-                bld.append("<dt><b>");
-                bld.append(nf.getNodeName());
-                bld.append(":</b></dt><dd>");
-                bld.append(goodOneLineDescr(NodeFactoryHTMLCreator
-                        .getInstance().readShortDescriptionFromXML(
-                                nf.getXMLDescription())));
-                bld.append("</dd>");
-            } else {
-                bld.append(goodFullDescr(NodeFactoryHTMLCreator.getInstance()
-                        .readFullDescription(nf.getXMLDescription())));
-            }
         }
-
     }
 
     /**
@@ -256,13 +233,25 @@ public final class DynamicNodeDescriptionCreator {
                 bld.append(":</b></dt>");
                 bld.append("<dd>");
                 // TODO functionality disabled
-                bld.append(goodOneLineDescr(NodeFactoryHTMLCreator
-                        .getInstance().readShortDescriptionFromXML(
-                                singleNC.getXMLDescription())));
+                bld.append(goodOneLineDescr(NodeFactoryHTMLCreator.instance.readShortDescriptionFromXML(singleNC
+                    .getXMLDescription())));
                 bld.append("</dd>");
             } else {
-                bld.append(goodFullDescr(NodeFactoryHTMLCreator.getInstance()
-                        .readFullDescription(singleNC.getXMLDescription())));
+                try {
+                    bld.append(NodeFactoryHTMLCreator.instance.readFullDescription(singleNC.getXMLDescription()));
+                } catch (FileNotFoundException ex) {
+                    NodeLogger.getLogger(DynamicNodeDescriptionCreator.class).error(
+                        "Could not create HTML node description: " + ex.getMessage(), ex);
+                    bld.append("<b>No description available, reason: " + ex.getMessage() + "</b>");
+                } catch (TransformerFactoryConfigurationError ex) {
+                    NodeLogger.getLogger(DynamicNodeDescriptionCreator.class).error(
+                        "Could not create HTML node description: " + ex.getMessage(), ex);
+                    bld.append("<b>No description available, reason: " + ex.getMessage() + "</b>");
+                } catch (TransformerException ex) {
+                    NodeLogger.getLogger(DynamicNodeDescriptionCreator.class).error(
+                        "Could not create HTML node description: " + ex.getMessage(), ex);
+                    bld.append("<b>No description available, reason: " + ex.getMessage() + "</b>");
+                }
             }
         }
     }
@@ -341,26 +330,6 @@ public final class DynamicNodeDescriptionCreator {
     }
 
     /**
-     * @param fullDescrFromFactory the string returned by the factory (could be
-     *            null or empty).
-     * @return a not null string containing some (more or less) meaningfull html
-     *         page.
-     */
-    private String goodFullDescr(final String fullDescrFromFactory) {
-        /*
-         * a good html page should be at least of length 30! (It needs a
-         * <html></html> and <body></body> pair with something in between)
-         */
-
-        if ((fullDescrFromFactory == null)
-                || (fullDescrFromFactory.length() < 30)) {
-            return "<html><body>No description available.</body></html>";
-        } else {
-            return fullDescrFromFactory;
-        }
-    }
-
-    /**
      * Converts the specified string into a new string that can be used inside
      * an html body. All characters with special meaning in html will be
      * escaped.
@@ -394,13 +363,7 @@ public final class DynamicNodeDescriptionCreator {
                     result.append("&quot;");
                     break;
                 default:
-                    /*
-                     * if (Character.isISOControl(ch)) { escaped = true;
-                     * result.append("&#"); result.append(Integer.toString(ch));
-                     * result.append(";"); } else {
-                     */
                     result.append(ch);
-                    // }
                     break;
             }
         }
@@ -410,14 +373,5 @@ public final class DynamicNodeDescriptionCreator {
         } else {
             return s;
         }
-    }
-
-    /**
-     * Returns the CSS style used for formatting the node descriptions.
-     *
-     * @return a CSS style
-     */
-    public String getCss() {
-        return m_css;
     }
 }

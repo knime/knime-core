@@ -18,6 +18,10 @@
 			<name>org.eclipse.buckminster.ant.AntBuilder</name>
 			<arguments>
 				<dictionary>
+					<key>derived.resource</key>
+					<value>src/xmlbeans</value>
+				</dictionary>
+				<dictionary>
 					<key>given.name</key>
 					<value>XMLBeans</value>
 				</dictionary>
@@ -25,10 +29,6 @@
 					<key>script.file</key>
 					<value>build.xml</value>
 				</dictionary>
-				<dictionary>
-					<key>derived.resource</key>
-					<value>src/xmlbeans</value>
-				</dictionary>				
 			</arguments>
 		</buildCommand>
 		<buildCommand>
@@ -58,6 +58,7 @@
 		</buildCommand>
 	</buildSpec>
 	<natures>
+		<nature>org.sonar.ide.eclipse.core.sonarNature</nature>
 		<nature>org.eclipse.jdt.core.javanature</nature>
 		<nature>net.sf.eclipsecs.core.CheckstyleNature</nature>
 		<nature>org.eclipse.pde.PluginNature</nature>

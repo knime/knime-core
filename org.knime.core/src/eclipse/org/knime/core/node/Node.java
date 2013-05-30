@@ -1623,7 +1623,6 @@ public final class Node implements NodeModelWarningListener {
      *
      * @param viewIndex The view index.
      * @return The view's name.
-     * @throws ArrayIndexOutOfBoundsException If the view index is out of range.
      */
     public String getViewName(final int viewIndex) {
         return m_factory.getNodeViewName(viewIndex);

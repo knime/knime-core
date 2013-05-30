@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
-<knimeNode icon="catch.png" type="ScopeEnd">
+<knimeNode icon="catch.png" type="ScopeEnd" xmlns="http://knime.org/node/v2.8" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd">
     <name>Catch Errors (Var Ports)</name>
     
     <shortDescription>End of Try-Catch construct. Use second input if execution leading to first input failed.</shortDescription>

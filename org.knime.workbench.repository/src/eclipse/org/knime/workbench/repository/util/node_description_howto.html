@@ -4,20 +4,18 @@
     Create an XML file, which is named exactly like your NodeFactory and placed 
     in the same directory. The NodeDescription explains the 
     functionality of the node, the configuration options, the node's view and 
-    the meaning of the in- and outports. 
-    The NodeDescription XML is structured in the following way:
+    the meaning of the in- and outports.</p>
+    <p>The format of the node description must comply with an XML Schema. The current schema can be retrieved from
+    <a href="http://knime.org/node/v2.8.xsd">http://knime.org/node/v2.8.xsd</a>. Briefly, the NodeDescription XML is
+    structured in the following way:
 	</p>
 	<dl>
-	<dt>DOCTYPE: </dt>
-	<dd>use this DOCTYPE in the declaration of the XML document:
-<pre>
-&lt;!DOCTYPE knimeNode PUBLIC 
-	"-//UNIKN//DTD KNIME Node 2.0//EN" 
-	"http://www.knime.org/Node.dtd"&gt;
-</pre>
-	</dd>
 	<dt>knimeNode: </dt>
-	<dd>add an icon and define the type:
+	<dd>The knimeNode must have the correct namespace, e.g. <em>http://knime.org/node/v2.8</em>, i.e. is must begin with
+	<pre>&lt;knimeNode xmlns="http://knime.org/node/v2.8" 
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xsi:schemaLocation="http://knime.org/node/v2.8 http://knime.org/node/v2.8.xsd"&gt;</pre>
+	Additionally add an icon and define the type as attributes:
 	<code>&lt;knimeNode icon="./yourIcon" type="Visualizer" /&gt;</code>
 	The icon should be contained in the same directory as the XML file and the 
 	NodeFactory.

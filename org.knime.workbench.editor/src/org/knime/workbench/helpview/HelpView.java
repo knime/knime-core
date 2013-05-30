@@ -77,6 +77,7 @@ import org.knime.workbench.repository.model.Category;
 import org.knime.workbench.repository.model.MetaNodeTemplate;
 import org.knime.workbench.repository.model.NodeTemplate;
 import org.knime.workbench.repository.util.DynamicNodeDescriptionCreator;
+import org.knime.workbench.repository.util.NodeFactoryHTMLCreator;
 
 /**
  * View displaying the description of the selected nodes. The description is
@@ -163,7 +164,7 @@ public class HelpView extends ViewPart implements ISelectionListener,
             }
             m_lastSelection = structSel;
 
-            // we display the full desciption only if a single node is selected
+            // we display the full description only if a single node is selected
             boolean useSingleLine;
             if ((structSel.size() > 1)
                     || (structSel.getFirstElement() instanceof Category)) {
@@ -181,7 +182,7 @@ public class HelpView extends ViewPart implements ISelectionListener,
                         + "content=\"text/html; charset=UTF-8\"></meta>");
                 // include stylesheet
                 content.append("<style>");
-                content.append(DynamicNodeDescriptionCreator.instance().getCss());
+                content.append(NodeFactoryHTMLCreator.instance.getCss());
                 content.append("</style>");
                 content.append("</head><body><dl>");
             }

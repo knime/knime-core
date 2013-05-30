@@ -2,9 +2,10 @@
 <!DOCTYPE stylesheet [
 <!ENTITY css SYSTEM "style.css">
 ]>
-<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<!-- Stylesheet for node descriptions prior to KNIME 2.0 -->
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:t="http://knime.org/node/v1.3">
     <xsl:param name="css" />
-    <xsl:template match="knimeNode">
+    <xsl:template match="t:knimeNode">
         <html>
             <head>
                 <title>
@@ -22,25 +23,24 @@
                     <h4 class="deprecated">Deprecated</h4>
                 </xsl:if>
                 <p>
-                    <xsl:apply-templates select="fullDescription/intro/node()" />
+                    <xsl:apply-templates select="t:fullDescription/t:intro/node()" />
                 </p>
 
-                <xsl:if test="fullDescription/option">
+                <xsl:if test="t:fullDescription/t:option">
                     <h2>Dialog Options</h2>
                     <dl>
-                        <xsl:apply-templates select="fullDescription/option" />
+                        <xsl:apply-templates select="t:fullDescription/t:option" />
                     </dl>
                 </xsl:if>
 
-                <xsl:if test="fullDescription/tab">
+                <xsl:if test="t:fullDescription/t:tab">
                     <h2>Dialog Options</h2>
-                    <xsl:apply-templates select="fullDescription/tab" />
+                    <xsl:apply-templates select="t:fullDescription/t:tab" />
                 </xsl:if>
 
 
-                <xsl:apply-templates select="interactiveView" />
-                <xsl:apply-templates select="ports" />
-                <xsl:apply-templates select="views" />
+                <xsl:apply-templates select="t:ports" />
+                <xsl:apply-templates select="t:views" />
 
                 <div id="origin-bundle">
                     This node is contained in <em><xsl:value-of select="osgi-info/@bundle-name" /></em>
@@ -50,7 +50,7 @@
         </html>
     </xsl:template>
     
-    <xsl:template match="tab">
+    <xsl:template match="t:tab">
         <div class="group">
             <div class="groupname">
                 <xsl:value-of select="@name" />
@@ -61,7 +61,7 @@
         </div>
     </xsl:template>
 
-    <xsl:template match="option">
+    <xsl:template match="t:option">
         <dt>
             <xsl:value-of select="@name" />
             <xsl:if test="@optional = 'true'">
@@ -73,17 +73,10 @@
         </dd>
     </xsl:template>
 
-    <xsl:template match="interactiveView">
-        <h2><xsl:value-of select="@name" /></h2>
-        <div>
-            <xsl:apply-templates />
-        </div>
-    </xsl:template>
-
-    <xsl:template match="views[view]">
+    <xsl:template match="t:views[t:view]">
         <h2>Views</h2>
         <dl>
-            <xsl:for-each select="view">
+            <xsl:for-each select="t:view">
                 <xsl:sort select="@index" />
                 <dt>
                     <xsl:value-of select="@name" />
@@ -96,14 +89,14 @@
     </xsl:template>
 
 
-    <xsl:template match="ports">
+    <xsl:template match="t:ports">
         <h2>Ports</h2>
         <dl>
-            <xsl:if test="dataIn|inPort">
+            <xsl:if test="t:dataIn|t:modelIn|t:predParamIn">
                 <div class="group">
                     <div class="groupname">Input Ports</div>
                     <table>
-                        <xsl:for-each select="dataIn|inPort">
+                        <xsl:for-each select="t:dataIn|t:modelIn|t:predParamIn">
                             <xsl:sort select="@index" />
                             <tr>
                                 <td class="dt">
@@ -118,11 +111,11 @@
                     </table>
                 </div>
             </xsl:if>
-            <xsl:if test="dataOut|outPort">
+            <xsl:if test="t:dataOut|t:modelOut|t:predParamOut">
                 <div class="group">
                     <div class="groupname">Output Ports</div>
                     <table>
-                        <xsl:for-each select="dataOut|outPort">
+                        <xsl:for-each select="t:dataOut|t:modelOut|t:predParamOut">
                             <xsl:sort select="@index" />
                             <tr>
                                 <td class="dt">
@@ -140,20 +133,20 @@
     </xsl:template>
 
 
-    <xsl:template match="intro/table">
+    <xsl:template match="t:intro/t:table">
         <table class="introtable">
             <xsl:apply-templates />
         </table>
     </xsl:template>
 
-    <xsl:template match="a[starts-with(@href, 'node:')]">
-        <a href="http://127.0.0.1:51176/node/?bundle={/knimeNode/osgi-info/@bundle-symbolic-name}&amp;package={/knimeNode/osgi-info/@factory-package}&amp;file={substring-after(@href, 'node:')}">
+    <xsl:template match="t:a[starts-with(@href, 'node:')]">
+        <a href="http://127.0.0.1:51176/node/?bundle={/t:knimeNode/osgi-info/@bundle-symbolic-name}&amp;package={/t:knimeNode/osgi-info/@factory-package}&amp;file={substring-after(@href, 'node:')}">
         <xsl:apply-templates />
         </a>
     </xsl:template>
 
-    <xsl:template match="a[starts-with(@href, 'bundle:')]">
-        <a href="http://127.0.0.1:51176/bundle/?bundle={/knimeNode/osgi-info/@bundle-symbolic-name}&amp;file={substring-after(@href, 'bundle:')}">
+    <xsl:template match="t:a[starts-with(@href, 'bundle:')]">
+        <a href="http://127.0.0.1:51176/bundle/?bundle={/t:knimeNode/osgi-info/@bundle-symbolic-name}&amp;file={substring-after(@href, 'bundle:')}">
         <xsl:apply-templates />
         </a>
     </xsl:template>
@@ -171,5 +164,4 @@
             <xsl:apply-templates select="@*|node()" />
         </xsl:copy>
     </xsl:template>
-
 </xsl:stylesheet>

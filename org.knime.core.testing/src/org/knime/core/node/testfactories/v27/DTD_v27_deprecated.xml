@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="icon.png" type="Other" deprecated="true">
+    <name>My own name</name>
+
+    <shortDescription>My own short description</shortDescription>
+
+    <fullDescription>
+        <intro>My own intro</intro>
+        <option name="First option name">First option description</option>
+        <option name="Second option name">Second option description</option>
+    </fullDescription>
+
+    <ports>
+        <inPort index="0" name="First input table name">First input table description</inPort>
+        <inPort index="1" name="Second input table name">Second input table description</inPort>
+        <inPort index="2" name="Third input table name">Third input table description</inPort>
+        <inPort index="3" name="First input model name">First input model description</inPort>
+        <inPort index="4" name="Second input model name">Second input model description</inPort>
+        <inPort index="5" name="Third input model name">Third input model description</inPort>
+        
+        <outPort index="0" name="First output table name">First output table description</outPort>
+        <outPort index="1" name="Second output table name">Second output table description</outPort>
+        <outPort index="2" name="Third output table name">Third output table description</outPort>
+        <outPort index="3" name="First output model name">First output model description</outPort>
+        <outPort index="4" name="Second output model name">Second output model description</outPort>
+        <outPort index="5" name="Third output model name">Third output model description</outPort>
+    </ports>
+
+    <views>
+        <view index="0" name="First view name">First view description</view>
+        <view index="1" name="Second view name">Second view description</view>
+        <view index="2" name="Third view name">Third view description</view>
+    </views>
+</knimeNode>
+

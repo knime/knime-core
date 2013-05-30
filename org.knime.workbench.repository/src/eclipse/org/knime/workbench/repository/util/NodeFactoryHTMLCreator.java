@@ -51,17 +51,21 @@
 package org.knime.workbench.repository.util;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
+import java.nio.charset.Charset;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
@@ -71,63 +75,94 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 /**
- * Loads an transformer and transforms the XML description of a node (which is
- * passed as a DOM element into HTML.
+ * Loads an transformer and transforms the XML description of a node (which is passed as a DOM element into HTML.
  *
  * @author Fabian Dill, University of Konstanz
  */
 public final class NodeFactoryHTMLCreator {
-
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(NodeFactoryHTMLCreator.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeFactoryHTMLCreator.class);
 
     private static final String SHORT_DESCR_TAG = "shortDescription";
 
-    private static final String XSLT_FILE = "FullNodeDescription.xslt";
-
     private static final String HOWTO_FILE = "node_description_howto.html";
 
-    private Transformer m_transformer;
+    private Map<String, Transformer> m_transformers = new HashMap<String, Transformer>();
 
-    /**
-     * Calls {@link #init()}.
-     */
-    private NodeFactoryHTMLCreator() {
-        init();
+    private static final Pattern NAMESPACE_PATTERN = Pattern.compile("http://knime.org/node(?:2012|/v(\\d+\\.\\d+))");
+
+    private final String m_css;
+
+    private NodeFactoryHTMLCreator() throws IOException {
+        InputStream is = getClass().getResourceAsStream("style.css");
+
+        BufferedReader in = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
+        String line;
+        StringBuilder buf = new StringBuilder();
+        while ((line = in.readLine()) != null) {
+            buf.append(line).append('\n');
+        }
+        m_css = buf.toString();
+        in.close();
     }
 
-    private static NodeFactoryHTMLCreator instance;
 
     /**
-     *
-     * @return single instance of the HTML creator
+     * The singleton instance.
      */
-    public static NodeFactoryHTMLCreator getInstance() {
-        if (instance == null) {
-            instance = new NodeFactoryHTMLCreator();
+    public static final NodeFactoryHTMLCreator instance;
+
+    static {
+        NodeFactoryHTMLCreator nfhc = null;
+        try {
+            nfhc = new NodeFactoryHTMLCreator();
+        } catch (IOException ex) {
+            LOGGER.error("Could create node factory creator: " + ex.getMessage(), ex);
         }
-        return instance;
+        instance = nfhc;
     }
 
     /**
      *
      * @param knimeNode DOM tree root of node factory XML description.
      * @return the full description as HTML
+     *
+     * @throws FileNotFoundException if the stylesheet for the node cannot found found
+     * @throws TransformerException if an error happens during the XML->HTML transformation
      */
-    public String readFullDescription(final Element knimeNode) {
+    public String readFullDescription(final Element knimeNode) throws FileNotFoundException, TransformerException {
         if (knimeNode == null) {
             return getXMLDescriptionHowTo();
         }
+
+        String namespaceUri = knimeNode.getNamespaceURI();
+        Transformer transformer = m_transformers.get(namespaceUri);
+        if (transformer == null) {
+            Matcher matcher = NAMESPACE_PATTERN.matcher(namespaceUri);
+            if (!matcher.matches()) {
+                throw new IllegalArgumentException("Unsupported namespace for knime node: " + namespaceUri);
+            }
+            final String version;
+            if (matcher.group(1) != null) {
+                version = matcher.group(1);
+            } else {
+                version = "2.7";
+            }
+
+            InputStream is = getClass().getResourceAsStream("FullNodeDescription_v" + version + ".xslt");
+            if (is == null) {
+                throw new FileNotFoundException("Could not find stylesheet 'FullNodeDescription_" + version + ".xslt");
+            }
+            StreamSource stylesheet = new StreamSource(is);
+            transformer = TransformerFactory.newInstance().newTemplates(stylesheet).newTransformer();
+            transformer.setParameter("css", m_css);
+            transformer.setOutputProperty(OutputKeys.METHOD, "xml");
+            transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+            m_transformers.put(namespaceUri, transformer);
+        }
+
         StreamResult result = new StreamResult(new StringWriter());
         DOMSource source = new DOMSource(knimeNode);
-        try {
-            m_transformer.transform(source, result);
-        } catch (TransformerException ex) {
-            LOGGER.coding("Unable to process fullDescription in " + "xml: "
-                    + ex.getMessage(), ex);
-            return "Unable to process fullDescription in " + "xml: "
-                    + ex.getMessage();
-        }
+        transformer.transform(source, result);
         return result.getWriter().toString();
     }
 
@@ -135,7 +170,7 @@ public final class NodeFactoryHTMLCreator {
         BufferedReader buffer = null;
         try {
             InputStream is = getClass().getResourceAsStream(HOWTO_FILE);
-            buffer = new BufferedReader(new InputStreamReader(is));
+            buffer = new BufferedReader(new InputStreamReader(is, Charset.forName("UTF-8")));
             StringBuilder result = new StringBuilder();
             result.append(DynamicNodeDescriptionCreator.instance().getHeader());
             String line;
@@ -145,7 +180,7 @@ public final class NodeFactoryHTMLCreator {
             result.append("</body></html>");
             return result.toString();
         } catch (IOException io) {
-            LOGGER.error(io);
+            LOGGER.error("Could not read node description howto: " + io.getMessage(), io);
             return "No description available. Please add an XML description";
         } finally {
             if (buffer != null) {
@@ -158,13 +193,11 @@ public final class NodeFactoryHTMLCreator {
     }
 
     /**
-     * Read the short description of the node from the XML file. If the tag is
-     * not available, returns <code>null</code>. This method is called from the
-     * constructor.
+     * Read the short description of the node from the XML file. If the tag is not available, returns <code>null</code>.
+     * This method is called from the constructor.
      *
      * @param knimeNode DOM tree root of node factory XML description
-     * @return The short description as defined in the XML or null if that
-     *         fails.
+     * @return The short description as defined in the XML or null if that fails.
      */
     public String readShortDescriptionFromXML(final Element knimeNode) {
         if (knimeNode == null) {
@@ -181,24 +214,13 @@ public final class NodeFactoryHTMLCreator {
         return w3cNodeChild.getNodeValue();
     }
 
+
     /**
-     * Initializes the XSLT transformer by loading the stylesheet.
+     * Returns the CSS style used for formatting the node descriptions.
+     *
+     * @return a CSS style
      */
-    public void init() {
-        try {
-            InputStream is = getClass().getResourceAsStream(XSLT_FILE);
-            StreamSource stylesheet = new StreamSource(is);
-            m_transformer =
-                    TransformerFactory.newInstance().newTemplates(stylesheet)
-                            .newTransformer();
-            m_transformer.setParameter("css", DynamicNodeDescriptionCreator
-                    .instance().getCss());
-            m_transformer.setOutputProperty(OutputKeys.METHOD, "xml");
-            m_transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        } catch (TransformerConfigurationException e) {
-            LOGGER.error(e.getMessage(), e);
-        } catch (TransformerFactoryConfigurationError e) {
-            LOGGER.error(e.getMessage(), e);
-        }
+    public String getCss() {
+        return m_css;
     }
 }

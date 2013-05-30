@@ -57,30 +57,25 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
-import javax.xml.transform.TransformerFactoryConfigurationError;
 
+import org.apache.xmlbeans.XmlException;
 import org.knime.core.eclipseUtil.OSGIHelper;
 import org.knime.core.node.config.ConfigRO;
 import org.knime.core.node.config.ConfigWO;
 import org.osgi.framework.Bundle;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
-import org.w3c.dom.Node;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-import org.xml.sax.SAXParseException;
-import org.xml.sax.helpers.DefaultHandler;
 
 /**
- * Interface for <code>NodeFactory</code>s summarizing {@link NodeModel},
- * {@link NodeView}, and {@link NodeDialogPane} for a specific <code>Node</code>
- * implementation.
+ * Abstract factory class for all components that make up a node, i.e. {@link NodeModel}, {@link NodeDialogPane}, and
+ * {@link NodeView}. It also provides access to the node description. The ddefault behaviour is to assume that the XML
+ * file containing the description is in the same package as the node factory and has exactly the same name but with a
+ * <tt>.xml</tt> suffix.
  *
  * @author Michael Berthold, University of Konstanz
+ * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  * @param <T> the concrete type of the {@link NodeModel}
  */
 public abstract class NodeFactory<T extends NodeModel> {
@@ -127,119 +122,44 @@ public abstract class NodeFactory<T extends NodeModel> {
         Unknown
     }
 
-    /** The logger for static methods. */
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeFactory.class);
+    private static final Pattern ICON_PATH_PATTERN = Pattern.compile("[^\\./]+/\\.\\./");
 
-    private String m_nodeName;
+    private static final NodeDescriptionParser PARSER;
 
-    private static class PortDescription {
-        private final String m_description;
-
-        private final String m_name;
-        /**
-         * A port description container holding port description and name.
-         * @param description of the port
-         * @param name and its name
-         */
-        PortDescription(final String description, final String name) {
-            m_description = description;
-            m_name = name;
+    static {
+        NodeDescriptionParser p = null;
+        try {
+            p = new NodeDescriptionParser();
+        } catch (ParserConfigurationException ex) {
+            NodeLogger.getLogger(NodeFactory.class).error(
+                "Could not create node description parser:" + ex.getMessage(), ex);
         }
+        PARSER = p;
     }
 
-    /* port descriptions */
-    private final List<PortDescription> m_inPorts =
-            new ArrayList<PortDescription>(4);
-
-    private final List<PortDescription> m_outPorts =
-            new ArrayList<PortDescription>(4);
-
-    private List<Element> m_views;
+    private NodeDescription m_nodeDescription;
 
     private URL m_icon;
 
-    private NodeType m_type;
-
-    private Element m_knimeNode;
-
-    private Element m_interactiveView;
-
-    private static DocumentBuilder parser;
-
-    private static URL defaultIcon = null;
+    private static final URL defaultIcon = NodeFactory.class.getResource("default.png");
 
     private final NodeLogger m_logger = NodeLogger.getLogger(getClass());
 
     private boolean m_initialized = false;
 
-    static {
-        try {
-            String imagePath = NodeFactory.class.getPackage().getName().replace('.', '/') + "/default.png";
-            URL iconURL = NodeFactory.class.getClassLoader().getResource(imagePath);
-            defaultIcon = iconURL;
-        } catch (Exception ioe) {
-            LOGGER.error("Default icon could not be read.", ioe);
-        }
-    }
 
     /**
-     * Instantiates the parser and the transformer for processing the xml node
-     * description. Prints log message if that fails.
-     */
-    private static void instantiateParser() {
-        try {
-            DocumentBuilderFactory f = DocumentBuilderFactory.newInstance();
-
-            // sets validation with DTD file
-            f.setValidating(true);
-
-            parser = f.newDocumentBuilder();
-
-            DefaultHandler dh = new DefaultHandler() {
-                @Override
-                public InputSource resolveEntity(final String pubId,
-                        final String sysId) throws IOException, SAXException {
-                    if (pubId != null) {
-                        String path = NodeFactory.class.getPackage().getName();
-                        if (pubId.equals("-//UNIKN//DTD KNIME Node 1.0//EN")) {
-                            path = path.replace('.', '/') + "/Node1xx.dtd";
-                        } else if (pubId.equals("-//UNIKN//DTD KNIME Node 2.0//EN")) {
-                            path = path.replace('.', '/') + "/Node.dtd";
-                        } else {
-                            return super.resolveEntity(pubId, sysId);
-                        }
-
-                        InputStream in =
-                                NodeFactory.class.getClassLoader()
-                                        .getResourceAsStream(path);
-                        return new InputSource(in);
-                    } else {
-                        return super.resolveEntity(pubId, sysId);
-                    }
-                }
-            };
-            parser.setEntityResolver(dh);
-            // parser.setErrorHandler(dh);
-        } catch (ParserConfigurationException ex) {
-            NodeLogger.getLogger(NodeFactory.class).error(ex.getMessage(), ex);
-        } catch (TransformerFactoryConfigurationError ex) {
-            NodeLogger.getLogger(NodeFactory.class).error(ex.getMessage(), ex);
-        }
-    }
-
-    /**
-     * Creates a new <code>NodeFactory</code> and tries to read to properties
-     * file named <code>Node.xml</code> in the same package as the factory.
+     * Creates a new <code>NodeFactory</code> and initializes the node description.
      */
     protected NodeFactory() {
        this(false);
     }
 
     /**
-     * Creates a new <code>NodeFactory</code> without reading the properties
-     * file.
-     * @param lazyInitialization if set to true the full initialization is
-     *      postponed until the {@link #init()} method is called.
+     * Creates a new <code>NodeFactory</code> optionally without initializing the node description.
+     *
+     * @param lazyInitialization if set to <code>true</code> the full initialization is postponed until the
+     *            {@link #init()} method is called.
      * @since 2.6
      */
     protected NodeFactory(final boolean lazyInitialization) {
@@ -249,93 +169,54 @@ public abstract class NodeFactory<T extends NodeModel> {
     }
 
     /**
-     * Initializes the node factory by parsing the properties file. This method
-     * should only be called if the NodeFactory was created with the constructor
-     * {@link #NodeFactory(boolean)}.
+     * Creates the description for this node. The default implementation reads the factory's XML file. Subclasses may
+     * override this method in order to create the description by other means.
+     *
+     * @return the node description
+     * @throws SAXException if the XML file is not well-formed
+     * @throws IOException if the XML file cannot be read
+     * @throws XmlException if the XML file is not valid
+     */
+    protected NodeDescription createNodeDescription() throws SAXException, IOException, XmlException {
+        return PARSER.parseDescription(this.getClass());
+    }
+
+    /**
+     * Initializes the node factory by reading and processing the node description. This method should only be called if
+     * the NodeFactory was created with the constructor {@link #NodeFactory(boolean)}.
+     *
      * @since 2.6
      */
-    public void init() {
+    public synchronized void init() {
         if (m_initialized) {
-            LOGGER.debug("NodeFactory is already initialized. Nothing to do.");
+            m_logger.debug("Factory is already initialized. Nothing to do.");
             return;
         }
-        if (parser == null) {
-            instantiateParser();
+        try {
+            m_nodeDescription = createNodeDescription();
+        } catch (SAXException ex) {
+            m_logger.error("Broken XML file for node description of " + getClass().getName() + ": " + ex.getMessage(),
+                ex);
+            m_nodeDescription = new NoDescriptionProxy(getClass());
+        } catch (IOException ex) {
+            m_logger.error(
+                "I/O error while reading node description of " + getClass().getName() + ": " + ex.getMessage(), ex);
+            m_nodeDescription = new NoDescriptionProxy(getClass());
+        } catch (XmlException ex) {
+            m_logger.error("Node description of " + getClass().getName() + " does not conform to used XML schema: "
+                + ex.getMessage(), ex);
+            m_nodeDescription = new NoDescriptionProxy(getClass());
         }
-        InputStream propInStream = getPropertiesInputStream();
 
-        // fall back node name if no xml file available or invalid.
-        String defaultNodeName = getClass().getSimpleName();
-        if (defaultNodeName.endsWith("NodeFactory")) {
-            defaultNodeName = defaultNodeName.substring(0, defaultNodeName.length() - "NodeFactory".length());
-        } else if (defaultNodeName.endsWith("Factory")) {
-            defaultNodeName = defaultNodeName.substring(0, defaultNodeName.length() - "Factory".length());
-        }
-        URL icon = null;
-        NodeType type = null;
-        Element knimeNode = null;
-        String nodeName = defaultNodeName;
-        if (propInStream == null) {
-            m_logger.error("Could not find XML description " + "file for node '" + getClass().getName() + "'");
-        } else {
-            Document doc = null;
-            try {
-                synchronized (parser) {
-                    parser.setErrorHandler(new DefaultHandler() {
-                        @Override
-                        public void error(final SAXParseException ex) throws SAXException {
-                            m_logger.coding("XML node file does not conform " + "with DTD: " + ex.getMessage(), ex);
-                        }
-                    });
-                    doc = parser.parse(new InputSource(propInStream));
-                }
-                knimeNode = doc.getDocumentElement();
-                icon = readIconFromXML(knimeNode);
+        m_icon = resolveIcon(m_nodeDescription.getIconPath());
 
-                try {
-                    type = NodeType.valueOf(knimeNode.getAttribute("type"));
-                } catch (IllegalArgumentException ex) {
-                    m_logger.coding("Unknown node type '" + knimeNode.getAttribute("type") + "'");
-                    type = NodeType.Unknown;
-                }
-
-                nodeName = readNameFromXML(knimeNode);
-                if (nodeName == null || nodeName.length() == 0) {
-                    m_logger.coding("Unable to read \"name\" tag from XML");
-                    nodeName = defaultNodeName;
-                }
-                String shortDescription = readShortDescriptionFromXML(
-                        knimeNode);
-                if (shortDescription == null
-                        || shortDescription.length() == 0) {
-                    m_logger.coding("Unable to read \"shortDescription\" " + "tag from XML");
-                }
-                readPortsFromXML(knimeNode);
-                readViewsFromXML(knimeNode);
-                // DO NOT call "checkConsistency(createNodeModel());" here as
-                // that would call an abstract method from within the
-                // constructor - local fields in the derived NodeFactory have
-                // not been initialized
-
-                if ("true".equals(knimeNode.getAttribute("deprecated"))
-                        && !nodeName.matches("^.+\\s+\\(?[dD]eprecated\\)?$")) {
-                    nodeName += " (deprecated)";
-                }
-            } catch (Exception ex) {
-                m_logger.coding(ex.getMessage(), ex);
-                knimeNode = null;
-                icon = null;
-                nodeName = defaultNodeName;
-                type = NodeType.Unknown;
-            }
-        }
-        m_knimeNode = knimeNode;
-        m_icon = icon;
-        m_nodeName = nodeName;
-        m_type = type;
+        // DO NOT call "checkConsistency(createNodeModel());" here as
+        // that would call an abstract method from within the
+        // constructor - local fields in the derived NodeFactory have
+        // not been initialized
 
         addBundleInformation();
-        addLoadedFactory(this.getClass());
+        addLoadedFactory(getClass());
         m_initialized = true;
     }
 
@@ -345,7 +226,9 @@ public abstract class NodeFactory<T extends NodeModel> {
      *
      * @return the input stream to read the properties from
      * @since 2.6
+     * @deprecated this method is not used any more, use {@link #createNodeDescription()} instead
      */
+    @Deprecated
     protected InputStream getPropertiesInputStream() {
         ClassLoader loader = getClass().getClassLoader();
         InputStream propInStream;
@@ -359,50 +242,47 @@ public abstract class NodeFactory<T extends NodeModel> {
             propInStream = loader.getResourceAsStream(path);
             clazz = clazz.getSuperclass();
         } while ((propInStream == null) && (clazz != Object.class));
-        LOGGER.debug("Parsing \"" + path + "\" for node properties.");
+        m_logger.debug("Parsing \"" + path + "\" for node properties.");
         return propInStream;
     }
 
-    private static final Pattern ICON_PATH_PATTERN =
-            Pattern.compile("[^\\./]+/\\.\\./");
-
-
+    /**
+     * Adds information about the bundle in which this node resides to the XML description tree. Note that the bundle
+     * information does not have a namespace!
+     */
     private void addBundleInformation() {
-        if (m_knimeNode == null) {
-            // TODO create substitute document?
-            return;
-        }
+        Element root = m_nodeDescription.getXMLDescription();
+
         Bundle bundle = OSGIHelper.getBundle(this.getClass());
-        if (bundle != null) { // for running in non-osgi context
+        if ((root != null) && (bundle != null)) { // for running in non-osgi context
             Dictionary<String, String> headers = bundle.getHeaders();
-            Document doc = m_knimeNode.getOwnerDocument();
+            Document doc = root.getOwnerDocument();
             Element bundleElement = doc.createElement("osgi-info");
             bundleElement.setAttribute("bundle-symbolic-name", bundle.getSymbolicName());
             bundleElement.setAttribute("bundle-name", headers.get("Bundle-Name"));
             bundleElement.setAttribute("bundle-vendor", headers.get("Bundle-Vendor"));
             bundleElement.setAttribute("factory-package", this.getClass().getPackage().getName());
-            m_knimeNode.appendChild(bundleElement);
+            root.appendChild(bundleElement);
         }
     }
 
 
 
     /**
-     * Reads the icon tag from the xml and returns the icon. If not available or
-     * the icon is not readable, an default icon is returned. This method is
-     * called from the constructor.
+     * Resolves the icon using the classloader. If not available or
+     * the icon is not readable, a default icon is returned.
      * <p>
-     * This method does not return null as the icon is optional, i.e. it doesn't
+     * This method does not return <code>null</code> as the icon is optional, i.e. it doesn't
      * hurt if it is missing.
      *
-     * @return The icon as given in the xml attribute <i>icon</i>.
+     * @return the icon as given in the xml attribute <i>icon</i>
      */
-    private URL readIconFromXML(final Element knimeNode) {
-        String imagePath = knimeNode.getAttribute("icon");
-        if (imagePath.trim().length() == 0) {
+    private URL resolveIcon(final String path) {
+        if ((path == null) || path.trim().isEmpty()) {
             return getDefaultIcon();
         }
 
+        String imagePath = path;
         imagePath = imagePath.replaceAll("//", "/");
         if (imagePath.startsWith("./")) {
             imagePath = imagePath.substring("./".length());
@@ -422,44 +302,6 @@ public abstract class NodeFactory<T extends NodeModel> {
         return iconURL;
     }
 
-    /**
-     * Read the name of the node from the xml file. If the tag is not available,
-     * returns <code>null</code>. This method is called from the constructor.
-     *
-     * @return The name as defined in the xml or null if that fails.
-     */
-    private String readNameFromXML(final Element knimeNode) {
-        Node w3cNode = knimeNode.getElementsByTagName("name").item(0);
-        if (w3cNode == null) {
-            return null;
-        }
-        Node w3cNodeChild = w3cNode.getFirstChild();
-        if (w3cNodeChild == null) {
-            return null;
-        }
-        return w3cNodeChild.getNodeValue();
-
-    }
-
-    /**
-     * Read the short description of the node from the xml file. If the tag is
-     * not available, returns <code>null</code>. This method is called from
-     * the constructor.
-     *
-     * @return The short description as defined in the xml or null if that
-     *         fails.
-     */
-    private String readShortDescriptionFromXML(final Element knimeNode) {
-        Node w3cNode = knimeNode.getElementsByTagName("shortDescription").item(0);
-        if (w3cNode == null) {
-            return null;
-        }
-        Node w3cNodeChild = w3cNode.getFirstChild();
-        if (w3cNodeChild == null) {
-            return null;
-        }
-        return w3cNodeChild.getNodeValue();
-    }
 
     /**
      * The XML description can be used with the
@@ -469,136 +311,12 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @return XML description of this node
      */
     public Element getXMLDescription() {
-        return m_knimeNode;
+        return m_nodeDescription.getXMLDescription();
     }
+
 
     /**
-     * Read the port descriptions of the node from the xml file. If an error
-     * occurs (no such element in the xml, parsing exception ...), a coding
-     * problem is reported to the node logger.
-     */
-    private void readPortsFromXML(final Element knimeNode) {
-        Node w3cNode = knimeNode.getElementsByTagName("ports").item(0);
-        if (w3cNode == null) {
-            return;
-        }
-        NodeList w3cNodeChildren = w3cNode.getChildNodes();
-        for (int i = 0; i < w3cNodeChildren.getLength(); i++) {
-            if (!(w3cNodeChildren.item(i) instanceof Element)) {
-                continue;
-            }
-            Element port = (Element)w3cNodeChildren.item(i);
-            // attempt to read index - this attribute will be used in the
-            // addToPortDescription method, make it fail fast here!
-            String indexString = port.getAttribute("index");
-            try {
-                int index = Integer.parseInt(indexString);
-                if (index < 0) {
-                    throw new NumberFormatException();
-                }
-            } catch (NumberFormatException nfe) {
-                m_logger.coding("Illegal index \"" + indexString + "\" in port description");
-                continue;
-            }
-            addToPort(port);
-        }
-
-        // look for null descriptions and print error if found
-        int nullIdx = m_inPorts.indexOf(null);
-        if (nullIdx >= 0) {
-            m_logger.coding("No description for input port " + nullIdx + ".");
-        }
-
-        nullIdx = m_outPorts.indexOf(null);
-        if (nullIdx >= 0) {
-            m_logger.coding("No description for output port " + nullIdx + ".");
-        }
-    }
-
-    /**
-     * Read the view descriptions of the node from the xml file. If an error
-     * occurs (no such element in the xml, parsing exception ...), a coding
-     * problem is reported to the node logger.
-     */
-    private void readViewsFromXML(final Element knimeNode) {
-        NodeList iaViews = knimeNode.getElementsByTagName("interactiveView");
-        if (iaViews.getLength() > 0) {
-            // note that there is at most one interactive view
-            m_interactiveView = (Element)iaViews.item(0);
-        }
-
-        Node w3cNode = knimeNode.getElementsByTagName("views").item(0);
-        if (w3cNode == null) {
-            return;
-        }
-        m_views = new ArrayList<Element>(4);
-        NodeList allViews = ((Element)w3cNode).getElementsByTagName("view");
-        for (int i = 0; i < allViews.getLength(); i++) {
-            Element view = (Element)allViews.item(i);
-            // attempt to read index
-            String indexString = view.getAttribute("index");
-            int index;
-            try {
-                index = Integer.parseInt(indexString);
-                if (index < 0) {
-                    throw new NumberFormatException();
-                }
-            } catch (NumberFormatException nfe) {
-                m_logger.coding("Invalid index \"" + indexString + "\" for view description.");
-                continue;
-            }
-            // make sure the description fits!
-            for (int k = m_views.size(); k <= index; k++) {
-                m_views.add(null);
-            }
-            if (m_views.get(index) != null) {
-                m_logger.coding("Duplicate view description in " + "XML for index " + index + ".");
-            }
-            m_views.set(index, view);
-        }
-    }
-
-    private void addToPort(final Element port) {
-        String elemName = port.getNodeName();
-        if ("modelIn".equals(elemName) || "modelOut".equals(elemName)
-                || "predParamsIn".equals(elemName) || "predParamsOut".equals(elemName)) {
-            throw new IllegalArgumentException(elemName + " is not supported "
-                    + " inside the node factory xml file any more. "
-                    + "It has been replaced by portIn/portOut. "
-                    + "Also update the publicID of the factory xml to 2.0.");
-        }
-
-        final List<PortDescription> portList;
-        if ("inPort".equals(elemName) || "dataIn".equals(elemName)) {
-            portList = m_inPorts;
-        } else {
-            portList = m_outPorts;
-        }
-
-        int index = Integer.parseInt(port.getAttribute("index"));
-        for (int k = portList.size(); k <= index; k++) {
-            portList.add(null);
-        }
-        if (portList.get(index) != null) {
-            m_logger.coding("Duplicate port description in " + "XML for index " + index + ".");
-        }
-
-        String portName = port.getAttribute("name");
-
-        Node w3cNode = port.getFirstChild();
-        if (w3cNode == null) {
-            return;
-        }
-        String value = w3cNode.getNodeValue();
-        if (value == null || value.length() == 0) {
-            return;
-        }
-        String portDescription = value.trim().replaceAll("(?:\\s+|\n)", " ");
-
-        portList.set(index, new PortDescription(portDescription, portName));
-    }
-
-    /** Loads additional settings to this instance that were saved using
+     * Loads additional settings to this instance that were saved using
      * the {@link #saveAdditionalFactorySettings(ConfigWO)}.
      *
      * <p>See {@link #saveAdditionalFactorySettings(ConfigWO)} for details on
@@ -639,41 +357,32 @@ public abstract class NodeFactory<T extends NodeModel> {
     /**
      * Returns the name of this node.
      *
-     * @return the node's name.
+     * @return the node's name
      */
     public final String getNodeName() {
-        return m_nodeName;
+        return m_nodeDescription.getNodeName();
     }
 
     /**
      * Returns a name for an input port.
      *
      * @param index the index of the input port, starting at 0
-     * @return an input port description
+     * @return an input port name
      */
     public String getInportName(final int index) {
-        if ((index >= m_inPorts.size()) || (m_inPorts.get(index) == null)) {
-            // can happen if no XML file for the node exists
-            return "No name available";
-        } else {
-            return m_inPorts.get(index).m_name;
-
-        }
+        String name = m_nodeDescription.getInportName(index);
+        return (name == null) ? "No name available" : name;
     }
 
     /**
      * Returns a name for an output port.
      *
      * @param index the index of the output port, starting at 0
-     * @return an output port description
+     * @return an output port name
      */
     public String getOutportName(final int index) {
-        if ((index >= m_outPorts.size()) || (m_outPorts.get(index) == null)) {
-            // can happen if no XML file for the node exists
-            return "No name available";
-        } else {
-            return m_outPorts.get(index).m_name;
-        }
+        String name = m_nodeDescription.getOutportName(index);
+        return (name == null) ? "No name available" : name;
     }
 
     /**
@@ -683,12 +392,8 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @return an input port description
      */
     public final String getInportDescription(final int index) {
-        if ((index >= m_inPorts.size()) || (m_inPorts.get(index) == null)) {
-            // can happen if no XML file for the node exists
-            return "No description available";
-        } else {
-            return m_inPorts.get(index).m_description;
-        }
+        String description = m_nodeDescription.getInportDescription(index);
+        return (description == null) ? "No description available" : description;
     }
 
     /**
@@ -698,12 +403,8 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @return an output port description
      */
     public final String getOutportDescription(final int index) {
-        if ((index >= m_outPorts.size()) || (m_outPorts.get(index) == null)) {
-            // can happen if no XML file for the node exists
-            return "No description available";
-        } else {
-            return m_outPorts.get(index).m_description;
-        }
+        String description = m_nodeDescription.getOutportDescription(index);
+        return (description == null) ? "No description available" : description;
     }
 
     /**
@@ -713,35 +414,33 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @return a view description
      */
     protected final String getViewDescription(final int index) {
-        Element e;
-        if ((m_views == null) || (index >= m_views.size()) || ((e = m_views.get(index)) == null)) {
-            return "No description available";
-        } else {
-            return e.getFirstChild().getNodeValue().trim().replaceAll(
-                    "(?:\\s+|\n)", " ");
-        }
+        String description = m_nodeDescription.getViewDescription(index);
+        return (description == null) ? "No description available" : description.replaceAll("(?:\\s+|\n)", "");
     }
 
     /**
      * Creates and returns a new instance of the node's corresponding model.
      *
-     * @return A new NodeModel for this node. Never <code>null</code>!
+     * @return A new {@link NodeModel} for this node. Never <code>null</code>!
      */
     public abstract T createNodeModel();
 
     /**
-     * @param context
-     * @return new NodeModel
+     * Creates a new node model using a specific context. This method must be overriden by nodes that make use
+     * of contexts.
+     *
+     * @param context the node context
+     * @return a new {@link NodeModel}
      */
     protected T createNodeModel(final NodeCreationContext context) {
         // normally correct implementations overwrite this
-        LOGGER.coding("If you register a node to be created in a certain"
+        m_logger.coding("If you register a node to be created in a certain"
                 + " context, you should extend ContextAwareNodeFactory");
         return createNodeModel();
     }
 
     /**
-     * Access method for <code>createNodeModel()</code>. This method will
+     * Access method for {@link #createNodeModel()}. This method will
      * also do sanity checks for the correct labeling of the port description:
      * The port count (in, out) is only available in the
      * NodeModel. The first time, this method is called, the port count is
@@ -750,7 +449,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      * will be written and the full description of the node is adapted such that
      * the user (preferably the implementor) immediately sees the problem.
      *
-     * @return The model as from createNodeModel()
+     * @return the model as from createNodeModel()
      */
     final T callCreateNodeModel(final NodeCreationContext context) {
         T result;
@@ -764,7 +463,7 @@ public abstract class NodeFactory<T extends NodeModel> {
     }
 
     /**
-     * Returns the number of possible views or 0 if no view is available.
+     * Returns the number of views or 0 if no view is available.
      *
      * @return number of views available for this node
      * @see #createNodeView(int,NodeModel)
@@ -772,18 +471,14 @@ public abstract class NodeFactory<T extends NodeModel> {
     protected abstract int getNrNodeViews();
 
     /**
-     * Returns the node name as view name, the index is not considered.
+     * Returns the name for this node's view at the given index.
      *
-     * @param index The view index,
-     * @return A node view name.
+     * @param index the view index, starting at 0
+     * @return the view's name
      */
     protected final String getNodeViewName(final int index) {
-        Element e;
-        if ((m_views == null) || (index >= m_views.size()) || ((e = m_views.get(index)) == null)) {
-            return "NoName";
-        } else {
-            return e.getAttribute("name");
-        }
+        String name = m_nodeDescription.getViewName(index);
+        return (name == null) ? "NoName" : name;
     }
 
     /**
@@ -841,26 +536,6 @@ public abstract class NodeFactory<T extends NodeModel> {
      */
     protected abstract NodeDialogPane createNodeDialogPane();
 
-//    /**
-//     * Create a configuration template for this node. Subclasses will overwrite
-//     * this method (added in v2.4, therefore not abstract!), register all
-//     * configuration parameters in the argument {@link ConfigRegistry} and
-//     * initialize a {@link NodeConfiguration} object with the pre-setup config
-//     * registry.
-//     *
-//     * @param registry The registry object to which client code needs to add
-//     *        valid parameters. These parameters (and only these) can later
-//     *        be accessed in the derived {@link NodeModel} implementation by
-//     *        calling {@link NodeModel#getNodeConfiguration()} and then reading
-//     *        the assigned values by one of the get methods.
-//     * @return A new {@link NodeConfiguration} object based on the argument
-//     *         registry, which has all node configuration parameters registered.
-//     */
-//    // to be made protected
-//    NodeConfiguration createNodeConfiguration(
-//            final ConfigRegistry registry) {
-//        return null;
-//    }
 
     /**
      * Returns the icon for the node.
@@ -876,30 +551,33 @@ public abstract class NodeFactory<T extends NodeModel> {
      * sanity checks here, for instance: Do the number of ports in the xml match
      * with the port count in the node model...
      *
-     * @param m The NodeModel to check against.
+     * @param m the NodeModel to check against
      */
     private void checkConsistency(final NodeModel m) {
-        if ((getNrNodeViews() > 0) && ((m_views == null) || getNrNodeViews() != m_views.size())) {
+        if (m_nodeDescription instanceof NoDescriptionProxy) {
+            // no description available at all; this has already been reported
+            return;
+        }
+
+        if (getNrNodeViews() != m_nodeDescription.getViewCount()) {
             m_logger.coding("Missing or surplus view description");
         }
 
-        for (int i = 0; i < m_inPorts.size(); i++) {
-            if (m_inPorts.get(i) == null) {
+        for (int i = 0; i < m.getNrInPorts(); i++) {
+            if (m_nodeDescription.getInportName(i) == null) {
                 m_logger.coding("Missing description for input port " + i);
             }
         }
 
-        for (int i = 0; i < m_outPorts.size(); i++) {
-            if (m_outPorts.get(i) == null) {
+        for (int i = 0; i < m.getNrOutPorts(); i++) {
+            if (m_nodeDescription.getOutportName(i) == null) {
                 m_logger.coding("Missing description for output port " + i);
             }
         }
 
-        if (m_views != null) {
-            for (int i = 0; i < m_views.size(); i++) {
-                if (m_views.get(i) == null) {
-                    m_logger.coding("Missing description for view " + i);
-                }
+        for (int i = 0; i < m_nodeDescription.getViewCount(); i++) {
+            if (m_nodeDescription.getViewDescription(i) == null) {
+                m_logger.coding("Missing description for view " + i);
             }
         }
     }
@@ -910,7 +588,7 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @return the node's type
      */
     public NodeType getType() {
-        return m_type;
+        return m_nodeDescription.getType();
     }
 
     /**
@@ -953,11 +631,6 @@ public abstract class NodeFactory<T extends NodeModel> {
      * @since 2.8
      */
     public String getInteractiveViewName() {
-        if (m_interactiveView != null) {
-            return m_interactiveView.getAttribute("name");
-        } else {
-            return null;
-        }
+        return m_nodeDescription.getInteractiveViewName();
     }
-
 }

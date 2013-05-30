@@ -19,9 +19,11 @@
    * website: www.knime.org
    * email: contact@knime.org
   ===============================================================================
+  
+  This XSD describes node description introduced with KNIME 2.8.
 -->
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
-        xmlns="http://knime.org/node2012" targetNamespace="http://knime.org/node2012"
+        xmlns="http://knime.org/node/v2.8" targetNamespace="http://knime.org/node/v2.8"
         elementFormDefault="qualified">
   <xs:element name="knimeNode">
     <xs:complexType>
@@ -49,19 +51,12 @@
         		<xs:enumeration value="QuickForm" />
         		<xs:enumeration value="Other" />
         		<xs:enumeration value="Unknown" />
-        		<xs:enumeration value="ScopeStart"></xs:enumeration>
-        		<xs:enumeration value="ScopeEnd"></xs:enumeration>
+        		<xs:enumeration value="ScopeStart"/>
+        		<xs:enumeration value="ScopeEnd"/>
         	</xs:restriction>
         </xs:simpleType>
       </xs:attribute>
-      <xs:attribute name="deprecated" default="false">
-        <xs:simpleType>
-          <xs:restriction base="xs:token">
-            <xs:enumeration value="true"/>
-            <xs:enumeration value="false"/>
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:attribute>
+      <xs:attribute name="deprecated" default="false" type="xs:boolean" />
     </xs:complexType>
   </xs:element>
   <xs:element name="name" type="xs:string"/>
@@ -117,14 +112,7 @@
         <xs:element ref="sup"/>
        </xs:choice>
       <xs:attribute name="name" type="xs:string" use="required"/>
-      <xs:attribute name="optional" default="false">
-        <xs:simpleType>
-          <xs:restriction base="xs:token">
-            <xs:enumeration value="true"/>
-            <xs:enumeration value="false"/>
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:attribute>
+      <xs:attribute name="optional" default="false" type="xs:boolean" />
     </xs:complexType>
   </xs:element>
   <xs:element name="tab">
@@ -231,6 +219,14 @@
         <xs:element minOccurs="0" maxOccurs="unbounded" ref="outPort"/>
       </xs:sequence>
     </xs:complexType>
+    <xs:unique name="uniqueInportIndex">
+      <xs:selector xpath="inPort"/>
+      <xs:field    xpath="@index"/>
+    </xs:unique>
+    <xs:unique name="uniqueOutportIndex">
+      <xs:selector xpath="outPort"/>
+      <xs:field    xpath="@index"/>
+    </xs:unique>    
   </xs:element>
   <xs:element name="inPort">
     <xs:complexType mixed="true">
@@ -243,16 +239,9 @@
         <xs:element ref="ul"/>
         <xs:element ref="ol"/>
       </xs:choice>
-      <xs:attribute name="index" type="xs:int" use="required"/>
+      <xs:attribute name="index" type="xs:nonNegativeInteger" use="required"/>
       <xs:attribute name="name" type="xs:string" use="required"/>
-      <xs:attribute name="optional" default="false">
-        <xs:simpleType>
-          <xs:restriction base="xs:token">
-            <xs:enumeration value="true"/>
-            <xs:enumeration value="false"/>
-          </xs:restriction>
-        </xs:simpleType>
-      </xs:attribute>
+      <xs:attribute name="optional" default="false" type="xs:boolean" />
     </xs:complexType>
   </xs:element>
   <xs:element name="outPort">
@@ -266,7 +255,7 @@
         <xs:element ref="ul"/>
         <xs:element ref="ol"/>
       </xs:choice>
-      <xs:attribute name="index" type="xs:int" use="required"/>
+      <xs:attribute name="index" type="xs:nonNegativeInteger" use="required"/>
       <xs:attribute name="name" type="xs:string" use="required"/>
     </xs:complexType>
   </xs:element>
@@ -276,45 +265,37 @@
         <xs:element maxOccurs="unbounded" ref="view"/>
       </xs:sequence>
     </xs:complexType>
+    <xs:unique name="uniqueIndex">
+      <xs:selector xpath="view"/>
+      <xs:field    xpath="@index"/>
+    </xs:unique>
   </xs:element>
   <xs:element name="view">
     <xs:complexType mixed="true">
-      <xs:choice minOccurs="0" maxOccurs="unbounded">
-        <xs:element ref="p"/>
-        <xs:element ref="h"/>
-        <xs:element ref="br"/>
-        <xs:element ref="b"/>
-        <xs:element ref="i"/>
-        <xs:element ref="u"/>
-        <xs:element ref="tt"/>
-        <xs:element ref="a"/>
-        <xs:element ref="ul"/>
-        <xs:element ref="ol"/>
-        <xs:element ref="pre"/>
-        <xs:element ref="sub"/>
-        <xs:element ref="sup"/>
-      </xs:choice>
-      <xs:attribute name="index" type="xs:int"  use="required"/>
-      <xs:attribute name="name" type="xs:string" use="required"/>
+      <xs:complexContent>
+        <xs:extension base="AbstractView">
+          <xs:attribute name="index" type="xs:nonNegativeInteger"  use="required"/>
+        </xs:extension>
+      </xs:complexContent>
     </xs:complexType>
   </xs:element>
 
-    <xs:complexType name="AbstractView">
-      <xs:choice minOccurs="0" maxOccurs="unbounded">
-        <xs:element ref="p"/>
-        <xs:element ref="h"/>
-        <xs:element ref="br"/>
-        <xs:element ref="b"/>
-        <xs:element ref="i"/>
-        <xs:element ref="u"/>
-        <xs:element ref="tt"/>
-        <xs:element ref="a"/>
-        <xs:element ref="ul"/>
-        <xs:element ref="ol"/>
-        <xs:element ref="pre"/>
-        <xs:element ref="sub"/>
-        <xs:element ref="sup"/>
-      </xs:choice>
-      <xs:attribute name="name" type="xs:string" use="required"/>
-    </xs:complexType>
+  <xs:complexType name="AbstractView" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element ref="p"/>
+      <xs:element ref="h"/>
+      <xs:element ref="br"/>
+      <xs:element ref="b"/>
+      <xs:element ref="i"/>
+      <xs:element ref="u"/>
+      <xs:element ref="tt"/>
+      <xs:element ref="a"/>
+      <xs:element ref="ul"/>
+      <xs:element ref="ol"/>
+      <xs:element ref="pre"/>
+      <xs:element ref="sub"/>
+      <xs:element ref="sup"/>
+    </xs:choice>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+  </xs:complexType>
 </xs:schema>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 1.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="icon.png" type="Other" deprecated="true">
+    <name>My own name</name>
+
+    <shortDescription>My own short description</shortDescription>
+
+    <fullDescription>
+        <intro>My own intro</intro>
+        <option name="First option name">First option description</option>
+        <option name="Second option name">Second option description</option>
+    </fullDescription>
+
+    <ports>
+        <dataIn index="0" name="First input table name">First input table description</dataIn>
+        <dataIn index="1" name="Second input table name">Second input table description</dataIn>
+        <dataIn index="2" name="Third input table name">Third input table description</dataIn>
+        <dataOut index="0" name="First output table name">First output table description</dataOut>
+        <dataOut index="1" name="Second output table name">Second output table description</dataOut>
+        <dataOut index="2" name="Third output table name">Third output table description</dataOut>
+        <modelIn name="First input model name" index="0">First input model description</modelIn>
+        <modelIn name="Second input model name" index="1">Second input model description</modelIn>
+        <modelIn name="Third input model name" index="2">Third input model description</modelIn>
+        <modelOut name="First output model name" index="0">First output model description</modelOut>
+        <modelOut name="Second output model name" index="1">Second output model description</modelOut>
+        <modelOut name="Third output model name" index="2">Third output model description</modelOut>
+    </ports>
+
+    <views>
+        <view index="0" name="First view name">First view description</view>
+        <view index="1" name="Second view name">Second view description</view>
+        <view index="2" name="Third view name">Third view description</view>
+    </views>
+</knimeNode>
+
