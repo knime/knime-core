@@ -152,7 +152,7 @@ public interface ByteVectorValue extends DataValue {
                             final DataValue v2) {
                         long c1 = ((ByteVectorValue)v1).cardinality();
                         long c2 = ((ByteVectorValue)v2).cardinality();
-                        return Long.compare(c1, c2);
+                        return (c1 < c2) ? -1 : ((c1 == c2) ? 0 : 1);
                     }
                 };
 
