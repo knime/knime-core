@@ -59,9 +59,13 @@ import java.util.Map;
 import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.eclipse.ui.forms.widgets.ExpandableComposite;
+import org.eclipse.ui.forms.widgets.Section;
 import org.eclipse.ui.preferences.ScopedPreferenceStore;
 import org.knime.core.data.ExtensibleUtilityFactory;
 import org.knime.core.data.renderer.DataValueRendererFactory;
@@ -133,8 +137,11 @@ public class PreferredRendererPreferencePage extends FieldEditorPreferencePage i
         Collections.sort(groupNames);
 
         for (String group : groupNames) {
-            LabelField separator = new LabelField(getFieldEditorParent(), group);
-            addField(separator);
+            Section sectionExpander =
+                new Section(getFieldEditorParent(), ExpandableComposite.TWISTIE | ExpandableComposite.CLIENT_INDENT);
+            sectionExpander.setText(group);
+            Composite section = new Composite(sectionExpander, SWT.NONE);
+            sectionExpander.setClient(section);
 
             List<ExtensibleUtilityFactory> utilityFactories = groupedUtilityFactories.get(group);
             Collections.sort(utilityFactories, utilityFactoryComparator);
@@ -149,12 +156,14 @@ public class PreferredRendererPreferencePage extends FieldEditorPreferencePage i
                     comboEntries[i++] = new String[]{rendFac.getDescription(), rendFac.getId()};
                 }
 
-                Composite parent = getFieldEditorParent();
                 ComboFieldEditor c =
-                    new ComboFieldEditor(utilFac.getPreferenceKey(), utilFac.getName(), comboEntries, parent);
-                c.setEnabled(comboEntries.length > 1, parent);
+                    new ComboFieldEditor(utilFac.getPreferenceKey(), utilFac.getName(), comboEntries, section);
+                c.setEnabled(comboEntries.length > 1, section);
                 addField(c);
             }
+
+            // add a dummy control which occupies the second column so that the next expander is in a new row
+            new Label(getFieldEditorParent(), SWT.NONE);
         }
     }
 
