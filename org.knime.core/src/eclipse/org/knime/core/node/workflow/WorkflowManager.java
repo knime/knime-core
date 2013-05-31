@@ -417,18 +417,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public void removeProject(final NodeID id) {
         synchronized (m_workflowMutex) {
-        NodeContainer nc = m_workflow.getNode(id);
-        if (nc instanceof WorkflowManager) {
-            WorkflowManager wfm = (WorkflowManager)nc;
-            if ((wfm.getNrInPorts() == 0) && (wfm.getNrOutPorts() == 0)) {
-                // looks like a project, remove it
+            NodeContainer nc = getNodeContainer(id);
+            if (nc instanceof WorkflowManager && ((WorkflowManager)nc).isProject()) {
                 removeNode(id);
-                return;
+            } else {
+                throw new IllegalArgumentException("Node: " + id + " is not a project!");
             }
         }
-        }
-        throw new IllegalArgumentException(
-                "Node: " + id + " is not a project!");
     }
 
     /** Uses given Factory to create a new node and then adds new node to the
