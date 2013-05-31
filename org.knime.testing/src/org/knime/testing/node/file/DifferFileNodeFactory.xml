@@ -24,5 +24,7 @@
 	</fullDescription>
 	
 	<ports>
+    <inPort name="File name variable" index="0">Flow variable with the file name that should be compared to the
+        reference</inPort>
 	</ports>	
 </knimeNode>
