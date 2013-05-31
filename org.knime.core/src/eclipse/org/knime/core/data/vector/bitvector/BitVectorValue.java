@@ -170,7 +170,7 @@ public interface BitVectorValue extends DataValue {
                             final DataValue v2) {
                         long c1 = ((BitVectorValue)v1).cardinality();
                         long c2 = ((BitVectorValue)v2).cardinality();
-                        return Long.compare(c1, c2);
+                        return (c1 < c2) ? -1 : ((c1 == c2) ? 0 : 1);
                     }
                 };
 
