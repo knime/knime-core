@@ -122,8 +122,8 @@ final class NodeDescription13Proxy extends NodeDescription {
         options.setErrorListener(errors);
         boolean valid = m_document.validate(options);
         if (!valid) {
-            logger.coding("Node description of " + m_document.getKnimeNode().getName()
-                + " does not conform to the Schema. Violations follow.");
+            logger.coding("Node description of '" + m_document.getKnimeNode().getName()
+                + "' does not conform to the Schema. Violations follow.");
             for (XmlError err : errors) {
                 logger.coding(err.toString());
             }
