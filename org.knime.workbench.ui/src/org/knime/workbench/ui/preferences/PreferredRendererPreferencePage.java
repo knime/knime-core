@@ -167,22 +167,6 @@ public class PreferredRendererPreferencePage extends FieldEditorPreferencePage i
         }
     }
 
-//    private Composite createSection(final String title) {
-//        ExpandableComposite section =
-//            new ExpandableComposite(getFieldEditorParent(), ExpandableComposite.TWISTIE
-//                | ExpandableComposite.CLIENT_INDENT);
-//        section.setBackground(null);
-//        section.setText(title);
-//        Composite composite = new Composite(section, SWT.NONE);
-//        composite.setLayout(new GridLayout(2, false));
-//        GridData data = new GridData();
-//        data.horizontalAlignment = SWT.FILL;
-//        data.grabExcessHorizontalSpace = true;
-//        composite.setLayoutData(data);
-//        section.setClient(composite);
-//        return composite;
-//    }
-
     /**
      * {@inheritDoc}
      */
