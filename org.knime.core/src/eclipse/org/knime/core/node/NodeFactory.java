@@ -441,7 +441,7 @@ public abstract class NodeFactory<T extends NodeModel> {
     }
 
     /**
-     * Access method for {@link #createNodeModel()}. This method will
+     * Access method for {@link #createNodeModel()}. If assertions are enabled, this method will
      * also do sanity checks for the correct labeling of the port description:
      * The port count (in, out) is only available in the
      * NodeModel. The first time, this method is called, the port count is
@@ -459,7 +459,9 @@ public abstract class NodeFactory<T extends NodeModel> {
         } else {
             result = createNodeModel(context);
         }
-        checkConsistency(result);
+        if (KNIMEConstants.ASSERTIONS_ENABLED) {
+            checkConsistency(result);
+        }
         return result;
     }
 
