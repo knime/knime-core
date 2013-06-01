@@ -23,9 +23,15 @@
  */
 package org.knime.testing.node.runtime;
 
+import java.io.IOException;
+
+import org.apache.xmlbeans.XmlException;
+import org.knime.core.node.NoDescriptionProxy;
+import org.knime.core.node.NodeDescription;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
+import org.xml.sax.SAXException;
 
 /**
  * NodeFactory that creates a node whose implementation is defined as inline
@@ -74,4 +80,11 @@ public class RuntimeNodeFactory extends NodeFactory<RuntimeNodeModel> {
         return false;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected NodeDescription createNodeDescription() throws SAXException, IOException, XmlException {
+        return new NoDescriptionProxy(getClass());
+    }
 }
