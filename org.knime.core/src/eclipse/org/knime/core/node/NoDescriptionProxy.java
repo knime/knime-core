@@ -60,7 +60,7 @@ import org.w3c.dom.Element;
  * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
  * @since 2.8
  */
-final class NoDescriptionProxy extends NodeDescription {
+public final class NoDescriptionProxy extends NodeDescription {
     private final String m_nodeName;
 
     /**
@@ -68,7 +68,7 @@ final class NoDescriptionProxy extends NodeDescription {
      *
      * @param factoryClass the node factory's class
      */
-    public NoDescriptionProxy(final Class<? extends NodeFactory> factoryClass) {
+    public NoDescriptionProxy(@SuppressWarnings("rawtypes") final Class<? extends NodeFactory> factoryClass) {
         m_nodeName = factoryClass.getSimpleName().replaceFirst("(?:[nN]ode)?[fF]actory$", "");
     }
 

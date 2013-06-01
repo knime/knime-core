@@ -50,6 +50,7 @@
 package org.knime.core.node;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -125,10 +126,29 @@ class NodeDescriptionParser {
     public NodeDescription parseDescription(
         @SuppressWarnings("rawtypes") final Class<? extends NodeFactory> factoryClass) throws SAXException,
         IOException, XmlException {
+
         String descriptionFile = factoryClass.getSimpleName() + ".xml";
+        InputStream inStream = factoryClass.getResourceAsStream(descriptionFile);
+        if (inStream == null) {
+            // could be a node factory hierarchy, check superclasses for node descriptions
+            Class<?> superClass = factoryClass.getSuperclass();
+            while ((inStream == null) && !superClass.equals(NodeFactory.class)) {
+                descriptionFile = superClass.getSimpleName() + ".xml";
+                inStream = superClass.getResourceAsStream(descriptionFile);
+            }
+
+            if (inStream == null) {
+                // OK, this is it, giving up
+                NodeLogger.getLogger(NodeDescriptionParser.class).coding(
+                    "No node description file found for " + factoryClass.getName());
+                return new NoDescriptionProxy(factoryClass);
+            }
+        }
+
+
         Document doc;
         synchronized (m_parser) {
-            doc = m_parser.parse(factoryClass.getResourceAsStream(descriptionFile));
+            doc = m_parser.parse(inStream);
         }
 
         String namespaceUri = doc.getDocumentElement().getNamespaceURI();
