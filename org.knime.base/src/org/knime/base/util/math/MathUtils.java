@@ -283,7 +283,7 @@ public final class MathUtils {
      * @return Vector resulting from subtraction
      * @since 2.8
      */
-    public static double[] substract(final double[] vector1,
+    public static double[] subtract(final double[] vector1,
                                       final double[] vector2) {
         // set the lengths of both vectors
         int n1 = vector1.length;
@@ -291,7 +291,7 @@ public final class MathUtils {
 
         // check compatibility
         if (n1 != n2) {
-            throw new IllegalArgumentException("Incompatible vectors for substraction.");
+            throw new IllegalArgumentException("Incompatible vectors for subtraction.");
         }
 
         double[] result = new double[n1];
