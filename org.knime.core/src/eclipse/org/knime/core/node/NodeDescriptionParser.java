@@ -132,9 +132,10 @@ class NodeDescriptionParser {
         if (inStream == null) {
             // could be a node factory hierarchy, check superclasses for node descriptions
             Class<?> superClass = factoryClass.getSuperclass();
-            while ((inStream == null) && !superClass.equals(Object.class)) {
+            while ((inStream == null) && (superClass != null)) {
                 descriptionFile = superClass.getSimpleName() + ".xml";
                 inStream = superClass.getResourceAsStream(descriptionFile);
+                superClass = superClass.getSuperclass();
             }
 
             if (inStream == null) {
