@@ -1195,9 +1195,8 @@ public class FileReaderSettings extends TokenizerSettings {
                 BufferedReader reader = null;
                 try {
                     reader = createNewInputReader();
-                } catch (Exception ioe) {
-                    status.addError("I/O Error while connecting to '"
-                            + m_dataFileLocation.toString() + "'.");
+                } catch (IOException ioe) {
+                    status.addError(ioe.getMessage());
                 }
                 if (reader != null) {
                     try {
