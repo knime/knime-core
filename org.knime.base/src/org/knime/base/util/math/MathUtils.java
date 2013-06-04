@@ -478,13 +478,16 @@ public final class MathUtils {
         if (matrix.length == 0) {
             return matrix;
         }
+        for (int i = 0; i < standardDev.length; i++) {
+            if (standardDev[i] <= 0) {
+                throw new IllegalArgumentException("Standard deviation must be a positive number.");
+            }
+        }
 
         double[][] normMatrix = new double[matrix.length][matrix[0].length];
 
         for (int row = 0; row < normMatrix.length; row++) {
-
             for (int column = 0; column < normMatrix[row].length; column++) {
-
                 normMatrix[row][column] =
                         (matrix[row][column] - mean[column])
                                 / standardDev[column];
@@ -509,11 +512,8 @@ public final class MathUtils {
         }
 
         double[][] normMatrix = new double[matrix.length][matrix[0].length];
-
         for (int row = 0; row < normMatrix.length; row++) {
-
             for (int column = 0; column < normMatrix[row].length; column++) {
-
                 normMatrix[row][column] = matrix[row][column] - mean[column];
             }
         }
@@ -537,7 +537,39 @@ public final class MathUtils {
     }
 
     /**
-     * Denormalizes the matrix relativ to the mean of the input data and to the
+     * Denormalizes the vector relative to the mean of the input data and to the
+     * standard deviation.
+     *
+     * @param vector the input array to denormalize
+     * @param standardDev the standard deviation for all columns used to
+     *            denormalize the matrix
+     * @param mean the mean for all columns used to denormalize the matrix
+     * @return the denormalized vector
+     */
+    public static double[] denormalizeVector(final double[] vector,
+            final double standardDev, final double mean) {
+
+        double[][] vectorAsMatrix = MathUtils.transpose(new double[][]{vector});
+        return MathUtils.transpose(denormalizeMatrix(vectorAsMatrix,
+                new double[]{standardDev}, new double[]{mean}))[0];
+    }
+
+    /**
+     * Denormalizes the vector relative to the mean of the input data.
+     *
+     * @param vector the input array to denormalize
+     * @param mean the mean for all columns used to denormalize the matrix
+     * @return the denormalized vector
+     */
+    public static double[] denormalizeVector(final double[] vector,
+            final double mean) {
+
+        double[][] vectorAsMatrix = MathUtils.transpose(new double[][]{vector});
+        return MathUtils.transpose(denormalizeMatrix(vectorAsMatrix, new double[]{mean}))[0];
+    }
+
+    /**
+     * Denormalizes the matrix relative to the mean of the input data and to the
      * standard deviation.
      *
      * @param y the matrix to denormalize
@@ -551,48 +583,21 @@ public final class MathUtils {
         if (y.length == 0) {
             return y;
         }
+        for (int i = 0; i < standardDev.length; i++) {
+            if (standardDev[i] <= 0) {
+                throw new IllegalArgumentException("Standard deviation must be a positive number.");
+            }
+        }
 
         double[][] denormMatrix = new double[y.length][y[0].length];
 
         for (int i = 0; i < denormMatrix.length; i++) {
-
             for (int j = 0; j < denormMatrix[i].length; j++) {
-
                 denormMatrix[i][j] = (y[i][j] * standardDev[j]) + mean[j];
             }
         }
 
         return denormMatrix;
-    }
-
-    /**
-     * Denormalizes the vector relative to the mean of the input data and to the
-     * standard deviation.
-     *
-     * @param vector the input array to denormalize
-     * @param standardDev the standard deviation for all columns used to
-     *            denormalize the matrix
-     * @param mean the mean for all columns used to denormalize the matrix
-     * @return the denormalized vector
-     */
-    public static double[] denormalizeVector(final double[] vector,
-            final double standardDev, final double mean) {
-
-        return denormalizeMatrix(new double[][]{vector},
-                new double[]{standardDev}, new double[]{mean})[0];
-    }
-
-    /**
-     * Denormalizes the vector relative to the mean of the input data.
-     *
-     * @param vector the input array to denormalize
-     * @param mean the mean for all columns used to denormalize the matrix
-     * @return the denormalized vector
-     */
-    public static double[] denormalizeVector(final double[] vector,
-            final double mean) {
-
-        return denormalizeMatrix(new double[][]{vector}, new double[]{mean})[0];
     }
 
     /**
@@ -611,9 +616,7 @@ public final class MathUtils {
         double[][] denormMatrix = new double[y.length][y[0].length];
 
         for (int i = 0; i < denormMatrix.length; i++) {
-
             for (int j = 0; j < denormMatrix[i].length; j++) {
-
                 denormMatrix[i][j] = y[i][j] + mean[j];
             }
         }
