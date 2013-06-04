@@ -124,4 +124,15 @@ public class WorkflowLoadHelper {
                 : WorkflowPersistor.WORKFLOW_FILE;
     }
 
+
+    /**
+     * Returns a context for the workflow that is being loaded. If not context is available <code>null</code> is
+     * returned.
+     *
+     * @return a workflow context or <code>null</code>
+     * @since 2.8
+     */
+    public WorkflowContext getWorkflowContext() {
+        return null; // TODO create real context if possible
+    }
 }
