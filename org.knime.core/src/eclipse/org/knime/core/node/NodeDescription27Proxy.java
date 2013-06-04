@@ -98,7 +98,9 @@ final class NodeDescription27Proxy extends NodeDescription {
      */
     public NodeDescription27Proxy(final Document doc) throws XmlException {
         m_document = KnimeNodeDocument.Factory.parse(doc.getDocumentElement(), OPTIONS);
-        validate();
+        if (KNIMEConstants.ASSERTIONS_ENABLED) {
+            validate();
+        }
     }
 
     /**
