@@ -596,7 +596,6 @@ public final class BufferedFileReader extends BufferedReader {
                 result.setZipEntryName(zipEntryName);
             }
             return result;
-
         } catch (Exception e) {
             // a npe flies, if windows tries to open an URL with a space
             String msg = e.getMessage();
@@ -604,7 +603,7 @@ public final class BufferedFileReader extends BufferedReader {
                 msg = e.getClass().getSimpleName() + ": <no details>";
             }
             throw new IOException("Can't access '"
-                    + dataLocation + "'. (" + msg + ")");
+                    + dataLocation + "'. (" + msg + ")", e);
         }
     }
 

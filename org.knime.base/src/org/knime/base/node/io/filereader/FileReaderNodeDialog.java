@@ -1594,7 +1594,7 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
                         msg = "No details, sorry.";
                     }
                     updatePreview();
-                    setAnalWarningText("I/O Error while analyzing file: ");
+                    setAnalWarningText("I/O Error while analyzing file: " + msg);
                     return;
                 } catch (TokenizerException fte) {
                     updatePreview();
