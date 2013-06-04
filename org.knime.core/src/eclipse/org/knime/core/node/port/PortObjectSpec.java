@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   10.09.2007 (mb): created
  */
@@ -69,25 +69,25 @@ import org.knime.core.node.NodeModel;
  * passed along the connections during a node's execution). Both the class of a
  * <code>PortObjectSpec</code> and a {@link PortObject} describe
  * {@link PortType}.
- * 
+ *
  * <p>
  * <b>Important:</b> Implementors of this interface must also provide a
  * {@link PortObjectSpecSerializer}, which is used to save and load instances.
  * The framework will try to invoke a static method defined in the
  * implementation with the following signature:
- * 
+ *
  * <pre>
- *  public static PortObjectSpecSerializer&lt;FooPortObjectSpec&gt; 
- *          getPortObjectSpecSerializer(final File directory) 
+ *  public static PortObjectSpecSerializer&lt;FooPortObjectSpec&gt;
+ *          getPortObjectSpecSerializer()
  *              throws IOException {...}
  * </pre>
- * 
+ *
  * If the class does not have such a static method (or it has the wrong
  * signature), an exception will be thrown at runtime.
- * 
+ *
  * <p>
- * <b>Note:</b> The API of this class is not finalized and may slightly change 
- * in future versions. 
+ * <b>Note:</b> The API of this class is not finalized and may slightly change
+ * in future versions.
 
  * @see org.knime.core.data.DataTableSpec
  * @see PortObject
@@ -101,12 +101,12 @@ public interface PortObjectSpec {
      * Factory class that's used for writing and loading objects of class
      * denoted by <code>T</code>. See description of class
      * {@link PortObjectSpec} for details.
-     * 
+     *
      * @param <T> class of the object to save or load.
      */
     abstract static class PortObjectSpecSerializer
         <T extends PortObjectSpec> implements Serializer<T> {
-        
+
         /** Saves the port specification to an output stream.
          * @param portObjectSpec The spec to save.
          * @param out Where to save to
@@ -115,7 +115,7 @@ public interface PortObjectSpec {
         public abstract void savePortObjectSpec(final T portObjectSpec,
                 final PortObjectSpecZipOutputStream out)
         throws IOException;
-        
+
         /** Load a specification from an input stream.
          * @param in Where to load from
          * @return The restored object.
@@ -125,18 +125,18 @@ public interface PortObjectSpec {
                 final PortObjectSpecZipInputStream in)
             throws IOException;
     }
-    
+
     /**
-     * The returned views are displayed in the out port view of the referring 
-     * node. Each component is displayed in an extra tab. The name of the 
-     * component is used as the title for the tab. It is important that no 
-     * external members are kept in the component so it can be deleted, when 
-     * the port object is deleted. If the port object has no view return an 
+     * The returned views are displayed in the out port view of the referring
+     * node. Each component is displayed in an extra tab. The name of the
+     * component is used as the title for the tab. It is important that no
+     * external members are kept in the component so it can be deleted, when
+     * the port object is deleted. If the port object has no view return an
      * empty array.
-     * 
-     * @return an array of views for the port object spec, each displayed as a 
-     * tab in the out port view 
+     *
+     * @return an array of views for the port object spec, each displayed as a
+     * tab in the out port view
      */
     public JComponent[] getViews();
-    
+
 }
