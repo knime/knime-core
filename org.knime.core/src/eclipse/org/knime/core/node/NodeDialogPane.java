@@ -109,6 +109,7 @@ import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.ICredentials;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeExecutorJobManagerDialogTab;
 import org.knime.core.node.workflow.SingleNodeContainer.MemoryPolicy;
 import org.knime.core.node.workflow.SingleNodeContainer.SingleNodeContainerSettings;
@@ -215,6 +216,8 @@ public abstract class NodeDialogPane {
 
     private boolean m_isWriteProtected;
 
+    private final NodeContext m_nodeContext;
+
     /**
      * Creates a new dialog with the given title. The pane holds a tabbed pane
      * ready to take additional components needed by the derived class
@@ -251,6 +254,9 @@ public abstract class NodeDialogPane {
         m_flowVariablesModelList =
             new CopyOnWriteArrayList<FlowVariableModel>();
         m_flowVariableTab = new FlowVariablesTab();
+        m_nodeContext = NodeContext.getContext();
+        m_logger.assertLog(m_nodeContext != null, "No node context available in constructor of node dialog pane "
+            + getClass().getName());
     }
 
     /** A logger initialized with the concrete runtime class.
@@ -438,7 +444,12 @@ public abstract class NodeDialogPane {
     void callDerivedLoadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs, final PortObject[] data)
     throws NotConfigurableException {
-        loadSettingsFrom(settings, specs);
+        NodeContext.pushContext(m_nodeContext);
+        try {
+            loadSettingsFrom(settings, specs);
+        } finally {
+            NodeContext.removeLastContext();
+        }
     }
 
     /**
@@ -450,6 +461,9 @@ public abstract class NodeDialogPane {
      */
     void internalSaveSettingsTo(final NodeSettingsWO settings) throws InvalidSettingsException {
         NodeSettings model = new NodeSettings("field_ignored");
+
+
+        NodeContext.pushContext(m_nodeContext);
         try {
             saveSettingsTo(model);
         } catch (InvalidSettingsException ise) {
@@ -458,6 +472,8 @@ public abstract class NodeDialogPane {
             m_logger.coding("Wrong exception type thrown "
                     + "while saving dialog settings", e);
             throw new InvalidSettingsException(e);
+        } finally {
+            NodeContext.removeLastContext();
         }
         if (m_flowVariablesModelChanged) {
             updateFlowVariablesTab();
@@ -562,13 +578,30 @@ public abstract class NodeDialogPane {
         // default implementation does nothing.
     }
 
+    /**
+     * This method calls {@link #onCancel()} after having set a {@link NodeContext} if none exists yet.
+     */
+    final void callOnCancel() {
+        NodeContext.pushContext(m_nodeContext);
+        try {
+            onCancel();
+        } finally {
+            NodeContext.removeLastContext();
+        }
+    }
+
     /** Does some cleanup and finally calls the {@link #onClose()} method.
      * @since 2.6
      * @noreference This method is not intended to be referenced by clients. */
     public final void callOnClose() {
         m_data = null;
         m_specs = null;
-        onClose();
+        NodeContext.pushContext(m_nodeContext);
+        try {
+            onClose();
+        } finally {
+            NodeContext.removeLastContext();
+        }
     }
 
     /**
@@ -585,6 +618,18 @@ public abstract class NodeDialogPane {
      */
     public void onOpen() {
         // default implementation does nothing.
+    }
+
+    /**
+     * This method calls {@link #onOpen()} after having set a {@link NodeContext} if none exists yet.
+     */
+    final void callOnOpen() {
+        NodeContext.pushContext(m_nodeContext);
+        try {
+            onOpen();
+        } finally {
+            NodeContext.removeLastContext();
+        }
     }
 
     /**
@@ -1204,6 +1249,7 @@ public abstract class NodeDialogPane {
         NodeSettings settings = new NodeSettings("save");
         NodeSettings variableSettings;
         commitComponentsRecursively(getPanel());
+        NodeContext.pushContext(m_nodeContext);
         try {
             saveSettingsTo(settings);
             variableSettings = m_flowVariableTab.getVariableSettings();
@@ -1216,6 +1262,8 @@ public abstract class NodeDialogPane {
                 + "save intermediate settings:<br/>" + e.getMessage();
             m_flowVariableTab.setErrorLabel(error);
             return;
+        } finally {
+            NodeContext.removeLastContext();
         }
         m_flowVariableTab.setVariableSettings(settings, variableSettings,
                 m_flowObjectStack, m_flowVariablesModelList);
@@ -1407,5 +1455,14 @@ public abstract class NodeDialogPane {
         }
     }
 
+    /**
+     * Returns the node context with which this dialog pane has been created.
+     *
+     * @return a node context
+     * @since 2.8
+     */
+    protected final NodeContext getNodeContext() {
+        return m_nodeContext;
+    }
 }
 

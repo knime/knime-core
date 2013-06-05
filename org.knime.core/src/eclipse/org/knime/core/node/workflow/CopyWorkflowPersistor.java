@@ -178,6 +178,14 @@ class CopyWorkflowPersistor implements WorkflowPersistor {
         return m_cons;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public WorkflowContext getWorkflowContext() {
+        return null; // context is determined by target workflow - in most cases the content is not a project anyway
+    }
+
     /** {@inheritDoc} */
     @Override
     public Set<ConnectionContainerTemplate> getAdditionalConnectionSet() {

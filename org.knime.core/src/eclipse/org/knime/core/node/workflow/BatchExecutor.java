@@ -247,14 +247,16 @@ public class BatchExecutor {
      * @author Bernd Wiswedel, KNIME.com, Zurich, Switzerland
      */
     private static final class BatchExecWorkflowLoadHelper extends WorkflowLoadHelper {
-        /**  */
         private final Map<String, Credentials> m_credentialMap;
+
+        private final WorkflowContext m_workflowContext;
 
         /**
          * @param credentialMap
          */
-        private BatchExecWorkflowLoadHelper(final Map<String, Credentials> credentialMap) {
+        private BatchExecWorkflowLoadHelper(final Map<String, Credentials> credentialMap, final File workflowDirectory) {
             m_credentialMap = credentialMap;
+            m_workflowContext = new WorkflowContext.Factory(workflowDirectory).createContext();
         }
 
         @Override
@@ -291,6 +293,14 @@ public class BatchExecutor {
             return newCredentials;
         }
 
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public WorkflowContext getWorkflowContext() {
+            return m_workflowContext;
+        }
     }
 
     /**
@@ -702,7 +712,8 @@ public class BatchExecutor {
 
         }
 
-        BatchExecWorkflowLoadHelper batchLH = new BatchExecWorkflowLoadHelper(config.credentials);
+        BatchExecWorkflowLoadHelper batchLH =
+            new BatchExecWorkflowLoadHelper(config.credentials, config.workflowLocation);
         WorkflowLoadResult loadResult =
                 WorkflowManager.loadProject(config.workflowLocation, new ExecutionMonitor(), batchLH);
         if (config.failOnLoadError && loadResult.hasErrors()) {

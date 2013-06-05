@@ -112,6 +112,7 @@ import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.LoopStartNode;
 import org.knime.core.node.workflow.NodeContainer.NodeContainerSettings.SplitType;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.NodeMessageEvent;
@@ -265,7 +266,6 @@ public final class Node implements NodeModelWarningListener {
 
     public Node(final NodeFactory<NodeModel> nodeFactory,
             final NodeCreationContext context) {
-
         if (nodeFactory == null) {
             throw new IllegalArgumentException("NodeFactory must not be null.");
         }
@@ -417,6 +417,9 @@ public final class Node implements NodeModelWarningListener {
      */
     public void loadDataAndInternals(final NodeContentPersistor loader,
             final ExecutionMonitor exec, final LoadResult loadResult) {
+        m_logger.assertLog(NodeContext.getContext() != null,
+            "No node context available, please check call hierarchy and fix it");
+
         boolean hasContent = loader.hasContent();
         m_model.setHasContent(hasContent);
         m_fileStoreHandler = loader.getFileStoreHandler();
@@ -519,6 +522,9 @@ public final class Node implements NodeModelWarningListener {
     public void loadModelSettingsFrom(final NodeSettingsRO modelSettings) throws InvalidSettingsException {
         /* Note, as of 2.8 the argument contains ONLY the actual settings, no variable settings. The root element
          * is passed to the NodeModel. In 2.7- the root element was "model" and "variableSettings"; */
+        m_logger.assertLog(NodeContext.getContext() != null,
+                "No node context available, please check call hierarchy and fix it");
+
         try {
             m_model.validateSettings(modelSettings);
             m_model.loadSettingsFrom(modelSettings);
@@ -540,6 +546,9 @@ public final class Node implements NodeModelWarningListener {
      * @noreference This method is not intended to be referenced by clients.
      */
     public boolean areSettingsValid(final NodeSettingsRO modelSettings) {
+        m_logger.assertLog(NodeContext.getContext() != null,
+            "No node context available, please check call hierarchy and fix it");
+
         /* Note the comment in method loadSettingsFrom(NodeSettingsROf) */
         try {
             m_model.validateSettings(modelSettings);
@@ -753,7 +762,6 @@ public final class Node implements NodeModelWarningListener {
 
    /**
     * @param rawData the data from the predecessor.
-    * @param reExecute is true when node is reExecuted
     * @param exec The execution monitor.
     * @return <code>true</code> if execution was successful otherwise
     *         <code>false</code>.
@@ -788,6 +796,9 @@ public final class Node implements NodeModelWarningListener {
      * @since 2.8
      */
     public boolean execute(final PortObject[] rawData, final ExecutionEnvironment exEnv, final ExecutionContext exec) {
+        m_logger.assertLog(NodeContext.getContext() != null,
+            "No node context available, please check call hierarchy and fix it");
+
         // clear the message object
         clearNodeMessageAndNotify();
 
@@ -1008,7 +1019,7 @@ public final class Node implements NodeModelWarningListener {
      * @param inData The input data to the node (excluding flow var port)
      * @return The output of node
      * @throws Exception An exception thrown by the client.
-     * @see invokeNodeModelExecute
+     * @see #invokeNodeModelExecute(ExecutionContext, PortObject[])
      * @since 2.6
      */
     @Deprecated
@@ -1029,6 +1040,9 @@ public final class Node implements NodeModelWarningListener {
      */
     public PortObject[] invokeNodeModelExecute(final ExecutionContext exec, final ExecutionEnvironment exEnv,
             final PortObject[] inData) throws Exception {
+        m_logger.assertLog(NodeContext.getContext() != null,
+            "No node context available, please check call hierarchy and fix it");
+
         return m_model.executeModel(inData, exEnv, exec);
     }
 
@@ -1279,6 +1293,9 @@ public final class Node implements NodeModelWarningListener {
      * Resets this node without re-configuring it.
      */
     public void reset() {
+        m_logger.assertLog(NodeContext.getContext() != null,
+                "No node context available, please check call hierarchy and fix it");
+
         m_logger.debug("reset");
         clearLoopContext();
         setPauseLoopExecution(false);
@@ -1470,6 +1487,9 @@ public final class Node implements NodeModelWarningListener {
      * Deletes any temporary resources associated with this node.
      */
     public void cleanup() {
+        m_logger.assertLog(NodeContext.getContext() != null,
+            "No node context available, please check call hierarchy and fix it");
+
         m_model.unregisterAllViews();
         try {
             m_model.onDispose();
@@ -1606,6 +1626,9 @@ public final class Node implements NodeModelWarningListener {
      * @since 2.6 */
     public PortObjectSpec[] invokeNodeModelConfigure(
             final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        m_logger.assertLog(NodeContext.getContext() != null,
+            "No node context available, please check call hierarchy and fix it");
+
         PortObjectSpec[] newOutSpec;
         newOutSpec = m_model.configureModel(inSpecs);
         return newOutSpec;
@@ -1637,6 +1660,9 @@ public final class Node implements NodeModelWarningListener {
      * @throws ArrayIndexOutOfBoundsException If the view index is out of range.
      */
     public AbstractNodeView<?> getView(final int viewIndex, final String title) {
+        m_logger.assertLog(NodeContext.getContext() != null,
+            "No node context available, please check call hierarchy and fix it");
+
         try {
             return m_factory.createAbstractNodeView(viewIndex, m_model);
         } catch (Throwable e) {
@@ -1696,6 +1722,9 @@ public final class Node implements NodeModelWarningListener {
      */
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent>> V getInteractiveView(final String title) {
+        m_logger.assertLog(NodeContext.getContext() != null,
+            "No node context available, please check call hierarchy and fix it");
+
         if (!(m_factory instanceof InteractiveNodeFactoryExtension)) {
             String errorMsg = "Interactive View instantiation failed: wrong factory!";
             m_logger.error(errorMsg);
@@ -1869,6 +1898,9 @@ public final class Node implements NodeModelWarningListener {
      * @noreference This method is not intended to be referenced by clients.
      */
     public void saveModelSettingsTo(final NodeSettingsWO modelSettings) {
+        m_logger.assertLog(NodeContext.getContext() != null,
+                "No node context available, please check call hierarchy and fix it");
+
         /* Note the comment in method loadSettingsFrom(NodeSettingsROf) */
         try {
             m_model.saveSettingsTo(modelSettings);
@@ -1889,6 +1921,10 @@ public final class Node implements NodeModelWarningListener {
     // Called by 3rd party executor
     public void saveInternals(final File internDir, final ExecutionMonitor exec)
             throws CanceledExecutionException {
+        m_logger.assertLog(NodeContext.getContext() != null,
+                "No node context available, please check call hierarchy and fix it");
+
+
         if (internDir.exists()) {
             FileUtil.deleteRecursively(internDir);
         }
@@ -1931,6 +1967,9 @@ public final class Node implements NodeModelWarningListener {
     // Called by 3rd party executor
     public void loadInternals(final File internDir, final ExecutionMonitor exec)
             throws CanceledExecutionException {
+        m_logger.assertLog(NodeContext.getContext() != null,
+            "No node context available, please check call hierarchy and fix it");
+
         if (m_model.hasContent()) {
             try {
                 m_model.loadInternals(internDir, exec);
@@ -1959,7 +1998,7 @@ public final class Node implements NodeModelWarningListener {
      */
     public void addMessageListener(final NodeMessageListener listener) {
         if (listener == null) {
-            throw new NullPointerException(
+            throw new IllegalArgumentException(
                     "Node message listener must not be null!");
         }
         m_messageListeners.add(listener);
@@ -2228,7 +2267,7 @@ public final class Node implements NodeModelWarningListener {
      * @since 2.6
      */
     public LoopStartNode getLoopStartNode() {
-    	return m_model.getLoopStartNode();
+        return m_model.getLoopStartNode();
     }
 
     /**
@@ -2244,6 +2283,9 @@ public final class Node implements NodeModelWarningListener {
      * @return true (default) if loop body nodes have to be reset/configure during each iteration.
      */
     public boolean resetAndConfigureLoopBody() {
+        m_logger.assertLog(NodeContext.getContext() != null,
+                "No node context available, please check call hierarchy and fix it");
+
         return getNodeModel().resetAndConfigureLoopBody();
     }
 

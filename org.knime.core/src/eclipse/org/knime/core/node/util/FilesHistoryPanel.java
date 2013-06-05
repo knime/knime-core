@@ -60,7 +60,6 @@ import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent;
 import java.awt.event.ItemListener;
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -336,19 +335,12 @@ public final class FilesHistoryPanel extends JPanel {
         if (SwingUtilities.isEventDispatchThread()) {
             m_textBox.setSelectedItem(url);
         } else {
-            try {
-                SwingUtilities.invokeAndWait(new Runnable() {
-                    @Override
-                    public void run() {
-                        m_textBox.setSelectedItem(url);
-
-                    }
-                });
-            } catch (InterruptedException ex) {
-                // ignore
-            } catch (InvocationTargetException ex) {
-                // ignore
-            }
+            ViewUtils.invokeAndWaitInEDT(new Runnable() {
+                @Override
+                public void run() {
+                    m_textBox.setSelectedItem(url);
+                }
+            });
         }
     }
 

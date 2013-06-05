@@ -105,6 +105,12 @@ public interface WorkflowPersistor extends NodeContainerPersistor {
      * @since 2.6 */
     boolean isProject();
 
+    /**
+     * @return The workflow context for projects (only reasonable if §{@link #isProject()}).
+     * @since 2.8
+     */
+    WorkflowContext getWorkflowContext();
+
     /** The map of node ID suffix to persistor.
      * @return The persistor map. */
     Map<Integer, ? extends NodeContainerPersistor> getNodeLoaderMap();

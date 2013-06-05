@@ -903,7 +903,12 @@ public abstract class NodeContainer implements NodeProgressListener {
         PortObject[] inputData = new PortObject[nrInPorts];
         m_parent.assembleInputSpecs(id, inputSpecs);
         m_parent.assembleInputData(id, inputData);
-        return getDialogPaneWithSettings(inputSpecs, inputData);
+        NodeContext.pushContext(this);
+        try {
+            return getDialogPaneWithSettings(inputSpecs, inputData);
+        } finally {
+            NodeContext.removeLastContext();
+        }
     }
 
     /** Launch a node dialog in its own JFrame (a JDialog).
@@ -928,7 +933,12 @@ public abstract class NodeContainer implements NodeProgressListener {
         }
         // TODO do we need to reset the node first??
         NodeSettings sett = new NodeSettings("node settings");
-        getDialogPane().finishEditingAndSaveSettingsTo(sett);
+        NodeContext.pushContext(this);
+        try {
+            getDialogPane().finishEditingAndSaveSettingsTo(sett);
+        } finally {
+            NodeContext.removeLastContext();
+        }
         m_parent.loadNodeSettings(getID(), sett);
     }
 
@@ -938,11 +948,14 @@ public abstract class NodeContainer implements NodeProgressListener {
                     "Node \"" + getName() + "\" has no dialog");
         }
         NodeSettings sett = new NodeSettings("node settings");
+        NodeContext.pushContext(this);
         try {
             getDialogPane().finishEditingAndSaveSettingsTo(sett);
             return areSettingsValid(sett);
         } catch (InvalidSettingsException nce) {
             return false;
+        } finally {
+            NodeContext.removeLastContext();
         }
     }
 

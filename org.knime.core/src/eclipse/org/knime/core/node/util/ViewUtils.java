@@ -63,6 +63,7 @@ import javax.swing.SwingUtilities;
 
 import org.knime.core.data.DataValue;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NodeContext;
 
 /**
  * Provides helper methods mostly useful when implementing NodeViews.
@@ -97,7 +98,7 @@ public final class ViewUtils {
         } else {
             try {
                 // otherwise queue into event dispatch thread
-                SwingUtilities.invokeAndWait(runMe);
+                SwingUtilities.invokeAndWait(getNodeContextWrapper(runMe));
             } catch (InvocationTargetException ite) {
                 Throwable c = ite.getCause();
                 if (c == null) {
@@ -133,7 +134,7 @@ public final class ViewUtils {
         if (SwingUtilities.isEventDispatchThread()) {
             runMe.run();
         } else {
-            SwingUtilities.invokeLater(runMe);
+            SwingUtilities.invokeLater(getNodeContextWrapper(runMe));
         }
     }
 
@@ -200,11 +201,10 @@ public final class ViewUtils {
      * {@link Class#getPackage() package}, e.g. <code>FooValue.class</code>.
      * @param path The icon path relative to package associated with the
      * class argument.
-     * @return the icon loaded from that path or null if it loading fails
+     * @return the icon loaded from that path or <code>null</code> if it loading fails
      */
     public static Icon loadIcon(
             final Class<?> className, final String path) {
-        ImageIcon icon;
         try {
             ClassLoader loader = className.getClassLoader();
             String packagePath =
@@ -227,14 +227,32 @@ public final class ViewUtils {
                 }
             }
 
-            icon = new ImageIcon(loader.getResource(correctedPath));
+            return new ImageIcon(loader.getResource(correctedPath));
         } catch (Exception e) {
             NodeLogger.getLogger(DataValue.class).debug(
                     "Unable to load icon at path " + path, e);
-            icon = null;
+            return null;
         }
-        return icon;
     }
 
 
+    private static Runnable getNodeContextWrapper(final Runnable orig) {
+        if (NodeContext.getContext() == null) {
+            return orig;
+        } else {
+            final NodeContext ctx = NodeContext.getContext();
+            return new Runnable() {
+                @Override
+                public void run() {
+                    NodeContext.pushContext(ctx);
+                    try {
+                        orig.run();
+                    } finally {
+                        NodeContext.removeLastContext();
+                    }
+
+                }
+            };
+        }
+    }
 }

@@ -48,6 +48,7 @@
  */
 package org.knime.core.node.workflow;
 
+import java.io.File;
 import java.util.List;
 
 /**
@@ -63,6 +64,8 @@ public class WorkflowLoadHelper {
 
     private final boolean m_isTemplate;
 
+    private final WorkflowContext m_workflowContext;
+
     /** How to proceed when a workflow written with a future KNIME version is
      * loaded. */
     public enum UnknownKNIMEVersionLoadPolicy {
@@ -70,16 +73,29 @@ public class WorkflowLoadHelper {
         Abort,
         /** Try anyway. */
         Try
-    };
+    }
 
     /** Default instance. */
     public WorkflowLoadHelper() {
         this(false);
     }
 
+    /**
+     * Creates a new load helper for the workflow at the specified location. The location is passed into the workflow
+     * context that can be retrieved via {@link #getWorkflowContext()} later.
+     *
+     * @param workflowLocation the location of the workflow
+     * @since 2.8
+     */
+    public WorkflowLoadHelper(final File workflowLocation) {
+        m_isTemplate = false;
+        m_workflowContext = new WorkflowContext.Factory(workflowLocation).createContext();
+    }
+
     /** @param isTemplate whether this is a template loader */
     public WorkflowLoadHelper(final boolean isTemplate) {
         m_isTemplate = isTemplate;
+        m_workflowContext = null;
     }
 
     /**
@@ -133,6 +149,6 @@ public class WorkflowLoadHelper {
      * @since 2.8
      */
     public WorkflowContext getWorkflowContext() {
-        return null; // TODO create real context if possible
+        return m_workflowContext;
     }
 }

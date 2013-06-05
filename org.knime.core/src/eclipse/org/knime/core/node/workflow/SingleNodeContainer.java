@@ -310,7 +310,12 @@ public final class SingleNodeContainer extends NodeContainer {
         if (!customName.isEmpty()) {
             title += " - " + customName;
         }
-        return (AbstractNodeView<NodeModel>)m_node.getView(i, title);
+        NodeContext.pushContext(this);
+        try {
+            return (AbstractNodeView<NodeModel>)m_node.getView(i, title);
+        } finally {
+            NodeContext.removeLastContext();
+        }
     }
 
     /** {@inheritDoc} */
@@ -346,21 +351,26 @@ public final class SingleNodeContainer extends NodeContainer {
     /** {@inheritDoc} */
     @Override
     public <V extends AbstractNodeView<?> & InteractiveView<?, ? extends ViewContent>> V getInteractiveView() {
-        V ainv = m_node.getNodeModel().getInteractiveNodeView();
-        if (ainv == null) {
-            String name = getInteractiveViewName();
-            if (name == null) {
-                name = "TITLE MISSING";
+        NodeContext.pushContext(this);
+        try {
+            V ainv = m_node.getNodeModel().getInteractiveNodeView();
+            if (ainv == null) {
+                String name = getInteractiveViewName();
+                if (name == null) {
+                    name = "TITLE MISSING";
+                }
+                String title = getNameWithID() + " (" + name + ")";
+                String customName = getDisplayCustomLine();
+                if (!customName.isEmpty()) {
+                    title += " - " + customName;
+                }
+                ainv = m_node.getInteractiveView(title);
+                ainv.setWorkflowManagerAndNodeID(getParent(), getID());
             }
-            String title = getNameWithID() + " (" + name + ")";
-            String customName = getDisplayCustomLine();
-            if (!customName.isEmpty()) {
-                title += " - " + customName;
-            }
-            ainv = m_node.getInteractiveView(title);
-            ainv.setWorkflowManagerAndNodeID(getParent(), getID());
+            return ainv;
+        } finally {
+            NodeContext.removeLastContext();
         }
-        return ainv;
     }
 
     /** {@inheritDoc} */
@@ -374,7 +384,12 @@ public final class SingleNodeContainer extends NodeContainer {
     @Override
     void cleanup() {
         super.cleanup();
-        m_node.cleanup();
+        NodeContext.pushContext(this);
+        try {
+            m_node.cleanup();
+        } finally {
+            NodeContext.removeLastContext();
+        }
         clearFileStoreHandler();
         if (m_outputPorts != null) {
             for (NodeOutPort p : m_outputPorts) {
@@ -536,7 +551,12 @@ public final class SingleNodeContainer extends NodeContainer {
                 return jobMgr.configure(inObjSpecs, nodeModelOutSpecs);
             }
         };
-        return m_node.configure(inSpecs, npc);
+        NodeContext.pushContext(this);
+        try {
+            return m_node.configure(inSpecs, npc);
+        } finally {
+            NodeContext.removeLastContext();
+        }
     }
 
     /** Used before configure, to apply the variable mask to the nodesettings,
@@ -567,10 +587,13 @@ public final class SingleNodeContainer extends NodeContainer {
                 + e.getMessage(), e);
         }
 
+        NodeContext.pushContext(this);
         try {
             m_node.loadModelSettingsFrom(fromModel);
         } catch (InvalidSettingsException e) {
             throw new InvalidSettingsException("Errors loading flow variables into node : " + e.getMessage(), e);
+        } finally {
+            NodeContext.removeLastContext();
         }
         Map<String, FlowVariable> newVariableHash = new LinkedHashMap<String, FlowVariable>();
         for (FlowVariable v : newVariableList) {
@@ -621,7 +644,12 @@ public final class SingleNodeContainer extends NodeContainer {
             switch (getInternalState()) {
             case EXECUTED:
             case EXECUTED_MARKEDFOREXEC:
-                m_node.reset();
+                NodeContext.pushContext(this);
+                try {
+                    m_node.reset();
+                } finally {
+                    NodeContext.removeLastContext();
+                }
                 clearFileStoreHandler();
                 cleanOutPorts(false);
                 // After reset we need explicit configure!
@@ -638,7 +666,12 @@ public final class SingleNodeContainer extends NodeContainer {
                  * Also configured nodes must be reset in order to handle
                  * nodes subsequent to meta nodes with through-connections.
                  */
-                m_node.reset();
+                NodeContext.pushContext(this);
+                try {
+                    m_node.reset();
+                } finally {
+                    NodeContext.removeLastContext();
+                }
                 clearFileStoreHandler();
                 setInternalState(InternalNodeContainerState.IDLE);
                 return;
@@ -982,7 +1015,12 @@ public final class SingleNodeContainer extends NodeContainer {
                     // for now we assume complete failure and clean up (reset)
                     // We do keep the message, though.
                     NodeMessage oldMessage = getNodeMessage();
-                    m_node.reset();
+                    NodeContext.pushContext(this);
+                    try {
+                        m_node.reset();
+                    } finally {
+                        NodeContext.removeLastContext();
+                    }
                     clearFileStoreHandler();
                     setNodeMessage(oldMessage);
                     setInternalState(InternalNodeContainerState.IDLE);
@@ -1024,8 +1062,13 @@ public final class SingleNodeContainer extends NodeContainer {
             setNodeMessage(new NodeMessage(NodeMessage.Type.WARNING, errorString));
             success = false;
         }
-        // execute node outside any synchronization!
-        success = success && m_node.execute(inObjects, ev, ec);
+        NodeContext.pushContext(this);
+        try {
+            // execute node outside any synchronization!
+            success = success && m_node.execute(inObjects, ev, ec);
+        } finally {
+            NodeContext.removeLastContext();
+        }
         if (success) {
             // output tables are made publicly available (for blobs)
             putOutputTablesIntoGlobalRepository(ec);
@@ -1160,11 +1203,16 @@ public final class SingleNodeContainer extends NodeContainer {
         synchronized (m_nodeMutex) {
             super.loadSettings(settings);
             m_settings = new SingleNodeContainerSettings(settings);
-            final NodeSettingsRO modelSettings = m_settings.getModelSettings();
-            if (modelSettings != null) {
-                m_node.loadModelSettingsFrom(modelSettings);
+            NodeContext.pushContext(this);
+            try {
+                final NodeSettingsRO modelSettings = m_settings.getModelSettings();
+                if (modelSettings != null) {
+                    m_node.loadModelSettingsFrom(modelSettings);
+                }
+                setDirty();
+            } finally {
+                NodeContext.removeLastContext();
             }
-            setDirty();
         }
     }
 
@@ -1231,8 +1279,12 @@ public final class SingleNodeContainer extends NodeContainer {
                 sncExecResult.getNodeExecutionResult();
             boolean success = sncExecResult.isSuccess();
             if (success) {
-                m_node.loadDataAndInternals(
-                        nodeExecResult, new ExecutionMonitor(), loadResult);
+                NodeContext.pushContext(this);
+                try {
+                    m_node.loadDataAndInternals(nodeExecResult, new ExecutionMonitor(), loadResult);
+                } finally {
+                    NodeContext.removeLastContext();
+                }
             }
             boolean needsReset = nodeExecResult.needsResetAfterLoad();
             if (!needsReset && success) {
@@ -1258,8 +1310,12 @@ public final class SingleNodeContainer extends NodeContainer {
             SingleNodeContainerExecutionResult result =
                 new SingleNodeContainerExecutionResult();
             super.saveExecutionResult(result);
-            result.setNodeExecutionResult(
-                    m_node.createNodeExecutionResult(exec));
+            NodeContext.pushContext(this);
+            try {
+                result.setNodeExecutionResult(m_node.createNodeExecutionResult(exec));
+            } finally {
+                NodeContext.removeLastContext();
+            }
             return result;
         }
     }
@@ -1284,7 +1340,12 @@ public final class SingleNodeContainer extends NodeContainer {
     /** Implementation of {@link WorkflowManager#saveNodeSettingsToDefault(NodeID)}. */
     void saveNodeSettingsToDefault() {
         NodeSettings modelSettings = new NodeSettings("model");
-        getNode().saveModelSettingsTo(modelSettings);
+        NodeContext.pushContext(this);
+        try {
+            getNode().saveModelSettingsTo(modelSettings);
+        } finally {
+            NodeContext.removeLastContext();
+        }
         m_settings.setModelSettings(modelSettings);
         setDirty();
     }
@@ -1300,7 +1361,12 @@ public final class SingleNodeContainer extends NodeContainer {
         if (initDefaultModelSettings && m_settings.getModelSettings() == null) {
             sncSettings = m_settings.clone();
             NodeSettings modelSettings = new NodeSettings("model");
-            getNode().saveModelSettingsTo(modelSettings);
+            NodeContext.pushContext(this);
+            try {
+                getNode().saveModelSettingsTo(modelSettings);
+            } finally {
+                NodeContext.removeLastContext();
+            }
             sncSettings.setModelSettings(modelSettings);
         }
         sncSettings.save(settings);
@@ -1328,7 +1394,12 @@ public final class SingleNodeContainer extends NodeContainer {
         if (modelSettings == null) {
             modelSettings = new NodeSettings("empty");
         }
-        return m_node.areSettingsValid(modelSettings);
+        NodeContext.pushContext(this);
+        try {
+            return m_node.areSettingsValid(modelSettings);
+        } finally {
+            NodeContext.removeLastContext();
+        }
     }
 
     ////////////////////////////////////
@@ -1494,7 +1565,12 @@ public final class SingleNodeContainer extends NodeContainer {
      * @see NodeModel#resetAndConfigureLoopBody()
      */
     boolean resetAndConfigureLoopBody() {
-        return getNode().resetAndConfigureLoopBody();
+        NodeContext.pushContext(this);
+        try {
+            return getNode().resetAndConfigureLoopBody();
+        } finally {
+            NodeContext.removeLastContext();
+        }
     }
 
     /** enable (or disable) that after the next execution of this loop end node
@@ -1529,8 +1605,12 @@ public final class SingleNodeContainer extends NodeContainer {
     /** {@inheritDoc} */
     @Override
     public final boolean hasDataAwareDialogPane() {
-        return m_node.hasDialog()
-        && m_node.getDialogPane() instanceof DataAwareNodeDialogPane;
+        NodeContext.pushContext(this);
+        try {
+            return m_node.hasDialog() && (m_node.getDialogPane() instanceof DataAwareNodeDialogPane);
+        } finally {
+            NodeContext.removeLastContext();
+        }
     }
 
     /** {@inheritDoc} */
@@ -1539,13 +1619,23 @@ public final class SingleNodeContainer extends NodeContainer {
             final PortObject[] inData) throws NotConfigurableException {
         NodeSettings settings = new NodeSettings(getName());
         saveSettings(settings, true);
-        return m_node.getDialogPaneWithSettings(inSpecs, inData, settings, getParent().isWriteProtected());
+        NodeContext.pushContext(this);
+        try {
+            return m_node.getDialogPaneWithSettings(inSpecs, inData, settings, getParent().isWriteProtected());
+        } finally {
+            NodeContext.removeLastContext();
+        }
     }
 
     /** {@inheritDoc} */
     @Override
     NodeDialogPane getDialogPane() {
-        return m_node.getDialogPane();
+        NodeContext.pushContext(this);
+        try {
+            return m_node.getDialogPane();
+        } finally {
+            NodeContext.removeLastContext();
+        }
     }
 
     /** {@inheritDoc} */
@@ -1555,10 +1645,13 @@ public final class SingleNodeContainer extends NodeContainer {
         NodeSettingsWO nodeSettings = new NodeSettings(key);
         saveSettings(nodeSettings, true);
         NodeSettingsWO dlgSettings = new NodeSettings(key);
+        NodeContext.pushContext(this);
         try {
             m_node.getDialogPane().finishEditingAndSaveSettingsTo(dlgSettings);
         } catch (InvalidSettingsException e) {
             return false;
+        } finally {
+            NodeContext.removeLastContext();
         }
         return dlgSettings.equals(nodeSettings);
     }

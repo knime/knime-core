@@ -73,6 +73,8 @@ import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
+import org.knime.core.node.workflow.WorkflowContext;
+import org.knime.core.node.workflow.WorkflowCreationHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
@@ -101,22 +103,24 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
 
     private File m_workflowFile;
 
+    private File m_mountpointRoot;
+
     private Throwable m_throwable = null;
 
     /** Message, which is non-null if the user canceled to the load. */
     private String m_loadingCanceledMessage;
 
     /**
+     * Creates a new runnable that load a workflow.
      *
-     * @param editor the {@link WorkflowEditor} for which the workflow should
-     * be loaded
-     * @param workflowFile the workflow file from which the workflow should be
-     * loaded (or created = empty workflow file)
+     * @param editor the {@link WorkflowEditor} for which the workflow should be loaded
+     * @param workflowFile the workflow file from which the workflow should be loaded (or created = empty workflow file)
+     * @param mountpointRoot the root directory of the mountpoint in which the workflow is contained
      */
-    public LoadWorkflowRunnable(final WorkflowEditor editor,
-            final File workflowFile) {
+    public LoadWorkflowRunnable(final WorkflowEditor editor, final File workflowFile, final File mountpointRoot) {
         m_editor = editor;
         m_workflowFile = workflowFile;
+        m_mountpointRoot = mountpointRoot;
     }
 
     /**
@@ -151,12 +155,12 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
                 = new CheckCancelNodeProgressMonitor(pm);
             progressMonitor.addProgressListener(progressHandler);
 
-            File parentFile = m_workflowFile.getParentFile();
+            File workflowDirectory = m_workflowFile.getParentFile();
             Display d = Display.getDefault();
-            GUIWorkflowLoadHelper loadHelper = new GUIWorkflowLoadHelper(
-                    d, parentFile.getName());
+            GUIWorkflowLoadHelper loadHelper =
+                new GUIWorkflowLoadHelper(d, workflowDirectory.getName(), workflowDirectory, m_mountpointRoot);
             final WorkflowLoadResult result =
-                WorkflowManager.loadProject(parentFile,
+                WorkflowManager.loadProject(workflowDirectory,
                     new ExecutionMonitor(progressMonitor), loadHelper);
             final WorkflowManager wm = result.getWorkflowManager();
             m_editor.setWorkflowManager(wm);
@@ -256,8 +260,12 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
             // create empty WFM if a new workflow is created
             // (empty workflow file)
             if (createEmptyWorkflow) {
+                WorkflowCreationHelper creationHelper = new WorkflowCreationHelper();
+                creationHelper.setWorkflowContext(new WorkflowContext.Factory(m_workflowFile.getParentFile())
+                    .createContext());
+
                 m_editor.setWorkflowManager(WorkflowManager.ROOT
-                        .createAndAddProject(name));
+                        .createAndAddProject(name, creationHelper));
                 // save empty project immediately
                 // bugfix 1341 -> see WorkflowEditor line 1294
                 // (resource delta visitor movedTo)
@@ -274,6 +282,7 @@ class LoadWorkflowRunnable extends PersistWorkflowRunnable {
             // editor!!! Otherwise the memory can not be freed later
             m_editor = null;
             m_workflowFile = null;
+            m_mountpointRoot = null;
         }
     }
 

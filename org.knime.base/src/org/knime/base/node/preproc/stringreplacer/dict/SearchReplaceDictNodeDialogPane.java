@@ -63,7 +63,6 @@ import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
@@ -115,36 +114,31 @@ final class SearchReplaceDictNodeDialogPane extends NodeDialogPane {
         m_delimiterField.addKeyListener(new KeyAdapter() {
             @Override
             public void keyTyped(final KeyEvent e) {
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        String text = m_delimiterField.getText();
-                        String newText;
-                        if (text.length() > 1) {
-                            if (text.charAt(0) == '\\') {
-                                switch (text.charAt(1)) {
-                                case '\\':
-                                case 't':
-                                    newText = text.substring(0, 2);
-                                    break;
-                                default:
-                                    newText = "\\\\";
-                                }
-                            } else {
-                                newText = Character.toString(text.charAt(0));
-                            }
-                        } else {
-                            newText = text;
+                String text = m_delimiterField.getText();
+                String newText;
+                if (text.length() > 1) {
+                    if (text.charAt(0) == '\\') {
+                        switch (text.charAt(1)) {
+                        case '\\':
+                        case 't':
+                            newText = text.substring(0, 2);
+                            break;
+                        default:
+                            newText = "\\\\";
                         }
-                        if (!newText.equals(text)) {
-                            m_delimiterField.setText(newText);
-                        }
-                        if ((newText.length() == 1 && !newText.startsWith("\\"))
-                                || newText.length() > 1) {
-                            m_delimiterField.selectAll();
-                        }
+                    } else {
+                        newText = Character.toString(text.charAt(0));
                     }
-                });
+                } else {
+                    newText = text;
+                }
+                if (!newText.equals(text)) {
+                    m_delimiterField.setText(newText);
+                }
+                if ((newText.length() == 1 && !newText.startsWith("\\"))
+                        || newText.length() > 1) {
+                    m_delimiterField.selectAll();
+                }
             }
         });
         m_appendTextField = new JTextField();

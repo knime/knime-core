@@ -33,6 +33,8 @@ import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.workflow.NodeID;
+import org.knime.core.node.workflow.WorkflowContext;
+import org.knime.core.node.workflow.WorkflowCreationHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.util.FileUtil;
 import org.knime.testing.node.differNode.DataTableDiffer;
@@ -72,8 +74,12 @@ public abstract class AbstractBlobsInWorkflowTest extends TestCase {
     @Override
     protected void setUp() throws Exception {
         m_wfmDir = FileUtil.createTempDir(getClass().getSimpleName());
+
+        WorkflowCreationHelper creationHelper = new WorkflowCreationHelper();
+        creationHelper.setWorkflowContext(new WorkflowContext.Factory(m_wfmDir).createContext());
+
         WorkflowManager m =
-            WorkflowManager.ROOT.createAndAddProject("Blob test");
+            WorkflowManager.ROOT.createAndAddProject("Blob test", creationHelper);
         RuntimeNodeModel createModel = new RuntimeNodeModel(0, 1) {
             /** {@inheritDoc} */
             @Override

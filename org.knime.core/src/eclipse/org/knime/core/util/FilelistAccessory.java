@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * --------------------------------------------------------------------- *
- * 
+ *
  * History
  *   29.08.2006 (ohl): created
  */
@@ -66,7 +66,8 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
-import javax.swing.SwingUtilities;
+
+import org.knime.core.node.util.ViewUtils;
 
 /**
  * A file list used to display the directory content in the file chooser (when
@@ -74,16 +75,16 @@ import javax.swing.SwingUtilities;
  * JFileChooser, that doesn't show the content of the directory. Users find
  * it disturbing to select a directory they don't know the content of. This
  * accessory displays all files contained in the currently selected dir.
- * 
+ *
  * @author ohl, University of Konstanz
  */
-public class FilelistAccessory extends JPanel 
+public class FilelistAccessory extends JPanel
         implements PropertyChangeListener {
 
     private final JList m_fileList;
- 
+
     private final JFileChooser m_fc;
-    
+
     /* a file filter accepting only files (no directories) */
     private FileFilter m_dirFilter = new FileFilter() {
         public boolean accept(final File f) {
@@ -95,13 +96,13 @@ public class FilelistAccessory extends JPanel
      * The constructor. The new instance must be set as accessory with the
      * specified file chooser. It will register itself with the file chooser (to
      * get updated when user selection changes).
-     * 
+     *
      * @param fc the file chooser this component will be set as accessory to.
      */
     public FilelistAccessory(final JFileChooser fc) {
 
         m_fc = fc;
-        
+
         m_fileList = new JList();
         m_fileList.setCellRenderer(new FileListRenderer(m_fc));
         // as we can't disable selection, we set it to single selection
@@ -112,7 +113,7 @@ public class FilelistAccessory extends JPanel
         labelBox.add(Box.createHorizontalStrut(3));
         labelBox.add(new JLabel("Files in the selected directory:"));
         labelBox.add(Box.createHorizontalGlue());
-        
+
         setLayout(new BorderLayout());
         add(labelBox, BorderLayout.NORTH);
         add(new JScrollPane(m_fileList), BorderLayout.CENTER);
@@ -140,7 +141,7 @@ public class FilelistAccessory extends JPanel
             if (dir == null) {
                 dir = m_fc.getCurrentDirectory();
             }
-            
+
             File[] fileList = null;
             if ((dir != null) && (dir.isDirectory())) {
                 fileList = dir.listFiles(m_dirFilter);
@@ -148,24 +149,25 @@ public class FilelistAccessory extends JPanel
             if (fileList == null) {
                 fileList = new File[0];
             }
-            
-            final File[] finalListForThread = fileList; 
-            SwingUtilities.invokeLater(new Runnable() {
+
+            final File[] finalListForThread = fileList;
+            ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+                @Override
                 public void run() {
                     m_fileList.setListData(finalListForThread);
                 }
             });
-            
+
         }
     }
-    
+
     /**
      * Renderer that checks if the value being renderer is of type
      * <code>File</code> and if so it will render the name of the file
      * together with the file's icon, which it retrieves from the passed
      * FileChooser. If the value is not a file, the passed value's toString()
      * method is used for rendering.
-     * 
+     *
      * @author ohl, University of Konstanz
      */
     public class FileListRenderer extends DefaultListCellRenderer {
@@ -174,7 +176,7 @@ public class FilelistAccessory extends JPanel
 
         /**
          * Creates a new instance of a renderer for a JList containing files.
-         * 
+         *
          * @param fc the FileChooser (to retrieve the icons from). Could be
          *            null, in which case no icons will be displayed.
          */

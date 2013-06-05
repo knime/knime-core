@@ -81,6 +81,7 @@ import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.PortUtil;
 import org.knime.core.node.port.inactive.InactiveBranchPortObjectSpec;
 import org.knime.core.node.port.pmml.PMMLPortObject;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.SingleNodeContainerPersistorVersion200;
 import org.knime.core.node.workflow.WorkflowPersistor;
@@ -177,7 +178,12 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
             isSaveInternals = node.isInactiveBranchConsumer() || !node.isInactive();
         }
         if (isSaveInternals) {
-            saveNodeInternDirectory(node, nodeInternDir, settings, internalMon);
+            NodeContext.pushContext(snc);
+            try {
+                saveNodeInternDirectory(node, nodeInternDir, settings, internalMon);
+            } finally {
+                NodeContext.removeLastContext();
+            }
         }
         internalMon.setProgress(1.0);
         /* A hash set of all tables that originate from the corresponding node

@@ -48,14 +48,16 @@
  */
 package org.knime.workbench.editor2;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.jface.window.Window;
 import org.eclipse.swt.widgets.Display;
 import org.knime.core.node.workflow.Credentials;
+import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.workbench.ui.masterkey.CredentialVariablesDialog;
 
@@ -68,25 +70,39 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
     private final Display m_display;
     private final String m_workflowName;
 
+    private final WorkflowContext m_workflowContext;
+
     /**
      * @param display Display host.
      * @param workflowName Name of the workflow (dialog title)
+     * @param workflowDirectory directory of the workflow that should be loaded; maybe <code>null</code> if not known
+     * @param mountpointRoot root directory of the mount point in which the workflow to the loaded is contained; maybe
+     *            <code>null</code> if not known
      */
-    GUIWorkflowLoadHelper(final Display display, final String workflowName) {
-        this(display, workflowName, false);
+    GUIWorkflowLoadHelper(final Display display, final String workflowName, final File workflowFile, final File mountpointRoot) {
+        this(display, workflowName, workflowFile, mountpointRoot, false);
     }
 
     /**
      * @param display Display host.
      * @param workflowName Name of the workflow (dialog title)
-     * @param isTemplate Whether the loaded workflow is a reference to a
-     * template (don't load data)
+     * @param workflowDirectory directory of the workflow that should be loaded; maybe <code>null</code> if not known
+     * @param mountpointRoot root directory of the mount point in which the workflow to the loaded is contained; maybe
+     *            <code>null</code> if not known
+     * @param isTemplate Whether the loaded workflow is a reference to a template (don't load data)
      */
-    GUIWorkflowLoadHelper(final Display display, final String workflowName,
+    GUIWorkflowLoadHelper(final Display display, final String workflowName, final File workflowDirectory, final File mountpointRoot,
             final boolean isTemplate) {
         super(isTemplate);
         m_display = display;
         m_workflowName = workflowName;
+        if (workflowDirectory == null) {
+            m_workflowContext = null;
+        } else {
+            WorkflowContext.Factory fac = new WorkflowContext.Factory(workflowDirectory);
+            fac.setMountpointRoot(mountpointRoot);
+            m_workflowContext = fac.createContext();
+        }
     }
 
     /** @return the display */
@@ -107,7 +123,7 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
                 CredentialVariablesDialog dialog =
                     new CredentialVariablesDialog(m_display.getActiveShell(),
                             credentials, m_workflowName);
-                if (dialog.open() == Dialog.OK) {
+                if (dialog.open() == Window.OK) {
                     newCredentials.addAll(
                             dialog.getCredentials());
                 } else {
@@ -148,4 +164,11 @@ class GUIWorkflowLoadHelper extends WorkflowLoadHelper {
         return result.get();
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public WorkflowContext getWorkflowContext() {
+        return m_workflowContext;
+    }
 }

@@ -75,7 +75,6 @@ import javax.swing.JSpinner;
 import javax.swing.JTable;
 import javax.swing.ListSelectionModel;
 import javax.swing.SpinnerNumberModel;
-import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.ListSelectionEvent;
@@ -92,6 +91,7 @@ import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.util.ColumnSelectionList;
+import org.knime.core.node.util.ViewUtils;
 import org.knime.core.util.Pair;
 
 /**
@@ -451,7 +451,7 @@ public class BWElimFilterNodeDialog extends NodeDialogPane {
                     "No feature elimination model available.");
         }
         m_targetColumn = m_bwElimModel.targetColumn();
-        SwingUtilities.invokeLater(new Runnable() {
+        ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
             @Override
             public void run() {
                 m_tableModel.featuresChanged(m_bwElimModel);

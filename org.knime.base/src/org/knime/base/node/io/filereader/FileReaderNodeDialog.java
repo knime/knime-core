@@ -68,7 +68,6 @@ import java.beans.PropertyChangeListener;
 import java.io.File;
 import java.io.IOException;
 import java.io.Reader;
-import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -89,7 +88,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JProgressBar;
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
@@ -1131,21 +1129,12 @@ class FileReaderNodeDialog extends NodeDialogPane implements ItemListener {
          * TODO: We need to synchronize the NodeSettings object
          */
 
-        if (SwingUtilities.isEventDispatchThread()) {
-            loadSettingsFromInternal(settings, specs);
-        } else {
-            try {
-                SwingUtilities.invokeAndWait(new Runnable() {
-                    public void run() {
-                        loadSettingsFromInternal(settings, specs);
-                    }
-                });
-            } catch (InterruptedException ie) {
-                LOGGER.warn("Exception while setting new table.", ie);
-            } catch (InvocationTargetException ite) {
-                LOGGER.warn("Exception while setting new table.", ite);
+        ViewUtils.invokeAndWaitInEDT(new Runnable() {
+            @Override
+            public void run() {
+                loadSettingsFromInternal(settings, specs);
             }
-        }
+        });
     }
 
     /**

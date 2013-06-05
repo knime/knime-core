@@ -51,7 +51,6 @@ package org.knime.core.node.tableview;
 
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashSet;
@@ -73,7 +72,6 @@ import org.knime.core.data.container.CloseableRowIterator;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.property.ColorAttr;
 import org.knime.core.node.BufferedDataTable;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.property.hilite.HiLiteHandler;
 import org.knime.core.node.property.hilite.HiLiteListener;
 import org.knime.core.node.property.hilite.KeyEvent;
@@ -315,24 +313,12 @@ public class TableContentModel extends AbstractTableModel
         // TODO: setDataIntern should be in own thread, but is now in
         // EventDispatchThread (even invokeAndWait). This causes OutportView to
         // freeze while data is loading (since it is loaded in EDT)
-        if (SwingUtilities.isEventDispatchThread()) {
-            setDataTableIntern(data, data, null);
-        } else {
-            try {
-                SwingUtilities.invokeAndWait(new Runnable() {
-                   @Override
-                   public void run() {
-                       setDataTableIntern(data, data, null);
-                   }
-                });
-            } catch (InterruptedException ie) {
-                NodeLogger.getLogger(getClass()).warn(
-                        "Exception while setting new table.", ie);
-            } catch (InvocationTargetException ite) {
-                NodeLogger.getLogger(getClass()).warn(
-                        "Exception while setting new table.", ite);
-            }
-        }
+        ViewUtils.invokeAndWaitInEDT(new Runnable() {
+           @Override
+           public void run() {
+               setDataTableIntern(data, data, null);
+           }
+        });
     }
 
     /**
@@ -1435,7 +1421,7 @@ public class TableContentModel extends AbstractTableModel
             m_rowCountOfInterest = m_maxRowCount;
             m_isRowCountOfInterestFinal = isFinal;
         }
-        SwingUtilities.invokeLater(new Runnable() {
+        ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
             @Override
             public void run() {
                 fireTableRowsInserted(oldCount, newCount - 1);

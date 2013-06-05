@@ -213,8 +213,9 @@ import org.knime.workbench.editor2.editparts.NodeContainerEditPart;
 import org.knime.workbench.editor2.editparts.WorkflowRootEditPart;
 import org.knime.workbench.editor2.figures.WorkflowFigure;
 import org.knime.workbench.editor2.pervasive.PervasiveJobExecutorHelper;
+import org.knime.workbench.explorer.filesystem.AbstractExplorerFileStore;
+import org.knime.workbench.explorer.filesystem.ExplorerFileSystem;
 import org.knime.workbench.explorer.view.actions.validators.FileStoreNameValidator;
-import org.knime.workbench.repository.RepositoryManager;
 import org.knime.workbench.ui.KNIMEUIPlugin;
 import org.knime.workbench.ui.SyncExecQueueDispatcher;
 import org.knime.workbench.ui.navigator.KnimeResourceUtil;
@@ -786,9 +787,51 @@ public class WorkflowEditor extends GraphicalEditor implements
 
         if (input instanceof WorkflowManagerInput) {
             setWorkflowManagerInput((WorkflowManagerInput)input);
-        } else {
-            // input is the (full, absolute) path to the workflow.knime file
-            File wfFile = new File(((IURIEditorInput)input).getURI());
+        } else if (input instanceof IURIEditorInput) {
+            File wfFile;
+            File mountPointRoot = null;
+            URI uri = ((IURIEditorInput)input).getURI();
+            if ("file".equals(uri.getScheme())) {
+                wfFile = new File(uri);
+                try {
+                    mountPointRoot =
+                        ExplorerFileSystem.INSTANCE.fromLocalFile(wfFile).getContentProvider().getFileStore("/")
+                            .toLocalFile();
+                } catch (CoreException ex) {
+                    LOGGER.warn(
+                        "Could not determine mount point root for " + wfFile.getParent() + ": " + ex.getMessage(), ex);
+                }
+            } else if (ExplorerFileSystem.SCHEME.equals(uri.getScheme())) {
+                AbstractExplorerFileStore filestore = ExplorerFileSystem.INSTANCE.getStore(uri);
+                if (filestore == null) {
+                    LOGGER.error("Could not find filestore for URI " + uri);
+                    openErrorDialogAndCloseEditor("Could not find filestore for URI " + uri);
+                    return;
+                }
+                try {
+                    wfFile = filestore.toLocalFile();
+                } catch (CoreException ex) {
+                    LOGGER.error(ex.getMessage(), ex);
+                    openErrorDialogAndCloseEditor(ex.getMessage());
+                    return;
+                }
+                if (wfFile == null) {
+                    LOGGER.error("URI " + uri + " is not a local workflow");
+                    openErrorDialogAndCloseEditor("URI " + uri + " is not a local workflow");
+                    return;
+                }
+
+                try {
+                    mountPointRoot = filestore.getContentProvider().getFileStore("/").toLocalFile();
+                } catch (CoreException ex) {
+                    LOGGER.warn(
+                        "Could not determine mount point root for " + wfFile.getParent() + ": " + ex.getMessage(), ex);
+                }
+            } else {
+                LOGGER.error("Unsupported scheme for workflow URI: " + uri);
+                openErrorDialogAndCloseEditor("Unsupported scheme for workflow URI: " + uri);
+                return;
+            }
 
             // non-null if the workflow editor was open and a doSaveAs is
             // called -- need to re-register listeners
@@ -813,15 +856,6 @@ public class WorkflowEditor extends GraphicalEditor implements
             }
 
             try {
-                // FIXME:
-                // setInput is called before the entire repository is loaded,
-                // need to figure out how to do it the other way around
-                // the static block needs to be executed, access
-                // RepositoryManager.INSTANCE
-                if (RepositoryManager.INSTANCE == null) {
-                    LOGGER.fatal(
-                            "Repository Manager Instance must not be null!");
-                }
                 assert m_manager == null;
 
                 m_manager =
@@ -838,33 +872,14 @@ public class WorkflowEditor extends GraphicalEditor implements
                     IWorkbench wb = PlatformUI.getWorkbench();
                     IProgressService ps = wb.getProgressService();
                     // this one sets the workflow manager in the editor
-                    LoadWorkflowRunnable loadWorflowRunnable =
-                            new LoadWorkflowRunnable(this, wfFile);
+                    LoadWorkflowRunnable loadWorflowRunnable = new LoadWorkflowRunnable(this, wfFile, mountPointRoot);
                     ps.busyCursorWhile(loadWorflowRunnable);
                     // check if the editor should be disposed
                     // non-null if set by workflow runnable above
                     if (m_manager == null) {
                         if (loadWorflowRunnable.hasLoadingBeenCanceled()) {
-                            final String cancelError =
-                                loadWorflowRunnable.getLoadingCanceledMessage();
-                            SwingUtilities.invokeLater(new Runnable() {
-                                /** {@inheritDoc} */
-                                @Override
-                                public void run() {
-                                    JOptionPane.showMessageDialog(null,
-                                            cancelError,
-                                            "Editor could not be opened",
-                                            JOptionPane.ERROR_MESSAGE);
-                                }
-                            });
-                            Display.getDefault().asyncExec(new Runnable() {
-                                /** {@inheritDoc} */
-                                @Override
-                                public void run() {
-                                    getEditorSite().getPage().closeEditor(
-                                            WorkflowEditor.this, false);
-                                }
-                            });
+                            String cancelError = loadWorflowRunnable.getLoadingCanceledMessage();
+                            openErrorDialogAndCloseEditor(cancelError);
                             throw new OperationCanceledException(cancelError);
                         } else if (loadWorflowRunnable.getThrowable() != null) {
                             throw new RuntimeException(
@@ -893,6 +908,8 @@ public class WorkflowEditor extends GraphicalEditor implements
 
             // update Actions, as now there's everything available
             updateActions();
+        } else {
+            throw new IllegalArgumentException("Unsupported editor input: " + input.getClass());
         }
     }
 
@@ -2473,4 +2490,18 @@ public class WorkflowEditor extends GraphicalEditor implements
     }
 
 
+    private void openErrorDialogAndCloseEditor(final String message) {
+        SwingUtilities.invokeLater(new Runnable() {
+            @Override
+            public void run() {
+                JOptionPane.showMessageDialog(null, message, "Workflow could not be opened", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        Display.getDefault().asyncExec(new Runnable() {
+            @Override
+            public void run() {
+                getEditorSite().getPage().closeEditor(WorkflowEditor.this, false);
+            }
+        });
+    }
 }

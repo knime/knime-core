@@ -52,7 +52,6 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -70,7 +69,6 @@ import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.ListSelectionModel;
-import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import javax.swing.border.TitledBorder;
 import javax.swing.event.ChangeEvent;
@@ -80,9 +78,9 @@ import org.knime.base.node.viz.aggregation.util.GUIUtils;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
-import org.knime.core.node.NodeLogger;
 import org.knime.core.node.util.ColumnFilter;
 import org.knime.core.node.util.DataColumnSpecListCellRenderer;
+import org.knime.core.node.util.ViewUtils;
 
 
 /**
@@ -384,25 +382,14 @@ public class AggregationColumnFilterPanel extends JPanel {
     public void update(final DataTableSpec spec,
             final Collection<? extends ColorColumn> incl) {
         if (spec == null) {
-            throw new NullPointerException("TableSpec must not be null");
+            throw new IllegalArgumentException("TableSpec must not be null");
         }
-        if (SwingUtilities.isEventDispatchThread()) {
-            updateInternal(spec, incl);
-        } else {
-            try {
-                SwingUtilities.invokeAndWait(new Runnable() {
-                   public void run() {
-                       updateInternal(spec, incl);
-                   }
-                });
-            } catch (final InterruptedException ie) {
-                NodeLogger.getLogger(getClass()).warn(
-                "Exception while updating AggregationColumnFilterPanel.", ie);
-            } catch (final InvocationTargetException ite) {
-                NodeLogger.getLogger(getClass()).warn(
-                "Exception while updating AggregationColumnFilterPanel.", ite);
+        ViewUtils.invokeAndWaitInEDT(new Runnable() {
+            @Override
+            public void run() {
+                updateInternal(spec, incl);
             }
-        }
+        });
         repaint();
     }
 

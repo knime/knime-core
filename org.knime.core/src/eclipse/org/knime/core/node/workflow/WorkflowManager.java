@@ -278,6 +278,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.5 */
     private WorkflowCipher m_cipher = WorkflowCipher.NULL_CIPHER;
 
+    private WorkflowContext m_contex;
+
     /** The root of everything, a workflow with no in- or outputs.
      * This workflow holds the top level projects. */
     public static final WorkflowManager ROOT =
@@ -344,6 +346,9 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
         }
         boolean isProject = persistor.isProject();
+        if (isProject) {
+            m_contex = persistor.getWorkflowContext();
+        }
         m_workflow = new Workflow(this, id);
         m_name = persistor.getName();
         m_editorInfo = persistor.getEditorUIInformation();
@@ -401,11 +406,14 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
 
     /** Create new project - which is the same as creating a new subworkflow
      * at this level with no in- or outports.
-     * @param name The name of the workflow (null value is ok)
+     * @param name the name of the workflow (<code>null</code> value is ok)
+     * @param creationHelper a workflow creation helper instance, must not be <code>null</code>
      * @return newly created workflow
+     * @since 2.8
      */
-    public WorkflowManager createAndAddProject(final String name) {
+    public WorkflowManager createAndAddProject(final String name, final WorkflowCreationHelper creationHelper) {
         WorkflowManager wfm = createAndAddSubWorkflow(new PortType[0], new PortType[0], name, true);
+        wfm.m_contex = creationHelper.getWorkflowContext();
         LOGGER.debug("Created project " + ((NodeContainer)wfm).getID());
         return wfm;
     }
@@ -4623,10 +4631,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         NodeSettings origSettings = new NodeSettings(defName);
         saveSettings(origSettings);
         NodeSettings dialogSettings = new NodeSettings(defName);
+        NodeContext.pushContext(this);
         try {
             getDialogPane().finishEditingAndSaveSettingsTo(dialogSettings);
         } catch (InvalidSettingsException e) {
             return false;
+        } finally {
+            NodeContext.removeLastContext();
         }
         return dialogSettings.equals(origSettings);
     }
@@ -5871,7 +5882,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         synchronized (WorkflowManager.class) {
             if (WFM_TEMPLATE_ROOT == null) {
                 WFM_TEMPLATE_ROOT =
-                    ROOT.createAndAddProject("Workflow Template Root");
+                    ROOT.createAndAddProject("Workflow Template Root", new WorkflowCreationHelper());
             }
         }
         WorkflowManager copy = null;
@@ -6246,7 +6257,16 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             throws IOException, InvalidSettingsException,
             CanceledExecutionException, UnsupportedWorkflowVersionException,
             LockFailedException {
-        return ROOT.load(directory, exec, loadHelper, false);
+        WorkflowLoadResult result = ROOT.load(directory, exec, loadHelper, false);
+        if ((result.getWorkflowManager() != null) && (result.getWorkflowManager().m_contex == null)) {
+            if (loadHelper.getWorkflowContext() != null) {
+                result.getWorkflowManager().m_contex = loadHelper.getWorkflowContext();
+            } else {
+                LOGGER.warn("No workflow context available for " + directory, new Throwable());
+                result.getWorkflowManager().m_contex = new WorkflowContext.Factory(directory).createContext();
+            }
+        }
+        return result;
     }
 
     /** {@inheritDoc} */
@@ -6699,6 +6719,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             // two steps below: loadNodeContainer and loadContent
             ExecutionMonitor sub1 = exec.createSubProgress(1.0 / (2 * m_workflow.getNrNodes()));
             ExecutionMonitor sub2 = exec.createSubProgress(1.0 / (2 * m_workflow.getNrNodes()));
+            NodeContext.pushContext(cont);
             try {
                 persistor.loadNodeContainer(tblRep, sub1, subResult);
             } catch (CanceledExecutionException e) {
@@ -6709,6 +6730,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 }
                 subResult.addError("Errors loading, skipping it: " + e.getMessage());
                 needsReset = true;
+            } finally {
+                NodeContext.removeLastContext();
             }
             sub1.setProgress(1.0);
             // if cont == isolated meta nodes, then we need to block that meta
@@ -7951,6 +7974,16 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public Set<NodeGraphAnnotation> getNodeGraphAnnotation(final NodeID id) {
         return m_workflow.getNodeGraphAnnotations(id);
+    }
+
+    /**
+     * Returns the current workflow context or <code>null</code> if no context is available.
+     *
+     * @return a workflow context or <code>null</code>
+     * @since 2.8
+     */
+    public WorkflowContext getContext() {
+        return m_contex;
     }
 
     /** Meta data such as who create the workflow and who edited it last and when.

@@ -60,13 +60,13 @@ import javax.swing.JCheckBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.util.ViewUtils;
 
 /**
  *
@@ -250,7 +250,7 @@ class LimitRowsPanel extends JPanel {
      */
     private void checkAndFixTextfield() {
         // this is called from inside the change listener - invoke is later
-        SwingUtilities.invokeLater(new Runnable() {
+        ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
             public void run() {
 
                 if (m_maxNumber.getText().trim().length() == 0) {
@@ -285,9 +285,9 @@ class LimitRowsPanel extends JPanel {
      */
     private void checkAndFixSkipCount() {
         // this is called from inside the change listener - invoke is later
-        SwingUtilities.invokeLater(new Runnable() {
+        ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+            @Override
             public void run() {
-
                 if (m_skipNumber.getText().trim().length() == 0) {
                     // can't handle no empty strings.
                     m_lastValidSkips = "0";

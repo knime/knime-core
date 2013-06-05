@@ -68,6 +68,7 @@ import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSetFactory;
+import org.knime.core.node.workflow.WorkflowCreationHelper;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor;
@@ -105,8 +106,7 @@ public final class RepositoryFactory {
 
     static {
         META_NODE_ROOT =
-                WorkflowManager.ROOT
-                        .createAndAddProject("KNIME MetaNode Repository");
+            WorkflowManager.ROOT.createAndAddProject("KNIME MetaNode Repository", new WorkflowCreationHelper());
     }
 
     /**

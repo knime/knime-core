@@ -77,7 +77,6 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
-import javax.swing.SwingUtilities;
 import javax.swing.WindowConstants;
 
 import org.knime.core.node.workflow.NodeContainer;
@@ -270,13 +269,7 @@ public final class NodeDialog {
             /** Invoked when the window is opened. */
             @Override
             public void windowOpened(final WindowEvent we) {
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        // invoke open operation
-                        onOpen(we);
-                    }
-                });
+                onOpen(we);
             }
         });
         return dialog;
@@ -369,7 +362,7 @@ public final class NodeDialog {
     protected void onCancel(final AWTEvent event) {
         assert (event != null);
         // send cancel action to underlying dialog pane
-        m_dialogPane.onCancel();
+        m_dialogPane.callOnCancel();
         closeDialog();
     }
 
@@ -394,7 +387,7 @@ public final class NodeDialog {
     protected void onOpen(final AWTEvent event) {
         assert (event != null);
         // send cancel action to underlying dialog pane
-        m_dialogPane.onOpen();
+        m_dialogPane.callOnOpen();
     }
 
     /**

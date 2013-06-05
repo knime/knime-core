@@ -340,6 +340,14 @@ public class WorkflowPersistorVersion1xx implements WorkflowPersistor, FromFileN
         return m_credentials;
     }
 
+    /** {@inheritDoc}
+     * @since 2.8
+     */
+    @Override
+    public WorkflowContext getWorkflowContext() {
+        return isProject() ? getMetaPersistor().getLoadHelper().getWorkflowContext() : null;
+    }
+
     /** {@inheritDoc} */
     @Override
     public List<WorkflowAnnotation> getWorkflowAnnotations() {

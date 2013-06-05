@@ -56,11 +56,11 @@ import java.util.Collection;
 
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
-import javax.swing.SwingUtilities;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.PlainDocument;
 
 import org.knime.core.node.NodeView;
+import org.knime.core.node.util.ViewUtils;
 
 /**
  * Base class for both output views. Provides a text field and the ability to
@@ -91,17 +91,12 @@ public abstract class ExtToolOutputNodeView<T extends ExtToolOutputNodeModel>
         m_numOfLines = 0;
         m_colorGray = Color.GRAY;
         m_colorDefault = m_output.getForeground();
-        if (!SwingUtilities.isEventDispatchThread()) {
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    init();
-                }
-            });
-        } else {
-            init();
-        }
-
+        ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+            @Override
+            public void run() {
+                init();
+            }
+        });
     }
 
     /**
@@ -150,17 +145,12 @@ public abstract class ExtToolOutputNodeView<T extends ExtToolOutputNodeModel>
 
     private void setTextInSwingThreadLater(final Collection<String> lines,
             final Color fgColor) {
-
-        if (!SwingUtilities.isEventDispatchThread()) {
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    setText(lines, fgColor);
-                }
-            });
-        } else {
-            setText(lines, fgColor);
-        }
+        ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+            @Override
+            public void run() {
+                setText(lines, fgColor);
+            }
+        });
     }
 
     private void setText(final Collection<String> lines, final Color fgCol) {
@@ -183,16 +173,12 @@ public abstract class ExtToolOutputNodeView<T extends ExtToolOutputNodeModel>
      * @param s the line to add
      */
     protected void addLineInSwingThreadLater(final String s) {
-        if (!SwingUtilities.isEventDispatchThread()) {
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    addLine(s);
-                }
-            });
-        } else {
-            addLine(s);
-        }
+        ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+            @Override
+            public void run() {
+                addLine(s);
+            }
+        });
     }
 
     /**

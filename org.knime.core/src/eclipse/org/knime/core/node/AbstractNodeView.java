@@ -47,6 +47,8 @@
  */
 package org.knime.core.node;
 
+import org.knime.core.node.workflow.NodeContext;
+
 
 
 /**
@@ -77,6 +79,13 @@ public abstract class AbstractNodeView<T extends NodeModel> {
     /** Holds the underlying <code>NodeModel</code> of type T, never null. */
     private final T m_nodeModel;
 
+    /**
+     * The node context for this view.
+     * @since 2.8
+     */
+    protected final NodeContext m_nodeContext;
+
+
     /** Creates new view. This constructor keeps the node model reference and
      * instantiates the logger.
      * @param nodeModel The underlying node model.
@@ -85,10 +94,14 @@ public abstract class AbstractNodeView<T extends NodeModel> {
      */
     protected AbstractNodeView(final T nodeModel) {
         if (nodeModel == null) {
-            throw new NullPointerException("Node Mode must not be null");
+            throw new IllegalArgumentException("Node model must not be null");
         }
         m_logger = NodeLogger.getLogger(this.getClass());
         m_nodeModel = nodeModel;
+
+        m_nodeContext = NodeContext.getContext();
+        m_logger.assertLog(m_nodeContext != null, "No node context available in constructor of node dialog pane "
+            + getClass().getName());
     }
 
     /**

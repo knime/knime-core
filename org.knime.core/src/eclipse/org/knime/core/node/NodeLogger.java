@@ -514,8 +514,8 @@ public final class NodeLogger {
      * @param m Print this message if failed.
      */
     public void assertLog(final boolean b, final String m) {
-        if (KNIMEConstants.ASSERTIONS_ENABLED) {
-            m_logger.assertLog(b, "ASSERT " + m);
+        if (KNIMEConstants.ASSERTIONS_ENABLED && b) {
+            m_logger.error("ASSERT " + m, new AssertionError(m));
         }
     }
 

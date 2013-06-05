@@ -205,11 +205,25 @@
             </message_arguments>
         </filter>
     </resource>
+    <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowManager.java" type="org.knime.core.node.workflow.WorkflowManager">
+        <filter id="338792546">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowManager"/>
+                <message_argument value="createAndAddProject(String)"/>
+            </message_arguments>
+        </filter>
+    </resource>
     <resource path="src/eclipse/org/knime/core/node/workflow/WorkflowPersistor.java" type="org.knime.core.node.workflow.WorkflowPersistor">
         <filter comment="persistor changes" id="403804204">
             <message_arguments>
                 <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
                 <message_argument value="getAuthorInformation()"/>
+            </message_arguments>
+        </filter>
+        <filter id="403804204">
+            <message_arguments>
+                <message_argument value="org.knime.core.node.workflow.WorkflowPersistor"/>
+                <message_argument value="getWorkflowContext()"/>
             </message_arguments>
         </filter>
         <filter id="643842064">

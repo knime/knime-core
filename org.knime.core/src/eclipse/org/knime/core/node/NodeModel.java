@@ -91,6 +91,7 @@ import org.knime.core.node.workflow.FlowVariable;
 import org.knime.core.node.workflow.ICredentials;
 import org.knime.core.node.workflow.LoopEndNode;
 import org.knime.core.node.workflow.LoopStartNode;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.ScopeStartNode;
 
 
@@ -387,6 +388,9 @@ public abstract class NodeModel {
      * Unregisters all views from the model.
      */
     final void unregisterAllViews() {
+        m_logger.assertLog(NodeContext.getContext() != null,
+                "No node context available, please check call hierarchy and fix it");
+
         m_logger.debug("Removing all (" + m_views.size() + ") views from model.");
         for (AbstractNodeView<?> view : m_views) {
             view.closeView();
@@ -438,6 +442,9 @@ public abstract class NodeModel {
      */
     final void loadSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
+        m_logger.assertLog(NodeContext.getContext() != null,
+                "No node context available, please check call hierarchy and fix it");
+
         // validate the settings before loading them
         validateSettings(settings);
         // load settings into the model
@@ -525,6 +532,8 @@ public abstract class NodeModel {
             final ExecutionContext exec) throws Exception {
         assert (data != null && data.length == getNrInPorts());
         assert (exec != null);
+        m_logger.assertLog(NodeContext.getContext() != null,
+                "No node context available, please check call hierarchy and fix it");
 
         setWarningMessage(null);
 
@@ -685,6 +694,9 @@ public abstract class NodeModel {
      */
     protected PortObject[] execute(final PortObject[] inObjects,
             final ExecutionContext exec) throws Exception {
+        m_logger.assertLog(NodeContext.getContext() != null,
+                "No node context available, please check call hierarchy and fix it");
+
         // default implementation: the standard version needs to hold: all
         // ports are data ports!
 
@@ -755,6 +767,9 @@ public abstract class NodeModel {
      * views about the changes.
      */
     final void resetModel() {
+        m_logger.assertLog(NodeContext.getContext() != null,
+                "No node context available, please check call hierarchy and fix it");
+
         try {
             setWarningMessage(null);
             // reset in derived model
@@ -816,6 +831,9 @@ public abstract class NodeModel {
      * @param arg The argument you want to pass.
      */
     protected final void notifyViews(final Object arg) {
+        m_logger.assertLog(NodeContext.getContext() != null,
+                "No node context available, please check call hierarchy and fix it");
+
         for (AbstractNodeView<?> view : m_views) {
             view.updateModel(arg);
         }
@@ -969,6 +987,8 @@ public abstract class NodeModel {
     final PortObjectSpec[] configureModel(final PortObjectSpec[] inSpecs)
             throws InvalidSettingsException {
         assert inSpecs.length == getNrInPorts();
+        m_logger.assertLog(NodeContext.getContext() != null,
+                "No node context available, please check call hierarchy and fix it");
 
         setWarningMessage(null);
 
@@ -1045,6 +1065,9 @@ public abstract class NodeModel {
      */
     protected PortObjectSpec[] configure(final PortObjectSpec[] inSpecs)
     throws InvalidSettingsException {
+        m_logger.assertLog(NodeContext.getContext() != null,
+                "No node context available, please check call hierarchy and fix it");
+
         // default implementation: the standard version needs to hold: all
         // ports are data ports!
 
@@ -1785,6 +1808,8 @@ public abstract class NodeModel {
     public PortObjectSpec[] computeFinalOutputSpecs(
             final StreamableOperatorInternals internals,
             final PortObjectSpec[] inSpecs) throws InvalidSettingsException {
+        m_logger.assertLog(NodeContext.getContext() != null,
+            "No node context available, please check call hierarchy and fix it");
         return configure(inSpecs);
     }
 

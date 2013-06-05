@@ -60,6 +60,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.interactive.InteractiveWebNodeView;
 import org.knime.core.node.interactive.WebViewTemplate;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.workbench.editor2.ImageRepository;
 
@@ -120,7 +121,12 @@ public class OpenInteractiveViewAction extends Action {
                 view = m_nodeContainer.getInteractiveView();
             } else if (m_nodeContainer.hasInteractiveWebView()) {
                 WebViewTemplate template = m_nodeContainer.getInteractiveWebViewTemplate();
-                view = new InteractiveWebNodeView(((SingleNodeContainer)m_nodeContainer).getNodeModel(), template);
+                NodeContext.pushContext(m_nodeContainer);
+                try {
+                    view = new InteractiveWebNodeView(((SingleNodeContainer)m_nodeContainer).getNodeModel(), template);
+                } finally {
+                    NodeContext.removeLastContext();
+                }
                 ((InteractiveWebNodeView)view).setWorkflowManagerAndNodeID(m_nodeContainer.getParent(),
                                                                            m_nodeContainer.getID());
             } else {

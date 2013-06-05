@@ -69,6 +69,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NodeContext;
 
 /**
  * Implements a sophisticated thread pool.
@@ -82,12 +83,14 @@ public class ThreadPool {
 
     private class MyFuture<T> extends FutureTask<T> {
         private final CountDownLatch m_startWaiter = new CountDownLatch(1);
+        private final NodeContext m_nodeContext;
 
         /**
          * @see FutureTask#FutureTask(Callable)
          */
         public MyFuture(final Callable<T> callable) {
             super(callable);
+            m_nodeContext = NodeContext.getContext();
         }
 
         /**
@@ -104,6 +107,7 @@ public class ThreadPool {
          */
         public MyFuture(final Runnable runnable, final T result) {
             super(runnable, result);
+            m_nodeContext = NodeContext.getContext();
         }
 
         /**
@@ -121,7 +125,12 @@ public class ThreadPool {
         @Override
         public void run() {
             m_startWaiter.countDown();
-            super.run();
+            NodeContext.pushContext(m_nodeContext);
+            try {
+                super.run();
+            } finally {
+                NodeContext.removeLastContext();
+            }
         }
 
         /**
@@ -243,13 +252,9 @@ public class ThreadPool {
                     } catch (CancellationException ex) {
                         LOGGER.debug("Future was canceled");
                     } catch (ExecutionException ex) {
-                        if ((ex.getCause() != null)
-                                || (ex.getCause() instanceof CanceledExecutionException)) {
-                            // this is OK
-                        } else {
-                            LOGGER.error(
-                                    "An exception occurred while executing "
-                                            + "a runnable.", ex.getCause());
+                        if (!(ex.getCause() instanceof CanceledExecutionException)) {
+                            // canceled execution exception is fine and will not be reported
+                            LOGGER.error("An exception occurred while executing " + "a runnable.", ex.getCause());
                         }
                     } catch (Exception ex) {
                         // prevent the worker from being terminated
@@ -386,15 +391,19 @@ public class ThreadPool {
      * example, {@link java.security.PrivilegedAction} to {@link Callable} form
      * so they can be submitted.
      *
-     * @param t the task to submit
+     * @param task the task to submit
      * @param <T> any result type
      * @return a Future representing pending completion of the task
      * @throws NullPointerException if <code>task</code> null
      *
      * @see #submit(Callable)
      */
-    public <T> Future<T> enqueue(final Callable<T> t) {
-        MyFuture<T> ftask = new MyFuture<T>(t);
+    public <T> Future<T> enqueue(final Callable<T> task) {
+        if (task == null) {
+            throw new IllegalArgumentException("Task must not be null");
+        }
+
+        MyFuture<T> ftask = new MyFuture<T>(task);
 
         synchronized (m_queuedFutures) {
             incrementPendingJobs();
@@ -624,13 +633,11 @@ public class ThreadPool {
         if (newValue < 0) {
             throw new IllegalArgumentException("Thread count must be >= 0");
         }
-        if (m_parent == null) {
-            if (newValue < m_maxThreads.get()) {
-                for (int i = (m_maxThreads.get() - newValue); i >= 0; i--) {
-                    Worker w = m_availableWorkers.poll();
-                    if (w != null) {
-                        w.interrupt();
-                    }
+        if ((m_parent == null) && (newValue < m_maxThreads.get())) {
+            for (int i = (m_maxThreads.get() - newValue); i >= 0; i--) {
+                Worker w = m_availableWorkers.poll();
+                if (w != null) {
+                    w.interrupt();
                 }
             }
         }
@@ -684,17 +691,12 @@ public class ThreadPool {
      * @param task the task to submit
      * @param <T> any result type
      * @return a Future representing pending completion of the task
-     * @throws NullPointerException if <code>task</code> null
      * @throws InterruptedException if the thread is interrupted
      *
      * @see #enqueue(Callable)
      */
     public <T> Future<T> submit(final Callable<T> task)
             throws InterruptedException {
-        if (task == null) {
-            throw new NullPointerException();
-        }
-
         MyFuture<T> ftask = (MyFuture<T>)enqueue(task);
         ftask.waitUntilStarted();
         return ftask;
@@ -707,15 +709,10 @@ public class ThreadPool {
      * @param task the task to submit
      * @return a Future representing pending completion of the task, and whose
      *         <tt>get()</tt> method will return <tt>null</tt> upon completion.
-     * @throws NullPointerException if <code>task</code> null
      * @throws InterruptedException if the thread is interrupted
      * @see #enqueue(Runnable)
      */
     public Future<?> submit(final Runnable task) throws InterruptedException {
-        if (task == null) {
-            throw new NullPointerException();
-        }
-
         MyFuture<?> ftask = (MyFuture<?>)enqueue(task);
         ftask.waitUntilStarted();
         return ftask;

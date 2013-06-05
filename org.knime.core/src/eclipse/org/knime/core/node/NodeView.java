@@ -72,6 +72,7 @@ import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 
 import org.knime.core.node.util.ViewUtils;
+import org.knime.core.node.workflow.NodeContext;
 
 /**
  * Node view class that displays the view content in an
@@ -308,11 +309,14 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
      */
     @Override
     protected final void callOpenView(final String title) {
+        NodeContext.pushContext(m_nodeContext);
         try {
             onOpen();
         } catch (Throwable t) {
             getLogger().error("NodeView.onOpen() causes an error "
                     + "on opening node view, reason: " + t.getMessage(), t);
+        } finally {
+            NodeContext.removeLastContext();
         }
         getNodeModel().addWarningListener(this);
         callModelChanged();
@@ -362,11 +366,14 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
      */
     @Override
     public final void callCloseView() {
+        NodeContext.pushContext(m_nodeContext);
         try {
             onClose();
         } catch (Throwable t) {
-            getLogger().error("NodeView.onClose() causes an error "
-                    + "during closing node view, reason: " + t.getMessage(), t);
+            getLogger().error(
+                "NodeView.onClose() caused an error during closing node view, reason: " + t.getMessage(), t);
+        } finally {
+            NodeContext.removeLastContext();
         }
         getNodeModel().removeWarningListener(this);
         m_frame.getContentPane().firePropertyChange(PROP_CHANGE_CLOSE, 0, 1);

@@ -95,6 +95,7 @@ import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.data.property.ColorAttr;
+import org.knime.core.node.util.ViewUtils;
 
 
 /**
@@ -163,7 +164,8 @@ class SpreadsheetTable extends JTable {
                     m_cellEditor.setStopEditingWidthArrows(true);
                     // request focus
                     this.requestFocus();
-                    SwingUtilities.invokeLater(new Runnable() {
+                    ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+                        @Override
                         public void run() {
                             processKeyBinding(ks, e, condition, pressed);
                         }

@@ -90,6 +90,14 @@ final class InsertWorkflowPersistor implements WorkflowPersistor {
         throw new IllegalStateException("not to be called");
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public WorkflowContext getWorkflowContext() {
+        throw new IllegalStateException("not to be called");
+    }
+
     /** {@inheritDoc} */
     @Override
     public Set<ConnectionContainerTemplate> getConnectionSet() {

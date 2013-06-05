@@ -48,7 +48,9 @@
  */
 package org.knime.core.node.workflow;
 
+import java.util.ArrayDeque;
 import java.util.Arrays;
+import java.util.Deque;
 
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.Node;
@@ -87,12 +89,12 @@ public abstract class NodeExecutionJob implements Runnable {
      */
     protected NodeExecutionJob(final NodeContainer nc, final PortObject[] data) {
         if (nc == null || data == null) {
-            throw new NullPointerException("Args must not be null.");
+            throw new IllegalArgumentException("Arguments must not be null.");
         }
         for (int i = 0; i < data.length; i++) {
             PortType type = nc.getInPort(i).getPortType();
             if (data[i] == null && !type.isOptional()) {
-                throw new NullPointerException("Array arg must not contain null for non-optional ports");
+                throw new IllegalArgumentException("Port objects must not be null for non-optional ports");
             }
         }
         m_nc = nc;
@@ -102,6 +104,24 @@ public abstract class NodeExecutionJob implements Runnable {
     /** {@inheritDoc} */
     @Override
     public final void run() {
+        Deque<NodeContext> contextStack = NodeContext.getContextStack();
+        Deque<NodeContext> savedContextStack = new ArrayDeque<NodeContext>(contextStack);
+        contextStack.clear();
+
+        NodeContext.pushContext(m_nc);
+        try {
+            internalRun();
+        } finally {
+            NodeContext.removeLastContext();
+            assert contextStack.size() == 0 : "Context stack is not empty although it should be";
+            contextStack.addAll(savedContextStack);
+        }
+    }
+
+    /**
+     *
+     */
+    private void internalRun() {
         NodeContainerExecutionStatus status = null;
         // handle inactive branches -- do not delegate to custom job
         // manager (the node will just return inactive branch objects)

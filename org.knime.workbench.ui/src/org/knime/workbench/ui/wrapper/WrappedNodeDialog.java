@@ -94,6 +94,7 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeContainer;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeOutPort;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.workbench.ui.KNIMEUIPlugin;
@@ -141,27 +142,32 @@ public class WrappedNodeDialog extends Dialog {
         super(parentShell);
         this.setShellStyle(SWT.PRIMARY_MODAL | SWT.SHELL_TRIM);
         m_nodeContainer = nodeContainer;
-        m_dialogPane = m_nodeContainer.getDialogPaneWithSettings();
-        m_logger = NodeLogger.getLogger(m_nodeContainer.getNameWithID());
+        NodeContext.pushContext(m_nodeContainer);
+        try {
+            m_dialogPane = m_nodeContainer.getDialogPaneWithSettings();
+            m_logger = NodeLogger.getLogger(m_nodeContainer.getNameWithID());
 
-        if (enableMacOSXWorkaround) {
-            // get underlying panel and do layout it
-            final JPanel panel = m_dialogPane.getPanel();
-            final Display display = Display.getCurrent();
-            SwingUtilities.invokeLater(new Runnable() {
-                @Override
-                public void run() {
-                    panel.doLayout();
-                    m_dialogSizeComputed.set(true);
-                    display.asyncExec(new Runnable() {
-                        @Override
-                        public void run() {
-                            // deliberately empty, this is only to wake up a
-                            // potentially waiting SWT-thread in getInitialSize
-                        }
-                    });
-                }
-            });
+            if (enableMacOSXWorkaround) {
+                // get underlying panel and do layout it
+                final JPanel panel = m_dialogPane.getPanel();
+                final Display display = Display.getCurrent();
+                SwingUtilities.invokeLater(new Runnable() {
+                    @Override
+                    public void run() {
+                        panel.doLayout();
+                        m_dialogSizeComputed.set(true);
+                        display.asyncExec(new Runnable() {
+                            @Override
+                            public void run() {
+                                // deliberately empty, this is only to wake up a
+                                // potentially waiting SWT-thread in getInitialSize
+                            }
+                        });
+                    }
+                });
+            }
+        } finally {
+            NodeContext.removeLastContext();
         }
     }
 
@@ -181,8 +187,23 @@ public class WrappedNodeDialog extends Dialog {
      */
     @Override
     public int open() {
-        m_dialogPane.onOpen();
-        return super.open();
+        ViewUtils.invokeAndWaitInEDT(new Runnable() {
+            @Override
+            public void run() {
+                NodeContext.pushContext(m_nodeContainer);
+            }
+        });
+        try {
+            m_dialogPane.onOpen();
+            return super.open();
+        } finally {
+            ViewUtils.invokeAndWaitInEDT(new Runnable() {
+                @Override
+                public void run() {
+                    NodeContext.removeLastContext();
+                }
+            });
+        }
     }
 
     /**
@@ -214,6 +235,7 @@ public class WrappedNodeDialog extends Dialog {
             public void widgetSelected(final SelectionEvent e) {
                 String file = openDialog.open();
                 if (file != null) {
+                    NodeContext.pushContext(m_nodeContainer);
                     try {
                         m_dialogPane
                                 .loadSettingsFrom(new FileInputStream(file));
@@ -221,6 +243,8 @@ public class WrappedNodeDialog extends Dialog {
                         showErrorMessage(ioe.getMessage());
                     } catch (NotConfigurableException ex) {
                         showErrorMessage(ex.getMessage());
+                    } finally {
+                        NodeContext.removeLastContext();
                     }
                 }
             }
@@ -233,6 +257,7 @@ public class WrappedNodeDialog extends Dialog {
             public void widgetSelected(final SelectionEvent e) {
                 String file = saveDialog.open();
                 if (file != null) {
+                    NodeContext.pushContext(m_nodeContainer);
                     try {
                         m_dialogPane.saveSettingsTo(new FileOutputStream(file));
                     } catch (IOException ioe) {
@@ -246,6 +271,8 @@ public class WrappedNodeDialog extends Dialog {
                         // SWT-AWT-Bridge doesn't properly
                         // repaint after dialog disappears
                         m_dialogPane.getPanel().repaint();
+                    } finally {
+                        NodeContext.removeLastContext();
                     }
                 }
             }
@@ -441,8 +468,13 @@ public class WrappedNodeDialog extends Dialog {
 
     private void doCancel() {
         // delegate cancel&close event to underlying dialog pane
-        m_dialogPane.onCancel();
-        m_dialogPane.callOnClose();
+        NodeContext.pushContext(m_nodeContainer);
+        try {
+            m_dialogPane.onCancel();
+            m_dialogPane.callOnClose();
+        } finally {
+            NodeContext.removeLastContext();
+        }
         buttonPressed(IDialogConstants.CANCEL_ID);
     }
 
@@ -466,7 +498,12 @@ public class WrappedNodeDialog extends Dialog {
 
     private void runOK(final boolean execute, final boolean openView) {
         // send close action to underlying dialog pane
-        m_dialogPane.callOnClose();
+        NodeContext.pushContext(m_nodeContainer);
+        try {
+            m_dialogPane.callOnClose();
+        } finally {
+            NodeContext.removeLastContext();
+        }
         buttonPressed(IDialogConstants.OK_ID);
         if (execute) {
             m_nodeContainer.getParent()
