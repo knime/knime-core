@@ -63,9 +63,10 @@ public interface WorkflowTestFactory {
      * to save the executed workflow can be provided.
      *
      * @param workflowDir the directory containing the workflow
+     * @param testcaseRoot root directory of all test workflows; this is used as a replacement for the mount point root
      * @param saveLocation an optional location where to save the executed
      *            workflow; can be <code>null</code> if it should not be saved
      * @return a testcase
      */
-    WorkflowTest createTestcase(File workflowDir, File saveLocation);
+    WorkflowTest createTestcase(File workflowDir, File testcaseRoot, File saveLocation);
 }

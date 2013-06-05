@@ -66,6 +66,7 @@ import org.knime.core.node.workflow.NodeContainerState;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.SingleNodeContainer;
 import org.knime.core.node.workflow.UnsupportedWorkflowVersionException;
+import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
@@ -85,17 +86,15 @@ public class SimpleWorkflowTest implements WorkflowTest {
     /**
      * Factory for simple workflow tests.
      */
-    public static final WorkflowTestFactory factory =
-            new WorkflowTestFactory() {
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public WorkflowTest createTestcase(final File workflowDir,
-                        final File saveLocation) {
-                    return new SimpleWorkflowTest(workflowDir, saveLocation);
-                }
-            };
+    public static final WorkflowTestFactory factory = new WorkflowTestFactory() {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public WorkflowTest createTestcase(final File workflowDir, final File testcaseRoot, final File saveLocation) {
+            return new SimpleWorkflowTest(workflowDir, testcaseRoot, saveLocation);
+        }
+    };
 
     /**
      * The default maximum runtime for a single testcase in seconds. After the timeout
@@ -105,6 +104,8 @@ public class SimpleWorkflowTest implements WorkflowTest {
 
     private final File m_knimeWorkFlow;
 
+    private final File m_testcaseRoot;
+
     private final File m_saveLoc;
 
     private int m_timeout = TIMEOUT;
@@ -112,11 +113,13 @@ public class SimpleWorkflowTest implements WorkflowTest {
     /**
      *
      * @param workflowFile the workflow dir
+     * @param testcaseRoot root directory of all test workflows; this is used as a replacement for the mount point root
      * @param saveLoc the dir to save the flow into after execution, or
      *            <code>null</code>
      */
-    public SimpleWorkflowTest(final File workflowFile, final File saveLoc) {
+    public SimpleWorkflowTest(final File workflowFile, final File testcaseRoot, final File saveLoc) {
         m_knimeWorkFlow = workflowFile;
+        m_testcaseRoot = testcaseRoot;
         m_saveLoc = saveLoc;
     }
 
@@ -124,9 +127,21 @@ public class SimpleWorkflowTest implements WorkflowTest {
             throws IOException, InvalidSettingsException,
             CanceledExecutionException, UnsupportedWorkflowVersionException,
             LockFailedException {
+
+        WorkflowLoadHelper loadHelper = new WorkflowLoadHelper() {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public WorkflowContext getWorkflowContext() {
+                WorkflowContext.Factory fac = new WorkflowContext.Factory(m_knimeWorkFlow);
+                fac.setMountpointRoot(m_testcaseRoot);
+                return fac.createContext();
+            }
+        };
+
         WorkflowLoadResult loadRes =
-                WorkflowManager.loadProject(m_knimeWorkFlow.getParentFile(),
-                        new ExecutionMonitor(), WorkflowLoadHelper.INSTANCE);
+                WorkflowManager.loadProject(m_knimeWorkFlow.getParentFile(), new ExecutionMonitor(), loadHelper);
         if (loadRes.hasErrors()) {
             result.addFailure(
                     this,

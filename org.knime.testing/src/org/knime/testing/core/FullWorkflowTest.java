@@ -73,9 +73,11 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.util.ViewUtils;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.NodeContainerState;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.NodeID;
 import org.knime.core.node.workflow.NodeMessage;
 import org.knime.core.node.workflow.SingleNodeContainer;
+import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.node.workflow.WorkflowLoadHelper;
 import org.knime.core.node.workflow.WorkflowManager;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
@@ -100,17 +102,15 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
      *
      * @since 2.6
      */
-    public static final WorkflowTestFactory factory =
-            new WorkflowTestFactory() {
-                /**
-                 * {@inheritDoc}
-                 */
-                @Override
-                public WorkflowTest createTestcase(final File workflowDir,
-                        final File saveLocation) {
-                    return new FullWorkflowTest(workflowDir, saveLocation);
-                }
-            };
+    public static final WorkflowTestFactory factory = new WorkflowTestFactory() {
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public WorkflowTest createTestcase(final File workflowDir, final File testcaseRoot, final File saveLocation) {
+            return new FullWorkflowTest(workflowDir, testcaseRoot, saveLocation);
+        }
+    };
 
     private static final class MsgPattern {
         private static final String REGEXPRPATTERN = "_!_";
@@ -390,6 +390,8 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
 
     private final File m_knimeWorkFlow;
 
+    private final File m_testcaseRoot;
+
     private WorkflowManager m_manager;
 
     // if not null, the executed workflow si saved here.
@@ -405,10 +407,12 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
     /**
      *
      * @param workflowFile the workflow dir
+     * @param testcaseRoot root directory of all test workflows; this is used as a replacement for the mount point root
      * @param saveLoc the dir to save the flow into after execution, or null.
      */
-    public FullWorkflowTest(final File workflowFile, final File saveLoc) {
+    public FullWorkflowTest(final File workflowFile, final File testcaseRoot, final File saveLoc) {
         m_knimeWorkFlow = workflowFile;
+        m_testcaseRoot = testcaseRoot;
         m_saveLoc = saveLoc;
         this.setName(workflowFile.getParentFile().getName());
     }
@@ -1095,7 +1099,12 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
     private void readConfigFromNode(final SingleNodeContainer configNode)
             throws InvalidSettingsException {
         NodeSettings s = new NodeSettings("");
-        configNode.getNode().saveModelSettingsTo(s);
+        NodeContext.pushContext(configNode);
+        try {
+            configNode.getNode().saveModelSettingsTo(s);
+        } finally {
+            NodeContext.removeLastContext();
+        }
         TestConfigSettings settings = new TestConfigSettings();
         settings.loadSettings(s);
 
@@ -1511,13 +1520,22 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
         logger.debug("Loading workflow ----------------------------"
                 + "--------------");
 
+        WorkflowLoadHelper loadHelper = new WorkflowLoadHelper() {
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public WorkflowContext getWorkflowContext() {
+                WorkflowContext.Factory fac = new WorkflowContext.Factory(m_knimeWorkFlow);
+                fac.setMountpointRoot(m_testcaseRoot);
+                return fac.createContext();
+            }
+        };
+
         Logger.getRootLogger().addAppender(m_customAppender);
         try {
             WorkflowLoadResult loadRes =
-                    WorkflowManager
-                            .loadProject(m_knimeWorkFlow.getParentFile(),
-                                    new ExecutionMonitor(),
-                                    WorkflowLoadHelper.INSTANCE);
+                    WorkflowManager.loadProject(m_knimeWorkFlow.getParentFile(), new ExecutionMonitor(), loadHelper);
             boolean mustReportErrors;
             switch (loadRes.getType()) {
                 case Ok:

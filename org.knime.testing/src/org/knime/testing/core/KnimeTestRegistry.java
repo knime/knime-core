@@ -171,7 +171,7 @@ public class KnimeTestRegistry {
         Collection<File> rootDirSnapshot = new ArrayList<File>(m_testRootDirs);
         // m_testRootDirs may be changed during search for zipped workflows
         for (File dir : rootDirSnapshot) {
-            searchDirectory(dir, workflowTests, factory);
+            searchDirectory(dir, dir, workflowTests, factory);
         }
 
         if ((m_pattern != null) && (workflowTests.size() == 0)) {
@@ -191,26 +191,25 @@ public class KnimeTestRegistry {
      * Searches in the directory and subdirectories for workflow.knime files and
      * adds them to m_registry.
      *
-     * @param dir - the basedir for the search
-     * @param saveRoot - the baseDir executed flows will be saved to (or null).
+     * @param currentDir the current directory for the search
+     * @param rootDir the root directory of all workflows
+     * @param saveRoot the baseDir executed flows will be saved to (or null).
      * @throws IOException if an I/O error occurs
      */
-    private void searchDirectory(final File dir,
-            final Collection<WorkflowTest> tests,
-            final WorkflowTestFactory factory) throws IOException {
+    private void searchDirectory(final File currentDir, final File rootDir, final Collection<WorkflowTest> tests,
+                                 final WorkflowTestFactory factory) throws IOException {
         if (m_pattern == null) {
             // null pattern matches nothing!
             return;
         }
 
-        File workflowFile = new File(dir, WorkflowPersistor.WORKFLOW_FILE);
+        File workflowFile = new File(currentDir, WorkflowPersistor.WORKFLOW_FILE);
 
         if (workflowFile.exists()) {
-            String name = dir.getName();
+            String name = currentDir.getName();
             if (name.matches(m_pattern)) {
                 File saveLoc = createSaveLocation(workflowFile);
-                WorkflowTest testCase =
-                        factory.createTestcase(workflowFile, saveLoc);
+                WorkflowTest testCase = factory.createTestcase(workflowFile, rootDir, saveLoc);
                 testCase.setTestDialogs(m_testDialogs);
                 testCase.setTestViews(m_testViews);
                 testCase.setTimeout(m_timeout);
@@ -221,20 +220,20 @@ public class KnimeTestRegistry {
             }
         } else {
             // recursivly search directories
-            File[] dirList = dir.listFiles(directoryFilter);
+            File[] dirList = currentDir.listFiles(directoryFilter);
             if (dirList == null) {
-                logger.error("I/O error accessing '" + dir
+                logger.error("I/O error accessing '" + currentDir
                         + "'. Does it exist?!?");
                 return;
             }
             for (int i = 0; i < dirList.length; i++) {
-                searchDirectory(dirList[i], tests, factory);
+                searchDirectory(dirList[i], rootDir, tests, factory);
             }
 
             // check for zipped workflow(group)s
-            File[] zipList = dir.listFiles(zipFilter);
+            File[] zipList = currentDir.listFiles(zipFilter);
             if (zipList == null) {
-                logger.error("I/O error accessing '" + dir
+                logger.error("I/O error accessing '" + currentDir
                         + "'. Does it exist?!?");
                 return;
             }
@@ -244,7 +243,7 @@ public class KnimeTestRegistry {
                     File tempDir = FileUtil.createTempDir("UnzippedTestflows");
                     m_testRootDirs.add(tempDir);
                     FileUtil.unzip(zipList[i], tempDir);
-                    searchDirectory(tempDir, tests, factory);
+                    searchDirectory(tempDir, rootDir, tests, factory);
                 }
             }
         }

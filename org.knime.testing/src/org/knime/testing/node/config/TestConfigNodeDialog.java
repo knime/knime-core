@@ -121,8 +121,6 @@ public class TestConfigNodeDialog extends NodeDialogPane {
 
     private int m_lastSelectedIndex = -1;
 
-    private WorkflowManager m_workflowManager;
-
     /**
      * Creates a new dialog.
      */
@@ -322,7 +320,8 @@ public class TestConfigNodeDialog extends NodeDialogPane {
 
     private void storeNodeConfiguration(final int index) {
         NodeContainer cont = (NodeContainer)m_allNodesModel.get(index);
-        String nodeID = TestConfigSettings.getNodeIDWithoutRootPrefix(m_workflowManager, cont);
+        String nodeID =
+                TestConfigSettings.getNodeIDWithoutRootPrefix(getNodeContext().getWorkflowManager(), cont);
 
         if (m_mustFail.isSelected()) {
             m_settings.addFailingNode(nodeID);
@@ -347,7 +346,8 @@ public class TestConfigNodeDialog extends NodeDialogPane {
 
     private void updateNodeConfigurationFields(final int index) {
         NodeContainer cont = (NodeContainer)m_allNodesModel.get(index);
-        String nodeID = TestConfigSettings.getNodeIDWithoutRootPrefix(m_workflowManager, cont);
+        String nodeID =
+                TestConfigSettings.getNodeIDWithoutRootPrefix(getNodeContext().getWorkflowManager(), cont);
 
         m_mustFail.setSelected(m_settings.failingNodes().contains(nodeID));
 
@@ -429,7 +429,6 @@ public class TestConfigNodeDialog extends NodeDialogPane {
             m_logInfosModel.addElement(l);
         }
 
-        m_workflowManager = findWorkflowManager(WorkflowManager.ROOT);
         fillNodeList();
     }
 
@@ -439,11 +438,11 @@ public class TestConfigNodeDialog extends NodeDialogPane {
             if (cont instanceof SingleNodeContainer) {
                 if (((SingleNodeContainer)cont).getNode().getDialogPane() != this) {
                     m_allNodesModel.addElement(cont);
-                    existingNodeIds.add(TestConfigSettings.getNodeIDWithoutRootPrefix(m_workflowManager, cont));
+                    existingNodeIds.add(TestConfigSettings.getNodeIDWithoutRootPrefix(getNodeContext().getWorkflowManager(), cont));
                 }
             } else if (cont instanceof WorkflowManager) {
                 m_allNodesModel.addElement(cont);
-                existingNodeIds.add(TestConfigSettings.getNodeIDWithoutRootPrefix(m_workflowManager, cont));
+                existingNodeIds.add(TestConfigSettings.getNodeIDWithoutRootPrefix(getNodeContext().getWorkflowManager(), cont));
                 fillNodeList((WorkflowManager) cont, existingNodeIds);
             }
         }
@@ -454,7 +453,7 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         m_allNodesModel.removeAllElements();
 
         Set<String> existingNodeIds = new HashSet<String>();
-        fillNodeList(m_workflowManager, existingNodeIds);
+        fillNodeList(getNodeContext().getWorkflowManager(), existingNodeIds);
 
         // remove config of non-existing nodes
         Set<String> set = new HashSet<String>();
@@ -477,38 +476,5 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         for (String s : set) {
             m_settings.setRequiredNodeWarning(s, null);
         }
-    }
-
-    /**
-     * Finds the manager for the workflow in which the current node is
-     * contained.
-     *
-     * @param root the root workflow manager from which the search should start
-     * @return a workflow manager or <code>null</code> if no appropriate manager
-     *         could be found (which would be strange)
-     */
-    private WorkflowManager findWorkflowManager(final WorkflowManager root) {
-        for (NodeContainer cont : root.getNodeContainers()) {
-            if (cont instanceof SingleNodeContainer) {
-                if (((SingleNodeContainer)cont).getNode().getDialogPane() == this) {
-                    return root;
-                }
-            } else if (cont instanceof WorkflowManager) {
-                WorkflowManager wfm =
-                        findWorkflowManager((WorkflowManager)cont);
-                if (wfm != null) {
-                    return wfm;
-                }
-            }
-        }
-        return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void onClose() {
-        m_workflowManager = null;
     }
 }
