@@ -97,13 +97,33 @@ public abstract class AbstractTestcaseCollector {
         }
     }
 
+
+    /**
+     * Returns a list with classes that contain JUnit test methods or are old-style (JUnit3) testcases.
+     *
+     * @return a list with classes
+     * @throws IOException if an I/O error occurs while collecting the classes
+     * @throws ClassNotFoundException if a class could not be found (which would be strange strange)
+     */
+    public List<Class<?>> getUnittestsClasses() throws IOException, ClassNotFoundException {
+        List<String> classnames = getUnittestsClassNames();
+        List<Class<?>> classes = new ArrayList<Class<?>>(classnames.size());
+
+        for (String className : classnames) {
+            classes.add(getClass().getClassLoader().loadClass(className));
+        }
+
+        return classes;
+    }
+
+
     /**
      * Returns a list with class names that contain JUnit test methods or are old-style (JUnit3) testcases.
      *
      * @return a list with class names
      * @throws IOException if an I/O error occurs while collecting the classes
      */
-    public List<String> getUnittestsClasses() throws IOException {
+    public List<String> getUnittestsClassNames() throws IOException {
         BaseClassLoader cl = (BaseClassLoader)getClass().getClassLoader();
         ClasspathManager cpm = cl.getClasspathManager();
         String classPath = this.getClass().getName().replace(".", "/") + ".class";
