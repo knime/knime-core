@@ -309,11 +309,11 @@ public class FileReaderSettings extends TokenizerSettings {
                 throw new IllegalArgumentException(
                         "Cannot create URL of data file" + " from '"
                                 + cfg.getString(CFGKEY_DATAURL)
-                                + "' in filereader config");
+                                + "' in filereader config", mfue);
             } catch (InvalidSettingsException ice) {
                 throw new InvalidSettingsException("Illegal config object for "
                         + "file reader settings! Key '" + CFGKEY_DATAURL
-                        + "' missing!");
+                        + "' missing!", ice);
             }
             // see if we got a tablename. For backwardcompatibility reasons
             // don't fail if its missing.
@@ -327,7 +327,7 @@ public class FileReaderSettings extends TokenizerSettings {
             } catch (InvalidSettingsException ice) {
                 throw new InvalidSettingsException("Illegal config object for "
                         + "file reader settings! Key '" + CFGKEY_HASCOL
-                        + "' missing!");
+                        + "' missing!", ice);
             }
 
             try {
@@ -335,7 +335,7 @@ public class FileReaderSettings extends TokenizerSettings {
             } catch (InvalidSettingsException ice) {
                 throw new InvalidSettingsException("Illegal config object for "
                         + "file reader settings! Key '" + CFGKEY_HASROW
-                        + "' missing!");
+                        + "' missing!", ice);
             }
 
             try {
@@ -343,7 +343,7 @@ public class FileReaderSettings extends TokenizerSettings {
             } catch (InvalidSettingsException ice) {
                 throw new InvalidSettingsException("Illegal config object for "
                         + "file reader settings! Key '" + CFGKEY_IGNOREEMPTY
-                        + "' missing!");
+                        + "' missing!", ice);
             }
 
             // set the row header prefix - if specified. It's optional.
@@ -354,7 +354,7 @@ public class FileReaderSettings extends TokenizerSettings {
                     throw new InvalidSettingsException(
                             "Illegal config object for file"
                                     + " reader settings! Wrong type of key '"
-                                    + CFGKEY_HASROW + "'!");
+                                    + CFGKEY_HASROW + "'!", ice);
                 }
             }
 
@@ -366,7 +366,7 @@ public class FileReaderSettings extends TokenizerSettings {
                     throw new InvalidSettingsException(
                             "Illegal config object for file "
                                     + "reader settings! Wrong type of key '"
-                                    + CFGKEY_MISSINGS + "'!");
+                                    + CFGKEY_MISSINGS + "'!", ice);
                 }
                 readMissingPatternsFromConfig(missPattConf);
             }
@@ -380,7 +380,7 @@ public class FileReaderSettings extends TokenizerSettings {
                 throw new InvalidSettingsException(
                         "Illegal config object for file reader settings!"
                                 + " Not existing or wrong type of key '"
-                                + CFGKEY_ROWDELIMS + "'!");
+                                + CFGKEY_ROWDELIMS + "'!", ice);
 
             }
             // get the decimal and thousands separator.
