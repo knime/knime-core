@@ -54,13 +54,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 import org.knime.base.data.sort.SortedTable;
 import org.knime.core.data.DataCell;
@@ -147,43 +145,6 @@ public class Statistics2Table {
             final List<String> nominalValueColumns,
             final ExecutionContext exec)
             throws CanceledExecutionException {
-        this(table, computeMedian, numNomValuesOutput, nominalValueColumns, exec, allColumnIndices(table.getSpec()));
-    }
-
-    /**
-     * @param spec
-     * @return
-     */
-    private static int[] allColumnIndices(final DataTableSpec spec) {
-        int[] ret = new int[spec.getNumColumns()];
-        for (int i = ret.length; i--> 0;) {
-            ret[i] = i;
-        }
-        return ret ;
-    }
-
-    /**
-     * Create new statistic table from an existing one. This constructor
-     * calculates all values. It needs to traverse (twice) through the entire
-     * specified table. User can cancel action if an execution monitor is
-     * passed.
-     * @param table table to be wrapped
-     * @param computeMedian if the median has to be computed
-     * @param numNomValuesOutput number of possible values in output table
-     * @param nominalValueColumns columns used to determine all poss. values
-     * @param exec an object to check with if user canceled operation
-     * @param selectedColumnIndices The indices of columns to compute the statistics.
-     * @throws CanceledExecutionException if user canceled
-     * @since 2.8
-     */
-    public Statistics2Table(final BufferedDataTable table,
-        final boolean computeMedian,
-        final int numNomValuesOutput,
-        final List<String> nominalValueColumns,
-        final ExecutionContext exec,
-        final int... selectedColumnIndices)
-                throws CanceledExecutionException {
-        final int[] colIndices = check(selectedColumnIndices, table.getSpec(), nominalValueColumns);
         int nrCols = table.getDataTableSpec().getNumColumns();
         m_spec = table.getDataTableSpec();
         // initialize cache arrays
@@ -196,21 +157,20 @@ public class Statistics2Table {
         m_median = new double[nrCols];
         m_nominalValues = new Map[nominalValueColumns.size()];
         m_rowCount = table.getRowCount();
-
-        Set<String> nominalValueColumnsSet = new HashSet<String>(nominalValueColumns);
-
         // the number of non-missing cells in each column
         int[] validCount = new int[nrCols];
         double[] sumsquare = new double[nrCols];
-        Arrays.fill(m_missingValueCnt, 0);
-        Arrays.fill(m_meanValues, Double.NaN);
-        Arrays.fill(m_sum, Double.NaN);
-        Arrays.fill(m_varianceValues, Double.NaN);
-        Arrays.fill(m_minValues, Double.NaN);
-        Arrays.fill(m_maxValues, Double.NaN);
-        Arrays.fill(m_median, Double.NaN);
-        Arrays.fill(sumsquare, 0.0);
-        Arrays.fill(validCount, 0);
+        for (int i = 0; i < nrCols; i++) {
+            m_missingValueCnt[i] = 0;
+            m_meanValues[i] = Double.NaN;
+            m_sum[i] = Double.NaN;
+            m_varianceValues[i] = Double.NaN;
+            m_minValues[i] = Double.NaN;
+            m_maxValues[i] = Double.NaN;
+            m_median[i] = Double.NaN;
+            sumsquare[i] = 0.0;
+            validCount[i] = 0;
+        }
 
         // used to store warnings
         final StringBuilder warn = new StringBuilder();
@@ -221,7 +181,7 @@ public class Statistics2Table {
         final int rowCnt = table.getRowCount();
         double diffProgress = rowCnt;
         if (computeMedian) {
-            for (int i: colIndices) {
+            for (int i = 0; i < m_spec.getNumColumns(); i++) {
                 if (m_spec.getColumnSpec(i).getType().isCompatible(
                         DoubleValue.class)) {
                     diffProgress += rowCnt;
@@ -231,10 +191,11 @@ public class Statistics2Table {
         int rowIdx = 0;
         for (RowIterator rowIt = table.iterator(); rowIt.hasNext(); rowIdx++) {
             DataRow row = rowIt.next();
-            exec.setProgress(rowIdx / diffProgress, "Calculating statistics, processing row " + (rowIdx + 1) + " (\""
-                + row.getKey() + "\")");
+            exec.setProgress(rowIdx / diffProgress,
+                        "Calculating statistics, processing row "
+                          + (rowIdx + 1) + " (\"" + row.getKey() + "\")");
             int colIdx = 0;
-            for (int c: colIndices) {
+            for (int c = 0; c < nrCols; c++) {
                 exec.checkCanceled();
                 DataColumnSpec cspec = m_spec.getColumnSpec(c);
                 final DataCell cell = row.getCell(c);
@@ -262,7 +223,7 @@ public class Statistics2Table {
                 } else {
                     m_missingValueCnt[c]++;
                 }
-                if (nominalValueColumnsSet.contains(cspec.getName())) {
+                if (nominalValueColumns.contains(cspec.getName())) {
                     if (nominalValues[colIdx] == null || (nominalValues[colIdx] != null
                 				// list is only empty, when the number of poss.
                 				// values exceeded the maximum
@@ -363,7 +324,7 @@ public class Statistics2Table {
 
         // compute median values if desired
         if (computeMedian) {
-            for (int c: colIndices) {
+            for (int c = 0; c < nrCols; c++) {
                 exec.setMessage("Calculating median value for column \""
                         + m_spec.getColumnSpec(c).getName() + "\"...");
                 if (m_spec.getColumnSpec(c).getType().isCompatible(
@@ -413,40 +374,6 @@ public class Statistics2Table {
                 }
             }
         }
-    }
-
-    /**
-     * Sanity check of the input parameters.
-     *
-     * @param selectedColumnIndices The column indices where the stats should be computed.
-     * @param spec The {@link DataTableSpec}.
-     * @param nominalValueColumns The columns where the possible values should be computed.
-     * @return The clone of {@code selectedColumnIndices}.
-     * @throws IllegalArgumentException When there was an invalid argument.
-     */
-    private int[] check(final int[] selectedColumnIndices, final DataTableSpec spec,
-        final List<String> nominalValueColumns) {
-        int numColumns = spec.getNumColumns();
-        for (int i : selectedColumnIndices) {
-            if (i < 0 || i >= numColumns) {
-                throw new IllegalArgumentException("Invalid column index: " + i + " in " + spec);
-            }
-        }
-        Set<Integer> indices = new HashSet<Integer>();
-        for (int idx : selectedColumnIndices) {
-            if (!indices.add(idx)) {
-                throw new IllegalArgumentException("Selected indices are not unique: "
-                    + Arrays.toString(selectedColumnIndices) + " duplicate: " + idx);
-            }
-        }
-        for (String colName : nominalValueColumns) {
-            final int colIndex = spec.findColumnIndex(colName);
-            if (colIndex < 0 || !indices.contains(colIndex)) {
-                throw new IllegalArgumentException(
-                    "The selected column for nominal values is not among the selected indices.");
-            }
-        }
-        return selectedColumnIndices.clone();
     }
 
     private static final String[] ROW_HEADER = new String[]{"Minimum",
