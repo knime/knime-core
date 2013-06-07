@@ -142,6 +142,8 @@ public final class ImageRepository {
         WorkflowGroup("icons/wf_set.png"),
         /** Icon for a system folder. */
         SystemFolder("icons/system_folder.png"),
+        /** Icon for a system flow. */
+        SystemFlow("icons/system_flow.png"),
 
         /** Icon for configured knime project. */
         WorkflowConfigured("icons/project_configured.png"),
@@ -247,10 +249,10 @@ public final class ImageRepository {
     public enum ImgDecorator {
         /** Decorator for messages. */
         Message("_msg"),
-        /** Decorator for outdated jobs. */
+        /** Decorator for outdated jobs (ignored right now). */
         Outdated("_out"),
-        /** Decorator for orphaned jobs. */
-        Orphaned("_orph");
+        /** Decorator for orphaned jobs (ignored right now). */
+        Orphaned("");
 
         private final String m_suffix;
 
