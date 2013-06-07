@@ -375,7 +375,7 @@ public class DatabaseConnectionSettings {
             if (conn != null) {
                 try {
                     // and is closed
-                    if (conn.isClosed()) {
+                    if (conn.isClosed() || !conn.isValid(1)) {
                         CONNECTION_MAP.remove(databaseConnKey);
                     } else {
                         conn.clearWarnings();
