@@ -1430,11 +1430,13 @@
             factory-class="org.knime.base.node.flowcontrol.trycatch.genericcatch.GenericPortCatchNodeFactory"
             id="org.knime.base.node.flowcontrol.trycatch.genericcatch.GenericPortCatchNodeFactory">
       </node>
+      <!--
       <node
             expert-flag="false"
             factory-class="org.knime.base.node.preproc.select.value.InteractiveValueSelectNodeFactory"
             id="org.knime.base.node.preproc.select.value.InteractiveValueSelectNodeFactory">
       </node>
+      -->
       <!-- new ones -->
       
 
