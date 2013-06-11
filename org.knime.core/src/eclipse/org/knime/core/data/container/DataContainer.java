@@ -925,7 +925,7 @@ public class DataContainer implements RowAppender {
             m_duplicateChecker.addKey(key.toString());
         } catch (IOException ioe) {
             throw new DataContainerException(ioe.getClass().getSimpleName()
-                    + " while checking for duplicate row IDs", ioe);
+                    + " while checking for duplicate row IDs: " + ioe.getMessage(), ioe);
         } catch (DuplicateKeyException dke) {
             throw new DuplicateKeyException("Encountered duplicate row ID  \""
                     + dke.getKey() + "\" at row number "
