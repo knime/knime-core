@@ -211,10 +211,10 @@ class Buffer implements KNIMEStreamConstants {
     private static final String CFG_CELL_SINGLE_ELEMENT_TYPE = "collection.element.type";
 
     /** Current version string. */
-    private static final String VERSION = "container_9";
+    private static final String VERSION = "container_8";
 
     /** The version number corresponding to VERSION. */
-    private static final int IVERSION = 9;
+    private static final int IVERSION = 8;
 
     private static final HashMap<String, Integer> COMPATIBILITY_MAP;
 
@@ -229,8 +229,9 @@ class Buffer implements KNIMEStreamConstants {
         COMPATIBILITY_MAP.put("container_7", 7); // 2.0.0 (final)
         COMPATIBILITY_MAP.put("container_8", 8); // version 2.0.1++
         COMPATIBILITY_MAP.put(VERSION, IVERSION);
-        // NOTE consider to also increment the workflow.knime version number
-        // when updating this list
+        // NOTE consider to also
+        // - increment the workflow.knime version number when updating this list
+        // - update list in NoKeyBuffer
     }
 
     /**
@@ -570,20 +571,22 @@ class Buffer implements KNIMEStreamConstants {
     }
 
     /**
-     * Validate the version as read from the file if it can be parsed by this implementation.
+     * Validate the version as read from the file if it can be parsed by this implementation. If unknown, uses
+     * latest known version (good luck).
      *
      * @param version As read from file.
      * @return The version ID for internal use.
-     * @throws IOException If it can't be parsed.
      */
-    public int validateVersion(final String version) throws IOException {
+    int validateVersion(final String version) {
         Integer iVersion = COMPATIBILITY_MAP.get(version);
         if (iVersion == null) {
-            throw new IOException("Unsupported version: \"" + version + "\"");
+            LOGGER.warn("Unknown version string in persisted table file (\"" + version
+                + "\") - was table created with a future version of KNIME? Using \"" + VERSION + "\" modus.");
+            iVersion = IVERSION;
         }
         if (iVersion < IVERSION) {
-            LOGGER.debug("Table has been written with a previous version of " + "KNIME (\"" + version
-                    + "\"), using compatibility mode.");
+            LOGGER.debug("Table has been written with a previous version of KNIME (\""
+                    + version + "\", using compatibility mode.");
         }
         return iVersion;
     }
@@ -1030,8 +1033,8 @@ class Buffer implements KNIMEStreamConstants {
             final CompressionFormat cF;
             if (m_version < 3) { // stream was not zipped in KNIME 1.1.x
                 cF = CompressionFormat.None;
-            } else if (m_version >= 9) {
-                String compFormat = subSettings.getString(CFG_COMPRESSION);
+            } else if (m_version >= 8) { // added sometime between format 8 and 9 - no increment of version number
+                String compFormat = subSettings.getString(CFG_COMPRESSION, CompressionFormat.Gzip.name());
                 try {
                     cF = CompressionFormat.valueOf(compFormat);
                 } catch (Exception e) {
@@ -1042,7 +1045,7 @@ class Buffer implements KNIMEStreamConstants {
                 cF = CompressionFormat.Gzip;
             }
             m_compressionFormat = cF;
-            // added somewhere between format 8 and 9
+            // added sometime between format 8 and 9
             m_containsBlobs = false;
             if (m_version >= 4) { // no blobs in version 1.1.x
                 m_containsBlobs = subSettings.getBoolean(CFG_CONTAINS_BLOBS);
