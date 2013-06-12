@@ -70,6 +70,8 @@ public interface IWriteFileStoreHandler extends IFileStoreHandler {
 
     public void close();
 
+    public void ensureOpenAfterLoad() throws IOException;
+
     /**
      * @param fs
      * @return */

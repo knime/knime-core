@@ -51,6 +51,7 @@
 package org.knime.core.node.workflow;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -1761,6 +1762,14 @@ public final class SingleNodeContainer extends NodeContainer {
                 m_node.ensureOutputDataIsRead();
             } catch (Exception e) {
                 LOGGER.error("Unable to read output data", e);
+            }
+            IFileStoreHandler fileStoreHandler = m_node.getFileStoreHandler();
+            if (fileStoreHandler instanceof IWriteFileStoreHandler) {
+                try {
+                    ((IWriteFileStoreHandler)fileStoreHandler).ensureOpenAfterLoad();
+                } catch (IOException e) {
+                    LOGGER.error("Unable to open file store handler " + fileStoreHandler, e);
+                }
             }
         }
         super.setDirty();

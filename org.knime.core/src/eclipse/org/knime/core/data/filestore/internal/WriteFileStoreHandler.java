@@ -243,15 +243,7 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
             throw new IllegalStateException(
                     "No file stores in \"" + toString() + "\"");
         }
-        if (m_baseDirInWorkflowFolder != null) {
-            assert m_baseDir == null;
-            ensureInitBaseDirectory();
-            LOGGER.debug(String.format("Restoring file store directory \"%s\" from \"%s\"",
-                    toString(), m_baseDirInWorkflowFolder));
-            File source = m_baseDirInWorkflowFolder;
-            m_baseDirInWorkflowFolder = null;
-            FileUtil.copyDir(source, m_baseDir);
-        }
+        ensureOpenAfterLoad();
         return FileStoreUtil.createFileStore(this, key);
     }
 
@@ -371,6 +363,21 @@ public class WriteFileStoreHandler implements IWriteFileStoreHandler {
             m_duplicateChecker = null;
         }
     }
+
+    /** {@inheritDoc} */
+    @Override
+    public synchronized void ensureOpenAfterLoad() throws IOException {
+        if (m_baseDirInWorkflowFolder != null) {
+            assert m_baseDir == null;
+            ensureInitBaseDirectory();
+            LOGGER.debug(String.format("Restoring file store directory \"%s\" from \"%s\"",
+                    toString(), m_baseDirInWorkflowFolder));
+            File source = m_baseDirInWorkflowFolder;
+            m_baseDirInWorkflowFolder = null;
+            FileUtil.copyDir(source, m_baseDir);
+        }
+    }
+
 
     public static final IFileStoreHandler restore(final String name,
             final UUID uuid,

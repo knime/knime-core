@@ -1135,9 +1135,7 @@ public final class Node implements NodeModelWarningListener {
     }
 
     /**
-     * @return the file store handler for the current execution. Throws
-     * exception when no file store handler is set (i.e. not set because node
-     * is reset or executing with 3rd party executor).
+     * @return the file store handler for the current execution (or null if not executed or run with 3rd party executor)
      * @since 2.6
      * @noreference This method is not intended to be referenced by clients.  */
     public IFileStoreHandler getFileStoreHandler() {

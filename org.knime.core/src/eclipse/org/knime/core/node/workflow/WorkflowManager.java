@@ -88,6 +88,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
+import org.knime.core.data.filestore.internal.IWriteFileStoreHandler;
 import org.knime.core.data.filestore.internal.WorkflowFileStoreHandlerRepository;
 import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
@@ -7167,6 +7168,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         for (ContainerTable t : m_globalTableRepository.values()) {
             t.ensureOpen();
+        }
+        for (IWriteFileStoreHandler writeFileStoreHandler : m_fileStoreHandlerRepository.getWriteFileStoreHandlers()) {
+            try {
+                writeFileStoreHandler.ensureOpenAfterLoad();
+            } catch (IOException e) {
+                LOGGER.error("Could not open file store handler " + writeFileStoreHandler, e);
+            }
         }
     }
 

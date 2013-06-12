@@ -167,6 +167,12 @@ public final class LoopEndWriteFileStoreHandler implements IWriteFileStoreHandle
 
     /** {@inheritDoc} */
     @Override
+    public void ensureOpenAfterLoad() throws IOException {
+        m_loopStartFSHandler.ensureOpenAfterLoad();
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public void addToRepository(final FileStoreHandlerRepository repository) {
         // ignore, handler does not define own file stores (only the start does)
     }

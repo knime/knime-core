@@ -146,6 +146,12 @@ public final class ReferenceWriteFileStoreHandler implements IWriteFileStoreHand
 
     /** {@inheritDoc} */
     @Override
+    public void ensureOpenAfterLoad() throws IOException {
+        m_reference.ensureOpenAfterLoad();
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public String toString() {
         return "Reference on " + m_reference.toString();
     }

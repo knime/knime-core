@@ -189,6 +189,12 @@ public final class LoopStartReferenceWriteFileStoreHandler implements ILoopStart
 
     /** {@inheritDoc} */
     @Override
+    public void ensureOpenAfterLoad() throws IOException {
+        m_reference.ensureOpenAfterLoad();
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public FileStore createFileStoreInNestedLoop(final String name,
             final byte[] nestedLoopPath, final int iterationIndex) throws IOException {
         return m_reference.createFileStoreInNestedLoop(name, nestedLoopPath, iterationIndex);

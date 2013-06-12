@@ -112,5 +112,10 @@ public class ROWriteFileStoreHandler extends EmptyFileStoreHandler implements IW
         return null;
     }
 
+    /** {@inheritDoc} */
+    @Override
+    public void ensureOpenAfterLoad() {
+    }
+
 
 }
