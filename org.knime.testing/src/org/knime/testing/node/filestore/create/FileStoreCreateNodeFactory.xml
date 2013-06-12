@@ -16,5 +16,7 @@
 	</fullDescription>
 	
 	<ports>
+	<inPort name="input" index="0">...</inPort>
+	<outPort name="Table with FS cell" index="0">...</outPort>
 	</ports>	
 </knimeNode>

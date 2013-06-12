@@ -16,5 +16,7 @@
 	</fullDescription>
 	
 	<ports>
+	<inPort name="Table to check" index="0">Table to check</inPort>
+	<outPort name="Checked table" index="0">Input table</outPort>
 	</ports>	
 </knimeNode>
