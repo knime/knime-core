@@ -5669,6 +5669,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         MetaNodeTemplateInformation linkInfo = meta.getTemplateInformation();
         URI sourceURI = linkInfo.getSourceURI();
         WorkflowPersistorVersion1xx loadPersistor;
+        NodeContext.pushContext(meta);
         try {
             File localDir = ResolverUtil.resolveURItoLocalOrTempFile(sourceURI);
             loadPersistor = WorkflowManager.createLoadPersistor(
@@ -5682,6 +5683,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         } catch (InvalidSettingsException e) {
             throw new IOException("Unable to read template meta node: "
                     + e.getMessage(), e);
+        } finally {
+            NodeContext.removeLastContext();
         }
         MetaNodeTemplateInformation templInfo =
             loadPersistor.getTemplateInformation();
@@ -5762,6 +5765,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         URI sourceURI = templInfo.getSourceURI();
         File localDir;
+        NodeContext.pushContext(nc);
         try {
             localDir = ResolverUtil.resolveURItoLocalOrTempFile(sourceURI);
         } catch (IOException e) {
@@ -5770,6 +5774,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             LOGGER.error(error, e);
             loadRes.addError(error);
             return loadRes;
+        } finally {
+            NodeContext.removeLastContext();
         }
         WorkflowPersistorVersion1xx loadPersistor;
         try {
