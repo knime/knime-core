@@ -92,6 +92,17 @@ public class WorkflowLoadHelper {
         m_workflowContext = new WorkflowContext.Factory(workflowLocation).createContext();
     }
 
+    /**
+     * Creates a new load helper with the given workflow context.
+     *
+     * @param workflowContext a workflow context
+     * @since 2.8
+     */
+    public WorkflowLoadHelper(final WorkflowContext workflowContext) {
+        m_isTemplate = false;
+        m_workflowContext = workflowContext;
+    }
+
     /** @param isTemplate whether this is a template loader */
     public WorkflowLoadHelper(final boolean isTemplate) {
         m_isTemplate = isTemplate;
