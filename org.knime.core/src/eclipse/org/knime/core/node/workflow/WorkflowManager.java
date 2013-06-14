@@ -749,28 +749,28 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 assert newConnType == ConnectionType.WFMOUT;
                 getOutPort(destPort).setUnderlyingPort(sourceNC.getOutPort(sourcePort));
             }
-        }
-        if (!currentlyLoadingFlow) { // user adds connection -> configure
-            if (newConn.getType().isLeavingWorkflow()) {
-                assert !m_workflow.containsNodeKey(dest);
-                // if the destination was the WFM itself, only configure its
-                // successors one layer up!
-                getParent().configureNodeAndSuccessors(dest, false);
-                checkForNodeStateChanges(true);
-            } else if (destNC instanceof WorkflowManager) {
-                // connection enters a meta node
-                // (can't have optional ins -- no reset required)
-                WorkflowManager destWFM = (WorkflowManager)destNC;
-                destWFM.configureNodesConnectedToPortInWFM(destPort);
-                Set<Integer> outPorts = destWFM.getWorkflow().connectedOutPorts(destPort);
-                configureNodeAndPortSuccessors(dest, outPorts,
+            if (!currentlyLoadingFlow) { // user adds connection -> configure
+                if (newConn.getType().isLeavingWorkflow()) {
+                    assert !m_workflow.containsNodeKey(dest);
+                    // if the destination was the WFM itself, only configure its
+                    // successors one layer up!
+                    getParent().configureNodeAndSuccessors(dest, false);
+                    checkForNodeStateChanges(true);
+                } else if (destNC instanceof WorkflowManager) {
+                    // connection enters a meta node
+                    // (can't have optional ins -- no reset required)
+                    WorkflowManager destWFM = (WorkflowManager)destNC;
+                    destWFM.configureNodesConnectedToPortInWFM(destPort);
+                    Set<Integer> outPorts = destWFM.getWorkflow().connectedOutPorts(destPort);
+                    configureNodeAndPortSuccessors(dest, outPorts,
                         /* do not configure dest itself */false, true);
-            } else {
-                assert m_workflow.containsNodeKey(dest);
-                // ...make sure the destination node is configured again (and
-                // all of its successors if needed)
-                // (reset required if optional input is connected)
-                resetAndConfigureNode(dest);
+                } else {
+                    assert m_workflow.containsNodeKey(dest);
+                    // ...make sure the destination node is configured again (and
+                    // all of its successors if needed)
+                    // (reset required if optional input is connected)
+                    resetAndConfigureNode(dest);
+                }
             }
         }
         // and finally notify listeners
