@@ -428,6 +428,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         synchronized (m_workflowMutex) {
             NodeContainer nc = getNodeContainer(id);
             if (nc instanceof WorkflowManager && ((WorkflowManager)nc).isProject()) {
+                ((WorkflowManager)nc).shutdown();
                 removeNode(id);
             } else {
                 throw new IllegalArgumentException("Node: " + id + " is not a project!");
