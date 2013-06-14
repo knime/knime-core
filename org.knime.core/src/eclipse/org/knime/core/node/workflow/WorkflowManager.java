@@ -5875,6 +5875,51 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
     }
 
+    /**
+     * Update meta node links (recursively finding all meta nodes but not updating meta nodes in meta nodes).
+     * @param lH Load helper.
+     * @param failOnLoadError If to fail if there errors updating the links
+     * @param exec Progress monitor
+     * @return The update summary
+     * @throws CanceledExecutionException If canceled
+     * @throws IOException Special errors during update (not accessible)
+     * @noreference This method is not intended to be referenced by clients.
+     * @since 2.8
+     */
+    public MetaNodeLinkUpdateResult updateMetaNodeLinks(final WorkflowLoadHelper lH,
+        final boolean failOnLoadError, final ExecutionMonitor exec) throws IOException, CanceledExecutionException {
+        // use queue, add meta node children while traversing the node list
+        List<NodeID> ncsToCheck = getLinkedMetaNodes(true);
+        int linksChecked = 0;
+        int linksUpdated = 0;
+        MetaNodeLinkUpdateResult update = new MetaNodeLinkUpdateResult("Update on " + ncsToCheck + " meta node(s) in "
+                + getNameWithID());
+        for (NodeID wmID : ncsToCheck) {
+            WorkflowManager wm = (WorkflowManager)findNodeContainer(wmID);
+            linksChecked += 1;
+            WorkflowManager parent = wm.getParent();
+            exec.setProgress(linksChecked / (double)ncsToCheck.size(), "node " + wm.getNameWithID());
+            exec.checkCanceled();
+            if (parent.checkUpdateMetaNodeLink(wm.getID(), lH)) {
+                MetaNodeLinkUpdateResult loadResult = parent.updateMetaNodeLink(wm.getID(),
+                    exec.createSubProgress(1.0 / ncsToCheck.size()), lH);
+                update.addChildError(loadResult);
+                linksUpdated += 1;
+                if (failOnLoadError && loadResult.hasErrors()) {
+                    LOGGER.error(loadResult.getFilteredError("", LoadResultEntryType.Error));
+                    throw new IOException("Error(s) while updating meta node links");
+                }
+            }
+        }
+        if (linksChecked == 0) {
+            LOGGER.debug("No meta node links in workflow, nothing updated");
+        } else {
+            LOGGER.debug("Workflow contains " + linksChecked + " meta node link(s), " + linksUpdated + " were updated");
+        }
+        return update;
+    }
+
+
     private static WorkflowManager WFM_TEMPLATE_ROOT;
 
     public MetaNodeTemplateInformation saveAsMetaNodeTemplate(

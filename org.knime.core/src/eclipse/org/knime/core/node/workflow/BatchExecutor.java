@@ -85,7 +85,6 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.util.StringFormat;
 import org.knime.core.node.workflow.WorkflowPersistor.LoadResultEntry.LoadResultEntryType;
-import org.knime.core.node.workflow.WorkflowPersistor.MetaNodeLinkUpdateResult;
 import org.knime.core.node.workflow.WorkflowPersistor.WorkflowLoadResult;
 import org.knime.core.util.EncryptionKeySupplier;
 import org.knime.core.util.FileUtil;
@@ -725,7 +724,7 @@ public class BatchExecutor {
         BatchExecWorkflowTemplateLoadHelper batchTemplateLH = new BatchExecWorkflowTemplateLoadHelper(batchLH);
         if (config.updateMetanodeLinks) {
             LOGGER.debug("Checking for meta node link updates...");
-            updateMetaNodeLinks(wfm, batchTemplateLH, config.failOnLoadError);
+            wfm.updateMetaNodeLinks(batchTemplateLH, config.failOnLoadError, new ExecutionMonitor());
             LOGGER.debug("Checking for meta node link updates... done");
         }
 
@@ -918,43 +917,6 @@ public class BatchExecutor {
             wfm.getParent().removeProject(wfm.getID());
         }
         return sucessful ? EXIT_SUCCESS : EXIT_ERR_EXECUTION;
-    }
-
-    /**
-     * Update meta node links (recursively).
-     *
-     * @param wfm The workflow
-     * @param failOnLoadError If to fail if there errors updating the links
-     * @throws CanceledExecutionException Not actually thrown
-     * @throws IOException Special errors during update (not accessible)
-     * @throws BatchException
-     * @throws LoadException
-     */
-    private static void updateMetaNodeLinks(final WorkflowManager wfm, final WorkflowLoadHelper lH,
-                                            final boolean failOnLoadError) throws IOException,
-            CanceledExecutionException {
-        // use queue, add meta node children while traversing the node list
-        List<NodeID> ncsToCheck = wfm.getLinkedMetaNodes(true);
-        int linksChecked = 0;
-        int linksUpdated = 0;
-        for (NodeID wmID : ncsToCheck) {
-            WorkflowManager wm = (WorkflowManager)wfm.findNodeContainer(wmID);
-            linksChecked += 1;
-            WorkflowManager parent = wm.getParent();
-            if (parent.checkUpdateMetaNodeLink(wm.getID(), lH)) {
-                MetaNodeLinkUpdateResult loadResult = parent.updateMetaNodeLink(wm.getID(), new ExecutionMonitor(), lH);
-                linksUpdated += 1;
-                if (failOnLoadError && loadResult.hasErrors()) {
-                    LOGGER.error(loadResult.getFilteredError("", LoadResultEntryType.Error));
-                    throw new IOException("Error(s) while updating meta node links");
-                }
-            }
-        }
-        if (linksChecked == 0) {
-            LOGGER.debug("No meta node links in workflow, nothing updated");
-        } else {
-            LOGGER.debug("Workflow contains " + linksChecked + " meta node link(s), " + linksUpdated + " were updated");
-        }
     }
 
     private static void setNodeOptions(final Collection<Option> options, final WorkflowManager wfm)
