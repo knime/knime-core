@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   05.08.2005 (bernd): created
  */
@@ -64,28 +64,28 @@ import org.knime.core.node.ExecutionMonitor;
 
 
 /**
- * Iterator to MissingValueHandlingTable. 
+ * Iterator to MissingValueHandlingTable.
  * @author Bernd Wiswedel, University of Konstanz
  */
-class MissingValueHandling2TableIterator extends RowIterator {
-    private static final ExecutionMonitor EMPTY_EXEC = 
-        new ExecutionMonitor(); 
-    
+class MissingValueHandling3TableIterator extends RowIterator {
+    private static final ExecutionMonitor EMPTY_EXEC =
+        new ExecutionMonitor();
+
     private final RowIterator m_internIt;
-    private final MissingValueHandling2Table m_table;
+    private final MissingValueHandling3Table m_table;
     private final ExecutionMonitor m_exec;
     private final int m_finalCount;
     private int m_count;
     // since we don't know if to skip the next row in the underlying table
     // (ColSetting.METHOD_IGNORE_ROWS), we save the next to return
     private DataRow m_next;
-    
+
     /**
      * Creates new iterator from table <code>table</code>.
      * @param table the table to iterate on
      * @param exec the progress monitor for cancel/progress
      */
-    MissingValueHandling2TableIterator(final MissingValueHandling2Table table, 
+    MissingValueHandling3TableIterator(final MissingValueHandling3Table table,
             final ExecutionMonitor exec) {
         m_internIt = table.getInternalIterator();
         m_table = table;
@@ -99,7 +99,7 @@ class MissingValueHandling2TableIterator extends RowIterator {
      * Creates new iterator from table <code>table</code>.
      * @param table the table to iterate on
      */
-    MissingValueHandling2TableIterator(final MissingValueHandling2Table table) {
+    MissingValueHandling3TableIterator(final MissingValueHandling3Table table) {
         this(table, EMPTY_EXEC);
     }
 
@@ -123,14 +123,14 @@ class MissingValueHandling2TableIterator extends RowIterator {
         push();
         return result;
     }
-    
+
     /** pushes the internal iterator forward to the next row to return. */
     private void push() {
         DataRow row;
         boolean hasMissing;
         boolean skipRow;
         // make an iterative loop and look for the next row to return;
-        // this method used to implement a recursion but with many rows 
+        // this method used to implement a recursion but with many rows
         // containing missing values, you get a StackOverFlow, bug fix #350
         do {
             if (!m_internIt.hasNext()) {
@@ -160,7 +160,7 @@ class MissingValueHandling2TableIterator extends RowIterator {
                             break;
                         default:
                             hasMissing = true;
-                        
+
                     }
                 }
             }
@@ -171,7 +171,7 @@ class MissingValueHandling2TableIterator extends RowIterator {
             m_next = row;
         }
     }
-    
+
     /* Does the missing value handling on a row. */
     private DataRow handleMissing(final DataRow row) {
         DataCell[] cells = new DataCell[row.getNumCells()];
@@ -222,15 +222,15 @@ class MissingValueHandling2TableIterator extends RowIterator {
         RowKey key = row.getKey();
         return new DefaultRow(key, cells);
     }
-    
-    
-    /** Runtime exception that's thrown when the execution monitor's 
-     * <code>checkCanceled</code> method throws an 
+
+
+    /** Runtime exception that's thrown when the execution monitor's
+     * <code>checkCanceled</code> method throws an
      * {@link CanceledExecutionException}.
-     */ 
-    static final class RuntimeCanceledExecutionException 
+     */
+    static final class RuntimeCanceledExecutionException
         extends RuntimeException {
-        
+
         /** Inits object.
          * @param cee The exception to wrap.
          */
@@ -238,10 +238,10 @@ class MissingValueHandling2TableIterator extends RowIterator {
                 final CanceledExecutionException cee) {
             super(cee.getMessage(), cee);
         }
-        
+
         /** Get reference to causing exception.
          * {@inheritDoc}
-         */ 
+         */
         @Override
         public CanceledExecutionException getCause() {
             return (CanceledExecutionException)super.getCause();

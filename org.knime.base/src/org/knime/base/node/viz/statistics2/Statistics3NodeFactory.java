@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,62 +44,68 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
+ * History
+ *   18.04.2005 (cebron): created
  */
-package org.knime.base.node.preproc.missingval;
+package org.knime.base.node.viz.statistics2;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
- * Factory to create all node classes for a node that handles missing values in
- * a table and replaces it by some meaningful values.
- * 
- * @author Bernd Wiswedel, University of Konstanz
- * @since 2.5
+ * Factory class for the Statistics Node.
+ *
+ * @author Thomas Gabriel, University of Konstanz
  */
-public class MissingValueHandling2NodeFactory
-        extends NodeFactory<MissingValueHandling2NodeModel> {
-    
+public class Statistics3NodeFactory extends NodeFactory<Statistics3NodeModel> {
+
     /**
-     * {@inheritDoc}
+     * Empty default constructor.
+     */
+    public Statistics3NodeFactory() {
+        super();
+    }
+
+    /**
+     * This node has no dialog.
      */
     @Override
-    public MissingValueHandling2NodeModel createNodeModel() {
-        return new MissingValueHandling2NodeModel();
+    public NodeDialogPane createNodeDialogPane() {
+        return new Statistics3NodeDialogPane();
     }
 
     /**
      * {@inheritDoc}
+     */
+    @Override
+    public Statistics3NodeModel createNodeModel() {
+        return new Statistics3NodeModel();
+    }
+
+    /**
+     * The view offers statistical information on the input table.
+     */
+    @Override
+    public NodeView<Statistics3NodeModel> createNodeView(final int viewIndex,
+            final Statistics3NodeModel nodeModel) {
+        return new Statistics3NodeView(nodeModel);
+    }
+
+    /**
+     * This node has one view.
      */
     @Override
     public int getNrNodeViews() {
-        return 0;
+          return 1;
     }
 
     /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeView<MissingValueHandling2NodeModel> createNodeView(
-            final int viewIndex, final MissingValueHandling2NodeModel model) {
-        throw new IndexOutOfBoundsException();
-    }
-
-    /**
-     * {@inheritDoc}
+     * No dialog for this node.
      */
     @Override
     public boolean hasDialog() {
         return true;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public NodeDialogPane createNodeDialogPane() {
-        return new MissingValueHandling2NodeDialogPane();
     }
 }

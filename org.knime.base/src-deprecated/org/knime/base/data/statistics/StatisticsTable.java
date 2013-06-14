@@ -82,7 +82,7 @@ import org.knime.core.node.ExecutionMonitor;
  * {@link org.knime.core.data.DataTable} consider calling the
  * {@link #calculateAllMoments(ExecutionMonitor)}-method first for a faster
  * processing speed.
- * @deprecated use {@link Statistics2Table}
+ * @deprecated use {@link Statistics3Table}
  * 
  * @author Nicolas Cebron, University of Konstanz
  */

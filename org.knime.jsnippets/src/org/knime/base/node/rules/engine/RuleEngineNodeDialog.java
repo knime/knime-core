@@ -51,8 +51,8 @@
 package org.knime.base.node.rules.engine;
 
 import org.fife.rsta.ac.LanguageSupportFactory;
-import org.knime.base.node.preproc.stringmanipulation.JavaScriptingCompletionProvider;
 import org.knime.base.node.rules.engine.manipulator.RuleManipulatorProvider;
+import org.knime.base.node.util.JavaScriptingCompletionProvider;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.FlowVariableModel;
 import org.knime.core.node.InvalidSettingsException;

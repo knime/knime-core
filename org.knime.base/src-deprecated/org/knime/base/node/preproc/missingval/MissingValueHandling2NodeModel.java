@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.preproc.missingval;
 
@@ -63,9 +63,11 @@ import org.knime.core.node.NodeSettingsWO;
 
 
 /**
- * NodeModel for missing value node. 
+ * NodeModel for missing value node.
  * @author wiswedel, University of Konstanz
+ * @deprecated Use {@link MissingValueHandling3NodeModel}
  */
+@Deprecated
 public class MissingValueHandling2NodeModel extends NodeModel {
     private MissingValueHandling2ColSetting[] m_colSettings;
 

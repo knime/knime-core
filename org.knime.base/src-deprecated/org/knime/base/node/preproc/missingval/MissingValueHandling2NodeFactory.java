@@ -40,54 +40,68 @@
  *  License, the License does not apply to Nodes, you are not required to
  *  license Nodes under the License, and you are granted a license to
  *  prepare and propagate Nodes, in each case even if such Nodes are
- *  propagated with or for interoperation with KNIME. The owner of a Node
+ *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * ------------------------------------------------------------------------
+ * -------------------------------------------------------------------
  *
- * History
- *   10.10.2011 (hofer): created
  */
-package org.knime.base.node.preproc.stringmanipulation;
+package org.knime.base.node.preproc.missingval;
 
-import org.fife.ui.autocomplete.BasicCompletion;
-import org.knime.base.node.util.KnimeCompletionProvider;
-import org.knime.ext.sun.nodes.script.expression.Expression;
+import org.knime.core.node.NodeDialogPane;
+import org.knime.core.node.NodeFactory;
+import org.knime.core.node.NodeView;
 
 /**
- * A completion provider that can be used in Java snippet editors.
+ * Factory to create all node classes for a node that handles missing values in
+ * a table and replaces it by some meaningful values.
  *
- * @author Heiko Hofer
- * @author Thorsten Meinl, University of Konstanz
+ * @author Bernd Wiswedel, University of Konstanz
+ * @since 2.5
+ * @deprecated Use {@link MissingValueHandling3NodeFactory}
  */
-public class JavaScriptingCompletionProvider extends KnimeCompletionProvider {
+@Deprecated
+public class MissingValueHandling2NodeFactory
+        extends NodeFactory<MissingValueHandling2NodeModel> {
+
     /**
-     * An instance with default code completions for the JavaSnippet.
+     * {@inheritDoc}
      */
-    public JavaScriptingCompletionProvider() {
-        addCompletion(new BasicCompletion(this, "$$" + Expression.ROWID + "$$",
-                "String", "The Row-ID"));
-        addCompletion(new BasicCompletion(this, "$$" + Expression.ROWINDEX
-                + "$$", "int", "The index of the row starting from zero."));
-        addCompletion(new BasicCompletion(this, "$$" + Expression.ROWCOUNT
-                + "$$", "int", "The number of rows in the input table."));
+    @Override
+    public MissingValueHandling2NodeModel createNodeModel() {
+        return new MissingValueHandling2NodeModel();
     }
 
     /**
      * {@inheritDoc}
-     * @since 2.6
      */
     @Override
-    public String escapeColumnName(final String colName) {
-        return "$" + colName + "$";
+    public int getNrNodeViews() {
+        return 0;
     }
 
     /**
      * {@inheritDoc}
-     * @since 2.6
      */
     @Override
-    public String escapeFlowVariableName(final String varName) {
-        return "$${" + varName + "}$$";
+    public NodeView<MissingValueHandling2NodeModel> createNodeView(
+            final int viewIndex, final MissingValueHandling2NodeModel model) {
+        throw new IndexOutOfBoundsException();
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean hasDialog() {
+        return true;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public NodeDialogPane createNodeDialogPane() {
+        return new MissingValueHandling2NodeDialogPane();
     }
 }

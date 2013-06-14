@@ -344,7 +344,7 @@ public class JSnippetPanel extends JPanel {
 
         ac.install(textArea);
 
-        m_expEdit = textArea;
+        setExpEdit(textArea);
         return scroller;
     }
 
@@ -535,7 +535,25 @@ public class JSnippetPanel extends JPanel {
      *            fill the list of available flow variables
      */
     public void update(final String expression, final DataTableSpec spec,
-            final Map<String, FlowVariable> flowVariables) {
+                       final Map<String, FlowVariable> flowVariables) {
+        // we have Expression.VERSION_2X
+        final String[] expressions = new String[] {Expression.ROWID, Expression.ROWINDEX, Expression.ROWCOUNT};
+        update(expression, spec, flowVariables, expressions);
+
+    }
+    /**
+     * Updates the contents of the panel with new values.
+     *
+     * @param expression the expression in the editor
+     * @param spec the data table spec of the input table; used for filling the
+     *            list of available columns
+     * @param flowVariables a map with all available flow variables; used to
+     *            fill the list of available flow variables
+     * @param expressions {@link Expression}s' constants to add to the columns list.
+     * @since 2.8
+     */
+    public void update(final String expression, final DataTableSpec spec,
+            final Map<String, FlowVariable> flowVariables, final String[] expressions) {
         m_expEdit.setText(expression);
         m_expEdit.requestFocus();
 
@@ -543,9 +561,9 @@ public class JSnippetPanel extends JPanel {
         listModel.removeAllElements();
 
         // we have Expression.VERSION_2X
-        listModel.addElement(Expression.ROWID);
-        listModel.addElement(Expression.ROWINDEX);
-        listModel.addElement(Expression.ROWCOUNT);
+        for (String exp : expressions) {
+            listModel.addElement(exp);
+        }
 
         for (int i = 0; i < spec.getNumColumns(); i++) {
             DataColumnSpec colSpec = spec.getColumnSpec(i);

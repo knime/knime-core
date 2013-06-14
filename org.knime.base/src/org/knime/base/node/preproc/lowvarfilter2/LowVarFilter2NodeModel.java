@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   25.02.2007 (wiswedel): created
  */
@@ -54,11 +54,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 
-import org.knime.base.data.statistics.StatisticsTable;
+import org.knime.base.data.statistics.Statistics3Table;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DoubleValue;
@@ -81,18 +82,18 @@ import org.knime.core.node.util.filter.column.DataTypeColumnFilter;
  * @author Bernd Wiswedel, University of Konstanz
  */
 public class LowVarFilter2NodeModel extends NodeModel {
-    
-    private static final NodeLogger LOGGER = 
+
+    private static final NodeLogger LOGGER =
         NodeLogger.getLogger(LowVarFilter2NodeModel.class);
-    
+
     /** Config key for variance threshold. */
     static final String CFG_KEY_MAX_VARIANCE = "max_variance";
     /** Config key for included columns. */
     static final String CFG_KEY_COL_FILTER = "col_filter";
-    
+
     private DataColumnSpecFilterConfiguration m_conf;
     private double m_varianceThreshold;
-    
+
     /** One input, one output. */
     public LowVarFilter2NodeModel() {
         super(1, 1);
@@ -111,13 +112,13 @@ public class LowVarFilter2NodeModel extends NodeModel {
         final FilterResult filter = m_conf.applyTo(
                 inData[0].getDataTableSpec());
         String[] includedColumns = filter.getIncludes();
-        
-        StatisticsTable statTable = new StatisticsTable(inData[0], exec);
+
+        Statistics3Table statTable = new Statistics3Table(inData[0], false, 0, Collections.<String>emptyList(), exec);
         ArrayList<String> includes = new ArrayList<String>();
         DataTableSpec s = inData[0].getDataTableSpec();
         int colCount = s.getNumColumns();
         double threshold = m_varianceThreshold;
-        HashSet<String> includesHash = 
+        HashSet<String> includesHash =
             new HashSet<String>(Arrays.asList(includedColumns));
         for (int i = 0; i < colCount; i++) {
             DataColumnSpec cs = s.getColumnSpec(i);
@@ -125,7 +126,7 @@ public class LowVarFilter2NodeModel extends NodeModel {
                     || !cs.getType().isCompatible(DoubleValue.class)
                     || statTable.getVariance(i) > threshold) {
                 includes.add(cs.getName());
-            } 
+            }
         }
         int filteredOutCount = s.getNumColumns() - includes.size();
         LOGGER.info("Filtered out " + filteredOutCount + " column(s)");
@@ -160,24 +161,24 @@ public class LowVarFilter2NodeModel extends NodeModel {
             m_conf.loadDefaults(inSpecs[0], true);
             m_varianceThreshold = 0.0;
             setWarningMessage("Auto-configuration: Using all double-compatible "
-                    + "columns and a threshold value of 0");            
-        }        
+                    + "columns and a threshold value of 0");
+        }
         final FilterResult filter = m_conf.applyTo(inSpecs[0]);
         String[] includedColumns = filter.getIncludes();
-        
+
         // contains null elements in include list
         if (Arrays.asList(includedColumns).contains(null)) {
             throw new InvalidSettingsException(
                     "Null elements not allowed in include list");
         }
-        
+
         // threshold check
         if (m_varianceThreshold < 0.0) {
-            throw new InvalidSettingsException("Not configured: Please set " 
+            throw new InvalidSettingsException("Not configured: Please set "
                     + "variance threshold to value >= 0");
         }
-        HashSet<String> hash = 
-            new LinkedHashSet<String>(Arrays.asList(includedColumns)); 
+        HashSet<String> hash =
+            new LinkedHashSet<String>(Arrays.asList(includedColumns));
         for (DataColumnSpec s : inSpecs[0]) {
             hash.remove(s.getName());
         }
@@ -200,7 +201,7 @@ public class LowVarFilter2NodeModel extends NodeModel {
         // unable to say anything about the outspec here.
         return new DataTableSpec[1];
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -211,7 +212,7 @@ public class LowVarFilter2NodeModel extends NodeModel {
             m_conf = createColFilterConf();
         }
         m_conf.saveConfiguration(settings);
-        
+
         settings.addDouble(CFG_KEY_MAX_VARIANCE, m_varianceThreshold);
     }
 
@@ -222,12 +223,12 @@ public class LowVarFilter2NodeModel extends NodeModel {
     protected void loadValidatedSettingsFrom(final NodeSettingsRO settings)
             throws InvalidSettingsException {
         m_varianceThreshold = settings.getDouble(CFG_KEY_MAX_VARIANCE);
-        
+
         DataColumnSpecFilterConfiguration conf = createColFilterConf();
         conf.loadConfigurationInModel(settings);
         m_conf = conf;
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -238,7 +239,7 @@ public class LowVarFilter2NodeModel extends NodeModel {
         DataColumnSpecFilterConfiguration conf = createColFilterConf();
         conf.loadConfigurationInModel(settings);
 
-        double varThresh = settings.getDouble(CFG_KEY_MAX_VARIANCE); 
+        double varThresh = settings.getDouble(CFG_KEY_MAX_VARIANCE);
         if (varThresh < 0.0) {
             throw new InvalidSettingsException(
                     "Negative variance not allowed: " + varThresh);
@@ -264,14 +265,14 @@ public class LowVarFilter2NodeModel extends NodeModel {
             CanceledExecutionException {
         // Nothing to do ...
     }
-    
+
     /**
-     * @return creates and returns configuration instance for column filter 
+     * @return creates and returns configuration instance for column filter
      * panel.
      */
     @SuppressWarnings("unchecked")
     private DataColumnSpecFilterConfiguration createColFilterConf() {
         return new DataColumnSpecFilterConfiguration(CFG_KEY_COL_FILTER,
                 new DataTypeColumnFilter(DoubleValue.class));
-    }    
+    }
 }

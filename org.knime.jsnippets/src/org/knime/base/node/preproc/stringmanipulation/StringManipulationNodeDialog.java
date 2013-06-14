@@ -71,6 +71,7 @@ import javax.swing.border.Border;
 import org.fife.ui.autocomplete.BasicCompletion;
 import org.knime.base.node.preproc.stringmanipulation.manipulator.Manipulator;
 import org.knime.base.node.util.JSnippetPanel;
+import org.knime.base.node.util.JavaScriptingCompletionProvider;
 import org.knime.base.node.util.KnimeCompletionProvider;
 import org.knime.base.node.util.ManipulatorProvider;
 import org.knime.core.data.DataTableSpec;

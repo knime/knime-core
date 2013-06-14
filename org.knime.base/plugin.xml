@@ -480,14 +480,14 @@
       </node>
       <node
             category-path="/statistics"
-            factory-class="org.knime.base.node.viz.statistics.Statistics2NodeFactory"
-            id="org.knime.base.node.viz.statistics.Statistics2NodeFactory"
+            factory-class="org.knime.base.node.viz.statistics2.Statistics3NodeFactory"
+            id="org.knime.base.node.viz.statistics2.Statistics3NodeFactory"
             after="org.knime.base.node.preproc.correlation.filter.CorrelationFilterNodeFactory"/>
       <node
             category-path="/statistics"
             factory-class="org.knime.base.node.viz.crosstable.CrosstabNodeFactory"
             id="org.knime.base.node.viz.crosstable.CrosstabNodeFactory"
-            after="org.knime.base.node.viz.statistics.Statistics2NodeFactory"/>
+            after="org.knime.base.node.viz.statistics2.Statistics3NodeFactory"/>
       <node
             category-path="/statistics"
             factory-class="org.knime.base.node.preproc.valcount.ValueCounterNodeFactory"
@@ -495,8 +495,8 @@
             after="org.knime.base.node.viz.crosstable.CrosstabNodeFactory"/>
       <node
             category-path="/manipulation/column/column-transform"
-            factory-class="org.knime.base.node.preproc.normalize.NormalizerNodeFactory"
-            id="org.knime.base.node.preproc.normalize.NormalizeNodeFactory"/>
+            factory-class="org.knime.base.node.preproc.normalize2.Normalizer2NodeFactory"
+            id="org.knime.base.node.preproc.normalize2.Normalize2NodeFactory"/>
      <node
             category-path="/manipulation/pmml"
             factory-class="org.knime.base.node.preproc.pmml.normalize.NormalizerPMMLNodeFactory"
@@ -568,9 +568,9 @@
             factory-class="org.knime.base.node.mine.cluster.fuzzycmeans.FuzzyClusterNodeFactory"
             id="org.knime.base.node.mine.cluster.fuzzycmeans.FuzzyClusterNodeFactory"/>
       <node
-            factory-class="org.knime.base.node.preproc.missingval.MissingValueHandling2NodeFactory"
+            factory-class="org.knime.base.node.preproc.missingval.MissingValueHandling3NodeFactory"
             category-path="/manipulation/column/column-transform"
-            id="org.knime.base.node.preproc.missingval.MissingValueHandling2NodeFactory"/>
+            id="org.knime.base.node.preproc.missingval.MissingValueHandling3NodeFactory"/>
       <node
             category-path="/mining/nn/mlp"
             factory-class="org.knime.base.node.mine.neural.rprop.RPropNodeFactory"
