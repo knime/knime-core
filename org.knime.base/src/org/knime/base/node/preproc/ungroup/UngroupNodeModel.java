@@ -512,7 +512,11 @@ public class UngroupNodeModel extends NodeModel {
             throws IOException, CanceledExecutionException {
         if (m_enableHilite.getBooleanValue()) {
             final NodeSettings config = new NodeSettings("hilite_mapping");
-            ((DefaultHiLiteMapper) m_trans.getMapper()).save(config);
+            final DefaultHiLiteMapper mapper = (DefaultHiLiteMapper) m_trans.getMapper();
+            if (mapper != null) {
+                //the mapper is null if the node produces an empty data table
+                mapper.save(config);
+            }
             config.saveToXML(new GZIPOutputStream(new FileOutputStream(new File(
                     nodeInternDir, "hilite_mapping.xml.gz"))));
         }
