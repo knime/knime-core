@@ -280,7 +280,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.5 */
     private WorkflowCipher m_cipher = WorkflowCipher.NULL_CIPHER;
 
-    private WorkflowContext m_contex;
+    private WorkflowContext m_workflowContext;
 
     /** The root of everything, a workflow with no in- or outputs.
      * This workflow holds the top level projects. */
@@ -354,7 +354,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         }
         boolean isProject = persistor.isProject();
         if (isProject) {
-            m_contex = persistor.getWorkflowContext();
+            m_workflowContext = persistor.getWorkflowContext();
         }
         m_workflow = new Workflow(this, id);
         m_name = persistor.getName();
@@ -420,7 +420,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public WorkflowManager createAndAddProject(final String name, final WorkflowCreationHelper creationHelper) {
         WorkflowManager wfm = createAndAddSubWorkflow(new PortType[0], new PortType[0], name, true);
-        wfm.m_contex = creationHelper.getWorkflowContext();
+        wfm.m_workflowContext = creationHelper.getWorkflowContext();
         LOGGER.debug("Created project " + ((NodeContainer)wfm).getID());
         return wfm;
     }
@@ -6323,15 +6323,15 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             CanceledExecutionException, UnsupportedWorkflowVersionException,
             LockFailedException {
         WorkflowLoadResult result = ROOT.load(directory, exec, loadHelper, false);
-        if ((result.getWorkflowManager() != null) && (result.getWorkflowManager().m_contex == null)) {
+        if ((result.getWorkflowManager() != null) && (result.getWorkflowManager().m_workflowContext == null)) {
             if (loadHelper.getWorkflowContext() != null) {
-                result.getWorkflowManager().m_contex = loadHelper.getWorkflowContext();
+                result.getWorkflowManager().m_workflowContext = loadHelper.getWorkflowContext();
             } else {
                 LOGGER.warn("No workflow context available for " + directory, new Throwable());
-                result.getWorkflowManager().m_contex = new WorkflowContext.Factory(directory).createContext();
+                result.getWorkflowManager().m_workflowContext = new WorkflowContext.Factory(directory).createContext();
             }
         }
-        result.getWorkflowManager().createWorkflowTempDirectory(result.getWorkflowManager().m_contex);
+        result.getWorkflowManager().createWorkflowTempDirectory(result.getWorkflowManager().m_workflowContext);
         return result;
     }
 
@@ -8079,7 +8079,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.8
      */
     public WorkflowContext getContext() {
-        return m_contex;
+        return m_workflowContext;
     }
 
     /** Meta data such as who create the workflow and who edited it last and when.
