@@ -71,7 +71,17 @@ public abstract class DataAwareNodeDialogPane extends NodeDialogPane {
     void callDerivedLoadSettingsFrom(final NodeSettingsRO settings,
             final PortObjectSpec[] specs, final PortObject[] data)
             throws NotConfigurableException {
-        loadSettingsFrom(settings, data);
+        boolean someDataAvailable = false;
+        for (int i = 0; data != null && i < data.length; i++) {
+            if (data[i] != null) {
+                someDataAvailable = true;
+            }
+        }
+        if (someDataAvailable) {
+            loadSettingsFrom(settings, data);
+        } else {
+            loadSettingsFrom(settings, specs);
+        }
     }
 
     /**
