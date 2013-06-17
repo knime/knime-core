@@ -24,6 +24,10 @@
                 if the workflow test fails. You can enter multiple addresses
                 by separating them with commas.
             </option>
+            <option name="Execution timeout">
+                Set a timeout after which execution of the workflow is canceled and an error
+                is reported.
+            </option>
             <option name="Log Errors, Warnings, Infos">
                 These lists contains error, warning, or info messages that must be present
                 in the log

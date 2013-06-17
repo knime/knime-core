@@ -64,6 +64,7 @@ import org.knime.core.node.NodeSettingsRO;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.node.workflow.NodeContainer;
 import org.knime.core.node.workflow.WorkflowManager;
+import org.knime.testing.core.FullWorkflowTest;
 
 /**
  * This class holds the settings for the testflow configuration node.
@@ -86,6 +87,8 @@ public class TestConfigSettings {
     private List<String> m_requiredLogInfos = new ArrayList<String>();
 
     private Set<String> m_failingNodes = new HashSet<String>();
+
+    private int m_timeout = FullWorkflowTest.TIMEOUT;
 
     private static final String[] EMPTY = new String[0];
 
@@ -245,6 +248,29 @@ public class TestConfigSettings {
         }
     }
 
+
+    /**
+     * Sets the workflow timeout in seconds. After the timeout the execution of the workflow is canceled. The
+     * default timeout is {@link FullWorkflowTest#TIMEOUT}.
+     *
+     * @param seconds the timeout in seconds.
+     */
+    public void timeout(final int seconds) {
+        m_timeout = seconds;
+    }
+
+
+    /**
+     * Returns the workflow timeout in seconds. After the timeout the execution of the workflow is canceled. The
+     * default timeout is {@link FullWorkflowTest#TIMEOUT}.
+     *
+     * @return the timeout in seconds.
+     */
+    public int timeout() {
+        return m_timeout;
+    }
+
+
     /**
      * Loads the settings from the given settings object.
      *
@@ -300,6 +326,9 @@ public class TestConfigSettings {
                 m_requiredNodeErrors.put(nodeID, message);
             }
         }
+
+        // since 2.8
+        m_timeout = settings.getInt("timeout", FullWorkflowTest.TIMEOUT);
     }
 
     /**
@@ -369,6 +398,8 @@ public class TestConfigSettings {
         } catch (InvalidSettingsException ex) {
             // ignore it
         }
+
+        m_timeout = settings.getInt("timeout", FullWorkflowTest.TIMEOUT);
     }
 
     /**
@@ -403,6 +434,8 @@ public class TestConfigSettings {
             i++;
         }
         subs.addInt("count", i);
+
+        settings.addInt("timeout", m_timeout);
     }
 
     /**

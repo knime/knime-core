@@ -74,9 +74,11 @@ import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JSpinner;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.SpinnerNumberModel;
 import javax.swing.border.BevelBorder;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
@@ -119,6 +121,8 @@ public class TestConfigNodeDialog extends NodeDialogPane {
 
     private final JTextArea m_requiredWarning = new JTextArea(3, 20);
 
+    private final JSpinner m_timeout = new JSpinner(new SpinnerNumberModel(30, 0, 3600, 10));
+
     private int m_lastSelectedIndex = -1;
 
     /**
@@ -155,6 +159,7 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         GridBagConstraints c = new GridBagConstraints();
 
         c.insets = new Insets(2, 0, 2, 0);
+        c.anchor = GridBagConstraints.WEST;
         c.gridx = 0;
         c.gridy = 0;
         p.add(new JLabel("Workflow owner's mail address:   "), c);
@@ -162,6 +167,17 @@ public class TestConfigNodeDialog extends NodeDialogPane {
         c.fill = GridBagConstraints.HORIZONTAL;
         c.weightx = 1;
         p.add(m_owner, c);
+
+        c.gridx = 0;
+        c.gridy++;
+        c.fill = GridBagConstraints.NONE;
+        c.weightx = 0;
+        p.add(new JLabel("Execution timeout in seconds:   "), c);
+        c.gridx = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
+        c.weightx = 1;
+        p.add(m_timeout, c);
+
 
         c.gridx = 0;
         c.gridy++;
@@ -383,6 +399,7 @@ public class TestConfigNodeDialog extends NodeDialogPane {
     protected void saveSettingsTo(final NodeSettingsWO settings)
             throws InvalidSettingsException {
         m_settings.owner(m_owner.getText());
+        m_settings.timeout((Integer) m_timeout.getValue());
 
         List<String> temp = new ArrayList<String>();
         for (int i = 0; i < m_logErrorsModel.getSize(); i++) {
@@ -413,6 +430,7 @@ public class TestConfigNodeDialog extends NodeDialogPane {
             final DataTableSpec[] specs) throws NotConfigurableException {
         m_settings.loadSettingsForDialog(settings);
         m_owner.setText(m_settings.owner());
+        m_timeout.setValue(m_settings.timeout());
 
         m_logErrorsModel.removeAllElements();
         for (String l : m_settings.requiredLogErrors()) {

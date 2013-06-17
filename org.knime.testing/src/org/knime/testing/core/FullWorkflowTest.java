@@ -1159,6 +1159,8 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
                         + "Ignoring the configuration.");
             }
         }
+
+        setTimeout(settings.timeout());
     }
 
     /**
@@ -1661,9 +1663,12 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
 
     /**
      * {@inheritDoc}
+     *
+     * Note that the timeout set here is overridden by the timeout specified via the testflow configuration node.
      */
     @Override
     public void setTimeout(final int seconds) {
         m_timeout = seconds;
+        logger.debug("Setting execution timeout to " + seconds + "s");
     }
 }
