@@ -280,13 +280,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.5 */
     private WorkflowCipher m_cipher = WorkflowCipher.NULL_CIPHER;
 
-    private WorkflowContext m_workflowContext;
+    private final WorkflowContext m_workflowContext;
 
     /** The root of everything, a workflow with no in- or outputs.
      * This workflow holds the top level projects. */
     public static final WorkflowManager ROOT =
         new WorkflowManager(null, NodeID.ROOTID,
-                new PortType[0], new PortType[0], true);
+                new PortType[0], new PortType[0], true, null);
 
     /** dir where all tmp files of the flow live. Set in the workflow context. If not null, it must be discarded upon
      * workflow disposal. If null, the temp dir location in the context was set from someone else (the server e.g.) and
@@ -302,7 +302,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     private WorkflowManager(final WorkflowManager parent, final NodeID id,
             final PortType[] inTypes, final PortType[] outTypes,
-            final boolean isProject) {
+            final boolean isProject, final WorkflowContext context) {
         super(parent, id);
         m_workflow = new Workflow(this, id);
         m_inPorts = new WorkflowInPort[inTypes.length];
@@ -322,12 +322,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             m_fileStoreHandlerRepository = new WorkflowFileStoreHandlerRepository();
             // ...and we do not need to synchronize across unconnected workflows
             m_workflowMutex = new Object();
+            m_workflowContext = context;
+            if (context != null) {
+                createWorkflowTempDirectory(context);
+            }
         } else {
             // otherwise we may have incoming and/or outgoing dependencies...
             m_globalTableRepository = parent.m_globalTableRepository;
             m_fileStoreHandlerRepository = parent.m_fileStoreHandlerRepository;
             // ...synchronize across border
             m_workflowMutex = parent.m_workflowMutex;
+            m_workflowContext = context;
         }
         m_credentialsStore = new CredentialsStore(this);
         // initialize listener list
@@ -336,7 +341,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         synchronized (m_workflowMutex) { // asserted in check -- even from constructor
             checkForNodeStateChanges(false); // get default state right
         }
-        // done.
         LOGGER.debug("Created subworkflow " + this.getID());
     }
 
@@ -352,10 +356,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         + "been locked by the load routines");
             }
         }
-        boolean isProject = persistor.isProject();
-        if (isProject) {
-            m_workflowContext = persistor.getWorkflowContext();
-        }
         m_workflow = new Workflow(this, id);
         m_name = persistor.getName();
         m_editorInfo = persistor.getEditorUIInformation();
@@ -365,6 +365,21 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         m_workflowVariables = new Vector<FlowVariable>(persistor.getWorkflowVariables());
         m_credentialsStore = new CredentialsStore(this, persistor.getCredentials());
         m_cipher = persistor.getWorkflowCipher();
+        boolean isProject = persistor.isProject();
+        WorkflowContext workflowContext;
+        if (isProject) {
+            workflowContext = persistor.getWorkflowContext();
+            if (workflowContext == null && getNodeContainerDirectory() != null) { // real projects have a file loc
+                LOGGER.warn("No workflow context available for " + m_name , new Throwable());
+                workflowContext = new WorkflowContext.Factory(getNodeContainerDirectory().getFile()).createContext();
+            }
+            if (workflowContext != null) {
+                createWorkflowTempDirectory(workflowContext);
+            }
+        } else {
+            workflowContext = null;
+        }
+        m_workflowContext = workflowContext;
         WorkflowPortTemplate[] inPortTemplates = persistor.getInPortTemplates();
         m_inPorts = new WorkflowInPort[inPortTemplates.length];
         for (int i = 0; i < inPortTemplates.length; i++) {
@@ -419,8 +434,8 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @since 2.8
      */
     public WorkflowManager createAndAddProject(final String name, final WorkflowCreationHelper creationHelper) {
-        WorkflowManager wfm = createAndAddSubWorkflow(new PortType[0], new PortType[0], name, true);
-        wfm.m_workflowContext = creationHelper.getWorkflowContext();
+        WorkflowManager wfm = createAndAddSubWorkflow(
+            new PortType[0], new PortType[0], name, true, creationHelper.getWorkflowContext());
         LOGGER.debug("Created project " + ((NodeContainer)wfm).getID());
         return wfm;
     }
@@ -565,12 +580,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     public WorkflowManager createAndAddSubWorkflow(final PortType[] inPorts,
             final PortType[] outPorts, final String name) {
-        return createAndAddSubWorkflow(inPorts, outPorts, name, false);
+        return createAndAddSubWorkflow(inPorts, outPorts, name, false, null);
     }
 
     /** Adds new empty meta node to this WFM. */
     private WorkflowManager createAndAddSubWorkflow(final PortType[] inPorts,
-            final PortType[] outPorts, final String name, final boolean isNewProject) {
+            final PortType[] outPorts, final String name, final boolean isNewProject, final WorkflowContext context) {
         final boolean hasPorts = inPorts.length != 0 || outPorts.length != 0;
         if (this == ROOT) {
             if (hasPorts) {
@@ -588,7 +603,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         WorkflowManager wfm;
         synchronized (m_workflowMutex) {
             newID = m_workflow.createUniqueID();
-            wfm = new WorkflowManager(this, newID, inPorts, outPorts, isNewProject);
+            wfm = new WorkflowManager(this, newID, inPorts, outPorts, isNewProject, context);
             if (name != null) {
                 wfm.m_name = name;
             }
@@ -6323,14 +6338,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             CanceledExecutionException, UnsupportedWorkflowVersionException,
             LockFailedException {
         WorkflowLoadResult result = ROOT.load(directory, exec, loadHelper, false);
-        if ((result.getWorkflowManager() != null) && (result.getWorkflowManager().m_workflowContext == null)) {
-            if (loadHelper.getWorkflowContext() != null) {
-                result.getWorkflowManager().m_workflowContext = loadHelper.getWorkflowContext();
-            } else {
-                LOGGER.warn("No workflow context available for " + directory, new Throwable());
-                result.getWorkflowManager().m_workflowContext = new WorkflowContext.Factory(directory).createContext();
-            }
-        }
         result.getWorkflowManager().createWorkflowTempDirectory(result.getWorkflowManager().m_workflowContext);
         return result;
     }
@@ -6567,8 +6574,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
         }
         try {
-            WorkflowPersistorVersion1xx persistor =
-                createLoadPersistor(directory, loadHelper);
+            WorkflowPersistorVersion1xx persistor = createLoadPersistor(directory, loadHelper);
             return load(persistor, exec, keepNodeMessages);
         } finally {
             if (!isTemplate) {
