@@ -137,8 +137,9 @@ import org.knime.workbench.ui.preferences.PreferenceConstants;
 import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
 
 /**
- * Edit part for node containers. This also listens to interesting events, like
- * changed extra infos or execution states <br />
+ * Edit part for node containers. This also listens to interesting events, like changed extra infos or execution states.
+ *
+ * <br />
  * Model: {@link NodeContainer} <br />
  * View: {@link NodeContainerFigure} <br />
  * Controller: {@link NodeContainerEditPart}
@@ -146,33 +147,25 @@ import org.knime.workbench.ui.wrapper.WrappedNodeDialog;
  * @author Florian Georg, University of Konstanz
  * @author Christoph Sieb, University of Konstanz
  */
-public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
-        NodeStateChangeListener, NodeProgressListener, NodeMessageListener,
-        NodeUIInformationListener, EditPartListener, ConnectableEditPart, NodeEditPart,
-        NodePropertyChangedListener, IPropertyChangeListener, IAdaptable {
+public class NodeContainerEditPart extends AbstractWorkflowEditPart implements NodeStateChangeListener,
+    NodeProgressListener, NodeMessageListener, NodeUIInformationListener, EditPartListener, ConnectableEditPart,
+    NodeEditPart, NodePropertyChangedListener, IPropertyChangeListener, IAdaptable {
 
-    private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(NodeContainerEditPart.class);
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeContainerEditPart.class);
 
-    private static final Image META_NODE_LINK_GREEN_ICON =
-        ImageRepository.getImage(
-                "icons/meta/metanode_link_green_decorator.png");
+    private static final Image META_NODE_LINK_GREEN_ICON = ImageRepository
+        .getImage("icons/meta/metanode_link_green_decorator.png");
 
-    private static final Image META_NODE_LINK_RED_ICON =
-        ImageRepository.getImage(
-            "icons/meta/metanode_link_red_decorator.png");
+    private static final Image META_NODE_LINK_RED_ICON = ImageRepository
+        .getImage("icons/meta/metanode_link_red_decorator.png");
 
-    private static final Image META_NODE_LINK_PROBLEM_ICON =
-        ImageRepository.getImage(
-            "icons/meta/metanode_link_problem_decorator.png");
+    private static final Image META_NODE_LINK_PROBLEM_ICON = ImageRepository
+        .getImage("icons/meta/metanode_link_problem_decorator.png");
 
-    private static final Image META_NODE_LOCK_ICON =
-        ImageRepository.getImage(
-            "icons/meta/metanode_lock_decorator.png");
+    private static final Image META_NODE_LOCK_ICON = ImageRepository.getImage("icons/meta/metanode_lock_decorator.png");
 
-    private static final Image META_NODE_UNLOCK_ICON =
-        ImageRepository.getImage(
-            "icons/meta/metanode_unlock_decorator.png");
+    private static final Image META_NODE_UNLOCK_ICON = ImageRepository
+        .getImage("icons/meta/metanode_unlock_decorator.png");
 
     /**
      * true, if the figure was initialized from the node extra info object.
@@ -219,8 +212,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
         // If we already have extra info, init figure now
         NodeContainer cont = getNodeContainer();
-        NodeUIInformation uiInfo =
-                cont.getUIInformation();
+        NodeUIInformation uiInfo = cont.getUIInformation();
         if (uiInfo != null) {
             // takes over all info except the coordinates
             updateFigureFromUIinfo(uiInfo);
@@ -237,14 +229,12 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         // to the viewer - so it doesn't know about the correct location yet
         NodeAnnotation nodeAnnotation = cont.getNodeAnnotation();
         NodeAnnotationEditPart nodeAnnotationEditPart =
-            (NodeAnnotationEditPart)getViewer().getEditPartRegistry().get(
-                    nodeAnnotation);
+            (NodeAnnotationEditPart)getViewer().getEditPartRegistry().get(nodeAnnotation);
         if (nodeAnnotationEditPart != null) {
             nodeAnnotationEditPart.nodeUIInformationChanged(null);
         }
 
-        IPreferenceStore store =
-            KNIMEUIPlugin.getDefault().getPreferenceStore();
+        IPreferenceStore store = KNIMEUIPlugin.getDefault().getPreferenceStore();
         store.addPropertyChangeListener(this);
 
         // listen to node container (= model object)
@@ -271,8 +261,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     @Override
     public void deactivate() {
         NodeContainer nc = getNodeContainer();
-        IPreferenceStore store =
-            KNIMEUIPlugin.getDefault().getPreferenceStore();
+        IPreferenceStore store = KNIMEUIPlugin.getDefault().getPreferenceStore();
         store.removePropertyChangeListener(this);
         nc.removeNodeStateChangeListener(this);
         nc.removeNodeMessageListener(this);
@@ -297,8 +286,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     @Override
     protected IFigure createFigure() {
         // create the visuals for the node container.
-        final NodeContainerFigure nodeFigure =
-                new NodeContainerFigure(new ProgressFigure());
+        final NodeContainerFigure nodeFigure = new NodeContainerFigure(new ProgressFigure());
         // init the user specified node name
         if (getRootEditPart() != null) {
             nodeFigure.hideNodeName(getRootEditPart().hideNodeNames());
@@ -318,10 +306,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                 return;
             }
             // simple dbl-click, no modifier key
-             openDialog();
+            openDialog();
         } else if (request.getType() == RequestConstants.REQ_DIRECT_EDIT) {
-            NodeAnnotationEditPart nodeAnnotationEditPart =
-                    getNodeAnnotationEditPart();
+            NodeAnnotationEditPart nodeAnnotationEditPart = getNodeAnnotationEditPart();
             if (nodeAnnotationEditPart != null) {
                 nodeAnnotationEditPart.performEdit();
             }
@@ -329,8 +316,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     }
 
     public void shiftConnection() {
-        ShiftConnectionCommand cmd =
-            new ShiftConnectionCommand(getWorkflowManager(), this);
+        ShiftConnectionCommand cmd = new ShiftConnectionCommand(getWorkflowManager(), this);
         if (cmd.canExecute()) {
             getViewer().getEditDomain().getCommandStack().execute(cmd);
         }
@@ -340,8 +326,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     public final NodeAnnotationEditPart getNodeAnnotationEditPart() {
         NodeAnnotation nodeAnnotation = getNodeContainer().getNodeAnnotation();
         NodeAnnotationEditPart nodeAnnotationEditPart =
-            (NodeAnnotationEditPart)getViewer().getEditPartRegistry().get(
-                    nodeAnnotation);
+            (NodeAnnotationEditPart)getViewer().getEditPartRegistry().get(nodeAnnotation);
         return nodeAnnotationEditPart;
     }
 
@@ -355,14 +340,12 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
         // This policy provides create/reconnect commands for connections that
         // are associated with ports of this node
-        this.installEditPolicy(EditPolicy.GRAPHICAL_NODE_ROLE,
-                new PortGraphicalRoleEditPolicy());
+        this.installEditPolicy(EditPolicy.GRAPHICAL_NODE_ROLE, new PortGraphicalRoleEditPolicy());
     }
 
     /**
-     * Returns the model children (= the ports) of the
-     * <code>NodeContainer</code> managed by this edit part. Note that in/out
-     * ports are handled the same.
+     * Returns the model children (= the ports) of the <code>NodeContainer</code> managed by this edit part. Note that
+     * in/out ports are handled the same.
      *
      * {@inheritDoc}
      */
@@ -381,6 +364,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     }
 
     private final AtomicBoolean m_updateInProgress = new AtomicBoolean(false);
+
     /** {@inheritDoc} */
     @Override
     public void stateChanged(final NodeStateEvent state) {
@@ -401,11 +385,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
                         updateNodeMessage();
                         // reset the tooltip text of the outports
                         for (Object part : getChildren()) {
-                            if (part instanceof NodeOutPortEditPart
-                                    || part instanceof WorkflowInPortEditPart
-                                    || part instanceof MetaNodeOutPortEditPart) {
-                                AbstractPortEditPart outPortPart =
-                                    (AbstractPortEditPart)part;
+                            if (part instanceof NodeOutPortEditPart || part instanceof WorkflowInPortEditPart
+                                || part instanceof MetaNodeOutPortEditPart) {
+                                AbstractPortEditPart outPortPart = (AbstractPortEditPart)part;
                                 outPortPart.rebuildTooltip();
                             }
                         }
@@ -422,8 +404,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     @Override
     public void progressChanged(final NodeProgressEvent pe) {
         // forward the new progress to our progress figure
-        ((NodeContainerFigure)getFigure()).getProgressFigure().progressChanged(
-                pe.getNodeProgress());
+        ((NodeContainerFigure)getFigure()).getProgressFigure().progressChanged(pe.getNodeProgress());
     }
 
     private final AtomicBoolean m_messageUpdateInProgress = new AtomicBoolean();
@@ -468,9 +449,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             public void run() {
                 if (isActive()) {
 
-                    NodeUIInformation uiInfo =
-                        getNodeContainer()
-                        .getUIInformation();
+                    NodeUIInformation uiInfo = getNodeContainer().getUIInformation();
                     updateFigureFromUIinfo(uiInfo);
                 }
             }
@@ -543,7 +522,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             // don't trigger another event here, when updating ui info
             m_uiListenerActive = false;
             getNodeContainer()
-                    .setUIInformation(new NodeUIInformation(bounds[0], bounds[1], bounds[2], bounds[3], true));
+                .setUIInformation(new NodeUIInformation(bounds[0], bounds[1], bounds[2], bounds[3], true));
             m_uiListenerActive = true;
         }
         // since v2.5 we ignore any width and height and keep bounds minimal
@@ -551,10 +530,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
-     * Adjusts the height and width of the node's figure. It automatically sets
-     * them to the preferred height/width of the figure (which might change if
-     * the warning icons change). It doesn't change x/y position of the figure.
-     * It does change width and height.
+     * Adjusts the height and width of the node's figure. It automatically sets them to the preferred height/width of
+     * the figure (which might change if the warning icons change). It doesn't change x/y position of the figure. It
+     * does change width and height.
      */
     private void refreshBounds() {
         NodeUIInformation uiInfo = getNodeContainer().getUIInformation();
@@ -574,8 +552,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         if (set) {
             // notify uiInfo listeners (e.g. node annotations)
             m_uiListenerActive = false;
-            getNodeContainer().setUIInformation(new NodeUIInformation(
-                    bounds[0], bounds[1], bounds[2], bounds[3], true));
+            getNodeContainer()
+                .setUIInformation(new NodeUIInformation(bounds[0], bounds[1], bounds[2], bounds[3], true));
             m_uiListenerActive = true;
         }
 
@@ -583,8 +561,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         Point offset = fig.getOffsetToRefPoint(uiInfo);
         bounds[0] -= offset.x;
         bounds[1] -= offset.y;
-        Rectangle rect =
-                new Rectangle(bounds[0], bounds[1], bounds[2], bounds[3]);
+        Rectangle rect = new Rectangle(bounds[0], bounds[1], bounds[2], bounds[3]);
         fig.setBounds(rect);
         parent.setLayoutConstraint(this, fig, rect);
     }
@@ -596,14 +573,10 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         String description = getNodeContainer().getCustomDescription();
 
         // get the icon
-        Image icon =
-                ImageRepository.getScaledImage(getNodeContainer().getIcon(),
-                        16, 16);
+        Image icon = ImageRepository.getScaledImage(getNodeContainer().getIcon(), 16, 16);
         // get default image if null
         if (icon == null) {
-            icon =
-                    ImageRepository.getScaledImage(
-                            NodeFactory.getDefaultIcon(), 16, 16);
+            icon = ImageRepository.getScaledImage(NodeFactory.getDefaultIcon(), 16, 16);
         }
         if (icon != null) {
             f.setIcon(icon);
@@ -614,9 +587,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
-     * Checks the message of the this node and if there is a message in the
-     * <code>NodeStatus</code> object the message is set. Otherwise the
-     * currently displayed message is removed.
+     * Checks the message of the this node and if there is a message in the <code>NodeStatus</code> object the message
+     * is set. Otherwise the currently displayed message is removed.
      */
     private void updateNodeMessage() {
         NodeContainer nc = getNodeContainer();
@@ -627,8 +599,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
-     * Marks this node parts figure. Used to hilite it from the rest of the
-     * parts.
+     * Marks this node parts figure. Used to hilite it from the rest of the parts.
      *
      * @see NodeContainerEditPart#unmark()
      */
@@ -647,8 +618,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     }
 
     /**
-     * Overridden to return a custom <code>DragTracker</code> for
-     * NodeContainerEditParts.
+     * Overridden to return a custom <code>DragTracker</code> for NodeContainerEditParts.
      *
      * {@inheritDoc}
      */
@@ -662,14 +632,12 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      */
     public ConnectionContainerEditPart[] getOutgoingConnections() {
 
-        List<ConnectionContainerEditPart> result =
-                new ArrayList<ConnectionContainerEditPart>();
+        List<ConnectionContainerEditPart> result = new ArrayList<ConnectionContainerEditPart>();
 
         for (Object part : getChildren()) {
 
             if (part instanceof NodeOutPortEditPart) {
-                result.addAll(((AbstractPortEditPart)part)
-                        .getSourceConnections());
+                result.addAll(((AbstractPortEditPart)part).getSourceConnections());
             }
         }
 
@@ -681,8 +649,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      */
     public ConnectionContainerEditPart[] getIncomingConnections() {
 
-        List<ConnectionContainerEditPart> result =
-                new ArrayList<ConnectionContainerEditPart>();
+        List<ConnectionContainerEditPart> result = new ArrayList<ConnectionContainerEditPart>();
 
         for (Object part : getChildren()) {
 
@@ -702,8 +669,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         ConnectionContainerEditPart[] out = getOutgoingConnections();
         ConnectionContainerEditPart[] in = getIncomingConnections();
 
-        ConnectionContainerEditPart[] result =
-                new ConnectionContainerEditPart[out.length + in.length];
+        ConnectionContainerEditPart[] result = new ConnectionContainerEditPart[out.length + in.length];
         System.arraycopy(in, 0, result, 0, in.length);
         System.arraycopy(out, 0, result, in.length, out.length);
 
@@ -723,7 +689,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         }
     }
 
-    /** Opens the node's dialog (also meta node dialogs).
+    /**
+     * Opens the node's dialog (also meta node dialogs).
+     *
      * @since 2.6
      */
     public void openNodeDialog() {
@@ -736,40 +704,33 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
 
         final Shell shell = Display.getCurrent().getActiveShell();
         if (container.hasDataAwareDialogPane()) {
-            IPreferenceStore store =
-                KNIMEUIPlugin.getDefault().getPreferenceStore();
-            final String key =
-                PreferenceConstants.P_CONFIRM_EXEC_NODES_DATA_AWARE_DIALOGS;
+            IPreferenceStore store = KNIMEUIPlugin.getDefault().getPreferenceStore();
+            final String key = PreferenceConstants.P_CONFIRM_EXEC_NODES_DATA_AWARE_DIALOGS;
             if (!store.contains(key) || store.getBoolean(key)) {
-                int returnCode = MessageDialogWithToggle.openOkCancelConfirm(
+                int returnCode =
+                    MessageDialogWithToggle.openOkCancelConfirm(
                         shell,
-                        "Execute upstream nodes", "The " + container.getName()
-                        + " node requires the full input data in order to be "
-                        + "configured.\n\n"
-                        + "Upstream nodes will now be executed.",
-                        "Don't prompt me again", false, store,
-                        key).getReturnCode();
+                        "Execute upstream nodes",
+                        "The " + container.getName() + " node requires the full input data in order to be "
+                            + "configured.\n\n" + "Upstream nodes will now be executed.", "Don't prompt me again",
+                        false, store, key).getReturnCode();
                 if (returnCode == Window.CANCEL) {
                     return;
                 }
             }
             try {
-                PlatformUI.getWorkbench().getProgressService().run(true, false,
-                        new IRunnableWithProgress() {
+                PlatformUI.getWorkbench().getProgressService().run(true, false, new IRunnableWithProgress() {
                     @Override
-                    public void run(final IProgressMonitor monitor)
-                    throws InvocationTargetException, InterruptedException {
-                        container.getParent().executePredecessorsAndWait(
-                                container.getID());
+                    public void run(final IProgressMonitor monitor) throws InvocationTargetException,
+                        InterruptedException {
+                        container.getParent().executePredecessorsAndWait(container.getID());
                     }
                 });
             } catch (InvocationTargetException e) {
-                String error = "Exception while waiting for completion "
-                    + "of execution";
+                String error = "Exception while waiting for completion " + "of execution";
                 LOGGER.warn(error, e);
-                ErrorDialog.openError(shell, "Failed opening dialog", error,
-                        new Status(IStatus.ERROR, KNIMEEditorPlugin.PLUGIN_ID,
-                                error, e));
+                ErrorDialog.openError(shell, "Failed opening dialog", error, new Status(IStatus.ERROR,
+                    KNIMEEditorPlugin.PLUGIN_ID, error, e));
             } catch (InterruptedException e) {
                 // ignore
             }
@@ -782,17 +743,13 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             WrappedNodeDialog dlg = new WrappedNodeDialog(shell, container);
             dlg.open();
         } catch (NotConfigurableException ex) {
-            MessageBox mb =
-                    new MessageBox(shell, SWT.ICON_WARNING | SWT.OK);
+            MessageBox mb = new MessageBox(shell, SWT.ICON_WARNING | SWT.OK);
             mb.setText("Dialog cannot be opened");
-            mb.setMessage("The dialog cannot be opened for the following"
-                    + " reason:\n" + ex.getMessage());
+            mb.setMessage("The dialog cannot be opened for the following" + " reason:\n" + ex.getMessage());
             mb.open();
         } catch (Throwable t) {
-            LOGGER.error("The dialog pane for node '"
-                    + container.getNameWithID() + "' has thrown a '"
-                    + t.getClass().getSimpleName()
-                    + "'. That is most likely an implementation error.", t);
+            LOGGER.error("The dialog pane for node '" + container.getNameWithID() + "' has thrown a '"
+                + t.getClass().getSimpleName() + "'. That is most likely an implementation error.", t);
         }
 
     }
@@ -808,17 +765,10 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
         try {
             NodeContainer container = (NodeContainer)getModel();
             final WorkflowEditor parent =
-                    (WorkflowEditor)PlatformUI.getWorkbench()
-                            .getActiveWorkbenchWindow().getActivePage()
-                            .getActiveEditor();
-            WorkflowManagerInput input =
-                    new WorkflowManagerInput((WorkflowManager)container, parent);
-            PlatformUI
-                    .getWorkbench()
-                    .getActiveWorkbenchWindow()
-                    .getActivePage()
-                    .openEditor(input,
-                            "org.knime.workbench.editor.WorkflowEditor");
+                (WorkflowEditor)PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().getActiveEditor();
+            WorkflowManagerInput input = new WorkflowManagerInput((WorkflowManager)container, parent);
+            PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
+                .openEditor(input, "org.knime.workbench.editor.WorkflowEditor");
         } catch (PartInitException e) {
             LOGGER.error("Error while opening new editor", e);
         }
@@ -834,27 +784,27 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             public void run() {
                 if (isActive()) {
                     switch (e.getProperty()) {
-                    case JobManager:
-                        updateJobManagerIcon();
-                        break;
-                    case Name:
-                        updateHeaderField();
-                        break;
-                    case TemplateConnection:
-                        checkMetaNodeTemplateIcon();
-                        break;
-                    case LockStatus:
-                        checkMetaNodeLockIcon();
-                        break;
-                    case MetaNodePorts:
-                        refreshChildren(); // account for new/removed ports
-                        updatePortIndex(); // set the (possibly changed) index in all ports
-                        updateNumberOfPorts();
-                        relayoutPorts();   // in case an index has changed
-                        refreshBounds(); // different port number could mean different bounds
-                        break;
-                    default:
-                        // unknown, ignore
+                        case JobManager:
+                            updateJobManagerIcon();
+                            break;
+                        case Name:
+                            updateHeaderField();
+                            break;
+                        case TemplateConnection:
+                            checkMetaNodeTemplateIcon();
+                            break;
+                        case LockStatus:
+                            checkMetaNodeLockIcon();
+                            break;
+                        case MetaNodePorts:
+                            refreshChildren(); // account for new/removed ports
+                            updatePortIndex(); // set the (possibly changed) index in all ports
+                            updateNumberOfPorts();
+                            relayoutPorts(); // in case an index has changed
+                            refreshBounds(); // different port number could mean different bounds
+                            break;
+                        default:
+                            // unknown, ignore
                     }
                 }
             }
@@ -923,22 +873,22 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             MetaNodeTemplateInformation templInfo = wm.getTemplateInformation();
             NodeContainerFigure fig = (NodeContainerFigure)getFigure();
             switch (templInfo.getRole()) {
-            case Link:
-                Image i;
-                switch (templInfo.getUpdateStatus()) {
-                case HasUpdate:
-                    i = META_NODE_LINK_RED_ICON;
-                    break;
-                case UpToDate:
-                    i = META_NODE_LINK_GREEN_ICON;
+                case Link:
+                    Image i;
+                    switch (templInfo.getUpdateStatus()) {
+                        case HasUpdate:
+                            i = META_NODE_LINK_RED_ICON;
+                            break;
+                        case UpToDate:
+                            i = META_NODE_LINK_GREEN_ICON;
+                            break;
+                        default:
+                            i = META_NODE_LINK_PROBLEM_ICON;
+                    }
+                    fig.setMetaNodeLinkIcon(i);
                     break;
                 default:
-                    i = META_NODE_LINK_PROBLEM_ICON;
-                }
-                fig.setMetaNodeLinkIcon(i);
-                break;
-            default:
-                fig.setMetaNodeLinkIcon(null);
+                    fig.setMetaNodeLinkIcon(null);
             }
         }
     }
@@ -1000,22 +950,20 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      */
     @Override
     public void propertyChange(final PropertyChangeEvent pce) {
-        if (pce.getProperty()
-                .equals(PreferenceConstants.P_NODE_LABEL_FONT_SIZE)) {
+        if (pce.getProperty().equals(PreferenceConstants.P_NODE_LABEL_FONT_SIZE)) {
             NodeContainerFigure fig = (NodeContainerFigure)getFigure();
             Object value = pce.getNewValue();
             Integer fontSize = null;
             if (value == null) {
                 return;
             } else if (value instanceof Integer) {
-                fontSize = (Integer) value;
+                fontSize = (Integer)value;
             } else if (value instanceof String && !value.toString().isEmpty()) {
                 try {
                     fontSize = Integer.parseInt((String)value);
                 } catch (NumberFormatException e) {
-                    LOGGER.warn("Setting "
-                         + PreferenceConstants.P_NODE_LABEL_FONT_SIZE
-                         + " could not be updated. Unable to parse the value.");
+                    LOGGER.warn("Setting " + PreferenceConstants.P_NODE_LABEL_FONT_SIZE
+                        + " could not be updated. Unable to parse the value.");
                 }
             }
             if (fontSize != null) {
@@ -1036,11 +984,8 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     /** @return underlying workflow root */
     WorkflowRootEditPart getRootEditPart() {
         EditPartViewer viewer = getViewer();
-        if (viewer != null
-                && viewer.getRootEditPart().getContents() instanceof WorkflowRootEditPart) {
-            WorkflowRootEditPart part =
-                    (WorkflowRootEditPart)viewer.getRootEditPart()
-                            .getContents();
+        if (viewer != null && viewer.getRootEditPart().getContents() instanceof WorkflowRootEditPart) {
+            WorkflowRootEditPart part = (WorkflowRootEditPart)viewer.getRootEditPart().getContents();
             return part;
         }
         return null;
@@ -1076,11 +1021,9 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
     /**
      * @param sourceNode
      * @param srcPortIdx
-     * @return the first free port the specified port could be connected to. Or
-     *         -1 if there is none.
+     * @return the first free port the specified port could be connected to. Or -1 if there is none.
      */
-    public int getFreeInPort(final ConnectableEditPart sourceNode,
-            final int srcPortIdx) {
+    public int getFreeInPort(final ConnectableEditPart sourceNode, final int srcPortIdx) {
         WorkflowManager wm = getWorkflowManager();
         if (wm == null || sourceNode == null || srcPortIdx < 0) {
             return -1;
@@ -1092,25 +1035,24 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
             startPortIdx = 0;
         }
         for (int i = startPortIdx; i < nc.getNrInPorts(); i++) {
-            if (wm.canAddNewConnection(sourceNode.getNodeContainer().getID(),
-                    srcPortIdx, nc.getID(), i)) {
+            if (wm.canAddNewConnection(sourceNode.getNodeContainer().getID(), srcPortIdx, nc.getID(), i)) {
                 connPortIdx = i;
                 break;
             }
         }
         if ((connPortIdx < 0) && (startPortIdx == 1)
-                && wm.canAddConnection(sourceNode.getNodeContainer().getID(), srcPortIdx, nc.getID(), 0)) {
+            && wm.canAddConnection(sourceNode.getNodeContainer().getID(), srcPortIdx, nc.getID(), 0)) {
             // if the src is a flow var port, connect it to impl flow var port
             connPortIdx = 0;
         }
         return connPortIdx;
     }
+
     /**
      * {@inheritDoc}
      */
     @Override
-    public ConnectionAnchor getTargetConnectionAnchor(
-            final ConnectionEditPart connection) {
+    public ConnectionAnchor getTargetConnectionAnchor(final ConnectionEditPart connection) {
         return null;
     }
 
@@ -1118,8 +1060,7 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements
      * {@inheritDoc}
      */
     @Override
-    public ConnectionAnchor getSourceConnectionAnchor(
-            final ConnectionEditPart connection) {
+    public ConnectionAnchor getSourceConnectionAnchor(final ConnectionEditPart connection) {
         return null;
     }
 
