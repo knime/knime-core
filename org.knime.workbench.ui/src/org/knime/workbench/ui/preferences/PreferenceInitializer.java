@@ -83,9 +83,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
         store.setDefault(
                 PreferenceConstants.P_CONFIRM_EXEC_NODES_NOT_SAVED, true);
 
-        store.setDefault(
-                PreferenceConstants.P_CONFIRM_EXEC_NODES_DATA_AWARE_DIALOGS,
-                true);
+        store.setDefault(PreferenceConstants.P_EXEC_NODES_DATA_AWARE_DIALOGS, MessageDialogWithToggle.PROMPT);
 
         store.setDefault(PreferenceConstants.P_FAV_FREQUENCY_HISTORY_SIZE, 10);
 

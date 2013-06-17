@@ -63,7 +63,6 @@ import org.knime.core.internal.ReferencedFile;
 import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
-import org.knime.core.node.DataAwareNodeDialogPane;
 import org.knime.core.node.DefaultNodeProgressMonitor;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
@@ -876,7 +875,7 @@ public abstract class NodeContainer implements NodeProgressListener {
 
     /* ------------ dialog -------------- */
 
-    /** Whether the dialog is a {@link DataAwareNodeDialogPane}. If so,
+    /** Whether the dialog is a {@link org.knime.core.node.DataAwareNodeDialogPane}. If so,
      * the predecessor nodes need to be executed before the dialog is opened.
      * @return that property
      * @since 2.6
@@ -909,6 +908,29 @@ public abstract class NodeContainer implements NodeProgressListener {
         } finally {
             NodeContext.removeLastContext();
         }
+    }
+
+    /** Called for nodes having {@linkplain org.knime.core.node.DataAwareNodeDialogPane data aware dialogs} in order
+     * to check whether to prompt for execution or not.
+     * @return true if correctly connected and all inputs have data.
+     * @since 2.8
+     * @see WorkflowManager#isAllInputDataAvailableToNode(NodeID)
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public final boolean isAllInputDataAvailable() {
+        return getParent().isAllInputDataAvailableToNode(m_id);
+    }
+
+    /** Currently called by nodes having {@linkplain org.knime.core.node.DataAwareNodeDialogPane data aware dialogs}
+     * in order to test whether upstream nodes are correctly wired and can be executed. It only tests if the direct
+     * predecessors are connected -- in the longer term it will check if all predecessors are correctly set up and
+     * at least one is executable.
+     * @return true if all non-optional ports are connected.
+     * @since 2.8
+     * @noreference This method is not intended to be referenced by clients.
+     */
+    public final boolean canExecuteUpToHere() {
+        return getParent().isFullyConnected(m_id);
     }
 
     /** Launch a node dialog in its own JFrame (a JDialog).

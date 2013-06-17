@@ -79,11 +79,10 @@ public abstract class DataAwareNodeDialogPane extends NodeDialogPane {
      * {@inheritDoc}
      */
     @Override
-    protected final void loadSettingsFrom(final NodeSettingsRO settings,
-            final DataTableSpec[] specs) throws NotConfigurableException {
-        throw new IllegalStateException("Method not to be called on derived "
-                + "classes of "
-                + DataAwareNodeDialogPane.class.getSimpleName());
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final DataTableSpec[] specs)
+            throws NotConfigurableException {
+        throw new NotConfigurableException("The configuration dialog needs all input data in "
+                + "order to be configured. Execute upstream nodes");
     }
 
     /**
@@ -91,11 +90,10 @@ public abstract class DataAwareNodeDialogPane extends NodeDialogPane {
      * {@inheritDoc}
      */
     @Override
-    protected final void loadSettingsFrom(final NodeSettingsRO settings,
-            final PortObjectSpec[] specs) throws NotConfigurableException {
-        throw new IllegalStateException("Method not to be called on "
-                + "derived classes of "
-                + DataAwareNodeDialogPane.class.getSimpleName());
+    protected void loadSettingsFrom(final NodeSettingsRO settings, final PortObjectSpec[] specs)
+            throws NotConfigurableException {
+        throw new NotConfigurableException("The configuration dialog needs all input data in "
+                + "order to be configured. Execute upstream nodes");
     }
 
     /**

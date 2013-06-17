@@ -2158,8 +2158,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @throws InterruptedException If thread is canceled during waiting
      * (has no affect on the workflow execution).
      * @since 2.6*/
-    public void executePredecessorsAndWait(
-            final NodeID id) throws InterruptedException {
+    public void executePredecessorsAndWait(final NodeID id) throws InterruptedException {
         final NodeContainer[] predNodes;
         synchronized (m_workflowMutex) {
             final NodeContainer nc = getNodeContainer(id);
@@ -4188,7 +4187,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param nodeID Node in question.
      * @return That property.
      * @since 2.6 */
-    public boolean isAllInputDataAvailableToNode(final NodeID nodeID) {
+    boolean isAllInputDataAvailableToNode(final NodeID nodeID) {
         synchronized (m_workflowMutex) {
             final NodeContainer nc = getNodeContainer(nodeID);
             return assembleInputData(nodeID, new PortObject[nc.getNrInPorts()]);
@@ -4884,22 +4883,24 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * @param id of Node
      * @return true if all input ports are connected.
      */
-    private boolean isFullyConnected(final NodeID id) {
-        if (id.equals(this.getID())) {
-            return getParent().isFullyConnected(id);
-        }
-        NodeContainer nc = getNodeContainer(id);
-        NodeOutPort[] predOutPorts = assemblePredecessorOutPorts(id);
-        for (int i = 0; i < predOutPorts.length; i++) {
-            NodeOutPort p = predOutPorts[i];
-            if (p == null) { // unconnected port
-                // accept only if inport is optional
-                if (!nc.getInPort(i).getPortType().isOptional()) {
-                    return false;
+    boolean isFullyConnected(final NodeID id) {
+        synchronized (m_workflowMutex) {
+            if (id.equals(this.getID())) {
+                return getParent().isFullyConnected(id);
+            }
+            NodeContainer nc = getNodeContainer(id);
+            NodeOutPort[] predOutPorts = assemblePredecessorOutPorts(id);
+            for (int i = 0; i < predOutPorts.length; i++) {
+                NodeOutPort p = predOutPorts[i];
+                if (p == null) { // unconnected port
+                    // accept only if inport is optional
+                    if (!nc.getInPort(i).getPortType().isOptional()) {
+                        return false;
+                    }
                 }
             }
+            return true;
         }
-        return true;
     }
 
     /** Returns true if the argument represents a source node in the workflow.

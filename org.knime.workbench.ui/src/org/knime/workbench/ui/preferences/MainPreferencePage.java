@@ -121,10 +121,15 @@ public class MainPreferencePage extends FieldEditorPreferencePage
         addField(new BooleanFieldEditor(
                 PreferenceConstants.P_CONFIRM_EXEC_NODES_NOT_SAVED,
                 "Confirm if executing nodes are not saved", parent));
-        addField(new BooleanFieldEditor(
-                PreferenceConstants.P_CONFIRM_EXEC_NODES_DATA_AWARE_DIALOGS,
-                "Confirm execution of upstream nodes when data is "
-                + "needed for configuration", parent));
+        ComboFieldEditor dataAwareExecutePromptEditor = new ComboFieldEditor(
+            PreferenceConstants.P_EXEC_NODES_DATA_AWARE_DIALOGS,
+            "Execute upstream nodes when needed",
+            new String[][] {
+                    {"Always", MessageDialogWithToggle.ALWAYS},
+                    {"Never", MessageDialogWithToggle.NEVER},
+                    {"Prompt", MessageDialogWithToggle.PROMPT},
+            }, getFieldEditorParent());
+        addField(dataAwareExecutePromptEditor);
 
         addField(new HorizontalLineField(parent));
         IntegerFieldEditor freqHistorySizeEditor = new IntegerFieldEditor(

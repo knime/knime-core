@@ -54,7 +54,16 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.eclipse.core.runtime.IAdaptable;
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -80,6 +89,7 @@ import org.eclipse.gef.commands.Command;
 import org.eclipse.gef.requests.CreateConnectionRequest;
 import org.eclipse.gef.requests.SelectionRequest;
 import org.eclipse.jface.dialogs.ErrorDialog;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialogWithToggle;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -152,6 +162,15 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
     NodeEditPart, NodePropertyChangedListener, IPropertyChangeListener, IAdaptable {
 
     private static final NodeLogger LOGGER = NodeLogger.getLogger(NodeContainerEditPart.class);
+
+    private static final ExecutorService DATA_AWARE_DIALOG_EXECUTOR = Executors.newCachedThreadPool(
+        new ThreadFactory() {
+            private final AtomicInteger m_threadIDs = new AtomicInteger();
+        @Override
+        public Thread newThread(final Runnable r) {
+            return new Thread(r, "DataAwareNode-Executor-" + m_threadIDs.incrementAndGet());
+        }
+    });
 
     private static final Image META_NODE_LINK_GREEN_ICON = ImageRepository
         .getImage("icons/meta/metanode_link_green_decorator.png");
@@ -703,36 +722,67 @@ public class NodeContainerEditPart extends AbstractWorkflowEditPart implements N
         }
 
         final Shell shell = Display.getCurrent().getActiveShell();
-        if (container.hasDataAwareDialogPane()) {
+        if (container.hasDataAwareDialogPane()
+                && !container.isAllInputDataAvailable() && container.canExecuteUpToHere()) {
             IPreferenceStore store = KNIMEUIPlugin.getDefault().getPreferenceStore();
-            final String key = PreferenceConstants.P_CONFIRM_EXEC_NODES_DATA_AWARE_DIALOGS;
-            if (!store.contains(key) || store.getBoolean(key)) {
-                int returnCode =
-                    MessageDialogWithToggle.openOkCancelConfirm(
-                        shell,
-                        "Execute upstream nodes",
-                        "The " + container.getName() + " node requires the full input data in order to be "
-                            + "configured.\n\n" + "Upstream nodes will now be executed.", "Don't prompt me again",
-                        false, store, key).getReturnCode();
+            String prefPrompt = store.getString(PreferenceConstants.P_EXEC_NODES_DATA_AWARE_DIALOGS);
+            boolean isExecuteUpstreamNodes;
+            if (MessageDialogWithToggle.PROMPT.equals(prefPrompt)) {
+                int returnCode = MessageDialogWithToggle.openYesNoCancelQuestion(shell, "Execute upstream nodes",
+                        "The " + container.getName() + " node can be configured using the full input data.\n\n"
+                            + "Execute upstream nodes?", "Remember my decision",
+                        false, store, PreferenceConstants.P_EXEC_NODES_DATA_AWARE_DIALOGS).getReturnCode();
                 if (returnCode == Window.CANCEL) {
                     return;
+                } else if (returnCode == IDialogConstants.YES_ID) {
+                    isExecuteUpstreamNodes = true;
+                } else {
+                    isExecuteUpstreamNodes = false;
                 }
+            } else if (MessageDialogWithToggle.ALWAYS.equals(prefPrompt)) {
+                isExecuteUpstreamNodes = true;
+            } else {
+                isExecuteUpstreamNodes = false;
             }
-            try {
-                PlatformUI.getWorkbench().getProgressService().run(true, false, new IRunnableWithProgress() {
-                    @Override
-                    public void run(final IProgressMonitor monitor) throws InvocationTargetException,
-                        InterruptedException {
-                        container.getParent().executePredecessorsAndWait(container.getID());
-                    }
-                });
-            } catch (InvocationTargetException e) {
-                String error = "Exception while waiting for completion " + "of execution";
-                LOGGER.warn(error, e);
-                ErrorDialog.openError(shell, "Failed opening dialog", error, new Status(IStatus.ERROR,
-                    KNIMEEditorPlugin.PLUGIN_ID, error, e));
-            } catch (InterruptedException e) {
-                // ignore
+            if (isExecuteUpstreamNodes) {
+                try {
+                    PlatformUI.getWorkbench().getProgressService().run(true, true, new IRunnableWithProgress() {
+                        @Override
+                        public void run(final IProgressMonitor monitor) throws InvocationTargetException,
+                            InterruptedException {
+                            Future<Void> submit = DATA_AWARE_DIALOG_EXECUTOR.submit(new Callable<Void>() {
+                                @Override
+                                public Void call() throws Exception {
+                                    container.getParent().executePredecessorsAndWait(container.getID());
+                                    return null;
+                                }
+                            });
+                            while (!submit.isDone()) {
+                                if (monitor.isCanceled()) {
+                                    submit.cancel(true);
+                                    throw new InterruptedException();
+                                }
+                                try {
+                                    submit.get(300, TimeUnit.MILLISECONDS);
+                                } catch (ExecutionException e) {
+                                    LOGGER.error("Error while waiting for execution to finish", e);
+                                } catch (InterruptedException e) {
+                                    submit.cancel(true);
+                                    throw e;
+                                } catch (TimeoutException e) {
+                                    // do another round
+                                }
+                            }
+                        }
+                    });
+                } catch (InvocationTargetException e) {
+                    String error = "Exception while waiting for completion of execution";
+                    LOGGER.warn(error, e);
+                    ErrorDialog.openError(shell, "Failed opening dialog", error, new Status(IStatus.ERROR,
+                        KNIMEEditorPlugin.PLUGIN_ID, error, e));
+                } catch (InterruptedException e) {
+                    return;
+                }
             }
         }
 
