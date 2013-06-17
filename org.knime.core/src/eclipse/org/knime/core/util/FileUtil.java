@@ -79,6 +79,8 @@ import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
 import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.WorkflowContext;
 
 /**
  * Utility class to do some basic file handling that is not available through
@@ -763,34 +765,41 @@ public final class FileUtil {
     }
 
     /**
-     * Creates a temporary directory that is automatically deleted when the JVM
-     * shuts down.
+     * Creates a temporary directory that is automatically deleted when the JVM shuts down. If no root directory is
+     * specified, the files are created in the temp dir associated with the workflow (set in the {@link WorkflowContext}
+     * ), or - if that is null - in the global temp dir.
      *
      * @param prefix the prefix string to be used in generating the file's name
-     * @param dir the directory in which the file is to be created, or
-     *            <code>null</code> if the default temporary-file directory is
-     *            to be used
+     * @param dir the directory in which the file is to be created, or <code>null</code> if the default temporary-file
+     *            directory is to be used
      * @return an abstract pathname denoting a newly-created empty directory
      * @throws IOException if the directory could not be created
      */
-    public static synchronized File createTempDir(final String prefix,
-            final File dir) throws IOException {
-        File rootDir =
-                (dir == null) ? new File(System.getProperty("java.io.tmpdir"))
-                        : dir;
+    public static synchronized File createTempDir(final String prefix, final File dir) throws IOException {
+        File rootDir = dir;
+        if (rootDir == null) {
+            NodeContext nodeContext = NodeContext.getContext();
+            if (nodeContext != null) {
+                WorkflowContext workflowContext = nodeContext.getWorkflowManager().getContext();
+                if (workflowContext != null) {
+                    rootDir = workflowContext.getTempLocation();
+                }
+            }
+            if (rootDir == null) {
+                rootDir = new File(KNIMEConstants.getKNIMETempDir());
+            }
+        }
         File tempDir;
         do {
-            tempDir =
-                    new File(rootDir, prefix + System.currentTimeMillis()
-                            + TEMP_FILES.size());
+            tempDir = new File(rootDir, prefix + System.currentTimeMillis() + TEMP_FILES.size());
         } while (tempDir.exists());
         if (!tempDir.mkdirs()) {
-            throw new IOException("Cannot create temporary directory '"
-                    + tempDir.getCanonicalPath() + "'.");
+            throw new IOException("Cannot create temporary directory '" + tempDir.getCanonicalPath() + "'.");
         }
         TEMP_FILES.add(tempDir);
         return tempDir;
     }
+
 
     /**
      * Sets the permissions on a given file or directory. If a directory is

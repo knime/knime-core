@@ -85,6 +85,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.apache.commons.io.FileUtils;
 import org.knime.core.data.container.ContainerTable;
 import org.knime.core.data.filestore.internal.FileStoreHandlerRepository;
 import org.knime.core.data.filestore.internal.IFileStoreHandler;
@@ -286,6 +287,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
     public static final WorkflowManager ROOT =
         new WorkflowManager(null, NodeID.ROOTID,
                 new PortType[0], new PortType[0], true);
+
+    /** dir where all tmp files of the flow live. Set in the workflow context. If not null, it must be discarded upon
+     * workflow disposal. If null, the temp dir location in the context was set from someone else (the server e.g.) and
+     * it must not be deleted by the workflow manager. */
+    private File m_tmpDir = null;
 
     ///////////////////////
     // Constructors
@@ -4389,6 +4395,11 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 checkForNodeStateChanges(false);
             }
             m_wfmListeners.clear();
+            if (m_tmpDir != null) {
+                // TODO: Do this in the background
+                // delete the flow temp dir that we created
+                FileUtils.deleteQuietly(m_tmpDir);
+            }
             super.performShutdown();
         }
     }
@@ -6320,7 +6331,31 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 result.getWorkflowManager().m_contex = new WorkflowContext.Factory(directory).createContext();
             }
         }
+        result.getWorkflowManager().createWorkflowTempDirectory(result.getWorkflowManager().m_contex);
         return result;
+    }
+
+    /**
+     * Creates a flow private sub dir in the temp folder. Sets it in the context. FileUtil#createTempDir picks it up
+     * from there. If the temp file location in the context is already set, this method does nothing.
+     * @param context to set the new temp dir location in
+     */
+    private void createWorkflowTempDirectory(final WorkflowContext context) {
+        if (context.getTempLocation() != null) {
+            return;
+        }
+        File rootDir = new File(KNIMEConstants.getKNIMETempDir());
+        File tempDir;
+        do {
+            tempDir = new File(rootDir, getName() + "_TEMP_" + System.currentTimeMillis());
+        } while (tempDir.exists());
+        if (!tempDir.mkdirs()) {
+            LOGGER.error("Cannot create temporary directory '" + tempDir.getAbsolutePath() + "'.");
+            tempDir = null;
+            // keeping null in the context causes FileUt
+        }
+        // if we created the temp dir we must clean it up when disposing of the workflow
+        m_tmpDir = tempDir;
     }
 
     /** {@inheritDoc} */
