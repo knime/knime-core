@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * ---------------------------------------------------------------------
- * 
+ *
  * History
  *   Sep 9, 2008 (wiswedel): created
  */
@@ -71,18 +71,18 @@ public final class AffineTransConfiguration {
     private static final String CFG_MAX = "column_max";
 
     private final String[] m_includeNames;
-    private final double[] m_scales; 
+    private final double[] m_scales;
     private final double[] m_translations;
-    private final double[] m_min; 
+    private final double[] m_min;
     private final double[] m_max;
     private final String m_summary;
-    
+
     /** Default, no normalization on columns. */
     public AffineTransConfiguration() {
-        this(new String[0], new double[0], new double[0], 
+        this(new String[0], new double[0], new double[0],
                 new double[0], new double[0], "No normalization");
     }
-    
+
     /**
      * @param names The names of the columns being normalized
      * @param scales the scale parameters (same order as <code>names</code>)
@@ -109,12 +109,12 @@ public final class AffineTransConfiguration {
                 || names.length != min.length) {
             throw new IllegalArgumentException("Lengths must match: "
                     + names.length + " vs. " + scales.length + " vs. "
-                    + translations.length + " vs. " + min.length 
+                    + translations.length + " vs. " + min.length
                     + " vs. " + max.length);
         }
         for (int i = 0; i < scales.length; i++) {
             if (Double.isNaN(scales[i]) || Double.isNaN(translations[i])) {
-                throw new IllegalArgumentException("Cannot transform with NaN");
+                throw new IllegalArgumentException("Cannot transform with NaN: " + names[i]);
             }
         }
         m_scales = Arrays.copyOf(scales, scales.length);
@@ -124,9 +124,9 @@ public final class AffineTransConfiguration {
         m_max = Arrays.copyOf(max, max.length);
         m_summary = summary;
     }
-    
+
     /** @return The names of the columns being normalized (in order of the
-     * other array getters). 
+     * other array getters).
      */
     public String[] getNames() {
         return m_includeNames;
@@ -159,14 +159,14 @@ public final class AffineTransConfiguration {
     public double[] getMax() {
         return m_max;
     }
-    
+
     /**
      * @return the summary
      */
     public String getSummary() {
         return m_summary;
     }
-    
+
     /** Saves this object to the argument model content.
      * @param model To write to.
      */
@@ -191,7 +191,7 @@ public final class AffineTransConfiguration {
         }
         model.addString(CFG_SUMMARY, m_summary);
     }
-    
+
 
     /** Restores content.
      * @param settings To load from.
@@ -200,7 +200,7 @@ public final class AffineTransConfiguration {
      */
     public static AffineTransConfiguration load(
             final ModelContentRO settings) throws InvalidSettingsException {
-        ModelContentRO colSub = settings.getModelContent(CFG_COLUMNS); 
+        ModelContentRO colSub = settings.getModelContent(CFG_COLUMNS);
         int colCount = colSub.keySet().size();
         double[] scales = new double[colCount];
         double[] translations = new double[colCount];

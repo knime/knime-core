@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   18.04.2005 (cebron): created
  */
@@ -59,31 +59,34 @@ import javax.swing.JEditorPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 
+import org.knime.base.node.viz.statistics2.Statistics3NodeView;
 import org.knime.core.data.DataCell;
 import org.knime.core.node.NodeView;
 import org.knime.core.node.tableview.TableView;
 
 /**
  * The view shows the statistical information.
- * 
+ *
  * @author cebron, University of Konstanz
+ * @deprecated Use the {@link Statistics3NodeView} class instead.
  */
+@Deprecated
 public class Statistics2NodeView extends NodeView<Statistics2NodeModel> {
 
     /** Pane for first order moments. */
     private final TableView m_output = new TableView();
     private final JEditorPane m_nominal = new JEditorPane("text/html", "");
-    
+
     /** Used to get a string representation of the double value. */
-    private static final NumberFormat FORMAT = 
+    private static final NumberFormat FORMAT =
         NumberFormat.getNumberInstance(Locale.US);
     static {
         FORMAT.setGroupingUsed(false);
     }
-    
+
     /**
      * Constructs a <code>NodeView</code> consisting of statistical values.
-     * 
+     *
      * @param model The underlying NodeModel
      */
     Statistics2NodeView(final Statistics2NodeModel model) {
@@ -100,7 +103,7 @@ public class Statistics2NodeView extends NodeView<Statistics2NodeModel> {
     /**
      * If the model changes, the new statistical information from the original
      * table is added to the upper statistics table.
-     * 
+     *
      * @see NodeView#modelChanged()
      */
     @Override
@@ -108,7 +111,7 @@ public class Statistics2NodeView extends NodeView<Statistics2NodeModel> {
         refreshStastics();
         refreshNominalValues();
     }
-    
+
     private void refreshStastics() {
         Statistics2NodeModel myModel = getNodeModel();
         if (myModel.getColumnNames() == null) {
@@ -117,14 +120,14 @@ public class Statistics2NodeView extends NodeView<Statistics2NodeModel> {
             m_output.setDataTable(myModel.getStatsTable());
         }
     }
-    
+
     private void refreshNominalValues() {
         Statistics2NodeModel myModel = getNodeModel();
         String[] columnNames = myModel.getNominalColumnNames();
         if (columnNames == null) {
             return;
         }
-        
+
         StringBuilder buffer = new StringBuilder();
         buffer.append("<html>\n");
         buffer.append("<body>\n");
@@ -133,23 +136,23 @@ public class Statistics2NodeView extends NodeView<Statistics2NodeModel> {
 
         for (int i = 0; i < columnNames.length; i++) {
             if (myModel.getNominals()[i] != null) {
-                buffer.append("<th style=\"white-space: nowrap\">" 
+                buffer.append("<th style=\"white-space: nowrap\">"
                 		+ columnNames[i] + "</th>");
             }
         }
-        
+
         buffer.append("<tr valign=\"top\">");
         double[] missings = myModel.getNumMissingValues();
         for (int i = 0; i < columnNames.length; i++) {
         	if (myModel.getNominals()[i] != null) {
                 buffer.append("<td style=\"white-space: nowrap\"><strong>"
-                		+ "No. missings: </strong>" 
+                		+ "No. missings: </strong>"
                         + ((int) missings[i]) + "</td>");
             }
         }
-        
+
         buffer.append("</tr><tr valign=\"top\">");
-        
+
         if (myModel.getNominals() != null) {
             final int numNomValues = myModel.numOfNominalValues();
             for (int j = 0; j < myModel.getNominals().length; j++) {
@@ -158,15 +161,15 @@ public class Statistics2NodeView extends NodeView<Statistics2NodeModel> {
                     buffer.append("<td nowrap=\"nowrap\">");
                     final int size = map.size();
                     if (size == 0) {
-                        buffer.append("<i>contains more than " 
+                        buffer.append("<i>contains more than "
                                 + getNodeModel().numOfNominalValuesOutput()
                                 + " nominal values</i>");
                     } else {
                         int cnt = 0;
-                        buffer.append("<strong>Top " + numNomValues 
+                        buffer.append("<strong>Top " + numNomValues
                                 + ":</strong><br>");
                         for (DataCell c : map.keySet()) {
-                            buffer.append(c.toString() + " : " 
+                            buffer.append(c.toString() + " : "
                                             + map.get(c) + "<br>");
                             if (++cnt == numNomValues) {
                                 break;
@@ -174,35 +177,35 @@ public class Statistics2NodeView extends NodeView<Statistics2NodeModel> {
                         }
                         buffer.append("</td>");
                     }
-                }                    
+                }
             }
         }
         buffer.append("</tr>");
-        
+
         buffer.append("</tr><tr valign=\"top\">");
-        
+
         if (myModel.getNominals() != null) {
             final int numNomValues = myModel.numOfNominalValues();
             for (int j = 0; j < myModel.getNominals().length; j++) {
                 Map<DataCell, Integer> map = myModel.getNominals()[j];
                 if (map != null) {
                     buffer.append("<td style=\"white-space: nowrap\">");
-                    buffer.append("<strong>Bottom " + numNomValues 
+                    buffer.append("<strong>Bottom " + numNomValues
                             + ":</strong><br>");
                     final int size = map.size();
                     if (size >= numNomValues) {
                         int cnt = 0;
                         for (DataCell c : map.keySet()) {
-                            if (cnt >= 
+                            if (cnt >=
                             	  Math.max(numNomValues, size - numNomValues)) {
-                                buffer.append(c.toString() + " : " 
+                                buffer.append(c.toString() + " : "
                                             + map.get(c) + "<br>");
                             }
                             cnt++;
                         }
                         buffer.append("</td>");
                     }
-                }                    
+                }
             }
         }
         buffer.append("</tr>");

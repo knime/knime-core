@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.preproc.missingval;
 
@@ -81,12 +81,12 @@ import org.knime.core.node.NodeSettingsWO;
  * <li>fixed replacement (if method is "replace by fixed value"),</li>
  * </ul>
  * where name and type are read only.
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 final class MissingValueHandling2ColSetting {
     private static final NodeLogger LOGGER = NodeLogger
-            .getLogger(MissingValueHandling2NodeModel.class);
+            .getLogger(MissingValueHandling3NodeModel.class);
 
     /** Type of column: anything but String, Double, Int. */
     public static final int TYPE_UNKNOWN = -1;
@@ -118,10 +118,10 @@ final class MissingValueHandling2ColSetting {
     /** Method: Replace by max in column, available for Double and Int. */
     public static final int METHOD_MAX = 4;
 
-    /** Method: Replace by most frequent value, 
+    /** Method: Replace by most frequent value,
      * available for String. */
     public static final int METHOD_MOST_FREQUENT = 5;
-    
+
     /** NodeSettings key: write method. */
     protected static final String CFG_METHOD = "miss_method";
 
@@ -198,7 +198,7 @@ final class MissingValueHandling2ColSetting {
         m_type = type;
         setMethod(METHOD_NO_HANDLING);
     }
-    
+
     /**
      * Constructor for a list of columns.
      * @param specs list of column specs
@@ -220,7 +220,7 @@ final class MissingValueHandling2ColSetting {
         m_type = initType(spec);
         setMethod(METHOD_NO_HANDLING);
     }
-    
+
     private static int initType(final DataColumnSpec spec) {
         DataType type = spec.getType();
         // NOTE: It's important here to check first for double since
@@ -292,21 +292,21 @@ final class MissingValueHandling2ColSetting {
         }
         return buf.toString();
     }
-    
+
     /**
      * @return returns the name(s) or <code>null</code> if
      *         {@link #isMetaConfig()} returns <code>true</code>
      */
     final String[] getNames() {
-        return m_names; 
+        return m_names;
     }
-    
+
     /**
      * Set a new list of column names.
      * @param names a list of column names
      */
     final void setNames(final String[] names) {
-        m_names = names; 
+        m_names = names;
     }
 
     /**
@@ -320,7 +320,7 @@ final class MissingValueHandling2ColSetting {
     /**
      * Loads settings from a NodeSettings object, used in
      * {@link org.knime.core.node.NodeModel}.
-     * 
+     *
      * @param settings the (sub-) config to load from
      * @throws InvalidSettingsException if any setting is missing
      */
@@ -397,7 +397,7 @@ final class MissingValueHandling2ColSetting {
 
     /**
      * Save settings to config object.
-     * 
+     *
      * @param settings to save to
      */
     protected void saveSettings(final NodeSettingsWO settings) {
@@ -420,7 +420,7 @@ final class MissingValueHandling2ColSetting {
                 break;
             default:
                 throw new RuntimeException("Cannot use fixed value "
-                        + "for unknown type. (Column name(s) '" 
+                        + "for unknown type. (Column name(s) '"
                         + Arrays.toString(m_names) + "')");
             }
         }
@@ -428,7 +428,7 @@ final class MissingValueHandling2ColSetting {
 
     /**
      * Helper that load meta settings from a config object, used in NodeModel.
-     * 
+     *
      * @param settings to load from
      * @return meta settings
      * @throws InvalidSettingsException if errors occur
@@ -442,14 +442,14 @@ final class MissingValueHandling2ColSetting {
 
     /**
      * Helper that loads meta settings from a config object, used in NodeDialog.
-     * 
+     *
      * @param settings to load from
      * @param spec To be used for default init
      * @return meta settings
      */
     protected static MissingValueHandling2ColSetting[] loadMetaColSettings(
             final NodeSettingsRO settings, final DataTableSpec spec) {
-        LinkedHashMap<String, MissingValueHandling2ColSetting> defaultsHash = 
+        LinkedHashMap<String, MissingValueHandling2ColSetting> defaultsHash =
             new LinkedHashMap<String, MissingValueHandling2ColSetting>();
         if (spec.containsCompatibleType(IntValue.class)) {
             defaultsHash.put(CFG_META_INT, new MissingValueHandling2ColSetting(TYPE_INT));
@@ -479,7 +479,7 @@ final class MissingValueHandling2ColSetting {
     /**
      * Helper that load individual settings from a config object, used in
      * NodeModel.
-     * 
+     *
      * @param settings to load from
      * @return individual settings
      * @throws InvalidSettingsException if errors occur
@@ -493,7 +493,7 @@ final class MissingValueHandling2ColSetting {
 
     /**
      * Helper that individual settings from a config object, used in NodeDialog.
-     * 
+     *
      * @param settings to load from
      * @param spec ignored, used here to differ from method that is used by
      *            {@link org.knime.core.node.NodeModel}
@@ -502,7 +502,7 @@ final class MissingValueHandling2ColSetting {
     protected static MissingValueHandling2ColSetting[] loadIndividualColSettings(
             final NodeSettingsRO settings, final DataTableSpec spec) {
         assert (spec == spec); // avoid checkstyle complain
-        Map<String, MissingValueHandling2ColSetting> individHash = 
+        Map<String, MissingValueHandling2ColSetting> individHash =
             new LinkedHashMap<String, MissingValueHandling2ColSetting>();
         if (settings.containsKey(CFG_INDIVIDUAL)) {
             NodeSettingsRO subConfig;
@@ -522,7 +522,7 @@ final class MissingValueHandling2ColSetting {
      */
     private static Map<String, MissingValueHandling2ColSetting> loadSubConfigs(
             final NodeSettingsRO settings) throws InvalidSettingsException {
-        LinkedHashMap<String, MissingValueHandling2ColSetting> result = 
+        LinkedHashMap<String, MissingValueHandling2ColSetting> result =
             new LinkedHashMap<String, MissingValueHandling2ColSetting>();
         for (String key : settings.keySet()) { // TODO CONFIG
             NodeSettingsRO subConfig = settings.getNodeSettings(key);
@@ -540,7 +540,7 @@ final class MissingValueHandling2ColSetting {
 
     /**
      * Saves the individual settings to a config object.
-     * 
+     *
      * @param colSettings the settings to write, may include meta settings
      *            (ignored)
      * @param settings to write to
@@ -560,7 +560,7 @@ final class MissingValueHandling2ColSetting {
 
     /**
      * Saves the meta settings to a config object.
-     * 
+     *
      * @param colSettings the settings to write, may include individual settings
      *            (ignored)
      * @param settings to write to

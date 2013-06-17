@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   18.04.2005 (cebron): created
  */
@@ -58,6 +58,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import org.knime.base.data.statistics.Statistics2Table;
+import org.knime.base.node.viz.statistics2.Statistics3NodeModel;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataTable;
@@ -79,28 +80,30 @@ import org.knime.core.node.property.hilite.HiLiteHandler;
 /**
  * The StatisticsNodeModel creates a new StatisticTable based on the input data
  * table.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
+ * @deprecated Use the {@link Statistics3NodeModel} instead.
  */
+@Deprecated
 public class Statistics2NodeModel extends NodeModel {
-    
+
     /** Statistical values table. */
     private Statistics2Table m_statTable;
 
     private final HiLiteHandler m_hilite = new HiLiteHandler();
-    
+
     private final SettingsModelBoolean m_computeMedian =
         Statistics2NodeDialogPane.createMedianModel();
-    
-    private final SettingsModelIntegerBounded m_nominalValues = 
+
+    private final SettingsModelIntegerBounded m_nominalValues =
         Statistics2NodeDialogPane.createNominalValuesModel();
-    
-    private final SettingsModelIntegerBounded m_nominalValuesOutput = 
+
+    private final SettingsModelIntegerBounded m_nominalValuesOutput =
         Statistics2NodeDialogPane.createNominalValuesModelOutput();
-    
+
     private final SettingsModelFilterString m_nominalFilter =
         Statistics2NodeDialogPane.createNominalFilterModel();
-    
+
     /** One input and one output. */
     Statistics2NodeModel() {
         super(1, 2);
@@ -109,7 +112,7 @@ public class Statistics2NodeModel extends NodeModel {
     /**
      * Output table is like the input table. After we are executed we can
      * deliver a better table spec. But not before.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
@@ -119,7 +122,7 @@ public class Statistics2NodeModel extends NodeModel {
             Statistics2Table.createOutSpecNumeric(inSpecs[0]);
         ArrayList<String> nominalValues = new ArrayList<String>(
                 m_nominalFilter.getIncludeList());
-        if (nominalValues.isEmpty() 
+        if (nominalValues.isEmpty()
                 && m_nominalFilter.getExcludeList().isEmpty()) {
             for (DataColumnSpec cspec : inSpecs[0]) {
                 nominalValues.add(cspec.getName());
@@ -129,31 +132,31 @@ public class Statistics2NodeModel extends NodeModel {
         DataTableSpec nominalSpec = Statistics2Table.createOutSpecNominal(
                 inSpecs[0], nominalValues);
         return new DataTableSpec[]{numericSpec, nominalSpec};
-                
+
     }
 
     /**
      * Computes the statistics for the DataTable at the in-port. Use the view on
      * this node to see them.
-     * 
+     *
      * {@inheritDoc}
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
         m_statTable = new Statistics2Table(
-                inData[0], m_computeMedian.getBooleanValue(), 
-                numOfNominalValuesOutput(), m_nominalFilter.getIncludeList(), 
+                inData[0], m_computeMedian.getBooleanValue(),
+                numOfNominalValuesOutput(), m_nominalFilter.getIncludeList(),
                 exec);
         if (m_statTable.getWarning() != null) {
             super.setWarningMessage(m_statTable.getWarning());
         }
         BufferedDataTable outTable1 = exec.createBufferedDataTable(
-                m_statTable.createStatisticMomentsTable(), 
+                m_statTable.createStatisticMomentsTable(),
                 exec.createSubProgress(0.5));
         BufferedDataTable outTable2 = exec.createBufferedDataTable(
                 m_statTable.createNominalValueTable(
-                        m_nominalFilter.getIncludeList()), 
+                        m_nominalFilter.getIncludeList()),
                         exec.createSubProgress(0.5));
         return new BufferedDataTable[]{outTable1, outTable2};
     }
@@ -177,7 +180,7 @@ public class Statistics2NodeModel extends NodeModel {
     protected void reset() {
         m_statTable = null;
     }
-    
+
     /**
      * @return statistics table containing all statistic moments
      */
@@ -205,7 +208,7 @@ public class Statistics2NodeModel extends NodeModel {
         }
         return m_statTable.getColumnNames();
     }
-    
+
     /**
      * @return number of missing values
      */
@@ -215,17 +218,17 @@ public class Statistics2NodeModel extends NodeModel {
         }
         return m_statTable.getNumberMissingValues();
     }
-    
+
     /** @return number of nominal values computed */
     int numOfNominalValues() {
         return m_nominalValues.getIntValue();
     }
-    
+
     /** @return number of nominal values for output table */
     int numOfNominalValuesOutput() {
         return m_nominalValuesOutput.getIntValue();
     }
-    
+
     /** @return nominal value and frequency for each column */
     Map<DataCell, Integer>[] getNominals() {
         return m_statTable.getNominalValues();
@@ -253,7 +256,7 @@ public class Statistics2NodeModel extends NodeModel {
         m_nominalValuesOutput.validateSettings(settings);
         m_nominalFilter.validateSettings(settings);
     }
-    
+
     /**
      * {@inheritDoc}
      */

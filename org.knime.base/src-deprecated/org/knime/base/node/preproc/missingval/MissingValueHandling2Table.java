@@ -85,7 +85,9 @@ import org.knime.core.util.MutableInteger;
  * DataTable that replaces missing values according to ColSetting objects.
  *
  * @author Bernd Wiswedel, University of Konstanz
+ * @deprecated Use {@link MissingValueHandling3Table} instead.
  */
+@Deprecated
 public final class MissingValueHandling2Table implements DataTable {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(MissingValueHandling2Table.class);

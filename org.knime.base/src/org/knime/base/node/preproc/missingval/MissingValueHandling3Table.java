@@ -440,7 +440,7 @@ public final class MissingValueHandling3Table implements DataTable {
         ExecutionMonitor e;
         if (needStatistics) {
             // for creating statistics table
-            ExecutionMonitor subExec = exec.createSubProgress(0.5);
+            ExecutionContext subExec = exec.createSubExecutionContext(0.5);
             myT = new MyStatisticsTable(table, subExec, mostFrequentCols);
             if (myT.m_warningMessage != null) {
                 warningBuffer.append(myT.m_warningMessage);
@@ -485,9 +485,9 @@ public final class MissingValueHandling3Table implements DataTable {
         private String m_warningMessage;
 
         @SuppressWarnings("unchecked")
-        private MyStatisticsTable(final BufferedDataTable t, final ExecutionMonitor exec, final int[] cols)
+        private MyStatisticsTable(final BufferedDataTable t, final ExecutionContext exec, final int[] cols)
             throws CanceledExecutionException {
-            super(t, false, 0, Collections.<String> emptyList(), (ExecutionContext)exec);
+            super(t, false, 0, Collections.<String> emptyList(), exec);
             final int colCount = t.getDataTableSpec().getNumColumns();
             m_countMaps = new HashMap[colCount];
             for (int i = 0; i < cols.length; i++) {
@@ -523,11 +523,11 @@ public final class MissingValueHandling3Table implements DataTable {
             } else {
                 m_warningMessage = "Column(s) " + Arrays.toString(errorCols.toArray()) + " contain(s) no valid cells.";
             }
-            m_cols = null;
-            m_countMaps = null;
             for (DataRow dataRow : t) {
                 calculateMomentInSubClass(dataRow);
             }
+            m_cols = null;
+            m_countMaps = null;
         }
 
         /**

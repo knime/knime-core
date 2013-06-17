@@ -113,7 +113,7 @@ public class MissingValueHandling3NodeModel extends NodeModel {
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
+            final ExecutionContext exec) throws CanceledExecutionException {
         StringBuffer warningMessageBuffer = new StringBuffer();
         BufferedDataTable out = MissingValueHandling3Table.
             createMissingValueHandlingTable(

@@ -52,7 +52,6 @@ package org.knime.base.node.preproc.lowvarfilter2;
 
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
-import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeView;
 
 /**
@@ -60,7 +59,7 @@ import org.knime.core.node.NodeView;
  * @author Bernd Wiswedel, University of Konstanz
  * @since 2.6
  */
-public class LowVarFilter2NodeFactory extends NodeFactory {
+public class LowVarFilter2NodeFactory extends NodeFactory<LowVarFilter2NodeModel> {
 
     /**
      * {@inheritDoc}
@@ -74,7 +73,7 @@ public class LowVarFilter2NodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeModel createNodeModel() {
+    public LowVarFilter2NodeModel createNodeModel() {
         return new LowVarFilter2NodeModel();
     }
 
@@ -82,8 +81,8 @@ public class LowVarFilter2NodeFactory extends NodeFactory {
      * {@inheritDoc}
      */
     @Override
-    public NodeView createNodeView(
-            final int viewIndex, final NodeModel nodeModel) {
+    public NodeView<LowVarFilter2NodeModel> createNodeView(
+            final int viewIndex, final LowVarFilter2NodeModel nodeModel) {
         throw new IndexOutOfBoundsException("No view available");
     }
 

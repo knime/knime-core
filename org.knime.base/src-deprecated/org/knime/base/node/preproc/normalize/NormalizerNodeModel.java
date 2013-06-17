@@ -60,6 +60,7 @@ import org.knime.base.data.normalize.AffineTransConfiguration;
 import org.knime.base.data.normalize.AffineTransTable;
 import org.knime.base.data.normalize.Normalizer;
 import org.knime.base.data.normalize.NormalizerPortObject;
+import org.knime.base.node.preproc.normalize2.Normalizer2NodeModel;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -86,7 +87,9 @@ import org.knime.core.node.port.pmml.PMMLPortObject;
  *
  * @see Normalizer
  * @author Nicolas Cebron, University of Konstanz
+ * @deprecated Use {@link Normalizer2NodeModel} isntead.
  */
+@Deprecated
 public class NormalizerNodeModel extends NodeModel {
 
     /** Key to store the new minimum value (in min/max mode). */

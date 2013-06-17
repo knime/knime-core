@@ -63,8 +63,10 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 
 /**
+ * Finds the median for selected ({@link DoubleValue}d) columns.
  *
  * @author Gabor Bakos
+ * @since 2.8
  */
 class MedianTable {
 
@@ -77,25 +79,32 @@ class MedianTable {
     private final boolean m_includeMissingValues;
 
     private double[] m_medians;
+
     private boolean m_inMemory = false;
 
     /**
-     * @param table
-     * @param indices
-     *
+     * @param table The input table.
+     * @param indices The unique column indices denoting only {@link DoubleValue}d columns within {@code table}.
      */
     public MedianTable(final BufferedDataTable table, final int[] indices) {
         this(table, indices, true, false);
     }
 
+    /**
+     * @param table The input table.
+     * @param colNames The unique column names denoting only {@link DoubleValue}d columns within {@code table}.
+     * @param includeNaNs Include the {@link Double#NaN} values to the possible values?
+     * @param includeMissingValues Include the missing values to the number of values?
+     */
     public MedianTable(final BufferedDataTable table, final List<String> colNames, final boolean includeNaNs,
         final boolean includeMissingValues) {
         this(table, findIndices(table, colNames), includeNaNs, includeMissingValues);
     }
+
     /**
-     * @param table
-     * @param colNames
-     * @return
+     * @param table The input table.
+     * @param colNames The unique column names denoting only {@link DoubleValue}d columns within {@code table}.
+     * @return The column indices of {@code colNames} within {@code table}.
      */
     private static int[] findIndices(final BufferedDataTable table, final List<String> colNames) {
         final DataTableSpec spec = table.getSpec();
@@ -103,12 +112,18 @@ class MedianTable {
             throw new IllegalArgumentException("Same column name multiple times: " + colNames);
         }
         int[] ret = new int[colNames.size()];
-        for (int i = colNames.size(); i -->0;) {
+        for (int i = colNames.size(); i-- > 0;) {
             ret[i] = spec.findColumnIndex(colNames.get(i));
         }
         return ret;
     }
 
+    /**
+     * @param table The input table.
+     * @param indices The unique column indices denoting only {@link DoubleValue}d columns within {@code table}.
+     * @param includeNaNs Include the {@link Double#NaN} values to the possible values?
+     * @param includeMissingValues Include the missing values to the number of values?
+     */
     public MedianTable(final BufferedDataTable table, final int[] indices, final boolean includeNaNs,
         final boolean includeMissingValues) {
         this.m_table = table;
@@ -117,26 +132,35 @@ class MedianTable {
         this.m_includeMissingValues = includeMissingValues;
     }
 
+    /**
+     * @param context An {@link ExecutionContext}
+     * @return The median values for the columns in the order of the columns specified in the constructor. The values
+     *         can be {@link Double#NaN}s in certain circumstances.
+     * @throws CanceledExecutionException When cancelled.
+     */
     public synchronized double[] medianValues(final ExecutionContext context) throws CanceledExecutionException {
         if (m_medians == null) {
             m_medians = new double[m_indices.length];
             int[] validCount = new int[m_indices.length];
             for (DataRow row : m_table) {
-                for (int col : m_indices) {
+                context.checkCanceled();
+                for (int i = 0; i < m_indices.length; ++i) {
+                    int col = m_indices[i];
                     final DataCell cell = row.getCell(col);
                     if (cell.isMissing()) {
                         if (m_includeMissingValues) {
-                            validCount[col]++;
+                            validCount[i]++;
                         }
                     } else if (cell instanceof DoubleValue) {
                         DoubleValue dv = (DoubleValue)cell;
                         if (m_includeNaNs) {
-                            validCount[col]++;
+                            validCount[i]++;
                         } else if (!Double.isNaN(dv.getDoubleValue())) {
-                            validCount[col]++;
+                            validCount[i]++;
                         }
                     } else {
-                        throw new IllegalStateException("Not a double value: " + cell + " in column: " + m_table.getSpec().getColumnSpec(m_indices[col]).getName());
+                        throw new IllegalStateException("Not a double value: " + cell + " in column: "
+                            + m_table.getSpec().getColumnSpec(col).getName());
                     }
                 }
             }
@@ -148,38 +172,39 @@ class MedianTable {
 
             int[][] k = new int[2][m_indices.length];
             for (int i = 0; i < 2; ++i) {
-                for (int j = m_indices.length; j-->0;) {
-                    k[i][j] = validCount[j] > 0 ? (validCount[j]-1+i) / 2: 0;
+                for (int j = m_indices.length; j-- > 0;) {
+                    k[i][j] = validCount[j] > 0 ? (validCount[j] - 1 + i) / 2 : 0;
                 }
             }
             BufferedSelectRank selectRank = new BufferedSelectRank(m_table, incList, k);
             selectRank.setSortInMemory(m_inMemory);
-            BufferedDataTable dataTable = selectRank.sort(context);
+            BufferedDataTable dataTable = selectRank.select(context);
             final CloseableRowIterator iterator = dataTable.iterator();
             try {
-            DataRow row1 = iterator.next();
-            DataRow row2 = iterator.next();
-            for (int i = 0; i < m_indices.length; ++i) {
-                final DataCell cell1 = row1.getCell(i);
-                final DataCell cell2 = row2.getCell(i);
-                if (cell1 instanceof DoubleValue && cell2 instanceof DoubleValue) {
-                    DoubleValue dv1 = (DoubleValue)cell1;
-                    DoubleValue dv2 = (DoubleValue)cell2;
-                    m_medians[i] = (dv1.getDoubleValue() + dv2.getDoubleValue()) / 2;
-                } else {
-                    m_medians[i] = Double.NaN;
+                DataRow row1 = iterator.next();
+                DataRow row2 = iterator.next();
+                for (int i = 0; i < m_indices.length; ++i) {
+                    final DataCell cell1 = row1.getCell(i);
+                    final DataCell cell2 = row2.getCell(i);
+                    if (cell1 instanceof DoubleValue && cell2 instanceof DoubleValue) {
+                        DoubleValue dv1 = (DoubleValue)cell1;
+                        DoubleValue dv2 = (DoubleValue)cell2;
+                        m_medians[i] = (dv1.getDoubleValue() + dv2.getDoubleValue()) / 2;
+                    } else {
+                        m_medians[i] = Double.NaN;
+                    }
                 }
-            }
             } finally {
                 iterator.close();
             }
         }
         return m_medians.clone();
     }
+
     /**
      * @param inMemory the inMemory to set
      */
-    public void setInMemory(final boolean inMemory) {
+    public synchronized void setInMemory(final boolean inMemory) {
         this.m_inMemory = inMemory;
     }
 }

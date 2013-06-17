@@ -49,7 +49,6 @@
  */
 package org.knime.base.data.statistics;
 
-import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -76,7 +75,6 @@ import org.knime.core.data.DoubleValue;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.StringCell;
 import org.knime.core.data.sort.MemoryService;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
@@ -90,14 +88,23 @@ import org.knime.core.node.NodeLogger;
  * @author Gabor Bakos
  * @see TableSorter
  * @since 2.8
+ * @param <C> The {@link DataContainer} type.
+ * @param <T> The result and input table type.
  */
 abstract class SelectRank<C extends DataContainer, T extends DataTable> {
 
-    private static final NodeLogger LOGGER = NodeLogger.getLogger(SelectRank.class);
+    /**
+     *
+     */
+    private static final DataTableSpec SINGLE_DATA_TABLE_SPEC = new DataTableSpec(new String[]{"x"},
+        new DataType[]{DoubleCell.TYPE});
 
-    /** Representing column spec to sort according to the row key. */
-    public static final DataColumnSpec ROWKEY_SORT_SPEC = new DataColumnSpecCreator("-ROWKEY -",
-        DataType.getType(StringCell.class)).createSpec();
+    /**
+     * Below this number of rows the selected m_value is computed by sorting them in memory.
+     */
+    private static final int MAX_CELLS_SORTED_IN_MEMORY = 5000000;
+
+    private static final NodeLogger LOGGER = NodeLogger.getLogger(SelectRank.class);
 
     /**
      * Default memory threshold. If this relative amount of memory is filled, the chunk is sorted and flushed to disk.
@@ -119,11 +126,6 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
      * The maximal number of open containers. This has an effect when many containers must be merged.
      */
     private int m_maxOpenContainers = DEF_MAX_OPENCONTAINER;
-
-    /**
-     * Maximum number of rows. Only used in unit test. Defaults to {@link Integer#MAX_VALUE}.
-     */
-    private int m_maxRows = Integer.MAX_VALUE;
 
     private boolean m_sortInMemory = false;
 
@@ -157,33 +159,20 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
     }
 
     /**
-     * Inits table sorter using the sorting according to {@link #setSelectRank(Collection, boolean[], int[][])}.
+     * Inits table sorter using the sorting according to {@link #setSelectRank(Collection, int[][])}.
      *
      * @param inputTable The table to sort
      * @param rowsCount The number of rows in the table
      * @param inclList Passed on to {@link #setSelectRank(Collection, int[][])}.
+     * @param k We need these values for each column. The first dimension specifies the index-index, the second the
+     *            index of column in order of {@code inclList}. It is ascending in their first index within each
+     *            second-index.
      * @throws NullPointerException If any argument is null.
      * @throws IllegalArgumentException If arguments are inconsistent.
      */
     public SelectRank(final T inputTable, final int rowsCount, final Collection<String> inclList, final int[][] k) {
         this(inputTable, rowsCount);
         setSelectRank(inclList, k);
-    }
-
-    /**
-     * Inits table sorter using the sorting according to {@link #setSelectRank(Collection, boolean[], boolean, m_k)}.
-     *
-     * @param inputTable The table to sort
-     * @param rowsCount The number of rows in the table
-     * @param inclList Passed on to {@link #setSelectRank(Collection, boolean, int[][])}.
-     * @param sortMissingsToEnd Passed on to {@link #setSelectRank(Collection, boolean, int[][])}.
-     * @throws NullPointerException If any argument is null.
-     * @throws IllegalArgumentException If arguments are inconsistent.
-     */
-    public SelectRank(final T inputTable, final int rowsCount, final Collection<String> inclList,
-        final boolean sortMissingsToEnd, final int[][] k) {
-        this(inputTable, rowsCount);
-        setSelectRank(inclList, sortMissingsToEnd, k);
     }
 
     /** @param indices The selected column indices to set. */
@@ -199,23 +188,11 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
      *
      * @param inclList the list with the columns to sort; the first column name represents the first sort criteria, the
      *            second the second criteria and so on.
+     * @param k We need these values for each column. The first dimension specifies the index-index, the second the
+     *            index of column in order of {@code inclList}. It is ascending in their first index within each
+     *            second-index.
      */
     public void setSelectRank(final Collection<String> inclList, final int[][] k) {
-        setSelectRank(inclList, false, k);
-    }
-
-    /**
-     * Sets sorting columns and order.
-     *
-     * @param inclList the list with the columns to sort; the first column name represents the first sort criteria, the
-     *            second the second criteria and so on.
-     *
-     * @param sortMissingsToEnd Whether to sort missing values always to the end independent to the sort oder (if false
-     *            missing values are always smaller than non-missings).
-     * @param m_k The {@code m_k}th elements to select (the inner array contains the indices for columns, all same number of
-     *            rows are selected for each column).
-     */
-    public void setSelectRank(final Collection<String> inclList, final boolean sortMissingsToEnd, final int[][] k) {
         this.m_k = flip(k);
         for (int[] is : this.m_k) {
             Arrays.sort(is);
@@ -238,7 +215,7 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
         int curIndex = 0;
         for (String name : inclList) {
             int index = spec.findColumnIndex(name);
-            if (index == -1 && !name.equals(ROWKEY_SORT_SPEC.getName())) {
+            if (index == -1) {
                 throw new IllegalArgumentException("Could not find column name:" + name.toString());
             }
             indices[curIndex++] = index;
@@ -247,8 +224,8 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
     }
 
     /**
-     * @param is
-     * @return
+     * @param is An array of int arrays.
+     * @return Transposed version.
      */
     private int[][] flip(final int[][] is) {
         int[][] ret = new int[is[0].length][is.length];
@@ -270,8 +247,8 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
     }
 
     /**
-     * Changes the number of maximum open containers (=files) during the sorting. Containers are used in the m_k-way merge
-     * sort, the higher the number the fewer iterations in the final merge need to be done.
+     * Changes the number of maximum open containers (=files) during the sorting. Containers are used in the m_k-way
+     * merge sort, the higher the number the fewer iterations in the final merge need to be done.
      *
      * <p>
      * The default is {@value #DEF_MAX_OPENCONTAINER}.
@@ -284,16 +261,6 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
             throw new IllegalArgumentException("Invalid open container count: " + value);
         }
         m_maxOpenContainers = value;
-    }
-
-    /**
-     * Set the maximum number of rows per chunk, defaults to {@link Integer#MAX_VALUE}. This field is modified from the
-     * testing framework.
-     *
-     * @param maxRows the maxRows to set
-     */
-    void setMaxRows(final int maxRows) {
-        m_maxRows = maxRows;
     }
 
     /**
@@ -320,7 +287,7 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
      * This option is merely to ensure backward compatibility and should not be used anymore.
      *
      * <p>
-     * The default value for this option is <b>false</b>.
+     * The default m_value for this option is <b>false</b>.
      *
      * @param sortInMemory <code>true</code> if sorting should be done in memory, <code>false</code> if sorting should
      *            be done in a hybrid way as described in the class description.
@@ -336,12 +303,12 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
      * @return The sorted output.
      * @throws CanceledExecutionException If canceled.
      */
-    DataTable sortInternal(final ExecutionMonitor exec) throws CanceledExecutionException {
+    DataTable selectInternal(final ExecutionMonitor exec) throws CanceledExecutionException {
         DataTable result;
         if (m_sortInMemory) {
             result = sortInMemory(exec);
         } else {
-            result = sortOnDisk(exec);
+            result = selectOnDisk(exec);
         }
         exec.setProgress(1.0);
         return result;
@@ -351,7 +318,7 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
         final DataTable dataTable = m_inputTable;
         List<List<Double>> colList = new ArrayList<List<Double>>(m_indices.length);
         for (int i = m_indices.length; i-- > 0;) {
-            colList.add(new ArrayList<Double>(Math.max(m_maxRows, 100)));
+            colList.add(new ArrayList<Double>());
         }
 
         int progress = 0;
@@ -369,7 +336,7 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
                 int index = m_indices[i];
                 final DataCell cell = r.getCell(index);
                 if (cell.isMissing()) {
-                    colList.get(i).add(null);
+                    //skipping
                 } else if (cell instanceof DoubleValue) {
                     DoubleValue value = (DoubleValue)cell;
                     colList.get(i).add(value.getDoubleValue());
@@ -378,11 +345,6 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
                 }
             }
             progress++;
-        }
-        // if there is 0 or 1 row only, return immediately (can't rely on
-        // "rowCount" as it might not be set)
-        if (colList.get(0).size() <= 1) {
-            return m_inputTable;
         }
 
         exec.setMessage("Sorting");
@@ -418,15 +380,16 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
     }
 
     /**
-     * @param dataTable
-     * @return
+     * @param dataTable The original table.
+     * @return A new {@link DataTableSpec} with only the expected columns.
      */
     private DataTableSpec computeNewSpec(final DataTable dataTable) {
         final DataTableSpec dataTableSpec = dataTable.getDataTableSpec();
         DataColumnSpec[] specs = new DataColumnSpec[m_indices.length];
         for (int i = 0; i < m_indices.length; i++) {
             int index = m_indices[i];
-            specs[i] = dataTableSpec.getColumnSpec(index);
+            specs[i] =
+                new DataColumnSpecCreator(dataTableSpec.getColumnSpec(index).getName(), DoubleCell.TYPE).createSpec();
         }
         DataTableSpec newSpec = new DataTableSpec(specs);
         return newSpec;
@@ -456,23 +419,14 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
      * @param exec an execution context for reporting progress and creating BufferedDataContainers
      * @throws CanceledExecutionException if the user has canceled execution
      */
-    private T sortOnDisk(final ExecutionMonitor exec) throws CanceledExecutionException {
+    private T selectOnDisk(final ExecutionMonitor exec) throws CanceledExecutionException {
         final T dataTable = m_inputTable;
-
-        double progress = 0.0;
-        double incProgress = m_rowsInInputTable <= 0 ? -1.0 : 1.0 / (2.0 * m_rowsInInputTable);
-        int counter = 0;
-        int cf = 0;
-        int chunkStartRow = 0;
-        long dummyCounter = 0;
 
         int[] nonMissingCount = new int[m_indices.length];
         int[] nans = new int[m_indices.length];
-        int rowCount = 0;
         exec.setMessage("Reading table");
         for (DataRow row : dataTable) {
             exec.checkCanceled();
-            ++rowCount;
             for (int i = 0; i < m_indices.length; i++) {
                 DataCell cell = row.getCell(m_indices[i]);
                 if (!cell.isMissing()) {
@@ -483,161 +437,29 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
                             nans[i]++;
                         }
                     } else {
-                        throw new IllegalStateException("Not supported data value: " + cell.getType() + " (" + cell
+                        throw new IllegalStateException("Not supported data m_value: " + cell.getType() + " (" + cell
                             + ") in " + row + ": " + m_indices[i]);
                     }
                 }
             }
         }
-        return sortOnDisk(exec, dataTable, nonMissingCount, nans);
+        return selectOnDisk(exec, dataTable, nonMissingCount, nans);
 
-        //        for (Iterator<DataRow> iter = dataTable.iterator(); iter.hasNext();) {
-        //            cf++;
-        //            exec.checkCanceled();
-        //            if (!m_memService.isMemoryLow() && (cf % m_maxRows != 0 || cf == 0)) {
-        //                counter++;
-        //                exec.checkCanceled();
-        //                String message = "Reading table, " + counter + " rows read";
-        //                if (m_rowsInInputTable > 0) {
-        //                    progress += incProgress;
-        //                    exec.setProgress(progress, message);
-        //                } else {
-        //                    exec.setMessage(message);
-        //                }
-        //                DataRow row = iter.next();
-        //                DataCell[] r = new DataCell[m_indices.length];
-        //                buffer.add(r);
-        //            } else {
-        //                LOGGER.debug("Writing chunk [" + chunkStartRow + ":" + counter + "] - mem usage: " + getMemUsage());
-        //                if (m_rowsInInputTable > 0) {
-        //                    int estimatedIncrements = m_rowsInInputTable - counter + buffer.size();
-        //                    incProgress = (0.5 - progress) / estimatedIncrements;
-        //                }
-        //                exec.setMessage("Sorting temporary buffer");
-        //                // sort buffer
-        //                Collections.sort(buffer);
-        //                // write buffer to disk
-        //                DataContainer diskCont = createDataContainer(dataTable.getDataTableSpec(), true);
-        //                diskCont.setMaxPossibleValues(0);
-        //                final int totalBufferSize = buffer.size();
-        //                for (int i = 0; i < totalBufferSize; i++) {
-        //                    exec.setMessage("Writing temporary table -- " + i + "/" + totalBufferSize);
-        //                    // must not use Iterator#remove as it causes
-        //                    // array copies
-        //                    DataCell[] next = buffer.set(i, null);
-        //                    diskCont.addRowToTable(new DefaultRow(Long.toString(dummyCounter++), next));
-        //                    exec.checkCanceled();
-        //                    if (m_rowsInInputTable > 0) {
-        //                        progress += incProgress;
-        //                        exec.setProgress(progress);
-        //                    }
-        //                }
-        //                buffer.clear();
-        //                diskCont.close();
-        //                chunksCont.add(diskCont.getTable());
-        //
-        //                // Force full gc to be sure that there is not too much
-        //                // garbage
-        //                LOGGER.debug("Wrote chunk [" + chunkStartRow + ":" + counter + "] - mem usage: " + getMemUsage());
-        //                Runtime.getRuntime().gc();
-        //
-        //                LOGGER.debug("Forced gc() when reading rows, new mem usage: " + getMemUsage());
-        //                chunkStartRow = counter + 1;
-        //            }
-        //        }
-        //        // no or one row only in input table, can exit immediately
-        //        // (can't rely on global rowCount - might not be set)
-        //        if (counter <= 1) {
-        //            return m_inputTable;
-        //        }
-        //        // Add buffer to the chunks
-        //        if (!buffer.isEmpty()) {
-        //            // sort buffer
-        //            Collections.sort(buffer);
-        //            chunksCont.add(buffer);
-        //        }
-        //
-        //        exec.setMessage("Merging temporary tables");
-        //        // The final output container
-        //        DataContainer cont = null;
-        //        // merge chunks until there is one left
-        //        while (chunksCont.size() > 1 || cont == null) {
-        //            exec.setMessage("Merging temporary tables, " + chunksCont.size() + " remaining");
-        //            if (chunksCont.size() < m_maxOpenContainers) {
-        //                // The final output container, leave it to the
-        //                // system to do the caching (bug 1809)
-        //                cont = createDataContainer(dataTable.getDataTableSpec(), false);
-        //                if (m_rowsInInputTable > 0) {
-        //                    incProgress = (1.0 - progress) / m_rowsInInputTable;
-        //                }
-        //            } else {
-        //                cont = createDataContainer(dataTable.getDataTableSpec(), true);
-        //                if (m_rowsInInputTable > 0) {
-        //                    double estimatedReads =
-        //                        Math.ceil(chunksCont.size() / (double)m_maxOpenContainers) * m_rowsInInputTable;
-        //                    incProgress = (1.0 - progress) / estimatedReads;
-        //                }
-        //            }
-        //            // isolate lists to merge
-        //            List<Iterable<DataRow>> toMergeCont = new ArrayList<Iterable<DataRow>>();
-        //            int c = 0;
-        //            for (Iterator<Iterable<DataRow>> iter = chunksCont.iterator(); iter.hasNext();) {
-        //                c++;
-        //                if (c > m_maxOpenContainers) {
-        //                    break;
-        //                }
-        //                toMergeCont.add(iter.next());
-        //                // remove container from chunksCont
-        //                iter.remove();
-        //            }
-        //            // merge container in toMergeCont into cont
-        //            PriorityQueue<MergeEntry> currentRows = new PriorityQueue<MergeEntry>(toMergeCont.size());
-        //            for (int i = 0; i < toMergeCont.size(); i++) {
-        //                Iterator<DataRow> iter = toMergeCont.get(i).iterator();
-        //                if (iter.hasNext()) {
-        //                    currentRows.add(new MergeEntry(iter, i));
-        //                }
-        //            }
-        //            while (currentRows.size() > 0) {
-        //                MergeEntry first = currentRows.poll();
-        //                DataRow least = first.poll();
-        //                cont.addRowToTable(least);
-        //                exec.checkCanceled();
-        //                if (m_rowsInInputTable > 0) {
-        //                    // increment progress
-        //                    progress += incProgress;
-        //                    exec.setProgress(progress);
-        //                }
-        //                // read next row in first
-        //                if (null != first.peek()) {
-        //                    currentRows.add(first);
-        //                }
-        //            }
-        //            cont.close();
-        //            // Add cont to the pending containers
-        //            chunksCont.add(0, cont.getTable());
-        //            // toMergeCont may contain DataTable. These DatatTables can be
-        //            // cleared now.
-        //            for (Iterable<DataRow> merged : toMergeCont) {
-        //                if (merged instanceof DataTable) {
-        //                    clearTable((DataTable)merged);
-        //                }
-        //            }
-        //        }
-        //        return cont.getTable();
     }
 
     /**
-     * @param exec
-     * @param dataTable
-     * @param nonMissingCount
-     * @param nans
-     * @return
+     * Finds the selected values with some helper statistics.
+     *
+     * @param exec An {@link ExecutionMonitor}.
+     * @param dataTable A {@link DataTable} (of type {@code T}).
+     * @param nonMissingCount The number of non-missing values in each (selected) columns.
+     * @param nans The number of {@link Double#NaN}s in each (selected) columns.
+     * @return A table with k rows for each index with the values in that index.
      * @throws CanceledExecutionException
      */
-    private T sortOnDisk(final ExecutionMonitor exec, final T dataTable, final int[] nonMissingCount, final int[] nans)
+    private T selectOnDisk(final ExecutionMonitor exec, final T dataTable, final int[] nonMissingCount, final int[] nans)
         throws CanceledExecutionException {
-        final PivotBuffer possiblePivots = new PivotBuffer(nonMissingCount, nans, m_k);
+        final PivotBuffer possiblePivots = new PivotBuffer(nonMissingCount, m_k);
 
         int[] nonMissingCounter = new int[m_indices.length];
         for (final DataRow row : dataTable) {
@@ -661,24 +483,68 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
         int[][] valueCounter = new int[m_indices.length][];
         int[][] addedRows = new int[m_indices.length][];
         int chunkCount = 0;
-        final DataTableSpec singleColumn = new DataTableSpec(new String[]{"x"}, new DataType[]{DoubleCell.TYPE});
-        for (int col = 0; col < m_indices.length; col++) {
+
+        //k, col
+        DataCell[][] result = new DataCell[this.m_k.length][m_indices.length];
+        int startCol = 0;
+        for (int col = startCol; col < m_indices.length; col++) {
             double[] ds = pivotValues[col];
+            if (chunkCount + ds.length + 1 > m_maxOpenContainers) {
+                process(exec, dataTable, nonMissingCount, nans, pivotValues, containers, valueCounter, addedRows,
+                    result, startCol, col);
+                startCol = col;
+                chunkCount = 0;
+            }
             chunkCount += ds.length + 1;
             valueCounter[col] = new int[ds.length];
-            if (chunkCount > m_maxOpenContainers) {
-                throw new UnsupportedOperationException("TODO");
-            }
             containers[col] = new DataContainer[ds.length + 1];
             addedRows[col] = new int[ds.length + 1];
             for (int i = ds.length + 1; i-- > 0;) {
-                containers[col][i] = createDataContainer(singleColumn, true);
+                containers[col][i] = createDataContainer(SINGLE_DATA_TABLE_SPEC, true);
             }
         }
+        process(exec, dataTable, nonMissingCount, nans, pivotValues, containers, valueCounter, addedRows, result,
+            startCol, m_indices.length);
 
+        C cont = createDataContainer(computeNewSpec(dataTable), false);
+        for (int r = 0; r < result.length; ++r) {
+            DefaultRow defaultRow = new DefaultRow(String.valueOf(r), result[r]);
+            cont.addRowToTable(defaultRow);
+        }
+        for (DataContainer[] conts : containers) {
+            for (DataContainer dataContainer : conts) {
+                clearTable(dataContainer.getTable());
+            }
+        }
+        cont.close();
+        @SuppressWarnings("unchecked")
+        final T table = (T)cont.getTable();
+        return table;
+    }
+
+    /**
+     * For the selected chunks it goes throw the table and puts the median values to the {@code result} array.
+     *
+     * @param exec An {@link ExecutionMonitor}.
+     * @param dataTable The input data.
+     * @param nonMissingCount Number of not missing values for selected columnt..
+     * @param nans Number of NaNs.
+     * @param pivotValues The pivot values.
+     * @param containers The {@link DataContainer}s.
+     * @param valueCounter Number of values.
+     * @param addedRows The already added rows (for row keys).
+     * @param result The result array.
+     * @param startCol Start column index in {@link #m_indices}.
+     * @param colAfter Index after the last column in {@link #m_indices}.
+     * @throws CanceledExecutionException Cancelled.
+     */
+    private void process(final ExecutionMonitor exec, final T dataTable, final int[] nonMissingCount, final int[] nans,
+        final double[][] pivotValues, final DataContainer[][] containers, final int[][] valueCounter,
+        final int[][] addedRows, final DataCell[][] result, final int startCol, final int colAfter)
+        throws CanceledExecutionException {
         for (final DataRow row : dataTable) {
             exec.checkCanceled();
-            for (int i = 0; i < m_indices.length; i++) {
+            for (int i = startCol; i < colAfter; i++) {
                 DataCell cell = row.getCell(m_indices[i]);
                 if (!cell.isMissing() && cell instanceof DoubleValue) {
                     final DoubleValue dv = (DoubleValue)cell;
@@ -699,12 +565,14 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
         }
 
         for (DataContainer[] conts : containers) {
-            for (DataContainer dataContainer : conts) {
-                dataContainer.close();
+            if (conts != null) {
+                for (DataContainer dataContainer : conts) {
+                    dataContainer.close();
+                }
             }
         }
 
-        // col, chunk, (originalK index,transformedK value)
+        // col, chunk, (originalK index,transformedK m_value)
         List<List<Map<Integer, Integer>>> postponed = new ArrayList<List<Map<Integer, Integer>>>(m_indices.length);
         for (int i = m_indices.length; i-- > 0;) {
             final ArrayList<Map<Integer, Integer>> newList = new ArrayList<Map<Integer, Integer>>();
@@ -713,24 +581,22 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
                 newList.add(new TreeMap<Integer, Integer>());
             }
         }
-        //m_k, col
-        DataCell[][] result = new DataCell[this.m_k.length][m_indices.length];
         for (int idx = m_k.length; idx-- > 0;) {
             int[] idxKs = this.m_k[idx];
-            for (int col = idxKs.length; col-- > 0;) {
+            for (int col = /*idxKs.length*/colAfter; col-- > startCol;) {
                 int order = idxKs[col];
                 if (order > nonMissingCount[col]) {
                     result[idx][col] = DataType.getMissingCell();
-                    break;
+                    continue;
                 }
                 if (order > nonMissingCount[col] - nans[col]) {
                     result[idx][col] = new DoubleCell(Double.NaN);
-                    break;
+                    continue;
                 }
                 int found = 0;
                 for (int i = 0; i < addedRows[col].length; ++i) {
                     found += addedRows[col][i];
-                    if (order < found) {
+                    if (order < found || i == valueCounter[col].length) {
                         //find in container, postpone
                         postponed.get(col).get(i).put(idx, order - found + addedRows[col][i]);
                         break;
@@ -744,10 +610,11 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
             }
         }
 
-        for (int col = m_indices.length; col-- > 0;) {
+        for (int col = colAfter; col-- > startCol;) {
+            exec.checkCanceled();
             for (int chunk = containers[col].length; chunk-- > 0;) {
+                exec.checkCanceled();
                 Map<Integer, Integer> map = postponed.get(col).get(chunk);
-                int lot = 5000000;
                 if (!map.isEmpty()) {
                     DataContainer container = containers[col][chunk];
                     int[] newKs = new int[map.size()];
@@ -755,7 +622,7 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
                     for (Entry<Integer, Integer> entry : map.entrySet()) {
                         newKs[i++] = entry.getValue().intValue();
                     }
-                    if (!m_memService.isMemoryLow() && addedRows[col][chunk] < lot) {
+                    if (!m_memService.isMemoryLow() && addedRows[col][chunk] < MAX_CELLS_SORTED_IN_MEMORY) {
                         double[] values = new double[addedRows[col][chunk]];
                         int r = 0;
                         for (final DataRow row : container.getTable()) {
@@ -763,13 +630,16 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
                         }
                         Arrays.sort(values);
                         for (Entry<Integer, Integer> entry : map.entrySet()) {
-                            result[entry.getKey()][col] = new DoubleCell(values[entry.getValue()]);
+                            result[entry.getKey()][col] =
+                                new DoubleCell(values.length <= entry.getValue() ? Double.NaN
+                                    : values[entry.getValue()]);
                         }
                     } else {
                         BufferedSelectRank tmp =
                             new BufferedSelectRank((BufferedDataTable)container.getTable(),
-                                Collections.singletonList(singleColumn.getColumnSpec(0).getName()), new int[][]{newKs});
-                        DataTable resultTable = tmp.sortInternal(exec);
+                                Collections.singletonList(SINGLE_DATA_TABLE_SPEC.getColumnSpec(0).getName()),
+                                new int[][]{newKs});
+                        DataTable resultTable = tmp.selectInternal(exec);
                         Iterator<Entry<Integer, Integer>> it = map.entrySet().iterator();
                         for (DataRow dataRow : resultTable) {
                             Entry<Integer, Integer> entry = it.next();
@@ -779,70 +649,39 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
                 }
             }
         }
-
-        C cont = createDataContainer(computeNewSpec(dataTable), false);
-        for (int r = 0; r < result.length; ++r) {
-            DefaultRow defaultRow = new DefaultRow(String.valueOf(r), result[r]);
-            cont.addRowToTable(defaultRow);
-        }
-        for (DataContainer[] conts : containers) {
-            for (DataContainer dataContainer : conts) {
-                clearTable(dataContainer.getTable());
-            }
-        }
-        cont.close();
-        return (T)cont.getTable();
-    }
-
-    private String getMemUsage() {
-        Runtime runtime = Runtime.getRuntime();
-        long free = runtime.freeMemory();
-        long total = runtime.totalMemory();
-        long avail = runtime.maxMemory();
-        double freeD = free / (double)(1024 * 1024);
-        double totalD = total / (double)(1024 * 1024);
-        double availD = avail / (double)(1024 * 1024);
-        String freeS = NumberFormat.getInstance().format(freeD);
-        String totalS = NumberFormat.getInstance().format(totalD);
-        String availS = NumberFormat.getInstance().format(availD);
-        return "avail: " + availS + "MB, total: " + totalS + "MB, free: " + freeS + "MB";
     }
 
     private static class PivotBuffer {
         private static final int PIVOT_CANDIDATE_COUNT = 8;
 
-        private static final Random random = new Random();
+        private static final Random m_random = new Random();
 
         /** 1st dim: which m_k, 2nd dim: col, 3rd dim: buffer */
-        PivotEntry[][][] entries;
+        PivotEntry[][][] m_entries;
 
-        private int[] bufferCount;
+        private int[] m_bufferCount;
 
-        private final int[][] ks;
+        private final int[][] m_ks;
 
-        private final int[] nonMissingCount;
+        private final int[] m_nonMissingCount;
 
-        private final int[] nans;
-
-        @SuppressWarnings("hiding")
-        PivotBuffer(final int[] nonMissingCount, final int[] nans, final int[][] k) {
+        PivotBuffer(final int[] nonMissingCount, final int[][] k) {
             super();
-            this.nonMissingCount = nonMissingCount;
-            this.nans = nans;
-            ks = k;
-            entries = new PivotEntry[k.length][nonMissingCount.length][PIVOT_CANDIDATE_COUNT];
-            bufferCount = new int[nonMissingCount.length];
+            this.m_nonMissingCount = nonMissingCount;
+            m_ks = k;
+            m_entries = new PivotEntry[k.length][nonMissingCount.length][PIVOT_CANDIDATE_COUNT];
+            m_bufferCount = new int[nonMissingCount.length];
         }
 
         /**
-         * @return
+         * @return The pivoting values expected to be the closest to the k values.
          */
         public double[][] findPivots() {
-            List<SortedSet<Double>> pivotValues = new ArrayList<SortedSet<Double>>(nonMissingCount.length);
-            for (int col = nonMissingCount.length; col-- > 0;) {
+            List<SortedSet<Double>> pivotValues = new ArrayList<SortedSet<Double>>(m_nonMissingCount.length);
+            for (int col = 0; col < m_nonMissingCount.length; ++col) {
                 final TreeSet<Double> set = new TreeSet<Double>();
                 pivotValues.add(set);
-                for (int[] kVals : ks) {
+                for (int[] kVals : m_ks) {
                     set.add(findClosest(kVals[col], col));
                 }
             }
@@ -860,115 +699,133 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
         }
 
         /**
-         * @param m_k
-         * @param col
-         * @return
+         * @param k An index m_value.
+         * @param col The column index.
+         * @return The closest m_value to find for.
          */
         private Double findClosest(final int k, final int col) {
             int closestDiff = Integer.MAX_VALUE;
             double closest = 0;
-            for (PivotEntry[][] dim23 : entries) {
-                for (PivotEntry entry : dim23[col]) {
+            for (PivotEntry[][] dim23 : m_entries) {
+                final PivotEntry[] pivotEntries = dim23[col];
+                for (PivotEntry entry : pivotEntries) {
                     if (entry != null) {
-                        int diff = Math.abs(entry.estimatedSmallerCount - k);
+                        int diff = Math.abs(entry.m_estimatedSmallerCount - k);
                         if (diff < closestDiff) {
                             closestDiff = diff;
-                            closest = entry.value;
+                            closest = entry.m_value;
                         }
                     }
                 }
             }
             if (closestDiff == Integer.MAX_VALUE) {
-                throw new IllegalStateException("Should not happen: col: " + col + " m_k: " + k + "\n"
-                    + Arrays.deepToString(entries));
+                return Double.NaN;
             }
             return closest;
         }
 
         private static class PivotEntry {
-            private double value;
+            private double m_value;
 
-            private int estimatedSmallerCount;
+            private int m_estimatedSmallerCount;
+
+            private int m_estimatedCount;
+
+            private int m_estimatedLargerCount;
 
             /**
              * {@inheritDoc}
              */
             @Override
             public String toString() {
-                return "[v=" + value + ", c=" + estimatedSmallerCount + "]";
+                return "[v=" + m_value + ", <:" + m_estimatedSmallerCount + ", =:" + m_estimatedCount + "]";
             }
 
         }
 
+        /**
+         * Updates statistics based on the values presented.
+         *
+         * @param rowIndex The number of already consumed rows.
+         * @param col The column index.
+         * @param d The current value.
+         */
         public void update(final double rowIndex, final int col, final double d) {
-            for (int i = 0; i < ks.length; i++) {
-                final PivotEntry[] kEntry = entries[i][col];
-                if (bufferCount[col] < PIVOT_CANDIDATE_COUNT) {
+            for (int i = 0; i < m_ks.length; i++) {
+                final PivotEntry[] kEntry = m_entries[i][col];
+                if (m_bufferCount[col] < PIVOT_CANDIDATE_COUNT) {
                     insertOrUpdate(rowIndex, col, d);
+                    break;
                 } else {
-                    int expectedSmaller = (int)(ks[i][col] * rowIndex / nonMissingCount[col]);
-                    boolean includeRandom = random.nextDouble() < PIVOT_CANDIDATE_COUNT * 3.0 / nonMissingCount[col];
+                    int expectedSmaller = (int)(m_ks[i][col] * rowIndex / m_nonMissingCount[col]);
+                    boolean includeRandom =
+                        m_random.nextDouble() < PIVOT_CANDIDATE_COUNT * 3.0 / m_nonMissingCount[col];
                     if (includeRandom) {
                         int j = 0;
                         for (; j < kEntry.length; ++j) {
-                            if (d < kEntry[j].value) {
+                            if (d < kEntry[j].m_value) {
                                 for (int u = kEntry.length; u-- > j + 1;) {
-                                    kEntry[u].value = kEntry[u - 1].value;
+                                    kEntry[u].m_value = kEntry[u - 1].m_value;
+                                    kEntry[u].m_estimatedCount = kEntry[u - 1].m_estimatedCount;
+                                    kEntry[u].m_estimatedSmallerCount = kEntry[u - 1].m_estimatedSmallerCount + 1;
+                                    kEntry[u].m_estimatedLargerCount = kEntry[u - 1].m_estimatedLargerCount;
                                 }
-                                kEntry[j].value = d;
+                                kEntry[j].m_value = d;
+                                kEntry[j].m_estimatedCount = 1;
                                 break;
-                            } else if (d == kEntry[j].value) {
+                            } else if (d == kEntry[j].m_value) {
+                                kEntry[j].m_estimatedCount++;
                                 ++j;
                                 break;
                             }
                         }
                         if (j == kEntry.length) {
-                            kEntry[j - 1].value = d;
-                            kEntry[j - 1].estimatedSmallerCount =
-                                Math.max(expectedSmaller,
-                                    Math.min(kEntry[j - 1].estimatedSmallerCount + 1, (int)rowIndex - 1));
+                            kEntry[j - 1].m_value = d;
+                            kEntry[j - 1].m_estimatedCount = 1;
+                            kEntry[j - 1].m_estimatedSmallerCount =
+                                Math.max(expectedSmaller, Math.min(kEntry[j - 1].m_estimatedSmallerCount
+                                    + kEntry[j - 1].m_estimatedCount, (int)rowIndex - 1));
                         }
                         for (; j < kEntry.length; ++j) {
-                            kEntry[j].estimatedSmallerCount++;
+                            kEntry[j].m_estimatedSmallerCount++;
                         }
                     } else {
                         int j = 0;
                         for (; j < kEntry.length; ++j) {
-                            if (d <= kEntry[j].value) {
+                            if (d <= kEntry[j].m_value) {
                                 break;
                             }
                         }
-                        if (j < kEntry.length && d == kEntry[j].value) {
+                        if (j < kEntry.length && d == kEntry[j].m_value) {
+                            kEntry[j].m_estimatedCount++;
                             //increase others
                             ++j;
                             for (; j < kEntry.length; ++j) {
-                                kEntry[j].estimatedSmallerCount++;
+                                kEntry[j].m_estimatedSmallerCount++;
                             }
-                        } else if (j == 0 && kEntry[j].estimatedSmallerCount > expectedSmaller) {
+                        } else if (j == 0 && kEntry[j].m_estimatedSmallerCount > expectedSmaller) {
                             //insert before
                             for (j = kEntry.length; j-- > 1;) {
-                                kEntry[j].value = kEntry[j - 1].value;
-                                kEntry[j].estimatedSmallerCount =
-                                        kEntry[j - 1].estimatedSmallerCount + 1;
+                                kEntry[j].m_value = kEntry[j - 1].m_value;
+                                kEntry[j].m_estimatedSmallerCount = kEntry[j - 1].m_estimatedSmallerCount + 1;
                             }
-                            kEntry[0].value = d;
-                            kEntry[0].estimatedSmallerCount = Math.min(expectedSmaller, (int)rowIndex - 1);
+                            kEntry[0].m_value = d;
+                            kEntry[0].m_estimatedCount = 1;
+                            kEntry[0].m_estimatedSmallerCount = Math.min(expectedSmaller, (int)rowIndex - 1);
                         } else if (j == kEntry.length) {
-                            if (kEntry[j - 1].estimatedSmallerCount < expectedSmaller) {
+                            if (kEntry[j - 1].m_estimatedSmallerCount < expectedSmaller) {
                                 //set last
-                                kEntry[j - 1].value = d;
-                                kEntry[j - 1].estimatedSmallerCount = expectedSmaller;
-                            } else {
-                                //insert
-                                //                                for (int u = entries[i].length; u-- > j + 1;) {
-                                //                                    entries[i][u][col].value = entries[i][u - 1][col].value;
-                                //                                    entries[i][u][col].estimatedSmallerCount =
-                                //                                        entries[i][u - 1][col].estimatedSmallerCount + 1;
-                                //                                }
-                                --j;
-                                kEntry[j].value = d;
-                                kEntry[j].estimatedSmallerCount =
-                                    (kEntry[j].estimatedSmallerCount + kEntry[j].estimatedSmallerCount) / 2;
+                                for (int u = 0; u < j - 1; ++u) {
+                                    kEntry[u].m_value = kEntry[u + 1].m_value;
+                                    kEntry[u].m_estimatedCount = kEntry[u + 1].m_estimatedCount;
+                                    kEntry[u].m_estimatedSmallerCount = kEntry[u + 1].m_estimatedSmallerCount;
+                                    kEntry[u].m_estimatedLargerCount = kEntry[u + 1].m_estimatedLargerCount;
+                                }
+                                kEntry[j - 1].m_value = d;
+                                kEntry[j - 1].m_estimatedCount = 1;
+                                kEntry[j - 1].m_estimatedSmallerCount =
+                                    Math.max(expectedSmaller, (kEntry[j - 2].m_estimatedSmallerCount
+                                        + kEntry[j - 2].m_estimatedCount + (int)rowIndex) / 2);
                             }
                         }
                     }
@@ -977,39 +834,61 @@ abstract class SelectRank<C extends DataContainer, T extends DataTable> {
         }
 
         /**
-         * @param rowIndex
-         * @param col
-         * @param d
+         * @param rowIndex Consumed number of rows.
+         * @param col The column index.
+         * @param d The new value.
          */
         private void insertOrUpdate(final double rowIndex, final int col, final double d) {
             boolean found = false;
             int i = 0;
-            for (; i < bufferCount[col]; ++i) {
-                if (entries[0][col][i] != null && entries[0][col][i].value == d) {
+            for (; i < m_bufferCount[col]; ++i) {
+                if (m_entries[0][col][i] != null && m_entries[0][col][i].m_value == d) {
                     found = true;
                     break;
                 }
             }
             if (found) {
-                for (int k = ks.length; k-- > 0;) {
-                    for (int j = i + 1; j < bufferCount[col]; ++j) {
-                        entries[k][col][j].estimatedSmallerCount++;
+                for (int k = m_ks.length; k-- > 0;) {
+                    m_entries[k][col][i].m_estimatedCount++;
+                    for (int j = i + 1; j < m_bufferCount[col]; ++j) {
+                        m_entries[k][col][j].m_estimatedSmallerCount++;
                     }
                 }
             } else {
-                bufferCount[col]++;
-                for (int k = ks.length; k-- > 0;) {
-                    entries[k][col][bufferCount[col] - 1] = new PivotEntry();
-                    for (int j = bufferCount[col]; j-- > i + 1;) {
-                        entries[k][col][j].estimatedSmallerCount = entries[k][col][j - 1].estimatedSmallerCount + 1;
-                        entries[k][col][j].value = entries[k][col][j - 1].value;
+                m_bufferCount[col]++;
+                for (int k = m_ks.length; k-- > 0;) {
+                    m_entries[k][col][m_bufferCount[col] - 1] = new PivotEntry();
+                    for (int j = m_bufferCount[col]; j-- > i + 1;) {
+                        m_entries[k][col][j].m_estimatedSmallerCount =
+                            m_entries[k][col][j - 1].m_estimatedSmallerCount + 1;
+                        m_entries[k][col][j].m_estimatedCount = m_entries[k][col][j - 1].m_estimatedCount;
+                        m_entries[k][col][j].m_value = m_entries[k][col][j - 1].m_value;
                     }
-                    entries[k][col][i].value = d;
-                    entries[k][col][i].estimatedSmallerCount =
-                        i == 0 ? 0 : i == bufferCount[col] - 1 ? entries[k][col][i - 1].estimatedSmallerCount + 1
-                            : entries[k][col][i].estimatedSmallerCount - 1;
+                    m_entries[k][col][i].m_value = d;
+                    m_entries[k][col][i].m_estimatedCount = 1;
+                    m_entries[k][col][i].m_estimatedSmallerCount =
+                        i == 0 ? 0 : /*i == m_bufferCount[col] - 1 ?*/m_entries[k][col][i - 1].m_estimatedSmallerCount
+                            + m_entries[k][col][i - 1].m_estimatedCount
+                    /*: m_entries[k][col][i].estimatedSmallerCount - 1*/;
                 }
             }
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public String toString() {
+            StringBuilder sb = new StringBuilder();
+            int i = 0;
+            for (PivotEntry[][] ee : m_entries) {
+                sb.append("k=").append(i++).append('\n');
+                for (PivotEntry[] pivotEntries : ee) {
+                    sb.append(Arrays.toString(pivotEntries)).append('\n');
+                }
+            }
+            return sb.toString();
+        }
+
     }
 }

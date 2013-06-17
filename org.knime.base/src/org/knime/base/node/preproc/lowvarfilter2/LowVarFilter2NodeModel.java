@@ -104,7 +104,7 @@ public class LowVarFilter2NodeModel extends NodeModel {
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
+            final ExecutionContext exec) throws CanceledExecutionException {
         if (m_conf == null) {
             // auto-guess
             m_conf = createColFilterConf();
@@ -151,7 +151,6 @@ public class LowVarFilter2NodeModel extends NodeModel {
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected DataTableSpec[] configure(final DataTableSpec[] inSpecs)
             throws InvalidSettingsException {
@@ -205,7 +204,6 @@ public class LowVarFilter2NodeModel extends NodeModel {
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected void saveSettingsTo(final NodeSettingsWO settings) {
         if (m_conf == null) {
@@ -232,7 +230,6 @@ public class LowVarFilter2NodeModel extends NodeModel {
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("unchecked")
     @Override
     protected void validateSettings(final NodeSettingsRO settings)
             throws InvalidSettingsException {

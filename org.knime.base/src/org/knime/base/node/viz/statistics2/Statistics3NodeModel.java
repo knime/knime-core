@@ -141,7 +141,7 @@ public class Statistics3NodeModel extends NodeModel {
      */
     @Override
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
-            final ExecutionContext exec) throws Exception {
+            final ExecutionContext exec) throws CanceledExecutionException {
         m_statTable = new Statistics3Table(
                 inData[0], m_computeMedian.getBooleanValue(),
                 numOfNominalValuesOutput(), m_nominalFilter.getIncludeList(),

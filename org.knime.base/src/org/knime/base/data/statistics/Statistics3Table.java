@@ -64,7 +64,6 @@ import java.util.Set;
 
 import org.apache.commons.math.stat.descriptive.moment.Mean;
 import org.apache.commons.math.stat.descriptive.moment.Variance;
-import org.knime.base.data.sort.SortedTable;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -75,7 +74,6 @@ import org.knime.core.data.DataType;
 import org.knime.core.data.DoubleValue;
 import org.knime.core.data.RowIterator;
 import org.knime.core.data.RowKey;
-import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.container.DataContainer;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DefaultTable;
@@ -353,8 +351,8 @@ public class Statistics3Table {
                 if (m_varianceValues[j] < 0.0 && m_varianceValues[j] > -1.0E8) {
                     m_varianceValues[j] = 0.0;
                 }
-                assert m_varianceValues[j] >= 0.0 : "Variance can not be negative (column \""
-                    + m_spec.getColumnSpec(j).getName() + "\": " + m_varianceValues[j];
+                assert Double.isNaN(m_varianceValues[j]) || m_varianceValues[j] >= 0.0 : "Variance can not be "
+                    + "negative (column \"" + m_spec.getColumnSpec(j).getName() + "\": " + m_varianceValues[j] + ")";
             }
         }
 
@@ -382,49 +380,11 @@ public class Statistics3Table {
 
         // compute median values if desired
         if (computeMedian) {
-            //TODO rework
-            for (int c : colIndices) {
-                exec.setMessage("Calculating median value for column \"" + m_spec.getColumnSpec(c).getName() + "\"...");
-                if (m_spec.getColumnSpec(c).getType().isCompatible(DoubleValue.class)) {
-                    ColumnRearranger colre = new ColumnRearranger(m_spec);
-                    colre.keepOnly(c);
-                    ExecutionContext subexec = exec.createSubExecutionContext(rowCnt / diffProgress);
-                    BufferedDataTable singleColumn =
-                        exec.createColumnRearrangeTable(table, colre, exec.createSilentSubProgress(0.0));
-                    SortedTable stable =
-                        new SortedTable(singleColumn, Arrays.asList(m_spec.getColumnSpec(c).getName()),
-                            new boolean[]{false}, false, subexec);
-                    int size = stable.getRowCount() - m_missingValueCnt[c];
-                    if (size % 2 == 0) {
-                        size = size / 2;
-                        double d1 = Double.NaN, d2 = Double.NaN;
-                        for (DataRow row : stable) {
-                            exec.checkCanceled();
-                            if (size == 1) {
-                                DataCell cell = row.getCell(0);
-                                d1 = ((DoubleValue)cell).getDoubleValue();
-                            }
-                            if (size == 0) {
-                                DataCell cell = row.getCell(0);
-                                d2 = ((DoubleValue)cell).getDoubleValue();
-                                break;
-                            }
-                            size--;
-                        }
-                        m_median[c] = (d1 + d2) / 2.0;
-                    } else {
-                        size = (size - 1) / 2;
-                        for (DataRow row : stable) {
-                            exec.checkCanceled();
-                            if (size-- == 0) {
-                                DataCell cell = row.getCell(0);
-                                m_median[c] = ((DoubleValue)cell).getDoubleValue();
-                                break;
-                            }
-                        }
-                    }
-                    subexec.setProgress(1.0);
-                }
+            final MedianTable medianTable = new MedianTable(table, colIndices);
+            medianTable.setInMemory(table.getRowCount() < Runtime.getRuntime().freeMemory() / Double.SIZE / 2);
+            double[] medianValues = medianTable.medianValues(exec);
+            for (int i = 0; i < colIndices.length; ++i) {
+                m_median[colIndices[i]] = medianValues[i];
             }
         }
     }

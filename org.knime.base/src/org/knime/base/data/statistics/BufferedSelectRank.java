@@ -60,48 +60,41 @@ import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.NodeLogger;
 
 /**
+ * A {@link BufferedDataTable}-based {@link SelectRank} implementation.
  *
  * @author Gabor Bakos
  * @since 2.8
  */
-public class BufferedSelectRank extends SelectRank<BufferedDataContainer, BufferedDataTable> {
+class BufferedSelectRank extends SelectRank<BufferedDataContainer, BufferedDataTable> {
 
     /** Used to create temporary and final output table. */
     private ExecutionContext m_execContext;
 
     /**
-     * @param inputTable
-     * @param inclList
+     * @param inputTable The input table.
+     * @param inclList the selected column names.
+     * @param k The indices to select for each included columns. This should be rectangular, the second dimension is for
+     *            the column indices (the position within {@code inclList}).
      */
     public BufferedSelectRank(final BufferedDataTable inputTable, final Collection<String> inclList, final int[][] k) {
-        super(inputTable, inputTable.getRowCount(), inclList,  k);
-        // TODO Auto-generated constructor stub
+        super(inputTable, inputTable.getRowCount(), inclList, k);
     }
 
     /**
-     * @param inputTable
-     * @param inclList
-     * @param sortMissingsToEnd
-     */
-    public BufferedSelectRank(final BufferedDataTable inputTable, final Collection<String> inclList,
-        final boolean sortMissingsToEnd, final int[][] k) {
-        super(inputTable, inputTable.getRowCount(), inclList, sortMissingsToEnd, k);
-        // TODO Auto-generated constructor stub
-    }
-
-    /** Sorts the table passed in the constructor according to the settings
-     * and returns the sorted output table.
+     * Selects values for indices from the table passed in the constructor according to the settings and returns the
+     * values in the output table.
+     *
      * @param ctx To report progress & create temporary and final output tables.
-     * @return The sorted output.
-     * @throws CanceledExecutionException If canceled. */
-    public BufferedDataTable sort(final ExecutionContext ctx)
-            throws CanceledExecutionException {
+     * @return The selected values.
+     * @throws CanceledExecutionException If canceled.
+     */
+    public BufferedDataTable select(final ExecutionContext ctx) throws CanceledExecutionException {
         if (ctx == null) {
             throw new NullPointerException("Argument must not be null.");
         }
         m_execContext = ctx;
         try {
-            return (BufferedDataTable)super.sortInternal(ctx);
+            return (BufferedDataTable)super.selectInternal(ctx);
         } finally {
             m_execContext = null;
         }
@@ -112,8 +105,7 @@ public class BufferedSelectRank extends SelectRank<BufferedDataContainer, Buffer
      */
     @Override
     BufferedDataContainer createDataContainer(final DataTableSpec spec, final boolean forceOnDisk) {
-        return m_execContext.createDataContainer(
-            spec, true, forceOnDisk ? 0 : -1);
+        return m_execContext.createDataContainer(spec, true, forceOnDisk ? 0 : -1);
     }
 
     /**
@@ -122,13 +114,11 @@ public class BufferedSelectRank extends SelectRank<BufferedDataContainer, Buffer
     @Override
     void clearTable(final DataTable table) {
         if (!(table instanceof BufferedDataTable)) {
-            NodeLogger.getLogger(getClass()).warn("Can't clear table instance "
-                    + "of \"" + table.getClass().getSimpleName()
-                    + "\" - expected \""
+            NodeLogger.getLogger(getClass()).warn(
+                "Can't clear table instance " + "of \"" + table.getClass().getSimpleName() + "\" - expected \""
                     + BufferedDataTable.class.getSimpleName() + "\"");
         } else {
             m_execContext.clearTable((BufferedDataTable)table);
         }
     }
-
 }

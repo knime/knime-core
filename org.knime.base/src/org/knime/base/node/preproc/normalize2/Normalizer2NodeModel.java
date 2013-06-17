@@ -52,13 +52,14 @@ package org.knime.base.node.preproc.normalize2;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Vector;
+import java.util.List;
 
 import org.knime.base.data.filter.column.FilterColumnTable;
 import org.knime.base.data.normalize.AffineTransConfiguration;
 import org.knime.base.data.normalize.AffineTransTable;
-import org.knime.base.data.normalize.Normalizer;
+import org.knime.base.data.normalize.Normalizer2;
 import org.knime.base.data.normalize.NormalizerPortObject;
 import org.knime.core.data.DataColumnDomainCreator;
 import org.knime.core.data.DataColumnSpec;
@@ -84,7 +85,7 @@ import org.knime.core.node.port.pmml.PMMLPortObject;
 /**
  * The NormalizeNodeModel uses the Normalizer to normalize the input DataTable.
  *
- * @see Normalizer
+ * @see Normalizer2
  * @author Nicolas Cebron, University of Konstanz
  */
 public class Normalizer2NodeModel extends NodeModel {
@@ -174,7 +175,7 @@ public class Normalizer2NodeModel extends NodeModel {
         DataTableSpec modelSpec =
             FilterColumnTable.createFilterTableSpec(spec, m_columns);
         return new PortObjectSpec[]{
-                Normalizer.generateNewSpec(spec, m_columns), modelSpec};
+                Normalizer2.generateNewSpec(spec, m_columns), modelSpec};
     }
 
     /**
@@ -261,7 +262,7 @@ public class Normalizer2NodeModel extends NodeModel {
      */
     static final String[] findAllNumericColumns(final DataTableSpec spec) {
         int nrcols = spec.getNumColumns();
-        Vector<String> poscolumns = new Vector<String>();
+        List<String> poscolumns = new ArrayList<String>();
         for (int i = 0; i < nrcols; i++) {
             if (spec.getColumnSpec(i).getType().isCompatible(
                     DoubleValue.class)) {
@@ -300,10 +301,10 @@ public class Normalizer2NodeModel extends NodeModel {
         DataTableSpec inSpec = inTable.getSpec();
         // extract selected numeric columns
         updateNumericColumnSelection(inSpec);
-        Normalizer ntable = new Normalizer(inTable, m_columns);
+        Normalizer2 ntable = new Normalizer2(inTable, m_columns);
 
         int rowcount = inTable.getRowCount();
-        ExecutionMonitor prepareExec = exec.createSubProgress(0.3);
+        ExecutionContext prepareExec = exec.createSubExecutionContext(0.3);
         AffineTransTable outTable;
         boolean fixDomainBounds = false;
         switch (m_mode) {
@@ -457,7 +458,7 @@ public class Normalizer2NodeModel extends NodeModel {
 
      * @author Dominik Morent, KNIME.com, Zurich, Switzerland
      */
-    protected final class CalculationResult {
+    protected static final class CalculationResult {
         private final BufferedDataTable m_dataTable;
         private final DataTableSpec m_spec;
         private final AffineTransConfiguration m_config;
@@ -498,7 +499,7 @@ public class Normalizer2NodeModel extends NodeModel {
      * @param columns the columns to set
      */
     protected void setColumns(final String[] columns) {
-        m_columns = columns;
+        m_columns = columns.clone();
     }
 
     /**

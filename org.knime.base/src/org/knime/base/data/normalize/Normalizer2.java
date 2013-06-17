@@ -50,9 +50,10 @@
  */
 package org.knime.base.data.normalize;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Vector;
+import java.util.List;
 
 import org.knime.base.data.statistics.Statistics3Table;
 import org.knime.base.node.util.DoubleFormat;
@@ -83,6 +84,11 @@ import org.knime.core.node.NodeLogger;
  * @since 2.8
  */
 public final class Normalizer2 {
+    /**
+     *
+     */
+    private static final int DECIMAL_BASE = 10;
+
     private static final NodeLogger LOGGER = NodeLogger.getLogger(Normalizer2.class);
 
     /**
@@ -106,25 +112,6 @@ public final class Normalizer2 {
      * @see DataTable#getDataTableSpec()
      */
     public Normalizer2(final BufferedDataTable table, final String[] columns) {
-        //        this(new WrappedTable(table), columns);
-        //    }
-        //
-        //    /**
-        //     * Prepares a Normalizer to process the StatisticsTable
-        //     * <code>table</code> (actually no traversing is done here).
-        //
-        //     * @param table table to be wrapped
-        //     * @param columns to work on
-        //     * @see DataTable#getDataTableSpec()
-        //     */
-        ////    public Normalizer(final Statistics3Table table, final String[] columns) {
-        ////        this(new WrappedTable(table), columns);
-        ////    }
-        //
-        //    /**
-        //     * Internal delegator.
-        //     */
-        //    private Normalizer(final KnowsRowCountTable table, final String[] columns) {
         m_table = table;
         DataTableSpec spec = table.getDataTableSpec();
         m_colindices = findNumericalColumns(spec, columns);
@@ -160,8 +147,7 @@ public final class Normalizer2 {
                 colspecs[i] = colspec;
             }
         }
-        DataTableSpec out = new DataTableSpec(colspecs);
-        return out;
+        return new DataTableSpec(colspecs);
     }
 
     /**
@@ -204,18 +190,12 @@ public final class Normalizer2 {
      */
     public AffineTransTable doMinMaxNorm(final double newmax, final double newmin, final ExecutionContext exec)
         throws CanceledExecutionException {
-        //ExecutionMonitor statisticsExec = exec.createSubProgress(.5);
         ExecutionContext statisticsExec = exec.createSilentSubExecutionContext(.5);
         Statistics3Table st;
-        //        if (m_table instanceof Statistics3Table) {
-        //            st = (Statistics3Table)m_table;
-        //        } else {
-        st =
-            new Statistics3Table(m_table, false, 0, Collections.<String> emptyList(), statisticsExec);
-        //        }
+        st = new Statistics3Table(m_table, false, 0, Collections.<String> emptyList(), statisticsExec);
         checkForMissVals(st);
 
-        DataTableSpec spec = m_table.getDataTableSpec();//st.getDataTableSpec();
+        DataTableSpec spec = m_table.getDataTableSpec();
         double[] max = st.getMax();
         double[] min = st.getMin();
         final double[] scales = new double[m_colindices.length];
@@ -226,8 +206,8 @@ public final class Normalizer2 {
         for (int i = 0; i < transforms.length; i++) {
             DataColumnSpec cSpec = spec.getColumnSpec(m_colindices[i]);
             boolean isDouble = cSpec.getType().isCompatible(DoubleValue.class);
-            if (!isDouble /*|| max[m_colindices[i]].isMissing()*/) {
-                assert (!isDouble /*|| min[m_colindices[i]].isMissing()*/);
+            if (!isDouble) {
+                assert (!isDouble);
                 scales[i] = Double.NaN;
                 transforms[i] = Double.NaN;
                 mins[i] = Double.NaN;
@@ -263,15 +243,9 @@ public final class Normalizer2 {
      * @return the normalized DataTable
      */
     public AffineTransTable doZScoreNorm(final ExecutionContext exec) throws CanceledExecutionException {
-        //ExecutionMonitor statisticsExec = exec.createSubProgress(.5);
         ExecutionContext statisticsExec = exec.createSubExecutionContext(.5);
-        Statistics3Table st;
-        //        if (m_table instanceof Statistics3Table) {
-        //            st = (Statistics3Table)m_table;
-        //        } else {
-        st =
+        final Statistics3Table st =
             new Statistics3Table(m_table, false, 0, Collections.<String> emptyList(), statisticsExec);
-        //        }
         checkForMissVals(st);
         double[] mean = st.getMean();
         double[] stddev = st.getStandardDeviation();
@@ -308,12 +282,7 @@ public final class Normalizer2 {
      * @return the normalized DataTable
      */
     public AffineTransTable doDecimalScaling(final ExecutionContext exec) throws CanceledExecutionException {
-        Statistics3Table st;
-        //        if (m_table instanceof Statistics3Table) {
-        //            st = (Statistics3Table)m_table;
-        //        } else {
-        st = new Statistics3Table(m_table, false, 0, Collections.<String> emptyList(), exec);
-        //        }
+        Statistics3Table st = new Statistics3Table(m_table, false, 0, Collections.<String> emptyList(), exec);
         checkForMissVals(st);
         String[] includes = getNames();
         double[] max = st.getMax();
@@ -328,11 +297,15 @@ public final class Normalizer2 {
             double absMin = Math.abs(min[trueIndex]);
             double maxvalue = absMax > absMin ? absMax : absMin;
             int exp = 0;
+            // Unreported bug fix: when there was an infinite value, it takes infinite time to reach 1 by / 10.
+            if (Double.isInfinite(maxvalue)) {
+                throw new IllegalStateException("Cannot handle infinite values: " + includes[i]);
+            }
             while (Math.abs(maxvalue) > 1) {
-                maxvalue = maxvalue / 10;
+                maxvalue = maxvalue / DECIMAL_BASE;
                 exp++;
             }
-            scales[i] = 1.0 / Math.pow(10, exp);
+            scales[i] = 1.0 / Math.pow(DECIMAL_BASE, exp);
             transforms[i] = 0.0;
             mins[i] = -1.0;
             maxs[i] = 1.0;
@@ -355,7 +328,7 @@ public final class Normalizer2 {
     }
 
     private void checkForMissVals(final Statistics3Table table) {
-        Vector<Integer> missValsColVec = new Vector<Integer>();
+        List<Integer> missValsColVec = new ArrayList<Integer>();
         int[] missingCount = table.getNumberMissingValues();
         for (int index = 0; index < missingCount.length; index++) {
             if (missingCount[index] == table.getRowCount()) {
@@ -374,11 +347,11 @@ public final class Normalizer2 {
         if (missValsColVec.size() > 0) {
             StringBuffer missColsBuffer = new StringBuffer();
             for (Integer i : missValsColVec) {
-                missColsBuffer.append(m_table.getDataTableSpec().getColumnSpec(i).getName() + " ");
+                missColsBuffer.append(m_table.getDataTableSpec().getColumnSpec(i).getName()).append(" ");
             }
             String message = "Ignore column(s) " + missColsBuffer.toString() + "as it/they contain only missing values";
             setErrorMessage(message);
-            Vector<Integer> newColIndices = new Vector<Integer>();
+            List<Integer> newColIndices = new ArrayList<Integer>();
             for (int val : m_colindices) {
                 newColIndices.add(val);
             }

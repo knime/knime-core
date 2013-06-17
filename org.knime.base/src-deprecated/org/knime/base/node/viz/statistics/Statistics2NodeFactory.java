@@ -44,30 +44,33 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   18.04.2005 (cebron): created
  */
 package org.knime.base.node.viz.statistics;
 
+import org.knime.base.node.viz.statistics2.Statistics3NodeFactory;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
  * Factory class for the Statistics Node.
- * 
+ *
  * @author Thomas Gabriel, University of Konstanz
+ * @deprecated Use the {@link Statistics3NodeFactory} instead.
  */
+@Deprecated
 public class Statistics2NodeFactory extends NodeFactory<Statistics2NodeModel> {
-    
+
     /**
      * Empty default constructor.
      */
     public Statistics2NodeFactory() {
         super();
     }
-    
+
     /**
      * This node has no dialog.
      */
@@ -75,7 +78,7 @@ public class Statistics2NodeFactory extends NodeFactory<Statistics2NodeModel> {
     public NodeDialogPane createNodeDialogPane() {
         return new Statistics2NodeDialogPane();
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -83,16 +86,16 @@ public class Statistics2NodeFactory extends NodeFactory<Statistics2NodeModel> {
     public Statistics2NodeModel createNodeModel() {
         return new Statistics2NodeModel();
     }
-    
+
     /**
      * The view offers statistical information on the input table.
      */
     @Override
-    public NodeView<Statistics2NodeModel> createNodeView(final int viewIndex, 
+    public NodeView<Statistics2NodeModel> createNodeView(final int viewIndex,
             final Statistics2NodeModel nodeModel) {
         return new Statistics2NodeView(nodeModel);
     }
-    
+
     /**
      * This node has one view.
      */
@@ -100,7 +103,7 @@ public class Statistics2NodeFactory extends NodeFactory<Statistics2NodeModel> {
     public int getNrNodeViews() {
           return 1;
     }
-    
+
     /**
      * No dialog for this node.
      */

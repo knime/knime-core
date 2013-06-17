@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,22 +44,25 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  * History
  *   19.04.2005 (cebron): created
  */
 package org.knime.base.node.preproc.normalize;
 
+import org.knime.base.node.preproc.normalize2.Normalizer2NodeFactory;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeFactory;
 import org.knime.core.node.NodeView;
 
 /**
  * Factory class for the Normalize Node.
- * 
+ *
  * @author Nicolas Cebron, University of Konstanz
+ * @deprecated Use {@link Normalizer2NodeFactory} instead.
  */
-public class NormalizerNodeFactory 
+@Deprecated
+public class NormalizerNodeFactory
 extends NodeFactory<NormalizerNodeModel> {
     /**
      * {@inheritDoc}

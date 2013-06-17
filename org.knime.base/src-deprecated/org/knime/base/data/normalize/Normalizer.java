@@ -83,7 +83,9 @@ import org.knime.core.node.NodeLogger;
  * {@link org.knime.core.data.def.DoubleCell} columns.
  *
  * @author Nicolas Cebron, University of Konstanz
+ * @deprecated Use {@link Normalizer2} instead.
  */
+@Deprecated
 public final class Normalizer {
     private static final NodeLogger LOGGER = NodeLogger
             .getLogger(Normalizer.class);

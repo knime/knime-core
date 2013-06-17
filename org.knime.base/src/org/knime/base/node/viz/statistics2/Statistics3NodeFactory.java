@@ -69,7 +69,7 @@ public class Statistics3NodeFactory extends NodeFactory<Statistics3NodeModel> {
     }
 
     /**
-     * This node has no dialog.
+     * @return The dialog.
      */
     @Override
     public NodeDialogPane createNodeDialogPane() {
@@ -86,10 +86,11 @@ public class Statistics3NodeFactory extends NodeFactory<Statistics3NodeModel> {
 
     /**
      * The view offers statistical information on the input table.
+     *
+     * @return A {@link Statistics3NodeView}.
      */
     @Override
-    public NodeView<Statistics3NodeModel> createNodeView(final int viewIndex,
-            final Statistics3NodeModel nodeModel) {
+    public NodeView<Statistics3NodeModel> createNodeView(final int viewIndex, final Statistics3NodeModel nodeModel) {
         return new Statistics3NodeView(nodeModel);
     }
 
@@ -98,7 +99,7 @@ public class Statistics3NodeFactory extends NodeFactory<Statistics3NodeModel> {
      */
     @Override
     public int getNrNodeViews() {
-          return 1;
+        return 1;
     }
 
     /**
