@@ -90,7 +90,7 @@ public class DuplicateChecker {
         private long m_count = 0;
 
         public Chunk() throws IOException {
-            m_file = File.createTempFile("KNIME_DuplicateChecker", ".bin");
+            m_file = FileUtil.createTempFile("KNIME_DuplicateChecker", ".bin", false);
             m_out = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(m_file)));
         }
 

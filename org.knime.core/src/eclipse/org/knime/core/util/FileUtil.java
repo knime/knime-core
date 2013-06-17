@@ -808,18 +808,36 @@ public final class FileUtil {
     }
 
     /**
-     * Creates a temp file that is automatically deleted when the JVM is shut down. It creates it in the temp directory
-     * associated with the flow/node.
+     * Creates a temp file in the temp directory associated with the flow/node.
      *
      * @param prefix see {@link File#createTempFile(String, String)}
      * @param suffix see {@link File#createTempFile(String, String)}
+     * @param deleteOnExit if true, the file is deleted when the JVM shuts down.
      * @return see {@link File#createTempFile(String, String)}
      * @throws IOException see {@link File#createTempFile(String, String)}
+     * @since 2.8
+     */
+    public static synchronized File
+        createTempFile(final String prefix, final String suffix, final boolean deleteOnExit) throws IOException {
+        File tmpFile = File.createTempFile(prefix, suffix, getTmpDir());
+        if (deleteOnExit) {
+            TEMP_FILES.add(tmpFile);
+        }
+        return tmpFile;
+    }
+
+    /**
+     * Creates a temp file that is deleted when the JVM is shut down. See
+     * {@link #createTempFile(String, String, boolean)}.
+     *
+     * @param prefix see {@link #createTempFile(String, String)}
+     * @param suffix see {@link #createTempFile(String, String)}
+     * @return the created temp file
+     * @throws IOException see {@link #createTempFile(String, String)}
+     * @since 2.8
      */
     public static synchronized File createTempFile(final String prefix, final String suffix) throws IOException {
-        File tmpFile = File.createTempFile(prefix, suffix, getTmpDir());
-        TEMP_FILES.add(tmpFile);
-        return tmpFile;
+        return createTempFile(prefix, suffix, true);
     }
 
     /**

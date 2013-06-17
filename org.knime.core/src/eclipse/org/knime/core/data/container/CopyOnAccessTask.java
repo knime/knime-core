@@ -181,8 +181,7 @@ final class CopyOnAccessTask {
         File fileStoreDir = null;
         // we only need to read from this file while being in
         // this method; temp file is deleted later on.
-        File metaTempFile = File.createTempFile("meta", ".xml");
-        metaTempFile.deleteOnExit();
+        File metaTempFile = FileUtil.createTempFile("meta", ".xml", true);
         DataTableSpec spec = m_spec;
         boolean isSpecFound = m_spec != null;
         boolean isDataFound = false;
