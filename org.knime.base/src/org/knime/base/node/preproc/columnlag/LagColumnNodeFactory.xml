@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE knimeNode PUBLIC "-//UNIKN//DTD KNIME Node 2.0//EN" "http://www.knime.org/Node.dtd">
+<knimeNode icon="lag_column.png" type="Manipulator">
+    <name>Lag Column</name>
+
+    <shortDescription>
+    Copies values from preceding rows into the current row.
+	</shortDescription>
+
+	<fullDescription>
+		<intro>
+			Copies values from preceding rows into the current row.
+		</intro>
+	</fullDescription>
+
+	<ports>
+		<inPort index="0" name="Input">Input data</inPort>
+		<outPort index="0" name="Output">Input data with additional columns
+			copying the values from preceding rows.
+		</outPort>
+	</ports>
+</knimeNode>

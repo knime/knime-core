@@ -1359,6 +1359,13 @@
             id="org.knime.base.node.preproc.columnresorter.ColumnResorterNodeFactory">
       </node>
       <node
+            category-path="/manipulation/column/column-transform"
+            expert-flag="false"
+            factory-class="org.knime.base.node.preproc.columnlag.LagColumnNodeFactory"
+            id="org.knime.base.node.preproc.columnlag.LagColumnNodeFactory"
+            after="org.knime.base.node.preproc.columnresorter.ColumnResorterNodeFactory">
+      </node>
+      <node
             category-path="/misc"
             expert-flag="false"
             factory-class="org.knime.base.node.util.extracttabledimension.ExtractTableDimensionNodeFactory"
