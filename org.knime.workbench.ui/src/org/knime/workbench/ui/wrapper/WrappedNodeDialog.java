@@ -53,8 +53,6 @@ package org.knime.workbench.ui.wrapper;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -88,7 +86,6 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.ISharedImages;
 import org.eclipse.ui.PlatformUI;
 import org.knime.core.node.InvalidSettingsException;
-import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NotConfigurableException;
@@ -118,11 +115,6 @@ public class WrappedNodeDialog extends Dialog {
 
     private final NodeLogger m_logger;
 
-    private final AtomicBoolean m_dialogSizeComputed = new AtomicBoolean();
-
-    private static final boolean enableMacOSXWorkaround = Boolean.getBoolean(
-            KNIMEConstants.PROPERTY_MACOSX_DIALOG_WORKAROUND);
-
     /**
      * Creates the (application modal) dialog for a given node.
      *
@@ -142,33 +134,8 @@ public class WrappedNodeDialog extends Dialog {
         super(parentShell);
         this.setShellStyle(SWT.PRIMARY_MODAL | SWT.SHELL_TRIM);
         m_nodeContainer = nodeContainer;
-        NodeContext.pushContext(m_nodeContainer);
-        try {
-            m_dialogPane = m_nodeContainer.getDialogPaneWithSettings();
-            m_logger = NodeLogger.getLogger(m_nodeContainer.getNameWithID());
-
-            if (enableMacOSXWorkaround) {
-                // get underlying panel and do layout it
-                final JPanel panel = m_dialogPane.getPanel();
-                final Display display = Display.getCurrent();
-                SwingUtilities.invokeLater(new Runnable() {
-                    @Override
-                    public void run() {
-                        panel.doLayout();
-                        m_dialogSizeComputed.set(true);
-                        display.asyncExec(new Runnable() {
-                            @Override
-                            public void run() {
-                                // deliberately empty, this is only to wake up a
-                                // potentially waiting SWT-thread in getInitialSize
-                            }
-                        });
-                    }
-                });
-            }
-        } finally {
-            NodeContext.removeLastContext();
-        }
+        m_dialogPane = m_nodeContainer.getDialogPaneWithSettings();
+        m_logger = NodeLogger.getLogger(m_nodeContainer.getNameWithID());
     }
 
     /**
@@ -689,27 +656,12 @@ public class WrappedNodeDialog extends Dialog {
     @Override
     protected Point getInitialSize() {
         final JPanel panel = m_dialogPane.getPanel();
-        if (enableMacOSXWorkaround) {
-            // this and the code in the constructor is a workaround
-            // for the nasty deadlock on MacOSX
-            // see http://bimbug.inf.uni-konstanz.de/show_bug.cgi?id=3151
-            while (!m_dialogSizeComputed.get()) {
-                Display.getCurrent().sleep();
+        ViewUtils.invokeAndWaitInEDT(new Runnable() {
+            @Override
+            public void run() {
+                panel.doLayout();
             }
-        } else {
-            try {
-                SwingUtilities.invokeAndWait(new Runnable() {
-                    @Override
-                    public void run() {
-                        panel.doLayout();
-                    }
-                });
-            } catch (InterruptedException ex) {
-                m_logger.info("Thread interrupted", ex);
-            } catch (InvocationTargetException ex) {
-                m_logger.error("Error while determining dialog sizes", ex);
-            }
-        }
+        });
 
         // underlying pane sizes
         int width = panel.getWidth();

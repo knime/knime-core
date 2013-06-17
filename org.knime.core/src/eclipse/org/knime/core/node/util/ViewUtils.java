@@ -52,6 +52,7 @@ package org.knime.core.node.util;
 
 import java.awt.FlowLayout;
 import java.lang.reflect.InvocationTargetException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -61,7 +62,9 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import org.eclipse.swt.widgets.Display;
 import org.knime.core.data.DataValue;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContext;
 
@@ -71,6 +74,15 @@ import org.knime.core.node.workflow.NodeContext;
  * @author ohl, University of Konstanz
  */
 public final class ViewUtils {
+    private static final boolean enableMacOSXWorkaround = Boolean.getBoolean(
+        KNIMEConstants.PROPERTY_MACOSX_DIALOG_WORKAROUND);
+
+    private static final Runnable EMPTY_RUNNABLE = new Runnable() {
+        @Override
+        public void run() {
+        }
+    };
+
 
     private ViewUtils() {
 
@@ -97,8 +109,38 @@ public final class ViewUtils {
             runMe.run();
         } else {
             try {
-                // otherwise queue into event dispatch thread
-                SwingUtilities.invokeAndWait(getNodeContextWrapper(runMe));
+                if (enableMacOSXWorkaround) {
+                    final Runnable nodeContextRunnable = getNodeContextWrapper(runMe);
+                    final Display display = Display.getCurrent();
+                    if (display == null) {
+                        // not the main thread, safe to use invokeAndWait directly
+                        SwingUtilities.invokeLater(nodeContextRunnable);
+                    } else {
+                        // we are in the main thread which is the GUI thread under MacOSX
+                        // we must not block here (i.e. use invokeAndWait) but keep the event loop
+                        // running
+                        final AtomicBoolean swingRunnableFinished = new AtomicBoolean();
+
+                        Runnable lockedRunnable = new Runnable() {
+                            @Override
+                            public void run() {
+                                nodeContextRunnable.run();
+                                swingRunnableFinished.set(true);
+                                // this call is to wake up the main thread from its "sleep" below
+                                display.asyncExec(EMPTY_RUNNABLE);
+                            }
+                        };
+                        SwingUtilities.invokeLater(lockedRunnable);
+                        while (!swingRunnableFinished.get()) {
+                            if (!display.readAndDispatch()) {
+                                display.sleep();
+                            }
+                        }
+                    }
+                } else {
+                    // otherwise queue into event dispatch thread
+                    SwingUtilities.invokeAndWait(getNodeContextWrapper(runMe));
+                }
             } catch (InvocationTargetException ite) {
                 Throwable c = ite.getCause();
                 if (c == null) {
