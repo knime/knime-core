@@ -114,7 +114,7 @@ public final class ViewUtils {
                     final Display display = Display.getCurrent();
                     if (display == null) {
                         // not the main thread, safe to use invokeAndWait directly
-                        SwingUtilities.invokeLater(nodeContextRunnable);
+                        SwingUtilities.invokeAndWait(nodeContextRunnable);
                     } else {
                         // we are in the main thread which is the GUI thread under MacOSX
                         // we must not block here (i.e. use invokeAndWait) but keep the event loop
