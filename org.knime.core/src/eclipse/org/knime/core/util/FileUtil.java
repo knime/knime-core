@@ -778,16 +778,7 @@ public final class FileUtil {
     public static synchronized File createTempDir(final String prefix, final File dir) throws IOException {
         File rootDir = dir;
         if (rootDir == null) {
-            NodeContext nodeContext = NodeContext.getContext();
-            if (nodeContext != null) {
-                WorkflowContext workflowContext = nodeContext.getWorkflowManager().getContext();
-                if (workflowContext != null) {
-                    rootDir = workflowContext.getTempLocation();
-                }
-            }
-            if (rootDir == null) {
-                rootDir = new File(KNIMEConstants.getKNIMETempDir());
-            }
+            rootDir = getTmpDir();
         }
         File tempDir;
         do {
@@ -800,6 +791,36 @@ public final class FileUtil {
         return tempDir;
     }
 
+    /** Reads the current temp dir from the workflow context or returns the standard tmp dir, if not set. */
+    private static File getTmpDir() {
+        File rootDir = null;
+        NodeContext nodeContext = NodeContext.getContext();
+        if (nodeContext != null) {
+            WorkflowContext workflowContext = nodeContext.getWorkflowManager().getContext();
+            if (workflowContext != null) {
+                rootDir = workflowContext.getTempLocation();
+            }
+        }
+        if (rootDir == null) {
+            rootDir = new File(KNIMEConstants.getKNIMETempDir());
+        }
+        return rootDir;
+    }
+
+    /**
+     * Creates a temp file that is automatically deleted when the JVM is shut down. It creates it in the temp directory
+     * associated with the flow/node.
+     *
+     * @param prefix see {@link File#createTempFile(String, String)}
+     * @param suffix see {@link File#createTempFile(String, String)}
+     * @return see {@link File#createTempFile(String, String)}
+     * @throws IOException see {@link File#createTempFile(String, String)}
+     */
+    public static synchronized File createTempFile(final String prefix, final String suffix) throws IOException {
+        File tmpFile = File.createTempFile(prefix, suffix, getTmpDir());
+        TEMP_FILES.add(tmpFile);
+        return tmpFile;
+    }
 
     /**
      * Sets the permissions on a given file or directory. If a directory is
