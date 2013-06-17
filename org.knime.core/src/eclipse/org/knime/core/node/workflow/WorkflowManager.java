@@ -4411,9 +4411,13 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             }
             m_wfmListeners.clear();
             if (m_tmpDir != null) {
-                // TODO: Do this in the background
                 // delete the flow temp dir that we created
-                FileUtils.deleteQuietly(m_tmpDir);
+                KNIMEConstants.GLOBAL_THREAD_POOL.enqueue(new Runnable() {
+                    @Override
+                    public void run() {
+                        FileUtils.deleteQuietly(m_tmpDir);
+                    }
+                });
             }
             super.performShutdown();
         }
