@@ -58,6 +58,7 @@ import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeModel;
 import org.knime.core.node.NodeSettingsRO;
@@ -67,6 +68,8 @@ import org.knime.core.node.port.PortObjectSpec;
 import org.knime.core.node.port.PortType;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObject;
 import org.knime.core.node.port.flowvariable.FlowVariablePortObjectSpec;
+import org.knime.core.node.workflow.NodeContext;
+import org.knime.core.node.workflow.WorkflowContext;
 import org.knime.core.util.FileUtil;
 
 /**
@@ -129,9 +132,21 @@ final class CreateTempDirectoryNodeModel extends NodeModel {
     }
 
     private File computeFileName(final UUID id) {
+        File rootDir = null;
+        // get the flow's tmp dir from its context
+        NodeContext nodeContext = NodeContext.getContext();
+        if (nodeContext != null) {
+            WorkflowContext workflowContext = nodeContext.getWorkflowManager().getContext();
+            if (workflowContext != null) {
+                rootDir = workflowContext.getTempLocation();
+            }
+        }
+        if (rootDir == null) {
+            // use the standard tmp dir then.
+            rootDir = new File(KNIMEConstants.getKNIMETempDir());
+        }
         String baseName = m_configuration.getBaseName();
-        return new File(new File(System.getProperty("java.io.tmpdir")),
-                baseName + id.toString());
+        return new File(rootDir, baseName + id.toString());
     }
 
     /** {@inheritDoc} */
