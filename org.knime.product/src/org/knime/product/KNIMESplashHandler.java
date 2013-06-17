@@ -323,7 +323,7 @@ public class KNIMESplashHandler extends BasicSplashHandler {
              */
             int y = 195;
             if (Platform.OS_MACOSX.equals(Platform.getOS())) {
-                y = 110;
+                y = 120;
             }
             m_installedExtensions.setBounds(SPLASH_SCREEN_BEVEL, y, 200, 20);
         }
