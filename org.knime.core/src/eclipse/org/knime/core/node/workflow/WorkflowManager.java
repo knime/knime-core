@@ -324,7 +324,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             m_workflowMutex = new Object();
             m_workflowContext = context;
             if (context != null) {
-                createWorkflowTempDirectory(context);
+                createAndSetWorkflowTempDirectory(context);
             }
         } else {
             // otherwise we may have incoming and/or outgoing dependencies...
@@ -374,7 +374,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 workflowContext = new WorkflowContext.Factory(getNodeContainerDirectory().getFile()).createContext();
             }
             if (workflowContext != null) {
-                createWorkflowTempDirectory(workflowContext);
+                createAndSetWorkflowTempDirectory(workflowContext);
             }
         } else {
             workflowContext = null;
@@ -6342,7 +6342,6 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
             CanceledExecutionException, UnsupportedWorkflowVersionException,
             LockFailedException {
         WorkflowLoadResult result = ROOT.load(directory, exec, loadHelper, false);
-        result.getWorkflowManager().createWorkflowTempDirectory(result.getWorkflowManager().m_workflowContext);
         return result;
     }
 
@@ -6350,21 +6349,20 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * Creates a flow private sub dir in the temp folder. Sets it in the context. FileUtil#createTempDir picks it up
      * from there. If the temp file location in the context is already set, this method does nothing.
      * @param context to set the new temp dir location in
+     * @throws IllegalStateException if temp folder can't be created.
      */
-    private void createWorkflowTempDirectory(final WorkflowContext context) {
+    private void createAndSetWorkflowTempDirectory(final WorkflowContext context) {
         if (context.getTempLocation() != null) {
             return;
         }
         File rootDir = new File(KNIMEConstants.getKNIMETempDir());
         File tempDir;
-        do {
-            tempDir = new File(rootDir, getName() + "_TEMP_" + System.currentTimeMillis());
-        } while (tempDir.exists());
-        if (!tempDir.mkdirs()) {
-            LOGGER.error("Cannot create temporary directory '" + tempDir.getAbsolutePath() + "'.");
-            tempDir = null;
-            // keeping null in the context causes FileUt
+        try {
+            tempDir = FileUtil.createTempDir(FileUtil.getValidFileName(getName(), 20) + "_TEMP_", rootDir);
+        } catch (IOException e) {
+            throw new IllegalStateException("Can't create temp folder in " + rootDir.getAbsolutePath(), e);
         }
+        context.setTempLocation(tempDir);
         // if we created the temp dir we must clean it up when disposing of the workflow
         m_tmpDir = tempDir;
     }

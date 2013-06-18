@@ -840,6 +840,22 @@ public final class FileUtil {
         return createTempFile(prefix, suffix, true);
     }
 
+    /** For some suggested name the returned string can be used to create a file. All unsupported characters are
+     * replaced by '_'. Used when a workflow is saved to derive the folder name for a node. The returned string
+     * may change between version (as we allow more special characters).
+     * @param strWithWeirdChars Some string (not null, length > 0)
+     * @param maxLength If name should be truncated, specify some value > 0 (<= 0 means no truncation)
+     * @return the name
+     * @since 2.8
+     */
+    public static String getValidFileName(final String strWithWeirdChars, final int maxLength) {
+        String result = strWithWeirdChars.replaceAll("[^a-zA-Z0-9 ]", "_");
+        if (maxLength > 0 && result.length() > maxLength) {
+            result = result.substring(0, maxLength).trim();
+        }
+        return result;
+    }
+
     /**
      * Sets the permissions on a given file or directory. If a directory is
      * specified it recursively sets the permissions on it and all contained
