@@ -1342,7 +1342,7 @@ public class DataContainer implements RowAppender {
         private final NodeContext m_context;
 
         /** @param cont The outer container.
-         * @param context TODO*/
+         * @param context owner node information, if any. */
         ASyncWriteCallable(final DataContainer cont, final NodeContext context) {
             m_context = context;
             m_containerRef = new WeakReference<DataContainer>(cont);
