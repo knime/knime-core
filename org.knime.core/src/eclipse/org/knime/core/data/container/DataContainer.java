@@ -105,6 +105,7 @@ import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsWO;
 import org.knime.core.util.DuplicateChecker;
 import org.knime.core.util.DuplicateKeyException;
+import org.knime.core.util.FileUtil;
 
 
 /**
@@ -1303,9 +1304,6 @@ public class DataContainer implements RowAppender {
     private static final SimpleDateFormat DATE_FORMAT =
         new SimpleDateFormat("yyyyMMdd");
 
-    /** The temp folder (see @link {@link KNIMEConstants#getKNIMETempDir()}. */
-    static final File TEMP_DIRECTORY = new File(KNIMEConstants.getKNIMETempDir());
-
     /** Creates a temp file called "knime_container_<i>date</i>_xxxx.zip" and
      * marks it for deletion upon exit. This method is used to init the file
      * when the data container flushes to disk. It is also used when the nodes
@@ -1320,7 +1318,7 @@ public class DataContainer implements RowAppender {
         }
         String fileName = "knime_container_" + date + "_";
         String suffix = ".bin.gz";
-        File f = File.createTempFile(fileName, suffix, TEMP_DIRECTORY);
+        File f = FileUtil.createTempFile(fileName, suffix);
         f.deleteOnExit();
         return f;
     }

@@ -654,7 +654,7 @@ class Buffer implements KNIMEStreamConstants {
         ensureTempFileExists();
         int result = m_list.size();
         if (m_outStream == null) {
-            Buffer.onFileCreated();
+            Buffer.onFileCreated(m_binFile);
             m_outStream = initOutFile(new BufferedOutputStream(new FileOutputStream(m_binFile)));
             for (BlobSupportDataRow rowInList : m_list) {
                 writeRow(rowInList, m_outStream);
@@ -1396,7 +1396,7 @@ class Buffer implements KNIMEStreamConstants {
                 return;
             }
         }
-        Buffer.onFileCreated();
+        Buffer.onFileCreated(outFile);
         OutputStream out = new BufferedOutputStream(new FileOutputStream(outFile));
         if (isToCompress) {
             out = new GZIPOutputStream(out);
@@ -1871,15 +1871,16 @@ class Buffer implements KNIMEStreamConstants {
      * {@link #MAX_FILES_TO_CREATE_BEFORE_GC} files the garbage collector. This fixes an unreported problem on windows,
      * where (although the file reference is null) there seems to be a hidden file lock, which yields a
      * "not enough system resources to perform operation" error.
+     * @param file TODO
      *
      * @throws IOException If there is not enough space left on the partition of the temp folder
      */
-    private static void onFileCreated() throws IOException {
+    private static void onFileCreated(final File file) throws IOException {
         int count = FILES_CREATED_COUNTER.incrementAndGet();
-        long freeSpace = DataContainer.TEMP_DIRECTORY.getUsableSpace();
+        long freeSpace = file.getUsableSpace();
         long minSpace = DataContainer.MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB * (1024L * 1024L);
         if (freeSpace < minSpace) {
-            throw new IOException("The partition of the temp directory \"" + DataContainer.TEMP_DIRECTORY
+            throw new IOException("The partition of the temp file \"" + file.getAbsolutePath()
                     + "\" is too low on disc space (" + freeSpace / (1024 * 1024) + "MB available but at least "
                     + DataContainer.MIN_FREE_DISC_SPACE_IN_TEMP_IN_MB + "MB are required). "
                     + " You can tweak the limit by changing the \""
