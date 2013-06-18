@@ -69,7 +69,10 @@ import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContext;
 
 /**
- * Provides helper methods mostly useful when implementing NodeViews.
+ * Provides helper methods mostly useful when implementing NodeViews.<br />
+ * Especially the methods {@link #runOrInvokeLaterInEDT(Runnable)}, {@link #invokeAndWaitInEDT(Runnable)}, and
+ * {@link #invokeLaterInEDT(Runnable)} are quite useful because they take care of
+ * retaining the {@link NodeContext} if the calling thread.
  *
  * @author ohl, University of Konstanz
  */
@@ -178,6 +181,19 @@ public final class ViewUtils {
         } else {
             SwingUtilities.invokeLater(getNodeContextWrapper(runMe));
         }
+    }
+
+
+    /**
+     * Executes the specified runnable some time in the Swing Event Dispatch
+     * Thread.
+     *
+     * @param runMe the <code>run</code> method of this will be executed.
+     * @see SwingUtilities#invokeLater(Runnable)
+     * @since 2.8
+     */
+    public static void invokeLaterInEDT(final Runnable runMe) {
+        SwingUtilities.invokeLater(getNodeContextWrapper(runMe));
     }
 
     /**

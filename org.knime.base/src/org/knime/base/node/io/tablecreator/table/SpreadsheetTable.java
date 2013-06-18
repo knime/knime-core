@@ -164,7 +164,10 @@ class SpreadsheetTable extends JTable {
                     m_cellEditor.setStopEditingWidthArrows(true);
                     // request focus
                     this.requestFocus();
-                    ViewUtils.runOrInvokeLaterInEDT(new Runnable() {
+
+                    // this call must really be invoked later otherwise we have an endless recursion
+                    // the focus does not seem to the changed until this event handler finished
+                    ViewUtils.invokeLaterInEDT(new Runnable() {
                         @Override
                         public void run() {
                             processKeyBinding(ks, e, condition, pressed);
