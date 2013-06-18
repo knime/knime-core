@@ -100,7 +100,7 @@ public abstract class AbstractNodeView<T extends NodeModel> {
         m_nodeModel = nodeModel;
 
         m_nodeContext = NodeContext.getContext();
-        m_logger.assertLog(m_nodeContext != null, "No node context available in constructor of node dialog pane "
+        m_logger.assertLog(m_nodeContext != null, "No node context available in constructor of node view "
             + getClass().getName());
     }
 
