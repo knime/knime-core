@@ -103,6 +103,7 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.NodeSettings;
 import org.knime.core.node.NodeSettingsWO;
+import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.util.DuplicateChecker;
 import org.knime.core.util.DuplicateKeyException;
 import org.knime.core.util.FileUtil;
@@ -457,8 +458,7 @@ public class DataContainer implements RowAppender {
             m_emptyingRowBuffer = new ArrayList<Object>(ASYNC_CACHE_SIZE);
             m_rowBufferExchanger = new Exchanger<List<Object>>();
             m_writeThrowable = new AtomicReference<Throwable>();
-            m_asyncAddFuture = ASYNC_EXECUTORS.submit(
-                    new ASyncWriteCallable(this));
+            m_asyncAddFuture = ASYNC_EXECUTORS.submit(new ASyncWriteCallable(this, NodeContext.getContext()));
         }
         // figure out for which columns it's worth to keep the list of possible
         // values and min/max ranges
@@ -1339,15 +1339,27 @@ public class DataContainer implements RowAppender {
     private static final class ASyncWriteCallable implements Callable<Void> {
 
         private final WeakReference<DataContainer> m_containerRef;
+        private final NodeContext m_context;
 
-        /** @param cont The outer container. */
-        ASyncWriteCallable(final DataContainer cont) {
+        /** @param cont The outer container.
+         * @param context TODO*/
+        ASyncWriteCallable(final DataContainer cont, final NodeContext context) {
+            m_context = context;
             m_containerRef = new WeakReference<DataContainer>(cont);
         }
 
         /** {@inheritDoc} */
         @Override
         public Void call() throws Exception {
+            NodeContext.pushContext(m_context);
+            try {
+                return callWithContext();
+            } finally {
+                NodeContext.removeLastContext();
+            }
+        }
+
+        private Void callWithContext() throws Exception {
             DataContainer d = m_containerRef.get();
             if (d == null) {
                 // data container was already discarded (no rows added)

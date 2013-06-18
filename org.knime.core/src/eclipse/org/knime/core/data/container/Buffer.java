@@ -654,8 +654,8 @@ class Buffer implements KNIMEStreamConstants {
         ensureTempFileExists();
         int result = m_list.size();
         if (m_outStream == null) {
-            Buffer.onFileCreated(m_binFile);
             m_outStream = initOutFile(new BufferedOutputStream(new FileOutputStream(m_binFile)));
+            Buffer.onFileCreated(m_binFile);
             for (BlobSupportDataRow rowInList : m_list) {
                 writeRow(rowInList, m_outStream);
             }
@@ -1396,8 +1396,8 @@ class Buffer implements KNIMEStreamConstants {
                 return;
             }
         }
-        Buffer.onFileCreated(outFile);
         OutputStream out = new BufferedOutputStream(new FileOutputStream(outFile));
+        Buffer.onFileCreated(outFile);
         if (isToCompress) {
             out = new GZIPOutputStream(out);
             // buffering the gzip stream brings another performance boost
@@ -1871,8 +1871,7 @@ class Buffer implements KNIMEStreamConstants {
      * {@link #MAX_FILES_TO_CREATE_BEFORE_GC} files the garbage collector. This fixes an unreported problem on windows,
      * where (although the file reference is null) there seems to be a hidden file lock, which yields a
      * "not enough system resources to perform operation" error.
-     * @param file TODO
-     *
+     * @param file The existing file
      * @throws IOException If there is not enough space left on the partition of the temp folder
      */
     private static void onFileCreated(final File file) throws IOException {
