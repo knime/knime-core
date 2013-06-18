@@ -286,7 +286,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      * This workflow holds the top level projects. */
     public static final WorkflowManager ROOT =
         new WorkflowManager(null, NodeID.ROOTID,
-                new PortType[0], new PortType[0], true, null);
+                new PortType[0], new PortType[0], true, null, "ROOT");
 
     /** dir where all tmp files of the flow live. Set in the workflow context. If not null, it must be discarded upon
      * workflow disposal. If null, the temp dir location in the context was set from someone else (the server e.g.) and
@@ -302,7 +302,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
      */
     private WorkflowManager(final WorkflowManager parent, final NodeID id,
             final PortType[] inTypes, final PortType[] outTypes,
-            final boolean isProject, final WorkflowContext context) {
+            final boolean isProject, final WorkflowContext context, final String name) {
         super(parent, id);
         m_workflow = new Workflow(this, id);
         m_inPorts = new WorkflowInPort[inTypes.length];
@@ -313,6 +313,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         for (int i = 0; i < outTypes.length; i++) {
             m_outPorts[i] = new WorkflowOutPort(i, outTypes[i]);
         }
+        m_name = name;
         boolean noPorts = m_inPorts.length == 0 && m_outPorts.length == 0;
         assert !isProject || noPorts; // projects must not have ports
         if (isProject) {
@@ -603,10 +604,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         WorkflowManager wfm;
         synchronized (m_workflowMutex) {
             newID = m_workflow.createUniqueID();
-            wfm = new WorkflowManager(this, newID, inPorts, outPorts, isNewProject, context);
-            if (name != null) {
-                wfm.m_name = name;
-            }
+            wfm = new WorkflowManager(this, newID, inPorts, outPorts, isNewProject, context, name);
             addNodeContainer(wfm, true);
             LOGGER.debug("Added new subworkflow " + newID);
         }
