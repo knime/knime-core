@@ -312,33 +312,33 @@ public abstract class NodeView<T extends NodeModel> extends AbstractNodeView<T>
         NodeContext.pushContext(m_nodeContext);
         try {
             onOpen();
+            getNodeModel().addWarningListener(this);
+            callModelChanged();
+            warningChanged(getNodeModel().getWarningMessage());
+            // show frame, make sure to do this in EDT (GUI related task)
+            Runnable runner = new Runnable() {
+                /** {@inheritDoc} */
+                @Override
+                public void run() {
+                    m_frame.setName(title);
+                    setTitle(title);
+                    if (m_comp != null) {
+                        m_comp.invalidate();
+                        m_comp.repaint();
+                    }
+                    m_frame.pack();
+                    m_frame.setLocationRelativeTo(null); // puts in screen center
+                    m_frame.setVisible(true);
+                    m_frame.toFront();
+                }
+            };
+            ViewUtils.runOrInvokeLaterInEDT(runner);
         } catch (Throwable t) {
             getLogger().error("NodeView.onOpen() causes an error "
                     + "on opening node view, reason: " + t.getMessage(), t);
         } finally {
             NodeContext.removeLastContext();
         }
-        getNodeModel().addWarningListener(this);
-        callModelChanged();
-        warningChanged(getNodeModel().getWarningMessage());
-        // show frame, make sure to do this in EDT (GUI related task)
-        Runnable runner = new Runnable() {
-            /** {@inheritDoc} */
-            @Override
-            public void run() {
-                m_frame.setName(title);
-                setTitle(title);
-                if (m_comp != null) {
-                    m_comp.invalidate();
-                    m_comp.repaint();
-                }
-                m_frame.pack();
-                m_frame.setLocationRelativeTo(null); // puts in screen center
-                m_frame.setVisible(true);
-                m_frame.toFront();
-            }
-        };
-        ViewUtils.runOrInvokeLaterInEDT(runner);
     }
 
     /** Closes the view programmatically. Sub-classes should not call this
