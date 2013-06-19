@@ -58,6 +58,8 @@ import org.knime.base.node.preproc.joiner.Joiner2Settings;
 import org.knime.base.node.preproc.joiner.Joiner2Settings.CompositionMode;
 import org.knime.base.node.preproc.joiner.Joiner2Settings.DuplicateHandling;
 import org.knime.base.node.preproc.joiner.Joiner2Settings.JoinMode;
+import org.knime.core.data.DataColumnSpec;
+import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.node.BufferedDataContainer;
@@ -173,13 +175,24 @@ public class LoopEndJoinNodeModel extends NodeModel implements LoopEndNode {
 
     private BufferedDataTable copy(final BufferedDataTable table,
             final ExecutionContext exec) throws CanceledExecutionException {
-        BufferedDataContainer container =
-            exec.createDataContainer(table.getDataTableSpec());
+        DataColumnSpec[] colSpecs = new DataColumnSpec[table.getDataTableSpec().getNumColumns()];
         int i = 0;
-        final int rowCount = table.getRowCount();
+        for (DataColumnSpec cs : table.getDataTableSpec()) {
+            if ((m_currentAppendTable != null) && m_currentAppendTable.getDataTableSpec().containsName(cs.getName())) {
+                String newName = cs.getName() + " (Iter #" + m_iteration + ")";
+                colSpecs[i++] = new DataColumnSpecCreator(newName, cs.getType()).createSpec();
+            } else {
+                colSpecs[i++] = cs;
+            }
+        }
+
+
+        BufferedDataContainer container = exec.createDataContainer(new DataTableSpec(colSpecs));
+        i = 0;
+        final double rowCount = table.getRowCount();
         for (DataRow r : table) {
             container.addRowToTable(r);
-            exec.setProgress((i++) / (double)rowCount, "Copied row " + i + "/"
+            exec.setProgress((i++) / rowCount, "Copied row " + i + "/"
                     + rowCount + " (\"" + r.getKey() + "\")");
             exec.checkCanceled();
         }
