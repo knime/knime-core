@@ -806,11 +806,14 @@ public class BatchExecutor {
     protected void saveWorkflow(final WorkflowManager wfm, final WorkflowConfiguration config) throws IOException,
             CanceledExecutionException, LockFailedException {
         if (!config.noSave) { // save workflow
-            // save // in place when no output (file or dir) given
+            // save in place when no output (file or dir) given
             if ((config.outputDir == null) && (config.outputFile == null)) {
                 wfm.save(config.workflowLocation, new ExecutionMonitor(), true);
                 LOGGER.debug("Workflow saved: " + config.workflowLocation.getAbsolutePath());
                 if (config.inputWorkflow.isFile()) {
+                    // must be shutdown and cleaned, otherwise the .knimeLock is still locked and Windows cannot read it
+                    wfm.getParent().removeProject(wfm.getID());
+
                     // if input is a Zip file, overwrite input flow
                     // (Zip) workflow dir contains temp workflow dir
                     FileUtil.zipDir(config.inputWorkflow, config.workflowLocation, 9);
@@ -820,6 +823,10 @@ public class BatchExecutor {
                 File outputTempDir = FileUtil.createTempDir("BatchExecutorOutput");
                 wfm.save(outputTempDir, new ExecutionMonitor(), true);
                 LOGGER.debug("Workflow saved: " + outputTempDir.getAbsolutePath());
+
+                // must be shutdown and cleaned, otherwise the .knimeLock is still locked and Windows cannot read it
+                wfm.getParent().removeProject(wfm.getID());
+
                 // to be saved into new output zip file
                 FileUtil.zipDir(config.outputFile, outputTempDir, 9);
                 LOGGER.info("Saved workflow availabe at: " + config.outputFile.getAbsolutePath());
@@ -905,16 +912,21 @@ public class BatchExecutor {
         try {
             saveWorkflow(wfm, config);
         } catch (IOException ex) {
-            LOGGER.error("IO error while saving workflow: " + ex.getMessage());
+            LOGGER.error("IO error while saving workflow: " + ex.getMessage(), ex);
             return EXIT_ERR_EXECUTION;
         } catch (CanceledExecutionException ex) {
-            LOGGER.error("Workflow saving canceled by user");
+            LOGGER.error("Workflow saving canceled by user", ex);
             return EXIT_ERR_EXECUTION;
         } catch (LockFailedException ex) {
-            LOGGER.error("Failed to lock workflow before saving: " + ex.getMessage());
+            LOGGER.error("Failed to lock workflow before saving: " + ex.getMessage(), ex);
             return EXIT_ERR_EXECUTION;
         } finally {
-            wfm.getParent().removeProject(wfm.getID());
+            try {
+                wfm.getParent().removeProject(wfm.getID());
+            } catch (IllegalArgumentException ex) {
+                LOGGER.debug("Workflow manager already closed because of saveToZip", ex);
+                // if saveToZip is used, then the WFM is already closed, so this is expected
+            }
         }
         return sucessful ? EXIT_SUCCESS : EXIT_ERR_EXECUTION;
     }
