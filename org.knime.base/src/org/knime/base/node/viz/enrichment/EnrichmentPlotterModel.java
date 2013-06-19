@@ -149,6 +149,48 @@ public class EnrichmentPlotterModel extends NodeModel {
         public int compareTo(final Helper o) {
             return Double.compare(this.a, o.a);
         }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            long temp;
+            temp = Double.doubleToLongBits(a);
+            result = prime * result + (int)(temp ^ (temp >>> 32));
+            result = prime * result + ((b == null) ? 0 : b.hashCode());
+            return result;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(final Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            Helper other = (Helper)obj;
+            if (Double.doubleToLongBits(a) != Double.doubleToLongBits(other.a)) {
+                return false;
+            }
+            if (b == null) {
+                if (other.b != null) {
+                    return false;
+                }
+            } else if (!b.equals(other.b)) {
+                return false;
+            }
+            return true;
+        }
     }
 
     /**

@@ -125,7 +125,7 @@ final class CrosstabProperties {
      *            the version of the naming
      * @return the naming object for the given version
      */
-    static CrosstabProperties create(final String version) {
+    static synchronized CrosstabProperties create(final String version) {
         if (null == namings) {
             namings = new HashMap<String, CrosstabProperties>();
         }

@@ -48,15 +48,15 @@
 
 package org.knime.base.node.preproc.matcher;
 
-import org.knime.core.data.DataCell;
-import org.knime.core.data.collection.CollectionCellFactory;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
+
+import org.knime.core.data.DataCell;
+import org.knime.core.data.collection.CollectionCellFactory;
 
 
 /**
@@ -325,5 +325,41 @@ public class SubsetMatcher implements Comparable<SubsetMatcher> {
             return 1;
         }
         return compare(o.getItem());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((m_item == null) ? 0 : m_item.hashCode());
+        return result;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        SubsetMatcher other = (SubsetMatcher)obj;
+        if (m_item == null) {
+            if (other.m_item != null) {
+                return false;
+            }
+        } else if (!m_item.equals(other.m_item)) {
+            return false;
+        }
+        return true;
     }
 }

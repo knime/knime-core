@@ -513,8 +513,7 @@ public class Pivot2NodeModel extends GroupByNodeModel {
         for (final String p : pivots) {
             pivotStarts.put(p, cspecs.size());
             for (final DataColumnSpec cspec : groupSpec) {
-                if (orderPivotColumnName != null
-                        && cspec.getName().equals(orderPivotColumnName)) {
+                if (cspec.getName().equals(orderPivotColumnName)) {
                     continue;
                 }
                 final String name = cspec.getName();

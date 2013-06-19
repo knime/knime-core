@@ -55,7 +55,6 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 
-import org.knime.base.node.viz.condbox.ConditionalBoxPlotNodeModel;
 import org.knime.base.node.viz.plotter.AbstractPlotterProperties;
 import org.knime.base.util.coordinate.Coordinate;
 import org.knime.core.data.DataCell;
@@ -74,9 +73,6 @@ public class ConditionalBoxPlotter extends BoxPlotter {
     protected void createNormalizedCoordinates(
             final Map<DataColumnSpec, double[]> statistics) {
         // create y-axis that consider the input domain
-        ConditionalBoxPlotNodeModel model =
-                (ConditionalBoxPlotNodeModel)getDataProvider();
-        DataColumnSpec numColSpec = model.getNumColSpec();
 
         Map<DataColumnSpec, Coordinate> coordinates =
                 new LinkedHashMap<DataColumnSpec, Coordinate>();
@@ -106,7 +102,7 @@ public class ConditionalBoxPlotter extends BoxPlotter {
      */
     public void setNormalizeTabCheckboxEnabled(final boolean enabled) {
         AbstractPlotterProperties properties = getProperties();
-        if (properties != null && properties instanceof BoxPlotterProperties) {
+        if (properties instanceof BoxPlotterProperties) {
             BoxPlotterProperties boxProperties =
                     (BoxPlotterProperties)getProperties();
             boxProperties.setCheckboxEnabled(enabled);
@@ -120,7 +116,7 @@ public class ConditionalBoxPlotter extends BoxPlotter {
      */
     public void setNormalizeTabCheckboxToolTip(final String text) {
         AbstractPlotterProperties properties = getProperties();
-        if (properties != null && properties instanceof BoxPlotterProperties) {
+        if (properties instanceof BoxPlotterProperties) {
             BoxPlotterProperties boxProperties =
                     (BoxPlotterProperties)getProperties();
             boxProperties.setCheckboxToolTipText(text);
@@ -133,11 +129,10 @@ public class ConditionalBoxPlotter extends BoxPlotter {
      */
     public void setNormalizeTabCheckboxSelected(final boolean selected) {
         AbstractPlotterProperties properties = getProperties();
-        if (properties != null && properties instanceof BoxPlotterProperties) {
+        if (properties instanceof BoxPlotterProperties) {
             BoxPlotterProperties boxProperties =
                     (BoxPlotterProperties)getProperties();
             boxProperties.setCheckboxSelected(selected);
         }
     }
-
 }

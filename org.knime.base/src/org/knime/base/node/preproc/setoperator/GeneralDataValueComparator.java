@@ -71,7 +71,7 @@ public final class GeneralDataValueComparator extends DataValueComparator {
     /**
      * @return the only living instance
      */
-    public static DataValueComparator getInstance() {
+    public static synchronized DataValueComparator getInstance() {
         if (instance == null) {
             instance = new GeneralDataValueComparator();
         }

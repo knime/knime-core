@@ -1,4 +1,4 @@
-/* 
+/*
  * ------------------------------------------------------------------------
  *
  *  Copyright (C) 2003 - 2013
@@ -44,7 +44,7 @@
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
  * -------------------------------------------------------------------
- * 
+ *
  */
 package org.knime.base.node.mine.smote;
 
@@ -79,16 +79,16 @@ import org.knime.core.node.ExecutionMonitor;
  * Implementation of the <a
  * href="http://www.cs.cmu.edu/afs/cs/project/jair/pub/volume16/chawla02a.pdf">
  * Smote</a> algorithm. It's more a controller for the algorithm, ok.
- * 
+ *
  * <p>
  * The algorithm is called SMOTE:
- * 
+ *
  * <pre>
- *  Chawla, N.V., Bowyer, K.W., Hall, L.O., Kegelmeyer, W.P. (2002) 
+ *  Chawla, N.V., Bowyer, K.W., Hall, L.O., Kegelmeyer, W.P. (2002)
  *  &quot;SMOTE: Synthetic Minority Over-sampling Technique&quot;,
  *  Journal of Artificial Intelligence Research, Volume 16, pages 321-357.
  * </pre>
- * 
+ *
  * @author Bernd Wiswedel, University of Konstanz
  */
 class Smoter {
@@ -102,22 +102,22 @@ class Smoter {
     private final LinkedHashMap<DataCell, MutableInt> m_inStats;
 
     private int m_appendCounter;
-    
+
     private final Random m_random;
 
     /**
      * Creates a new instance given the input table <code>in</code> and the
      * target column <code>colName</code>.
-     * 
+     *
      * @param in the input table
      * @param colName the target column with class information
-     * @param exec monitor to get canceled status from 
+     * @param exec monitor to get canceled status from
      *  (may be <code>null</code>)
      * @param rand The random generator, may be <code>null</code>.
      * @throws CanceledExecutionException if execution is canceled
      */
     public Smoter(final BufferedDataTable in, final String colName,
-            final ExecutionContext exec, final Random rand) 
+            final ExecutionContext exec, final Random rand)
         throws CanceledExecutionException {
         final int col = in.getDataTableSpec().findColumnIndex(colName);
         if (col < 0) {
@@ -146,7 +146,7 @@ class Smoter {
 
     /**
      * Get iterator of all classes that occur in the target column.
-     * 
+     *
      * @return all available classes
      */
     public Iterator<DataCell> getClassValues() {
@@ -156,7 +156,7 @@ class Smoter {
     /**
      * Get frequency of a class name in the input table. The argument must be an
      * entry of the iterator that is returned by {@link #getClassValues()}.
-     * 
+     *
      * @param name the class name
      * @return the frequency
      */
@@ -170,7 +170,7 @@ class Smoter {
 
     /**
      * Get name of the majority class, i.e. the class that occurs most often.
-     * 
+     *
      * @return name of majority class.
      */
     public DataCell getMajorityClass() {
@@ -191,11 +191,11 @@ class Smoter {
      * Oversample the class <code>name</code> such that <code>count</code>
      * new rows are inserted. The <code>kNN</code> nearest neighbors are
      * chosen as reference.
-     * 
+     *
      * @param name the class name
      * @param count add this amount of new rows
      * @param kNN k nearest neighbor parameter
-     * @param exec monitor to get canceled status from 
+     * @param exec monitor to get canceled status from
      *  (may be <code>null</code>)
      * @throws CanceledExecutionException if execution is canceled
      */
@@ -225,8 +225,6 @@ class Smoter {
         // reference
         int lucky = count - fixedPart.length;
         System.arraycopy(shuffleMe, 0, indexesToUse, fixedPart.length, lucky);
-        shuffleMe = null;
-        fixedPart = null;
         Arrays.sort(indexesToUse);
 
         // the counter in the input table for this particular class value
@@ -386,7 +384,7 @@ class Smoter {
 
     /**
      * Get final output table, including original input table and smoted table.
-     * 
+     *
      * @return the new output table
      */
     public DataTable getSmotedTable() {
@@ -414,7 +412,7 @@ class Smoter {
      * Creates the out spec when <i>smoting</i> the table with
      * <code>inSpec</code>. It replaces the data types of all
      * {@link DoubleValue}-compatible columns by {@link DoubleCell#TYPE}.
-     * 
+     *
      * @param inSpec the table spec of the input table
      * @return the output table spec
      */
@@ -427,7 +425,7 @@ class Smoter {
             // double type (think of an integer column which isn't an integer
             // column really once the Smoter adds new records
             if (cur.getType().isCompatible(DoubleValue.class)) {
-                DataColumnSpecCreator colspeccreator 
+                DataColumnSpecCreator colspeccreator
                     = new DataColumnSpecCreator(cur);
                 DataType oldType = cur.getType();
                 // may be there was some strange double value type in the
@@ -464,7 +462,7 @@ class Smoter {
 
         /**
          * Init the integer with specific value.
-         * 
+         *
          * @param i The int to set.
          */
         MutableInt(final int i) {

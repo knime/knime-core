@@ -380,7 +380,7 @@ ColumnAggregator, DataColumnSpec> {
                 AggregationMethods.getMethod4Id(methodId));
         final Collection<Integer> idxs = new LinkedList<Integer>();
         for (final int i : selectedRows) {
-            idxs.add(new Integer(i));
+            idxs.add(Integer.valueOf(i));
         }
         updateSelection(idxs);
     }
@@ -403,9 +403,7 @@ ColumnAggregator, DataColumnSpec> {
      */
     int noOfCompatibleRows(
             final Class<? extends DataValue> type) {
-        final Collection<Integer> idxs =
-            getTableModel().getCompatibleRowIdxs(type);
-        return idxs != null ? idxs.size() : 0;
+        return getTableModel().getCompatibleRowIdxs(type).size();
     }
 
     /**

@@ -259,5 +259,64 @@ final class BinByDictionaryRuleSet {
             return 0;
         }
 
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + getOuterType().hashCode();
+            result = prime * result + ((m_label == null) ? 0 : m_label.hashCode());
+            result = prime * result + ((m_lowerBoundValue == null) ? 0 : m_lowerBoundValue.hashCode());
+            result = prime * result + ((m_upperBoundValue == null) ? 0 : m_upperBoundValue.hashCode());
+            return result;
+        }
+
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public boolean equals(final Object obj) {
+            if (this == obj) {
+                return true;
+            }
+            if (obj == null) {
+                return false;
+            }
+            if (getClass() != obj.getClass()) {
+                return false;
+            }
+            Rule other = (Rule)obj;
+            if (!getOuterType().equals(other.getOuterType())) {
+                return false;
+            }
+            if (m_label == null) {
+                if (other.m_label != null) {
+                    return false;
+                }
+            } else if (!m_label.equals(other.m_label)) {
+                return false;
+            }
+            if (m_lowerBoundValue == null) {
+                if (other.m_lowerBoundValue != null) {
+                    return false;
+                }
+            } else if (!m_lowerBoundValue.equals(other.m_lowerBoundValue)) {
+                return false;
+            }
+            if (m_upperBoundValue == null) {
+                if (other.m_upperBoundValue != null) {
+                    return false;
+                }
+            } else if (!m_upperBoundValue.equals(other.m_upperBoundValue)) {
+                return false;
+            }
+            return true;
+        }
+
+        private BinByDictionaryRuleSet getOuterType() {
+            return BinByDictionaryRuleSet.this;
+        }
     }
 }

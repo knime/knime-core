@@ -137,7 +137,7 @@ public class Statistics3NodeView extends NodeView<Statistics3NodeModel> {
         for (int i = 0; i < columnNames.length; i++) {
             if (nominals.get(i) != null) {
                 buffer.append("<th style=\"white-space: nowrap\">"
-                		+ columnNames[i] + "</th>");
+                        + columnNames[i] + "</th>");
             }
         }
 
@@ -166,13 +166,12 @@ public class Statistics3NodeView extends NodeView<Statistics3NodeModel> {
                         int cnt = 0;
                         buffer.append("<strong>Top " + numNomValues
                                 + ":</strong><br>");
-                        for (DataCell c : map.keySet()) {
-                            buffer.append(c.toString() + " : "
-                                            + map.get(c) + "<br>");
-                            if (++cnt == numNomValues) {
-                                break;
-                            }
+                    for (Map.Entry<DataCell, Integer> e : map.entrySet()) {
+                        buffer.append(e.getKey() + " : " + e.getValue() + "<br>");
+                        if (++cnt == numNomValues) {
+                            break;
                         }
+                    }
                         buffer.append("</td>");
                     }
                 }
@@ -190,10 +189,8 @@ public class Statistics3NodeView extends NodeView<Statistics3NodeModel> {
                     if (size >= numNomValues) {
                         int cnt = 0;
                         for (DataCell c : map.keySet()) {
-                            if (cnt >=
-                            	  Math.max(numNomValues, size - numNomValues)) {
-                                buffer.append(c.toString() + " : "
-                                            + map.get(c) + "<br>");
+                            if (cnt >= Math.max(numNomValues, size - numNomValues)) {
+                                buffer.append(c.toString() + " : " + map.get(c) + "<br>");
                             }
                             cnt++;
                         }

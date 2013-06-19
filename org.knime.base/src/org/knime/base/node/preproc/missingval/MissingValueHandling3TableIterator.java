@@ -211,6 +211,7 @@ class MissingValueHandling3TableIterator extends RowIterator {
                     case MissingValueHandling2ColSetting.METHOD_IGNORE_ROWS:
                         assert false : "That should have been filtered.";
                         newCell = oldCell;
+                        break;
                     default:
                         throw new RuntimeException("Invalid method!");
                 }
