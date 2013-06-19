@@ -60,6 +60,7 @@ import java.util.WeakHashMap;
 
 import org.apache.commons.io.FileUtils;
 import org.knime.core.node.NodeLogger;
+import org.knime.core.node.workflow.NodeContext;
 
 /**
  * API not public yet.
@@ -88,7 +89,8 @@ public final class MemoryObjectTracker {
     * The list of tracked objects, whose memory will be freed, if the
     * memory runs out.
     */
-    private final WeakHashMap<MemoryReleasable, Long> m_trackedObjectHash = new WeakHashMap<MemoryReleasable, Long>();
+    private final WeakHashMap<MemoryReleasable, TimestampAndContext> m_trackedObjectHash =
+            new WeakHashMap<MemoryReleasable, TimestampAndContext>();
 
     private long m_lastAccess;
 
@@ -147,7 +149,8 @@ public final class MemoryObjectTracker {
     public void addMemoryReleaseable(final MemoryReleasable obj) {
         if (obj != null) {
             synchronized (m_trackedObjectHash) {
-                m_trackedObjectHash.put(obj, m_lastAccess++);
+                TimestampAndContext value = new TimestampAndContext(m_lastAccess++, NodeContext.getContext());
+                m_trackedObjectHash.put(obj, value);
                 LOGGER.debug("Adding " + obj.getClass().getName() + " (" + m_trackedObjectHash.size() + " in total)");
             }
         }
@@ -174,7 +177,10 @@ public final class MemoryObjectTracker {
     public void promoteMemoryReleaseable(final MemoryReleasable obj) {
         if (obj != null) {
             synchronized (m_trackedObjectHash) {
-                m_trackedObjectHash.put(obj, m_lastAccess++);
+                TimestampAndContext timestampAndContext = m_trackedObjectHash.get(obj);
+                if (timestampAndContext != null) {
+                    timestampAndContext.m_lastAccessStamp = m_lastAccess++;
+                }
             }
         }
     }
@@ -185,20 +191,23 @@ public final class MemoryObjectTracker {
     private void freeAllMemory(final double percentage) {
         int initSize = m_trackedObjectHash.size();
 
-        List<Map.Entry<MemoryReleasable, Long>> entryValues =
-                new ArrayList<Map.Entry<MemoryReleasable, Long>>(initSize);
+        List<Map.Entry<MemoryReleasable, TimestampAndContext>> entryValues =
+                new ArrayList<Map.Entry<MemoryReleasable, TimestampAndContext>>(initSize);
 
         int count = 0;
         synchronized (m_trackedObjectHash) {
             entryValues.addAll(m_trackedObjectHash.entrySet());
         }
 
-        Collections.sort(entryValues, new Comparator<Map.Entry<MemoryReleasable, Long>>() {
+        Collections.sort(entryValues, new Comparator<Map.Entry<MemoryReleasable, TimestampAndContext>>() {
             @Override
-            public int compare(final Entry<MemoryReleasable, Long> o1, final Entry<MemoryReleasable, Long> o2) {
-                if (o1.getValue() < o2.getValue()) {
+            public int compare(final Entry<MemoryReleasable, TimestampAndContext> o1,
+                final Entry<MemoryReleasable, TimestampAndContext> o2) {
+                long o1LastAccess = o1.getValue().m_lastAccessStamp;
+                long o2LastAccess = o2.getValue().m_lastAccessStamp;
+                if (o1LastAccess < o2LastAccess) {
                     return -1;
-                } else if (o1.getValue() > o2.getValue()) {
+                } else if (o1LastAccess > o2LastAccess) {
                     return +1;
                 } else {
                     assert false : "Equal update time stamp";
@@ -208,16 +217,20 @@ public final class MemoryObjectTracker {
         });
 
         LOGGER.debug("Trying to release " + entryValues.size() + " memory objects");
-        for (Iterator<Map.Entry<MemoryReleasable, Long>> it = entryValues.iterator(); it.hasNext();) {
-            Map.Entry<MemoryReleasable, Long> entry = it.next();
+        for (Iterator<Map.Entry<MemoryReleasable, TimestampAndContext>> it = entryValues.iterator(); it.hasNext();) {
+            Map.Entry<MemoryReleasable, TimestampAndContext> entry = it.next();
             MemoryReleasable memoryReleasable = entry.getKey();
             if (memoryReleasable != null) {
+                TimestampAndContext value = entry.getValue();
                 boolean isToRemove;
+                NodeContext.pushContext(value.m_context);
                 try {
                     isToRemove = memoryReleasable.memoryAlert(MEMORY_ALERT);
                 } catch (Exception e) {
                     LOGGER.error("Exception while alerting low memory condition", e);
                     isToRemove = true;
+                } finally {
+                    NodeContext.removeLastContext();
                 }
                 if (isToRemove) {
                     synchronized (m_trackedObjectHash) {
@@ -246,5 +259,21 @@ public final class MemoryObjectTracker {
             instance = new MemoryObjectTracker();
         }
         return instance;
+    }
+
+    /** Value class of the tracked object. Keeps last access time stamp and the node context. */
+    private static final class TimestampAndContext {
+        private long m_lastAccessStamp;
+        private final NodeContext m_context;
+
+        /**
+         * @param lastAccessStamp ...
+         * @param context ...
+         */
+        TimestampAndContext(final long lastAccessStamp, final NodeContext context) {
+            m_lastAccessStamp = lastAccessStamp;
+            m_context = context;
+        }
+
     }
 }
