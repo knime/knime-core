@@ -43,96 +43,118 @@
  *  propagated with or for interoperation with KNIME.  The owner of a Node
  *  may freely choose the license terms applicable to such Node, including
  *  when such Node is propagated with or for interoperation with KNIME.
- * -------------------------------------------------------------------
+ * ---------------------------------------------------------------------
  *
- * History
- *   ${date} (${user}): created
+ * Created on 19.06.2013 by thor
  */
-package org.knime.workbench;
+package org.knime.workbench.core.util;
 
+import java.util.HashMap;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.ImageRegistry;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.SWTError;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
-import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.plugin.AbstractUIPlugin;
-import org.knime.workbench.core.util.ThreadsafeImageRegistry;
-import org.knime.workbench.ui.KNIMEUIPlugin;
-import org.osgi.framework.BundleContext;
 
 /**
- * The main plugin class for the editor.
+ * Thread-safe implementation of {@link ImageRegistry}. This is necessary if an {@link ImageRegistry} is access from
+ * different threads at the same time because the original ImageRegistry contains an unsynchronized {@link HashMap}.
  *
- * @author Florian Georg, University of Konstanz
+ * @author Thorsten Meinl, KNIME.com, Zurich, Switzerland
+ * @since 2.8
  */
-public class KNIMEEditorPlugin extends AbstractUIPlugin {
-    // Make sure that this *always* matches the ID in plugin.xml
-    /** The Plugin ID. */
-    public static final String PLUGIN_ID = "org.knime.workbench.editor";
+public class ThreadsafeImageRegistry extends ImageRegistry {
+    private final ReadWriteLock m_rwLock = new ReentrantReadWriteLock();
 
-    // The shared instance.
-    private static KNIMEEditorPlugin plugin;
+    private final Lock m_readLock = m_rwLock.readLock();
+
+    private final Lock m_writeLock = m_rwLock.writeLock();
 
     /**
-     * The constructor.
+     * Creates an empty image registry.
+     * <p>
+     * There must be an SWT Display created in the current thread before calling this method.
+     * </p>
      */
-    public KNIMEEditorPlugin() {
+    public ThreadsafeImageRegistry() {
         super();
-        plugin = this;
     }
 
     /**
-     * This method is called upon plug-in activation.
+     * Creates an empty image registry.
      *
-     * @param context The bundle context
-     * @throws Exception If failed
+     * @param display this <code>Display</code> must not be <code>null</code> and must not be disposed in order to use
+     *            this registry
      */
-    @Override
-    public void start(final BundleContext context) throws Exception {
-        super.start(context);
-        // TODO: temporary hug for preference page, to ensure that the
-        // MasterKeySupplier is set correctly before the editor is started
-        KNIMEUIPlugin.getDefault().getPreferenceStore();
-    }
-
-    /**
-     * This method is called when the plug-in is stopped.
-     *
-     * @param context The bundle context
-     * @throws Exception If failed
-     *
-     */
-    @Override
-    public void stop(final BundleContext context) throws Exception {
-        super.stop(context);
-        plugin = null;
-    }
-
-    /**
-     * Returns the shared instance.
-     *
-     * @return The shared instance of this plugin
-     */
-    public static KNIMEEditorPlugin getDefault() {
-        return plugin;
+    public ThreadsafeImageRegistry(final Display display) {
+        super(display);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    protected ImageRegistry createImageRegistry() {
-        //If we are in the UI Thread use that
-        if(Display.getCurrent() != null) {
-            return new ThreadsafeImageRegistry(Display.getCurrent());
+    public Image get(final String key) {
+        m_readLock.lock();
+        try {
+            return super.get(key);
+        } finally {
+            m_readLock.unlock();
         }
+    }
 
-        if(PlatformUI.isWorkbenchRunning()) {
-            return new ThreadsafeImageRegistry(PlatformUI.getWorkbench().getDisplay());
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public ImageDescriptor getDescriptor(final String key) {
+        m_readLock.lock();
+        try {
+            return super.getDescriptor(key);
+        } finally {
+            m_readLock.unlock();
         }
+    }
 
-        //Invalid thread access if it is not the UI Thread
-        //and the workbench is not created.
-        throw new SWTError(SWT.ERROR_THREAD_INVALID_ACCESS);
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void put(final String key, final ImageDescriptor descriptor) {
+        m_writeLock.lock();
+        try {
+            super.put(key, descriptor);
+        } finally {
+            m_writeLock.unlock();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void put(final String key, final Image image) {
+        m_writeLock.lock();
+        try {
+            super.put(key, image);
+        } finally {
+            m_writeLock.unlock();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void remove(final String key) {
+        m_writeLock.lock();
+        try {
+            super.remove(key);
+        } finally {
+            m_writeLock.unlock();
+        }
     }
 }

@@ -62,12 +62,16 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.resource.ImageRegistry;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.SWTError;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.knime.core.internal.CorePlugin;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.util.KnimeEncryption;
+import org.knime.workbench.core.util.ThreadsafeImageRegistry;
 import org.knime.workbench.repository.NodeUsageRegistry;
 import org.knime.workbench.ui.favorites.FavoriteNodesManager;
 import org.knime.workbench.ui.masterkey.MasterKeyPreferencePage;
@@ -330,4 +334,23 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
         return AbstractUIPlugin.imageDescriptorFromPlugin(pluginID, filename);
     }
 
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    protected ImageRegistry createImageRegistry() {
+        //If we are in the UI Thread use that
+        if(Display.getCurrent() != null) {
+            return new ThreadsafeImageRegistry(Display.getCurrent());
+        }
+
+        if(PlatformUI.isWorkbenchRunning()) {
+            return new ThreadsafeImageRegistry(PlatformUI.getWorkbench().getDisplay());
+        }
+
+        //Invalid thread access if it is not the UI Thread
+        //and the workbench is not created.
+        throw new SWTError(SWT.ERROR_THREAD_INVALID_ACCESS);
+    }
 }
