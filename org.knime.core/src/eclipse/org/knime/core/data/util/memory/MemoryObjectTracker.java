@@ -88,24 +88,22 @@ public final class MemoryObjectTracker {
     * The list of tracked objects, whose memory will be freed, if the
     * memory runs out.
     */
-    private final WeakHashMap<MemoryReleasable, Long> TRACKED_OBJECTS = new WeakHashMap<MemoryReleasable, Long>();
+    private final WeakHashMap<MemoryReleasable, Long> m_trackedObjectHash = new WeakHashMap<MemoryReleasable, Long>();
 
     private long m_lastAccess;
 
-    // Singleton instance of this object
-    private static MemoryObjectTracker m_instance;
+    /** Singleton instance of this object. */
+    private static MemoryObjectTracker instance;
 
-    /*
-    * Memory Warning System
-    */
-    private final MemoryWarningSystem MEMORY_WARNING_SYSTEM = MemoryWarningSystem.getInstance();
+    /** Memory Warning System. */
+    private final MemoryWarningSystem m_memoryWarningSystem = MemoryWarningSystem.getInstance();
 
     /*
      * Private constructor, singleton
      */
     private MemoryObjectTracker() {
-        MEMORY_WARNING_SYSTEM.setPercentageUsageThreshold(0.7);
-        MEMORY_WARNING_SYSTEM.registerListener(new MemoryWarningSystem.MemoryWarningListener() {
+        m_memoryWarningSystem.setPercentageUsageThreshold(0.7);
+        m_memoryWarningSystem.registerListener(new MemoryWarningSystem.MemoryWarningListener() {
 
             @Override
             public void memoryUsageLow(final long usedMemory, final long maxMemory) {
@@ -148,21 +146,21 @@ public final class MemoryObjectTracker {
      */
     public void addMemoryReleaseable(final MemoryReleasable obj) {
         if (obj != null) {
-            synchronized (TRACKED_OBJECTS) {
-                TRACKED_OBJECTS.put(obj, m_lastAccess++);
-                LOGGER.debug("Adding " + obj.getClass().getName() + " (" + TRACKED_OBJECTS.size() + " in total)");
+            synchronized (m_trackedObjectHash) {
+                m_trackedObjectHash.put(obj, m_lastAccess++);
+                LOGGER.debug("Adding " + obj.getClass().getName() + " (" + m_trackedObjectHash.size() + " in total)");
             }
         }
     }
 
     public void removeMemoryReleaseable(final MemoryReleasable obj) {
         if (obj != null) {
-            synchronized (TRACKED_OBJECTS) {
+            synchronized (m_trackedObjectHash) {
                 String name = obj.getClass().getName();
-                if (TRACKED_OBJECTS.remove(obj) == null) {
+                if (m_trackedObjectHash.remove(obj) == null) {
                     LOGGER.debug("Attempted to remove " + name + ", which was not tracked");
                 } else {
-                    LOGGER.debug("Removing " + name + " (" + TRACKED_OBJECTS.size() + " remaining)");
+                    LOGGER.debug("Removing " + name + " (" + m_trackedObjectHash.size() + " remaining)");
                 }
             }
         }
@@ -175,8 +173,8 @@ public final class MemoryObjectTracker {
      */
     public void promoteMemoryReleaseable(final MemoryReleasable obj) {
         if (obj != null) {
-            synchronized (TRACKED_OBJECTS) {
-                TRACKED_OBJECTS.put(obj, m_lastAccess++);
+            synchronized (m_trackedObjectHash) {
+                m_trackedObjectHash.put(obj, m_lastAccess++);
             }
         }
     }
@@ -185,14 +183,14 @@ public final class MemoryObjectTracker {
     * Frees the memory of some objects in the list.
     */
     private void freeAllMemory(final double percentage) {
-        int initSize = TRACKED_OBJECTS.size();
+        int initSize = m_trackedObjectHash.size();
 
         List<Map.Entry<MemoryReleasable, Long>> entryValues =
                 new ArrayList<Map.Entry<MemoryReleasable, Long>>(initSize);
 
         int count = 0;
-        synchronized (TRACKED_OBJECTS) {
-            entryValues.addAll(TRACKED_OBJECTS.entrySet());
+        synchronized (m_trackedObjectHash) {
+            entryValues.addAll(m_trackedObjectHash.entrySet());
         }
 
         Collections.sort(entryValues, new Comparator<Map.Entry<MemoryReleasable, Long>>() {
@@ -222,8 +220,8 @@ public final class MemoryObjectTracker {
                     isToRemove = true;
                 }
                 if (isToRemove) {
-                    synchronized (TRACKED_OBJECTS) {
-                        TRACKED_OBJECTS.remove(entry);
+                    synchronized (m_trackedObjectHash) {
+                        m_trackedObjectHash.remove(entry);
                     }
                     count++;
                 }
@@ -234,8 +232,8 @@ public final class MemoryObjectTracker {
             }
         }
         int remaining;
-        synchronized (TRACKED_OBJECTS) {
-            remaining = TRACKED_OBJECTS.size();
+        synchronized (m_trackedObjectHash) {
+            remaining = m_trackedObjectHash.size();
         }
         LOGGER.debug(count + "/" + initSize + " tracked objects have been released (" + remaining + " remaining)");
     }
@@ -244,9 +242,9 @@ public final class MemoryObjectTracker {
      * @return singleton on MemoryObjectTracker.
      */
     public static MemoryObjectTracker getInstance() {
-        if (m_instance == null) {
-            m_instance = new MemoryObjectTracker();
+        if (instance == null) {
+            instance = new MemoryObjectTracker();
         }
-        return m_instance;
+        return instance;
     }
 }
