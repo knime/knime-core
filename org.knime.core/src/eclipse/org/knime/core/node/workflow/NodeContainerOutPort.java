@@ -191,18 +191,23 @@ public class NodeContainerOutPort extends NodePortAdaptor
     // TODO: return component with convenience method for Frame construction.
     @Override
     public void openPortView(final String name) {
-        if (m_portView == null) {
-            setPortView(new OutPortView(m_snc.getDisplayLabel(),
-                    getPortName()));
-        } else {
-            // the custom name might have changed meanwhile
-            m_portView.setTitle(getPortName() + " - "
-                    + m_snc.getDisplayLabel());
+        NodeContext.pushContext(m_snc);
+        try {
+            if (m_portView == null) {
+                setPortView(new OutPortView(m_snc.getDisplayLabel(),
+                        getPortName()));
+            } else {
+                // the custom name might have changed meanwhile
+                m_portView.setTitle(getPortName() + " - "
+                        + m_snc.getDisplayLabel());
+            }
+            m_portView.update(getPortObject(), getPortObjectSpec(),
+                    getFlowObjectStack(),
+                    m_snc.getNode().getCredentialsProvider());
+            m_portView.openView();
+        } finally {
+            NodeContext.removeLastContext();
         }
-        m_portView.update(getPortObject(), getPortObjectSpec(),
-                getFlowObjectStack(),
-                m_snc.getNode().getCredentialsProvider());
-        m_portView.openView();
     }
 
     /** {@inheritDoc} */
@@ -215,12 +220,17 @@ public class NodeContainerOutPort extends NodePortAdaptor
             /** {@inheritDoc} */
             @Override
             public void run() {
-                if (m_portView != null) {
-                    m_portView.update(null, null,
-                            new FlowObjectStack(NodeID.ROOTID), null);
-                    m_portView.setVisible(false);
-                    m_portView.dispose();
-                    m_portView = null;
+                NodeContext.pushContext(m_snc);
+                try {
+                    if (m_portView != null) {
+                        m_portView.update(null, null,
+                                new FlowObjectStack(NodeID.ROOTID), null);
+                        m_portView.setVisible(false);
+                        m_portView.dispose();
+                        m_portView = null;
+                    }
+                } finally {
+                    NodeContext.removeLastContext();
                 }
             }
         };
@@ -256,8 +266,13 @@ public class NodeContainerOutPort extends NodePortAdaptor
      */
     @Override
     public void notifyNodeStateChangeListener(final NodeStateEvent e) {
-        for (NodeStateChangeListener l : m_listener) {
-            l.stateChanged(e);
+        NodeContext.pushContext(m_snc);
+        try {
+            for (NodeStateChangeListener l : m_listener) {
+                l.stateChanged(e);
+            }
+        } finally {
+            NodeContext.removeLastContext();
         }
     }
 
@@ -278,14 +293,19 @@ public class NodeContainerOutPort extends NodePortAdaptor
     @Override
     public void stateChanged(final NodeStateEvent state) {
         if (!m_snc.getNodeContainerState().isExecutionInProgress()) {
-            notifyNodeStateChangeListener(state);
-            if (m_portView != null) {
-                try {
-                    m_portView.update(getPortObject(), getPortObjectSpec(), getFlowObjectStack(),
-                            m_snc.getNode().getCredentialsProvider());
-                } catch (Exception e) {
-                    NodeLogger.getLogger(getClass()).error("Failed to update port view.", e);
+            NodeContext.pushContext(m_snc);
+            try {
+                notifyNodeStateChangeListener(state);
+                if (m_portView != null) {
+                    try {
+                        m_portView.update(getPortObject(), getPortObjectSpec(), getFlowObjectStack(),
+                                m_snc.getNode().getCredentialsProvider());
+                    } catch (Exception e) {
+                        NodeLogger.getLogger(getClass()).error("Failed to update port view.", e);
+                    }
                 }
+            } finally {
+                NodeContext.removeLastContext();
             }
         }
 

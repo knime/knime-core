@@ -107,7 +107,7 @@ public class OutPortView extends JFrame {
                     + m_counter.incrementAndGet());
             t.setDaemon(true);
             return t;
-        };
+        }
     });
 
     /**
@@ -197,6 +197,7 @@ public class OutPortView extends JFrame {
         private final PortObjectSpec m_portObjectSpec;
         private final FlowObjectStack m_flowObjectStack;
         private final CredentialsProvider m_credentialsProvider;
+        private final NodeContext m_nodeContext;
 
         private UpdateObject(final PortObject po, final PortObjectSpec spec,
                 final FlowObjectStack stack, final CredentialsProvider prov) {
@@ -204,6 +205,7 @@ public class OutPortView extends JFrame {
             m_portObjectSpec = spec;
             m_flowObjectStack = stack;
             m_credentialsProvider = prov;
+            m_nodeContext = NodeContext.getContext();
         }
     }
 
@@ -254,6 +256,15 @@ public class OutPortView extends JFrame {
         ViewUtils.invokeAndWaitInEDT(new Runnable() {
             @Override
             public void run() {
+                NodeContext.pushContext(updateObject.m_nodeContext);
+                try {
+                    runWithContext();
+                } finally {
+                    NodeContext.removeLastContext();
+                }
+            }
+
+            private void runWithContext() {
                 // add all port object tabs
                 final Map<String, JComponent> views
                     = new LinkedHashMap<String, JComponent>();
