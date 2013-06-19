@@ -68,6 +68,7 @@ import org.knime.core.data.container.CellFactory;
 import org.knime.core.data.container.ColumnRearranger;
 import org.knime.core.data.def.DoubleCell;
 import org.knime.core.data.def.IntCell;
+import org.knime.core.data.def.LongCell;
 import org.knime.core.node.BufferedDataTable;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionContext;
@@ -90,7 +91,7 @@ public class StringToNumberNodeModel extends NodeModel {
      * The possible types that the string can be converted to.
      */
     public static final DataType[] POSSIBLETYPES =
-        new DataType[]{DoubleCell.TYPE, IntCell.TYPE};
+        new DataType[]{DoubleCell.TYPE, IntCell.TYPE, LongCell.TYPE};
 
     /* Node Logger of this class. */
     private static final NodeLogger LOGGER =
@@ -420,6 +421,9 @@ public class StringToNumberNodeModel extends NodeModel {
                         } else if (m_type.equals(IntCell.TYPE)) {
                             int parsedInteger = Integer.parseInt(corrected);
                             newcells[i] = new IntCell(parsedInteger);
+                        } else if (m_type.equals(LongCell.TYPE)) {
+                            long parsedLong = Long.parseLong(corrected);
+                            newcells[i] = new LongCell(parsedLong);
                         } else {
                             m_error = "No valid parse type.";
                         }
@@ -461,6 +465,11 @@ public class StringToNumberNodeModel extends NodeModel {
                     colspeccreator =
                             new DataColumnSpecCreator(colspec.getName(),
                                     IntCell.TYPE);
+                } else if (m_type.equals(LongCell.TYPE)) {
+                    // change DataType to LongCell
+                    colspeccreator =
+                            new DataColumnSpecCreator(colspec.getName(),
+                                LongCell.TYPE);
                 } else {
                     colspeccreator =
                             new DataColumnSpecCreator("Invalid parse mode",
