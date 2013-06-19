@@ -110,7 +110,7 @@ public class RemoteFileTransfer extends ByteArrayTransfer {
     @Override
     public void javaToNative(final Object object,
             final TransferData transferData) {
-        if (object == null || !(object instanceof URI[])) {
+        if (!(object instanceof URI[])) {
             return;
         }
 

@@ -71,7 +71,7 @@ import org.knime.workbench.core.preferences.HeadlessPreferencesConstants;
 public class DatabasePreferencePage extends FieldEditorPreferencePage
     implements IWorkbenchPreferencePage {
 
-	/**
+    /**
 	 *
 	 */
 	public DatabasePreferencePage() {

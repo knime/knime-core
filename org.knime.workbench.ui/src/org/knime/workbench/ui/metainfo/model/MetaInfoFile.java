@@ -107,8 +107,7 @@ public final class MetaInfoFile {
         if (fileName == null || fileName.isEmpty()) {
             return null;
         }
-        File f = new File(fileName);
-        return f;
+        return new File(fileName);
     }
 
     private static void createDefaultFileFallback(final File parent) {

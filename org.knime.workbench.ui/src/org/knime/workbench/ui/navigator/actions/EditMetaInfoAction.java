@@ -136,12 +136,12 @@ public class EditMetaInfoAction extends Action {
             } catch (CoreException e) {
                 throw new RuntimeException("Meta Info files can only be created"
                         + " for local workflows or groups. "
-                        + m_parent.getName() + "doesn't provide a local file.");
+                        + m_parent.getName() + " doesn't provide a local file.");
             }
             if (parentFile == null) {
                 throw new RuntimeException("Meta Info files can only be created"
                         + " for local workflows or groups. "
-                        + m_parent.getName() + "doesn't provide a local file.");
+                        + m_parent.getName() + " doesn't provide a local file.");
             }
             MetaInfoFile.createMetaInfoFile(parentFile, isWorkflow);
         }

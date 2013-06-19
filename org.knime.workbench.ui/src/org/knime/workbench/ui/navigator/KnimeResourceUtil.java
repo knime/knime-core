@@ -407,8 +407,8 @@ public final class KnimeResourceUtil {
      * @throws InterruptedException
      * @throws InvocationTargetException
      */
-    private static void importWorkflowIntoWorkspace(final IPath destination,
-            final File zippedWorkflow) throws ZipException, IOException, InvocationTargetException, InterruptedException {
+    private static void importWorkflowIntoWorkspace(final IPath destination, final File zippedWorkflow)
+        throws ZipException, IOException, InvocationTargetException, InterruptedException {
 
         ZipFile zFile = new ZipFile(zippedWorkflow);
         ZipLeveledStructProvider importStructureProvider =

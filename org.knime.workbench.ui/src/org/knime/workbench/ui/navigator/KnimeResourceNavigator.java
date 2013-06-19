@@ -252,13 +252,12 @@ public class KnimeResourceNavigator extends ResourceNavigator implements
                             if (rsrc != null) {
                                 getTreeViewer().update(rsrc, null);
                             }
-                        } else {
-                            /*
-                             * this is a meta node used in a project. Currently
-                             * we don't need to refresh the tree because meta
-                             * node states are not shown in the tree
-                             */
                         }
+                        /*
+                         * Otherwise it is a meta node used in a project. Currently
+                         * we don't need to refresh the tree because meta
+                         * node states are not shown in the tree
+                         */
                     } catch (IllegalArgumentException iae) {
                         // node couldn't be found -> so we don't make a refresh
                     }
