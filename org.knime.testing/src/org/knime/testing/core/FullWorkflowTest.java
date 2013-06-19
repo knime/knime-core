@@ -65,6 +65,7 @@ import org.knime.core.node.AbstractNodeView;
 import org.knime.core.node.CanceledExecutionException;
 import org.knime.core.node.ExecutionMonitor;
 import org.knime.core.node.InvalidSettingsException;
+import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.Node;
 import org.knime.core.node.NodeDialogPane;
 import org.knime.core.node.NodeLogger;
@@ -414,7 +415,8 @@ public class FullWorkflowTest extends TestCase implements WorkflowTest {
         m_knimeWorkFlow = workflowFile;
         m_testcaseRoot = testcaseRoot;
         m_saveLoc = saveLoc;
-        this.setName(workflowFile.getParentFile().getName());
+        this.setName(workflowFile.getParentFile().getName() + " (assertions "
+                + (KNIMEConstants.ASSERTIONS_ENABLED ? "on" : "off") + ")");
     }
 
     private void appendLogMessage(final LoggingEvent aEvent) {
