@@ -341,11 +341,11 @@ public class KNIMEUIPlugin extends AbstractUIPlugin {
     @Override
     protected ImageRegistry createImageRegistry() {
         //If we are in the UI Thread use that
-        if(Display.getCurrent() != null) {
+        if (Display.getCurrent() != null) {
             return new ThreadsafeImageRegistry(Display.getCurrent());
         }
 
-        if(PlatformUI.isWorkbenchRunning()) {
+        if (PlatformUI.isWorkbenchRunning()) {
             return new ThreadsafeImageRegistry(PlatformUI.getWorkbench().getDisplay());
         }
 
