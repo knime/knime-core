@@ -535,6 +535,7 @@ public class NodePersistorVersion200 extends NodePersistorVersion1xx {
                 }
                 BufferedDataTable t =
                     loadBufferedDataTable(portDirRef, subProgress, loadTblRep, tblRep, fileStoreHandlerRepository);
+                t.setOwnerRecursively(node);
                 result[index] = t;
             }
             subProgress.setProgress(1.0);
