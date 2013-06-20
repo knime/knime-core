@@ -50,12 +50,34 @@
  */
 package org.knime.core;
 
+import junit.framework.JUnit4TestAdapter;
+import junit.framework.TestSuite;
+
+import org.junit.runner.RunWith;
+import org.junit.runners.AllTests;
 import org.knime.testing.core.AbstractTestcaseCollector;
 
 /**
+ * Testcase collector for this plug-in.
  *
  * @author Thorsten Meinl, University of Konstanz
  */
+@RunWith(AllTests.class)
 public class CoreTestcaseCollector extends AbstractTestcaseCollector {
-    // yes, it is empty
+    /**
+     * This is called via the JUnit framework in order to collect all testcases.
+     *
+     * @return a test suite with all testcases
+     *
+     * @throws Exception if something goes wrong
+     */
+    public static TestSuite suite() throws Exception {
+        TestSuite suite = new TestSuite();
+
+        for (Class<?> testClass : new CoreTestcaseCollector().getUnittestsClasses()) {
+            suite.addTest(new JUnit4TestAdapter(testClass));
+        }
+
+        return suite;
+    }
 }
