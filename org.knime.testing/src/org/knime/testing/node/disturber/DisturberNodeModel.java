@@ -92,7 +92,7 @@ public class DisturberNodeModel extends NodeModel {
             exec.setProgress(count++ / (double) inData[0].getRowCount());
             DataCell[] cells = new DataCell[row.getNumCells()];
             for (int i = 0; i < cells.length; i++) {
-                if (!missingValueCreated || (r.nextDouble() < 0.1)) {
+                if ((r.nextDouble() < 0.1) || !missingValueCreated) {
                     cells[i] = DataType.getMissingCell();
                     missingValueCreated = true;
                 } else {
