@@ -74,17 +74,27 @@ public class DisturberNodeModel extends NodeModel {
         BufferedDataContainer missingValueTable = exec
                 .createDataContainer(inData[0].getDataTableSpec());
 
-        int count = 0;
+
+        // check if at least one random missing value will be inserted into the output table
+        // if not, enforce a missing value in the first cell
         Random r = new Random(12345678);
-        double sum = 7 * r.nextDouble();
+        boolean missingValueCreated = false;
+        for (int i = 0; i < inData[0].getRowCount(); i++) {
+            if (r.nextDouble() < 0.1) {
+                missingValueCreated = true;
+                break;
+            }
+        }
+
+        int count = 0;
+        r = new Random(12345678);
         for (DataRow row : inData[0]) {
             exec.setProgress(count++ / (double) inData[0].getRowCount());
             DataCell[] cells = new DataCell[row.getNumCells()];
             for (int i = 0; i < cells.length; i++) {
-                sum += r.nextDouble();
-                if (sum >= 5) {
+                if (!missingValueCreated || (r.nextDouble() < 0.1)) {
                     cells[i] = DataType.getMissingCell();
-                    sum -= 5;
+                    missingValueCreated = true;
                 } else {
                     cells[i] = row.getCell(i);
                 }
