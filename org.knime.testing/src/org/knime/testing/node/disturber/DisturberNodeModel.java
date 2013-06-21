@@ -69,27 +69,29 @@ public class DisturberNodeModel extends NodeModel {
             final ExecutionContext exec) throws Exception {
         BufferedDataTable origTable = inData[0];
         BufferedDataContainer emptyTable = exec.createDataContainer(
-                inData[0].getDataTableSpec());
+                origTable.getDataTableSpec());
         emptyTable.close();
         BufferedDataContainer missingValueTable = exec
-                .createDataContainer(inData[0].getDataTableSpec());
+                .createDataContainer(origTable.getDataTableSpec());
 
 
         // check if at least one random missing value will be inserted into the output table
         // if not, enforce a missing value in the first cell
         Random r = new Random(12345678);
         boolean missingValueCreated = false;
-        for (int i = 0; i < inData[0].getRowCount(); i++) {
-            if (r.nextDouble() < 0.1) {
-                missingValueCreated = true;
-                break;
+        for (int i = 0; i < origTable.getRowCount(); i++) {
+            for (int k = 0; k < origTable.getDataTableSpec().getNumColumns(); k++) {
+                if (r.nextDouble() < 0.1) {
+                    missingValueCreated = true;
+                    break;
+                }
             }
         }
 
         int count = 0;
         r = new Random(12345678);
-        for (DataRow row : inData[0]) {
-            exec.setProgress(count++ / (double) inData[0].getRowCount());
+        for (DataRow row : origTable) {
+            exec.setProgress(count++ / (double) origTable.getRowCount());
             DataCell[] cells = new DataCell[row.getNumCells()];
             for (int i = 0; i < cells.length; i++) {
                 if ((r.nextDouble() < 0.1) || !missingValueCreated) {
