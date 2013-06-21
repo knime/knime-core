@@ -4044,7 +4044,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         lsid = m_workflow.getMatchingLoopStart(leid);
                     } catch (Exception e) {
                         // this should have been caught earlier...
-                        LOGGER.coding("WorkflowManager.reset() LoopEnd encountered invalid state: ", e);
+                        LOGGER.coding("WorkflowManager.reset() LoopEnd could not find matching loop start: ", e);
                         lsid = null;
                     }
                     if ((lsid != null) && (!allnodes.containsKey(lsid))) {
@@ -4068,12 +4068,12 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                                 // and now launch the proper reset (&configure!) for this branch:
                                 // Fix for bug #4148:
                                 // instead of a call to resetAndConfigureNode(lsid)
-                                // call the following to avoid checking for "isResetAble()"
+                                // call the following to avoid checking for "isResetable()"
                                 // which will fail in nested loops with "affected" loops
                                 // within a metanode
-                                resetNodeAndSuccessors(lsid);
+                                resetSuccessors(lsid);
                                 // and launch configure starting with this node
-                                configureNodeAndSuccessors(lsid, true);
+                                configureNodeAndSuccessors(lsid, false);
                             }
                         }
                     }
@@ -4122,8 +4122,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
         Set<ConnectionContainer> succs = m_workflow.getConnectionsBySource(id);
         for (ConnectionContainer conn : succs) {
             NodeID currID = conn.getDest();
-            if ((conn.getSourcePort() == portID)
-                || (portID < 0)) {
+            if ((conn.getSourcePort() == portID) || (portID < 0)) {
                 // only reset successors if they are connected to the
                 // correct port or we don't care (id==-1)
                 if (!conn.getType().isLeavingWorkflow()) {
@@ -4137,17 +4136,17 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                         if (nc instanceof SingleNodeContainer) {
                             // for a normal node, ports don't matter
                             this.resetSuccessors(currID, -1);
-                            // ..then reset immediate successor itself
-                            invokeResetOnSingleNodeContainer(
-                                    (SingleNodeContainer)nc);
+                            // ..then reset immediate successor itself if it was not implicitly
+                            // reset by the successor reset (via an outer loop)
+                            if (nc.isResetable()) {
+                                invokeResetOnSingleNodeContainer((SingleNodeContainer)nc);
+                            }
                         } else {
                             assert nc instanceof WorkflowManager;
                             WorkflowManager wfm = (WorkflowManager)nc;
                             // first reset all nodes which are connected
                             // to the outports of interest of this WFM...
-                            Set<Integer> outcomingPorts
-                                = wfm.m_workflow.connectedOutPorts(
-                                         conn.getDestPort());
+                            Set<Integer> outcomingPorts = wfm.m_workflow.connectedOutPorts(conn.getDestPort());
                             for (Integer i : outcomingPorts) {
                                 this.resetSuccessors(currID, i);
                             }
@@ -5091,7 +5090,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 // configure node itself
                 boolean outputSpecsChanged = false;
                 if (flowStackConflict) {
-                    // can't configured due to stack clash
+                    // can't be configured due to stack clash.
                     // make sure execution from here on is canceled
                     disableNodeForExecution(sncID);
                     // and reset node if it's not reset already
@@ -5151,8 +5150,7 @@ public final class WorkflowManager extends NodeContainer implements NodeUIInform
                 LOGGER.debug("configure found " + snc.getInternalState() + " node: " + snc.getNameWithID());
                 break;
             default:
-                LOGGER.error("configure found weird state (" + snc.getInternalState()
-                        + "): " + snc.getNameWithID());
+                LOGGER.error("configure found weird state (" + snc.getInternalState() + "): " + snc.getNameWithID());
             }
             if (keepNodeMessage) {
                 NodeMessage newMessage = snc.getNodeMessage();
