@@ -118,6 +118,16 @@ public final class NodeContext {
         return manager;
     }
 
+
+    /**
+     * Returns the node container which is currently executing something.
+     *
+     * @return a node container
+     */
+    public NodeContainer getNodeContainer() {
+        return m_nodeContainer;
+    }
+
     /**
      * Returns the current node context or <code>null</code> if no context exists.
      *
@@ -182,11 +192,9 @@ public final class NodeContext {
         if (stack == null) {
             stack = new ArrayDeque<NodeContext>(4);
             threadLocal.set(stack);
-        } else {
-            if (stack.size() > 10) {
-                logger.coding("Node context stack has more than 10 elements (" + stack.size()
-                    + "), looks like we are leaking contexts somewhere");
-            }
+        } else if (stack.size() > 10) {
+            logger.coding("Node context stack has more than 10 elements (" + stack.size()
+                + "), looks like we are leaking contexts somewhere");
         }
         return stack;
     }
