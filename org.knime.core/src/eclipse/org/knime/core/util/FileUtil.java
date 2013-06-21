@@ -52,6 +52,7 @@ package org.knime.core.util;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -59,6 +60,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.io.StringReader;
 import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.net.MalformedURLException;
@@ -81,6 +83,7 @@ import org.knime.core.node.KNIMEConstants;
 import org.knime.core.node.NodeLogger;
 import org.knime.core.node.workflow.NodeContext;
 import org.knime.core.node.workflow.WorkflowContext;
+import org.knime.core.node.workflow.WorkflowManager;
 
 /**
  * Utility class to do some basic file handling that is not available through
@@ -799,12 +802,31 @@ public final class FileUtil {
             WorkflowContext workflowContext = nodeContext.getWorkflowManager().getContext();
             if (workflowContext != null) {
                 rootDir = workflowContext.getTempLocation();
+                if (!rootDir.isDirectory()) {
+                    LOGGER.error("Temp folder \"" + rootDir.getAbsolutePath() + "\" does not exist (associated "
+                            + "with NodeContext \"" + nodeContext + "\" - live WFMs follow on DEBUG");
+                    String wfmOut = WorkflowManager.ROOT.printNodeSummary(WorkflowManager.ROOT.getID(), 0);
+                    printToLoggerDEBUG(wfmOut);
+                }
             }
         }
         if (rootDir == null) {
             rootDir = new File(KNIMEConstants.getKNIMETempDir());
         }
         return rootDir;
+    }
+
+    private static final void printToLoggerDEBUG(final String str) {
+        try {
+            BufferedReader r =  new BufferedReader(new StringReader(str));
+            String line;
+            while ((line = r.readLine()) != null) {
+                LOGGER.debug(line);
+            }
+            r.close();
+        } catch (IOException e) {
+            LOGGER.error("Error printing string to DEBUG log", e);
+        }
     }
 
     /**
