@@ -76,7 +76,7 @@
     <xsl:template match="t:views[t:view]">
         <h2>Views</h2>
         <dl>
-            <xsl:for-each select="view">
+            <xsl:for-each select="t:view">
                 <xsl:sort select="@index" />
                 <dt>
                     <xsl:value-of select="@name" />
