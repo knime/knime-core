@@ -68,6 +68,8 @@ public class OpenPortViewAction extends Action {
 
     private final int m_userIndex;
 
+    private final int m_totalPortCount;
+
     private static final NodeLogger LOGGER =
             NodeLogger.getLogger(OpenPortViewAction.class);
 
@@ -76,9 +78,10 @@ public class OpenPortViewAction extends Action {
      *
      * @param nodeContainer The node
      * @param portIndex The index of the out-port
+     * @param totalPortCount The total number of ports
      */
     public OpenPortViewAction(final NodeContainer nodeContainer,
-            final int portIndex) {
+            final int portIndex, final int totalPortCount) {
         m_nodeContainer = nodeContainer;
         m_index = portIndex;
         /* in normal nodes (not meta nodes) we have an additional port (the
@@ -87,8 +90,10 @@ public class OpenPortViewAction extends Action {
          */
         if (!(nodeContainer instanceof WorkflowManager)) {
             m_userIndex = m_index - 1;
+            m_totalPortCount = totalPortCount - 1;
         } else {
             m_userIndex = m_index;
+            m_totalPortCount = totalPortCount;
         }
 
     }
@@ -122,8 +127,12 @@ public class OpenPortViewAction extends Action {
      */
     @Override
     public String getText() {
-        return m_userIndex + " "
-                + m_nodeContainer.getOutPort(m_index).getPortName();
+        StringBuilder b = new StringBuilder();
+        if (m_totalPortCount >= 4) {
+            b.append(m_userIndex).append(": ");
+        }
+        b.append(m_nodeContainer.getOutPort(m_index).getPortName());
+        return b.toString();
     }
 
     /**

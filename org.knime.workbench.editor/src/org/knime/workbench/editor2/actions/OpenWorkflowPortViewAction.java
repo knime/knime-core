@@ -72,10 +72,11 @@ public class OpenWorkflowPortViewAction extends OpenPortViewAction {
     /**
      * @param nodeContainer
      * @param portIndex
+     * @param totalPortCount
      */
     public OpenWorkflowPortViewAction(final NodeContainer nodeContainer,
-            final int portIndex) {
-        super(nodeContainer, portIndex);
+            final int portIndex, final int totalPortCount) {
+        super(nodeContainer, portIndex, totalPortCount);
         m_port = ((WorkflowInPort)getNodeContainer().getInPort(getPortIndex()))
             .getUnderlyingPort();
     }

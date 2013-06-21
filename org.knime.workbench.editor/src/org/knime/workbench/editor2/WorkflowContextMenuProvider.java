@@ -289,12 +289,9 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                     EditPart child = (EditPart)o;
                     if (child instanceof WorkflowInPortEditPart
                             && ((WorkflowInPortEditPart)child).isSelected()) {
-                        action =
-                                new OpenWorkflowPortViewAction(
-                                        ((WorkflowPortBar)root.getModel())
-                                                .getWorkflowManager(),
-                                        ((WorkflowInPortEditPart)child)
-                                                .getIndex());
+                        final WorkflowManager wm = ((WorkflowPortBar)root.getModel()).getWorkflowManager();
+                        action = new OpenWorkflowPortViewAction(wm,
+                            ((WorkflowInPortEditPart)child).getIndex(), wm.getNrInPorts());
                         manager.appendToGroup("outPortViews", action);
                         ((WorkflowInPortEditPart)child).setSelected(false);
                     }
@@ -350,7 +347,7 @@ public class WorkflowContextMenuProvider extends ContextMenuProvider {
                         // skip the implicit flow var ports on "normal" nodes
                         continue;
                     }
-                    action = new OpenPortViewAction(container, i);
+                    action = new OpenPortViewAction(container, i, numOutPorts);
                     manager.appendToGroup("outPortViews", action);
                 }
 
